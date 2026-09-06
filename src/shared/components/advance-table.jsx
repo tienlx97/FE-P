@@ -130,6 +130,7 @@ const styles = stylex.create({
  *   columnOptions: ReadonlyArray<{ key: string, label: string, isAlwaysVisible?: boolean }>,
  *   initialColumnKeys?: string[],
  *   defaultColumnKeys?: string[],
+ *   fixedEndColumnKeys?: string[],
  *   tableColumns: import('@astryxdesign/core/Table').TableColumn<T>[],
  *   data: T[],
  *   idKey: string,
@@ -166,6 +167,7 @@ export function AdvanceTable({
   columnOptions,
   initialColumnKeys,
   defaultColumnKeys,
+  fixedEndColumnKeys = [],
   tableColumns,
   data,
   idKey,
@@ -420,7 +422,10 @@ export function AdvanceTable({
 
   const columnSettingsState = useTableColumnSettingsState({
     columns: columnOptions,
-    activeColumnKeys,
+    activeColumnKeys: [
+      ...activeColumnKeys.filter((key) => !fixedEndColumnKeys.includes(key)),
+      ...fixedEndColumnKeys,
+    ],
     onChangeActiveColumnKeys: (keys) => setActiveColumnKeys([...keys]),
   });
   const columnSettingsPlugin =
@@ -437,12 +442,17 @@ export function AdvanceTable({
           stickyStart,
           columnSettingsState.activeColumnKeys,
           false,
-        ),
-        endKeys: stickyColumnKeys(
-          stickyEnd,
-          columnSettingsState.activeColumnKeys,
-          true,
-        ),
+        ).filter((key) => !fixedEndColumnKeys.includes(key)),
+        endKeys: [
+          ...new Set([
+            ...stickyColumnKeys(
+              stickyEnd,
+              columnSettingsState.activeColumnKeys,
+              true,
+            ),
+            ...fixedEndColumnKeys,
+          ]),
+        ],
       })
     );
 
@@ -512,6 +522,13 @@ export function AdvanceTable({
             </StackItem>
             <HStack gap={2} vAlign="center" xstyle={styles.toolbarEnd}>
               <TableViewOptionsPopover
+                fixedEndLabel={fixedEndColumnKeys
+                  .map(
+                    (key) =>
+                      columnOptions.find((column) => column.key === key)
+                        ?.label ?? key,
+                  )
+                  .join(', ')}
                 columns={columnOptions}
                 activeColumnKeys={[...columnSettingsState.activeColumnKeys]}
                 onChangeActiveColumnKeys={

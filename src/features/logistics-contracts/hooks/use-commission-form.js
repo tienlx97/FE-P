@@ -59,9 +59,7 @@ export function useCommissionForm({
   const isEdit = Boolean(commission);
 
   const [values, setValues] = useState(
-    commission
-      ? valuesFromCommission(commission)
-      : emptyValues(),
+    commission ? valuesFromCommission(commission) : emptyValues(),
   );
   const [fieldErrors, setFieldErrors] = useState(
     /** @type {Record<string, string>} */ ({}),
@@ -90,6 +88,27 @@ export function useCommissionForm({
         }))
       : undefined,
   );
+
+  function reset() {
+    setValues(commission ? valuesFromCommission(commission) : emptyValues());
+    setFieldErrors({});
+    setSubmitError('');
+    paymentTermRows.setRows(
+      commission?.paymentTerms.map((term) => ({
+        rowKey: term.id,
+        paymentRatioPercent: term.paymentRatioPercent,
+        paymentCondition: term.paymentCondition,
+      })) ?? [],
+    );
+    paymentHistoryRows.setRows(
+      commission?.paymentHistory.map((payment) => ({
+        rowKey: payment.id,
+        paymentDate: payment.paymentDate,
+        amount: payment.amount,
+        note: payment.note ?? '',
+      })) ?? [],
+    );
+  }
 
   const createMutation = useCreateCommissionMutation(contractId);
   const updateMutation = useUpdateCommissionMutation(contractId);
@@ -159,6 +178,7 @@ export function useCommissionForm({
   }
 
   return {
+    reset,
     mode: isEdit ? 'edit' : 'create',
     title: isEdit ? 'CẬP NHẬT COMMISSION' : 'TẠO COMMISSION',
     submitLabel: isEdit ? 'Lưu thay đổi' : 'Tạo Commission',

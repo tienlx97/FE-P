@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { useCommissionForm } from '../hooks/use-commission-form.js';
@@ -12,6 +14,8 @@ import { CommissionFields } from './commission-fields.jsx';
  * existing one; omit it to create the first (and only) one.
  * @param {{
  *   isOpen: boolean,
+ *   initialMode?: 'view' | 'edit',
+ *   viewContent?: import('react').ReactNode | ((tab: string) => import('react').ReactNode),
  *   onOpenChange: (isOpen: boolean) => void,
  *   contractId: string,
  *   currency: string,
@@ -21,12 +25,16 @@ import { CommissionFields } from './commission-fields.jsx';
  */
 export function CommissionFormDialog({
   isOpen,
+  initialMode = 'edit',
+  viewContent,
   onOpenChange,
   contractId,
   currency,
   commission = null,
   onSuccess,
 }) {
+  const [mode, setMode] = useState(initialMode);
+  const isViewing = mode === 'view' && Boolean(commission);
   const form = useCommissionForm({
     contractId,
     commission,
@@ -39,8 +47,13 @@ export function CommissionFormDialog({
   return (
     <FormDialog
       isOpen={isOpen}
+      isReadOnly={isViewing}
+      onEdit={() => {
+        form.reset();
+        setMode('edit');
+      }}
       onOpenChange={onOpenChange}
-      title={form.title}
+      title={isViewing ? `Commission · ${commission?.code}` : form.title}
       submitLabel={form.submitLabel}
       width={720}
       variant="fullscreen"
@@ -54,15 +67,23 @@ export function CommissionFormDialog({
       fieldStatuses={form.fieldStatuses}
       onSubmit={form.handleSubmit}
     >
-      <CommissionFields
-        values={form.values}
-        setField={form.setField}
-        fieldStatuses={form.fieldStatuses}
-        customers={form.customers}
-        currency={currency}
-        paymentTermRows={form.paymentTermRows}
-        paymentHistoryRows={form.paymentHistoryRows}
-      />
+      {isViewing ? (
+        typeof viewContent === 'function' ? (
+          viewContent('info')
+        ) : (
+          viewContent
+        )
+      ) : (
+        <CommissionFields
+          values={form.values}
+          setField={form.setField}
+          fieldStatuses={form.fieldStatuses}
+          customers={form.customers}
+          currency={currency}
+          paymentTermRows={form.paymentTermRows}
+          paymentHistoryRows={form.paymentHistoryRows}
+        />
+      )}
     </FormDialog>
   );
 }

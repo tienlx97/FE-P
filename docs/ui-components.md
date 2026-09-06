@@ -22,8 +22,11 @@ Static table definitions live in `config/{contracts,commissions,shipments,custom
   `contract-expanded-details` → `contract-info-tab` / `contract-commission-tab`
   while viewing related data. New contracts keep related tabs disabled until
   saved; related editors remain siblings of the table (ADR-0004).
-- Commission: `commissions-list` → `commission-expanded-details`.
-- Shipment: `shipment-fields` → `shipment-booking-fields` / `shipment-lot-fields`
+- Commission: `commissions-list` → `commission-form-dialog` (create/view/edit);
+  view content uses `commission-expanded-details` with related annex/payment actions.
+- Shipment: `shipments-list` → `shipment-form-dialog` (create/view/edit);
+  view content uses `shipment-expanded-details`, controlled by workspace tabs.
+  Editing uses `shipment-fields` → `shipment-booking-fields` / `shipment-lot-fields`
   / existing VGM and cost editors.
 
 All names above refer to `.jsx` files. Existing feature `index.js` exports remain
@@ -64,3 +67,24 @@ Run `node harness/checks/dialog-browser.mjs` against local `pnpm dev` for the
 mocked regression suite. It intercepts backend calls with synthetic fixtures
 and records screenshots, geometry and behavioral checks under `harness/runs/`.
 The suite is manual; the full gate does not run a browser server automatically.
+
+## Logistics list actions
+
+Contracts, standalone Shipments and Commissions expose `RecordActionsMenu`
+(Xem/Sửa) in an always-visible final column. `AdvanceTable.fixedEndColumnKeys`
+keeps that column last and end-pinned when visible columns/pin options change.
+Standalone Shipment/Commission row expansion is removed. The nested Shipment
+panel inside Contract retains its existing behavior.
+
+`FormDialog.isReadOnly` replaces Save with distinct keyed Edit/Close actions.
+An edit transition rebases the draft after the feature controller resets from
+its latest record, preserving payments added through a child editor. Successful
+Commission/Shipment mutations await both per-contract and standalone list query
+invalidation. The singular `/logistics/commission` URL redirects to the existing
+canonical `/logistics/commissions` route with the same permission requirement.
+
+Regression: `node harness/checks/logistics-actions-browser.mjs` runs against a
+local dev server with synthetic backend fixtures only. It covers menu contents,
+read-only view, direct edit, child operations, refreshed payments, sticky column
+geometry and mobile dialogs. `dialog-browser.mjs` covers existing creation and
+shared-form guards.

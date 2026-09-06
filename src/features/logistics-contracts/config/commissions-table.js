@@ -27,6 +27,7 @@ export const COLUMN_OPTIONS = [
   { key: 'signedDate', label: 'Ngày ký' },
   { key: 'sellerSigned', label: 'Bên bán đã ký' },
   { key: 'partySigned', label: 'Bên nhận hoa hồng đã ký' },
+  { key: 'actions', label: 'Chức năng', isAlwaysVisible: true },
 ];
 
 // The picker opens on this set rather than every column at once — same
@@ -38,6 +39,7 @@ export const DEFAULT_COLUMN_KEYS = [
   'partyCustomerName',
   'value',
   'signedDate',
+  'actions',
 ];
 
 // `code` (computed from Year+Number) has no backend search field —

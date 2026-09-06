@@ -2,19 +2,17 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
+import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { MetadataList } from '@astryxdesign/core/MetadataList';
-import { Heading, Text } from '@astryxdesign/core/Text';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { FileText, Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 
-import {
-  expandableRowStyles,
-  UnderlinedMetadataListItem as MetadataListItem,
-} from '@/shared/components/expandable-row-styles.jsx';
+import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
 
 import { labelForCommissionAnnexType } from '../config/commission-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
@@ -52,17 +50,11 @@ function annexAmountLabel(annex, currency) {
 }
 
 /**
- * Expanded row for one Commission — same layout/actions as the
- * "Commission" tab in `ContractExpandedDetails`
- * (`contracts-list.jsx`), just entered from this system-wide list instead
- * of from a specific contract's row.
- *
- * Dialog-opening is forwarded up to `CommissionsList` via
- * `onEdit`/`onAddAnnex`/`onEditAnnex` rather than owned here — see the
- * "Selector popover stacking" note above `CommissionsList` for why.
+ * Read-only Commission details and related actions inside its workspace.
+ * Child editors are owned outside the table DOM (ADR-0004).
  * @param {{
  *   row: CommissionListRow,
- *   onEdit: () => void,
+ *   onEdit?: () => void,
  *   onAddAnnex: () => void,
  *   onEditAnnex: (annex: import('../types/index.js').CommissionAnnex) => void,
  *   onAddPayment: () => void,
@@ -75,6 +67,7 @@ export function CommissionExpandedDetails({
   onEditAnnex,
   onAddPayment,
 }) {
+  const isNarrow = useMediaQuery('(max-width: 640px)');
   const annexesQuery = useCommissionAnnexesQuery(row.contractId);
   const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
 
@@ -92,28 +85,12 @@ export function CommissionExpandedDetails({
   const grandTotal = row.value + annexesTotal;
 
   return (
-    <VStack gap={4} hAlign="stretch" xstyle={expandableRowStyles.expandedPanel}>
-      <HStack gap={3} vAlign="center">
-        <HStack
-          vAlign="center"
-          hAlign="center"
-          xstyle={expandableRowStyles.expandedIcon}
-        >
-          <Icon icon={FileText} size="md" />
-        </HStack>
-        <VStack gap={1}>
-          <Heading level={3}>{row.code}</Heading>
-          <Text color="secondary">
-            {orDash(row.contractNumber)} · {orDash(row.partyCustomerName)}
-          </Text>
-        </VStack>
-      </HStack>
-
-      {/* Rows 1–2: one columns={4} grid — each row already has exactly 4
+    <VStack gap={4} hAlign="stretch">
+      {/* Rows 1–2: one columns={isNarrow ? 2 : 4} grid — each row already has exactly 4
           items, so they line up naturally without needing padding cells
           (unlike the previous 2-item/3-item split). Same grid width as
           "Đợt thanh toán" below, so columns line up across all 3 rows. */}
-      <MetadataList columns={4} label={{ position: 'top' }}>
+      <MetadataList columns={isNarrow ? 2 : 4} label={{ position: 'top' }}>
         <MetadataListItem label="Mã">{row.code}</MetadataListItem>
         <MetadataListItem label="Số hợp đồng">
           {orDash(row.contractNumber)}
@@ -141,7 +118,7 @@ export function CommissionExpandedDetails({
       {/* Row 3: Đợt thanh toán */}
       <MetadataList
         title="Đợt thanh toán"
-        columns={4}
+        columns={isNarrow ? 2 : 4}
         label={{ position: 'top' }}
         style={{ fontWeight: 'bold' }}
       >
@@ -167,7 +144,7 @@ export function CommissionExpandedDetails({
         />
       </HStack>
 
-      <MetadataList columns={4} label={{ position: 'top' }}>
+      <MetadataList columns={isNarrow ? 2 : 4} label={{ position: 'top' }}>
         {row.paymentHistory.length === 0 ? (
           <MetadataListItem label="Lịch sử thanh toán">—</MetadataListItem>
         ) : (
@@ -229,17 +206,21 @@ export function CommissionExpandedDetails({
         <Text weight="semibold">{formatMoney(grandTotal, row.currency)}</Text>
       </HStack>
 
-      <Divider />
+      {onEdit ? (
+        <>
+          <Divider />
 
-      <HStack hAlign="end">
-        <Button
-          label="Sửa Commission"
-          variant="secondary"
-          size="sm"
-          icon={<Icon icon={Pencil} />}
-          onClick={onEdit}
-        />
-      </HStack>
+          <HStack hAlign="end">
+            <Button
+              label="Sửa Commission"
+              variant="secondary"
+              size="sm"
+              icon={<Icon icon={Pencil} />}
+              onClick={onEdit}
+            />
+          </HStack>
+        </>
+      ) : null}
     </VStack>
   );
 }

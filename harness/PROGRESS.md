@@ -7160,3 +7160,38 @@ ward reference data (free-text inputs, matching the backend).
   `harness/runs/20260906-220221-601009/`: 120 unit tests, lint, typecheck,
   structural/harness checks, build and quality gate (shared gzip 168.7 kB).
   Task 1.1 complete.
+
+## 2026-09-06 — Logistics list actions and entity workspaces
+
+- Active change: `logistics-dialog-actions`, task 1.1; ADR-0007 recorded before
+  implementation. Contracts, Commission and Shipment now have a final pinned
+  Chức năng menu with Xem/Sửa. Standalone Commission/Shipment row expansion
+  is removed. Their create dialogs also host read-only detail content and
+  transition to editable fields; related VGM/annex/payment actions remain.
+- Shared fixedEndColumnKeys keeps actions visible, ordered last and pinned
+  despite optional-column/pin changes. View options explain the fixed column.
+  Distinct keyed Edit/Save buttons and preventDefault prevent accidental submit.
+  Singular `/logistics/commission` redirects to `/logistics/commissions` under
+  the same logistics:contracts:view permission rule.
+- Found during review: standalone lists were not invalidated by entity saves;
+  mutations now await per-contract and standalone invalidation. Re-entering
+  edit resets controller values/rows from the latest selected record and
+  rebases the shell baseline, preserving payments just added in a child.
+- Browser evidence: `harness/runs/20260906-logistics-actions/`; reusable runner
+  `harness/checks/logistics-actions-browser.mjs`. Mocked menus/read-only views,
+  direct edits, zero writes on Edit, one PUT per save, dirty discard, mobile
+  geometry, horizontal pinning, VGM/annex children, quick payment and its
+  retention in a later edit. Shared creation/guard regression also passed
+  all 14 checks via `harness/checks/dialog-browser.mjs`.
+- Harness gaps: browser waits must return booleans (serializing DOM nodes can
+  exceed CDP depth); numeric controls may use aria-labelledby rather than
+  native labels. Regression helper handles both and waits for animations.
+  Valid Commission fixtures must include payment terms totaling 100%.
+- Concurrent filter-layout edits are preserved. A removed required Selector
+  label caused typecheck failure; retained its visual intent using the label
+  plus isLabelHidden. Only that accessibility correction is included here;
+  unrelated filter layout/environment/memory changes are excluded from commit.
+- Final verification: all 39 action-workspace browser checks passed, plus
+  14 shared-form regression checks. `./harness/verify.sh` passed in
+  `harness/runs/20260906-223740-631429/` (120 unit tests, lint, typecheck,
+  structure, harness tests, build, shared gzip 168.7 kB). Task 1.1 complete.

@@ -2,6 +2,7 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
+import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { MetadataList } from '@astryxdesign/core/MetadataList';
@@ -23,12 +24,7 @@ import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.
 import { labelForShipmentType } from '../config/shipment-types.js';
 import { ShipmentVgmSection } from './shipment-vgm-section.jsx';
 
-// Fixed content height + its own scroll, same idiom as
-// `ContractFormDialog`/`ShipmentVgmFormDialog` — per user request
-// (2026-09-05) that this panel gets tabs (it was one long scroll of
-// "Thông tin lô hàng" / "Thông tin Book" / VGM / costs stacked together) and
-// keeps a stable, bounded height like the contract dialog instead of
-// growing without limit.
+// Only the legacy nested contract panel owns a bounded scroll region.
 const EXPANDED_DETAILS_CONTENT_HEIGHT = 480;
 
 /** @param {string | number | null | undefined} value */
@@ -37,35 +33,10 @@ function orDash(value) {
 }
 
 /**
- * Expanded row for one Shipment, nested inside the Contract's own
- * "Shipment" tab table (`contracts-list.jsx`) — Book info + Lot info, its
- * VGM records, and its logistics cost lines, split into three tabs
- * ("Thông tin" / "VGM" / "Chi phí Logistics") over a fixed, scrollable
- * height, per user request (2026-09-05): the panel used to stack all of
- * that content in one long scroll, which made it hard to find any one
- * section.
- *
- * VGM's table + add/edit/delete affordances live in `ShipmentVgmSection`,
- * shared with `ShipmentFormDialog`'s own "VGM" tab. `onAddVgm`/`onEditVgm`
- * are forwarded down into it unchanged: this panel still renders inside a
- * `<table>` row-expansion, so the add/edit dialog itself must stay owned by
- * `ContractsList` outside that DOM tree (see the "Selector popover
- * stacking" note on `ContractsList`) — only the *list* of VGMs (no
- * `Selector` field) lives in this panel.
- *
- * `onEdit` is optional: `contracts-list.jsx`'s own "Shipment" tab already
- * has its own row-level edit icon (a plain `<Table>`, not wrapped by
- * `AdvanceTable`'s column-settings machinery, so an always-on action
- * column works there) and doesn't pass it. `shipments-list.jsx` (the
- * standalone `/logistics/shipments` page) does pass it — `AdvanceTable`
- * drops any `tableColumns` key not also declared in `columnOptions`, so a
- * persistent per-row action column isn't an option there, and this footer
- * button is the edit entry point instead, same spot `ContractExpandedDetails`
- * puts "Sửa hợp đồng".
- * `costCategoriesById` resolves `ShipmentCostLine.costCategoryId` → name for
- * the "Chi phí Logistics" tab below; `ProviderCustomerId` reuses the
- * already-threaded `customersById` instead of a new prop.
+ * Shipment details shared by the legacy nested contract panel and fullscreen
+ * workspace. A controlled tab delegates navigation/scrolling to the dialog.
  * @param {{
+ *   activeTab?: string,
  *   contractId: string,
  *   shipment: import('../types/index.js').Shipment,
  *   supplierName: string,
@@ -77,6 +48,7 @@ function orDash(value) {
  * }} props
  */
 export function ShipmentExpandedDetails({
+  activeTab: controlledTab,
   contractId,
   shipment,
   supplierName,
@@ -86,7 +58,9 @@ export function ShipmentExpandedDetails({
   onEditVgm,
   onEdit,
 }) {
-  const [activeTab, setActiveTab] = useState('info');
+  const [localTab, setActiveTab] = useState('info');
+  const activeTab = controlledTab ?? localTab;
+  const isNarrow = useMediaQuery('(max-width: 640px)');
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ShipmentCostLine & Record<string, unknown>>[]} */
   const costColumns = [
@@ -129,24 +103,30 @@ export function ShipmentExpandedDetails({
   ];
 
   return (
-    <VStack gap={3} hAlign="stretch" xstyle={expandableRowStyles.expandedPanel}>
-      <TabList value={activeTab} onChange={setActiveTab} hasDivider>
-        <Tab value="info" label="Thông tin" />
-        <Tab value="vgm" label="VGM" />
-        <Tab value="costs" label="Chi phí Logistics" />
-      </TabList>
+    <VStack
+      gap={3}
+      hAlign="stretch"
+      xstyle={!controlledTab && expandableRowStyles.expandedPanel}
+    >
+      {!controlledTab ? (
+        <TabList value={activeTab} onChange={setActiveTab} hasDivider>
+          <Tab value="info" label="Thông tin" />
+          <Tab value="vgm" label="VGM" />
+          <Tab value="costs" label="Chi phí Logistics" />
+        </TabList>
+      ) : null}
 
       <VStack
         gap={4}
         hAlign="stretch"
-        height={EXPANDED_DETAILS_CONTENT_HEIGHT}
-        isScrollable
+        height={controlledTab ? undefined : EXPANDED_DETAILS_CONTENT_HEIGHT}
+        isScrollable={!controlledTab}
       >
         {activeTab === 'info' ? (
           <>
             <MetadataList
               title={<Text weight="bold">Thông tin lô hàng</Text>}
-              columns={4}
+              columns={isNarrow ? 2 : 4}
               label={{ position: 'top' }}
             >
               <MetadataListItem label="Tên lô hàng">
@@ -181,7 +161,7 @@ export function ShipmentExpandedDetails({
 
             <MetadataList
               title={<Text weight="bold">Thông tin Book</Text>}
-              columns={4}
+              columns={isNarrow ? 2 : 4}
               label={{ position: 'top' }}
             >
               <MetadataListItem label="Forwarder">
@@ -254,7 +234,7 @@ export function ShipmentExpandedDetails({
                     title={
                       <Text weight="semibold">Tổng theo nhóm chi phí</Text>
                     }
-                    columns={4}
+                    columns={isNarrow ? 2 : 4}
                     label={{ position: 'top' }}
                   >
                     {shipment.costTotalsByCategory.map((total) => (

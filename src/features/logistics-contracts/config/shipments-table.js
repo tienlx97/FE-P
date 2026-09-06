@@ -31,6 +31,7 @@ export const COLUMN_OPTIONS = [
   { key: 'bookingNumber', label: 'Booking' },
   { key: 'supplier', label: 'Forwarder' },
   { key: 'invoiceValue', label: 'Giá trị invoice' },
+  { key: 'actions', label: 'Chức năng', isAlwaysVisible: true },
 ];
 
 // Narrow default, same "start narrow, opt in via Tuỳ chọn hiển thị"
@@ -41,6 +42,7 @@ export const DEFAULT_COLUMN_KEYS = [
   'name',
   'type',
   'invoiceValue',
+  'actions',
 ];
 
 // `shipmentCode` (computed from the parent contract's number + shipment

@@ -43,7 +43,12 @@ export function useCreateCommissionMutation(contractId) {
     ) => createCommission(contractId, values, paymentTerms, paymentHistory),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: queryKey(contractId) });
+        return Promise.all([
+          queryClient.invalidateQueries({ queryKey: queryKey(contractId) }),
+          queryClient.invalidateQueries({
+            queryKey: ['logistics-contracts', 'commissions-list'],
+          }),
+        ]);
       }
     },
   });
@@ -63,7 +68,12 @@ export function useUpdateCommissionMutation(contractId) {
     ) => updateCommission(contractId, values, paymentTerms, paymentHistory),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: queryKey(contractId) });
+        return Promise.all([
+          queryClient.invalidateQueries({ queryKey: queryKey(contractId) }),
+          queryClient.invalidateQueries({
+            queryKey: ['logistics-contracts', 'commissions-list'],
+          }),
+        ]);
       }
     },
   });

@@ -148,6 +148,7 @@ export function AdvancedFilterBuilder({ fields, conditions, onChange }) {
             {index > 0 ? (
               <Selector
                 label="Kết hợp với điều kiện trước"
+                isLabelHidden
                 size="sm"
                 width={100}
                 options={CONNECTOR_OPTIONS}

@@ -89,6 +89,7 @@ export const COLUMN_OPTIONS = [
   { key: 'note', label: 'Ghi chú' },
   { key: 'paymentTerms', label: 'Đợt thanh toán' },
   { key: 'bankIds', label: 'Ngân hàng thụ hưởng' },
+  { key: 'actions', label: 'Chức năng', isAlwaysVisible: true },
 ];
 
 // The picker opens on this set rather than every column at once — the API
@@ -103,6 +104,7 @@ export const DEFAULT_COLUMN_KEYS = [
   'contractValue',
   'incoterm',
   'createdDate',
+  'actions',
 ];
 
 export const SKELETON_ROW_COUNT = 6;

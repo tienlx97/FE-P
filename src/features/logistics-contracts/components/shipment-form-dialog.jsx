@@ -22,6 +22,8 @@ const styles = stylex.create({
  * the backend on success).
  * @param {{
  *   isOpen: boolean,
+ *   initialMode?: 'view' | 'edit',
+ *   viewContent?: import('react').ReactNode | ((tab: string) => import('react').ReactNode),
  *   onOpenChange: (isOpen: boolean) => void,
  *   contractId: string,
  *   contract?: import('../types/index.js').Contract | null,
@@ -31,12 +33,16 @@ const styles = stylex.create({
  */
 export function ShipmentFormDialog({
   isOpen,
+  initialMode = 'edit',
+  viewContent,
   onOpenChange,
   contractId,
   contract = null,
   shipment = null,
   onSuccess,
 }) {
+  const [mode, setMode] = useState(initialMode);
+  const isViewing = mode === 'view' && Boolean(shipment);
   const form = useShipmentForm({
     contractId,
     contract,
@@ -58,10 +64,17 @@ export function ShipmentFormDialog({
   return (
     <FormDialog
       isOpen={isOpen}
+      isReadOnly={isViewing}
+      onEdit={() => {
+        form.reset();
+        setMode('edit');
+      }}
       onOpenChange={handleOpenChange}
       variant="fullscreen"
       title={
-        shipment ? `Sửa Shipment ${shipment.shipmentCode}` : 'Thêm Shipment'
+        shipment
+          ? `${isViewing ? 'Shipment ·' : 'Sửa Shipment'} ${shipment.shipmentCode}`
+          : 'Thêm Shipment'
       }
       submitLabel={shipment ? 'Lưu thay đổi' : 'Tạo Shipment'}
       draft={{ values: form.values, costs: form.costLineRows.rows }}
@@ -111,17 +124,25 @@ export function ShipmentFormDialog({
         }
         tabIndex={0}
       >
-        <ShipmentFields
-          values={form.values}
-          setField={form.setField}
-          fieldStatuses={form.fieldStatuses}
-          customers={form.customers}
-          isEditing={shipment != null}
-          costLineRows={form.costLineRows}
-          contractId={contractId}
-          shipmentId={shipment?.id ?? null}
-          activeTab={activeTab}
-        />
+        {isViewing ? (
+          typeof viewContent === 'function' ? (
+            viewContent(activeTab)
+          ) : (
+            viewContent
+          )
+        ) : (
+          <ShipmentFields
+            values={form.values}
+            setField={form.setField}
+            fieldStatuses={form.fieldStatuses}
+            customers={form.customers}
+            isEditing={shipment != null}
+            costLineRows={form.costLineRows}
+            contractId={contractId}
+            shipmentId={shipment?.id ?? null}
+            activeTab={activeTab}
+          />
+        )}
       </section>
     </FormDialog>
   );

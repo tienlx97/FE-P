@@ -40,6 +40,7 @@ import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractExpandedDetails } from './contract-expanded-details.jsx';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
 import { PaymentScheduleFormDialog } from './payment-schedule-form-dialog.jsx';
+import { RecordActionsMenu } from './record-actions-menu.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 import { ShipmentVgmFormDialog } from './shipment-vgm-form-dialog.jsx';
 
@@ -64,7 +65,7 @@ function formatPaymentTerms(terms) {
 export function ContractsList() {
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreenToggle();
   const [workspace, setWorkspace] = useState(
-    /** @type {{ contract: import('../types/index.js').Contract | null, revision: number } | null} */ (
+    /** @type {{ mode?: 'view' | 'edit', contract: import('../types/index.js').Contract | null, revision: number } | null} */ (
       null
     ),
   );
@@ -303,6 +304,24 @@ export function ContractsList() {
           ? '—'
           : `${contract.bankIds.length} ngân hàng`,
     },
+    {
+      key: 'actions',
+      header: 'Chức năng',
+      width: pixel(140),
+      align: 'end',
+      renderCell: (row) => (
+        <RecordActionsMenu
+          onView={() => {
+            setExpandedTab('info');
+            setWorkspace({ contract: row, revision: 0, mode: 'view' });
+          }}
+          onEdit={() => {
+            setExpandedTab('info');
+            setWorkspace({ contract: row, revision: 0, mode: 'edit' });
+          }}
+        />
+      ),
+    },
   ];
 
   const searchableContracts = contracts.map((contract) => ({
@@ -405,6 +424,7 @@ export function ContractsList() {
         columnOptions={COLUMN_OPTIONS}
         initialColumnKeys={DEFAULT_COLUMN_KEYS}
         defaultColumnKeys={DEFAULT_COLUMN_KEYS}
+        fixedEndColumnKeys={['actions']}
         tableColumns={columns}
         data={searchableContracts}
         idKey="id"
@@ -434,6 +454,7 @@ export function ContractsList() {
             if (!open) setWorkspace(null);
           }}
           contract={workspace.contract}
+          initialMode={workspace.mode}
           activeTab={expandedTab}
           onActiveTabChange={setExpandedTab}
           onSuccess={(saved) => {

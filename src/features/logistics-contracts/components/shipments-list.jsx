@@ -16,11 +16,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
-import {
-  pixel,
-  proportional,
-  useTableRowExpansion,
-} from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Plus } from 'lucide-react';
@@ -31,7 +27,6 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
-import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
 
 import { formatMoney } from '../config/currencies.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
@@ -49,6 +44,7 @@ import { useContractsQuery } from '../hooks/use-contracts-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
 import { useShipmentsListQuery } from '../hooks/use-shipments-list-query.js';
+import { RecordActionsMenu } from './record-actions-menu.jsx';
 import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 import { ShipmentVgmFormDialog } from './shipment-vgm-form-dialog.jsx';
@@ -64,10 +60,6 @@ export function ShipmentsList() {
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
-  const [expandedShipmentId, setExpandedShipmentId] = useState(
-    /** @type {string | null} */ (null),
-  );
-
   // Dialogs are all rendered as siblings of `AdvanceTable` below, never
   // inside `renderExpanded` — `contracts-list.jsx`'s big comment above
   // `ContractsList` explains why: a `Selector`-bearing dialog opened from
@@ -78,7 +70,7 @@ export function ShipmentsList() {
     /** @type {string | null} */ (null),
   );
   const [shipmentDialog, setShipmentDialog] = useState(
-    /** @type {{ contractId: string, contract?: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
+    /** @type {{ mode?: 'view' | 'edit', contractId: string, contract?: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
       null
     ),
   );
@@ -209,59 +201,33 @@ export function ShipmentsList() {
       width: pixel(200),
       renderCell: (row) => formatMoney(row.invoiceValue, row.invoiceCurrency),
     },
+    {
+      key: 'actions',
+      header: 'Chức năng',
+      width: pixel(140),
+      align: 'end',
+      renderCell: (row) => (
+        <RecordActionsMenu
+          onView={() =>
+            setShipmentDialog({
+              mode: 'view',
+              contractId: row.contractId,
+              contract: contractsById.get(row.contractId),
+              shipment: row,
+            })
+          }
+          onEdit={() =>
+            setShipmentDialog({
+              mode: 'edit',
+              contractId: row.contractId,
+              contract: contractsById.get(row.contractId),
+              shipment: row,
+            })
+          }
+        />
+      ),
+    },
   ];
-
-  const expandedKeys = useMemo(
-    () => new Set(expandedShipmentId ? [expandedShipmentId] : []),
-    [expandedShipmentId],
-  );
-  const expansionPlugin =
-    /** @type {import('@astryxdesign/core/Table').TablePlugin<ShipmentListRow>} */ (
-      useTableRowExpansion({
-        expandedKeys,
-        onToggle: (id) =>
-          setExpandedShipmentId((current) => (current === id ? null : id)),
-        getRowKey: (row) => row.id,
-        getIsItemExpandable: (row) => !row.id.startsWith('skeleton-'),
-        renderExpanded: (row) => (
-          <ShipmentExpandedDetails
-            contractId={row.contractId}
-            shipment={row}
-            supplierName={row.supplierName}
-            customersById={customersById}
-            costCategoriesById={costCategoriesById}
-            onAddVgm={() =>
-              setVgmDialog({ contractId: row.contractId, shipmentId: row.id })
-            }
-            onEditVgm={(vgm) =>
-              setVgmDialog({
-                contractId: row.contractId,
-                shipmentId: row.id,
-                vgm,
-              })
-            }
-            onEdit={() =>
-              setShipmentDialog({
-                contractId: row.contractId,
-                contract: contractsById.get(row.contractId),
-                shipment: row,
-              })
-            }
-          />
-        ),
-      })
-    );
-  const rowInteractionPlugin = useMemo(
-    /** @returns {import('@astryxdesign/core/Table').TablePlugin<ShipmentListRow>} */
-    () =>
-      createRowExpansionInteractionPlugin({
-        expandedId: expandedShipmentId,
-        onToggle: (id) =>
-          setExpandedShipmentId((current) => (current === id ? null : id)),
-        isExpandable: (row) => !row.id.startsWith('skeleton-'),
-      }),
-    [expandedShipmentId],
-  );
 
   const totalShipments = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
@@ -278,6 +244,10 @@ export function ShipmentsList() {
     });
     setPickedContractId(null);
   }
+
+  const selectedShipment =
+    shipments.find((row) => row.id === shipmentDialog?.shipment?.id) ??
+    shipmentDialog?.shipment;
 
   return (
     <VStack gap={4} hAlign="stretch">
@@ -312,10 +282,7 @@ export function ShipmentsList() {
         idKey="id"
         isLoading={shipmentsQuery.isLoading}
         skeletonRows={skeletonRows}
-        extraPlugins={{
-          expansion: expansionPlugin,
-          rowInteraction: rowInteractionPlugin,
-        }}
+        fixedEndColumnKeys={['actions']}
         onRefresh={() => shipmentsQuery.refetch()}
         isRefreshing={shipmentsQuery.isFetching}
         pagination={{
@@ -397,7 +364,38 @@ export function ShipmentsList() {
           }}
           contractId={shipmentDialog.contractId}
           contract={shipmentDialog.contract}
-          shipment={shipmentDialog.shipment}
+          initialMode={shipmentDialog.mode}
+          shipment={selectedShipment}
+          viewContent={
+            selectedShipment
+              ? (tab) => (
+                  <ShipmentExpandedDetails
+                    activeTab={tab}
+                    contractId={selectedShipment.contractId}
+                    shipment={selectedShipment}
+                    supplierName={
+                      customersById.get(selectedShipment.supplierCustomerId)
+                        ?.companyName ?? ''
+                    }
+                    customersById={customersById}
+                    costCategoriesById={costCategoriesById}
+                    onAddVgm={() =>
+                      setVgmDialog({
+                        contractId: selectedShipment.contractId,
+                        shipmentId: selectedShipment.id,
+                      })
+                    }
+                    onEditVgm={(vgm) =>
+                      setVgmDialog({
+                        contractId: selectedShipment.contractId,
+                        shipmentId: selectedShipment.id,
+                        vgm,
+                      })
+                    }
+                  />
+                )
+              : null
+          }
           onSuccess={() => setShipmentDialog(null)}
         />
       ) : null}

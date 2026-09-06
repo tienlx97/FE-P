@@ -36,6 +36,7 @@ const TAB_LABELS = {
  * One fullscreen workspace for creation, inspection and editing.
  * @param {{
  *   isOpen: boolean,
+ *   initialMode?: 'view' | 'edit',
  *   onOpenChange: (open: boolean) => void,
  *   contract?: import('../types/index.js').Contract | null,
  *   onSuccess: (contract: import('../types/index.js').Contract) => void,
@@ -46,6 +47,7 @@ const TAB_LABELS = {
  */
 export function ContractFormDialog({
   isOpen,
+  initialMode = 'view',
   onOpenChange,
   contract = null,
   onSuccess,
@@ -53,7 +55,9 @@ export function ContractFormDialog({
   onActiveTabChange,
   children,
 }) {
-  const [isEditing, setIsEditing] = useState(!contract);
+  const [isEditing, setIsEditing] = useState(
+    !contract || initialMode === 'edit',
+  );
   const [discardAction, setDiscardAction] = useState(
     /** @type {'close' | 'cancel' | null} */ (null),
   );

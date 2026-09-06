@@ -6,7 +6,7 @@ import { Popover } from '@astryxdesign/core/Popover';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Section } from '@astryxdesign/core/Section';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { Heading } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
@@ -138,6 +138,7 @@ export function stickyColumnKeys(edge, columnKeys, fromEnd) {
  *   activeColumnKeys: string[],
  *   onChangeActiveColumnKeys: (keys: string[]) => void,
  *   defaultColumnKeys?: string[],
+ *   fixedEndLabel?: string,
  *   density: string,
  *   onChangeDensity: (value: string) => void,
  *   stickyStart: string,
@@ -151,6 +152,7 @@ export function TableViewOptionsPopover({
   activeColumnKeys,
   onChangeActiveColumnKeys,
   defaultColumnKeys,
+  fixedEndLabel,
   density,
   onChangeDensity,
   stickyStart,
@@ -208,6 +210,13 @@ export function TableViewOptionsPopover({
 
           <StackItem size="fill" xstyle={styles.paneSlot}>
             <VStack gap={0} minHeight={0} xstyle={styles.pane}>
+              {fixedEndLabel ? (
+                <VStack padding={4}>
+                  <Text color="secondary">
+                    Cột {fixedEndLabel} luôn hiển thị và ghim ở cuối bảng.
+                  </Text>
+                </VStack>
+              ) : null}
               {section !== 'columns' ? (
                 <VStack gap={0} padding={4} paddingBlockEnd={3}>
                   <Heading level={3}>{activeSection?.title}</Heading>

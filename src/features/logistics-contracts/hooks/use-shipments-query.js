@@ -2,10 +2,18 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createShipment, listShipments, updateShipment } from '../api/shipments.js';
+import {
+  createShipment,
+  listShipments,
+  updateShipment,
+} from '../api/shipments.js';
 
 /** @param {string} contractId */
-const queryKey = (contractId) => ['logistics-contracts', 'shipments', contractId];
+const queryKey = (contractId) => [
+  'logistics-contracts',
+  'shipments',
+  contractId,
+];
 
 /**
  * Per-contract shipment list — only meaningful once a contract exists, so
@@ -34,7 +42,12 @@ export function useCreateShipmentMutation(contractId) {
     ) => createShipment(contractId, values, costLines),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: queryKey(contractId) });
+        return Promise.all([
+          queryClient.invalidateQueries({ queryKey: queryKey(contractId) }),
+          queryClient.invalidateQueries({
+            queryKey: ['logistics-contracts', 'shipments-list'],
+          }),
+        ]);
       }
     },
   });
@@ -54,7 +67,12 @@ export function useUpdateShipmentMutation(contractId) {
     ) => updateShipment(contractId, shipmentId, values, costLines),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: queryKey(contractId) });
+        return Promise.all([
+          queryClient.invalidateQueries({ queryKey: queryKey(contractId) }),
+          queryClient.invalidateQueries({
+            queryKey: ['logistics-contracts', 'shipments-list'],
+          }),
+        ]);
       }
     },
   });

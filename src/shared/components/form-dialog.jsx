@@ -43,6 +43,7 @@ const getServerSnapshot = () => false;
  * successMessage?: string, variant?: 'fullscreen', width?: number,
  * navigation?: import('react').ReactNode,
  * onValidation?: () => void,
+ * isReadOnly?: boolean, onEdit?: () => void,
  * }} props
  */
 export function FormDialog(props) {
@@ -78,18 +79,26 @@ function FormDialogSession({
   width,
   navigation,
   onValidation,
+  isReadOnly = false,
+  onEdit,
 }) {
   const formId = useId();
   const fingerprint = JSON.stringify(draft);
   const [baseline, setBaseline] = useState(fingerprint);
+  const [wasReadOnly, setWasReadOnly] = useState(isReadOnly);
   const [wasReady, setWasReady] = useState(isReady);
   const [confirmedSuccess, setConfirmedSuccess] = useState(successMessage);
-  if (wasReady !== isReady || confirmedSuccess !== successMessage) {
+  if (
+    wasReadOnly !== isReadOnly ||
+    wasReady !== isReady ||
+    confirmedSuccess !== successMessage
+  ) {
+    setWasReadOnly(isReadOnly);
     setWasReady(isReady);
     setConfirmedSuccess(successMessage);
     setBaseline(fingerprint);
   }
-  const isDirty = isReady && baseline !== fingerprint;
+  const isDirty = !isReadOnly && isReady && baseline !== fingerprint;
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const savingRef = useRef(false);
@@ -115,7 +124,7 @@ function FormDialogSession({
   async function submit(event) {
     event.preventDefault();
     event.stopPropagation();
-    if (!isReady || isBusy || savingRef.current) return;
+    if (isReadOnly || !isReady || isBusy || savingRef.current) return;
     const formElement = event.currentTarget;
     savingRef.current = true;
     setIsSaving(true);
@@ -201,20 +210,36 @@ function FormDialogSession({
                   </Text>
                   <HStack gap={2}>
                     <Button
-                      label="Hủy"
+                      label={isReadOnly ? 'Đóng' : 'Hủy'}
                       type="button"
                       variant="secondary"
                       isDisabled={isBusy}
                       onClick={requestClose}
                     />
-                    <Button
-                      label={submitLabel}
-                      type="submit"
-                      form={formId}
-                      variant="primary"
-                      isLoading={isBusy}
-                      isDisabled={!isReady}
-                    />
+                    {isReadOnly ? (
+                      onEdit ? (
+                        <Button
+                          key="edit"
+                          label="Sửa"
+                          type="button"
+                          variant="primary"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            onEdit();
+                          }}
+                        />
+                      ) : null
+                    ) : (
+                      <Button
+                        key="save"
+                        label={submitLabel}
+                        type="submit"
+                        form={formId}
+                        variant="primary"
+                        isLoading={isBusy}
+                        isDisabled={!isReady}
+                      />
+                    )}
                   </HStack>
                 </HStack>
               </LayoutFooter>

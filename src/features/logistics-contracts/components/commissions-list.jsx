@@ -16,7 +16,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
-import { pixel, useTableRowExpansion } from '@astryxdesign/core/Table';
+import { pixel } from '@astryxdesign/core/Table';
 import { Heading } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Plus } from 'lucide-react';
@@ -27,7 +27,6 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
-import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
 
 import {
   COLUMN_OPTIONS,
@@ -46,34 +45,22 @@ import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
 import { CommissionExpandedDetails } from './commission-expanded-details.jsx';
 import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
+import { RecordActionsMenu } from './record-actions-menu.jsx';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
   return value == null || value === '' ? '—' : value;
 }
 
-/**
- * Selector popover stacking: same bug and fix as `contracts-list.jsx`'s
- * "Selector popover stacking" note above `ContractsList` — Astryx's
- * `Selector` portals its dropdown outside the nearest "unsafe host"
- * ancestor (`<table>`, `<tr>`, ...), so a `*FormDialog` with a `Selector`
- * field declared inside this table's own `renderExpanded` callback
- * (`CommissionFormDialog` and `CommissionAnnexFormDialog` both
- * have one) gets its dropdown portaled to the table's scroll wrapper and
- * stacked underneath the dialog — clicks land on the dialog instead of the
- * option. Both dialogs are therefore rendered HERE, a sibling of
- * `AdvanceTable`, with only trigger callbacks (`onEdit`, `onAddAnnex`,
- * `onEditAnnex`) passed down to `CommissionExpandedDetails`. Do not
- * move a `*FormDialog` back inside `renderExpanded`.
- */
+/** Standalone list opens shared entity dialogs; related editors stay outside tables (ADR-0004). */
 export function CommissionsList() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
-  const [expandedCommissionId, setExpandedCommissionId] = useState(
-    /** @type {string | null} */ (null),
+  const [dialogMode, setDialogMode] = useState(
+    /** @type {'view' | 'edit'} */ ('view'),
   );
   const [editingCommissionRow, setEditingCommissionRow] = useState(
     /** @type {CommissionListRow | null} */ (null),
@@ -224,44 +211,25 @@ export function CommissionsList() {
       width: pixel(170),
       renderCell: (row) => (row.partySigned ? 'Đã ký' : 'Chưa ký'),
     },
+    {
+      key: 'actions',
+      header: 'Chức năng',
+      width: pixel(140),
+      align: 'end',
+      renderCell: (row) => (
+        <RecordActionsMenu
+          onView={() => {
+            setDialogMode('view');
+            setEditingCommissionRow(row);
+          }}
+          onEdit={() => {
+            setDialogMode('edit');
+            setEditingCommissionRow(row);
+          }}
+        />
+      ),
+    },
   ];
-
-  const expandedKeys = useMemo(
-    () => new Set(expandedCommissionId ? [expandedCommissionId] : []),
-    [expandedCommissionId],
-  );
-  const expansionPlugin =
-    /** @type {import('@astryxdesign/core/Table').TablePlugin<CommissionListRow>} */ (
-      useTableRowExpansion({
-        expandedKeys,
-        onToggle: (id) =>
-          setExpandedCommissionId((current) => (current === id ? null : id)),
-        getRowKey: (row) => row.id,
-        getIsItemExpandable: (row) => !row.id.startsWith('skeleton-'),
-        renderExpanded: (row) => (
-          <CommissionExpandedDetails
-            row={row}
-            onEdit={() => setEditingCommissionRow(row)}
-            onAddAnnex={() => setAnnexDialog({ contractId: row.contractId })}
-            onEditAnnex={(annex) =>
-              setAnnexDialog({ contractId: row.contractId, annex })
-            }
-            onAddPayment={() => setPaymentDialog(row)}
-          />
-        ),
-      })
-    );
-  const rowInteractionPlugin = useMemo(
-    /** @returns {import('@astryxdesign/core/Table').TablePlugin<CommissionListRow>} */
-    () =>
-      createRowExpansionInteractionPlugin({
-        expandedId: expandedCommissionId,
-        onToggle: (id) =>
-          setExpandedCommissionId((current) => (current === id ? null : id)),
-        isExpandable: (row) => !row.id.startsWith('skeleton-'),
-      }),
-    [expandedCommissionId],
-  );
 
   const totalCommissions = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
@@ -279,6 +247,10 @@ export function CommissionsList() {
     });
     setPickedContractId(null);
   }
+
+  const selectedCommission =
+    searchableCommissions.find((row) => row.id === editingCommissionRow?.id) ??
+    editingCommissionRow;
 
   return (
     <VStack gap={4} hAlign="stretch">
@@ -313,10 +285,7 @@ export function CommissionsList() {
         idKey="id"
         isLoading={commissionsQuery.isLoading}
         skeletonRows={skeletonRows}
-        extraPlugins={{
-          expansion: expansionPlugin,
-          rowInteraction: rowInteractionPlugin,
-        }}
+        fixedEndColumnKeys={['actions']}
         onRefresh={() => commissionsQuery.refetch()}
         isRefreshing={commissionsQuery.isFetching}
         pagination={{
@@ -330,8 +299,7 @@ export function CommissionsList() {
         }}
       />
 
-      {/* Rendered here, a sibling of `AdvanceTable`, rather than inside
-          `renderExpanded` — see the note above this component for why. */}
+      {/* Keep record and related dialogs outside the table DOM (ADR-0004). */}
 
       {isPickingContract ? (
         <CommonDialog
@@ -419,7 +387,25 @@ export function CommissionsList() {
           }}
           contractId={editingCommissionRow.contractId}
           currency={editingCommissionRow.currency}
-          commission={editingCommissionRow}
+          commission={selectedCommission}
+          initialMode={dialogMode}
+          viewContent={
+            selectedCommission ? (
+              <CommissionExpandedDetails
+                row={selectedCommission}
+                onAddAnnex={() =>
+                  setAnnexDialog({ contractId: selectedCommission.contractId })
+                }
+                onEditAnnex={(annex) =>
+                  setAnnexDialog({
+                    contractId: selectedCommission.contractId,
+                    annex,
+                  })
+                }
+                onAddPayment={() => setPaymentDialog(selectedCommission)}
+              />
+            ) : null
+          }
           onSuccess={() => setEditingCommissionRow(null)}
         />
       ) : null}
