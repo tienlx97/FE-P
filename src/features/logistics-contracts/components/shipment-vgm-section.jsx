@@ -48,6 +48,7 @@ function orDash(value) {
  *   contractId: string,
  *   shipmentId: string,
  *   customersById: Map<string, import('../types/index.js').Customer>,
+ *   isReadOnly?: boolean,
  *   onAddVgm?: () => void,
  *   onEditVgm?: (vgm: import('../types/index.js').ShipmentVgm) => void,
  * }} props
@@ -56,6 +57,7 @@ export function ShipmentVgmSection({
   contractId,
   shipmentId,
   customersById,
+  isReadOnly = false,
   onAddVgm,
   onEditVgm,
 }) {
@@ -139,7 +141,10 @@ export function ShipmentVgmSection({
       width: proportional(1),
       renderCell: (vgm) => vgm.vgm.toFixed(2),
     },
-    {
+  ];
+
+  if (!isReadOnly) {
+    vgmColumns.push({
       key: 'actions',
       header: '',
       width: pixel(90),
@@ -163,8 +168,8 @@ export function ShipmentVgmSection({
           />
         </HStack>
       ),
-    },
-  ];
+    });
+  }
 
   const vgmStickyColumns =
     /** @type {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').ShipmentVgm & Record<string, unknown>>} */ (
@@ -175,13 +180,15 @@ export function ShipmentVgmSection({
     <VStack gap={3} hAlign="stretch">
       <HStack hAlign="between" vAlign="center">
         <Text weight="semibold">VGM</Text>
-        <Button
-          label="Thêm VGM"
-          variant="secondary"
-          size="sm"
-          icon={<Icon icon={Plus} />}
-          onClick={handleAdd}
-        />
+        {isReadOnly ? null : (
+          <Button
+            label="Thêm VGM"
+            variant="secondary"
+            size="sm"
+            icon={<Icon icon={Plus} />}
+            onClick={handleAdd}
+          />
+        )}
       </HStack>
 
       {vgms.length === 0 ? (

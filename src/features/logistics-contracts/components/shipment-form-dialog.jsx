@@ -19,11 +19,12 @@ const styles = stylex.create({
  * `ContractExpandedDetails`'s "Shipment" tab (`contracts-list.jsx`).
  * Pass `shipment` to edit an existing one; omit it
  * to create a new one (its `shipmentNumber`/`shipmentCode` are assigned by
- * the backend on success).
+ * the backend on success). Xem and Sửa share the same `ShipmentFields`
+ * layout — only `isReadOnly` differs per field — so there is no separate
+ * view-only content branch.
  * @param {{
  *   isOpen: boolean,
  *   initialMode?: 'view' | 'edit',
- *   viewContent?: import('react').ReactNode | ((tab: string) => import('react').ReactNode),
  *   onOpenChange: (isOpen: boolean) => void,
  *   contractId: string,
  *   contract?: import('../types/index.js').Contract | null,
@@ -34,7 +35,6 @@ const styles = stylex.create({
 export function ShipmentFormDialog({
   isOpen,
   initialMode = 'edit',
-  viewContent,
   onOpenChange,
   contractId,
   contract = null,
@@ -124,25 +124,18 @@ export function ShipmentFormDialog({
         }
         tabIndex={0}
       >
-        {isViewing ? (
-          typeof viewContent === 'function' ? (
-            viewContent(activeTab)
-          ) : (
-            viewContent
-          )
-        ) : (
-          <ShipmentFields
-            values={form.values}
-            setField={form.setField}
-            fieldStatuses={form.fieldStatuses}
-            customers={form.customers}
-            isEditing={shipment != null}
-            costLineRows={form.costLineRows}
-            contractId={contractId}
-            shipmentId={shipment?.id ?? null}
-            activeTab={activeTab}
-          />
-        )}
+        <ShipmentFields
+          values={form.values}
+          setField={form.setField}
+          fieldStatuses={form.fieldStatuses}
+          customers={form.customers}
+          isEditing={shipment != null}
+          costLineRows={form.costLineRows}
+          contractId={contractId}
+          shipmentId={shipment?.id ?? null}
+          activeTab={activeTab}
+          isReadOnly={isViewing}
+        />
       </section>
     </FormDialog>
   );

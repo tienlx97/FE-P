@@ -42,12 +42,9 @@ import {
 } from '../config/shipments-table.js';
 import { useContractsQuery } from '../hooks/use-contracts-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
-import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
 import { useShipmentsListQuery } from '../hooks/use-shipments-list-query.js';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
-import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
-import { ShipmentVgmFormDialog } from './shipment-vgm-form-dialog.jsx';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -74,12 +71,6 @@ export function ShipmentsList() {
       null
     ),
   );
-  const [vgmDialog, setVgmDialog] = useState(
-    /** @type {{ contractId: string, shipmentId: string, vgm?: import('../types/index.js').ShipmentVgm } | null} */ (
-      null
-    ),
-  );
-
   const shipmentsQuery = useShipmentsListQuery({
     page: pageIndex,
     pageSize,
@@ -114,18 +105,6 @@ export function ShipmentsList() {
         ),
       ),
     [customersQuery.data],
-  );
-
-  const costCategoriesQuery = useShipmentCostCategoriesQuery();
-  const costCategoriesById = useMemo(
-    () =>
-      new Map(
-        (costCategoriesQuery.data?.success
-          ? costCategoriesQuery.data.costCategories
-          : []
-        ).map((costCategory) => [costCategory.id, costCategory]),
-      ),
-    [costCategoriesQuery.data],
   );
 
   const searchableShipments = shipments.map((shipment) => {
@@ -366,51 +345,7 @@ export function ShipmentsList() {
           contract={shipmentDialog.contract}
           initialMode={shipmentDialog.mode}
           shipment={selectedShipment}
-          viewContent={
-            selectedShipment
-              ? (tab) => (
-                  <ShipmentExpandedDetails
-                    activeTab={tab}
-                    contractId={selectedShipment.contractId}
-                    shipment={selectedShipment}
-                    supplierName={
-                      customersById.get(selectedShipment.supplierCustomerId)
-                        ?.companyName ?? ''
-                    }
-                    customersById={customersById}
-                    costCategoriesById={costCategoriesById}
-                    onAddVgm={() =>
-                      setVgmDialog({
-                        contractId: selectedShipment.contractId,
-                        shipmentId: selectedShipment.id,
-                      })
-                    }
-                    onEditVgm={(vgm) =>
-                      setVgmDialog({
-                        contractId: selectedShipment.contractId,
-                        shipmentId: selectedShipment.id,
-                        vgm,
-                      })
-                    }
-                  />
-                )
-              : null
-          }
           onSuccess={() => setShipmentDialog(null)}
-        />
-      ) : null}
-
-      {vgmDialog ? (
-        <ShipmentVgmFormDialog
-          key={vgmDialog.vgm?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setVgmDialog(null);
-          }}
-          contractId={vgmDialog.contractId}
-          shipmentId={vgmDialog.shipmentId}
-          vgm={vgmDialog.vgm}
-          onSuccess={() => setVgmDialog(null)}
         />
       ) : null}
     </VStack>

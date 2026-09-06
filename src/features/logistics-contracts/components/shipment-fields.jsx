@@ -48,6 +48,7 @@ import { ShipmentVgmSection } from './shipment-vgm-section.jsx';
  *   contractId: string,
  *   shipmentId: string | null,
  *   activeTab: string,
+ *   isReadOnly?: boolean,
  * }} props
  */
 export function ShipmentFields({
@@ -60,6 +61,7 @@ export function ShipmentFields({
   contractId,
   shipmentId,
   activeTab,
+  isReadOnly = false,
 }) {
   const derivedQuantityUnit = quantityUnitForShipmentType(values.type);
 
@@ -87,6 +89,7 @@ export function ShipmentFields({
                 setField={setField}
                 fieldStatuses={fieldStatuses}
                 customers={customers}
+                isReadOnly={isReadOnly}
               />
 
               <ShipmentLotFields
@@ -95,6 +98,7 @@ export function ShipmentFields({
                 fieldStatuses={fieldStatuses}
                 isEditing={isEditing}
                 derivedQuantityUnit={derivedQuantityUnit}
+                isReadOnly={isReadOnly}
               />
             </VStack>
           </CollapsibleGroup>
@@ -106,6 +110,7 @@ export function ShipmentFields({
               contractId={contractId}
               shipmentId={shipmentId}
               customersById={customersById}
+              isReadOnly={isReadOnly}
             />
           ) : (
             <Text color="secondary">Lưu shipment trước khi thêm VGM.</Text>
@@ -116,6 +121,7 @@ export function ShipmentFields({
           <ShipmentCostLinesFields
             rows={costLineRows.rows}
             customers={customers}
+            isReadOnly={isReadOnly}
             onAddRow={costLineRows.addRow}
             onRemoveRow={costLineRows.removeRow}
             onUpdateRowField={costLineRows.updateRowField}

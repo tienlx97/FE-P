@@ -6,6 +6,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { overlayPaddingReset } from '@astryxdesign/core/Layout';
+import { MetadataList } from '@astryxdesign/core/MetadataList';
 import { Selector } from '@astryxdesign/core/Selector';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -15,6 +16,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 
+import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
@@ -30,6 +32,11 @@ import { QuickCreateShipmentCostCategoryDialog } from './quick-create-shipment-c
 // `IconButton` beside it.
 const ADD_COST_CATEGORY_OPTION_VALUE = '__add_cost_category__';
 
+/** @param {string | null | undefined} value */
+function orDash(value) {
+  return value == null || value === '' ? '—' : value;
+}
+
 /**
  * "Thông tin chi phí logistics" grid for a Shipment — mirrors
  * `PaymentHistoryFields` (purely a controlled view over
@@ -44,6 +51,7 @@ const ADD_COST_CATEGORY_OPTION_VALUE = '__add_cost_category__';
  *   rows: import('../types/index.js').ShipmentCostLineRow[],
  *   customers: import('../types/index.js').Customer[],
  *   status?: { type: 'error' | 'success', message: string },
+ *   isReadOnly?: boolean,
  *   onAddRow: () => void,
  *   onRemoveRow: (rowKey: string) => void,
  *   onUpdateRowField: (rowKey: string, field: 'costCategoryId' | 'name' | 'amount' | 'note' | 'providerCustomerId', value: number | string | undefined) => void,
@@ -53,6 +61,7 @@ export function ShipmentCostLinesFields({
   rows,
   customers,
   status,
+  isReadOnly = false,
   onAddRow,
   onRemoveRow,
   onUpdateRowField,
@@ -65,8 +74,31 @@ export function ShipmentCostLinesFields({
   const costCategories = costCategoriesQuery.data?.success
     ? costCategoriesQuery.data.costCategories
     : [];
+  const costCategoriesById = new Map(
+    costCategories.map((costCategory) => [costCategory.id, costCategory]),
+  );
 
   const total = rows.reduce((sum, row) => sum + (row.amount ?? 0), 0);
+
+  // Live "Tổng theo nhóm chi phí" breakdown — computed from the rows
+  // currently being edited (not `shipment.costTotalsByCategory`, a
+  // server-computed snapshot), so it stays correct while editing and shown
+  // in both modes (per user request 2026-09-06, mirrors Commission's
+  // Phụ lục/Tổng cộng).
+  const totalsByCategory = Array.from(
+    rows.reduce((totals, row) => {
+      if (!row.costCategoryId) return totals;
+      totals.set(
+        row.costCategoryId,
+        (totals.get(row.costCategoryId) ?? 0) + (row.amount ?? 0),
+      );
+      return totals;
+    }, new Map()),
+  ).map(([costCategoryId, totalAmount]) => ({
+    costCategoryId,
+    costCategoryName: costCategoriesById.get(costCategoryId)?.name ?? '—',
+    totalAmount,
+  }));
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ShipmentCostLineRow & Record<string, unknown>>[]} */
   const columns = [
@@ -74,35 +106,38 @@ export function ShipmentCostLinesFields({
       key: 'costCategoryId',
       header: 'Nhóm chi phí',
       width: pixel(280),
-      renderCell: (row) => (
-        <Selector
-          label="Nhóm chi phí"
-          isLabelHidden
-          hasSearch
-          placeholder="Chọn nhóm chi phí"
-          value={row.costCategoryId}
-          onChange={(value) => {
-            if (value === ADD_COST_CATEGORY_OPTION_VALUE) {
-              setQuickCreateForRowKey(row.rowKey);
-              return;
-            }
-            onUpdateRowField(row.rowKey, 'costCategoryId', value ?? '');
-          }}
-          options={[
-            ...costCategories.map((costCategory) => ({
-              value: costCategory.id,
-              label: costCategory.name,
-            })),
-            { type: 'divider' },
-            {
-              value: ADD_COST_CATEGORY_OPTION_VALUE,
-              label: 'Thêm nhóm chi phí',
-              icon: <Icon icon={IconPlus} size="sm" />,
-            },
-          ]}
-          width="100%"
-        />
-      ),
+      renderCell: (row) =>
+        isReadOnly ? (
+          orDash(costCategoriesById.get(row.costCategoryId)?.name)
+        ) : (
+          <Selector
+            label="Nhóm chi phí"
+            isLabelHidden
+            hasSearch
+            placeholder="Chọn nhóm chi phí"
+            value={row.costCategoryId}
+            onChange={(value) => {
+              if (value === ADD_COST_CATEGORY_OPTION_VALUE) {
+                setQuickCreateForRowKey(row.rowKey);
+                return;
+              }
+              onUpdateRowField(row.rowKey, 'costCategoryId', value ?? '');
+            }}
+            options={[
+              ...costCategories.map((costCategory) => ({
+                value: costCategory.id,
+                label: costCategory.name,
+              })),
+              { type: 'divider' },
+              {
+                value: ADD_COST_CATEGORY_OPTION_VALUE,
+                label: 'Thêm nhóm chi phí',
+                icon: <Icon icon={IconPlus} size="sm" />,
+              },
+            ]}
+            width="100%"
+          />
+        ),
     },
     {
       key: 'name',
@@ -115,6 +150,7 @@ export function ShipmentCostLinesFields({
           value={row.name}
           onChange={(value) => onUpdateRowField(row.rowKey, 'name', value)}
           placeholder="Ví dụ: Phí THC, Phí D/O"
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -130,6 +166,7 @@ export function ShipmentCostLinesFields({
           onChange={(value) => onUpdateRowField(row.rowKey, 'amount', value)}
           units="đ"
           size="sm"
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -147,6 +184,7 @@ export function ShipmentCostLinesFields({
           rows={1}
           size="sm"
           width="100%"
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -154,26 +192,35 @@ export function ShipmentCostLinesFields({
       key: 'providerCustomerId',
       header: 'Nhà cung cấp',
       width: pixel(300),
-      renderCell: (row) => (
-        <Selector
-          label="Nhà cung cấp"
-          isLabelHidden
-          hasSearch
-          hasClear
-          placeholder="Chưa xác định"
-          value={row.providerCustomerId || null}
-          onChange={(value) =>
-            onUpdateRowField(row.rowKey, 'providerCustomerId', value ?? '')
-          }
-          options={customers.map((customer) => ({
-            value: customer.id,
-            label: customer.companyName,
-          }))}
-          width="100%"
-        />
-      ),
+      renderCell: (row) =>
+        isReadOnly ? (
+          orDash(
+            customers.find((customer) => customer.id === row.providerCustomerId)
+              ?.companyName,
+          )
+        ) : (
+          <Selector
+            label="Nhà cung cấp"
+            isLabelHidden
+            hasSearch
+            hasClear
+            placeholder="Chưa xác định"
+            value={row.providerCustomerId || null}
+            onChange={(value) =>
+              onUpdateRowField(row.rowKey, 'providerCustomerId', value ?? '')
+            }
+            options={customers.map((customer) => ({
+              value: customer.id,
+              label: customer.companyName,
+            }))}
+            width="100%"
+          />
+        ),
     },
-    {
+  ];
+
+  if (!isReadOnly) {
+    columns.push({
       key: 'actions',
       header: '',
       width: pixel(48),
@@ -188,8 +235,8 @@ export function ShipmentCostLinesFields({
           onClick={() => onRemoveRow(row.rowKey)}
         />
       ),
-    },
-  ];
+    });
+  }
 
   return (
     <VStack
@@ -198,13 +245,17 @@ export function ShipmentCostLinesFields({
       {...stylex.props(overlayPaddingReset.reset)}
     >
       <HStack hAlign="between" vAlign="center">
-        <Button
-          label="Thêm chi phí"
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={onAddRow}
-        />
+        {isReadOnly ? (
+          <Text weight="semibold">Thông tin chi phí logistics</Text>
+        ) : (
+          <Button
+            label="Thêm chi phí"
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onAddRow}
+          />
+        )}
         {rows.length > 0 ? (
           <Text weight="semibold">Tổng chi phí: {formatMoney(total)} đ</Text>
         ) : null}
@@ -213,13 +264,32 @@ export function ShipmentCostLinesFields({
       {rows.length === 0 ? (
         <Text color="secondary">Chưa có khoản chi phí nào</Text>
       ) : (
-        <Table
-          data={rows}
-          columns={columns}
-          idKey="rowKey"
-          density="compact"
-          dividers="grid"
-        />
+        <>
+          <Table
+            data={rows}
+            columns={columns}
+            idKey="rowKey"
+            density="compact"
+            dividers="grid"
+          />
+
+          {totalsByCategory.length > 0 ? (
+            <MetadataList
+              title={<Text weight="semibold">Tổng theo nhóm chi phí</Text>}
+              columns={2}
+              label={{ position: 'top' }}
+            >
+              {totalsByCategory.map((categoryTotal) => (
+                <MetadataListItem
+                  key={categoryTotal.costCategoryId}
+                  label={categoryTotal.costCategoryName}
+                >
+                  {formatMoney(categoryTotal.totalAmount)} đ
+                </MetadataListItem>
+              ))}
+            </MetadataList>
+          ) : null}
+        </>
       )}
 
       {status ? (
