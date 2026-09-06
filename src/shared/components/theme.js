@@ -137,5 +137,33 @@ export const ktxnkTheme = defineTheme({
         },
       },
     },
+    // Astryx ships a `disabled` state (dimmed/reduced-opacity) for every
+    // text-like input, but no default visual at all for `readonly` — a
+    // read-only TextInput renders pixel-identical to an empty editable one.
+    // Once view-mode forms (Commission/Shipment/Contract) started reusing
+    // native `isReadOnly` side-by-side with real `isDisabled` fields (e.g. a
+    // locked "Loại hình" Selector next to a read-only "Số booking"
+    // TextInput), the two states read as the same thing — per user request
+    // (2026-09-07), give `readonly` its own tinted-but-not-dimmed
+    // background so it reads as "has a value, just not this field" instead
+    // of either plain-editable or grayed-out-disabled.
+    'text-input': {
+      readonly: {
+        backgroundColor: 'var(--color-background-muted)',
+        borderColor: 'transparent',
+      },
+    },
+    'number-input': {
+      readonly: {
+        backgroundColor: 'var(--color-background-muted)',
+        borderColor: 'transparent',
+      },
+    },
+    textarea: {
+      readonly: {
+        backgroundColor: 'var(--color-background-muted)',
+        borderColor: 'transparent',
+      },
+    },
   },
 });
