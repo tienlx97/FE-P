@@ -18,12 +18,19 @@ import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
  * `useExtraFieldRows`'s state, same shape as `bank-accounts-fields.jsx`.
  * @param {{
  *   rows: import('../types/index.js').ExtraFieldRow[],
+ *   isReadOnly?: boolean,
  *   onAddRow: () => void,
  *   onRemoveRow: (rowKey: string) => void,
  *   onUpdateRowField: (rowKey: string, field: 'key' | 'value', value: string) => void,
  * }} props
  */
-export function ExtraFieldsEditor({ rows, onAddRow, onRemoveRow, onUpdateRowField }) {
+export function ExtraFieldsEditor({
+  rows,
+  isReadOnly = false,
+  onAddRow,
+  onRemoveRow,
+  onUpdateRowField,
+}) {
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ExtraFieldRow & Record<string, unknown>>[]} */
   const columns = [
     {
@@ -37,6 +44,7 @@ export function ExtraFieldsEditor({ rows, onAddRow, onRemoveRow, onUpdateRowFiel
           value={row.key}
           onChange={(value) => onUpdateRowField(row.rowKey, 'key', value)}
           placeholder="Ví dụ: Mã số thuế"
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -50,10 +58,14 @@ export function ExtraFieldsEditor({ rows, onAddRow, onRemoveRow, onUpdateRowFiel
           isLabelHidden
           value={row.value}
           onChange={(value) => onUpdateRowField(row.rowKey, 'value', value)}
+          isReadOnly={isReadOnly}
         />
       ),
     },
-    {
+  ];
+
+  if (!isReadOnly) {
+    columns.push({
       key: 'actions',
       header: '',
       width: pixel(48),
@@ -68,8 +80,8 @@ export function ExtraFieldsEditor({ rows, onAddRow, onRemoveRow, onUpdateRowFiel
           onClick={() => onRemoveRow(row.rowKey)}
         />
       ),
-    },
-  ];
+    });
+  }
 
   return (
     <VStack gap={2} hAlign="stretch">
@@ -83,9 +95,17 @@ export function ExtraFieldsEditor({ rows, onAddRow, onRemoveRow, onUpdateRowFiel
         <Text color="secondary">Chưa có trường tùy ý nào.</Text>
       )}
 
-      <HStack gap={2}>
-        <Button label="Thêm trường" type="button" variant="secondary" size="sm" onClick={onAddRow} />
-      </HStack>
+      {isReadOnly ? null : (
+        <HStack gap={2}>
+          <Button
+            label="Thêm trường"
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onAddRow}
+          />
+        </HStack>
+      )}
     </VStack>
   );
 }

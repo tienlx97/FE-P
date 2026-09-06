@@ -35,6 +35,7 @@ const styles = stylex.create({
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   showCompanyName?: boolean,
  *   isCollapsible?: boolean,
+ *   isReadOnly?: boolean,
  * }} props
  */
 export function CustomerFields({
@@ -44,12 +45,13 @@ export function CustomerFields({
   extraFieldRows,
   showCompanyName = true,
   isCollapsible = false,
+  isReadOnly = false,
 }) {
   const detailsId = useId();
   const disclosure = useCollapsible({
     isCollapsible: isCollapsible ? { defaultIsOpen: false } : false,
   });
-  const areDetailsShown = !isCollapsible || disclosure.isOpen;
+  const areDetailsShown = isReadOnly || !isCollapsible || disclosure.isOpen;
 
   const detailFields = (
     <VStack gap={3} hAlign="stretch" id={isCollapsible ? detailsId : undefined}>
@@ -59,6 +61,7 @@ export function CustomerFields({
             label="Người đại diện"
             value={values.representativeName}
             onChange={(value) => setField('representativeName', value)}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
         <StackItem size="fill">
@@ -66,6 +69,7 @@ export function CustomerFields({
             label="Chức vụ"
             value={values.representativeTitle}
             onChange={(value) => setField('representativeTitle', value)}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
       </FormGrid>
@@ -74,10 +78,12 @@ export function CustomerFields({
         label="Địa chỉ"
         value={values.address}
         onChange={(value) => setField('address', value)}
+        isReadOnly={isReadOnly}
       />
 
       <ExtraFieldsEditor
         rows={extraFieldRows.rows}
+        isReadOnly={isReadOnly}
         onAddRow={extraFieldRows.addRow}
         onRemoveRow={extraFieldRows.removeRow}
         onUpdateRowField={extraFieldRows.updateRowField}
@@ -95,10 +101,11 @@ export function CustomerFields({
           isRequired
           status={fieldStatuses.companyName}
           statusVariant="tooltip"
+          isReadOnly={isReadOnly}
         />
       ) : null}
 
-      {isCollapsible ? (
+      {isCollapsible && !isReadOnly ? (
         <Button
           label={
             disclosure.isOpen

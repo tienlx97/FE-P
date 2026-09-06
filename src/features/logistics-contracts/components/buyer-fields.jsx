@@ -36,6 +36,7 @@ import { QuickCreateCustomerDialog } from './quick-create-customer-dialog.jsx';
  *   onSwitchToInline: () => void,
  *   onInlineFieldChange: (field: keyof import('../types/index.js').CustomerFormValues, value: string) => void,
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
+ *   isReadOnly?: boolean,
  * }} props
  */
 export function BuyerFields({
@@ -48,12 +49,32 @@ export function BuyerFields({
   onSwitchToInline,
   onInlineFieldChange,
   extraFieldRows,
+  isReadOnly = false,
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
   const selectedCustomer = customers.find(
     (customer) => customer.id === sourceCustomerId,
   );
+
+  if (isReadOnly) {
+    return (
+      <VStack gap={3} hAlign="stretch">
+        <Text type="supporting" color="secondary">
+          Tên công ty:{' '}
+          {selectedCustomer?.companyName || inlineValues.companyName}
+        </Text>
+        <CustomerFields
+          values={inlineValues}
+          setField={onInlineFieldChange}
+          fieldStatuses={fieldStatuses}
+          extraFieldRows={extraFieldRows}
+          showCompanyName={false}
+          isReadOnly
+        />
+      </VStack>
+    );
+  }
 
   return (
     <VStack gap={3} hAlign="stretch">

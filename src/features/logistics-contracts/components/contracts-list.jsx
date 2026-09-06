@@ -457,6 +457,12 @@ export function ContractsList() {
           initialMode={workspace.mode}
           activeTab={expandedTab}
           onActiveTabChange={setExpandedTab}
+          onAddAnnex={() =>
+            contract && setAnnexDialog({ contractId: contract.id })
+          }
+          onEditAnnex={(annex) =>
+            contract && setAnnexDialog({ contractId: contract.id, annex })
+          }
           onSuccess={(saved) => {
             setExpandedTab('info');
             setWorkspace({ contract: saved, revision: workspace.revision + 1 });
@@ -465,15 +471,9 @@ export function ContractsList() {
           {contract ? (
             <ContractExpandedDetails
               contract={contract}
-              banksById={banksById}
-              countriesById={countriesById}
               customersById={customersById}
               costCategoriesById={costCategoriesById}
               activeTab={expandedTab}
-              onAddAnnex={() => setAnnexDialog({ contractId: contract.id })}
-              onEditAnnex={(annex) =>
-                setAnnexDialog({ contractId: contract.id, annex })
-              }
               onAddPaymentSchedule={() =>
                 setPaymentScheduleDialog({ contractId: contract.id })
               }

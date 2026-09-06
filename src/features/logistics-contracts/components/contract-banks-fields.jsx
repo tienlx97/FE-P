@@ -5,6 +5,7 @@ import { CheckboxList, CheckboxListItem } from '@astryxdesign/core/CheckboxList'
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { List, ListItem } from '@astryxdesign/core/List';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
@@ -22,10 +23,46 @@ import { QuickCreateBankDialog } from './quick-create-bank-dialog.jsx';
  *   selectedBankIds: string[],
  *   onChange: (bankIds: string[]) => void,
  *   status?: { type: 'error' | 'success', message: string },
+ *   isReadOnly?: boolean,
  * }} props
  */
-export function ContractBanksFields({ banks, selectedBankIds, onChange, status }) {
+export function ContractBanksFields({
+  banks,
+  selectedBankIds,
+  onChange,
+  status,
+  isReadOnly = false,
+}) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+
+  if (isReadOnly) {
+    const banksById = new Map(banks.map((bank) => [bank.id, bank]));
+    const selectedBanks = selectedBankIds
+      .map((bankId) => banksById.get(bankId))
+      .filter(
+        /** @returns {bank is import('../types/index.js').ContractBank} */ (
+          bank,
+        ) => bank != null,
+      );
+
+    return selectedBanks.length === 0 ? (
+      <Text color="secondary">Chưa có ngân hàng thụ hưởng</Text>
+    ) : (
+      <List hasDividers density="compact">
+        {selectedBanks.map((bank) => (
+          <ListItem
+            key={bank.id}
+            label={bank.bankName || 'Ngân hàng chưa đặt tên'}
+            description={
+              [bank.beneficiary, bank.bankAccountNumber, bank.branchName]
+                .filter(Boolean)
+                .join(' · ') || undefined
+            }
+          />
+        ))}
+      </List>
+    );
+  }
 
   return (
     <VStack gap={3} hAlign="stretch">

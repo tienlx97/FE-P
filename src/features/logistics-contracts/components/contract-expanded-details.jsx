@@ -16,18 +16,15 @@ import { useMemo, useState } from 'react';
 
 import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
 
-import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
 import { useCommissionAnnexesQuery } from '../hooks/use-commission-annexes-query.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
-import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { ContractCommissionTab } from './contract-commission-tab.jsx';
-import { ContractInfoTab } from './contract-info-tab.jsx';
 import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 
 /** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission'} ExpandedTab */
@@ -35,20 +32,6 @@ import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 /** @param {string | null | undefined} value */
 function orDash(value) {
   return value == null || value === '' ? '—' : value;
-}
-
-/**
- * Signed amount label for one contract-annex row — `ValueChange` never
- * represents an amount change, so it gets no sign (same sign convention as
- * `commissions-list.jsx`'s `annexAmountLabel`).
- * @param {import('../types/index.js').ContractAnnex} annex
- * @param {string} currency
- */
-function contractAnnexAmountLabel(annex, currency) {
-  const formatted = formatMoney(annex.amount, currency);
-  if (annex.type === 'AmountIncrease') return `+ ${formatted}`;
-  if (annex.type === 'AmountDecrease') return `− ${formatted}`;
-  return formatted;
 }
 
 /**
@@ -61,13 +44,9 @@ function contractAnnexAmountLabel(annex, currency) {
  * itself.
  * @param {object} props
  * @param {import('../types/index.js').Contract} props.contract
- * @param {Map<string, import('../types/index.js').ContractBank>} props.banksById
- * @param {Map<string, import('../types/index.js').Country>} props.countriesById
  * @param {Map<string, import('../types/index.js').Customer>} props.customersById
  * @param {Map<string, import('../types/index.js').ShipmentCostCategory>} props.costCategoriesById
  * @param {ExpandedTab} props.activeTab
- * @param {() => void} props.onAddAnnex
- * @param {(annex: import('../types/index.js').ContractAnnex) => void} props.onEditAnnex
  * @param {() => void} props.onAddPaymentSchedule
  * @param {(schedule: import('../types/index.js').PaymentSchedule) => void} props.onEditPaymentSchedule
  * @param {() => void} props.onAddShipment
@@ -81,13 +60,9 @@ function contractAnnexAmountLabel(annex, currency) {
  */
 export function ContractExpandedDetails({
   contract,
-  banksById,
-  countriesById,
   customersById,
   costCategoriesById,
   activeTab,
-  onAddAnnex,
-  onEditAnnex,
   onAddPaymentSchedule,
   onEditPaymentSchedule,
   onAddShipment,
@@ -103,19 +78,6 @@ export function ContractExpandedDetails({
     /** @type {string | null} */ (null),
   );
 
-  const annexesQuery = useContractAnnexesQuery(contract.id);
-  const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
-
-  // "Tổng cộng" = the contract's own `contractValue` plus every annex's
-  // `amount`, signed by its `type` — same rollup as the Commission
-  // tab's `commissionGrandTotal` below.
-  const contractAnnexesTotal = annexes.reduce((total, annex) => {
-    if (annex.type === 'AmountIncrease') return total + annex.amount;
-    if (annex.type === 'AmountDecrease') return total - annex.amount;
-    return total;
-  }, 0);
-  const contractGrandTotal = contract.contractValue + contractAnnexesTotal;
-
   const isFullySigned = contract.sellerSigned && contract.buyerSigned;
   const paymentSchedulesQuery = usePaymentSchedulesQuery(contract.id);
   const paymentSchedules = paymentSchedulesQuery.data?.success
@@ -126,85 +88,6 @@ export function ContractExpandedDetails({
   const shipments = shipmentsQuery.data?.success
     ? shipmentsQuery.data.shipments
     : [];
-
-  const paymentTermRows = contract.paymentTerms.map((term, index) => ({
-    ...term,
-    orderLabel: `Đợt ${index + 1}`,
-  }));
-
-  /** @type {import('@astryxdesign/core/Table').TableColumn<(typeof paymentTermRows)[number]>[]} */
-  const paymentTermColumns = [
-    {
-      key: 'orderLabel',
-      header: 'Đợt',
-      width: pixel(80),
-      renderCell: (term) => term.orderLabel,
-    },
-    {
-      key: 'paymentRatioPercent',
-      header: 'Tỷ lệ',
-      width: pixel(100),
-      align: 'end',
-      renderCell: (term) => `${term.paymentRatioPercent}%`,
-    },
-    {
-      key: 'paymentCondition',
-      header: 'Điều kiện thanh toán',
-      width: proportional(1),
-      renderCell: (term) => orDash(term.paymentCondition),
-    },
-  ];
-
-  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ContractAnnex & Record<string, unknown>>[]} */
-  const annexColumns = [
-    {
-      key: 'annexCode',
-      header: 'Mã phụ lục',
-      width: proportional(1.2),
-      renderCell: (annex) =>
-        `${annex.annexCode} · ${labelForContractAnnexType(annex.type)}`,
-    },
-    {
-      key: 'signedDate',
-      header: 'Ngày ký',
-      width: pixel(120),
-      renderCell: (annex) => annex.signedDate,
-    },
-    {
-      key: 'buyerSigned',
-      header: 'Mua ký',
-      width: pixel(90),
-      renderCell: (annex) => (annex.buyerSigned ? 'Đã ký' : 'Chưa ký'),
-    },
-    {
-      key: 'sellerSigned',
-      header: 'Bán ký',
-      width: pixel(90),
-      renderCell: (annex) => (annex.sellerSigned ? 'Đã ký' : 'Chưa ký'),
-    },
-    {
-      key: 'amount',
-      header: 'Số tiền',
-      width: pixel(140),
-      align: 'end',
-      renderCell: (annex) => contractAnnexAmountLabel(annex, contract.currency),
-    },
-    {
-      key: 'actions',
-      header: '',
-      width: pixel(60),
-      renderCell: (annex) => (
-        <IconButton
-          label={`Sửa ${annex.annexCode}`}
-          tooltip="Sửa phụ lục"
-          icon={<Icon icon={Pencil} size="sm" />}
-          variant="ghost"
-          size="sm"
-          onClick={() => onEditAnnex(annex)}
-        />
-      ),
-    },
-  ];
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').PaymentSchedule & Record<string, unknown>>[]} */
   const paymentScheduleColumns = [
@@ -397,20 +280,6 @@ export function ContractExpandedDetails({
 
   return (
     <VStack gap={4} hAlign="stretch">
-      {activeTab === 'info' && (
-        <ContractInfoTab
-          contract={contract}
-          banksById={banksById}
-          countriesById={countriesById}
-          onAddAnnex={onAddAnnex}
-          annexes={annexes}
-          contractGrandTotal={contractGrandTotal}
-          paymentTermRows={paymentTermRows}
-          paymentTermColumns={paymentTermColumns}
-          annexColumns={annexColumns}
-        />
-      )}
-
       {activeTab === 'paymentSchedule' && (
         <VStack gap={4} hAlign="stretch">
           {/* Requires the contract to be fully signed to create; the

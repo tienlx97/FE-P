@@ -33,7 +33,12 @@ const TAB_LABELS = {
 };
 
 /**
- * One fullscreen workspace for creation, inspection and editing.
+ * One fullscreen workspace for creation, inspection and editing. Xem and
+ * Sửa share the same "Thông tin" tab layout — only `isReadOnly` differs per
+ * field (mirrors `CommissionFormDialog`/`ShipmentFormDialog`); the other 3
+ * tabs (Lịch sử thanh toán/Shipment/Commission) have no edit mode of their
+ * own in this dialog — each row there is edited via its own `*FormDialog` —
+ * so they always render `children` regardless of `isEditing`.
  * @param {{
  *   isOpen: boolean,
  *   initialMode?: 'view' | 'edit',
@@ -42,6 +47,8 @@ const TAB_LABELS = {
  *   onSuccess: (contract: import('../types/index.js').Contract) => void,
  *   activeTab: 'info' | 'paymentSchedule' | 'shipment' | 'commission',
  *   onActiveTabChange: (tab: 'info' | 'paymentSchedule' | 'shipment' | 'commission') => void,
+ *   onAddAnnex?: () => void,
+ *   onEditAnnex?: (annex: import('../types/index.js').ContractAnnex) => void,
  *   children?: import('react').ReactNode,
  * }} props
  */
@@ -53,6 +60,8 @@ export function ContractFormDialog({
   onSuccess,
   activeTab,
   onActiveTabChange,
+  onAddAnnex,
+  onEditAnnex,
   children,
 }) {
   const [isEditing, setIsEditing] = useState(
@@ -160,14 +169,13 @@ export function ContractFormDialog({
                     container="card"
                   />
                 ) : null}
-                {isEditing ? (
+                {activeTab === 'info' ? (
                   <form
                     id={formId}
                     onSubmit={(event) => {
                       event.currentTarget.scrollIntoView({ block: 'start' });
                       handleSubmit(event);
                     }}
-                    hidden={!isEditing || activeTab !== 'info'}
                   >
                     <VStack gap={4} hAlign="stretch">
                       {submitError ? (
@@ -182,7 +190,13 @@ export function ContractFormDialog({
                         defaultValue={['general', 'paymentTerms', 'banks']}
                       >
                         <VStack gap={3} hAlign="stretch">
-                          <ContractGeneralFields form={form} />
+                          <ContractGeneralFields
+                            form={form}
+                            contract={contract}
+                            isReadOnly={!isEditing}
+                            onAddAnnex={onAddAnnex}
+                            onEditAnnex={onEditAnnex}
+                          />
 
                           <FormSection
                             value="paymentTerms"
@@ -195,6 +209,7 @@ export function ContractFormDialog({
                               status={fieldStatuses.paymentTerms}
                               contractValue={values.contractValue}
                               currency={values.currency}
+                              isReadOnly={!isEditing}
                               onAddRow={paymentTermRows.addRow}
                               onRemoveRow={paymentTermRows.removeRow}
                               onUpdateRowField={paymentTermRows.updateRowField}
@@ -211,14 +226,16 @@ export function ContractFormDialog({
                               selectedBankIds={values.bankIds}
                               onChange={setBankIds}
                               status={fieldStatuses.bankIds}
+                              isReadOnly={!isEditing}
                             />
                           </FormSection>
                         </VStack>
                       </CollapsibleGroup>
                     </VStack>
                   </form>
-                ) : null}
-                {!isEditing || activeTab !== 'info' ? children : null}
+                ) : (
+                  children
+                )}
               </section>
             </LayoutContent>
           }

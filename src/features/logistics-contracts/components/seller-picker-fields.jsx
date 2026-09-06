@@ -32,6 +32,7 @@ import { SellerFields } from './seller-fields.jsx';
  *   onSwitchToInline: () => void,
  *   onInlineFieldChange: (field: keyof import('../types/index.js').SellerFormValues, value: string) => void,
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
+ *   isReadOnly?: boolean,
  * }} props
  */
 export function SellerPickerFields({
@@ -44,12 +45,31 @@ export function SellerPickerFields({
   onSwitchToInline,
   onInlineFieldChange,
   extraFieldRows,
+  isReadOnly = false,
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
   const selectedSeller = sellers.find(
     (seller) => seller.id === sourceSellerId,
   );
+
+  if (isReadOnly) {
+    return (
+      <VStack gap={3} hAlign="stretch">
+        <Text type="supporting" color="secondary">
+          Tên công ty: {selectedSeller?.companyName || inlineValues.companyName}
+        </Text>
+        <SellerFields
+          values={inlineValues}
+          setField={onInlineFieldChange}
+          fieldStatuses={fieldStatuses}
+          extraFieldRows={extraFieldRows}
+          showCompanyName={false}
+          isReadOnly
+        />
+      </VStack>
+    );
+  }
 
   return (
     <VStack gap={3} hAlign="stretch">
