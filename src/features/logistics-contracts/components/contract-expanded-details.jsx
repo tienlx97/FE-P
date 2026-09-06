@@ -1,6 +1,5 @@
 'use client';
 import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -10,21 +9,14 @@ import {
   Table,
   useTableRowExpansion,
 } from '@astryxdesign/core/Table';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Heading, Text } from '@astryxdesign/core/Text';
-import { Token } from '@astryxdesign/core/Token';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import * as stylex from '@stylexjs/stylex';
-import { FileText, Pencil, Plus, Printer, Trash2 } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import {
-  createRowExpansionInteractionPlugin,
-  expandableRowStyles,
-} from '@/shared/components/expandable-row-styles.jsx';
+import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
 
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
-import { labelForContractType } from '../config/contract-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
@@ -59,21 +51,6 @@ function contractAnnexAmountLabel(annex, currency) {
   return formatted;
 }
 
-const styles = stylex.create({
-  projectNameHeading: {
-    textTransform: 'uppercase',
-  },
-});
-
-// Caps each tab's content in the expanded row to its own scroll area (same
-// idiom as `ContractFormDialog`'s fixed-height inner `VStack`) so the
-// action bar below it (Sửa hợp đồng/Xoá/...) stays put right under the
-// tabs instead of sliding to the bottom of whatever the longest tab's
-// content happens to be — per user report (2026-09-04): the "Thông tin"
-// tab in particular is long enough that reaching those buttons meant a
-// lot of scrolling.
-const EXPANDED_TAB_CONTENT_HEIGHT = 520;
-
 /**
  * All dialogs opened from within this component's own tabs (Shipment,
  * Payment Schedule, Annex, Commission, VGM) are deliberately owned
@@ -84,13 +61,11 @@ const EXPANDED_TAB_CONTENT_HEIGHT = 520;
  * itself.
  * @param {object} props
  * @param {import('../types/index.js').Contract} props.contract
- * @param {(contract: import('../types/index.js').Contract) => void} props.onEdit
  * @param {Map<string, import('../types/index.js').ContractBank>} props.banksById
  * @param {Map<string, import('../types/index.js').Country>} props.countriesById
  * @param {Map<string, import('../types/index.js').Customer>} props.customersById
  * @param {Map<string, import('../types/index.js').ShipmentCostCategory>} props.costCategoriesById
  * @param {ExpandedTab} props.activeTab
- * @param {(tab: ExpandedTab) => void} props.onActiveTabChange
  * @param {() => void} props.onAddAnnex
  * @param {(annex: import('../types/index.js').ContractAnnex) => void} props.onEditAnnex
  * @param {() => void} props.onAddPaymentSchedule
@@ -106,13 +81,11 @@ const EXPANDED_TAB_CONTENT_HEIGHT = 520;
  */
 export function ContractExpandedDetails({
   contract,
-  onEdit,
   banksById,
   countriesById,
   customersById,
   costCategoriesById,
   activeTab,
-  onActiveTabChange,
   onAddAnnex,
   onEditAnnex,
   onAddPaymentSchedule,
@@ -423,164 +396,121 @@ export function ContractExpandedDetails({
     : 0;
 
   return (
-    <VStack gap={4} hAlign="stretch" xstyle={expandableRowStyles.expandedPanel}>
-      <HStack hAlign="between" vAlign="start" gap={4} wrap="wrap">
-        <HStack gap={3} vAlign="center">
-          <HStack
-            vAlign="center"
-            hAlign="center"
-            xstyle={expandableRowStyles.expandedIcon}
-          >
-            <Icon icon={FileText} size="md" />
-          </HStack>
-          <VStack gap={1}>
-            <Heading level={3} xstyle={styles.projectNameHeading}>
-              {contract.projectName}
-            </Heading>
-            <Text color="secondary">
-              {contract.contractNumber} · {contract.buyer.companyName}
-            </Text>
-          </VStack>
-        </HStack>
-        <HStack gap={2} vAlign="center" wrap="wrap">
-          <Token
-            label={labelForContractType(contract.contractType)}
-            color={contract.contractType === 'Official' ? 'green' : 'orange'}
-            size="sm"
-          />
-          <Token
-            label={`${contract.incoterm} ${contract.incotermYear}`}
-            color="blue"
-            size="sm"
-          />
-          {contract.currency && (
-            <Token label={contract.currency} color="gray" size="sm" />
-          )}
-        </HStack>
-      </HStack>
+    <VStack gap={4} hAlign="stretch">
+      {activeTab === 'info' && (
+        <ContractInfoTab
+          contract={contract}
+          banksById={banksById}
+          countriesById={countriesById}
+          onAddAnnex={onAddAnnex}
+          annexes={annexes}
+          contractGrandTotal={contractGrandTotal}
+          paymentTermRows={paymentTermRows}
+          paymentTermColumns={paymentTermColumns}
+          annexColumns={annexColumns}
+        />
+      )}
 
-      <TabList
-        value={activeTab}
-        onChange={(value) =>
-          onActiveTabChange(/** @type {ExpandedTab} */ (value))
-        }
-        hasDivider
-        size="sm"
-      >
-        <Tab value="info" label="Thông tin" />
-        <Tab value="paymentSchedule" label="Lịch sử thanh toán" />
-        <Tab value="shipment" label="Shipment" />
-        <Tab value="commission" label="Commission" />
-      </TabList>
-
-      <VStack
-        gap={4}
-        hAlign="stretch"
-        height={EXPANDED_TAB_CONTENT_HEIGHT}
-        isScrollable
-      >
-        {activeTab === 'info' && (
-          <ContractInfoTab
-            contract={contract}
-            banksById={banksById}
-            countriesById={countriesById}
-            onAddAnnex={onAddAnnex}
-            annexes={annexes}
-            contractGrandTotal={contractGrandTotal}
-            paymentTermRows={paymentTermRows}
-            paymentTermColumns={paymentTermColumns}
-            annexColumns={annexColumns}
-          />
-        )}
-
-        {activeTab === 'paymentSchedule' && (
-          <VStack gap={4} hAlign="stretch">
-            {/* Requires the contract to be fully signed to create; the
+      {activeTab === 'paymentSchedule' && (
+        <VStack gap={4} hAlign="stretch">
+          {/* Requires the contract to be fully signed to create; the
               backend also enforces this (`400` otherwise), the disabled
               button + tooltip here is just the UX-level mirror of that
               rule. */}
-            <HStack hAlign="between" vAlign="center">
-              <Text weight="semibold">Lịch sử thanh toán</Text>
-              <Button
-                label="Thêm đợt thanh toán"
-                variant="secondary"
-                size="sm"
-                icon={<Icon icon={Plus} />}
-                isDisabled={!isFullySigned}
-                tooltip={
-                  isFullySigned
-                    ? undefined
-                    : 'Hợp đồng phải được cả 2 bên ký trước khi thêm đợt thanh toán'
-                }
-                onClick={onAddPaymentSchedule}
-              />
-            </HStack>
-
-            {paymentSchedules.length === 0 ? (
-              <Text color="secondary">Chưa có đợt thanh toán</Text>
-            ) : (
-              <Table
-                columns={paymentScheduleColumns}
-                data={paymentSchedules}
-                idKey="id"
-                dividers="rows"
-                density="compact"
-              />
-            )}
-          </VStack>
-        )}
-
-        {activeTab === 'shipment' && (
-          <VStack gap={4} hAlign="stretch">
-            <HStack hAlign="between" vAlign="center">
-              <Text weight="semibold">Shipment</Text>
-              <Button
-                label="Thêm Shipment"
-                variant="secondary"
-                size="sm"
-                icon={<Icon icon={Plus} />}
-                onClick={onAddShipment}
-              />
-            </HStack>
-
-            {shipments.length === 0 ? (
-              <Text color="secondary">Chưa có Shipment nào</Text>
-            ) : (
-              <Table
-                columns={shipmentColumns}
-                data={shipments}
-                idKey="id"
-                dividers="rows"
-                density="compact"
-                plugins={{
-                  expansion: shipmentExpansionPlugin,
-                  rowInteraction: shipmentRowInteractionPlugin,
-                }}
-              />
-            )}
-          </VStack>
-        )}
-
-        {activeTab === 'commission' && !commission && (
-          <VStack gap={4} hAlign="stretch" vAlign="center">
-            <Text color="secondary">Hợp đồng chưa có Commission</Text>
+          <HStack hAlign="between" vAlign="center">
+            <Text weight="semibold">Lịch sử thanh toán</Text>
             <Button
-              label="Tạo Commission"
+              label="Thêm đợt thanh toán"
               variant="secondary"
               size="sm"
               icon={<Icon icon={Plus} />}
-              onClick={() =>
-                onOpenCommission({
-                  contractId: contract.id,
-                  currency: contract.currency,
-                  commission: null,
-                })
+              isDisabled={!isFullySigned}
+              tooltip={
+                isFullySigned
+                  ? undefined
+                  : 'Hợp đồng phải được cả 2 bên ký trước khi thêm đợt thanh toán'
               }
+              onClick={onAddPaymentSchedule}
             />
-          </VStack>
-        )}
+          </HStack>
 
-        {activeTab === 'commission' && commission && (
+          {paymentSchedules.length === 0 ? (
+            <Text color="secondary">Chưa có đợt thanh toán</Text>
+          ) : (
+            <Table
+              columns={paymentScheduleColumns}
+              data={paymentSchedules}
+              idKey="id"
+              dividers="rows"
+              density="compact"
+            />
+          )}
+        </VStack>
+      )}
+
+      {activeTab === 'shipment' && (
+        <VStack gap={4} hAlign="stretch">
+          <HStack hAlign="between" vAlign="center">
+            <Text weight="semibold">Shipment</Text>
+            <Button
+              label="Thêm Shipment"
+              variant="secondary"
+              size="sm"
+              icon={<Icon icon={Plus} />}
+              onClick={onAddShipment}
+            />
+          </HStack>
+
+          {shipments.length === 0 ? (
+            <Text color="secondary">Chưa có Shipment nào</Text>
+          ) : (
+            <Table
+              columns={shipmentColumns}
+              data={shipments}
+              idKey="id"
+              dividers="rows"
+              density="compact"
+              plugins={{
+                expansion: shipmentExpansionPlugin,
+                rowInteraction: shipmentRowInteractionPlugin,
+              }}
+            />
+          )}
+        </VStack>
+      )}
+
+      {activeTab === 'commission' && !commission && (
+        <VStack gap={4} hAlign="stretch" vAlign="center">
+          <Text color="secondary">Hợp đồng chưa có Commission</Text>
+          <Button
+            label="Tạo Commission"
+            variant="secondary"
+            size="sm"
+            icon={<Icon icon={Plus} />}
+            onClick={() =>
+              onOpenCommission({
+                contractId: contract.id,
+                currency: contract.currency,
+                commission: null,
+              })
+            }
+          />
+        </VStack>
+      )}
+
+      {activeTab === 'commission' && commission && (
+        <VStack gap={4} hAlign="stretch">
+          <Button
+            label="Sửa Commission"
+            variant="secondary"
+            onClick={() =>
+              onOpenCommission({
+                contractId: contract.id,
+                currency: contract.currency,
+                commission,
+              })
+            }
+          />
           <ContractCommissionTab
             contract={contract}
             customersById={customersById}
@@ -591,51 +521,8 @@ export function ContractExpandedDetails({
             commissionAnnexes={commissionAnnexes}
             commissionGrandTotal={commissionGrandTotal}
           />
-        )}
-      </VStack>
-
-      <Divider />
-
-      <HStack hAlign="between" vAlign="center">
-        <Button
-          label="Xoá"
-          variant="ghost"
-          size="sm"
-          icon={<Icon icon={Trash2} />}
-          isDisabled
-          tooltip="Chưa hỗ trợ"
-        />
-        <HStack gap={2}>
-          <Button
-            label={hasCommission ? 'Sửa Commission' : 'Tạo Commission'}
-            variant="secondary"
-            size="sm"
-            icon={<Icon icon={hasCommission ? Pencil : Plus} />}
-            onClick={() =>
-              onOpenCommission({
-                contractId: contract.id,
-                currency: contract.currency,
-                commission,
-              })
-            }
-          />
-          <Button
-            label="In"
-            variant="secondary"
-            size="sm"
-            icon={<Icon icon={Printer} />}
-            isDisabled
-            tooltip="Chưa hỗ trợ"
-          />
-          <Button
-            label="Sửa hợp đồng"
-            variant="primary"
-            size="sm"
-            icon={<Icon icon={Pencil} />}
-            onClick={() => onEdit(contract)}
-          />
-        </HStack>
-      </HStack>
+        </VStack>
+      )}
     </VStack>
   );
 }

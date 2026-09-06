@@ -152,7 +152,7 @@ function fieldStatus(message) {
  * Single hook backing both the create and edit Contract dialog — there is
  * no legacy version of this form to keep separate (unlike admin-users'
  * v1/v2 split), so one mode-aware hook is simplest.
- * @param {{ contract?: import('../types/index.js').Contract | null, onSuccess?: () => void }} [options]
+ * @param {{ contract?: import('../types/index.js').Contract | null, onSuccess?: (contract: import('../types/index.js').Contract) => void }} [options]
  */
 export function useContractForm({ contract = null, onSuccess } = {}) {
   const isEdit = Boolean(contract);
@@ -218,6 +218,14 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
       value: field.value,
     })),
   );
+
+  const draftFingerprint = JSON.stringify({
+    values,
+    paymentTerms: paymentTermRows.rows,
+    sellerExtras: sellerExtraFieldRows.rows,
+    buyerExtras: buyerExtraFieldRows.rows,
+  });
+  const [initialFingerprint] = useState(draftFingerprint);
 
   const createMutation = useCreateContractMutation();
   const updateMutation = useUpdateContractMutation();
@@ -360,6 +368,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   /** @param {import('react').FormEvent<HTMLFormElement>} event */
   async function handleSubmit(event) {
     event.preventDefault();
+    if (createMutation.isPending || updateMutation.isPending) return;
     setSubmitError('');
     setSubmitSuccess('');
 
@@ -382,6 +391,9 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
         }
       }
       setFieldErrors(nextFieldErrors);
+      setSubmitError(
+        'Vui lòng kiểm tra các trường được đánh dấu trước khi lưu.',
+      );
       return;
     }
 
@@ -407,7 +419,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     }
 
     setSubmitSuccess(isEdit ? 'Đã cập nhật hợp đồng.' : 'Đã tạo hợp đồng.');
-    onSuccess?.();
+    onSuccess?.(mutationResult.contract);
   }
 
   /** @type {Record<string, { type: 'error', message: string } | undefined>} */
@@ -439,6 +451,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   };
 
   return {
+    isDirty: draftFingerprint !== initialFingerprint,
     mode: isEdit ? 'edit' : 'create',
     title: isEdit ? 'CẬP NHẬT HỢP ĐỒNG' : 'TẠO HỢP ĐỒNG',
     submitLabel: isEdit ? 'Lưu thay đổi' : 'Tạo hợp đồng',

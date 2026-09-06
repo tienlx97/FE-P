@@ -1,18 +1,20 @@
 'use client';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateInput } from '@astryxdesign/core/DateInput';
+import { Grid } from '@astryxdesign/core/Grid';
+import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
-import { StackItem } from '@astryxdesign/core/Stack';
+import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
-import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
@@ -25,8 +27,16 @@ import { QuickCreateCountryDialog } from './quick-create-country-dialog.jsx';
 import { QuickCreatePlaceDialog } from './quick-create-place-dialog.jsx';
 import { SellerPickerFields } from './seller-picker-fields.jsx';
 
+// Fullscreen dialog: 3 fields per row (vs 2) keeps rows from stretching
+// too wide on large viewports.
+const GENERAL_FIELD_COLUMNS = { minWidth: 220, max: 3 };
+// Fixed-width side column so the two dates read as one grouped block,
+// stacked next to the main field grid (see UX reference).
+const DATE_COLUMN_WIDTH = 280;
+
 /** @param {{ form: ReturnType<typeof import('../hooks/use-contract-form.js').useContractForm> }} props */
 export function ContractGeneralFields({ form }) {
+  const isNarrow = useMediaQuery('(max-width: 768px)');
   const {
     values,
     setField,
@@ -63,226 +73,214 @@ export function ContractGeneralFields({ form }) {
   const buyerFieldStatuses = {};
 
   return (
-    <FormSection value="general" title="Thông tin chung">
-      <FormGrid>
+    <FormSection value="general" title="Thông tin chung" isDisabled>
+      <Stack
+        gap={4}
+        direction={isNarrow ? 'vertical' : 'horizontal'}
+        hAlign={isNarrow ? 'stretch' : 'start'}
+        vAlign="start"
+      >
         <StackItem size="fill">
-          <TextInput
-            label="Số hợp đồng"
-            value={values.contractNumber}
-            onChange={(value) => setField('contractNumber', value)}
-            isRequired
-            isLoading={isCheckingContractNumber}
-            status={fieldStatuses.contractNumber}
-            statusVariant="tooltip"
-          />
-        </StackItem>
-        <StackItem size="fill">
-          <TextInput
-            label="Tên dự án"
-            value={values.projectName}
-            onChange={(value) => setField('projectName', value)}
-            isRequired
-            status={fieldStatuses.projectName}
-            statusVariant="tooltip"
-          />
-        </StackItem>
-      </FormGrid>
-
-      <FormGrid>
-        <StackItem size="fill">
-          <Selector
-            label="Loại hợp đồng"
-            placeholder="Chọn loại hợp đồng"
-            value={values.contractType}
-            onChange={(value) => setField('contractType', value ?? '')}
-            options={contractTypeOptions}
-            isRequired
-            status={fieldStatuses.contractType}
-            statusVariant="tooltip"
-          />
-        </StackItem>
-      </FormGrid>
-
-      <FormGrid>
-        <StackItem size="fill">
-          <DateInput
-            label="Ngày tạo hợp đồng"
-            value={
-              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                values.createdDate
-              )
-            }
-            onChange={(value) => setField('createdDate', value ?? '')}
-            format="system_date"
-            isRequired
-            status={fieldStatuses.createdDate}
-            statusVariant="tooltip"
-          />
-        </StackItem>
-        <StackItem size="fill">
-          <DateInput
-            label="Ngày báo giá"
-            value={
-              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                values.quotationDate
-              )
-            }
-            onChange={(value) => setField('quotationDate', value ?? '')}
-            format="system_date"
-            isRequired
-            status={fieldStatuses.quotationDate}
-            statusVariant="tooltip"
-          />
-        </StackItem>
-      </FormGrid>
-
-      <FormGrid>
-        <StackItem size="fill">
-          <TextInput
-            label="Hạng mục"
-            value={values.category}
-            onChange={(value) => setField('category', value)}
-            isRequired
-            status={fieldStatuses.category}
-            statusVariant="tooltip"
-          />
-        </StackItem>
-        <StackItem size="fill">
-          <HStack gap={2} vAlign="end">
-            <StackItem size="fill">
-              <Selector
-                label="Nước xuất khẩu"
-                hasSearch
-                placeholder="Chọn nước"
-                value={values.countryId}
-                onChange={(value) => setField('countryId', value ?? '')}
-                options={countries.map((country) => ({
-                  value: country.id,
-                  label: country.name,
-                }))}
+          <VStack gap={3} hAlign="stretch">
+            <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
+              <TextInput
+                label="Số hợp đồng"
+                value={values.contractNumber}
+                onChange={(value) => setField('contractNumber', value)}
                 isRequired
-                status={fieldStatuses.countryId}
+                isLoading={isCheckingContractNumber}
+                status={fieldStatuses.contractNumber}
                 statusVariant="tooltip"
-                width="100%"
               />
-            </StackItem>
-            <IconButton
-              label="Thêm nước"
-              tooltip="Thêm nước"
-              icon={<Icon icon={IconPlus} size="sm" />}
-              type="button"
-              variant="secondary"
-              onClick={() => setIsQuickCreateCountryOpen(true)}
+              <TextInput
+                label="Tên dự án"
+                value={values.projectName}
+                onChange={(value) => setField('projectName', value)}
+                isRequired
+                status={fieldStatuses.projectName}
+                statusVariant="tooltip"
+              />
+              <Selector
+                label="Loại hợp đồng"
+                placeholder="Chọn loại hợp đồng"
+                value={values.contractType}
+                onChange={(value) => setField('contractType', value ?? '')}
+                options={contractTypeOptions}
+                isRequired
+                status={fieldStatuses.contractType}
+                statusVariant="tooltip"
+              />
+            </Grid>
+
+            <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
+              <TextInput
+                label="Hạng mục"
+                value={values.category}
+                onChange={(value) => setField('category', value)}
+                isRequired
+                status={fieldStatuses.category}
+                statusVariant="tooltip"
+              />
+              <Selector
+                label="Incoterm"
+                placeholder="Chọn Incoterm"
+                value={values.incoterm}
+                onChange={(value) => setField('incoterm', value ?? '')}
+                options={incotermOptions}
+                isRequired
+                status={fieldStatuses.incoterm}
+                statusVariant="tooltip"
+              />
+              <NumberInput
+                label="Năm Incoterm"
+                value={values.incotermYear}
+                onChange={(value) => setField('incotermYear', value)}
+                isIntegerOnly
+                isRequired
+                status={fieldStatuses.incotermYear}
+                statusVariant="tooltip"
+              />
+            </Grid>
+          </VStack>
+        </StackItem>
+
+        <StackItem size="static">
+          <VStack
+            gap={3}
+            hAlign="stretch"
+            width={isNarrow ? '100%' : DATE_COLUMN_WIDTH}
+          >
+            <DateInput
+              label="Ngày tạo hợp đồng"
+              value={
+                /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                  values.createdDate
+                )
+              }
+              onChange={(value) => setField('createdDate', value ?? '')}
+              format="system_date"
+              isRequired
+              status={fieldStatuses.createdDate}
+              statusVariant="tooltip"
             />
-          </HStack>
+            <DateInput
+              label="Ngày báo giá"
+              value={
+                /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                  values.quotationDate
+                )
+              }
+              onChange={(value) => setField('quotationDate', value ?? '')}
+              format="system_date"
+              isRequired
+              status={fieldStatuses.quotationDate}
+              statusVariant="tooltip"
+            />
+          </VStack>
         </StackItem>
-      </FormGrid>
+      </Stack>
 
-      <FormGrid>
-        <StackItem size="fill">
-          <Selector
-            label="Incoterm"
-            placeholder="Chọn Incoterm"
-            value={values.incoterm}
-            onChange={(value) => setField('incoterm', value ?? '')}
-            options={incotermOptions}
-            isRequired
-            status={fieldStatuses.incoterm}
-            statusVariant="tooltip"
+      <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
+        <HStack gap={2} vAlign="end">
+          <StackItem size="fill">
+            <Selector
+              label="Nước xuất khẩu"
+              hasSearch
+              placeholder="Chọn nước"
+              value={values.countryId}
+              onChange={(value) => setField('countryId', value ?? '')}
+              options={countries.map((country) => ({
+                value: country.id,
+                label: country.name,
+              }))}
+              isRequired
+              status={fieldStatuses.countryId}
+              statusVariant="tooltip"
+              width="100%"
+            />
+          </StackItem>
+          <IconButton
+            label="Thêm nước"
+            tooltip="Thêm nước"
+            icon={<Icon icon={IconPlus} size="sm" />}
+            type="button"
+            variant="secondary"
+            onClick={() => setIsQuickCreateCountryOpen(true)}
           />
-        </StackItem>
-        <StackItem size="fill">
-          <NumberInput
-            label="Năm Incoterm"
-            value={values.incotermYear}
-            onChange={(value) => setField('incotermYear', value)}
-            isIntegerOnly
-            isRequired
-            status={fieldStatuses.incotermYear}
-            statusVariant="tooltip"
-          />
-        </StackItem>
-      </FormGrid>
+        </HStack>
 
-      <HStack>
-        <StackItem size="fill">
-          <HStack gap={2} vAlign="end">
-            <StackItem size="fill">
-              <Selector
-                label="Nơi xếp hàng"
-                hasSearch
-                placeholder="Chọn nơi xếp hàng"
-                disabledMessage={
-                  vietnamCountryId
-                    ? undefined
-                    : 'Danh mục nước chưa có "Việt Nam"'
-                }
-                isDisabled={!vietnamCountryId}
-                value={values.placeOfLoading}
-                onChange={(value) => setField('placeOfLoading', value ?? '')}
-                options={loadingPlaces.map((place) => ({
-                  value: place.name,
-                  label: place.name,
-                }))}
-                isRequired
-                status={fieldStatuses.placeOfLoading}
-                statusVariant="tooltip"
-                width="100%"
-              />
-            </StackItem>
-            <IconButton
-              label="Thêm nơi xếp hàng"
-              tooltip="Thêm nơi xếp hàng"
-              icon={<Icon icon={IconPlus} size="sm" />}
-              type="button"
-              variant="secondary"
+        <HStack gap={2} vAlign="end">
+          <StackItem size="fill">
+            <Selector
+              label="Nơi xếp hàng"
+              hasSearch
+              placeholder="Chọn nơi xếp hàng"
+              disabledMessage={
+                vietnamCountryId
+                  ? undefined
+                  : 'Danh mục nước chưa có "Việt Nam"'
+              }
               isDisabled={!vietnamCountryId}
-              onClick={() => setIsQuickCreateLoadingPlaceOpen(true)}
+              value={values.placeOfLoading}
+              onChange={(value) => setField('placeOfLoading', value ?? '')}
+              options={loadingPlaces.map((place) => ({
+                value: place.name,
+                label: place.name,
+              }))}
+              isRequired
+              status={fieldStatuses.placeOfLoading}
+              statusVariant="tooltip"
+              width="100%"
             />
-          </HStack>
-        </StackItem>
-      </HStack>
+          </StackItem>
+          <IconButton
+            label="Thêm nơi xếp hàng"
+            tooltip="Thêm nơi xếp hàng"
+            icon={<Icon icon={IconPlus} size="sm" />}
+            type="button"
+            variant="secondary"
+            isDisabled={!vietnamCountryId}
+            onClick={() => setIsQuickCreateLoadingPlaceOpen(true)}
+          />
+        </HStack>
 
-      <HStack>
-        <StackItem size="fill">
-          <HStack gap={2} vAlign="end">
-            <StackItem size="fill">
-              <Selector
-                label="Cảng/nơi đến"
-                hasSearch
-                placeholder="Chọn cảng/nơi đến"
-                disabledMessage={
-                  !isPlaceOfDischargeApplicable
-                    ? 'Không áp dụng cho Incoterm EXW/FOB'
-                    : !values.countryId
-                      ? 'Vui lòng chọn nước xuất khẩu trước'
-                      : undefined
-                }
-                isDisabled={!isPlaceOfDischargeApplicable || !values.countryId}
-                value={values.placeOfDischarge}
-                onChange={(value) => setField('placeOfDischarge', value ?? '')}
-                options={dischargePlaces.map((place) => ({
-                  value: place.name,
-                  label: place.name,
-                }))}
-                isRequired={isPlaceOfDischargeApplicable}
-                status={fieldStatuses.placeOfDischarge}
-                statusVariant="tooltip"
-                width="100%"
-              />
-            </StackItem>
-            <IconButton
-              label="Thêm cảng / nơi đến"
-              tooltip="Thêm cảng / nơi đến"
-              icon={<Icon icon={IconPlus} size="sm" />}
-              type="button"
-              variant="secondary"
+        <HStack gap={2} vAlign="end">
+          <StackItem size="fill">
+            <Selector
+              label="Cảng/nơi đến"
+              hasSearch
+              placeholder="Chọn cảng/nơi đến"
+              disabledMessage={
+                !isPlaceOfDischargeApplicable
+                  ? 'Không áp dụng cho Incoterm EXW/FOB'
+                  : !values.countryId
+                    ? 'Vui lòng chọn nước xuất khẩu trước'
+                    : undefined
+              }
               isDisabled={!isPlaceOfDischargeApplicable || !values.countryId}
-              onClick={() => setIsQuickCreateDischargePlaceOpen(true)}
+              value={values.placeOfDischarge}
+              onChange={(value) => setField('placeOfDischarge', value ?? '')}
+              options={dischargePlaces.map((place) => ({
+                value: place.name,
+                label: place.name,
+              }))}
+              isRequired={isPlaceOfDischargeApplicable}
+              status={fieldStatuses.placeOfDischarge}
+              statusVariant="tooltip"
+              width="100%"
             />
-          </HStack>
-        </StackItem>
-      </HStack>
+          </StackItem>
+          <IconButton
+            label="Thêm cảng / nơi đến"
+            tooltip="Thêm cảng / nơi đến"
+            icon={<Icon icon={IconPlus} size="sm" />}
+            type="button"
+            variant="secondary"
+            isDisabled={!isPlaceOfDischargeApplicable || !values.countryId}
+            onClick={() => setIsQuickCreateDischargePlaceOpen(true)}
+          />
+        </HStack>
+      </Grid>
 
       <QuickCreateCountryDialog
         isOpen={isQuickCreateCountryOpen}

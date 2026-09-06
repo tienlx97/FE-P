@@ -4,12 +4,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import {
-  pixel,
-  proportional,
-  Table,
-  useTableRowExpansion,
-} from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Maximize2, Minimize2 } from 'lucide-react';
@@ -64,39 +59,19 @@ function formatPaymentTerms(terms) {
   return `${terms.length} đợt`;
 }
 
-/**
- * Selector popover stacking: Astryx's `Selector` positions its dropdown by
- * walking up from its own DOM position and portaling out to the nearest
- * ancestor outside any "unsafe host" (`<table>`, `<tr>`, ... — see
- * `resolveLayerPortalTarget` in `@astryxdesign/core`'s `Layer/layerHost.ts`).
- * A `*FormDialog` declared inside this table's own `renderExpanded` callback
- * is, in the React/DOM tree, still a descendant of this `<table>` even
- * though the Dialog itself floats visually above the page — so any
- * `Selector` inside it gets portaled to the *table's* scroll wrapper instead
- * of the dialog's own layer, and ends up stacked underneath the dialog:
- * visually it looks fine, but a mouse click on an option lands on the
- * dialog's trigger button underneath instead of the option (only keyboard
- * selection worked). Every dialog that has a `Selector` field and is opened
- * from inside a row's expanded content (Shipment, Payment Schedule, Annex,
- * Commission, VGM) is therefore rendered HERE — a sibling of
- * `AdvanceTable`, not a descendant of it — with only trigger callbacks
- * passed down to `ContractExpandedDetails`/`ShipmentExpandedDetails`. Do not
- * move a `*FormDialog` back inside `renderExpanded`.
- */
+/** Contract workspace and related editors are siblings of the table so
+ * Selector portals remain inside their dialog layers (ADR-0004). */
 export function ContractsList() {
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreenToggle();
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [hasOpenedCreate, setHasOpenedCreate] = useState(false);
-  const [editingContract, setEditingContract] = useState(
-    /** @type {import('../types/index.js').Contract | null} */ (null),
+  const [workspace, setWorkspace] = useState(
+    /** @type {{ contract: import('../types/index.js').Contract | null, revision: number } | null} */ (
+      null
+    ),
   );
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
-  );
-  const [expandedContractId, setExpandedContractId] = useState(
-    /** @type {string | null} */ (null),
   );
   const [expandedTab, setExpandedTab] = useState(
     /** @type {ExpandedTab} */ ('info'),
@@ -137,22 +112,16 @@ export function ContractsList() {
     ),
   );
 
-  /** @param {string} contractId */
-  function toggleExpandedContract(contractId) {
-    setExpandedContractId((current) => {
-      const next = current === contractId ? null : contractId;
-      if (next !== current) setExpandedTab('info');
-      return next;
-    });
-  }
-
   const contractsQuery = useContractsQuery({
     page: pageIndex,
     pageSize,
     conditions: filterConditions,
   });
   const listResult = contractsQuery.data;
-  const contracts = listResult?.success ? listResult.contracts : [];
+  const contracts = useMemo(
+    () => (listResult?.success ? listResult.contracts : []),
+    [listResult],
+  );
 
   const banksQuery = useContractBanksQuery();
   const banksById = useMemo(
@@ -218,7 +187,18 @@ export function ContractsList() {
       header: 'Số hợp đồng',
       width: pixel(180),
       filter: 'contractNumber',
-      renderCell: (contract) => contract.contractNumber,
+      renderCell: (contract) => (
+        <Button
+          label={contract.contractNumber}
+          variant="ghost"
+          size="sm"
+          onClick={(event) => {
+            event.stopPropagation();
+            setExpandedTab('info');
+            setWorkspace({ contract, revision: 0 });
+          }}
+        />
+      ),
     },
     {
       key: 'contractType',
@@ -335,72 +315,39 @@ export function ContractsList() {
       .join(', '),
   }));
 
-  const expandedKeys = useMemo(
-    () => new Set(expandedContractId ? [expandedContractId] : []),
-    [expandedContractId],
-  );
-  const expansionPlugin =
-    /** @type {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').Contract & Record<string, unknown>>} */ (
-      useTableRowExpansion({
-        expandedKeys,
-        onToggle: toggleExpandedContract,
-        getRowKey: (contract) => contract.id,
-        getIsItemExpandable: (contract) => !contract.id.startsWith('skeleton-'),
-        renderExpanded: (contract) => (
-          <ContractExpandedDetails
-            contract={contract}
-            onEdit={setEditingContract}
-            banksById={banksById}
-            countriesById={countriesById}
-            customersById={customersById}
-            costCategoriesById={costCategoriesById}
-            activeTab={expandedTab}
-            onActiveTabChange={setExpandedTab}
-            onAddAnnex={() => setAnnexDialog({ contractId: contract.id })}
-            onEditAnnex={(annex) =>
-              setAnnexDialog({ contractId: contract.id, annex })
-            }
-            onAddPaymentSchedule={() =>
-              setPaymentScheduleDialog({ contractId: contract.id })
-            }
-            onEditPaymentSchedule={(schedule) =>
-              setPaymentScheduleDialog({ contractId: contract.id, schedule })
-            }
-            onAddShipment={() =>
-              setShipmentDialog({ contractId: contract.id, contract })
-            }
-            onEditShipment={(shipment) =>
-              setShipmentDialog({ contractId: contract.id, contract, shipment })
-            }
-            onAddVgm={(payload) => setVgmDialog(payload)}
-            onEditVgm={(payload) => setVgmDialog(payload)}
-            onOpenCommission={(payload) => setCommissionDialog(payload)}
-            onAddCommissionAnnex={() =>
-              setCommissionAnnexDialog({ contractId: contract.id })
-            }
-            onEditCommissionAnnex={(annex) =>
-              setCommissionAnnexDialog({ contractId: contract.id, annex })
-            }
-            onAddCommissionPayment={(commission) =>
-              setCommissionPaymentDialog({
-                contractId: contract.id,
-                currency: contract.currency,
-                commission,
-              })
-            }
-          />
-        ),
-      })
-    );
+  const contract = workspace?.contract;
   const rowInteractionPlugin = useMemo(
     /** @returns {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').Contract & Record<string, unknown>>} */
-    () =>
-      createRowExpansionInteractionPlugin({
-        expandedId: expandedContractId,
-        onToggle: toggleExpandedContract,
-        isExpandable: (contract) => !contract.id.startsWith('skeleton-'),
-      }),
-    [expandedContractId],
+    () => {
+      /** @type {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').Contract & Record<string, unknown>>} */
+      const interaction = createRowExpansionInteractionPlugin({
+        expandedId: null,
+        onToggle: (id) => {
+          const selected = contracts.find((item) => item.id === id);
+          if (selected) {
+            setExpandedTab('info');
+            setWorkspace({ contract: selected, revision: 0 });
+          }
+        },
+        isExpandable: (item) => !item.id.startsWith('skeleton-'),
+      });
+      return {
+        ...interaction,
+        transformBodyRow: (props, row, context) => {
+          const result =
+            interaction.transformBodyRow?.(props, row, context) ?? props;
+          return {
+            ...result,
+            htmlProps: {
+              ...result.htmlProps,
+              'aria-expanded': undefined,
+              'aria-haspopup': 'dialog',
+            },
+          };
+        },
+      };
+    },
+    [contracts],
   );
 
   const totalContracts = listResult?.success ? listResult.totalCount : 0;
@@ -435,8 +382,8 @@ export function ContractsList() {
             label="Tạo hợp đồng"
             variant="primary"
             onClick={() => {
-              setHasOpenedCreate(true);
-              setIsCreateOpen(true);
+              setExpandedTab('info');
+              setWorkspace({ contract: null, revision: 0 });
             }}
           />
         </HStack>
@@ -464,7 +411,6 @@ export function ContractsList() {
         isLoading={isLoadingContracts}
         skeletonRows={skeletonRows}
         extraPlugins={{
-          expansion: expansionPlugin,
           rowInteraction: rowInteractionPlugin,
         }}
         onRefresh={() => contractsQuery.refetch()}
@@ -480,29 +426,71 @@ export function ContractsList() {
         }}
       />
 
-      {hasOpenedCreate ? (
+      {workspace ? (
         <ContractFormDialog
-          isOpen={isCreateOpen}
-          onOpenChange={setIsCreateOpen}
-          onSuccess={() => setIsCreateOpen(false)}
-        />
-      ) : null}
-
-      {editingContract ? (
-        <ContractFormDialog
-          key={editingContract.id}
-          isOpen={editingContract !== null}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setEditingContract(null);
+          key={`${workspace.contract?.id ?? 'create'}-${workspace.revision}`}
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setWorkspace(null);
           }}
-          contract={editingContract}
-          onSuccess={() => setEditingContract(null)}
-        />
+          contract={workspace.contract}
+          activeTab={expandedTab}
+          onActiveTabChange={setExpandedTab}
+          onSuccess={(saved) => {
+            setExpandedTab('info');
+            setWorkspace({ contract: saved, revision: workspace.revision + 1 });
+          }}
+        >
+          {contract ? (
+            <ContractExpandedDetails
+              contract={contract}
+              banksById={banksById}
+              countriesById={countriesById}
+              customersById={customersById}
+              costCategoriesById={costCategoriesById}
+              activeTab={expandedTab}
+              onAddAnnex={() => setAnnexDialog({ contractId: contract.id })}
+              onEditAnnex={(annex) =>
+                setAnnexDialog({ contractId: contract.id, annex })
+              }
+              onAddPaymentSchedule={() =>
+                setPaymentScheduleDialog({ contractId: contract.id })
+              }
+              onEditPaymentSchedule={(schedule) =>
+                setPaymentScheduleDialog({ contractId: contract.id, schedule })
+              }
+              onAddShipment={() =>
+                setShipmentDialog({ contractId: contract.id, contract })
+              }
+              onEditShipment={(shipment) =>
+                setShipmentDialog({
+                  contractId: contract.id,
+                  contract,
+                  shipment,
+                })
+              }
+              onAddVgm={(payload) => setVgmDialog(payload)}
+              onEditVgm={(payload) => setVgmDialog(payload)}
+              onOpenCommission={(payload) => setCommissionDialog(payload)}
+              onAddCommissionAnnex={() =>
+                setCommissionAnnexDialog({ contractId: contract.id })
+              }
+              onEditCommissionAnnex={(annex) =>
+                setCommissionAnnexDialog({ contractId: contract.id, annex })
+              }
+              onAddCommissionPayment={(commission) =>
+                setCommissionPaymentDialog({
+                  contractId: contract.id,
+                  currency: contract.currency,
+                  commission,
+                })
+              }
+            />
+          ) : null}
+        </ContractFormDialog>
       ) : null}
 
-      {/* Every dialog below is opened from inside a Contracts-row's expanded
-          content but rendered here, a sibling of `AdvanceTable` rather than
-          a descendant of it — see the note above this component for why. */}
+      {/* Related editors stay outside tables (ADR-0004). */}
 
       {shipmentDialog ? (
         <ShipmentFormDialog

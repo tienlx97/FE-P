@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
+import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { List, ListItem } from '@astryxdesign/core/List';
@@ -29,7 +30,7 @@ function orDash(value) {
  * A blank grid cell — `MetadataListItem` has no first-class "empty slot"
  * (`label`/`children` are both meant to be filled in), so this fakes one
  * purely to pad a row out to a multiple of `columns`. Keeps the expanded
- * panel's info grid a *single* `columns={4}` `MetadataList` — so every
+ * panel's info grid a single responsive `MetadataList` — so every
  * row's 4 columns are the same width and line up with each other — while
  * still visually grouping fields onto their own row even when a row has
  * fewer than 4 fields (see `commissions-list.jsx`'s identical
@@ -67,12 +68,11 @@ export function ContractInfoTab({
   paymentTermColumns,
   annexColumns,
 }) {
+  const isNarrow = useMediaQuery('(max-width: 640px)');
   return (
     <VStack gap={4} hAlign="stretch">
-      {/* Rows 1–3: one columns={4} grid, padded with blank cells so
-              row 2 (only 2 fields) still lines up under rows 1 and 3 (each
-              already exactly 4 fields) — see `metadataSpacer`. */}
-      <MetadataList columns={4} label={{ position: 'top' }}>
+      {/* Four aligned columns on desktop, two readable columns on mobile. */}
+      <MetadataList columns={isNarrow ? 2 : 4} label={{ position: 'top' }}>
         <MetadataListItem label="Số hợp đồng">
           {contract.contractNumber}
         </MetadataListItem>
@@ -135,7 +135,7 @@ export function ContractInfoTab({
       {/* Bên bán — pulled down from the old "Bên bán" tab. */}
       <VStack gap={2} hAlign="stretch">
         <Text weight="semibold">Bên bán</Text>
-        <MetadataList columns={4} label={{ position: 'top' }}>
+        <MetadataList columns={isNarrow ? 2 : 4} label={{ position: 'top' }}>
           <MetadataListItem label="Tên công ty">
             {contract.seller.companyName}
           </MetadataListItem>
@@ -159,7 +159,7 @@ export function ContractInfoTab({
       {/* Khách hàng — pulled down from the old "Khách hàng" tab. */}
       <VStack gap={2} hAlign="stretch">
         <Text weight="semibold">Khách hàng</Text>
-        <MetadataList columns={4} label={{ position: 'top' }}>
+        <MetadataList columns={isNarrow ? 2 : 4} label={{ position: 'top' }}>
           <MetadataListItem label="Tên công ty">
             {contract.buyer.companyName}
           </MetadataListItem>

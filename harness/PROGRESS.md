@@ -7090,3 +7090,34 @@ ward reference data (free-text inputs, matching the backend).
 - **Next step:** open an `openspec/changes/` proposal (per the `_template/`
   folder) for the next real feature instead of ad-hoc edits.
 - **Blockers:** none
+
+## 2026-09-06 — Unified fullscreen contract workspace
+
+- Active change: `unify-contract-dialog`, task 1.1.
+- Replaced contract table expansion with one fullscreen workspace for create,
+  view and edit. Four tabs keep stable positions; creation disables payment
+  history, Shipment and Commission with an explanation. Save uses the returned
+  contract to stay in view mode and unlock the related workflows.
+- Draft fields survive tab switches; cancel/close confirms before discarding;
+  close/cancel is blocked during save. Header/tabs/footer stay fixed while
+  content scrolls. Related editors remain outside table rendering (ADR-0004).
+- Preserved the existing open field groups and general-field/date layout,
+  adding mobile stacking; read-only metadata now uses two columns on mobile.
+  The fullscreen surface is opaque. Source changes already present in the
+  contract form/general fields/FormSection are retained as part of the
+  integrated contract UI. Unrelated environment and memory edits are excluded.
+- Browser evidence: `harness/runs/20260906-contract-dialog/`; scenario/results
+  map: `openspec/changes/unify-contract-dialog/verification.md`. Synthetic API
+  fixtures only: create and update round trips, no writes on entering edit,
+  invalid save, dirty cancel, tab preservation, child dialog, mobile geometry.
+- Harness gaps: switching a reused action button from `button` to `submit`
+  during its click can execute the submit default action. Fixed with distinct
+  React keys, explicit button type and preventDefault on Edit; browser fetch
+  instrumentation verified zero writes on Edit and exactly one PUT on Save.
+  Add this behavioral check to a future CI browser gate (current harness has
+  no browser runner). Wait for dialog opening animation before screenshots;
+  intermediate opacity can look like a transparent surface. Do not start a
+  second full gate until an earlier build has exited (build lock collision).
+- Final verification: `./harness/verify.sh` passed,
+  `harness/runs/20260906-131752-565150/` (120 unit tests, build, structure
+  and quality thresholds). Task 1.1 complete.
