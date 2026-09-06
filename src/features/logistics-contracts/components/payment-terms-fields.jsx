@@ -31,6 +31,7 @@ import { formatMoney } from '../config/currencies.js';
  *   status?: { type: 'error' | 'success', message: string },
  *   contractValue?: number,
  *   currency?: string,
+ *   isReadOnly?: boolean,
  *   onAddRow: () => void,
  *   onRemoveRow: (rowKey: string) => void,
  *   onUpdateRowField: (rowKey: string, field: 'paymentRatioPercent' | 'paymentCondition', value: number | string | undefined) => void,
@@ -42,6 +43,7 @@ export function PaymentTermsFields({
   status,
   contractValue,
   currency,
+  isReadOnly = false,
   onAddRow,
   onRemoveRow,
   onUpdateRowField,
@@ -78,6 +80,7 @@ export function PaymentTermsFields({
           }
           units="%"
           size="sm"
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -96,6 +99,7 @@ export function PaymentTermsFields({
           placeholder="Ví dụ: L/C at sight, T/T..."
           size="sm"
           width="100%"
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -120,7 +124,10 @@ export function PaymentTermsFields({
         );
       },
     },
-    {
+  ];
+
+  if (!isReadOnly) {
+    columns.push({
       key: 'actions',
       header: 'Thao tác',
       width: pixel(96),
@@ -136,8 +143,8 @@ export function PaymentTermsFields({
           onClick={() => onRemoveRow(row.rowKey)}
         />
       ),
-    },
-  ];
+    });
+  }
 
   return (
     <VStack gap={2} hAlign="stretch">
@@ -147,13 +154,15 @@ export function PaymentTermsFields({
         variant="muted"
         dividers={['bottom']}
         startContent={
-          <Button
-            label="Thêm đợt"
-            type="button"
-            variant="secondary"
-            icon={<Icon icon={IconPlus} size="sm" />}
-            onClick={onAddRow}
-          />
+          isReadOnly ? undefined : (
+            <Button
+              label="Thêm đợt"
+              type="button"
+              variant="secondary"
+              icon={<Icon icon={IconPlus} size="sm" />}
+              onClick={onAddRow}
+            />
+          )
         }
         endContent={
           <HStack gap={2} vAlign="center">

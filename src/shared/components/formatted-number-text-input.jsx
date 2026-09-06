@@ -29,6 +29,7 @@ const styles = stylex.create({
  *   description?: string,
  *   isLabelHidden?: boolean,
  *   isRequired?: boolean,
+ *   isReadOnly?: boolean,
  *   size?: 'sm' | 'md' | 'lg',
  *   status?: { type: 'error' | 'warning' | 'success', message?: string },
  *   statusVariant?: 'attached' | 'detached' | 'tooltip',
@@ -42,6 +43,7 @@ export function FormattedNumberTextInput({
   description,
   isLabelHidden = false,
   isRequired = false,
+  isReadOnly = false,
   size = 'md',
   status,
   statusVariant = 'tooltip',
@@ -75,6 +77,7 @@ export function FormattedNumberTextInput({
       placeholder="0.00"
       description={units ? undefined : description}
       isRequired={isRequired}
+      isReadOnly={isReadOnly}
       size={size}
       status={units ? undefined : status}
       statusVariant={statusVariant}

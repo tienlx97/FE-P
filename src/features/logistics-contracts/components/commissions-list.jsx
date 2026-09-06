@@ -42,7 +42,6 @@ import { useCommissionsQuery } from '../hooks/use-commissions-query.js';
 import { useContractsQuery } from '../hooks/use-contracts-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
-import { CommissionExpandedDetails } from './commission-expanded-details.jsx';
 import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
@@ -389,22 +388,19 @@ export function CommissionsList() {
           currency={editingCommissionRow.currency}
           commission={selectedCommission}
           initialMode={dialogMode}
-          viewContent={
-            selectedCommission ? (
-              <CommissionExpandedDetails
-                row={selectedCommission}
-                onAddAnnex={() =>
-                  setAnnexDialog({ contractId: selectedCommission.contractId })
-                }
-                onEditAnnex={(annex) =>
-                  setAnnexDialog({
-                    contractId: selectedCommission.contractId,
-                    annex,
-                  })
-                }
-                onAddPayment={() => setPaymentDialog(selectedCommission)}
-              />
-            ) : null
+          onAddAnnex={() =>
+            selectedCommission &&
+            setAnnexDialog({ contractId: selectedCommission.contractId })
+          }
+          onEditAnnex={(annex) =>
+            selectedCommission &&
+            setAnnexDialog({
+              contractId: selectedCommission.contractId,
+              annex,
+            })
+          }
+          onAddPayment={() =>
+            selectedCommission && setPaymentDialog(selectedCommission)
           }
           onSuccess={() => setEditingCommissionRow(null)}
         />

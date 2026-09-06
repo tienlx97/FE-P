@@ -58,10 +58,10 @@ export function ContractCommissionTab({
 }) {
   return (
     <VStack gap={4} hAlign="stretch">
-      {/* Same field set/layout as `commissions-list.jsx`'s
-              `CommissionExpandedDetails` — this tab is that
-              component's content, just entered from a contract's row
-              instead of the system-wide Commission list. */}
+      {/* Same field set/layout as `commissions-list.jsx`'s Commission
+              view (`CommissionFields` in read-only mode) — this tab shows
+              the same content, just entered from a contract's row instead
+              of the system-wide Commission list. */}
       <MetadataList columns={4} label={{ position: 'top' }}>
         <MetadataListItem label="Mã">{commission.code}</MetadataListItem>
         <MetadataListItem label="Số hợp đồng">

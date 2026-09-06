@@ -28,6 +28,7 @@ import { formatMoney } from '../config/currencies.js';
  *   rows: import('../types/index.js').CommissionPaymentRow[],
  *   status?: { type: 'error' | 'success', message: string },
  *   currency?: string,
+ *   isReadOnly?: boolean,
  *   onAddRow: () => void,
  *   onRemoveRow: (rowKey: string) => void,
  *   onUpdateRowField: (rowKey: string, field: 'paymentDate' | 'amount' | 'note', value: number | string | undefined) => void,
@@ -37,6 +38,7 @@ export function PaymentHistoryFields({
   rows,
   status,
   currency,
+  isReadOnly = false,
   onAddRow,
   onRemoveRow,
   onUpdateRowField,
@@ -63,23 +65,26 @@ export function PaymentHistoryFields({
       key: 'paymentDate',
       header: 'Ngày thanh toán',
       width: pixel(220),
-      renderCell: (row) => (
-        <DateInput
-          label="Ngày thanh toán"
-          isLabelHidden
-          value={
-            /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-              row.paymentDate || null
-            )
-          }
-          onChange={(value) =>
-            onUpdateRowField(row.rowKey, 'paymentDate', value ?? '')
-          }
-          format="system_date"
-          size="sm"
-          width="100%"
-        />
-      ),
+      renderCell: (row) =>
+        isReadOnly ? (
+          <Text hasTabularNumbers>{row.paymentDate || '—'}</Text>
+        ) : (
+          <DateInput
+            label="Ngày thanh toán"
+            isLabelHidden
+            value={
+              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                row.paymentDate || null
+              )
+            }
+            onChange={(value) =>
+              onUpdateRowField(row.rowKey, 'paymentDate', value ?? '')
+            }
+            format="system_date"
+            size="sm"
+            width="100%"
+          />
+        ),
     },
     {
       key: 'amount',
@@ -93,6 +98,7 @@ export function PaymentHistoryFields({
           onChange={(value) => onUpdateRowField(row.rowKey, 'amount', value)}
           units={currency || undefined}
           size="sm"
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -110,10 +116,14 @@ export function PaymentHistoryFields({
           rows={1}
           size="sm"
           width="100%"
+          isReadOnly={isReadOnly}
         />
       ),
     },
-    {
+  ];
+
+  if (!isReadOnly) {
+    columns.push({
       key: 'actions',
       header: 'Thao tác',
       width: pixel(96),
@@ -128,24 +138,30 @@ export function PaymentHistoryFields({
           onClick={() => onRemoveRow(row.rowKey)}
         />
       ),
-    },
-  ];
+    });
+  }
 
   return (
     <VStack gap={2} hAlign="stretch">
       {rows.length === 0 ? (
         <EmptyState
           title="Chưa có lần thanh toán"
-          description="Ghi nhận lần thanh toán đầu tiên cho Commission này."
+          description={
+            isReadOnly
+              ? undefined
+              : 'Ghi nhận lần thanh toán đầu tiên cho Commission này.'
+          }
           isCompact
           actions={
-            <Button
-              label="Thêm lần thanh toán"
-              type="button"
-              variant="secondary"
-              icon={<Icon icon={IconPlus} size="sm" />}
-              onClick={onAddRow}
-            />
+            isReadOnly ? undefined : (
+              <Button
+                label="Thêm lần thanh toán"
+                type="button"
+                variant="secondary"
+                icon={<Icon icon={IconPlus} size="sm" />}
+                onClick={onAddRow}
+              />
+            )
           }
         />
       ) : (
@@ -156,13 +172,15 @@ export function PaymentHistoryFields({
             variant="muted"
             dividers={['bottom']}
             startContent={
-              <Button
-                label="Thêm lần thanh toán"
-                type="button"
-                variant="secondary"
-                icon={<Icon icon={IconPlus} size="sm" />}
-                onClick={onAddRow}
-              />
+              isReadOnly ? undefined : (
+                <Button
+                  label="Thêm lần thanh toán"
+                  type="button"
+                  variant="secondary"
+                  icon={<Icon icon={IconPlus} size="sm" />}
+                  onClick={onAddRow}
+                />
+              )
             }
             endContent={
               <Text weight="semibold" hasTabularNumbers>

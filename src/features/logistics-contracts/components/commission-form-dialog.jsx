@@ -11,27 +11,35 @@ import { CommissionFields } from './commission-fields.jsx';
  * Create/edit dialog for one `Contract`'s `Commission` — opened from
  * `ContractExpandedDetails`'s "Commission" tab (`contracts-list.jsx`).
  * A contract has at most one, so pass `commission` to edit the
- * existing one; omit it to create the first (and only) one.
+ * existing one; omit it to create the first (and only) one. Xem and Sửa
+ * share the same `CommissionFields` layout — only `isReadOnly` differs
+ * per field — so there is no separate view-only content branch.
  * @param {{
  *   isOpen: boolean,
  *   initialMode?: 'view' | 'edit',
- *   viewContent?: import('react').ReactNode | ((tab: string) => import('react').ReactNode),
  *   onOpenChange: (isOpen: boolean) => void,
  *   contractId: string,
  *   currency: string,
- *   commission?: import('../types/index.js').Commission | null,
+ *   commission?: (import('../types/index.js').Commission & {
+ *     contractNumber?: string, projectName?: string,
+ *   }) | null,
  *   onSuccess?: (commission: import('../types/index.js').Commission) => void,
+ *   onAddAnnex?: () => void,
+ *   onEditAnnex?: (annex: import('../types/index.js').CommissionAnnex) => void,
+ *   onAddPayment?: () => void,
  * }} props
  */
 export function CommissionFormDialog({
   isOpen,
   initialMode = 'edit',
-  viewContent,
   onOpenChange,
   contractId,
   currency,
   commission = null,
   onSuccess,
+  onAddAnnex,
+  onEditAnnex,
+  onAddPayment,
 }) {
   const [mode, setMode] = useState(initialMode);
   const isViewing = mode === 'view' && Boolean(commission);
@@ -67,23 +75,20 @@ export function CommissionFormDialog({
       fieldStatuses={form.fieldStatuses}
       onSubmit={form.handleSubmit}
     >
-      {isViewing ? (
-        typeof viewContent === 'function' ? (
-          viewContent('info')
-        ) : (
-          viewContent
-        )
-      ) : (
-        <CommissionFields
-          values={form.values}
-          setField={form.setField}
-          fieldStatuses={form.fieldStatuses}
-          customers={form.customers}
-          currency={currency}
-          paymentTermRows={form.paymentTermRows}
-          paymentHistoryRows={form.paymentHistoryRows}
-        />
-      )}
+      <CommissionFields
+        commission={commission}
+        isReadOnly={isViewing}
+        values={form.values}
+        setField={form.setField}
+        fieldStatuses={form.fieldStatuses}
+        customers={form.customers}
+        currency={currency}
+        paymentTermRows={form.paymentTermRows}
+        paymentHistoryRows={form.paymentHistoryRows}
+        onAddAnnex={onAddAnnex}
+        onEditAnnex={onEditAnnex}
+        onAddPayment={onAddPayment}
+      />
     </FormDialog>
   );
 }
