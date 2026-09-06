@@ -1,0 +1,108 @@
+{
+  "contract": {
+    "id": "contract-ui-test",
+    "contractNumber": "HD-UI-001",
+    "contractType": "Draft",
+    "createdDate": "2026-09-06",
+    "quotationDate": "2026-09-06",
+    "projectName": "Dự án kiểm thử giao diện",
+    "category": "Thiết bị",
+    "countryId": "country-1",
+    "placeOfLoading": "Hải Phòng",
+    "placeOfDischarge": "",
+    "contractValue": 100000,
+    "currency": "USD",
+    "incoterm": "FOB",
+    "incotermYear": 2020,
+    "companyId": "company-1",
+    "seller": {
+      "companyName": "Công ty kiểm thử",
+      "sourceCustomerId": "customer-1",
+      "sourceSellerId": "seller-1",
+      "representativeName": "Nguyễn An",
+      "representativeTitle": "Giám đốc",
+      "address": "Hà Nội",
+      "extraFields": []
+    },
+    "buyer": {
+      "companyName": "Công ty kiểm thử",
+      "sourceCustomerId": "customer-1",
+      "sourceSellerId": "seller-1",
+      "representativeName": "Nguyễn An",
+      "representativeTitle": "Giám đốc",
+      "address": "Hà Nội",
+      "extraFields": []
+    },
+    "sellerSigned": false,
+    "buyerSigned": false,
+    "paymentTerms": [
+      {
+        "id": "term-1",
+        "paymentRatioPercent": 100,
+        "paymentCondition": "T/T"
+      }
+    ],
+    "bankIds": [
+      "bank-1"
+    ],
+    "note": ""
+  },
+  "shipment": {
+    "id": "shipment-1",
+    "contractId": "contract-ui-test",
+    "shipmentCode": "LCL-001",
+    "shipmentNumber": 1,
+    "supplierCustomerId": "customer-1",
+    "bookingNumber": "BOOK-001",
+    "type": "LCL",
+    "name": "Lô hàng kiểm thử",
+    "paymentCondition": "TT",
+    "invoiceValue": 1000,
+    "invoiceCurrency": "USD",
+    "declarationValue": 1000,
+    "declarationCurrency": "USD",
+    "declarationExchangeRate": 25000,
+    "quantityAmount": 10,
+    "quantityUnit": "Package",
+    "declarationWeightKg": 100,
+    "costs": []
+  },
+  "user": {
+    "id": "user-1",
+    "employeeCode": "NV-TEST",
+    "firstName": "An",
+    "lastName": "Nguyễn",
+    "nationalId": "012345678901",
+    "yearOfBirth": 1990,
+    "gender": "Male",
+    "nationalIdIssueDate": "2020-01-01",
+    "nationalIdIssuePlace": "Hà Nội",
+    "phone": "0901234567",
+    "passportNumber": "",
+    "oldProvince": "Hà Nội",
+    "oldDistrict": "Ba Đình",
+    "oldWard": "Điện Biên",
+    "oldAddressDetail": "1 Đường thử",
+    "newProvince": "Hà Nội",
+    "newWard": "Ba Đình",
+    "newAddressDetail": "1 Đường thử",
+    "departmentIds": [
+      "department-1"
+    ],
+    "companyId": "company-1",
+    "branchId": "branch-1",
+    "positionId": "position-1",
+    "extraPermissions": [],
+    "allowConcurrentSessions": false
+  },
+  "customer": {
+    "id": "customer-1",
+    "companyName": "Công ty kiểm thử",
+    "sourceCustomerId": "customer-1",
+    "sourceSellerId": "seller-1",
+    "representativeName": "Nguyễn An",
+    "representativeTitle": "Giám đốc",
+    "address": "Hà Nội",
+    "extraFields": []
+  }
+}

@@ -154,7 +154,9 @@ function toBankAccountRow(account) {
 async function persistBankAccountRowChanges(userId, rows, originalAccounts) {
   /** @type {string[]} */
   const failures = [];
-  const originalById = new Map(originalAccounts.map((account) => [account.id, account]));
+  const originalById = new Map(
+    originalAccounts.map((account) => [account.id, account]),
+  );
   const remainingIds = new Set(originalAccounts.map((account) => account.id));
 
   for (const row of rows) {
@@ -177,14 +179,21 @@ async function persistBankAccountRowChanges(userId, rows, originalAccounts) {
         original.accountNumber !== row.accountNumber ||
         (original.branch ?? '') !== row.branch)
     ) {
-      const result = await adminUpdateBankAccount(userId, row.bankAccountId, row);
+      const result = await adminUpdateBankAccount(
+        userId,
+        row.bankAccountId,
+        row,
+      );
       if (!result.success) {
         failures.push(`${row.accountNumber}: ${result.message}`);
       }
     }
 
     if (row.isPrimary && !original?.isPrimary) {
-      const result = await adminSetPrimaryBankAccount(userId, row.bankAccountId);
+      const result = await adminSetPrimaryBankAccount(
+        userId,
+        row.bankAccountId,
+      );
       if (!result.success) {
         failures.push(`${row.accountNumber}: ${result.message}`);
       }
@@ -195,7 +204,9 @@ async function persistBankAccountRowChanges(userId, rows, originalAccounts) {
     const result = await adminRemoveBankAccount(userId, removedId);
     if (!result.success) {
       const removedAccount = originalById.get(removedId);
-      failures.push(`${removedAccount?.accountNumber ?? removedId}: ${result.message}`);
+      failures.push(
+        `${removedAccount?.accountNumber ?? removedId}: ${result.message}`,
+      );
     }
   }
 
@@ -244,18 +255,32 @@ export function useEditUserForm(user, { onSuccess } = {}) {
   // values, so the full record is fetched and the form re-seeded once it lands.
   const userDetailQuery = useUserDetailQuery(user.id);
   const hasSeededFromDetailRef = useRef(false);
-  // Derived from the query, not the seeding ref — a ref mutation does not
-  // re-render, so the form would stay stuck on its loading state.
-  const isLoadingUser = !userDetailQuery.data?.success;
+  const [detailSeeded, setDetailSeeded] = useState(false);
+  const [banksSeeded, setBanksSeeded] = useState(false);
+  // Readiness follows both seeded snapshots so loaded defaults are never
+  // mistaken for user edits and saving cannot erase unhydrated bank rows.
+  const isLoadingUser = !detailSeeded || !banksSeeded;
+  const loadError =
+    (userDetailQuery.data && !userDetailQuery.data.success
+      ? userDetailQuery.data.message
+      : '') ||
+    (bankAccountsQuery.data && !bankAccountsQuery.data.success
+      ? bankAccountsQuery.data.message
+      : '') ||
+    (userDetailQuery.isError || bankAccountsQuery.isError
+      ? 'Không thể tải đầy đủ thông tin người dùng.'
+      : '');
 
   useEffect(() => {
-    if (hasSeededFromDetailRef.current || !userDetailQuery.data?.success) return;
+    if (hasSeededFromDetailRef.current || !userDetailQuery.data?.success)
+      return;
 
     setValues(toFormValues(userDetailQuery.data.user));
     setAllowConcurrentSessions(
       userDetailQuery.data.user.allowConcurrentSessions,
     );
     hasSeededFromDetailRef.current = true;
+    setDetailSeeded(true);
   }, [userDetailQuery.data]);
 
   /** @param {boolean} allowed */
@@ -297,8 +322,15 @@ export function useEditUserForm(user, { onSuccess } = {}) {
     newAddressQuery.data,
   );
 
-  const { rows: bankAccountRowsState, setRows: setBankAccountRows, addRow: addBankAccountRow, removeRow: removeBankAccountRow, clearRows: clearBankAccountRows, updateRowField: updateBankAccountRowField, setPrimaryRow: setPrimaryBankAccountRow } =
-    useBankAccountRows();
+  const {
+    rows: bankAccountRowsState,
+    setRows: setBankAccountRows,
+    addRow: addBankAccountRow,
+    removeRow: removeBankAccountRow,
+    clearRows: clearBankAccountRows,
+    updateRowField: updateBankAccountRowField,
+    setPrimaryRow: setPrimaryBankAccountRow,
+  } = useBankAccountRows();
 
   // The grid is seeded from the server exactly once, the first time the
   // list query resolves — re-seeding on every background refetch would
@@ -309,11 +341,15 @@ export function useEditUserForm(user, { onSuccess } = {}) {
   );
 
   useEffect(() => {
-    if (hasSeededBankAccountRowsRef.current || !bankAccountsQuery.data?.success) return;
+    if (hasSeededBankAccountRowsRef.current || !bankAccountsQuery.data?.success)
+      return;
 
     originalBankAccountsRef.current = bankAccountsQuery.data.bankAccounts;
-    setBankAccountRows(bankAccountsQuery.data.bankAccounts.map(toBankAccountRow));
+    setBankAccountRows(
+      bankAccountsQuery.data.bankAccounts.map(toBankAccountRow),
+    );
     hasSeededBankAccountRowsRef.current = true;
+    setBanksSeeded(true);
   }, [bankAccountsQuery.data, setBankAccountRows]);
 
   /**
@@ -335,6 +371,7 @@ export function useEditUserForm(user, { onSuccess } = {}) {
   /** @param {import('react').FormEvent<HTMLFormElement>} event */
   async function handleSubmit(event) {
     event.preventDefault();
+    if (isLoadingUser) return;
     setSubmitError('');
     setSubmitSuccess('');
 
@@ -382,6 +419,11 @@ export function useEditUserForm(user, { onSuccess } = {}) {
     values,
     setField,
     isLoadingUser,
+    loadError,
+    retryLoad: () => {
+      userDetailQuery.refetch();
+      bankAccountsQuery.refetch();
+    },
     fieldStatuses: {
       firstName: fieldStatus(fieldErrors.firstName),
       lastName: fieldStatus(fieldErrors.lastName),

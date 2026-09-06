@@ -1,6 +1,6 @@
 'use client';
 import { Button } from '@astryxdesign/core/Button';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
+import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -96,7 +96,7 @@ export function AdvanceTableSearchDialog({
           />
         </CommonDialog>
       ) : advancedSearchFieldsResolved.length > 0 ? (
-        <Dialog
+        <CommonDialog
           isOpen={isAdvancedSearchOpen}
           onOpenChange={handleAdvancedSearchOpenChange}
           purpose="form"
@@ -166,7 +166,7 @@ export function AdvanceTableSearchDialog({
               </LayoutFooter>
             }
           />
-        </Dialog>
+        </CommonDialog>
       ) : null}
     </>
   );

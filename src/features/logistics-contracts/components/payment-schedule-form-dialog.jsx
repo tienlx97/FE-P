@@ -1,12 +1,6 @@
 'use client';
 
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
-import { DialogHeader } from '@astryxdesign/core/Dialog';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-
-import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { usePaymentScheduleForm } from '../hooks/use-payment-schedule-form.js';
 import { PaymentScheduleFields } from './payment-schedule-fields.jsx';
@@ -47,51 +41,27 @@ export function PaymentScheduleFormDialog({
   }
 
   return (
-    <CommonDialog isOpen={isOpen} onOpenChange={handleOpenChange} width={480}>
-      <form onSubmit={form.handleSubmit}>
-        <Layout
-          header={
-            <DialogHeader
-              title={
-                schedule
-                  ? `Sửa đợt thanh toán ${schedule.paymentCode}`
-                  : 'Thêm đợt thanh toán'
-              }
-              onOpenChange={handleOpenChange}
-            />
-          }
-          content={
-            <LayoutContent padding={6}>
-              {form.submitError ? (
-                <Banner status="error" title={form.submitError} container="card" />
-              ) : null}
-              <PaymentScheduleFields
-                values={form.values}
-                setField={form.setField}
-                fieldStatuses={form.fieldStatuses}
-              />
-            </LayoutContent>
-          }
-          footer={
-            <LayoutFooter>
-              <HStack hAlign="end" gap={2}>
-                <Button
-                  label="Hủy"
-                  type="button"
-                  variant="secondary"
-                  onClick={() => handleOpenChange(false)}
-                />
-                <Button
-                  label={schedule ? 'Lưu' : 'Thêm'}
-                  type="submit"
-                  variant="primary"
-                  isLoading={form.isSubmitting}
-                />
-              </HStack>
-            </LayoutFooter>
-          }
-        />
-      </form>
-    </CommonDialog>
+    <FormDialog
+      isOpen={isOpen}
+      onOpenChange={handleOpenChange}
+      title={
+        schedule
+          ? `Sửa đợt thanh toán ${schedule.paymentCode}`
+          : 'Thêm đợt thanh toán'
+      }
+      submitLabel={schedule ? 'Lưu thay đổi' : 'Thêm'}
+      width={480}
+      draft={{ values: form.values }}
+      isSubmitting={form.isSubmitting}
+      submitError={form.submitError}
+      fieldStatuses={form.fieldStatuses}
+      onSubmit={form.handleSubmit}
+    >
+      <PaymentScheduleFields
+        values={form.values}
+        setField={form.setField}
+        fieldStatuses={form.fieldStatuses}
+      />
+    </FormDialog>
   );
 }

@@ -1,21 +1,17 @@
 'use client';
 
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
-import { DialogHeader } from '@astryxdesign/core/Dialog';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
+import { Text } from '@astryxdesign/core/Text';
 import * as stylex from '@stylexjs/stylex';
+import { useId, useState } from 'react';
 
-import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { useShipmentForm } from '../hooks/use-shipment-form.js';
 import { ShipmentFields } from './shipment-fields.jsx';
 
 const styles = stylex.create({
-  form: {
-    height: '100%',
-  },
+  disabledTab: { cursor: 'not-allowed', opacity: 0.5 },
 });
 
 /**
@@ -57,69 +53,76 @@ export function ShipmentFormDialog({
     onOpenChange(nextIsOpen);
   }
 
+  const [activeTab, setActiveTab] = useState('info');
+  const panelId = useId();
   return (
-    <CommonDialog
+    <FormDialog
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
       variant="fullscreen"
+      title={
+        shipment ? `Sửa Shipment ${shipment.shipmentCode}` : 'Thêm Shipment'
+      }
+      submitLabel={shipment ? 'Lưu thay đổi' : 'Tạo Shipment'}
+      draft={{ values: form.values, costs: form.costLineRows.rows }}
+      isSubmitting={form.isSubmitting}
+      submitError={form.submitError}
+      fieldStatuses={form.fieldStatuses}
+      onSubmit={async (event) => {
+        const invalidTab = await form.handleSubmit(event);
+        if (invalidTab) setActiveTab(invalidTab);
+      }}
+      navigation={
+        <TabList
+          value={activeTab}
+          onChange={(tab) => {
+            if (tab !== 'vgm' || shipment) setActiveTab(tab);
+          }}
+          role="tablist"
+          hasDivider
+        >
+          <Tab value="info" label="Thông tin" panelId={panelId} />
+          <Tab
+            value="vgm"
+            label="VGM"
+            panelId={panelId}
+            aria-disabled={!shipment}
+            xstyle={!shipment && styles.disabledTab}
+          />
+          <Tab value="costs" label="Chi phí Logistics" panelId={panelId} />
+        </TabList>
+      }
     >
-      <form onSubmit={form.handleSubmit} {...stylex.props(styles.form)}>
-        <Layout
-          header={
-            <DialogHeader
-              title={
-                shipment
-                  ? `Sửa Shipment ${shipment.shipmentCode}`
-                  : 'Thêm Shipment'
-              }
-              onOpenChange={handleOpenChange}
-            />
-          }
-          content={
-            // See ContractFormDialog for why isScrollable is disabled here
-            // and moved into ShipmentFields' own fixed-height tab panel:
-            // without it, switching tabs (which changes content height)
-            // would resize the dialog itself.
-            <LayoutContent padding={6} isScrollable={false}>
-              {form.submitError ? (
-                <Banner
-                  status="error"
-                  title={form.submitError}
-                  container="card"
-                />
-              ) : null}
-              <ShipmentFields
-                values={form.values}
-                setField={form.setField}
-                fieldStatuses={form.fieldStatuses}
-                customers={form.customers}
-                isEditing={shipment != null}
-                costLineRows={form.costLineRows}
-                contractId={contractId}
-                shipmentId={shipment?.id ?? null}
-              />
-            </LayoutContent>
-          }
-          footer={
-            <LayoutFooter>
-              <HStack hAlign="end" gap={2}>
-                <Button
-                  label="Hủy"
-                  type="button"
-                  variant="secondary"
-                  onClick={() => handleOpenChange(false)}
-                />
-                <Button
-                  label={shipment ? 'Lưu' : 'Thêm'}
-                  type="submit"
-                  variant="primary"
-                  isLoading={form.isSubmitting}
-                />
-              </HStack>
-            </LayoutFooter>
-          }
+      {!shipment ? (
+        <Text color="secondary">
+          Lưu Shipment trước khi thêm VGM. Chi phí Logistics được lưu cùng
+          Shipment.
+        </Text>
+      ) : null}
+      <section
+        id={panelId}
+        role="tabpanel"
+        aria-label={
+          activeTab === 'info'
+            ? 'Thông tin'
+            : activeTab === 'vgm'
+              ? 'VGM'
+              : 'Chi phí Logistics'
+        }
+        tabIndex={0}
+      >
+        <ShipmentFields
+          values={form.values}
+          setField={form.setField}
+          fieldStatuses={form.fieldStatuses}
+          customers={form.customers}
+          isEditing={shipment != null}
+          costLineRows={form.costLineRows}
+          contractId={contractId}
+          shipmentId={shipment?.id ?? null}
+          activeTab={activeTab}
         />
-      </form>
-    </CommonDialog>
+      </section>
+    </FormDialog>
   );
 }

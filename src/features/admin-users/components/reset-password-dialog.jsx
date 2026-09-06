@@ -1,17 +1,13 @@
 'use client';
 
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
+import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { IconShuffle } from '@/shared/components/icon/icon-shuffle.jsx';
 
 import { generateRandomPassword } from '../config/generate-password.js';
@@ -76,93 +72,48 @@ export function ResetPasswordDialog({ isOpen, onOpenChange, user }) {
   }
 
   return (
-    <Dialog
+    <FormDialog
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
-      purpose="form"
+      title="Đặt lại mật khẩu"
+      subtitle={fullName || undefined}
+      submitLabel="Đặt lại mật khẩu"
       width={440}
+      draft={password}
+      isSubmitting={resetPasswordMutation.isPending}
+      isReady={!resetPasswordValue}
+      submitError={error}
+      onSubmit={handleSubmit}
+      successMessage={
+        resetPasswordValue
+          ? `Đã đặt lại mật khẩu. Mật khẩu mới: ${resetPasswordValue}. Hãy gửi mật khẩu này cho nhân viên — hệ thống không gửi email/SMS.`
+          : ''
+      }
     >
-      <form onSubmit={handleSubmit}>
-        <Layout
-          header={
-            <DialogHeader
-              title="Đặt lại mật khẩu"
-              subtitle={fullName || undefined}
-              onOpenChange={handleOpenChange}
+      {!resetPasswordValue ? (
+        <HStack gap={2}>
+          <StackItem size="fill">
+            <TextInput
+              label="Mật khẩu mới"
+              value={password}
+              onChange={setPassword}
+              type="text"
+              placeholder="Tối thiểu 8 ký tự, có hoa/thường/số/ký tự đặc biệt"
+              isRequired
             />
-          }
-          content={
-            <LayoutContent padding={6}>
-              <VStack gap={3} hAlign="stretch">
-                {error ? (
-                  <Banner status="error" title={error} container="card" />
-                ) : null}
-
-                {resetPasswordValue ? (
-                  <Banner
-                    status="success"
-                    title="Đã đặt lại mật khẩu"
-                    description={`Mật khẩu mới: ${resetPasswordValue}. Hãy gửi mật khẩu này cho nhân viên — hệ thống không lưu lại và không gửi email/SMS.`}
-                    container="card"
-                  />
-                ) : (
-                  <HStack gap={2}>
-                    <StackItem size="fill">
-                      <TextInput
-                        label="Mật khẩu mới"
-                        value={password}
-                        onChange={setPassword}
-                        type="text"
-                        placeholder="Tối thiểu 8 ký tự, có hoa/thường/số/ký tự đặc biệt"
-                        isRequired
-                      />
-                    </StackItem>
-                    <StackItem crossAlignSelf="end">
-                      <IconButton
-                        label="Tạo mật khẩu ngẫu nhiên"
-                        tooltip="Ngẫu nhiên"
-                        icon={<Icon icon={IconShuffle} size="sm" />}
-                        type="button"
-                        variant="secondary"
-                        onClick={() => setPassword(generateRandomPassword())}
-                      />
-                    </StackItem>
-                  </HStack>
-                )}
-              </VStack>
-            </LayoutContent>
-          }
-          footer={
-            <LayoutFooter>
-              <HStack hAlign="end" gap={2}>
-                {resetPasswordValue ? (
-                  <Button
-                    label="Đóng"
-                    type="button"
-                    variant="primary"
-                    onClick={() => handleOpenChange(false)}
-                  />
-                ) : (
-                  <>
-                    <Button
-                      label="Hủy"
-                      type="button"
-                      variant="secondary"
-                      onClick={() => handleOpenChange(false)}
-                    />
-                    <Button
-                      label="Đặt lại mật khẩu"
-                      type="submit"
-                      variant="primary"
-                      isLoading={resetPasswordMutation.isPending}
-                    />
-                  </>
-                )}
-              </HStack>
-            </LayoutFooter>
-          }
-        />
-      </form>
-    </Dialog>
+          </StackItem>
+          <StackItem crossAlignSelf="end">
+            <IconButton
+              label="Tạo mật khẩu ngẫu nhiên"
+              tooltip="Ngẫu nhiên"
+              icon={<Icon icon={IconShuffle} size="sm" />}
+              type="button"
+              variant="secondary"
+              onClick={() => setPassword(generateRandomPassword())}
+            />
+          </StackItem>
+        </HStack>
+      ) : null}
+    </FormDialog>
   );
 }

@@ -1,13 +1,8 @@
 'use client';
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
 import { CollapsibleGroup } from '@astryxdesign/core/Collapsible';
-import { DialogHeader } from '@astryxdesign/core/Dialog';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { VStack } from '@astryxdesign/core/VStack';
 
-import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 
 import { useShipmentVgmForm } from '../hooks/use-shipment-vgm-form.js';
@@ -17,7 +12,6 @@ import {
 } from './shipment-vgm-fields.jsx';
 
 export const SHIPMENT_VGM_FORM_DIALOG_WIDTH = 760;
-const SHIPMENT_VGM_FORM_DIALOG_CONTENT_HEIGHT = 480;
 
 /**
  * Create/edit dialog for one `Shipment`'s VGM records — opened from
@@ -62,84 +56,46 @@ export function ShipmentVgmFormDialog({
   }
 
   return (
-    <CommonDialog
+    <FormDialog
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
+      title={vgm ? `Sửa VGM ${vgm.containerNumber}` : 'Thêm VGM'}
+      submitLabel={vgm ? 'Lưu thay đổi' : 'Thêm VGM'}
       width={SHIPMENT_VGM_FORM_DIALOG_WIDTH}
+      draft={form.values}
+      isSubmitting={form.isSubmitting}
+      submitError={form.submitError}
+      fieldStatuses={form.fieldStatuses}
+      onSubmit={form.handleSubmit}
     >
-      <form onSubmit={form.handleSubmit}>
-        <Layout
-          header={
-            <DialogHeader
-              title={vgm ? `Sửa VGM ${vgm.containerNumber}` : 'Thêm VGM'}
-              onOpenChange={handleOpenChange}
+      <CollapsibleGroup
+        type="multiple"
+        defaultValue={['main', 'additional']}
+        value={
+          Object.values(form.fieldStatuses).some(Boolean)
+            ? ['main', 'additional']
+            : undefined
+        }
+      >
+        <VStack gap={3} hAlign="stretch">
+          <FormSection value="main" title="Thông tin container">
+            <ShipmentVgmFields
+              values={form.values}
+              setField={form.setField}
+              fieldStatuses={form.fieldStatuses}
+              customers={form.customers}
             />
-          }
-          content={
-            // See ContractFormDialog for why isScrollable is disabled here
-            // and moved to the fixed-height VStack below: without it, every
-            // card expand/collapse resizes the dialog itself.
-            <LayoutContent padding={6} isScrollable={false}>
-              <VStack
-                gap={4}
-                hAlign="stretch"
-                height={SHIPMENT_VGM_FORM_DIALOG_CONTENT_HEIGHT}
-                isScrollable
-              >
-                {form.submitError ? (
-                  <Banner
-                    status="error"
-                    title={form.submitError}
-                    container="card"
-                  />
-                ) : null}
+          </FormSection>
 
-                <CollapsibleGroup
-                  type="multiple"
-                  defaultValue={['main', 'additional']}
-                >
-                  <VStack gap={3} hAlign="stretch">
-                    <FormSection value="main" title="Thông tin container">
-                      <ShipmentVgmFields
-                        values={form.values}
-                        setField={form.setField}
-                        fieldStatuses={form.fieldStatuses}
-                        customers={form.customers}
-                      />
-                    </FormSection>
-
-                    <FormSection value="additional" title="Thông tin bổ sung">
-                      <ShipmentVgmAdditionalFields
-                        values={form.values}
-                        setField={form.setField}
-                        fieldStatuses={form.fieldStatuses}
-                      />
-                    </FormSection>
-                  </VStack>
-                </CollapsibleGroup>
-              </VStack>
-            </LayoutContent>
-          }
-          footer={
-            <LayoutFooter>
-              <HStack hAlign="end" gap={2}>
-                <Button
-                  label="Hủy"
-                  type="button"
-                  variant="secondary"
-                  onClick={() => handleOpenChange(false)}
-                />
-                <Button
-                  label={vgm ? 'Lưu' : 'Thêm'}
-                  type="submit"
-                  variant="primary"
-                  isLoading={form.isSubmitting}
-                />
-              </HStack>
-            </LayoutFooter>
-          }
-        />
-      </form>
-    </CommonDialog>
+          <FormSection value="additional" title="Thông tin bổ sung">
+            <ShipmentVgmAdditionalFields
+              values={form.values}
+              setField={form.setField}
+              fieldStatuses={form.fieldStatuses}
+            />
+          </FormSection>
+        </VStack>
+      </CollapsibleGroup>
+    </FormDialog>
   );
 }

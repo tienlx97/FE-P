@@ -226,6 +226,8 @@ export {};
  * @property {'create' | 'edit'} mode
  * @property {string} title Dialog header text.
  * @property {string} submitLabel Primary button label.
+ * @property {string} [loadError]
+ * @property {() => void} [retryLoad]
  * @property {boolean} isLoadingUser True while the detail record is in flight (edit only).
  * @property {string | null} password Create only — `null` in edit mode, where the
  *   password has its own reset endpoint and is not part of `PUT /users/{id}`.

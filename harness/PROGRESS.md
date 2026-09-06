@@ -7121,3 +7121,42 @@ ward reference data (free-text inputs, matching the backend).
 - Final verification: `./harness/verify.sh` passed,
   `harness/runs/20260906-131752-565150/` (120 unit tests, build, structure
   and quality thresholds). Task 1.1 complete.
+
+## 2026-09-06 — Shared operational form dialogs
+
+- Active change: `shared-form-dialogs`, task 1.1.
+- Integrated 19 production form dialog components with FormDialog: consistent
+  header/content/footer, compact mobile geometry, themed independent native
+  forms, dirty discard confirmation and an awaited save/deduplication guard.
+  Shipment, Commission and User remain fullscreen; lookup forms stay compact.
+- Shipment keeps tabs outside its scroll region, disables VGM before creation
+  and selects the failing validation tab without losing values. User waits for
+  detail and bank-row initialization, offers load retry, starts Work open and
+  reveals hidden sections when validating. Existing Contract workspace remains
+  the specialized create/view/edit controller on CommonDialog.
+- Browser evidence: `harness/runs/20260906-dialog-audit/`, 14 checks covering
+  representative desktop/mobile geometry, child Enter isolation, theme,
+  parent/tab drafts, discard Escape, User load retry/clean baseline, pending
+  deduplication and failed-save retention. All backend traffic mocked with
+  synthetic fixtures; no real business records were written. Reusable runner:
+  `node harness/checks/dialog-browser.mjs` with local dev server running.
+- Harness gaps: body portals lose inherited theme variables; fixed by wrapping
+  the portaled form in ThemeProvider and asserting theme presence in geometry
+  checks. DOM portals still bubble React submit events; stopPropagation plus
+  the child-only POST assertion protects this. Browser scripts must wait for
+  hydrated data/menu presence/animation and use plain CSS selectors; backend
+  error expectations must match apiRequest's normalized message. These checks
+  are manual until a CI browser server/runner is introduced.
+- Discovered: existing User bank persistence can hide partial-failure messages
+  by closing after multiple API writes. Reconciliation/idempotent retry needs a
+  separate persistence task; recorded in the change verification document.
+  Legacy v1 User forms, demo dialogs and media dialogs were audited but retain
+  purpose-specific behavior. Individual backend round trips for every migrated
+  form were not exercised.
+- ADR-0006 and docs/ui-components.md record the shared API and tradeoffs. ADR
+  recording occurred late again; an explicit pre-implementation ADR checklist
+  is a remaining process gap. Unrelated environment and memory edits excluded.
+- Final verification: `./harness/verify.sh` passed in
+  `harness/runs/20260906-220221-601009/`: 120 unit tests, lint, typecheck,
+  structural/harness checks, build and quality gate (shared gzip 168.7 kB).
+  Task 1.1 complete.

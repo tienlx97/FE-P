@@ -1,13 +1,9 @@
 'use client';
 
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
+
+import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 /**
  * Generic "add a new X" dialog reused by all four org-directory Selectors in
@@ -68,48 +64,18 @@ export function CreateOrgItemDialog({
   }
 
   return (
-    <Dialog isOpen={isOpen} onOpenChange={handleOpenChange} purpose="form" width={400}>
-      {/* Deliberately no <form>/type="submit" here: `UserOrgFields` renders
-          this dialog nested inside the create/edit user dialog's own
-          <form>. Astryx's `Dialog` is a native <dialog> element rendered
-          inline (no portal), so a second <form> here would be a form nested
-          inside a form — invalid HTML that the browser's parser resolves by
-          dropping this inner <form> tag entirely, silently merging "Thêm"
-          into the OUTER form. That earlier bug submitted (and closed) the
-          whole user-edit dialog instead of creating this item. A plain
-          button + onClick sidesteps the nesting rule outright. */}
-      <Layout
-        header={<DialogHeader title={title} onOpenChange={handleOpenChange} />}
-        content={
-          <LayoutContent padding={6}>
-            <VStack gap={3} hAlign="stretch">
-              {error ? (
-                <Banner status="error" title={error} container="card" />
-              ) : null}
-              <TextInput label={label} value={name} onChange={setName} isRequired />
-            </VStack>
-          </LayoutContent>
-        }
-        footer={
-          <LayoutFooter>
-            <HStack hAlign="end" gap={2}>
-              <Button
-                label="Hủy"
-                type="button"
-                variant="secondary"
-                onClick={() => handleOpenChange(false)}
-              />
-              <Button
-                label="Thêm"
-                type="button"
-                variant="primary"
-                isLoading={isSubmitting}
-                onClick={handleSubmit}
-              />
-            </HStack>
-          </LayoutFooter>
-        }
-      />
-    </Dialog>
+    <FormDialog
+      isOpen={isOpen}
+      onOpenChange={handleOpenChange}
+      title={title}
+      submitLabel="Thêm"
+      width={400}
+      draft={name}
+      isSubmitting={isSubmitting}
+      submitError={error}
+      onSubmit={handleSubmit}
+    >
+      <TextInput label={label} value={name} onChange={setName} isRequired />
+    </FormDialog>
   );
 }

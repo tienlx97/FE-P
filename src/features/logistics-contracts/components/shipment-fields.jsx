@@ -1,28 +1,14 @@
 'use client';
 import { CollapsibleGroup } from '@astryxdesign/core/Collapsible';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import * as stylex from '@stylexjs/stylex';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { quantityUnitForShipmentType } from '../config/shipment-quantity-units.js';
 import { ShipmentBookingFields } from './shipment-booking-fields.jsx';
 import { ShipmentCostLinesFields } from './shipment-cost-lines-fields.jsx';
 import { ShipmentLotFields } from './shipment-lot-fields.jsx';
 import { ShipmentVgmSection } from './shipment-vgm-section.jsx';
-
-const styles = stylex.create({
-  container: {
-    height: '100%',
-  },
-  content: {
-    flex: '1',
-    minHeight: 0,
-    overflowX: 'hidden',
-    overflowY: 'auto',
-  },
-});
 
 /**
  * `Shipment` field-set, split into three tabs — per user request
@@ -61,6 +47,7 @@ const styles = stylex.create({
  *   costLineRows: ReturnType<typeof import('../hooks/use-shipment-cost-line-rows.js').useShipmentCostLineRows>,
  *   contractId: string,
  *   shipmentId: string | null,
+ *   activeTab: string,
  * }} props
  */
 export function ShipmentFields({
@@ -72,9 +59,9 @@ export function ShipmentFields({
   costLineRows,
   contractId,
   shipmentId,
+  activeTab,
 }) {
   const derivedQuantityUnit = quantityUnitForShipmentType(values.type);
-  const [activeTab, setActiveTab] = useState('info');
 
   const customersById = useMemo(
     () => new Map(customers.map((customer) => [customer.id, customer])),
@@ -82,16 +69,18 @@ export function ShipmentFields({
   );
 
   return (
-    <VStack gap={3} hAlign="stretch" xstyle={styles.container}>
-      <TabList value={activeTab} onChange={setActiveTab} hasDivider>
-        <Tab value="info" label="Thông tin" />
-        <Tab value="vgm" label="VGM" />
-        <Tab value="costs" label="Chi phí Logistics" />
-      </TabList>
-
-      <VStack gap={3} hAlign="stretch" xstyle={styles.content}>
+    <VStack gap={3} hAlign="stretch">
+      <VStack gap={3} hAlign="stretch">
         {activeTab === 'info' ? (
-          <CollapsibleGroup type="multiple" defaultValue={['book', 'lot']}>
+          <CollapsibleGroup
+            type="multiple"
+            defaultValue={['book', 'lot']}
+            value={
+              Object.values(fieldStatuses).some(Boolean)
+                ? ['book', 'lot']
+                : undefined
+            }
+          >
             <VStack gap={3} hAlign="stretch">
               <ShipmentBookingFields
                 values={values}

@@ -1,12 +1,6 @@
 'use client';
 
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
-import { DialogHeader } from '@astryxdesign/core/Dialog';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-
-import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { useCustomerForm } from '../hooks/use-customer-form.js';
 import { CustomerFields } from './customer-fields.jsx';
@@ -44,52 +38,24 @@ export function CustomerFormDialog({
   }
 
   return (
-    <CommonDialog isOpen={isOpen} onOpenChange={handleOpenChange} width={600}>
-      <form onSubmit={form.handleSubmit}>
-        <Layout
-          header={
-            <DialogHeader
-              title={customer ? 'Sửa khách hàng' : 'Thêm khách hàng'}
-              onOpenChange={handleOpenChange}
-            />
-          }
-          content={
-            <LayoutContent padding={6}>
-              {form.submitError ? (
-                <Banner
-                  status="error"
-                  title={form.submitError}
-                  container="card"
-                />
-              ) : null}
-              <CustomerFields
-                values={form.values}
-                setField={form.setField}
-                fieldStatuses={form.fieldStatuses}
-                extraFieldRows={form.extraFieldRows}
-              />
-            </LayoutContent>
-          }
-          footer={
-            <LayoutFooter>
-              <HStack hAlign="end" gap={2}>
-                <Button
-                  label="Hủy"
-                  type="button"
-                  variant="secondary"
-                  onClick={() => handleOpenChange(false)}
-                />
-                <Button
-                  label={customer ? 'Lưu' : 'Thêm'}
-                  type="submit"
-                  variant="primary"
-                  isLoading={form.isSubmitting}
-                />
-              </HStack>
-            </LayoutFooter>
-          }
-        />
-      </form>
-    </CommonDialog>
+    <FormDialog
+      isOpen={isOpen}
+      onOpenChange={handleOpenChange}
+      title={customer ? 'Sửa khách hàng' : 'Thêm khách hàng'}
+      submitLabel={customer ? 'Lưu thay đổi' : 'Thêm'}
+      width={600}
+      draft={{ values: form.values, extraFieldRows: form.extraFieldRows.rows }}
+      isSubmitting={form.isSubmitting}
+      submitError={form.submitError}
+      fieldStatuses={form.fieldStatuses}
+      onSubmit={form.handleSubmit}
+    >
+      <CustomerFields
+        values={form.values}
+        setField={form.setField}
+        fieldStatuses={form.fieldStatuses}
+        extraFieldRows={form.extraFieldRows}
+      />
+    </FormDialog>
   );
 }

@@ -176,7 +176,11 @@ export function useShipmentForm({
         }
       }
       setFieldErrors(nextFieldErrors);
-      return;
+      return Object.keys(nextFieldErrors).some(
+        (key) => !key.startsWith('costLines'),
+      )
+        ? 'info'
+        : 'costs';
     }
 
     setFieldErrors({});
@@ -188,7 +192,10 @@ export function useShipmentForm({
           values: submittedValues,
           costLines,
         })
-      : await createMutation.mutateAsync({ values: submittedValues, costLines });
+      : await createMutation.mutateAsync({
+          values: submittedValues,
+          costLines,
+        });
 
     if (!mutationResult.success) {
       setSubmitError(mutationResult.message);

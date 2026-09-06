@@ -1,16 +1,13 @@
 'use client';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { CollapsibleGroup } from '@astryxdesign/core/Collapsible';
-import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import * as stylex from '@stylexjs/stylex';
+import { useState } from 'react';
 
+import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 
 import { useCreateUserFormV2 } from '../hooks/use-create-user-form-v2.js';
@@ -23,12 +20,6 @@ import { UserOrgFields } from './user-org-fields.jsx';
 import { UserPermissionsFields } from './user-permissions-fields.jsx';
 import { UserSessionFields } from './user-session-fields.jsx';
 
-const styles = stylex.create({
-  form: {
-    height: '100%',
-  },
-});
-
 /**
  * The v2 create/edit dialog. Replaces v1's tab strip with a stack of cards:
  * one always-open card with the fields needed to identify the person, then
@@ -37,7 +28,7 @@ const styles = stylex.create({
  * `controller` contract (`types/index.js`, `UserFormV2Controller`), so there
  * is a single layout to maintain rather than two that drift apart.
  *
- * Sections are `type="multiple"` and start closed: an accordion that closes
+ * Sections are `type="multiple"`; work starts open and validation reveals all: an accordion that closes
  * the previous section would hide fields the Admin already filled in, and a
  * validation error on a closed section still has to be reachable.
  * @param {{
@@ -83,166 +74,139 @@ function UserFormDialogShell({ isOpen, onOpenChange, controller }) {
     handleSubmit,
   } = controller;
 
+  const [expandedSections, setExpandedSections] = useState(['work']);
   return (
-    <Dialog
+    <FormDialog
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      purpose="form"
       variant="fullscreen"
+      title={title}
+      submitLabel={submitLabel}
+      isReady={!isLoadingUser}
+      draft={{ values, banks: bankAccountRows }}
+      isSubmitting={isSubmitting}
+      submitError={controller.loadError || submitError}
+      fieldStatuses={fieldStatuses}
+      successMessage={submitSuccess}
+      onSubmit={handleSubmit}
+      onValidation={() =>
+        setExpandedSections([
+          'work',
+          'bank',
+          'employee',
+          'permissions',
+          'sessions',
+        ])
+      }
     >
-      <form onSubmit={handleSubmit} {...stylex.props(styles.form)}>
-        <Layout
-          header={<DialogHeader title={title} onOpenChange={onOpenChange} />}
-          content={
-            <LayoutContent padding={6} isScrollable={false}>
-              {/*
-                The fullscreen frame has a fixed viewport height. This inner
-                VStack fills the remaining content region and is its sole
-                scroll owner, so expanding cards never moves the header or
-                footer and doesn't create a redundant nested scrollbar.
+      {isLoadingUser ? (
+        <VStack gap={3} hAlign="stretch">
+          {controller.loadError ? (
+            <Button
+              label="Thử tải lại"
+              variant="secondary"
+              onClick={controller.retryLoad}
+            />
+          ) : (
+            <>
+              <Text color="secondary">Đang tải thông tin người dùng…</Text>
+              {[0, 1, 2, 3].map((row) => (
+                <Skeleton key={row} height={40} index={row} />
+              ))}
+            </>
+          )}
+        </VStack>
+      ) : (
+        <>
+          <Card>
+            <VStack gap={3} hAlign="stretch">
+              <Text type="large" weight="semibold">
+                {mode === 'edit'
+                  ? 'Thông tin người dùng'
+                  : 'Thông tin khởi tạo'}
+              </Text>
+              <UserIdentityFields
+                values={values}
+                setField={setField}
+                fieldStatuses={fieldStatuses}
+                password={password}
+              />
+            </VStack>
+          </Card>
 
-                In edit mode the list row is a slim projection, so the form is
-                empty until `GET /users/{id}` lands. Showing the blank form
-                meanwhile would invite a save that erases every field the row
-                omits — see `use-edit-user-form.js`.
-              */}
-              <VStack gap={4} hAlign="stretch" height="100%" isScrollable>
-                {isLoadingUser ? (
-                  <>
-                    <Text color="secondary">
-                      Đang tải thông tin người dùng…
-                    </Text>
-                    {[0, 1, 2, 3, 4, 5].map((row) => (
-                      <Skeleton key={row} height={40} index={row} />
-                    ))}
-                  </>
-                ) : (
-                  <>
-                    {submitError ? (
-                      <Banner
-                        status="error"
-                        title={submitError}
-                        container="card"
-                      />
-                    ) : null}
-                    {submitSuccess ? (
-                      <Banner
-                        status="success"
-                        title={submitSuccess}
-                        container="card"
-                      />
-                    ) : null}
+          <CollapsibleGroup
+            type="multiple"
+            value={expandedSections}
+            onChange={(value) =>
+              setExpandedSections(Array.isArray(value) ? value : [value])
+            }
+          >
+            <VStack gap={3} hAlign="stretch">
+              <FormSection value="work" title="Thông tin công việc">
+                <UserOrgFields
+                  values={values}
+                  setField={setField}
+                  fieldStatuses={fieldStatuses}
+                  companies={companies}
+                  branches={branches}
+                  departments={departments}
+                  positions={positions}
+                />
+              </FormSection>
 
-                    <Card>
-                      <VStack gap={3} hAlign="stretch">
-                        <Text type="large" weight="semibold">
-                          Thông tin khởi tạo
-                        </Text>
-                        <UserIdentityFields
-                          values={values}
-                          setField={setField}
-                          fieldStatuses={fieldStatuses}
-                          password={password}
-                        />
-                      </VStack>
-                    </Card>
+              <FormSection value="bank" title="Thông tin ngân hàng">
+                <BankAccountsFields
+                  rows={bankAccountRows}
+                  vietnamBanks={vietnamBanks}
+                  onAddRow={addBankAccountRow}
+                  onRemoveRow={removeBankAccountRow}
+                  onClearRows={clearBankAccountRows}
+                  onUpdateRowField={updateBankAccountRowField}
+                  onSetPrimaryRow={setPrimaryBankAccountRow}
+                />
+              </FormSection>
 
-                    <CollapsibleGroup type="multiple" defaultValue={[]}>
-                      <VStack gap={3} hAlign="stretch">
-                        <FormSection value="work" title="Thông tin công việc">
-                          <UserOrgFields
-                            values={values}
-                            setField={setField}
-                            fieldStatuses={fieldStatuses}
-                            companies={companies}
-                            branches={branches}
-                            departments={departments}
-                            positions={positions}
-                          />
-                        </FormSection>
+              <FormSection value="employee" title="Thông tin nhân viên">
+                <UserEmployeeFields
+                  values={values}
+                  setField={setField}
+                  fieldStatuses={fieldStatuses}
+                  editableNationalId={editableNationalId}
+                  readOnlyEmployeeCode={readOnlyEmployeeCode}
+                  oldProvinces={oldProvinces}
+                  oldDistricts={oldDistricts}
+                  oldWards={oldWards}
+                  newProvinces={newProvinces}
+                  newWards={newWards}
+                />
+              </FormSection>
 
-                        <FormSection value="bank" title="Thông tin ngân hàng">
-                          <BankAccountsFields
-                            rows={bankAccountRows}
-                            vietnamBanks={vietnamBanks}
-                            onAddRow={addBankAccountRow}
-                            onRemoveRow={removeBankAccountRow}
-                            onClearRows={clearBankAccountRows}
-                            onUpdateRowField={updateBankAccountRowField}
-                            onSetPrimaryRow={setPrimaryBankAccountRow}
-                          />
-                        </FormSection>
-
-                        <FormSection
-                          value="employee"
-                          title="Thông tin nhân viên"
-                        >
-                          <UserEmployeeFields
-                            values={values}
-                            setField={setField}
-                            fieldStatuses={fieldStatuses}
-                            editableNationalId={editableNationalId}
-                            readOnlyEmployeeCode={readOnlyEmployeeCode}
-                            oldProvinces={oldProvinces}
-                            oldDistricts={oldDistricts}
-                            oldWards={oldWards}
-                            newProvinces={newProvinces}
-                            newWards={newWards}
-                          />
-                        </FormSection>
-
-                        {/* Create mode leaves this null — granting a permission
+              {/* Create mode leaves this null — granting a permission
                           to an account that doesn't exist yet is meaningless. */}
-                        {permissionsFieldsProps ? (
-                          <FormSection value="permissions" title="Phân quyền">
-                            <UserPermissionsFields
-                              {...permissionsFieldsProps}
-                            />
-                          </FormSection>
-                        ) : null}
+              {permissionsFieldsProps ? (
+                <FormSection value="permissions" title="Phân quyền">
+                  <UserPermissionsFields {...permissionsFieldsProps} />
+                </FormSection>
+              ) : null}
 
-                        {createPermissionsFieldsProps ? (
-                          <FormSection value="permissions" title="Phân quyền">
-                            <CreateUserPermissionsFields
-                              {...createPermissionsFieldsProps}
-                            />
-                          </FormSection>
-                        ) : null}
+              {createPermissionsFieldsProps ? (
+                <FormSection value="permissions" title="Phân quyền">
+                  <CreateUserPermissionsFields
+                    {...createPermissionsFieldsProps}
+                  />
+                </FormSection>
+              ) : null}
 
-                        {concurrentSessionsProps ? (
-                          <FormSection value="sessions" title="Phiên đăng nhập">
-                            <UserSessionFields {...concurrentSessionsProps} />
-                          </FormSection>
-                        ) : null}
-                      </VStack>
-                    </CollapsibleGroup>
-                  </>
-                )}
-              </VStack>
-            </LayoutContent>
-          }
-          footer={
-            <LayoutFooter>
-              <HStack hAlign="end" gap={2}>
-                <Button
-                  label="Hủy"
-                  type="button"
-                  variant="secondary"
-                  onClick={() => onOpenChange(false)}
-                />
-                <Button
-                  label={submitLabel}
-                  type="submit"
-                  variant="primary"
-                  isLoading={isSubmitting}
-                  isDisabled={mode === 'edit' && isLoadingUser}
-                />
-              </HStack>
-            </LayoutFooter>
-          }
-        />
-      </form>
-    </Dialog>
+              {concurrentSessionsProps ? (
+                <FormSection value="sessions" title="Phiên đăng nhập">
+                  <UserSessionFields {...concurrentSessionsProps} />
+                </FormSection>
+              ) : null}
+            </VStack>
+          </CollapsibleGroup>
+        </>
+      )}
+    </FormDialog>
   );
 }
 
@@ -302,6 +266,7 @@ export function UserFormDialog({
   onOpenChange,
   onSuccess,
 }) {
+  if (!isOpen) return null;
   if (mode === 'edit') {
     return (
       <EditUserFormDialog

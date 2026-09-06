@@ -1,22 +1,9 @@
 'use client';
 
-import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
-import { DialogHeader } from '@astryxdesign/core/Dialog';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import * as stylex from '@stylexjs/stylex';
-
-import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { useCommissionForm } from '../hooks/use-commission-form.js';
 import { CommissionFields } from './commission-fields.jsx';
-
-const styles = stylex.create({
-  form: {
-    height: '100%',
-  },
-});
 
 /**
  * Create/edit dialog for one `Contract`'s `Commission` — opened from
@@ -50,52 +37,32 @@ export function CommissionFormDialog({
   });
 
   return (
-    <CommonDialog
+    <FormDialog
       isOpen={isOpen}
       onOpenChange={onOpenChange}
+      title={form.title}
+      submitLabel={form.submitLabel}
+      width={720}
       variant="fullscreen"
+      draft={{
+        values: form.values,
+        paymentTerms: form.paymentTermRows.rows,
+        payments: form.paymentHistoryRows.rows,
+      }}
+      isSubmitting={form.isSubmitting}
+      submitError={form.submitError}
+      fieldStatuses={form.fieldStatuses}
+      onSubmit={form.handleSubmit}
     >
-      <form onSubmit={form.handleSubmit} {...stylex.props(styles.form)}>
-        <Layout
-          header={
-            <DialogHeader title={form.title} onOpenChange={onOpenChange} />
-          }
-          content={
-            <LayoutContent padding={6}>
-              {form.submitError ? (
-                <Banner status="error" title={form.submitError} container="card" />
-              ) : null}
-              <CommissionFields
-                values={form.values}
-                setField={form.setField}
-                fieldStatuses={form.fieldStatuses}
-                customers={form.customers}
-                currency={currency}
-                paymentTermRows={form.paymentTermRows}
-                paymentHistoryRows={form.paymentHistoryRows}
-              />
-            </LayoutContent>
-          }
-          footer={
-            <LayoutFooter>
-              <HStack hAlign="end" gap={2}>
-                <Button
-                  label="Hủy"
-                  type="button"
-                  variant="secondary"
-                  onClick={() => onOpenChange(false)}
-                />
-                <Button
-                  label={form.submitLabel}
-                  type="submit"
-                  variant="primary"
-                  isLoading={form.isSubmitting}
-                />
-              </HStack>
-            </LayoutFooter>
-          }
-        />
-      </form>
-    </CommonDialog>
+      <CommissionFields
+        values={form.values}
+        setField={form.setField}
+        fieldStatuses={form.fieldStatuses}
+        customers={form.customers}
+        currency={currency}
+        paymentTermRows={form.paymentTermRows}
+        paymentHistoryRows={form.paymentHistoryRows}
+      />
+    </FormDialog>
   );
 }

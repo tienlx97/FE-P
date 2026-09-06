@@ -1,6 +1,13 @@
 'use client';
 
 import { Dialog } from '@astryxdesign/core/Dialog';
+import { useMediaQuery } from '@astryxdesign/core/hooks';
+import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
+import * as stylex from '@stylexjs/stylex';
+
+const styles = stylex.create({
+  surface: { backgroundColor: colorVars['--color-background-surface'] },
+});
 
 /**
  * Shared `Dialog` wrapper so every form dialog in the app opens at the same
@@ -36,13 +43,15 @@ export function CommonDialog({
   purpose = 'form',
   ...rest
 }) {
+  const isNarrow = useMediaQuery('(max-width: 640px)');
   return (
     <Dialog
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       purpose={purpose}
       width={width}
-      maxHeight={maxHeight}
+      maxHeight={isNarrow ? 'calc(100dvh - 32px)' : maxHeight}
+      xstyle={styles.surface}
       // Astryx's `position` prop replaces the default centering
       // `margin: auto` with `margin: 0` the moment any position is given
       // (see `Dialog.tsx`'s `dynamicStyles.position`) — fine for corner
@@ -52,7 +61,7 @@ export function CommonDialog({
       // re-centers it without touching `transform`, which the open/close
       // animation already animates — overriding that in `style` would fight
       // the animation instead of just the resting position.
-      position={{ top: topOffset, start: 0, end: 0 }}
+      position={{ top: isNarrow ? 16 : topOffset, start: 0, end: 0 }}
       style={{ marginInline: 'auto' }}
       {...rest}
     >

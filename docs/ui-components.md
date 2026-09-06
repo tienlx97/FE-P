@@ -42,3 +42,25 @@ Capture desktop/mobile screenshots in a dated `harness/runs/` directory.
 Check controls inside dialogs/popovers: document width alone misses clipping
 inside overlays. Review column transfer, filter recovery, accordion/tab value
 preservation, and mouse selection in edit dialogs after shared UI changes.
+
+## Operational dialogs
+
+`CommonDialog` owns overlay geometry and surface; compact dialogs use the
+available mobile height. `FormDialog` owns the header, navigation slot, one
+content scroll region and save/cancel footer. Pass controlled `draft` values,
+`fieldStatuses` and the existing async `onSubmit`. Return/await all persistence
+operations so the pending guard covers the complete save. Set `isReady=false`
+until asynchronous defaults have been seeded. Do not nest another native form
+inside its children; the shell already portals an independent themed form and
+stops submit propagation. Reset/unmount controller state on confirmed close.
+
+Shipment, Commission and User use fullscreen. Customer, Country, Place, bank,
+annex, payment, VGM, organization and password dialogs use compact widths.
+Shipment keeps navigation outside the scroll region, disables VGM until saved,
+and reveals the tab containing validation errors. User opens Work initially,
+reveals all sections on validation and offers retry when detail/banks fail.
+
+Run `node harness/checks/dialog-browser.mjs` against local `pnpm dev` for the
+mocked regression suite. It intercepts backend calls with synthetic fixtures
+and records screenshots, geometry and behavioral checks under `harness/runs/`.
+The suite is manual; the full gate does not run a browser server automatically.
