@@ -2,10 +2,12 @@
 
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { Grid } from '@astryxdesign/core/Grid';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Trash2 } from 'lucide-react';
@@ -160,116 +162,126 @@ export function AdvancedFilterBuilder({ fields, conditions, onChange }) {
                 }
               />
             ) : null}
-            <Grid columns={CONDITION_COLUMNS} gap={2} align="end">
-              <Selector
-                label="Trường lọc"
-                size="sm"
-                width="100%"
-                options={[
-                  { value: field.key, label: field.label },
-                  ...availableFieldOptions,
-                ]}
-                value={condition.field}
-                onChange={(next) => {
-                  if (!next) return;
-                  const nextField = fieldsByKey.get(next);
-                  if (!nextField) return;
-                  updateCondition(condition.id, {
-                    field: next,
-                    operator: defaultOperatorFor(nextField.type),
-                    value: '',
-                    valueTo: '',
-                  });
-                }}
-              />
-              {field.type === 'date' ? (
-                <>
-                  <DateInput
-                    label="Từ ngày"
-                    size="sm"
-                    width="100%"
-                    value={
-                      /** @type {import('@astryxdesign/core/Calendar').ISODateString | undefined} */ (
-                        condition.value || undefined
-                      )
-                    }
-                    onChange={(next) =>
-                      updateCondition(condition.id, { value: next ?? '' })
-                    }
-                    format="system_date"
-                  />
-                  <DateInput
-                    label="Đến ngày"
-                    size="sm"
-                    width="100%"
-                    value={
-                      /** @type {import('@astryxdesign/core/Calendar').ISODateString | undefined} */ (
-                        condition.valueTo || undefined
-                      )
-                    }
-                    onChange={(next) =>
-                      updateCondition(condition.id, { valueTo: next ?? '' })
-                    }
-                    format="system_date"
-                  />
-                </>
-              ) : (
-                <>
+            <HStack gap={2} vAlign="end">
+              <StackItem size="fill">
+                <Grid columns={CONDITION_COLUMNS} gap={2} align="end">
                   <Selector
-                    label="Điều kiện"
+                    label="Trường lọc"
                     size="sm"
                     width="100%"
-                    options={OPERATORS_BY_TYPE[field.type]}
-                    value={condition.operator}
-                    onChange={(next) =>
+                    options={[
+                      { value: field.key, label: field.label },
+                      ...availableFieldOptions,
+                    ]}
+                    value={condition.field}
+                    onChange={(next) => {
+                      if (!next) return;
+                      const nextField = fieldsByKey.get(next);
+                      if (!nextField) return;
                       updateCondition(condition.id, {
-                        operator:
-                          next ?? OPERATORS_BY_TYPE[field.type][0].value,
-                      })
-                    }
+                        field: next,
+                        operator: defaultOperatorFor(nextField.type),
+                        value: '',
+                        valueTo: '',
+                      });
+                    }}
                   />
-                  {showsValue && field.type === 'enum' ? (
-                    <Selector
-                      label="Giá trị"
-                      size="sm"
-                      width="100%"
-                      hasClear
-                      options={[...(field.options ?? [])]}
-                      value={condition.value || null}
-                      onChange={(next) =>
-                        updateCondition(condition.id, { value: next ?? '' })
-                      }
-                    />
-                  ) : null}
-                  {showsValue && field.type === 'number' ? (
-                    <NumberInput
-                      label="Giá trị"
-                      size="sm"
-                      width="100%"
-                      value={
-                        condition.value === '' ? null : Number(condition.value)
-                      }
-                      onChange={(next) =>
-                        updateCondition(condition.id, {
-                          value: next == null ? '' : String(next),
-                        })
-                      }
-                    />
-                  ) : null}
-                  {showsValue && field.type === 'string' ? (
-                    <TextInput
-                      label="Giá trị"
-                      size="sm"
-                      width="100%"
-                      hasClear
-                      value={condition.value}
-                      onChange={(next) =>
-                        updateCondition(condition.id, { value: next })
-                      }
-                    />
-                  ) : null}
-                </>
-              )}
+                  {field.type === 'date' ? (
+                    <>
+                      <DateInput
+                        label="Từ ngày"
+                        size="sm"
+                        width="100%"
+                        value={
+                          /** @type {import('@astryxdesign/core/Calendar').ISODateString | undefined} */ (
+                            condition.value || undefined
+                          )
+                        }
+                        onChange={(next) =>
+                          updateCondition(condition.id, { value: next ?? '' })
+                        }
+                        format="system_date"
+                      />
+                      <DateInput
+                        label="Đến ngày"
+                        size="sm"
+                        width="100%"
+                        value={
+                          /** @type {import('@astryxdesign/core/Calendar').ISODateString | undefined} */ (
+                            condition.valueTo || undefined
+                          )
+                        }
+                        onChange={(next) =>
+                          updateCondition(condition.id, {
+                            valueTo: next ?? '',
+                          })
+                        }
+                        format="system_date"
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Selector
+                        label="Điều kiện"
+                        size="sm"
+                        width="100%"
+                        options={OPERATORS_BY_TYPE[field.type]}
+                        value={condition.operator}
+                        onChange={(next) =>
+                          updateCondition(condition.id, {
+                            operator:
+                              next ?? OPERATORS_BY_TYPE[field.type][0].value,
+                          })
+                        }
+                      />
+                      {showsValue && field.type === 'enum' ? (
+                        <Selector
+                          label="Giá trị"
+                          size="sm"
+                          width="100%"
+                          hasClear
+                          options={[...(field.options ?? [])]}
+                          value={condition.value || null}
+                          onChange={(next) =>
+                            updateCondition(condition.id, {
+                              value: next ?? '',
+                            })
+                          }
+                        />
+                      ) : null}
+                      {showsValue && field.type === 'number' ? (
+                        <NumberInput
+                          label="Giá trị"
+                          size="sm"
+                          width="100%"
+                          value={
+                            condition.value === ''
+                              ? null
+                              : Number(condition.value)
+                          }
+                          onChange={(next) =>
+                            updateCondition(condition.id, {
+                              value: next == null ? '' : String(next),
+                            })
+                          }
+                        />
+                      ) : null}
+                      {showsValue && field.type === 'string' ? (
+                        <TextInput
+                          label="Giá trị"
+                          size="sm"
+                          width="100%"
+                          hasClear
+                          value={condition.value}
+                          onChange={(next) =>
+                            updateCondition(condition.id, { value: next })
+                          }
+                        />
+                      ) : null}
+                    </>
+                  )}
+                </Grid>
+              </StackItem>
               <IconButton
                 label="Xoá điều kiện này"
                 tooltip="Xoá"
@@ -278,7 +290,7 @@ export function AdvancedFilterBuilder({ fields, conditions, onChange }) {
                 size="sm"
                 onClick={() => removeCondition(condition.id)}
               />
-            </Grid>
+            </HStack>
           </VStack>
         );
       })}
