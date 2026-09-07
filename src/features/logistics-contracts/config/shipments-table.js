@@ -74,6 +74,10 @@ export const FILTER_FIELD_DEFS = [
   { key: 'invoiceValue', label: 'Giá trị invoice', type: 'number' },
   { key: 'etd', label: 'ETD', type: 'date' },
   { key: 'eta', label: 'ETA', type: 'date' },
+  // Resolves against any cost line's invoice number, not a field on the
+  // Shipment itself (BE-kt-xnk's `ShipmentFilterFields`) — a lô hàng
+  // matches if *any* of its cost lines carries this invoice number.
+  { key: 'invoiceNumber', label: 'Số hoá đơn', type: 'string' },
 ];
 
 export const SKELETON_ROW_COUNT = 6;
