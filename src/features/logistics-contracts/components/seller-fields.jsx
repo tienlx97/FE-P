@@ -46,7 +46,7 @@ export function SellerFields({
 }) {
   const detailsId = useId();
   const disclosure = useCollapsible({
-    isCollapsible: isCollapsible ? { defaultIsOpen: true } : false,
+    isCollapsible: isCollapsible ? { defaultIsOpen: false } : false,
   });
   const areDetailsShown = !isCollapsible || disclosure.isOpen;
 
