@@ -7360,3 +7360,31 @@ ward reference data (free-text inputs, matching the backend).
 - Final verification: `./harness/verify.sh` passed,
   `harness/runs/20260907-082002-942492/` (lint, typecheck, structure, harness
   tests, unit tests, build, quality thresholds all green). Task 1.1 complete.
+
+## 2026-09-07 — Home internal portal
+
+- Active change: `home-portal`, task 1.1. Notices now sit beside the existing
+  featured-news carousel on desktop and wrap their full titles on mobile.
+  A teal holiday panel separates published holiday dates from the navigable
+  company calendar and monthly agenda. News, videos and ecosystem follow.
+- Kept brand tokens and Vietnamese fonts. Existing editorial fixtures remain
+  illustrative; no holiday ranges or return-to-work dates were invented.
+  Vietnam's current date is supplied by the server for consistent hydration.
+- Browser runner: `node harness/checks/home-portal-browser.mjs` (local dev
+  server on port 3001; HOME_TEST_ORIGIN override supported). Six scenarios:
+  1440/768/390/320px geometry, month changes/empty months/year boundary/keyboard,
+  and policy navigation. No page overflow at any measured width; screenshots
+  and results in `harness/runs/20260907-home-portal/`.
+- Harness gaps caught: Astryx List does not forward arbitrary ARIA props;
+  use its header API and assert the rendered accessible name. Section paints
+  its variant on an inner node and can bleed parent padding; the holiday
+  region uses a padded VStack with an asserted theme background instead.
+  A first Windows browser daemon can retain captured child-process pipes;
+  bootstrap with inherited stdio. Browser regression is manual until CI has
+  an app server/browser runner; source checks alone did not catch these.
+- Discovered: initial gate hit unrelated admin-backups work in progress;
+  its owner resolved and committed it during this task. No backup files were
+  edited here. Existing homepage content remains static, not backend-fed.
+- Final gate passed: `harness/runs/20260907-153812-3249/` — lint, typecheck,
+  structure, harness tests, 131 unit tests, build and quality thresholds.
+  Shared gzip remains 168.7 kB (<250 kB). Task 1.1 complete.

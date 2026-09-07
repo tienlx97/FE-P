@@ -1,3 +1,4 @@
+import { Grid } from '@astryxdesign/core/Grid';
 import { Section } from '@astryxdesign/core/Section';
 import { colorVars, radiusVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -6,6 +7,7 @@ import * as stylex from '@stylexjs/stylex';
 import {
   AnnouncementsBoard,
   Ecosystem,
+  HolidaySchedule,
   NewsHighlights,
   UpcomingEvents,
   VideoClips,
@@ -22,6 +24,21 @@ const styles = stylex.create({
   content: {
     marginInline: 'auto',
   },
+  lead: {
+    alignItems: 'start',
+    gridTemplateColumns: {
+      default: 'minmax(0, 1fr)',
+      '@media (min-width: 1100px)': 'minmax(0, 1.6fr) minmax(360px, 1fr)',
+    },
+  },
+  calendar: {
+    alignItems: 'start',
+    gridTemplateColumns: {
+      default: 'minmax(0, 1fr)',
+      '@media (min-width: 1100px)': '320px minmax(0, 1fr)',
+    },
+  },
+  region: { minWidth: 0 },
   // Tinted bands break the page into alternating pale/white groups so the
   // sections read as distinct movements instead of one long scroll. Padding
   // is responsive because a 24px inset on a 390px screen costs more of the
@@ -37,6 +54,9 @@ const styles = stylex.create({
 });
 
 export default function HomePage() {
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+  }).format(new Date());
   return (
     <Section
       variant="transparent"
@@ -46,12 +66,17 @@ export default function HomePage() {
       xstyle={styles.content}
     >
       <VStack gap={10}>
-        <WelcomeHero />
-        <NewsHighlights />
-        <VStack gap={10} xstyle={styles.band}>
+        <Grid gap={6} xstyle={styles.lead}>
+          <VStack xstyle={styles.region}>
+            <WelcomeHero />
+          </VStack>
           <AnnouncementsBoard />
-          <UpcomingEvents />
-        </VStack>
+        </Grid>
+        <Grid gap={8} xstyle={styles.calendar}>
+          <HolidaySchedule />
+          <UpcomingEvents initialDate={today} />
+        </Grid>
+        <NewsHighlights />
         <VStack xstyle={styles.band}>
           <VideoClips />
         </VStack>

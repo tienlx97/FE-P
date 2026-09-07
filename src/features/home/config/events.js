@@ -1,6 +1,7 @@
 /**
  * @typedef {{
  *   id: string,
+ *   kind?: 'holiday',
  *   date: string,
  *   time: string | null,
  *   title: string,
@@ -52,6 +53,7 @@ export const events = [
   },
   {
     id: 'nghi-le-quoc-khanh',
+    kind: 'holiday',
     date: '2026-09-02',
     time: null,
     title: 'Nghỉ lễ Quốc khánh 2/9',

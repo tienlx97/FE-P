@@ -90,7 +90,9 @@ Enforced by `harness/structure.rules.cjs` (dependency-cruiser), run via
   lives in `config/*-table.js`; components are grouped by responsibility.
   See `docs/ui-components.md` and ADR-0005 for the current component map.
 
-- `src/features/home/` — `components/hero.jsx`, the homepage hero.
+- `src/features/home/` — internal portal: featured news, notices, published
+  holiday dates, monthly calendar/agenda, videos and ecosystem. Editorial
+  fixtures live in `config/`; date/calendar helpers live in `api/`.
 - `src/features/design-system/` — `components/{showcase-section.jsx,sections/*.jsx}`,
   the internal component showcase at `/design-system`.
 - `src/features/docs/` — filesystem discovery, trusted build-time MDX

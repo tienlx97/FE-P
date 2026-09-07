@@ -1,173 +1,115 @@
-import { Card } from '@astryxdesign/core/Card';
-import { Grid } from '@astryxdesign/core/Grid';
+'use client';
+
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { Heading, Text } from '@astryxdesign/core/Text';
-import { colorVars, radiusVars } from '@astryxdesign/core/theme/tokens.stylex';
+import { IconButton } from '@astryxdesign/core/IconButton';
+import { List, ListItem } from '@astryxdesign/core/List';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import Image from 'next/image';
+import { useState } from 'react';
 
-import { formatDateBadge, formatEventWhen, parseIsoDate } from '../api/date.js';
+import { formatEventWhen, parseIsoDate } from '../api/date.js';
 import { events } from '../config/events.js';
 import { MiniCalendar } from './mini-calendar.jsx';
 import { SectionHeading } from './section-heading.jsx';
 
-// The calendar shows whichever month the SOONEST upcoming event falls in —
-// `events` is maintained newest-first-removed/soonest-first (see the
-// config file), so that's simply the first entry. A real deployment would
-// derive this from "today" instead, but this module has no `Date.now()`
-// anywhere (see `api/calendar.js`) to keep server/client render identical.
-const calendarDate = parseIsoDate(events[0].date);
-
 const styles = stylex.create({
-  // `flexGrow` lets the event grid claim whatever width `MiniCalendar`'s
-  // fixed 300px doesn't use inside the shared `HStack`; `minWidth: 0` is
-  // the same flex-shrink override documented on `body`/`details` below —
-  // without it the grid refuses to shrink under its content and the row
-  // overflows instead of wrapping to a second line under the calendar.
-  list: {
-    flexGrow: 1,
-    minWidth: 0,
-  },
-  card: {
-    height: '100%',
-    overflow: 'hidden',
-  },
-  media: {
-    // Hidden on the narrowest screens: at ~320px of card width the photo
-    // would eat a third of the row and squeeze the title to two words.
-    display: {
-      default: 'none',
-      '@media (min-width: 480px)': 'block',
-    },
-    flexShrink: 0,
-    position: 'relative',
-    width: '132px',
-  },
-  photo: {
-    objectFit: 'cover',
-  },
-  // A flex item defaults to `min-width: auto`, i.e. it refuses to shrink
-  // below its content's intrinsic width. Inside this horizontal card that
-  // meant the long "when" line pushed the row 99px wider than the card at
-  // 390px, and the card's `overflow: hidden` clipped the titles rather than
-  // letting `maxLines` ellipsize them. Both the row and the text column
-  // need the override — clearing it on only one still leaves the other
-  // refusing to shrink.
-  body: {
-    minWidth: 0,
-  },
-  details: {
-    minWidth: 0,
-  },
-  // Day/month chip. On wide cards it sits over the photo; when the photo is
-  // hidden it becomes the row's leading element, which is why it carries its
-  // own opaque background rather than relying on the image behind it.
-  dateChip: {
-    backgroundColor: colorVars['--color-accent'],
-    borderRadius: radiusVars['--radius-element'],
-    color: colorVars['--color-on-accent'],
-    flexShrink: 0,
-    width: '56px',
-  },
+  region: { minWidth: 0 },
+  agenda: { flexBasis: '260px', flexGrow: 1, minWidth: 0 },
 });
 
-/**
- * "Sự kiện sắp tới" — the next internal events, as horizontal cards with a
- * prominent date chip. Card (rather than a row list) is deliberate here:
- * each entry carries a photo and four distinct facts, which is a widget,
- * not a dense data row.
- */
-export function UpcomingEvents() {
+/** @param {{ initialDate: string }} props */
+export function UpcomingEvents({ initialDate }) {
+  const [cursor, setCursor] = useState(() => {
+    const date = parseIsoDate(initialDate);
+    return { year: date.getFullYear(), month: date.getMonth() };
+  });
+  const monthEvents = events.filter((event) => {
+    const date = parseIsoDate(event.date);
+    return (
+      date.getFullYear() === cursor.year && date.getMonth() === cursor.month
+    );
+  });
+  /** @param {number} delta */
+  function moveMonth(delta) {
+    setCursor(({ year, month }) => {
+      const date = new Date(year, month + delta, 1);
+      return { year: date.getFullYear(), month: date.getMonth() };
+    });
+  }
+  const agendaHeading = (
+    <Text color="secondary" weight="semibold">
+      Trong tháng {cursor.month + 1}/{cursor.year}
+    </Text>
+  );
   return (
-    <VStack gap={5}>
-      <SectionHeading
-        id="su-kien"
-        title="Sự kiện sắp tới"
-        description="Lịch họp, đào tạo và các mốc quan trọng của toàn hệ sinh thái."
-      />
-      <HStack gap={6} wrap="wrap" vAlign="start">
+    <VStack gap={4} xstyle={styles.region}>
+      <HStack justify="between" gap={3} wrap="wrap">
+        <SectionHeading id="su-kien" title="Lịch công ty" />
+        <HStack gap={1}>
+          <IconButton
+            label="Tháng trước"
+            tooltip="Tháng trước"
+            variant="ghost"
+            size="sm"
+            icon={<Icon icon="chevronLeft" />}
+            onClick={() => moveMonth(-1)}
+          />
+          <IconButton
+            label="Tháng sau"
+            tooltip="Tháng sau"
+            variant="ghost"
+            size="sm"
+            icon={<Icon icon="chevronRight" />}
+            onClick={() => moveMonth(1)}
+          />
+        </HStack>
+      </HStack>
+      <HStack gap={5} wrap="wrap" vAlign="start">
         <MiniCalendar
-          year={calendarDate.getFullYear()}
-          month={calendarDate.getMonth()}
-          entries={events}
+          year={cursor.year}
+          month={cursor.month}
+          entries={monthEvents}
         />
-        <Grid columns={{ minWidth: 340, max: 2 }} gap={4} xstyle={styles.list}>
-          {events.map((event) => {
-            const { day, month } = formatDateBadge(event.date);
-            return (
-              <Card
-                key={event.id}
-                elevation="low"
-                padding={0}
-                xstyle={styles.card}
-              >
-                <HStack height="100%">
-                  <VStack xstyle={styles.media}>
-                    <Image
-                      src={event.image.src}
-                      alt={event.image.alt}
-                      fill
-                      sizes="132px"
-                      {...stylex.props(styles.photo)}
-                    />
-                  </VStack>
-                  <HStack
-                    gap={3}
-                    padding={4}
-                    vAlign="start"
-                    xstyle={styles.body}
-                  >
-                    <VStack
-                      paddingBlock={1.5}
-                      hAlign="center"
-                      xstyle={styles.dateChip}
-                    >
-                      <Text
-                        type="display-3"
-                        color="inherit"
-                        weight="bold"
-                        justify="center"
-                        display="block"
-                      >
-                        {day}
+        <VStack
+          gap={2}
+          xstyle={styles.agenda}
+          aria-live="polite"
+          data-testid="home-agenda"
+        >
+          {monthEvents.length ? (
+            <List hasDividers density="balanced" header={agendaHeading}>
+              {monthEvents.map((event) => (
+                <ListItem
+                  key={event.id}
+                  label={event.kind === 'holiday' ? 'Nghỉ lễ' : 'Sự kiện'}
+                  description={
+                    <VStack gap={1}>
+                      <Text weight="semibold">{event.title}</Text>
+                      <Text type="supporting" color="secondary">
+                        {formatEventWhen(event)}
                       </Text>
-                      <Text
-                        type="supporting"
-                        color="inherit"
-                        justify="center"
-                        display="block"
-                      >
-                        {month}
+                      <Text type="supporting" color="secondary">
+                        {event.location}
                       </Text>
-                    </VStack>
-                    <VStack gap={1.5} xstyle={styles.details}>
-                      <Heading level={3} maxLines={2}>
-                        {event.title}
-                      </Heading>
-                      <HStack gap={1.5} vAlign="start">
-                        <Icon icon="clock" size="xsm" color="secondary" />
-                        <Text type="supporting" maxLines={2}>
-                          {formatEventWhen(event)}
-                        </Text>
-                      </HStack>
-                      <HStack gap={1.5} vAlign="start">
-                        <Icon icon="info" size="xsm" color="secondary" />
-                        <Text type="supporting" maxLines={2}>
-                          {event.location}
-                        </Text>
-                      </HStack>
-                      <Text type="supporting" color="accent" maxLines={1}>
+                      <Text type="supporting" color="secondary">
                         {event.audience}
                       </Text>
                     </VStack>
-                  </HStack>
-                </HStack>
-              </Card>
-            );
-          })}
-        </Grid>
+                  }
+                />
+              ))}
+            </List>
+          ) : (
+            <VStack gap={2}>
+              {agendaHeading}
+              <Text color="secondary">
+                Chưa có lịch được đăng trong tháng này.
+              </Text>
+            </VStack>
+          )}
+        </VStack>
       </HStack>
     </VStack>
   );
