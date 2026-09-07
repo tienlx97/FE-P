@@ -44,9 +44,15 @@ export async function createBackup() {
  * irreversible from inside the app. The backend requires `confirmDatabaseName`
  * to exactly match the live database's name as a confirmation step (see the
  * API's `Backups.md`).
+ *
+ * `status` is surfaced on failure so the caller can tell a `409` (the
+ * restore is either still running past the backend's own response timeout,
+ * or another one is already in progress — both worth silently retrying)
+ * apart from a real failure (wrong confirmation text, backup missing) that
+ * retrying would not fix.
  * @param {string} fileName
  * @param {string} confirmDatabaseName
- * @returns {Promise<{ success: true } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true } | { success: false, status: number | null, message: string }>}
  */
 export async function restoreBackup(fileName, confirmDatabaseName) {
   const result = await apiRequest(
@@ -59,7 +65,7 @@ export async function restoreBackup(fileName, confirmDatabaseName) {
   );
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, status: result.status, message: result.message };
   }
 
   return { success: true };
