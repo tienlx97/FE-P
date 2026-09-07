@@ -49,7 +49,7 @@ const ADD_COST_CATEGORY_OPTION_VALUE = '__add_cost_category__';
  *   isReadOnly?: boolean,
  *   onAddRow: () => void,
  *   onRemoveRow: (rowKey: string) => void,
- *   onUpdateRowField: (rowKey: string, field: 'costCategoryId' | 'name' | 'amount' | 'note' | 'providerCustomerId', value: number | string | undefined) => void,
+ *   onUpdateRowField: (rowKey: string, field: 'costCategoryId' | 'name' | 'amount' | 'note' | 'providerCustomerId' | 'invoiceNumber', value: number | string | undefined) => void,
  * }} props
  */
 export function ShipmentCostLinesFields({
@@ -202,6 +202,21 @@ export function ShipmentCostLinesFields({
             label: customer.companyName,
           }))}
           width="100%"
+        />
+      ),
+    },
+    {
+      key: 'invoiceNumber',
+      header: 'Số hoá đơn',
+      width: pixel(180),
+      renderCell: (row) => (
+        <TextInput
+          label="Số hoá đơn"
+          isLabelHidden
+          value={row.invoiceNumber}
+          onChange={(value) => onUpdateRowField(row.rowKey, 'invoiceNumber', value)}
+          placeholder={isReadOnly ? '—' : 'Không bắt buộc'}
+          isReadOnly={isReadOnly}
         />
       ),
     },

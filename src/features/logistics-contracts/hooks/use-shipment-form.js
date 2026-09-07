@@ -123,6 +123,7 @@ export function useShipmentForm({
           amount: cost.amount,
           note: cost.note ?? '',
           providerCustomerId: cost.providerCustomerId ?? '',
+          invoiceNumber: cost.invoiceNumber ?? '',
         }))
       : undefined,
   );
@@ -149,6 +150,7 @@ export function useShipmentForm({
             amount: cost.amount,
             note: cost.note ?? '',
             providerCustomerId: cost.providerCustomerId ?? '',
+            invoiceNumber: cost.invoiceNumber ?? '',
           }))
         : [],
     );
@@ -167,6 +169,7 @@ export function useShipmentForm({
         amount: row.amount,
         note: row.note,
         providerCustomerId: row.providerCustomerId,
+        invoiceNumber: row.invoiceNumber,
       })),
     };
 

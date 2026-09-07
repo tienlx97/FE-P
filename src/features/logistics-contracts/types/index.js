@@ -503,6 +503,7 @@ export {};
  * @property {number} amount
  * @property {string | null} note
  * @property {string | null} providerCustomerId
+ * @property {string | null} invoiceNumber - "Số hoá đơn", optional
  */
 
 /**
@@ -512,6 +513,7 @@ export {};
  * @property {number} amount
  * @property {string} note
  * @property {string} providerCustomerId
+ * @property {string} invoiceNumber
  */
 
 /**
@@ -522,6 +524,7 @@ export {};
  * @property {number | undefined} amount
  * @property {string} note
  * @property {string} providerCustomerId
+ * @property {string} invoiceNumber
  */
 
 /**

@@ -100,6 +100,12 @@ export function ShipmentExpandedDetails({
             : null,
         ),
     },
+    {
+      key: 'invoiceNumber',
+      header: 'Số hoá đơn',
+      width: pixel(160),
+      renderCell: (cost) => orDash(cost.invoiceNumber),
+    },
   ];
 
   return (

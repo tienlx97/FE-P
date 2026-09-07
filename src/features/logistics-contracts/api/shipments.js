@@ -18,6 +18,7 @@ function toCostsRequestBody(costLines) {
     Amount: cost.amount,
     Note: cost.note || null,
     ProviderCustomerId: cost.providerCustomerId || null,
+    InvoiceNumber: cost.invoiceNumber || null,
   }));
 }
 

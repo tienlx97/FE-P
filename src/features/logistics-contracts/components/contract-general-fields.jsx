@@ -17,6 +17,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 
+import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
@@ -441,29 +442,34 @@ export function ContractGeneralFields({
         </>
       )}
 
-      <FormattedNumberTextInput
-        label="Giá trị hợp đồng"
-        value={values.contractValue}
-        onChange={(value) => setField('contractValue', value)}
-        units={values.currency || undefined}
-        isRequired
-        status={fieldStatuses.contractValue}
-        statusVariant="tooltip"
-        isReadOnly={isReadOnly}
-      />
-
-      <Selector
-        isDisabled={isReadOnly}
-        label="Tiền tệ"
-        placeholder={isReadOnly ? '—' : 'Đơn vị'}
-        value={values.currency}
-        onChange={(value) => setField('currency', value ?? '')}
-        options={currencyOptions}
-        width={120}
-        isRequired
-        status={fieldStatuses.currency}
-        statusVariant="tooltip"
-      />
+      <FormGrid>
+        <StackItem size="fill">
+          <FormattedNumberTextInput
+            label="Giá trị hợp đồng"
+            value={values.contractValue}
+            onChange={(value) => setField('contractValue', value)}
+            units={values.currency || undefined}
+            isRequired
+            status={fieldStatuses.contractValue}
+            statusVariant="tooltip"
+            isReadOnly={isReadOnly}
+          />
+        </StackItem>
+        <StackItem size="static">
+          <Selector
+            isDisabled={isReadOnly}
+            label="Tiền tệ"
+            placeholder={isReadOnly ? '—' : 'Đơn vị'}
+            value={values.currency}
+            onChange={(value) => setField('currency', value ?? '')}
+            options={currencyOptions}
+            width={120}
+            isRequired
+            status={fieldStatuses.currency}
+            statusVariant="tooltip"
+          />
+        </StackItem>
+      </FormGrid>
 
       <Selector
         isDisabled={isReadOnly || isCompanyFixed}

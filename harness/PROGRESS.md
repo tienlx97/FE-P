@@ -1,5 +1,27 @@
 # Progress Log
 
+## 2026-09-07 — Add: Shipment cost invoice number + contract value/currency same row
+
+**Context:** user request — (1) each Shipment cost line needed an
+optional invoice number field; (2) "Giá trị hợp đồng" and "Tiền tệ" were
+on two separate rows in the Contract form, should be one row.
+
+**Fix** (`openspec/changes/add-shipment-cost-invoice-number/`):
+`invoiceNumber` threaded through `shipment-schema.js`, `use-shipment-
+cost-line-rows.js`, `use-shipment-form.js`, `api/shipments.js`; new
+editable column in `ShipmentCostLinesFields` and read-only column in
+`ShipmentExpandedDetails`. Companion backend change: BE-kt-xnk's
+`openspec/changes/add-shipment-cost-invoice-number/`. Separately,
+`contract-general-fields.jsx` now wraps "Giá trị hợp đồng" + "Tiền tệ"
+in `FormGrid`/`StackItem`, matching the existing money+currency row
+pattern used for Shipment's invoice/declaration value fields.
+
+**Verified:** `./harness/verify.sh` full suite green (lint, typecheck,
+structure, 131 unit tests, build, quality thresholds). Live browser
+check against the rebuilt BE stack + reloaded sample data: sample
+Contract's value/currency render side-by-side; sample Shipment's "Chi
+phí Logistics" tab shows the new "Số hoá đơn" column with seeded values.
+
 ## 2026-09-07 — Fix: editing an EXW/FOB Contract always failed
 
 **Context:** user report — the Contract edit form kept showing a
