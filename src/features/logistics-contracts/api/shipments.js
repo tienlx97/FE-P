@@ -52,6 +52,7 @@ function toCreateRequestBody(values, costLines) {
     CoDeclarationDate: values.coDeclarationDate || null,
     CoIssuedDate: values.coIssuedDate || null,
     Costs: toCostsRequestBody(costLines),
+    Status: values.status,
   };
 }
 
@@ -85,6 +86,7 @@ function toUpdateRequestBody(values, costLines) {
     CoDeclarationDate: values.coDeclarationDate || null,
     CoIssuedDate: values.coIssuedDate || null,
     Costs: toCostsRequestBody(costLines),
+    Status: values.status,
   };
 }
 

@@ -20,6 +20,7 @@ import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
+import { labelForShipmentStatus } from '../config/shipment-status.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
 import { useCommissionAnnexesQuery } from '../hooks/use-commission-annexes-query.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
@@ -170,6 +171,12 @@ export function ContractExpandedDetails({
       header: 'Loại hình',
       width: pixel(90),
       renderCell: (shipment) => labelForShipmentType(shipment.type),
+    },
+    {
+      key: 'status',
+      header: 'Tình trạng',
+      width: pixel(150),
+      renderCell: (shipment) => labelForShipmentStatus(shipment.status),
     },
     {
       key: 'quantity',

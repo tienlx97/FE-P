@@ -39,6 +39,7 @@ function baseCandidate() {
     bankIds: ['bank-1'],
     sellerSigned: false,
     buyerSigned: false,
+    status: 'InProgress',
   };
 }
 

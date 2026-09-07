@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { shipmentSchema } from '../config/shipment-schema.js';
+import { SHIPMENT_STATUSES } from '../config/shipment-status.js';
 import { useCustomersQuery } from './use-customers-query.js';
 import { useShipmentCostLineRows } from './use-shipment-cost-line-rows.js';
 import {
@@ -44,6 +45,9 @@ function emptyValues(contract = null) {
     coNumber: '',
     coDeclarationDate: '',
     coIssuedDate: '',
+    // New shipments default to "Đã book" — matches the backend's own
+    // default (BE-kt-xnk).
+    status: SHIPMENT_STATUSES[0],
   };
 }
 
@@ -72,6 +76,7 @@ function valuesFromShipment(shipment) {
     coNumber: shipment.coNumber ?? '',
     coDeclarationDate: shipment.coDeclarationDate ?? '',
     coIssuedDate: shipment.coIssuedDate ?? '',
+    status: shipment.status,
   };
 }
 

@@ -9,6 +9,18 @@ export {};
  */
 
 /**
+ * "Trạng thái hợp đồng" — independent of {@link ContractType} (Draft/
+ * Official is a paperwork stage; this is the deal's real-world status).
+ * @typedef {'InProgress' | 'Completed' | 'Cancelled'} ContractStatus
+ */
+
+/**
+ * "Tình trạng" Shipment — freely settable, covers every stage across the
+ * business's CIF/DDP/FOB/EXW Incoterm flows (see `config/shipment-status.js`).
+ * @typedef {'Booked' | 'Packing' | 'AtYardAwaitingExport' | 'Shipping' | 'DeliveredToPort' | 'CustomsDeclaration' | 'TruckingToSite' | 'Completed'} ShipmentStatus
+ */
+
+/**
  * @typedef {Object} ExtraField
  * @property {string} key
  * @property {string} value
@@ -142,6 +154,7 @@ export {};
  * @property {string[]} bankIds
  * @property {boolean} sellerSigned - "Bên bán ký"
  * @property {boolean} buyerSigned - "Bên mua ký"
+ * @property {ContractStatus} status
  */
 
 /**
@@ -401,6 +414,7 @@ export {};
  * @property {string[]} bankIds
  * @property {boolean} sellerSigned - "Bên bán ký"
  * @property {boolean} buyerSigned - "Bên mua ký"
+ * @property {ContractStatus | ''} status
  */
 
 /**
@@ -568,6 +582,7 @@ export {};
  * @property {string | null} coIssuedDate - ISO date, "ngày có C/O"
  * @property {ShipmentCostLine[]} costs
  * @property {ShipmentCostTotal[]} costTotalsByCategory - computed at read time, never stored
+ * @property {ShipmentStatus} status
  */
 
 /**
@@ -594,6 +609,7 @@ export {};
  * @property {string} coNumber
  * @property {string} coDeclarationDate
  * @property {string} coIssuedDate
+ * @property {ShipmentStatus | ''} status
  */
 
 /**

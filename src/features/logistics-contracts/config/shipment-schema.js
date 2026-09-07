@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { CURRENCY_CODES } from './currencies.js';
 import { PAYMENT_TYPES } from './payment-schedule-types.js';
+import { SHIPMENT_STATUSES } from './shipment-status.js';
 import { SHIPMENT_TYPES } from './shipment-types.js';
 
 /**
@@ -85,4 +86,5 @@ export const shipmentSchema = z.object({
   coDeclarationDate: z.string(),
   coIssuedDate: z.string(),
   costLines: z.array(shipmentCostLineSchema),
+  status: z.enum(SHIPMENT_STATUSES, { error: 'Vui lòng chọn tình trạng' }),
 });

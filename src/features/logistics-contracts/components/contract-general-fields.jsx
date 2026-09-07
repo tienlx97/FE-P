@@ -22,6 +22,7 @@ import { FormattedNumberTextInput } from '@/shared/components/formatted-number-t
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
+import { contractStatusOptions } from '../config/contract-status.js';
 import { contractTypeOptions } from '../config/contract-types.js';
 import { currencyOptions, formatMoney } from '../config/currencies.js';
 import { incotermOptions } from '../config/incoterms.js';
@@ -483,6 +484,19 @@ export function ContractGeneralFields({
         )}
         isRequired
         status={fieldStatuses.companyId}
+        statusVariant="tooltip"
+        width="100%"
+      />
+
+      <Selector
+        isDisabled={isReadOnly}
+        label="Trạng thái hợp đồng"
+        placeholder={isReadOnly ? '—' : 'Chọn trạng thái'}
+        value={values.status}
+        onChange={(value) => setField('status', value ?? '')}
+        options={contractStatusOptions}
+        isRequired
+        status={fieldStatuses.status}
         statusVariant="tooltip"
         width="100%"
       />

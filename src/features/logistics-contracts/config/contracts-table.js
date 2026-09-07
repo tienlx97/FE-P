@@ -1,3 +1,4 @@
+import { contractStatusOptions } from './contract-status.js';
 import { contractTypeOptions } from './contract-types.js';
 import { currencyOptions } from './currencies.js';
 import { incotermOptions } from './incoterms.js';
@@ -27,6 +28,12 @@ export const SEARCH_FIELD_DEFS = [
     type: 'enum',
     label: 'Incoterm',
     enumValues: incotermOptions,
+  },
+  {
+    key: 'status',
+    type: 'enum',
+    label: 'Trạng thái',
+    enumValues: contractStatusOptions,
   },
 ];
 
@@ -71,11 +78,18 @@ export const FILTER_FIELD_DEFS = [
   { key: 'placeOfLoading', label: 'Nơi xếp hàng', type: 'string' },
   { key: 'placeOfDischarge', label: 'Nơi dỡ hàng', type: 'string' },
   { key: 'note', label: 'Ghi chú', type: 'string' },
+  {
+    key: 'status',
+    label: 'Trạng thái',
+    type: 'enum',
+    options: contractStatusOptions,
+  },
 ];
 
 export const COLUMN_OPTIONS = [
   { key: 'contractNumber', label: 'Số hợp đồng', isAlwaysVisible: true },
   { key: 'contractType', label: 'Loại hợp đồng' },
+  { key: 'status', label: 'Trạng thái' },
   { key: 'projectName', label: 'Dự án' },
   { key: 'buyer', label: 'Khách hàng' },
   { key: 'contractValue', label: 'Giá trị' },
@@ -99,6 +113,7 @@ export const COLUMN_OPTIONS = [
 export const DEFAULT_COLUMN_KEYS = [
   'contractNumber',
   'contractType',
+  'status',
   'projectName',
   'buyer',
   'contractValue',
@@ -155,5 +170,6 @@ export const skeletonRows = Array.from(
     bankIds: [],
     sellerSigned: false,
     buyerSigned: false,
+    status: 'InProgress',
   }),
 );

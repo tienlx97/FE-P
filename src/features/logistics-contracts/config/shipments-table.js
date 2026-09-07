@@ -1,3 +1,4 @@
+import { shipmentStatusOptions } from './shipment-status.js';
 import { shipmentTypeOptions } from './shipment-types.js';
 
 /**
@@ -27,6 +28,7 @@ export const COLUMN_OPTIONS = [
   { key: 'projectName', label: 'Dự án' },
   { key: 'name', label: 'Tên lô hàng' },
   { key: 'type', label: 'Loại hình' },
+  { key: 'status', label: 'Tình trạng' },
   { key: 'quantity', label: 'Số lượng' },
   { key: 'bookingNumber', label: 'Booking' },
   { key: 'supplier', label: 'Forwarder' },
@@ -41,6 +43,7 @@ export const DEFAULT_COLUMN_KEYS = [
   'contractNumber',
   'name',
   'type',
+  'status',
   'invoiceValue',
   'actions',
 ];
@@ -59,6 +62,12 @@ export const FILTER_FIELD_DEFS = [
     label: 'Loại hình',
     type: 'enum',
     options: shipmentTypeOptions,
+  },
+  {
+    key: 'status',
+    label: 'Tình trạng',
+    type: 'enum',
+    options: shipmentStatusOptions,
   },
   { key: 'bookingNumber', label: 'Booking', type: 'string' },
   { key: 'supplierName', label: 'Forwarder', type: 'string' },
@@ -106,6 +115,7 @@ export const skeletonRows = Array.from(
     coIssuedDate: null,
     costs: [],
     costTotalsByCategory: [],
+    status: 'Booked',
     contractNumber: '',
     projectName: '',
     supplierName: '',

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { contractSchema } from '../config/contract-schema.js';
+import { CONTRACT_STATUSES } from '../config/contract-status.js';
 import { CONTRACT_TYPES } from '../config/contract-types.js';
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
 import { requiresPlaceOfDischarge } from '../config/incoterms.js';
@@ -84,6 +85,9 @@ function emptyValues() {
     bankIds: [],
     sellerSigned: false,
     buyerSigned: false,
+    // New contracts default to "Đang thực hiện" (in-progress) — matches
+    // the backend's own default (BE-kt-xnk).
+    status: CONTRACT_STATUSES[0],
   };
 }
 
@@ -140,6 +144,7 @@ function valuesFromContract(contract) {
     bankIds: contract.bankIds,
     sellerSigned: contract.sellerSigned,
     buyerSigned: contract.buyerSigned,
+    status: contract.status,
   };
 }
 

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { CONTRACT_STATUSES } from './contract-status.js';
 import { CONTRACT_TYPES } from './contract-types.js';
 import { CURRENCY_CODES } from './currencies.js';
 import { INCOTERM_CODES, requiresPlaceOfDischarge } from './incoterms.js';
@@ -82,6 +83,9 @@ export const contractSchema = z
     bankIds: z.array(z.string()).min(1, 'Vui lòng chọn ít nhất 1 ngân hàng'),
     sellerSigned: z.boolean(),
     buyerSigned: z.boolean(),
+    status: z.enum(CONTRACT_STATUSES, {
+      error: 'Vui lòng chọn trạng thái hợp đồng',
+    }),
   })
   .refine((values) => Boolean(values.sourceSellerId), {
     message: 'Vui lòng chọn bên bán, hoặc bấm "Thêm bên bán" để tạo mới',

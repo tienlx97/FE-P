@@ -1,5 +1,43 @@
 # Progress Log
 
+## 2026-09-07 — Contract and Shipment status fields
+
+**Context:** BE-kt-xnk shipped `Contract.Status`/`Shipment.Status` (see
+its `openspec/changes/add-contract-and-shipment-status/`). This session
+wires both up here, per the user's own instruction to do BE first, then
+FE.
+
+**Shipped** (`openspec/changes/add-contract-and-shipment-status-fields/`):
+- `config/contract-status.js` (`InProgress`/`Completed`/`Cancelled`),
+  `config/shipment-status.js` (`Booked`/`Packing`/
+  `AtYardAwaitingExport`/`Shipping`/`DeliveredToPort`/
+  `CustomsDeclaration`/`TruckingToSite`/`Completed`) — Vietnamese labels,
+  same shape as `contract-types.js`/`shipment-types.js`.
+- `status` added everywhere Contract/Shipment fields already flow:
+  types, zod schemas, api request bodies, form-hook defaults
+  (`InProgress`/`Booked`, matching the backend's own default), a new
+  required Selector on the general/lot field-sets, and a new column on
+  every list/table that renders a Contract or Shipment — including the
+  nested Shipment table inside the Contract dialog. Made filterable too
+  (advanced search + quick search), matching the backend's new filterable
+  field.
+- `./harness/verify.sh` green: 131 unit tests (was 126), lint, typecheck,
+  structure, build, quality.
+
+**Verified live** against the real running BE-kt-xnk stack: sample data
+(seeded by the BE session) showed "Đang thực hiện" on the Contract list
+and "Đã book"/"Đã hoàn thành" on its two Shipments correctly; the edit
+form's Status Selector opened with the right options and the current one
+checked, and changing it updated the displayed value correctly.
+
+**Discovered, not fixed** (pre-existing, unrelated to this change): the
+Contract edit form's "Bên bán" (Seller) Selector doesn't preload the
+contract's current seller when entering edit mode — it shows empty/
+"Chọn bên bán" even though a seller is already set, and blocks saving
+with a validation error unless re-picked. Not investigated further here
+since it's unrelated to Status; flagging for whoever picks up Contract
+edit-form work next.
+
 ## 2026-09-07 — Contract "Thông tin private" tab (BOQ)
 
 **Context:** BE-kt-xnk shipped `GET`/`PUT /contracts/{id}/private-info`

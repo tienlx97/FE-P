@@ -17,6 +17,7 @@ import {
 import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
 import { useFullscreenToggle } from '@/shared/components/fullscreen-panel.jsx';
 
+import { labelForContractStatus } from '../config/contract-status.js';
 import { labelForContractType } from '../config/contract-types.js';
 import {
   COLUMN_OPTIONS,
@@ -213,6 +214,13 @@ export function ContractsList() {
       width: pixel(130),
       filter: 'contractType',
       renderCell: (contract) => labelForContractType(contract.contractType),
+    },
+    {
+      key: 'status',
+      header: 'Trạng thái',
+      width: pixel(140),
+      filter: 'status',
+      renderCell: (contract) => labelForContractStatus(contract.status),
     },
     {
       key: 'projectName',

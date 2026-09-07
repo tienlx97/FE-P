@@ -30,6 +30,7 @@ import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 
 import { formatMoney } from '../config/currencies.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
+import { labelForShipmentStatus } from '../config/shipment-status.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
 import {
   COLUMN_OPTIONS,
@@ -153,6 +154,13 @@ export function ShipmentsList() {
       header: 'Loại hình',
       width: pixel(90),
       renderCell: (row) => labelForShipmentType(row.type),
+    },
+    {
+      key: 'status',
+      header: 'Tình trạng',
+      width: pixel(150),
+      filter: 'status',
+      renderCell: (row) => labelForShipmentStatus(row.status),
     },
     {
       key: 'quantity',

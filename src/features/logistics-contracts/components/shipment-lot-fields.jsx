@@ -11,6 +11,7 @@ import { FormattedNumberTextInput } from '@/shared/components/formatted-number-t
 import { currencyOptions } from '../config/currencies.js';
 import { paymentTypeOptions } from '../config/payment-schedule-types.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
+import { shipmentStatusOptions } from '../config/shipment-status.js';
 import { shipmentTypeOptions } from '../config/shipment-types.js';
 
 /** @param {{
@@ -83,6 +84,26 @@ export function ShipmentLotFields({
         options={paymentTypeOptions}
         isRequired
         status={fieldStatuses.paymentCondition}
+        statusVariant="tooltip"
+        width="100%"
+      />
+
+      <Selector
+        isDisabled={isReadOnly}
+        label="Tình trạng"
+        placeholder={isReadOnly ? '—' : 'Chọn tình trạng'}
+        value={values.status}
+        onChange={(value) =>
+          setField(
+            'status',
+            /** @type {import('../types/index.js').ShipmentStatus | ''} */ (
+              value ?? ''
+            ),
+          )
+        }
+        options={shipmentStatusOptions}
+        isRequired
+        status={fieldStatuses.status}
         statusVariant="tooltip"
         width="100%"
       />

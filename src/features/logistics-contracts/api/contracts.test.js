@@ -36,6 +36,7 @@ const BASE_VALUES = {
   bankIds: ['bank-1'],
   sellerSigned: false,
   buyerSigned: false,
+  status: 'InProgress',
 };
 
 test('sends an inline Buyer when no source customer is selected', async () => {

@@ -195,6 +195,7 @@ function buildContractBody(
     BankIds: values.bankIds,
     SellerSigned: values.sellerSigned,
     BuyerSigned: values.buyerSigned,
+    Status: values.status,
   };
 }
 
