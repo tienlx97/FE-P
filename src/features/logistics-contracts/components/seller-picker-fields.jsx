@@ -49,33 +49,14 @@ export function SellerPickerFields({
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
-  const selectedSeller = sellers.find(
-    (seller) => seller.id === sourceSellerId,
-  );
-
-  if (isReadOnly) {
-    return (
-      <VStack gap={3} hAlign="stretch">
-        <Text type="supporting" color="secondary">
-          Tên công ty: {selectedSeller?.companyName || inlineValues.companyName}
-        </Text>
-        <SellerFields
-          values={inlineValues}
-          setField={onInlineFieldChange}
-          fieldStatuses={fieldStatuses}
-          extraFieldRows={extraFieldRows}
-          showCompanyName={false}
-          isReadOnly
-        />
-      </VStack>
-    );
-  }
+  const selectedSeller = sellers.find((seller) => seller.id === sourceSellerId);
 
   return (
     <VStack gap={3} hAlign="stretch">
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
           <Selector
+            isDisabled={isReadOnly}
             label="Bên bán"
             hasSearch
             placeholder="Chọn bên bán"
@@ -94,6 +75,7 @@ export function SellerPickerFields({
           />
         </StackItem>
         <IconButton
+          isDisabled={isReadOnly}
           label="Thêm bên bán"
           tooltip="Thêm bên bán"
           icon={<Icon icon={IconPlus} size="sm" />}
@@ -106,17 +88,9 @@ export function SellerPickerFields({
       {selectedSeller ? (
         <VStack gap={3} hAlign="stretch">
           <Text type="supporting" color="secondary">
-            Tên công ty: {selectedSeller.companyName} (theo danh mục, không
-            sửa được ở đây)
+            Tên công ty: {selectedSeller.companyName} (theo danh mục, không sửa
+            được ở đây)
           </Text>
-          <SellerFields
-            values={inlineValues}
-            setField={onInlineFieldChange}
-            fieldStatuses={fieldStatuses}
-            extraFieldRows={extraFieldRows}
-            showCompanyName={false}
-            isCollapsible
-          />
         </VStack>
       ) : inlineValues.companyName ? (
         // Editing a contract whose Seller was saved without a catalog link
@@ -124,10 +98,20 @@ export function SellerPickerFields({
         // allows that, this form just no longer offers it going forward).
         <Text type="supporting" color="secondary">
           Tên công ty hiện tại (chưa gắn danh mục): {inlineValues.companyName}.
-          Chọn bên bán tương ứng ở trên, hoặc &quot;Thêm bên bán&quot; nếu
-          chưa có trong danh mục.
+          Chọn bên bán tương ứng ở trên, hoặc &quot;Thêm bên bán&quot; nếu chưa
+          có trong danh mục.
         </Text>
       ) : null}
+
+      <SellerFields
+        values={inlineValues}
+        setField={onInlineFieldChange}
+        fieldStatuses={fieldStatuses}
+        extraFieldRows={extraFieldRows}
+        showCompanyName={false}
+        isCollapsible
+        isReadOnly={isReadOnly}
+      />
 
       <QuickCreateSellerDialog
         isOpen={isQuickCreateOpen}

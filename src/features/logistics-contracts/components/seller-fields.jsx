@@ -46,9 +46,9 @@ export function SellerFields({
 }) {
   const detailsId = useId();
   const disclosure = useCollapsible({
-    isCollapsible: isCollapsible ? { defaultIsOpen: false } : false,
+    isCollapsible: isCollapsible ? { defaultIsOpen: true } : false,
   });
-  const areDetailsShown = isReadOnly || !isCollapsible || disclosure.isOpen;
+  const areDetailsShown = !isCollapsible || disclosure.isOpen;
 
   const detailFields = (
     <VStack gap={3} hAlign="stretch" id={isCollapsible ? detailsId : undefined}>
@@ -102,7 +102,7 @@ export function SellerFields({
         />
       ) : null}
 
-      {isCollapsible && !isReadOnly ? (
+      {isCollapsible ? (
         <Button
           label={
             disclosure.isOpen

@@ -6,7 +6,6 @@ import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { MetadataList } from '@astryxdesign/core/MetadataList';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
@@ -18,16 +17,12 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Pencil } from 'lucide-react';
 import { useState } from 'react';
 
-import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
-import {
-  contractTypeOptions,
-  labelForContractType,
-} from '../config/contract-types.js';
+import { contractTypeOptions } from '../config/contract-types.js';
 import { currencyOptions, formatMoney } from '../config/currencies.js';
 import { incotermOptions } from '../config/incoterms.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
@@ -43,9 +38,14 @@ const GENERAL_FIELD_COLUMNS = { minWidth: 220, max: 3 };
 // stacked next to the main field grid (see UX reference).
 const DATE_COLUMN_WIDTH = 280;
 
-/** @param {string | null | undefined} value */
-function orDash(value) {
-  return value == null || value === '' ? '—' : value;
+/** Preserve a saved value while its lookup is loading or unavailable.
+ * @param {{value: string, label: string}[]} options
+ * @param {string} value
+ */
+function withSavedOption(options, value) {
+  return value && !options.some((option) => option.value === value)
+    ? [...options, { value, label: value }]
+    : options;
 }
 
 /**
@@ -192,99 +192,71 @@ export function ContractGeneralFields({
       >
         <StackItem size="fill">
           <VStack gap={3} hAlign="stretch">
-            {isReadOnly ? (
-              <MetadataList
-                columns={isNarrow ? 1 : 3}
-                label={{ position: 'top' }}
-              >
-                <MetadataListItem label="Số hợp đồng">
-                  {values.contractNumber}
-                </MetadataListItem>
-                <MetadataListItem label="Tên dự án">
-                  {values.projectName}
-                </MetadataListItem>
-                <MetadataListItem label="Loại hợp đồng">
-                  {labelForContractType(values.contractType)}
-                </MetadataListItem>
-              </MetadataList>
-            ) : (
-              <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
-                <TextInput
-                  label="Số hợp đồng"
-                  value={values.contractNumber}
-                  onChange={(value) => setField('contractNumber', value)}
-                  isRequired
-                  isLoading={isCheckingContractNumber}
-                  status={fieldStatuses.contractNumber}
-                  statusVariant="tooltip"
-                />
-                <TextInput
-                  label="Tên dự án"
-                  value={values.projectName}
-                  onChange={(value) => setField('projectName', value)}
-                  isRequired
-                  status={fieldStatuses.projectName}
-                  statusVariant="tooltip"
-                />
-                <Selector
-                  label="Loại hợp đồng"
-                  placeholder="Chọn loại hợp đồng"
-                  value={values.contractType}
-                  onChange={(value) => setField('contractType', value ?? '')}
-                  options={contractTypeOptions}
-                  isRequired
-                  status={fieldStatuses.contractType}
-                  statusVariant="tooltip"
-                />
-              </Grid>
-            )}
+            <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
+              <TextInput
+                isReadOnly={isReadOnly}
+                label="Số hợp đồng"
+                value={values.contractNumber}
+                onChange={(value) => setField('contractNumber', value)}
+                isRequired
+                isLoading={isCheckingContractNumber}
+                status={fieldStatuses.contractNumber}
+                statusVariant="tooltip"
+              />
+              <TextInput
+                isReadOnly={isReadOnly}
+                label="Tên dự án"
+                value={values.projectName}
+                onChange={(value) => setField('projectName', value)}
+                isRequired
+                status={fieldStatuses.projectName}
+                statusVariant="tooltip"
+              />
+              <Selector
+                isDisabled={isReadOnly}
+                label="Loại hợp đồng"
+                placeholder={isReadOnly ? '—' : 'Chọn loại hợp đồng'}
+                value={values.contractType}
+                onChange={(value) => setField('contractType', value ?? '')}
+                options={contractTypeOptions}
+                isRequired
+                status={fieldStatuses.contractType}
+                statusVariant="tooltip"
+              />
+            </Grid>
 
-            {isReadOnly ? (
-              <MetadataList
-                columns={isNarrow ? 1 : 3}
-                label={{ position: 'top' }}
-              >
-                <MetadataListItem label="Hạng mục">
-                  {values.category}
-                </MetadataListItem>
-                <MetadataListItem label="Incoterm">
-                  {values.incoterm}
-                </MetadataListItem>
-                <MetadataListItem label="Năm Incoterm">
-                  {values.incotermYear}
-                </MetadataListItem>
-              </MetadataList>
-            ) : (
-              <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
-                <TextInput
-                  label="Hạng mục"
-                  value={values.category}
-                  onChange={(value) => setField('category', value)}
-                  isRequired
-                  status={fieldStatuses.category}
-                  statusVariant="tooltip"
-                />
-                <Selector
-                  label="Incoterm"
-                  placeholder="Chọn Incoterm"
-                  value={values.incoterm}
-                  onChange={(value) => setField('incoterm', value ?? '')}
-                  options={incotermOptions}
-                  isRequired
-                  status={fieldStatuses.incoterm}
-                  statusVariant="tooltip"
-                />
-                <NumberInput
-                  label="Năm Incoterm"
-                  value={values.incotermYear}
-                  onChange={(value) => setField('incotermYear', value)}
-                  isIntegerOnly
-                  isRequired
-                  status={fieldStatuses.incotermYear}
-                  statusVariant="tooltip"
-                />
-              </Grid>
-            )}
+            <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
+              <TextInput
+                isReadOnly={isReadOnly}
+                label="Hạng mục"
+                value={values.category}
+                onChange={(value) => setField('category', value)}
+                isRequired
+                status={fieldStatuses.category}
+                statusVariant="tooltip"
+              />
+              <Selector
+                isDisabled={isReadOnly}
+                label="Incoterm"
+                placeholder={isReadOnly ? '—' : 'Chọn Incoterm'}
+                value={values.incoterm}
+                onChange={(value) => setField('incoterm', value ?? '')}
+                options={incotermOptions}
+                isRequired
+                status={fieldStatuses.incoterm}
+                statusVariant="tooltip"
+              />
+              <NumberInput
+                isReadOnly={isReadOnly}
+                label="Năm Incoterm"
+                value={values.incotermYear}
+                onChange={(value) => setField('incotermYear', value)}
+                isIntegerOnly
+                isRequired
+                status={fieldStatuses.incotermYear}
+                statusVariant="tooltip"
+              />
+            </Grid>
           </VStack>
         </StackItem>
 
@@ -294,167 +266,153 @@ export function ContractGeneralFields({
             hAlign="stretch"
             width={isNarrow ? '100%' : DATE_COLUMN_WIDTH}
           >
-            {isReadOnly ? (
-              <MetadataList columns={1} label={{ position: 'top' }}>
-                <MetadataListItem label="Ngày tạo hợp đồng">
-                  {orDash(values.createdDate)}
-                </MetadataListItem>
-                <MetadataListItem label="Ngày báo giá">
-                  {orDash(values.quotationDate)}
-                </MetadataListItem>
-              </MetadataList>
-            ) : (
-              <>
-                <DateInput
-                  label="Ngày tạo hợp đồng"
-                  value={
-                    /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                      values.createdDate
-                    )
-                  }
-                  onChange={(value) => setField('createdDate', value ?? '')}
-                  format="system_date"
-                  isRequired
-                  status={fieldStatuses.createdDate}
-                  statusVariant="tooltip"
-                />
-                <DateInput
-                  label="Ngày báo giá"
-                  value={
-                    /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                      values.quotationDate
-                    )
-                  }
-                  onChange={(value) => setField('quotationDate', value ?? '')}
-                  format="system_date"
-                  isRequired
-                  status={fieldStatuses.quotationDate}
-                  statusVariant="tooltip"
-                />
-              </>
-            )}
+            <>
+              <DateInput
+                isDisabled={isReadOnly}
+                label="Ngày tạo hợp đồng"
+                value={
+                  /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                    values.createdDate
+                  )
+                }
+                onChange={(value) => setField('createdDate', value ?? '')}
+                format="system_date"
+                isRequired
+                status={fieldStatuses.createdDate}
+                statusVariant="tooltip"
+              />
+              <DateInput
+                isDisabled={isReadOnly}
+                label="Ngày báo giá"
+                value={
+                  /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                    values.quotationDate
+                  )
+                }
+                onChange={(value) => setField('quotationDate', value ?? '')}
+                format="system_date"
+                isRequired
+                status={fieldStatuses.quotationDate}
+                statusVariant="tooltip"
+              />
+            </>
           </VStack>
         </StackItem>
       </Stack>
 
-      {isReadOnly ? (
-        <MetadataList columns={isNarrow ? 1 : 3} label={{ position: 'top' }}>
-          <MetadataListItem label="Nước xuất khẩu">
-            {orDash(
-              countries.find((country) => country.id === values.countryId)
-                ?.name,
-            )}
-          </MetadataListItem>
-          <MetadataListItem label="Cảng/nơi xếp hàng">
-            {orDash(values.placeOfLoading)}
-          </MetadataListItem>
-          <MetadataListItem label="Cảng/nơi đến">
-            {orDash(values.placeOfDischarge)}
-          </MetadataListItem>
-        </MetadataList>
-      ) : (
-        <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
-          <HStack gap={2} vAlign="end">
-            <StackItem size="fill">
-              <Selector
-                label="Nước xuất khẩu"
-                hasSearch
-                placeholder="Chọn nước"
-                value={values.countryId}
-                onChange={(value) => setField('countryId', value ?? '')}
-                options={countries.map((country) => ({
-                  value: country.id,
-                  label: country.name,
-                }))}
-                isRequired
-                status={fieldStatuses.countryId}
-                statusVariant="tooltip"
-                width="100%"
-              />
-            </StackItem>
-            <IconButton
-              label="Thêm nước"
-              tooltip="Thêm nước"
-              icon={<Icon icon={IconPlus} size="sm" />}
-              type="button"
-              variant="secondary"
-              onClick={() => setIsQuickCreateCountryOpen(true)}
+      <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
+        <HStack gap={2} vAlign="end">
+          <StackItem size="fill">
+            <Selector
+              isDisabled={isReadOnly}
+              label="Nước xuất khẩu"
+              hasSearch
+              placeholder={isReadOnly ? '—' : 'Chọn nước'}
+              value={values.countryId}
+              onChange={(value) => setField('countryId', value ?? '')}
+              options={countries.map((country) => ({
+                value: country.id,
+                label: country.name,
+              }))}
+              isRequired
+              status={fieldStatuses.countryId}
+              statusVariant="tooltip"
+              width="100%"
             />
-          </HStack>
+          </StackItem>
+          <IconButton
+            isDisabled={isReadOnly}
+            label="Thêm nước"
+            tooltip="Thêm nước"
+            icon={<Icon icon={IconPlus} size="sm" />}
+            type="button"
+            variant="secondary"
+            onClick={() => setIsQuickCreateCountryOpen(true)}
+          />
+        </HStack>
 
-          <HStack gap={2} vAlign="end">
-            <StackItem size="fill">
-              <Selector
-                label="Nơi xếp hàng"
-                hasSearch
-                placeholder="Chọn nơi xếp hàng"
-                disabledMessage={
-                  vietnamCountryId
-                    ? undefined
-                    : 'Danh mục nước chưa có "Việt Nam"'
-                }
-                isDisabled={!vietnamCountryId}
-                value={values.placeOfLoading}
-                onChange={(value) => setField('placeOfLoading', value ?? '')}
-                options={loadingPlaces.map((place) => ({
+        <HStack gap={2} vAlign="end">
+          <StackItem size="fill">
+            <Selector
+              label="Nơi xếp hàng"
+              hasSearch
+              placeholder={isReadOnly ? '—' : 'Chọn nơi xếp hàng'}
+              disabledMessage={
+                vietnamCountryId
+                  ? undefined
+                  : 'Danh mục nước chưa có "Việt Nam"'
+              }
+              isDisabled={isReadOnly || !vietnamCountryId}
+              value={values.placeOfLoading}
+              onChange={(value) => setField('placeOfLoading', value ?? '')}
+              options={withSavedOption(
+                loadingPlaces.map((place) => ({
                   value: place.name,
                   label: place.name,
-                }))}
-                isRequired
-                status={fieldStatuses.placeOfLoading}
-                statusVariant="tooltip"
-                width="100%"
-              />
-            </StackItem>
-            <IconButton
-              label="Thêm nơi xếp hàng"
-              tooltip="Thêm nơi xếp hàng"
-              icon={<Icon icon={IconPlus} size="sm" />}
-              type="button"
-              variant="secondary"
-              isDisabled={!vietnamCountryId}
-              onClick={() => setIsQuickCreateLoadingPlaceOpen(true)}
+                })),
+                values.placeOfLoading,
+              )}
+              isRequired
+              status={fieldStatuses.placeOfLoading}
+              statusVariant="tooltip"
+              width="100%"
             />
-          </HStack>
+          </StackItem>
+          <IconButton
+            label="Thêm nơi xếp hàng"
+            tooltip="Thêm nơi xếp hàng"
+            icon={<Icon icon={IconPlus} size="sm" />}
+            type="button"
+            variant="secondary"
+            isDisabled={isReadOnly || !vietnamCountryId}
+            onClick={() => setIsQuickCreateLoadingPlaceOpen(true)}
+          />
+        </HStack>
 
-          <HStack gap={2} vAlign="end">
-            <StackItem size="fill">
-              <Selector
-                label="Cảng/nơi đến"
-                hasSearch
-                placeholder="Chọn cảng/nơi đến"
-                disabledMessage={
-                  !isPlaceOfDischargeApplicable
-                    ? 'Không áp dụng cho Incoterm EXW/FOB'
-                    : !values.countryId
-                      ? 'Vui lòng chọn nước xuất khẩu trước'
-                      : undefined
-                }
-                isDisabled={!isPlaceOfDischargeApplicable || !values.countryId}
-                value={values.placeOfDischarge}
-                onChange={(value) => setField('placeOfDischarge', value ?? '')}
-                options={dischargePlaces.map((place) => ({
+        <HStack gap={2} vAlign="end">
+          <StackItem size="fill">
+            <Selector
+              label="Cảng/nơi đến"
+              hasSearch
+              placeholder={isReadOnly ? '—' : 'Chọn cảng/nơi đến'}
+              disabledMessage={
+                !isPlaceOfDischargeApplicable
+                  ? 'Không áp dụng cho Incoterm EXW/FOB'
+                  : !values.countryId
+                    ? 'Vui lòng chọn nước xuất khẩu trước'
+                    : undefined
+              }
+              isDisabled={
+                isReadOnly || !isPlaceOfDischargeApplicable || !values.countryId
+              }
+              value={values.placeOfDischarge}
+              onChange={(value) => setField('placeOfDischarge', value ?? '')}
+              options={withSavedOption(
+                dischargePlaces.map((place) => ({
                   value: place.name,
                   label: place.name,
-                }))}
-                isRequired={isPlaceOfDischargeApplicable}
-                status={fieldStatuses.placeOfDischarge}
-                statusVariant="tooltip"
-                width="100%"
-              />
-            </StackItem>
-            <IconButton
-              label="Thêm cảng / nơi đến"
-              tooltip="Thêm cảng / nơi đến"
-              icon={<Icon icon={IconPlus} size="sm" />}
-              type="button"
-              variant="secondary"
-              isDisabled={!isPlaceOfDischargeApplicable || !values.countryId}
-              onClick={() => setIsQuickCreateDischargePlaceOpen(true)}
+                })),
+                values.placeOfDischarge,
+              )}
+              isRequired={isPlaceOfDischargeApplicable}
+              status={fieldStatuses.placeOfDischarge}
+              statusVariant="tooltip"
+              width="100%"
             />
-          </HStack>
-        </Grid>
-      )}
+          </StackItem>
+          <IconButton
+            label="Thêm cảng / nơi đến"
+            tooltip="Thêm cảng / nơi đến"
+            icon={<Icon icon={IconPlus} size="sm" />}
+            type="button"
+            variant="secondary"
+            isDisabled={
+              isReadOnly || !isPlaceOfDischargeApplicable || !values.countryId
+            }
+            onClick={() => setIsQuickCreateDischargePlaceOpen(true)}
+          />
+        </HStack>
+      </Grid>
 
       {isReadOnly ? null : (
         <>
@@ -487,50 +445,47 @@ export function ContractGeneralFields({
         value={values.contractValue}
         onChange={(value) => setField('contractValue', value)}
         units={values.currency || undefined}
-        isRequired={!isReadOnly}
+        isRequired
         status={fieldStatuses.contractValue}
         statusVariant="tooltip"
         isReadOnly={isReadOnly}
       />
 
-      {!isReadOnly && (
-        <Selector
-          label="Tiền tệ"
-          placeholder="Đơn vị"
-          value={values.currency}
-          onChange={(value) => setField('currency', value ?? '')}
-          options={currencyOptions}
-          width={120}
-          isRequired
-          status={fieldStatuses.currency}
-          statusVariant="tooltip"
-        />
-      )}
+      <Selector
+        isDisabled={isReadOnly}
+        label="Tiền tệ"
+        placeholder={isReadOnly ? '—' : 'Đơn vị'}
+        value={values.currency}
+        onChange={(value) => setField('currency', value ?? '')}
+        options={currencyOptions}
+        width={120}
+        isRequired
+        status={fieldStatuses.currency}
+        statusVariant="tooltip"
+      />
 
-      {isCompanyFixed || isReadOnly ? (
-        <Text type="supporting" color="secondary">
-          Công ty:{' '}
-          {companies.find((company) => company.id === values.companyId)?.name ??
-            values.companyId}
-          {isCompanyFixed ? ' (không thể thay đổi sau khi tạo)' : ''}
-        </Text>
-      ) : (
-        <Selector
-          label="Công ty"
-          hasSearch
-          placeholder="Chọn công ty"
-          value={values.companyId}
-          onChange={(value) => setField('companyId', value ?? '')}
-          options={companies.map((company) => ({
+      <Selector
+        isDisabled={isReadOnly || isCompanyFixed}
+        disabledMessage={
+          isCompanyFixed ? 'Không thể thay đổi công ty sau khi tạo' : undefined
+        }
+        label="Công ty"
+        hasSearch
+        placeholder={isReadOnly ? '—' : 'Chọn công ty'}
+        value={values.companyId}
+        onChange={(value) => setField('companyId', value ?? '')}
+        options={withSavedOption(
+          companies.map((company) => ({
             value: company.id,
             label: company.name,
-          }))}
-          isRequired
-          status={fieldStatuses.companyId}
-          statusVariant="tooltip"
-          width="100%"
-        />
-      )}
+          })),
+          values.companyId,
+        )}
+        isRequired
+        status={fieldStatuses.companyId}
+        statusVariant="tooltip"
+        width="100%"
+      />
 
       <TextArea
         label="Ghi chú"

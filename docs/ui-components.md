@@ -88,3 +88,23 @@ local dev server with synthetic backend fixtures only. It covers menu contents,
 read-only view, direct edit, child operations, refreshed payments, sticky column
 geometry and mobile dialogs. `dialog-browser.mjs` covers existing creation and
 shared-form guards.
+
+## Stable view/edit geometry
+
+Contract, Shipment and Commission keep the same field grid in every mode.
+Prefer a control's read-only API; for Selector/DateInput/CheckboxList, retain
+the same control with `isDisabled` because these Astryx controls do not expose
+read-only behavior. Keep toolbar actions and table columns in place, disabling
+parent mutations in view. Commission quick-payment reuses the Add slot for its
+independent child dialog. VGM mutations remain available only in edit.
+
+Existing-record titles, footer action widths and seller/buyer disclosures
+remain stable across view/edit. Do not reintroduce separate MetadataList
+branches for editable fields or conditionally remove currency/action slots.
+Creation keeps helper text and Commission's metadata placeholder slots.
+
+`node harness/checks/stable-dialog-layout-browser.mjs` compares control
+rectangles, footer geometry, scroll and zero writes on edit at desktop/mobile
+widths. The accepted per-control displacement is at most 2 CSS pixels. This
+mocked browser runner supplements the full gate; it still requires a local
+dev server. See `openspec/changes/stable-dialog-layout/` for scenarios.

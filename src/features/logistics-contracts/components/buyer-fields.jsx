@@ -57,30 +57,12 @@ export function BuyerFields({
     (customer) => customer.id === sourceCustomerId,
   );
 
-  if (isReadOnly) {
-    return (
-      <VStack gap={3} hAlign="stretch">
-        <Text type="supporting" color="secondary">
-          Tên công ty:{' '}
-          {selectedCustomer?.companyName || inlineValues.companyName}
-        </Text>
-        <CustomerFields
-          values={inlineValues}
-          setField={onInlineFieldChange}
-          fieldStatuses={fieldStatuses}
-          extraFieldRows={extraFieldRows}
-          showCompanyName={false}
-          isReadOnly
-        />
-      </VStack>
-    );
-  }
-
   return (
     <VStack gap={3} hAlign="stretch">
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
           <Selector
+            isDisabled={isReadOnly}
             label="Khách hàng"
             hasSearch
             placeholder="Chọn khách hàng"
@@ -99,6 +81,7 @@ export function BuyerFields({
           />
         </StackItem>
         <IconButton
+          isDisabled={isReadOnly}
           label="Thêm khách hàng"
           tooltip="Thêm khách hàng"
           icon={<Icon icon={IconPlus} size="sm" />}
@@ -114,14 +97,6 @@ export function BuyerFields({
             Tên công ty: {selectedCustomer.companyName} (theo danh mục, không
             sửa được ở đây)
           </Text>
-          <CustomerFields
-            values={inlineValues}
-            setField={onInlineFieldChange}
-            fieldStatuses={fieldStatuses}
-            extraFieldRows={extraFieldRows}
-            showCompanyName={false}
-            isCollapsible
-          />
         </VStack>
       ) : inlineValues.companyName ? (
         // Editing a contract whose Buyer was saved without a catalog
@@ -136,6 +111,16 @@ export function BuyerFields({
           chưa có trong danh mục.
         </Text>
       ) : null}
+
+      <CustomerFields
+        values={inlineValues}
+        setField={onInlineFieldChange}
+        fieldStatuses={fieldStatuses}
+        extraFieldRows={extraFieldRows}
+        showCompanyName={false}
+        isCollapsible
+        isReadOnly={isReadOnly}
+      />
 
       <QuickCreateCustomerDialog
         isOpen={isQuickCreateOpen}

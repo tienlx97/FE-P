@@ -61,7 +61,7 @@ export function CommissionFormDialog({
         setMode('edit');
       }}
       onOpenChange={onOpenChange}
-      title={isViewing ? `Commission · ${commission?.code}` : form.title}
+      title={commission ? `Commission · ${commission.code}` : form.title}
       submitLabel={form.submitLabel}
       width={720}
       variant="fullscreen"

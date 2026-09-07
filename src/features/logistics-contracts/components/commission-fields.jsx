@@ -9,11 +9,13 @@ import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { overlayPaddingReset } from '@astryxdesign/core/Layout';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { MetadataList } from '@astryxdesign/core/MetadataList';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 import { Pencil, Plus } from 'lucide-react';
 
 import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
@@ -54,7 +56,11 @@ function annexAmountLabel(annex, currency) {
 function Section({ title, children }) {
   return (
     <Card padding={4}>
-      <VStack gap={3} hAlign="stretch">
+      <VStack
+        gap={3}
+        hAlign="stretch"
+        {...stylex.props(overlayPaddingReset.reset)}
+      >
         <Text weight="semibold">{title}</Text>
         {children}
       </VStack>
@@ -67,7 +73,7 @@ function Section({ title, children }) {
  * modes of `CommissionFormDialog`; `isReadOnly` toggles each field's
  * interactivity instead of switching to a separate read-only component.
  * `year`/`number`/`code` are backend-assigned and never editable, so they
- * only render (as static values) once `commission` exists. Uses the parent
+ * keep a metadata slot with a creation placeholder. Uses the parent
  * contract's `currency`, so there is no currency field here. "Phụ lục" and
  * "Tổng cộng" are informational and have their own actions independent of
  * this form, so they render in both modes whenever `commission` exists.
@@ -120,68 +126,54 @@ export function CommissionFields({
   }, 0);
   const grandTotal = (values.value ?? 0) + annexesTotal;
 
-  const partyCustomerName =
-    customers.find((customer) => customer.id === values.partyCustomerId)
-      ?.companyName ?? '—';
-
   return (
     <VStack gap={5} hAlign="stretch">
-      {commission ? (
-        <MetadataList columns={isNarrow ? 2 : 3} label={{ position: 'top' }}>
-          <MetadataListItem label="Mã">
-            {orDash(commission.code)}
-          </MetadataListItem>
-          <MetadataListItem label="Số hợp đồng">
-            {orDash(commission.contractNumber)}
-          </MetadataListItem>
-          <MetadataListItem label="Dự án">
-            {orDash(commission.projectName)}
-          </MetadataListItem>
-        </MetadataList>
-      ) : null}
+      <MetadataList columns={isNarrow ? 2 : 3} label={{ position: 'top' }}>
+        <MetadataListItem label="Mã">
+          {commission ? orDash(commission.code) : 'Tự động sau khi tạo'}
+        </MetadataListItem>
+        <MetadataListItem label="Số hợp đồng">
+          {orDash(commission?.contractNumber)}
+        </MetadataListItem>
+        <MetadataListItem label="Dự án">
+          {orDash(commission?.projectName)}
+        </MetadataListItem>
+      </MetadataList>
 
-      {isReadOnly ? (
-        <MetadataList columns={isNarrow ? 1 : 2} label={{ position: 'top' }}>
-          <MetadataListItem label="Ngày ký">
-            {orDash(values.signedDate)}
-          </MetadataListItem>
-          <MetadataListItem label="Bên nhận hoa hồng">
-            {partyCustomerName}
-          </MetadataListItem>
-        </MetadataList>
-      ) : (
-        <Grid columns={isNarrow ? 1 : 2} gap={3}>
-          <DateInput
-            label="Ngày ký"
-            value={
-              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                values.signedDate
-              )
-            }
-            onChange={(value) => setField('signedDate', value ?? '')}
-            isRequired
-            status={fieldStatuses.signedDate}
-            statusVariant="tooltip"
-            width="100%"
-          />
+      <Grid columns={isNarrow ? 1 : 2} gap={3}>
+        <DateInput
+          format="system_date"
+          isDisabled={isReadOnly}
+          label="Ngày ký"
+          value={
+            /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+              values.signedDate
+            )
+          }
+          onChange={(value) => setField('signedDate', value ?? '')}
+          isRequired
+          status={fieldStatuses.signedDate}
+          statusVariant="tooltip"
+          width="100%"
+        />
 
-          <Selector
-            label="Bên nhận hoa hồng"
-            hasSearch
-            placeholder="Chọn khách hàng"
-            value={values.partyCustomerId}
-            onChange={(value) => setField('partyCustomerId', value ?? '')}
-            options={customers.map((customer) => ({
-              value: customer.id,
-              label: customer.companyName,
-            }))}
-            isRequired
-            status={fieldStatuses.partyCustomerId}
-            statusVariant="tooltip"
-            width="100%"
-          />
-        </Grid>
-      )}
+        <Selector
+          isDisabled={isReadOnly}
+          label="Bên nhận hoa hồng"
+          hasSearch
+          placeholder={isReadOnly ? '—' : 'Chọn khách hàng'}
+          value={values.partyCustomerId}
+          onChange={(value) => setField('partyCustomerId', value ?? '')}
+          options={customers.map((customer) => ({
+            value: customer.id,
+            label: customer.companyName,
+          }))}
+          isRequired
+          status={fieldStatuses.partyCustomerId}
+          statusVariant="tooltip"
+          width="100%"
+        />
+      </Grid>
 
       <FormattedNumberTextInput
         label="Giá trị"
@@ -224,19 +216,8 @@ export function CommissionFields({
       </Section>
 
       <Section title="Lịch sử thanh toán">
-        {isReadOnly && onAddPayment ? (
-          <HStack hAlign="end">
-            <IconButton
-              label="Thêm nhanh lần thanh toán"
-              tooltip="Thêm nhanh"
-              icon={<Icon icon={Plus} size="sm" />}
-              variant="ghost"
-              size="sm"
-              onClick={onAddPayment}
-            />
-          </HStack>
-        ) : null}
         <PaymentHistoryFields
+          onQuickAdd={onAddPayment}
           rows={paymentHistoryRows.rows}
           status={fieldStatuses.paymentHistory}
           currency={currency}

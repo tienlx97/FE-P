@@ -29,6 +29,7 @@ import { formatMoney } from '../config/currencies.js';
  *   status?: { type: 'error' | 'success', message: string },
  *   currency?: string,
  *   isReadOnly?: boolean,
+ *   onQuickAdd?: () => void,
  *   onAddRow: () => void,
  *   onRemoveRow: (rowKey: string) => void,
  *   onUpdateRowField: (rowKey: string, field: 'paymentDate' | 'amount' | 'note', value: number | string | undefined) => void,
@@ -39,6 +40,7 @@ export function PaymentHistoryFields({
   status,
   currency,
   isReadOnly = false,
+  onQuickAdd,
   onAddRow,
   onRemoveRow,
   onUpdateRowField,
@@ -65,26 +67,25 @@ export function PaymentHistoryFields({
       key: 'paymentDate',
       header: 'Ngày thanh toán',
       width: pixel(220),
-      renderCell: (row) =>
-        isReadOnly ? (
-          <Text hasTabularNumbers>{row.paymentDate || '—'}</Text>
-        ) : (
-          <DateInput
-            label="Ngày thanh toán"
-            isLabelHidden
-            value={
-              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                row.paymentDate || null
-              )
-            }
-            onChange={(value) =>
-              onUpdateRowField(row.rowKey, 'paymentDate', value ?? '')
-            }
-            format="system_date"
-            size="sm"
-            width="100%"
-          />
-        ),
+      renderCell: (row) => (
+        <DateInput
+          placeholder={isReadOnly ? '—' : 'Chọn ngày'}
+          isDisabled={isReadOnly}
+          label="Ngày thanh toán"
+          isLabelHidden
+          value={
+            /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+              row.paymentDate || null
+            )
+          }
+          onChange={(value) =>
+            onUpdateRowField(row.rowKey, 'paymentDate', value ?? '')
+          }
+          format="system_date"
+          size="sm"
+          width="100%"
+        />
+      ),
     },
     {
       key: 'amount',
@@ -112,7 +113,7 @@ export function PaymentHistoryFields({
           isLabelHidden
           value={row.note}
           onChange={(value) => onUpdateRowField(row.rowKey, 'note', value)}
-          placeholder="Ghi chú (không bắt buộc)"
+          placeholder={isReadOnly ? '—' : 'Ghi chú (không bắt buộc)'}
           rows={1}
           size="sm"
           width="100%"
@@ -122,46 +123,40 @@ export function PaymentHistoryFields({
     },
   ];
 
-  if (!isReadOnly) {
-    columns.push({
-      key: 'actions',
-      header: 'Thao tác',
-      width: pixel(96),
-      align: 'end',
-      renderCell: (row) => (
-        <IconButton
-          label="Xoá dòng này"
-          tooltip="Xoá"
-          icon={<Icon icon={IconTrash} size="sm" />}
-          type="button"
-          variant="ghost"
-          onClick={() => onRemoveRow(row.rowKey)}
-        />
-      ),
-    });
-  }
+  columns.push({
+    key: 'actions',
+    header: 'Thao tác',
+    width: pixel(96),
+    align: 'end',
+    renderCell: (row) => (
+      <IconButton
+        isDisabled={isReadOnly}
+        label="Xoá dòng này"
+        tooltip="Xoá"
+        icon={<Icon icon={IconTrash} size="sm" />}
+        type="button"
+        variant="ghost"
+        onClick={() => onRemoveRow(row.rowKey)}
+      />
+    ),
+  });
 
   return (
     <VStack gap={2} hAlign="stretch">
       {rows.length === 0 ? (
         <EmptyState
           title="Chưa có lần thanh toán"
-          description={
-            isReadOnly
-              ? undefined
-              : 'Ghi nhận lần thanh toán đầu tiên cho Commission này.'
-          }
+          description={'Ghi nhận lần thanh toán đầu tiên cho Commission này.'}
           isCompact
           actions={
-            isReadOnly ? undefined : (
-              <Button
-                label="Thêm lần thanh toán"
-                type="button"
-                variant="secondary"
-                icon={<Icon icon={IconPlus} size="sm" />}
-                onClick={onAddRow}
-              />
-            )
+            <Button
+              isDisabled={isReadOnly && !onQuickAdd}
+              label="Thêm lần thanh toán"
+              type="button"
+              variant="secondary"
+              icon={<Icon icon={IconPlus} size="sm" />}
+              onClick={isReadOnly ? onQuickAdd : onAddRow}
+            />
           }
         />
       ) : (
@@ -172,15 +167,14 @@ export function PaymentHistoryFields({
             variant="muted"
             dividers={['bottom']}
             startContent={
-              isReadOnly ? undefined : (
-                <Button
-                  label="Thêm lần thanh toán"
-                  type="button"
-                  variant="secondary"
-                  icon={<Icon icon={IconPlus} size="sm" />}
-                  onClick={onAddRow}
-                />
-              )
+              <Button
+                isDisabled={isReadOnly && !onQuickAdd}
+                label="Thêm lần thanh toán"
+                type="button"
+                variant="secondary"
+                icon={<Icon icon={IconPlus} size="sm" />}
+                onClick={isReadOnly ? onQuickAdd : onAddRow}
+              />
             }
             endContent={
               <Text weight="semibold" hasTabularNumbers>

@@ -143,33 +143,33 @@ export function ShipmentVgmSection({
     },
   ];
 
-  if (!isReadOnly) {
-    vgmColumns.push({
-      key: 'actions',
-      header: '',
-      width: pixel(90),
-      renderCell: (vgm) => (
-        <HStack gap={1} vAlign="center" hAlign="end">
-          <IconButton
-            label={`Sửa ${vgm.containerNumber}`}
-            tooltip="Sửa VGM"
-            icon={<Icon icon={Pencil} size="sm" />}
-            variant="ghost"
-            size="sm"
-            onClick={() => handleEdit(vgm)}
-          />
-          <IconButton
-            label={`Xoá ${vgm.containerNumber}`}
-            tooltip="Xoá VGM"
-            icon={<Icon icon={Trash2} size="sm" />}
-            variant="ghost"
-            size="sm"
-            onClick={() => setDeletingVgm(vgm)}
-          />
-        </HStack>
-      ),
-    });
-  }
+  vgmColumns.push({
+    key: 'actions',
+    header: '',
+    width: pixel(90),
+    renderCell: (vgm) => (
+      <HStack gap={1} vAlign="center" hAlign="end">
+        <IconButton
+          isDisabled={isReadOnly}
+          label={`Sửa ${vgm.containerNumber}`}
+          tooltip="Sửa VGM"
+          icon={<Icon icon={Pencil} size="sm" />}
+          variant="ghost"
+          size="sm"
+          onClick={() => handleEdit(vgm)}
+        />
+        <IconButton
+          isDisabled={isReadOnly}
+          label={`Xoá ${vgm.containerNumber}`}
+          tooltip="Xoá VGM"
+          icon={<Icon icon={Trash2} size="sm" />}
+          variant="ghost"
+          size="sm"
+          onClick={() => setDeletingVgm(vgm)}
+        />
+      </HStack>
+    ),
+  });
 
   const vgmStickyColumns =
     /** @type {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').ShipmentVgm & Record<string, unknown>>} */ (
@@ -180,15 +180,14 @@ export function ShipmentVgmSection({
     <VStack gap={3} hAlign="stretch">
       <HStack hAlign="between" vAlign="center">
         <Text weight="semibold">VGM</Text>
-        {isReadOnly ? null : (
-          <Button
-            label="Thêm VGM"
-            variant="secondary"
-            size="sm"
-            icon={<Icon icon={Plus} />}
-            onClick={handleAdd}
-          />
-        )}
+        <Button
+          isDisabled={isReadOnly}
+          label="Thêm VGM"
+          variant="secondary"
+          size="sm"
+          icon={<Icon icon={Plus} />}
+          onClick={handleAdd}
+        />
       </HStack>
 
       {vgms.length === 0 ? (

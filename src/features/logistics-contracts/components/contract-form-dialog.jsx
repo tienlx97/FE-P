@@ -21,6 +21,13 @@ import { ContractGeneralFields } from './contract-general-fields.jsx';
 import { PaymentTermsFields } from './payment-terms-fields.jsx';
 
 const styles = stylex.create({
+  hint: {
+    flex: '1',
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
   surface: { backgroundColor: colorVars['--color-background-surface'] },
   disabledTab: { cursor: 'not-allowed', opacity: 0.5 },
 });
@@ -116,7 +123,7 @@ export function ContractFormDialog({
                 title={
                   !contract
                     ? 'Tạo hợp đồng'
-                    : `${isEditing ? 'Sửa hợp đồng' : 'Hợp đồng'} · ${contract.contractNumber}`
+                    : `Hợp đồng · ${contract.contractNumber}`
                 }
                 onOpenChange={() => requestExit('close')}
               />
@@ -165,7 +172,7 @@ export function ContractFormDialog({
                 {!contract ? (
                   <Banner
                     status="info"
-                    title="Lưu hợp đồng để sử dụng Lịch sử thanh toán, Shipment và Commission."
+                    title="Lịch sử thanh toán, Shipment và Commission được quản lý sau khi lưu hợp đồng."
                     container="card"
                   />
                 ) : null}
@@ -173,6 +180,11 @@ export function ContractFormDialog({
                   <form
                     id={formId}
                     onSubmit={(event) => {
+                      if (!isEditing) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        return;
+                      }
                       event.currentTarget.scrollIntoView({ block: 'start' });
                       handleSubmit(event);
                     }}
@@ -241,8 +253,8 @@ export function ContractFormDialog({
           }
           footer={
             <LayoutFooter>
-              <HStack hAlign="between" gap={2} wrap="wrap">
-                <Text color="secondary">
+              <HStack hAlign="between" gap={2}>
+                <Text color="secondary" xstyle={styles.hint}>
                   {isEditing
                     ? isDirty
                       ? 'Có thay đổi chưa lưu'
@@ -251,6 +263,7 @@ export function ContractFormDialog({
                 </Text>
                 <HStack gap={2}>
                   <Button
+                    width={80}
                     label={isEditing ? 'Hủy' : 'Đóng'}
                     variant="secondary"
                     isDisabled={isSubmitting}
@@ -259,6 +272,7 @@ export function ContractFormDialog({
                   {isEditing ? (
                     <Button
                       key="save"
+                      width={144}
                       label={submitLabel}
                       type="submit"
                       form={formId}
@@ -269,6 +283,7 @@ export function ContractFormDialog({
                   ) : (
                     <Button
                       key="edit"
+                      width={144}
                       type="button"
                       label="Sửa hợp đồng"
                       variant="primary"

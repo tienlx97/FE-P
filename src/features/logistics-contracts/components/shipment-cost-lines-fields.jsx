@@ -32,11 +32,6 @@ import { QuickCreateShipmentCostCategoryDialog } from './quick-create-shipment-c
 // `IconButton` beside it.
 const ADD_COST_CATEGORY_OPTION_VALUE = '__add_cost_category__';
 
-/** @param {string | null | undefined} value */
-function orDash(value) {
-  return value == null || value === '' ? '—' : value;
-}
-
 /**
  * "Thông tin chi phí logistics" grid for a Shipment — mirrors
  * `PaymentHistoryFields` (purely a controlled view over
@@ -106,38 +101,36 @@ export function ShipmentCostLinesFields({
       key: 'costCategoryId',
       header: 'Nhóm chi phí',
       width: pixel(280),
-      renderCell: (row) =>
-        isReadOnly ? (
-          orDash(costCategoriesById.get(row.costCategoryId)?.name)
-        ) : (
-          <Selector
-            label="Nhóm chi phí"
-            isLabelHidden
-            hasSearch
-            placeholder="Chọn nhóm chi phí"
-            value={row.costCategoryId}
-            onChange={(value) => {
-              if (value === ADD_COST_CATEGORY_OPTION_VALUE) {
-                setQuickCreateForRowKey(row.rowKey);
-                return;
-              }
-              onUpdateRowField(row.rowKey, 'costCategoryId', value ?? '');
-            }}
-            options={[
-              ...costCategories.map((costCategory) => ({
-                value: costCategory.id,
-                label: costCategory.name,
-              })),
-              { type: 'divider' },
-              {
-                value: ADD_COST_CATEGORY_OPTION_VALUE,
-                label: 'Thêm nhóm chi phí',
-                icon: <Icon icon={IconPlus} size="sm" />,
-              },
-            ]}
-            width="100%"
-          />
-        ),
+      renderCell: (row) => (
+        <Selector
+          isDisabled={isReadOnly}
+          label="Nhóm chi phí"
+          isLabelHidden
+          hasSearch
+          placeholder={isReadOnly ? '—' : 'Chọn nhóm chi phí'}
+          value={row.costCategoryId}
+          onChange={(value) => {
+            if (value === ADD_COST_CATEGORY_OPTION_VALUE) {
+              setQuickCreateForRowKey(row.rowKey);
+              return;
+            }
+            onUpdateRowField(row.rowKey, 'costCategoryId', value ?? '');
+          }}
+          options={[
+            ...costCategories.map((costCategory) => ({
+              value: costCategory.id,
+              label: costCategory.name,
+            })),
+            { type: 'divider' },
+            {
+              value: ADD_COST_CATEGORY_OPTION_VALUE,
+              label: 'Thêm nhóm chi phí',
+              icon: <Icon icon={IconPlus} size="sm" />,
+            },
+          ]}
+          width="100%"
+        />
+      ),
     },
     {
       key: 'name',
@@ -149,7 +142,7 @@ export function ShipmentCostLinesFields({
           isLabelHidden
           value={row.name}
           onChange={(value) => onUpdateRowField(row.rowKey, 'name', value)}
-          placeholder="Ví dụ: Phí THC, Phí D/O"
+          placeholder={isReadOnly ? '—' : 'Ví dụ: Phí THC, Phí D/O'}
           isReadOnly={isReadOnly}
         />
       ),
@@ -180,7 +173,7 @@ export function ShipmentCostLinesFields({
           isLabelHidden
           value={row.note}
           onChange={(value) => onUpdateRowField(row.rowKey, 'note', value)}
-          placeholder="Ghi chú (không bắt buộc)"
+          placeholder={isReadOnly ? '—' : 'Ghi chú (không bắt buộc)'}
           rows={1}
           size="sm"
           width="100%"
@@ -192,51 +185,45 @@ export function ShipmentCostLinesFields({
       key: 'providerCustomerId',
       header: 'Nhà cung cấp',
       width: pixel(300),
-      renderCell: (row) =>
-        isReadOnly ? (
-          orDash(
-            customers.find((customer) => customer.id === row.providerCustomerId)
-              ?.companyName,
-          )
-        ) : (
-          <Selector
-            label="Nhà cung cấp"
-            isLabelHidden
-            hasSearch
-            hasClear
-            placeholder="Chưa xác định"
-            value={row.providerCustomerId || null}
-            onChange={(value) =>
-              onUpdateRowField(row.rowKey, 'providerCustomerId', value ?? '')
-            }
-            options={customers.map((customer) => ({
-              value: customer.id,
-              label: customer.companyName,
-            }))}
-            width="100%"
-          />
-        ),
+      renderCell: (row) => (
+        <Selector
+          isDisabled={isReadOnly}
+          label="Nhà cung cấp"
+          isLabelHidden
+          hasSearch
+          hasClear
+          placeholder={isReadOnly ? '—' : 'Chưa xác định'}
+          value={row.providerCustomerId || null}
+          onChange={(value) =>
+            onUpdateRowField(row.rowKey, 'providerCustomerId', value ?? '')
+          }
+          options={customers.map((customer) => ({
+            value: customer.id,
+            label: customer.companyName,
+          }))}
+          width="100%"
+        />
+      ),
     },
   ];
 
-  if (!isReadOnly) {
-    columns.push({
-      key: 'actions',
-      header: '',
-      width: pixel(48),
-      align: 'end',
-      renderCell: (row) => (
-        <IconButton
-          label="Xoá dòng này"
-          tooltip="Xoá"
-          icon={<Icon icon={IconTrash} size="sm" />}
-          type="button"
-          variant="ghost"
-          onClick={() => onRemoveRow(row.rowKey)}
-        />
-      ),
-    });
-  }
+  columns.push({
+    key: 'actions',
+    header: '',
+    width: pixel(48),
+    align: 'end',
+    renderCell: (row) => (
+      <IconButton
+        isDisabled={isReadOnly}
+        label="Xoá dòng này"
+        tooltip="Xoá"
+        icon={<Icon icon={IconTrash} size="sm" />}
+        type="button"
+        variant="ghost"
+        onClick={() => onRemoveRow(row.rowKey)}
+      />
+    ),
+  });
 
   return (
     <VStack
@@ -245,17 +232,14 @@ export function ShipmentCostLinesFields({
       {...stylex.props(overlayPaddingReset.reset)}
     >
       <HStack hAlign="between" vAlign="center">
-        {isReadOnly ? (
-          <Text weight="semibold">Thông tin chi phí logistics</Text>
-        ) : (
-          <Button
-            label="Thêm chi phí"
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={onAddRow}
-          />
-        )}
+        <Button
+          isDisabled={isReadOnly}
+          label="Thêm chi phí"
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={onAddRow}
+        />
         {rows.length > 0 ? (
           <Text weight="semibold">Tổng chi phí: {formatMoney(total)} đ</Text>
         ) : null}

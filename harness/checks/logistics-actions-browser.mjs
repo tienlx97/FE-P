@@ -45,7 +45,7 @@ function button(label) {
 }
 function field(label, value) {
   evaluate(
-    `document.querySelectorAll('[data-audit-field]').forEach(e=>e.removeAttribute('data-audit-field'));const controls=[...document.querySelectorAll('dialog[open] input,dialog[open] textarea')];const input=controls.find(e=>e.checkVisibility() && ([...(e.labels||[])].map(l=>l.textContent).join(" ")+" "+(e.getAttribute("aria-labelledby")||"").split(" ").map(id=>document.getElementById(id)?.textContent||"").join(" ")).includes(${JSON.stringify(label)}));if(!input)throw Error('Missing field: '+${JSON.stringify(label)});input.setAttribute('data-audit-field','true');`,
+    `document.querySelectorAll('[data-audit-field]').forEach(e=>e.removeAttribute('data-audit-field'));const dialog=[...document.querySelectorAll('dialog[open]')].at(-1);const controls=[...dialog.querySelectorAll('input,textarea')];const input=controls.find(e=>e.checkVisibility() && !e.readOnly && !e.disabled && ([...(e.labels||[])].map(l=>l.textContent).join(" ")+" "+(e.getAttribute("aria-labelledby")||"").split(" ").map(id=>document.getElementById(id)?.textContent||"").join(" ")).includes(${JSON.stringify(label)}));if(!input)throw Error('Missing field: '+${JSON.stringify(label)});input.setAttribute('data-audit-field','true');`,
   );
   browser('fill', '[data-audit-field]', value);
 }
@@ -177,7 +177,7 @@ pinned('Shipment');
 menu('Xem');
 opened('Shipment · ' + shipment.shipmentCode);
 check(
-  '!document.querySelector("dialog[open] input") && !document.querySelector("dialog[open] button[type=submit]")',
+  '[...document.querySelectorAll("dialog[open] input:not([type=hidden]), dialog[open] textarea")].filter(e=>e.checkVisibility()).every(e=>e.readOnly||e.disabled||e.closest("[aria-disabled=true]")) && !document.querySelector("dialog[open] button[type=submit]")',
   'Shipment view exposes no editable parent fields',
 );
 geometry('shipment-view-desktop');
@@ -186,11 +186,12 @@ browser('press', 'Enter');
 wait(
   'document.querySelector("dialog[open]")?.textContent.includes("Thêm VGM")',
 );
+button('Sửa');
+wait('document.querySelector("dialog[open] button[type=submit]")');
 button('Thêm VGM');
 wait('document.querySelectorAll("dialog[open]").length===2');
 button('Hủy');
 wait('document.querySelectorAll("dialog[open]").length===1');
-button('Sửa');
 wait('document.querySelector("dialog[open] button[type=submit]")');
 check(
   'window.auditWrites.length===0',
@@ -204,7 +205,7 @@ opened('Bỏ thay đổi chưa lưu?');
 button('Bỏ thay đổi');
 closed();
 menu('Sửa');
-opened('Sửa Shipment ' + shipment.shipmentCode);
+opened('Shipment · ' + shipment.shipmentCode);
 field('Số booking', 'BOOK-SAVED');
 browser('click', 'dialog[open] button[type=submit]');
 closed();
@@ -230,14 +231,14 @@ menu('Xem');
 opened('Commission · ' + commission.code);
 geometry('commission-view-desktop');
 check(
-  '!document.querySelector("dialog[open] input") && !document.querySelector("dialog[open] button[type=submit]")',
+  '[...document.querySelectorAll("dialog[open] input:not([type=hidden]), dialog[open] textarea")].filter(e=>e.checkVisibility()).every(e=>e.readOnly||e.disabled||e.closest("[aria-disabled=true]")) && !document.querySelector("dialog[open] button[type=submit]")',
   'Commission view exposes no editable parent fields',
 );
 button('Thêm phụ lục');
 wait('document.querySelectorAll("dialog[open]").length===2');
 button('Hủy');
 wait('document.querySelectorAll("dialog[open]").length===1');
-button('Thêm nhanh');
+button('Thêm lần thanh toán');
 opened('Thêm lần thanh toán');
 field('Giá trị', '25');
 button('Thêm thanh toán');
@@ -283,7 +284,7 @@ check(
   'Contract menu edit opens fields without writes',
 );
 button('Hủy');
-wait('!document.querySelector("dialog[open] input")');
+wait('!document.querySelector("dialog[open] button[type=submit]")');
 button('Đóng');
 closed();
 button('Tuỳ chọn hiển thị');

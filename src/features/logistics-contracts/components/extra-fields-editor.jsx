@@ -64,24 +64,23 @@ export function ExtraFieldsEditor({
     },
   ];
 
-  if (!isReadOnly) {
-    columns.push({
-      key: 'actions',
-      header: '',
-      width: pixel(48),
-      align: 'end',
-      renderCell: (row) => (
-        <IconButton
-          label="Xoá dòng này"
-          tooltip="Xoá"
-          icon={<Icon icon={IconTrash} size="sm" />}
-          type="button"
-          variant="ghost"
-          onClick={() => onRemoveRow(row.rowKey)}
-        />
-      ),
-    });
-  }
+  columns.push({
+    key: 'actions',
+    header: '',
+    width: pixel(48),
+    align: 'end',
+    renderCell: (row) => (
+      <IconButton
+        isDisabled={isReadOnly}
+        label="Xoá dòng này"
+        tooltip="Xoá"
+        icon={<Icon icon={IconTrash} size="sm" />}
+        type="button"
+        variant="ghost"
+        onClick={() => onRemoveRow(row.rowKey)}
+      />
+    ),
+  });
 
   return (
     <VStack gap={2} hAlign="stretch">
@@ -95,17 +94,16 @@ export function ExtraFieldsEditor({
         <Text color="secondary">Chưa có trường tùy ý nào.</Text>
       )}
 
-      {isReadOnly ? null : (
-        <HStack gap={2}>
-          <Button
-            label="Thêm trường"
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={onAddRow}
-          />
-        </HStack>
-      )}
+      <HStack gap={2}>
+        <Button
+          isDisabled={isReadOnly}
+          label="Thêm trường"
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={onAddRow}
+        />
+      </HStack>
     </VStack>
   );
 }

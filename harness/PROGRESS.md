@@ -7195,3 +7195,37 @@ ward reference data (free-text inputs, matching the backend).
   14 shared-form regression checks. `./harness/verify.sh` passed in
   `harness/runs/20260906-223740-631429/` (120 unit tests, lint, typecheck,
   structure, harness tests, build, shared gzip 168.7 kB). Task 1.1 complete.
+
+## 2026-09-07 — Stable Contract/Shipment/Commission view/edit geometry
+
+- Active change: `stable-dialog-layout`, task 1.1.
+- Contract, Shipment and Commission now render one field grid, table set and
+  footer in both view and edit — no more swapping to a separate read-only
+  component. Native `TextInput`/`NumberInput`/`TextArea` toggle their own
+  `isReadOnly`; `Selector`/`DateInput`/`CheckboxList` have no read-only API,
+  so those stay the same live control with `isDisabled={isReadOnly}` instead
+  — same rect, same tab stop count, just non-interactive. Add/remove/quick-add
+  affordances (Đợt thanh toán, Lịch sử thanh toán, Trường tùy ý, Chi phí
+  Logistics, VGM, Ngân hàng thụ hưởng) stay in their existing slot, disabled
+  rather than removed, so the toolbar/table geometry never reflows. Seller/
+  buyer detail disclosure is now independent of view/edit (always expanded)
+  instead of collapsing only when editable. `FormDialog`'s shared footer
+  (Commission/Shipment/User) gained fixed button widths and single-line
+  truncating hint text so the footer rect itself cannot shift either.
+- Fixed along the way: `ContractGeneralFields`'s Nước xuất khẩu/Cảng Selectors
+  now use a `withSavedOption` helper that synthesizes an option from the
+  saved raw value when it's missing from the fetched catalog (the seed-data
+  gap noted the same day — "Cảng Cát Lái, TP.HCM" has no matching `Place`
+  row) — the Selector shows the saved value instead of an empty placeholder
+  in edit mode now, regardless of whether the catalog row exists.
+  `docs/ui-components.md` documents the isDisabled-vs-native-readOnly rule.
+- Browser evidence: `harness/checks/stable-dialog-layout-browser.mjs` — 12/12
+  scenarios (Contract/Shipment/Commission × 1440×900/390×844, plus Shipment's
+  costs/vgm tabs and an empty-payment-history Commission) all report
+  `maxDelta: 0`, zero control-set changes, zero footer-rect shift, zero
+  scroll-position change and zero writes between view and edit. Re-ran
+  `harness/checks/logistics-actions-browser.mjs` (35 checks) and
+  `harness/checks/dialog-browser.mjs` (10 checks) as regression — both clean.
+- Final verification: `./harness/verify.sh` passed,
+  `harness/runs/20260907-082002-942492/` (lint, typecheck, structure, harness
+  tests, unit tests, build, quality thresholds all green). Task 1.1 complete.

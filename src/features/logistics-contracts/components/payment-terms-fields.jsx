@@ -126,25 +126,23 @@ export function PaymentTermsFields({
     },
   ];
 
-  if (!isReadOnly) {
-    columns.push({
-      key: 'actions',
-      header: 'Thao tác',
-      width: pixel(96),
-      align: 'end',
-      renderCell: (row) => (
-        <IconButton
-          label="Xoá dòng này"
-          tooltip="Xoá"
-          icon={<Icon icon={IconTrash} size="sm" />}
-          type="button"
-          variant="ghost"
-          isDisabled={rows.length <= 1}
-          onClick={() => onRemoveRow(row.rowKey)}
-        />
-      ),
-    });
-  }
+  columns.push({
+    key: 'actions',
+    header: 'Thao tác',
+    width: pixel(96),
+    align: 'end',
+    renderCell: (row) => (
+      <IconButton
+        label="Xoá dòng này"
+        tooltip="Xoá"
+        icon={<Icon icon={IconTrash} size="sm" />}
+        type="button"
+        variant="ghost"
+        isDisabled={isReadOnly || rows.length <= 1}
+        onClick={() => onRemoveRow(row.rowKey)}
+      />
+    ),
+  });
 
   return (
     <VStack gap={2} hAlign="stretch">
@@ -154,15 +152,14 @@ export function PaymentTermsFields({
         variant="muted"
         dividers={['bottom']}
         startContent={
-          isReadOnly ? undefined : (
-            <Button
-              label="Thêm đợt"
-              type="button"
-              variant="secondary"
-              icon={<Icon icon={IconPlus} size="sm" />}
-              onClick={onAddRow}
-            />
-          )
+          <Button
+            isDisabled={isReadOnly}
+            label="Thêm đợt"
+            type="button"
+            variant="secondary"
+            icon={<Icon icon={IconPlus} size="sm" />}
+            onClick={onAddRow}
+          />
         }
         endContent={
           <HStack gap={2} vAlign="center">

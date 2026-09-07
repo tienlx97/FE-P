@@ -16,6 +16,13 @@ import { CommonDialog } from './common-dialog.jsx';
 import { ThemeProvider } from './theme-provider.jsx';
 
 const styles = stylex.create({
+  hint: {
+    flex: '1',
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
   form: {
     display: 'flex',
     flexDirection: 'column',
@@ -200,8 +207,8 @@ function FormDialogSession({
             }
             footer={
               <LayoutFooter>
-                <HStack hAlign="between" gap={2} wrap="wrap">
-                  <Text color="secondary">
+                <HStack hAlign="between" gap={2}>
+                  <Text color="secondary" xstyle={styles.hint}>
                     {isBusy
                       ? 'Đang lưu…'
                       : isDirty
@@ -210,6 +217,7 @@ function FormDialogSession({
                   </Text>
                   <HStack gap={2}>
                     <Button
+                      width={80}
                       label={isReadOnly ? 'Đóng' : 'Hủy'}
                       type="button"
                       variant="secondary"
@@ -220,6 +228,7 @@ function FormDialogSession({
                       onEdit ? (
                         <Button
                           key="edit"
+                          width={144}
                           label="Sửa"
                           type="button"
                           variant="primary"
@@ -232,6 +241,7 @@ function FormDialogSession({
                     ) : (
                       <Button
                         key="save"
+                        width={144}
                         label={submitLabel}
                         type="submit"
                         form={formId}

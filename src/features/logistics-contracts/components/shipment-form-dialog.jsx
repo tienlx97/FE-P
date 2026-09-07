@@ -71,11 +71,7 @@ export function ShipmentFormDialog({
       }}
       onOpenChange={handleOpenChange}
       variant="fullscreen"
-      title={
-        shipment
-          ? `${isViewing ? 'Shipment ·' : 'Sửa Shipment'} ${shipment.shipmentCode}`
-          : 'Thêm Shipment'
-      }
+      title={shipment ? `Shipment · ${shipment.shipmentCode}` : 'Thêm Shipment'}
       submitLabel={shipment ? 'Lưu thay đổi' : 'Tạo Shipment'}
       draft={{ values: form.values, costs: form.costLineRows.rows }}
       isSubmitting={form.isSubmitting}
@@ -106,12 +102,10 @@ export function ShipmentFormDialog({
         </TabList>
       }
     >
-      {!shipment ? (
-        <Text color="secondary">
-          Lưu Shipment trước khi thêm VGM. Chi phí Logistics được lưu cùng
-          Shipment.
-        </Text>
-      ) : null}
+      <Text color="secondary">
+        VGM được quản lý sau khi lưu Shipment. Chi phí Logistics được lưu cùng
+        Shipment.
+      </Text>
       <section
         id={panelId}
         role="tabpanel"
