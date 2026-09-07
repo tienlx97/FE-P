@@ -147,23 +147,22 @@ export const ktxnkTheme = defineTheme({
     // (2026-09-07), give `readonly` its own tinted-but-not-dimmed
     // background so it reads as "has a value, just not this field" instead
     // of either plain-editable or grayed-out-disabled.
+    //
+    // Background only, no borderColor override: inside an InputGroup (e.g.
+    // FormattedNumberTextInput's currency suffix), Astryx fakes one
+    // continuous border across every segment by overlapping each segment's
+    // own left border onto the previous segment's right edge
+    // (`margin-inline-start: calc(-1 * var(--border-width))`) — clearing
+    // this field's border here would erase that shared seam and leave the
+    // adjacent unit box looking borderless on its left edge (2026-09-07).
     'text-input': {
-      readonly: {
-        backgroundColor: 'var(--color-background-muted)',
-        borderColor: 'transparent',
-      },
+      readonly: { backgroundColor: 'var(--color-background-muted)' },
     },
     'number-input': {
-      readonly: {
-        backgroundColor: 'var(--color-background-muted)',
-        borderColor: 'transparent',
-      },
+      readonly: { backgroundColor: 'var(--color-background-muted)' },
     },
     textarea: {
-      readonly: {
-        backgroundColor: 'var(--color-background-muted)',
-        borderColor: 'transparent',
-      },
+      readonly: { backgroundColor: 'var(--color-background-muted)' },
     },
   },
 });
