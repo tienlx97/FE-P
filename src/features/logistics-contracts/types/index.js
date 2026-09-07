@@ -251,6 +251,61 @@ export {};
  */
 
 /**
+ * A Contract's "Thông tin private" (internal BOQ — cost/pricing/profit),
+ * gated by the `logistics:secret` permission (BE-kt-xnk,
+ * `openspec/changes/add-contract-private-info/`) — unlike every other
+ * `logistics:*` permission, this one is never granted by role/department,
+ * only individually. `GET` never 404s once the contract itself exists: a
+ * contract with no private info entered yet returns every field below as
+ * `null` except `volumeDeclaration`, so "has it been filled in" is judged
+ * from those fields, not from a separate existence flag.
+ * `logisticsTotal` (`quotedPricePerContainer` × `containerCount`) and
+ * `volumeDeclaration` (sum of every sibling Shipment's
+ * `declarationWeightKg`) are both computed by the backend at read time —
+ * never sent in a `PUT` body.
+ * @typedef {Object} ContractPrivateInfo
+ * @property {string | null} boqSentDate - ISO date (YYYY-MM-DD)
+ * @property {number | null} containerCount
+ * @property {number | null} costPricePerContainer
+ * @property {number | null} quotedPricePerContainer
+ * @property {number | null} logisticsTotal - computed, read-only
+ * @property {number | null} unitCostLabor
+ * @property {number | null} unitCostSandblasting
+ * @property {number | null} unitCostPainting
+ * @property {number | null} unitCostFactory
+ * @property {number | null} volumeSale
+ * @property {number | null} volumeMaterial
+ * @property {number} volumeDeclaration - computed, read-only
+ * @property {number | null} profit
+ * @property {number | null} totalAmountUsd
+ * @property {number | null} exchangeRateVnd
+ * @property {ExtraField[]} extraFields
+ */
+
+/**
+ * `PUT /contracts/{id}/private-info` body shape — every numeric field is
+ * optional (`undefined` submits `null`), mirroring the backend's
+ * `UpsertContractPrivateInfoCommandValidator` (no field is required to
+ * fill in only part of the BOQ at a time). `boqSentDate` empty string
+ * submits `null` (no date chosen), same convention as
+ * `PaymentSchedule`'s date field.
+ * @typedef {Object} ContractPrivateInfoFormValues
+ * @property {string} boqSentDate - ISO date (YYYY-MM-DD), or '' for none
+ * @property {number} [containerCount]
+ * @property {number} [costPricePerContainer]
+ * @property {number} [quotedPricePerContainer]
+ * @property {number} [unitCostLabor]
+ * @property {number} [unitCostSandblasting]
+ * @property {number} [unitCostPainting]
+ * @property {number} [unitCostFactory]
+ * @property {number} [volumeSale]
+ * @property {number} [volumeMaterial]
+ * @property {number} [profit]
+ * @property {number} [totalAmountUsd]
+ * @property {number} [exchangeRateVnd]
+ */
+
+/**
  * @typedef {Object} Company
  * @property {string} id
  * @property {string} name

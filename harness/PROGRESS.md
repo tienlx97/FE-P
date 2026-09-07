@@ -1,5 +1,47 @@
 # Progress Log
 
+## 2026-09-07 — Contract "Thông tin private" tab (BOQ)
+
+**Context:** BE-kt-xnk shipped `GET`/`PUT /contracts/{id}/private-info`
+gated by a new `logistics:secret` permission that is deliberately not
+role/department-derived (see BE-kt-xnk's
+`openspec/changes/add-contract-private-info/`). This session wires it up
+here, per the user's own instruction to do BE first, then FE.
+
+**Shipped** (`openspec/changes/add-contract-private-info-tab/`):
+- New "Thông tin private" tab in `ContractFormDialog`/
+  `ContractExpandedDetails`, shaped like the existing Commission tab but
+  gated: the tab itself only renders for a caller holding
+  `logistics:secret` — every other tab renders unconditionally.
+- New shared `useSessionPermissions()` hook
+  (`src/shared/hooks/use-session-permissions.js`) so a feature can gate UI
+  on a permission string without a banned cross-feature import into
+  `auth`; `auth`'s own `useSession` now delegates to it instead of
+  duplicating the (non-trivial — `useSyncExternalStore` needs a stable
+  snapshot reference, not a fresh array every parse) logic.
+- New `api/contract-private-info.js`, `config/contract-private-info-
+  schema.js`, two hooks, three components — same split as `Commission`,
+  except there is no create/exists split (the endpoint always 200s once
+  the contract exists, so it's always a single upsert `PUT`).
+- `logisticsTotal`/`volumeDeclaration` render as read-only — both are
+  backend-computed, never sent back on save.
+
+**Verified live**, not just `harness/verify.sh` (126 tests, build,
+structure, lint, typecheck, quality — all green): logged into the real
+running BE-kt-xnk (dev server on :3000, API on :8080, sample data from
+BE-kt-xnk's own session) as Nguyễn Văn A (individually granted
+`logistics:secret`, not via his Logistics department) — the tab shows the
+seeded BOQ, editing `Số cont` 2→3 recomputed `Tổng` 17,000,000 →
+25,500,000 VNĐ correctly on save (reverted after). Logged in as Admin (no
+grant) — confirmed the tab does not render at all.
+
+**Harness gaps / discovered, not fixed** (flagged, out of scope): the
+shared `FormattedNumberTextInput`'s documented left-to-right integer
+grouping (see its own `formatNumberInput` comment) makes large values
+confusing while editing (6,500,000 draws as "650,000,0") — pre-existing,
+affects every money field in the app already, and the underlying number
+round-trips correctly regardless (verified live above).
+
 ## 2026-09-05 — Extend formatted numeric precision (task 1.2)
 
 Raised the common `FormattedNumberTextInput` decimal precision from two to

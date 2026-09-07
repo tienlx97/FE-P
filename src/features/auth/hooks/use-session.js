@@ -10,6 +10,7 @@ import {
   readSessionEmployeeCode,
   SESSION_CHANGE_EVENT,
 } from '@/shared/api/session-cookies.js';
+import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 /** @param {() => void} callback */
 function subscribeToSessionChange(callback) {
@@ -61,11 +62,12 @@ export function useSession() {
     getEmployeeCode,
     getEmployeeCodeServerSnapshot,
   );
+  const permissions = useSessionPermissions();
 
   async function logout() {
     await clearSession();
     router.push('/login');
   }
 
-  return { isAuthenticated, displayName, employeeCode, logout };
+  return { isAuthenticated, displayName, employeeCode, permissions, logout };
 }

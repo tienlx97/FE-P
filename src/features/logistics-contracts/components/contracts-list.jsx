@@ -1,5 +1,5 @@
 'use client';
-/** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission'} ExpandedTab */
+/** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo'} ExpandedTab */
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -39,6 +39,7 @@ import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-
 import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractExpandedDetails } from './contract-expanded-details.jsx';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
+import { ContractPrivateInfoFormDialog } from './contract-private-info-form-dialog.jsx';
 import { PaymentScheduleFormDialog } from './payment-schedule-form-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
@@ -109,6 +110,11 @@ export function ContractsList() {
   );
   const [vgmDialog, setVgmDialog] = useState(
     /** @type {{ contractId: string, shipmentId: string, vgm?: import('../types/index.js').ShipmentVgm } | null} */ (
+      null
+    ),
+  );
+  const [privateInfoDialog, setPrivateInfoDialog] = useState(
+    /** @type {{ contractId: string, privateInfo: import('../types/index.js').ContractPrivateInfo | null } | null} */ (
       null
     ),
   );
@@ -506,6 +512,7 @@ export function ContractsList() {
                   commission,
                 })
               }
+              onOpenPrivateInfo={(payload) => setPrivateInfoDialog(payload)}
             />
           ) : null}
         </ContractFormDialog>
@@ -606,6 +613,18 @@ export function ContractsList() {
           shipmentId={vgmDialog.shipmentId}
           vgm={vgmDialog.vgm}
           onSuccess={() => setVgmDialog(null)}
+        />
+      ) : null}
+
+      {privateInfoDialog ? (
+        <ContractPrivateInfoFormDialog
+          isOpen
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setPrivateInfoDialog(null);
+          }}
+          contractId={privateInfoDialog.contractId}
+          privateInfo={privateInfoDialog.privateInfo}
+          onSuccess={() => setPrivateInfoDialog(null)}
         />
       ) : null}
     </VStack>

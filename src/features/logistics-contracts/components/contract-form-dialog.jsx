@@ -14,6 +14,7 @@ import { useId, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
+import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import { useContractForm } from '../hooks/use-contract-form.js';
 import { ContractBanksFields } from './contract-banks-fields.jsx';
@@ -37,23 +38,32 @@ const TAB_LABELS = {
   paymentSchedule: 'Lịch sử thanh toán',
   shipment: 'Shipment',
   commission: 'Commission',
+  privateInfo: 'Thông tin private',
 };
+
+// Deliberately NOT role/department-derived — gates the tab the same way
+// the backend gates the endpoint (see
+// `openspec/changes/add-contract-private-info/`, BE-kt-xnk).
+const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 
 /**
  * One fullscreen workspace for creation, inspection and editing. Xem and
  * Sửa share the same "Thông tin" tab layout — only `isReadOnly` differs per
- * field (mirrors `CommissionFormDialog`/`ShipmentFormDialog`); the other 3
- * tabs (Lịch sử thanh toán/Shipment/Commission) have no edit mode of their
- * own in this dialog — each row there is edited via its own `*FormDialog` —
- * so they always render `children` regardless of `isEditing`.
+ * field (mirrors `CommissionFormDialog`/`ShipmentFormDialog`); the other
+ * tabs (Lịch sử thanh toán/Shipment/Commission/Thông tin private) have no
+ * edit mode of their own in this dialog — each is edited via its own
+ * `*FormDialog` — so they always render `children` regardless of
+ * `isEditing`. "Thông tin private" only renders at all for a caller with
+ * `logistics:secret` (unlike every other tab, not role/department-derived
+ * — see `openspec/changes/add-contract-private-info/`, BE-kt-xnk).
  * @param {{
  *   isOpen: boolean,
  *   initialMode?: 'view' | 'edit',
  *   onOpenChange: (open: boolean) => void,
  *   contract?: import('../types/index.js').Contract | null,
  *   onSuccess: (contract: import('../types/index.js').Contract) => void,
- *   activeTab: 'info' | 'paymentSchedule' | 'shipment' | 'commission',
- *   onActiveTabChange: (tab: 'info' | 'paymentSchedule' | 'shipment' | 'commission') => void,
+ *   activeTab: 'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo',
+ *   onActiveTabChange: (tab: 'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo') => void,
  *   onAddAnnex?: () => void,
  *   onEditAnnex?: (annex: import('../types/index.js').ContractAnnex) => void,
  *   children?: import('react').ReactNode,
@@ -92,6 +102,9 @@ export function ContractFormDialog({
   } = form;
   const formId = useId();
   const panelId = useId();
+  const hasLogisticsSecret = useSessionPermissions().includes(
+    LOGISTICS_SECRET_PERMISSION,
+  );
 
   /** @param {'close' | 'cancel'} action */
   function finish(action) {
@@ -158,6 +171,15 @@ export function ContractFormDialog({
                   aria-disabled={!contract}
                   xstyle={!contract && styles.disabledTab}
                 />
+                {hasLogisticsSecret ? (
+                  <Tab
+                    value="privateInfo"
+                    label="Thông tin private"
+                    panelId={panelId}
+                    aria-disabled={!contract}
+                    xstyle={!contract && styles.disabledTab}
+                  />
+                ) : null}
               </TabList>
             </VStack>
           }
@@ -172,7 +194,7 @@ export function ContractFormDialog({
                 {!contract ? (
                   <Banner
                     status="info"
-                    title="Lịch sử thanh toán, Shipment và Commission được quản lý sau khi lưu hợp đồng."
+                    title="Lịch sử thanh toán, Shipment, Commission và Thông tin private được quản lý sau khi lưu hợp đồng."
                     container="card"
                   />
                 ) : null}

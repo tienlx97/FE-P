@@ -15,6 +15,7 @@ import { Pencil, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
+import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
@@ -22,12 +23,19 @@ import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.
 import { labelForShipmentType } from '../config/shipment-types.js';
 import { useCommissionAnnexesQuery } from '../hooks/use-commission-annexes-query.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
+import { useContractPrivateInfoQuery } from '../hooks/use-contract-private-info-query.js';
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { ContractCommissionTab } from './contract-commission-tab.jsx';
+import {
+  ContractPrivateInfoTab,
+  isPrivateInfoEntirelyEmpty,
+} from './contract-private-info-tab.jsx';
 import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 
-/** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission'} ExpandedTab */
+/** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo'} ExpandedTab */
+
+const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -57,6 +65,7 @@ function orDash(value) {
  * @param {() => void} props.onAddCommissionAnnex
  * @param {(annex: import('../types/index.js').CommissionAnnex) => void} props.onEditCommissionAnnex
  * @param {(commission: import('../types/index.js').Commission) => void} props.onAddCommissionPayment
+ * @param {(payload: { contractId: string, privateInfo: import('../types/index.js').ContractPrivateInfo | null }) => void} props.onOpenPrivateInfo
  */
 export function ContractExpandedDetails({
   contract,
@@ -73,9 +82,17 @@ export function ContractExpandedDetails({
   onAddCommissionAnnex,
   onEditCommissionAnnex,
   onAddCommissionPayment,
+  onOpenPrivateInfo,
 }) {
   const [expandedShipmentId, setExpandedShipmentId] = useState(
     /** @type {string | null} */ (null),
+  );
+
+  // Gates the query itself, not just the tab button (`contract-form-
+  // dialog.jsx` hides the tab entirely without this permission) — a caller
+  // who can't see the tab shouldn't fire a request that only ever 403s.
+  const hasLogisticsSecret = useSessionPermissions().includes(
+    LOGISTICS_SECRET_PERMISSION,
   );
 
   const isFullySigned = contract.sellerSigned && contract.buyerSigned;
@@ -251,6 +268,13 @@ export function ContractExpandedDetails({
     [expandedShipmentId],
   );
 
+  const privateInfoQuery = useContractPrivateInfoQuery(
+    hasLogisticsSecret ? contract.id : undefined,
+  );
+  const privateInfo = privateInfoQuery.data?.success
+    ? privateInfoQuery.data.privateInfo
+    : null;
+
   const commissionQuery = useCommissionQuery(contract.id);
   const commissionResult = commissionQuery.data;
   const commission =
@@ -390,6 +414,25 @@ export function ContractExpandedDetails({
             commissionAnnexes={commissionAnnexes}
             commissionGrandTotal={commissionGrandTotal}
           />
+        </VStack>
+      )}
+
+      {activeTab === 'privateInfo' && (
+        <VStack gap={4} hAlign="stretch">
+          <Button
+            label={
+              privateInfo && !isPrivateInfoEntirelyEmpty(privateInfo)
+                ? 'Sửa Thông tin private'
+                : 'Nhập Thông tin private'
+            }
+            variant="secondary"
+            onClick={() =>
+              onOpenPrivateInfo({ contractId: contract.id, privateInfo })
+            }
+          />
+          {privateInfo ? (
+            <ContractPrivateInfoTab privateInfo={privateInfo} />
+          ) : null}
         </VStack>
       )}
     </VStack>
