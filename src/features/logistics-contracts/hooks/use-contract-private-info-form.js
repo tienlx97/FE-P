@@ -66,6 +66,7 @@ export function useContractPrivateInfoForm({
   privateInfo = null,
   onSuccess,
 }) {
+  const [version, setVersion] = useState(privateInfo?.version);
   const [values, setValues] = useState(
     privateInfo ? valuesFromPrivateInfo(privateInfo) : emptyValues(),
   );
@@ -83,6 +84,7 @@ export function useContractPrivateInfoForm({
   );
 
   function reset() {
+    setVersion(privateInfo?.version);
     setValues(privateInfo ? valuesFromPrivateInfo(privateInfo) : emptyValues());
     setFieldErrors({});
     setSubmitError('');
@@ -130,6 +132,7 @@ export function useContractPrivateInfoForm({
     const mutationResult = await upsertMutation.mutateAsync({
       values: result.data,
       extraFieldRows: extraFieldRows.rows,
+      version,
     });
 
     if (!mutationResult.success) {
@@ -137,6 +140,7 @@ export function useContractPrivateInfoForm({
       return;
     }
 
+    setVersion(mutationResult.privateInfo.version);
     onSuccess?.(mutationResult.privateInfo);
   }
 

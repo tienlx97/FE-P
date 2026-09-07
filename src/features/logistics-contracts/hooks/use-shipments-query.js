@@ -41,7 +41,7 @@ export function useCreateShipmentMutation(contractId) {
       },
     ) => createShipment(contractId, values, costLines),
     onSuccess: (result) => {
-      if (result.success) {
+      if (result.success || result.conflict) {
         return Promise.all([
           queryClient.invalidateQueries({ queryKey: queryKey(contractId) }),
           queryClient.invalidateQueries({
@@ -59,14 +59,15 @@ export function useUpdateShipmentMutation(contractId) {
 
   return useMutation({
     mutationFn: (
-      /** @type {{ shipmentId: string, values: import('../types/index.js').ShipmentFormValues, costLines?: Parameters<typeof updateShipment>[3] }} */ {
+      /** @type {{ shipmentId: string, version?: number, values: import('../types/index.js').ShipmentFormValues, costLines?: Parameters<typeof updateShipment>[3] }} */ {
         shipmentId,
+        version,
         values,
         costLines,
       },
-    ) => updateShipment(contractId, shipmentId, values, costLines),
+    ) => updateShipment(contractId, shipmentId, values, costLines, version),
     onSuccess: (result) => {
-      if (result.success) {
+      if (result.success || result.conflict) {
         return Promise.all([
           queryClient.invalidateQueries({ queryKey: queryKey(contractId) }),
           queryClient.invalidateQueries({

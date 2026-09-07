@@ -102,6 +102,7 @@ export function useShipmentForm({
   shipment = null,
   onSuccess,
 }) {
+  const [version, setVersion] = useState(shipment?.version);
   const [values, setValues] = useState(
     shipment ? valuesFromShipment(shipment) : emptyValues(contract),
   );
@@ -138,6 +139,7 @@ export function useShipmentForm({
   }
 
   function reset() {
+    setVersion(shipment?.version);
     setValues(shipment ? valuesFromShipment(shipment) : emptyValues(contract));
     setFieldErrors({});
     setSubmitError('');
@@ -197,6 +199,7 @@ export function useShipmentForm({
     const mutationResult = shipment
       ? await updateMutation.mutateAsync({
           shipmentId: shipment.id,
+          version,
           values: submittedValues,
           costLines,
         })
@@ -210,6 +213,7 @@ export function useShipmentForm({
       return;
     }
 
+    setVersion(mutationResult.shipment.version);
     onSuccess?.(mutationResult.shipment);
     if (!shipment) reset();
   }

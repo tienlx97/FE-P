@@ -7,7 +7,7 @@ const GENERIC_EXISTS_ERROR = 'Không thể kiểm tra số hợp đồng';
 
 /**
  * @param {{ page?: number, pageSize?: number }} [options]
- * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
  */
 export async function listContracts({ page = 1, pageSize = 25 } = {}) {
   const result = await apiRequest(
@@ -16,7 +16,7 @@ export async function listContracts({ page = 1, pageSize = 25 } = {}) {
   );
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return {
@@ -37,7 +37,7 @@ export async function listContracts({ page = 1, pageSize = 25 } = {}) {
  * /api/v1/contracts/search`, BE-kt-xnk) so results are correct across every
  * page, not just the one currently loaded.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
- * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchContracts({
   page = 1,
@@ -61,7 +61,7 @@ export async function searchContracts({
   });
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return {
@@ -82,7 +82,7 @@ export async function searchContracts({
  * use this number" without the contract colliding with its own current
  * number (see `GET /contracts/exists`, `docs/api/Contracts.md`, BE-kt-xnk).
  * @param {{ contractNumber: string, excludeContractId?: string | null }} params
- * @returns {Promise<{ success: true, exists: boolean } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true, exists: boolean } | { success: false, message: string, conflict: boolean }>}
  */
 export async function checkContractNumberExists({
   contractNumber,
@@ -101,7 +101,7 @@ export async function checkContractNumberExists({
   );
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return { success: true, exists: Boolean(result.data?.exists) };
@@ -161,7 +161,7 @@ function buildBuyerPayload(values, buyerExtraFieldRows) {
 
 /**
  * @param {import('../types/index.js').ContractFormValues} values
- * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string }[], sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
+ * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
  */
 function buildContractBody(
   values,
@@ -201,8 +201,8 @@ function buildContractBody(
 
 /**
  * @param {import('../types/index.js').ContractFormValues} values
- * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string }[], sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
- * @returns {Promise<{ success: true, contract: import('../types/index.js').Contract } | { success: false, message: string }>}
+ * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
+ * @returns {Promise<{ success: true, contract: import('../types/index.js').Contract } | { success: false, message: string, conflict: boolean }>}
  */
 export async function createContract(values, extra) {
   const result = await apiRequest('/api/v1/contracts', {
@@ -215,7 +215,7 @@ export async function createContract(values, extra) {
   });
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return { success: true, contract: result.data };
@@ -224,18 +224,18 @@ export async function createContract(values, extra) {
 /**
  * @param {string} contractId
  * @param {import('../types/index.js').ContractFormValues} values
- * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string }[], sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
- * @returns {Promise<{ success: true, contract: import('../types/index.js').Contract } | { success: false, message: string }>}
+ * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
+ * @returns {Promise<{ success: true, contract: import('../types/index.js').Contract } | { success: false, message: string, conflict: boolean }>}
  */
 export async function updateContract(contractId, values, extra) {
   const result = await apiRequest(`/api/v1/contracts/${contractId}`, {
     method: 'PUT',
     errorMessage: GENERIC_UPDATE_ERROR,
-    body: buildContractBody(values, extra),
+    body: { ...buildContractBody(values, extra), Version: extra.version },
   });
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return { success: true, contract: result.data };

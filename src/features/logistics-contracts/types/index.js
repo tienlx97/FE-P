@@ -130,6 +130,7 @@ export {};
 
 /**
  * @typedef {Object} Contract
+ * @property {number} version Phiên bản dữ liệu dùng để phát hiện chỉnh sửa đồng thời.
  * @property {string} id
  * @property {string} contractNumber
  * @property {ContractType} contractType
@@ -277,6 +278,7 @@ export {};
  * `declarationWeightKg`) are both computed by the backend at read time —
  * never sent in a `PUT` body.
  * @typedef {Object} ContractPrivateInfo
+ * @property {number} version Phiên bản dữ liệu dùng để phát hiện chỉnh sửa đồng thời.
  * @property {string | null} boqSentDate - ISO date (YYYY-MM-DD)
  * @property {number | null} containerCount
  * @property {number | null} costPricePerContainer
@@ -556,6 +558,7 @@ export {};
  * {@link Customer} catalog (not a snapshot), same pattern as
  * `Commission.partyCustomerId`.
  * @typedef {Object} Shipment
+ * @property {number} version Phiên bản dữ liệu dùng để phát hiện chỉnh sửa đồng thời.
  * @property {string} id
  * @property {string} contractId
  * @property {number} shipmentNumber

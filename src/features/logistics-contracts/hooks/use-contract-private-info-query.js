@@ -36,13 +36,14 @@ export function useUpsertContractPrivateInfoMutation(contractId) {
 
   return useMutation({
     mutationFn: (
-      /** @type {{ values: import('../types/index.js').ContractPrivateInfoFormValues, extraFieldRows: import('../types/index.js').ExtraFieldRow[] }} */ {
+      /** @type {{ version?: number, values: import('../types/index.js').ContractPrivateInfoFormValues, extraFieldRows: import('../types/index.js').ExtraFieldRow[] }} */ {
         values,
+        version,
         extraFieldRows,
       },
-    ) => upsertContractPrivateInfo(contractId, values, extraFieldRows),
+    ) => upsertContractPrivateInfo(contractId, values, extraFieldRows, version),
     onSuccess: (result) => {
-      if (result.success) {
+      if (result.success || result.conflict) {
         return queryClient.invalidateQueries({ queryKey: queryKey(contractId) });
       }
     },

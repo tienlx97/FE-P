@@ -1,5 +1,62 @@
 # Progress Log
 
+## 2026-09-07 — Add: optimistic concurrency (Version) on Contract/Shipment forms, finished a Codex session that ran out of tokens mid-work
+
+**Context:** Codex was mid-implementation of the FE half of BE-kt-xnk's
+optimistic-concurrency feature (`Contract.Version`/`Shipment.Version`, see
+that repo's own `harness/PROGRESS.md` — no openspec change folder exists
+for this on either side, Codex never created one) and ran out of tokens
+with a red `harness/verify.sh`. Picked up the working tree as-is and
+finished it, then finished the still-uncommitted BE half in that sibling
+repo too.
+
+**What was already done (Codex):** `version` threaded through
+`api/contracts.js`/`api/shipments.js`/`api/contract-private-info.js`
+(`Version` sent on every `PUT`, `conflict: result.status === 409` added
+to every API result shape); `use-contract-form.js`/`use-shipment-form.js`/
+`use-contract-private-info-form.js` track a local `version` state seeded
+from the loaded record and updated from each successful mutation's
+response; the `*-query.js` mutation hooks invalidate their query on
+`result.conflict` too (not just `result.success`), so a stale form
+refetches the winning write instead of silently sitting on stale data;
+`Contract`/`Shipment`/`ContractPrivateInfo` JSDoc typedefs gained a
+`version` field.
+
+**What was broken, fixed this session:** `harness/verify.sh`'s
+`typecheck` step failed — `contracts-table.js`'s and
+`shipments-table.js`'s `skeletonRows` loading-state placeholders (used
+while the real list is still fetching) predate the `version` field and
+didn't have one, so they no longer satisfied the `Contract[]`/
+`Shipment[]` types. Added `version: 0` to both. `./harness/verify.sh`
+green after: lint, typecheck, structure, unit tests, build, quality
+thresholds.
+
+**Verified live** against a disposable, isolated Docker stack built from
+BE-kt-xnk's current code (project name `kt-xnk-verify`, ports remapped
+off 8080/3307 so it never touched the real `docker-compose.lan.yml`
+deployment — that's a live LAN service with real data, not something to
+reseed for a manual check) with `db/sample-data.sql` freshly imported:
+logged in as the sample Admin, opened the sample Contract, edited and
+saved — `version` went 1→2, confirmed via a direct API read. Then
+reproduced an actual two-editor race across two browser tabs sharing one
+login session (same account can't hold two sessions —
+`AllowConcurrentSessions` is off by default — so two *tabs*, not two
+logins, is what simulates this): tab 2 saved first (version 2→3 with its
+own edit), then submitting tab 1's still-open edit form (holding the
+now-stale version) correctly surfaced "Dữ liệu đã được người khác cập
+nhật. Vui lòng tải lại trước khi lưu." instead of silently overwriting
+tab 2's write. Also spot-checked the Shipment edit form's golden path
+(edit + save) the same way. Teardown: the disposable Docker stack
+(containers, volume, network, image) was fully removed afterward: the
+sample-data reseed and every check above ran only against that stack —
+`companymanagement-lan-mysql`/`companymanagement-lan-api` (the real LAN
+deployment) were never touched.
+
+**Not done this session:** no openspec change folder created (matching
+what Codex already didn't do) — out of scope for finishing an existing
+diff. Both repos' changes are committed (`BE-kt-xnk` and here) but not
+pushed.
+
 ## 2026-09-07 — Add: Shipment cost invoice number + contract value/currency same row
 
 **Context:** user request — (1) each Shipment cost line needed an

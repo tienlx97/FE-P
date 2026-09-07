@@ -31,7 +31,7 @@ export function useCreateContractMutation() {
       },
     ) => createContract(values, extra),
     onSuccess: (result) => {
-      if (result.success) {
+      if (result.success || result.conflict) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       }
     },
@@ -50,7 +50,7 @@ export function useUpdateContractMutation() {
       },
     ) => updateContract(contractId, values, extra),
     onSuccess: (result) => {
-      if (result.success) {
+      if (result.success || result.conflict) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
       }
     },

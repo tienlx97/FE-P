@@ -12,7 +12,7 @@ const GENERIC_UPSERT_ERROR = 'Không thể lưu Thông tin private';
  * any other forbidden action (`apiRequest`'s own 403 handling), not
  * special-cased here.
  * @param {string} contractId
- * @returns {Promise<{ success: true, privateInfo: import('../types/index.js').ContractPrivateInfo } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true, privateInfo: import('../types/index.js').ContractPrivateInfo } | { success: false, message: string, conflict: boolean }>}
  */
 export async function getContractPrivateInfo(contractId) {
   const result = await apiRequest(
@@ -21,7 +21,7 @@ export async function getContractPrivateInfo(contractId) {
   );
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return { success: true, privateInfo: result.data };
@@ -33,12 +33,14 @@ export async function getContractPrivateInfo(contractId) {
  * @param {string} contractId
  * @param {import('../types/index.js').ContractPrivateInfoFormValues} values
  * @param {import('../types/index.js').ExtraFieldRow[]} [extraFieldRows]
- * @returns {Promise<{ success: true, privateInfo: import('../types/index.js').ContractPrivateInfo } | { success: false, message: string }>}
+ * @param {number} [version]
+ * @returns {Promise<{ success: true, privateInfo: import('../types/index.js').ContractPrivateInfo } | { success: false, message: string, conflict: boolean }>}
  */
 export async function upsertContractPrivateInfo(
   contractId,
   values,
   extraFieldRows = [],
+  version,
 ) {
   // Same "drop blank-key rows the user never filled in" convention as
   // `buildSellerPayload`/`buildPartyAPayload` (`api/contracts.js`).
@@ -52,6 +54,7 @@ export async function upsertContractPrivateInfo(
       method: 'PUT',
       errorMessage: GENERIC_UPSERT_ERROR,
       body: {
+        Version: version,
         BoqSentDate: values.boqSentDate || null,
         ContainerCount: values.containerCount ?? null,
         CostPricePerContainer: values.costPricePerContainer ?? null,
@@ -71,7 +74,7 @@ export async function upsertContractPrivateInfo(
   );
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return { success: true, privateInfo: result.data };

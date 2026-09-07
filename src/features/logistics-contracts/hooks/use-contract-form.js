@@ -166,6 +166,7 @@ function fieldStatus(message) {
 export function useContractForm({ contract = null, onSuccess } = {}) {
   const isEdit = Boolean(contract);
 
+  const [version, setVersion] = useState(contract?.version);
   const [values, setValues] = useState(
     contract ? valuesFromContract(contract) : emptyValues(),
   );
@@ -418,7 +419,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
       ? await updateMutation.mutateAsync({
           contractId: contract.id,
           values: result.data,
-          extra,
+          extra: { ...extra, version },
         })
       : await createMutation.mutateAsync({ values: result.data, extra });
 
@@ -427,6 +428,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
       return;
     }
 
+    setVersion(mutationResult.contract.version);
     setSubmitSuccess(isEdit ? 'Đã cập nhật hợp đồng.' : 'Đã tạo hợp đồng.');
     onSuccess?.(mutationResult.contract);
   }

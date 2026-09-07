@@ -91,6 +91,7 @@ export const skeletonRows = Array.from(
   { length: SKELETON_ROW_COUNT },
   (_, index) => ({
     id: `skeleton-${index}`,
+    version: 0,
     contractId: '',
     shipmentNumber: 0,
     shipmentCode: '',

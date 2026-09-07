@@ -94,7 +94,7 @@ function toUpdateRequestBody(values, costLines) {
 /**
  * Requires `logistics:contracts:view`, scoped to the contract's company.
  * @param {string} contractId
- * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[] } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[] } | { success: false, message: string, conflict: boolean }>}
  */
 export async function listShipments(contractId) {
   const result = await apiRequest(`/api/v1/contracts/${contractId}/shipments`, {
@@ -102,7 +102,7 @@ export async function listShipments(contractId) {
   });
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return { success: true, shipments: result.data ?? [] };
@@ -116,7 +116,7 @@ export async function listShipments(contractId) {
  * contract's `CreatedDate` descending, then `ShipmentNumber` descending
  * (newest first).
  * @param {{ page?: number, pageSize?: number }} [options]
- * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
  */
 export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
   const result = await apiRequest(
@@ -125,7 +125,7 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
   );
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return {
@@ -144,7 +144,7 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
  * identically to `listAllShipments` — filtering happens server-side (`POST
  * /api/v1/shipments/search`, BE-kt-xnk).
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
- * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchAllShipments({ page = 1, pageSize = 25, conditions = [] } = {}) {
   const result = await apiRequest('/api/v1/shipments/search', {
@@ -164,7 +164,7 @@ export async function searchAllShipments({ page = 1, pageSize = 25, conditions =
   });
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return {
@@ -185,7 +185,7 @@ export async function searchAllShipments({ page = 1, pageSize = 25, conditions =
  * @param {string} contractId
  * @param {import('../types/index.js').ShipmentFormValues} values
  * @param {import('../types/index.js').ShipmentCostLineFormValues[]} [costLines]
- * @returns {Promise<{ success: true, shipment: import('../types/index.js').Shipment } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true, shipment: import('../types/index.js').Shipment } | { success: false, message: string, conflict: boolean }>}
  */
 export async function createShipment(contractId, values, costLines = []) {
   const result = await apiRequest(`/api/v1/contracts/${contractId}/shipments`, {
@@ -195,7 +195,7 @@ export async function createShipment(contractId, values, costLines = []) {
   });
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return { success: true, shipment: result.data };
@@ -211,20 +211,21 @@ export async function createShipment(contractId, values, costLines = []) {
  * @param {string} shipmentId
  * @param {import('../types/index.js').ShipmentFormValues} values
  * @param {import('../types/index.js').ShipmentCostLineFormValues[]} [costLines]
- * @returns {Promise<{ success: true, shipment: import('../types/index.js').Shipment } | { success: false, message: string }>}
+ * @param {number} [version]
+ * @returns {Promise<{ success: true, shipment: import('../types/index.js').Shipment } | { success: false, message: string, conflict: boolean }>}
  */
-export async function updateShipment(contractId, shipmentId, values, costLines = []) {
+export async function updateShipment(contractId, shipmentId, values, costLines = [], version) {
   const result = await apiRequest(
     `/api/v1/contracts/${contractId}/shipments/${shipmentId}`,
     {
       method: 'PUT',
       errorMessage: GENERIC_UPDATE_ERROR,
-      body: toUpdateRequestBody(values, costLines),
+      body: { ...toUpdateRequestBody(values, costLines), Version: version },
     },
   );
 
   if (!result.success) {
-    return { success: false, message: result.message };
+    return { success: false, message: result.message, conflict: result.status === 409 };
   }
 
   return { success: true, shipment: result.data };
