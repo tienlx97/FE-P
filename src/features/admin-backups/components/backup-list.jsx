@@ -97,7 +97,7 @@ export function BackupList() {
                 <HStack gap={2}>
                   <Button
                     label="Tải xuống"
-                    variant="secondary"
+                    variant="ghost"
                     href={downloadBackupUrl(backup.fileName)}
                   />
                   <Button
