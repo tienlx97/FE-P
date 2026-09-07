@@ -139,7 +139,7 @@ export {};
  * @property {string} category
  * @property {string} countryId - FK into the {@link Country} catalog (was the free-text `exportCountry`)
  * @property {string} placeOfLoading - was `portOfLoading`
- * @property {string} placeOfDischarge - was `portOrPlaceOfDestination`; free text, not constrained to the {@link Place} catalog
+ * @property {string | null} placeOfDischarge - was `portOrPlaceOfDestination`; free text, not constrained to the {@link Place} catalog. `null` for Incoterm EXW/FOB (BE-kt-xnk requires it null for those, required non-null for CIF/DDP — see `requiresPlaceOfDischarge()`)
  * @property {number} contractValue
  * @property {string} currency - 3-letter uppercase ISO 4217 code, e.g. "USD"
  * @property {Incoterm} incoterm

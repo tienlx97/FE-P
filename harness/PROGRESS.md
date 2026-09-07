@@ -1,5 +1,34 @@
 # Progress Log
 
+## 2026-09-07 — Fix: editing an EXW/FOB Contract always failed
+
+**Context:** user report — the Contract edit form kept showing a
+"Cảng/nơi đến" validation error and refused to save the sample (FOB)
+Contract, even untouched. Root cause was split across both repos: the
+backend had never actually implemented the EXW/FOB-must-be-null rule
+kt-xnk's own `incoterm-driven-place-fields` change assumed already
+shipped (see BE-kt-xnk's `openspec/changes/fix-place-of-discharge-
+incoterm-validation/`), so every EXW/FOB save always 400'd. Fixing that
+backend mismatch then surfaced a second bug here: once the backend
+legitimately started returning `placeOfDischarge: null` for those
+contracts, `use-contract-form.js`'s `valuesFromContract()` fed that
+`null` straight into form state instead of normalizing to `''` — the
+schema's own "must be empty for EXW/FOB" refine calls `.length` on it,
+which fails on `null`.
+
+**Fix** (`openspec/changes/fix-place-of-discharge-null-loading/`):
+`valuesFromContract()` now does `contract.placeOfDischarge ?? ''`,
+matching the normalize-nullable-snapshot-field convention already used
+for `note` elsewhere in the same function. `Contract.placeOfDischarge`
+retyped `string | null`. `./harness/verify.sh` green (131 tests, no new
+coverage needed — the schema itself was already correct and tested; only
+the load-from-API path had the bug).
+
+**Verified live** against the real running BE-kt-xnk stack: opened the
+sample FOB Contract for edit — no more error/disabled state on "Cảng/nơi
+đến" — saved with no other changes, and confirmed via `GET` afterward
+that `placeOfDischarge: null` persisted correctly.
+
 ## 2026-09-07 — Contract and Shipment status fields
 
 **Context:** BE-kt-xnk shipped `Contract.Status`/`Shipment.Status` (see

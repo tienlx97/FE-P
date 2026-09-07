@@ -105,7 +105,11 @@ function valuesFromContract(contract) {
     category: contract.category,
     countryId: contract.countryId,
     placeOfLoading: contract.placeOfLoading,
-    placeOfDischarge: contract.placeOfDischarge,
+    // null for EXW/FOB (BE-kt-xnk sends it that way — see
+    // requiresPlaceOfDischarge()) — normalize like every other nullable
+    // snapshot field here, or the form's own "must be empty for EXW/FOB"
+    // refine throws calling .length on null.
+    placeOfDischarge: contract.placeOfDischarge ?? '',
     contractValue: contract.contractValue,
     currency: contract.currency,
     incoterm: contract.incoterm,
