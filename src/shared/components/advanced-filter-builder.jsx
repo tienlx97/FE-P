@@ -78,13 +78,16 @@ function defaultOperatorFor(type) {
   return type === 'date' ? 'Between' : OPERATORS_BY_TYPE[type][0].value;
 }
 
-let nextConditionId = 0;
 /** A new condition's id only needs to be unique within this browser tab's
- * lifetime (React keys, not persisted) — a plain incrementing counter avoids
- * pulling in a UUID dependency for that. */
+ * lifetime (React keys, not persisted). A module-level counter isn't safe
+ * for that: Fast Refresh re-executes this module (resetting the counter)
+ * without remounting the component holding already-generated ids, so a
+ * freshly added condition could collide with one from before the reload —
+ * `crypto.randomUUID()` (already the convention for row keys elsewhere in
+ * this codebase, e.g. `use-shipment-cost-line-rows.js`) has no such
+ * lifetime tied to the module. */
 function makeConditionId() {
-  nextConditionId += 1;
-  return `condition-${nextConditionId}`;
+  return `condition-${crypto.randomUUID()}`;
 }
 
 /**
@@ -301,6 +304,7 @@ export function AdvancedFilterBuilder({ fields, conditions, onChange }) {
           placeholder="Chọn điều kiện lọc"
           size="sm"
           hasClear
+          hasSearch
           options={availableFieldOptions}
           value={null}
           onChange={(next) => next && addCondition(next)}
