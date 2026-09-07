@@ -13,7 +13,7 @@ import { SESSION_CHANGE_EVENT } from '@/shared/api/session-cookies.js';
 import { loginSchema } from '../config/login-schema.js';
 import { useLoginMutation } from './use-login-mutation.js';
 
-const REMEMBERED_EMPLOYEE_CODE_KEY = 'kt-xnk:remembered-employee-code';
+const REMEMBERED_NATIONAL_ID_KEY = 'kt-xnk:remembered-national-id';
 
 /** @param {string} [message] @returns {{ type: 'error', message: string } | undefined} */
 function fieldStatus(message) {
@@ -24,11 +24,11 @@ function subscribeToNothing() {
   return () => {};
 }
 
-function getRememberedEmployeeCode() {
-  return window.localStorage.getItem(REMEMBERED_EMPLOYEE_CODE_KEY) ?? '';
+function getRememberedNationalId() {
+  return window.localStorage.getItem(REMEMBERED_NATIONAL_ID_KEY) ?? '';
 }
 
-function getServerRememberedEmployeeCode() {
+function getServerRememberedNationalId() {
   return '';
 }
 
@@ -42,20 +42,20 @@ export function useLoginForm() {
   // warning) and React itself re-renders with the real client value right
   // after mount. Local overrides let the user freely edit the fields
   // without fighting that synced value.
-  const rememberedEmployeeCode = useSyncExternalStore(
+  const rememberedNationalId = useSyncExternalStore(
     subscribeToNothing,
-    getRememberedEmployeeCode,
-    getServerRememberedEmployeeCode,
+    getRememberedNationalId,
+    getServerRememberedNationalId,
   );
-  const [employeeCodeOverride, setEmployeeCodeOverride] = useState(
+  const [nationalIdOverride, setNationalIdOverride] = useState(
     /** @type {string | null} */ (null),
   );
   const [rememberMeOverride, setRememberMeOverride] = useState(
     /** @type {boolean | null} */ (null),
   );
-  const employeeCode = employeeCodeOverride ?? rememberedEmployeeCode;
-  const rememberMe = rememberMeOverride ?? rememberedEmployeeCode !== '';
-  const setEmployeeCode = setEmployeeCodeOverride;
+  const nationalId = nationalIdOverride ?? rememberedNationalId;
+  const rememberMe = rememberMeOverride ?? rememberedNationalId !== '';
+  const setNationalId = setNationalIdOverride;
   const setRememberMe = setRememberMeOverride;
 
   const [password, setPassword] = useState('');
@@ -91,7 +91,7 @@ export function useLoginForm() {
     setSubmitError('');
     setIsSessionExpiredNoticeDismissed(true);
 
-    const result = loginSchema.safeParse({ employeeCode, password, rememberMe });
+    const result = loginSchema.safeParse({ nationalId, password, rememberMe });
     if (!result.success) {
       /** @type {Record<string, string>} */
       const nextFieldErrors = {};
@@ -114,9 +114,9 @@ export function useLoginForm() {
     }
 
     if (rememberMe) {
-      window.localStorage.setItem(REMEMBERED_EMPLOYEE_CODE_KEY, employeeCode);
+      window.localStorage.setItem(REMEMBERED_NATIONAL_ID_KEY, nationalId);
     } else {
-      window.localStorage.removeItem(REMEMBERED_EMPLOYEE_CODE_KEY);
+      window.localStorage.removeItem(REMEMBERED_NATIONAL_ID_KEY);
     }
 
     // Cookies are already set — `/api/session/login` did it server-side, so no
@@ -128,13 +128,13 @@ export function useLoginForm() {
   }
 
   return {
-    employeeCode,
-    setEmployeeCode,
+    nationalId,
+    setNationalId,
     password,
     setPassword,
     rememberMe,
     setRememberMe,
-    employeeCodeStatus: fieldStatus(fieldErrors.employeeCode),
+    nationalIdStatus: fieldStatus(fieldErrors.nationalId),
     passwordStatus: fieldStatus(fieldErrors.password),
     submitError,
     sessionExpiredNotice,

@@ -1,4 +1,4 @@
-const GENERIC_ERROR_MESSAGE = 'Sai mã nhân viên hoặc mật khẩu';
+const GENERIC_ERROR_MESSAGE = 'Sai số CCCD hoặc mật khẩu';
 const RATE_LIMITED_MESSAGE = 'Bạn đã thử quá nhiều lần. Vui lòng đợi ít phút rồi thử lại.';
 
 /**
@@ -13,18 +13,18 @@ const RATE_LIMITED_MESSAGE = 'Bạn đã thử quá nhiều lần. Vui lòng đ�
  *
  * Also not routed through `shared/api/api-client.js`: that client treats `401`
  * as "your session expired" and redirects to `/login`. Here `401` means "wrong
- * employee code or password", on a page that already *is* `/login`.
+ * national ID or password", on a page that already *is* `/login`.
  *
  * @param {import('../types/index.js').LoginFormValues} values
  * @returns {Promise<import('../types/index.js').LoginResult>}
  */
-export async function login({ employeeCode, password }) {
+export async function login({ nationalId, password }) {
   let response;
   try {
     response = await fetch('/api/session/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ employeeCode, password }),
+      body: JSON.stringify({ nationalId, password }),
     });
   } catch {
     return { success: false, message: 'Không thể kết nối đến máy chủ' };
