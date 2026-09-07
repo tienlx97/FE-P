@@ -19,6 +19,15 @@
           "path": "/admin/permissions"
         }
       ]
+    },
+    {
+      "title": "Sao lưu & khôi phục",
+      "routes": [
+        {
+          "title": "Danh sách",
+          "path": "/admin/backups"
+        }
+      ]
     }
   ]
 }
