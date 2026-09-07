@@ -21,6 +21,15 @@ import { normalizePermissions, normalizeRoles } from './jwt.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
+// `Secure` cookies require HTTPS, which the TLS-fronted deployment
+// (`docker-compose.prod.yml` + nginx) always has in production — but a
+// plain-HTTP LAN deployment (`next start` run directly, no TLS terminator;
+// see BE-kt-xnk's own LAN model) still sets `NODE_ENV=production` and would
+// otherwise get a cookie the browser silently refuses to store. Set
+// `COOKIE_SECURE=false` in that deployment's `.env` to opt out; unset,
+// nothing changes for the TLS-fronted deployment.
+const secureCookies = process.env.COOKIE_SECURE === 'false' ? false : isProduction;
+
 /**
  * The access-token cookie expires exactly when the token does, so a stale
  * cookie can never make the app look signed in against a dead token. The rest
@@ -59,7 +68,7 @@ export function writeSessionCookies(cookieStore, session) {
   const sessionCookie = {
     path: '/',
     sameSite: /** @type {const} */ ('lax'),
-    secure: isProduction,
+    secure: secureCookies,
     maxAge: SESSION_COOKIE_MAX_AGE_SECONDS,
   };
 
@@ -130,7 +139,7 @@ export function clearSessionCookies(cookieStore) {
       path: '/',
       maxAge: 0,
       sameSite: 'lax',
-      secure: isProduction,
+      secure: secureCookies,
     });
   }
 }
