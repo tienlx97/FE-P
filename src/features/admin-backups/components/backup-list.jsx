@@ -1,13 +1,21 @@
 'use client';
 
+import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Card } from '@astryxdesign/core/Card';
-import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
+
+import {
+  AdvanceTable,
+  AdvanceTableErrorBanner,
+} from '@/shared/components/advance-table.jsx';
+import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { IconUpload } from '@/shared/components/icon/icon-upload.jsx';
 
 import { downloadBackupUrl } from '../api/backups.js';
 import { useBackupsQuery } from '../hooks/use-backups-query.js';
@@ -30,6 +38,32 @@ function formatDate(isoDateUtc) {
   return new Date(isoDateUtc).toLocaleString('vi-VN');
 }
 
+// The backend has no "source" field on a backup, but the nightly cron and
+// manual uploads write distinguishable file-name prefixes
+// (`companymanagement-...` vs `uploaded-...` — see backups.js /
+// README.LAN.md), so the badge is derived rather than stored.
+const UPLOADED_FILE_PREFIX = 'uploaded-';
+
+const COLUMN_OPTIONS = [
+  { key: 'fileName', label: 'Tên file', isAlwaysVisible: true },
+  { key: 'createdAtUtc', label: 'Thời gian tạo' },
+  { key: 'sizeBytes', label: 'Kích thước' },
+  { key: 'actions', label: 'Thao tác', isAlwaysVisible: true },
+];
+const ALL_COLUMN_KEYS = COLUMN_OPTIONS.map((column) => column.key);
+
+const SEARCH_FIELD_DEFS = [
+  { key: 'fileName', type: 'string', label: 'Tên file' },
+];
+
+const SKELETON_ROW_COUNT = 4;
+/** @type {import('../types/index.js').BackupFile[]} */
+const skeletonRows = Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => ({
+  fileName: `skeleton-${index}`,
+  sizeBytes: 0,
+  createdAtUtc: new Date().toISOString(),
+}));
+
 export function BackupList() {
   const backupsQuery = useBackupsQuery();
   const createBackupMutation = useCreateBackupMutation();
@@ -41,9 +75,78 @@ export function BackupList() {
   const listResult = backupsQuery.data;
   const backups = listResult?.success ? listResult.backups : [];
 
+  // The API returns backups newest-first — the first row is the one a
+  // restore/rollback would most likely reach for, so it's worth calling out.
+  const rows = backups.map((backup, index) => ({
+    ...backup,
+    isNewest: index === 0,
+    isUploaded: backup.fileName.startsWith(UPLOADED_FILE_PREFIX),
+  }));
+
+  /** @type {import('@astryxdesign/core/Table').TableColumn<typeof rows[number] & Record<string, unknown>>[]} */
+  const columns = [
+    {
+      key: 'fileName',
+      header: 'Tên file',
+      width: proportional(2.2),
+      filter: 'fileName',
+      renderCell: (backup) => (
+        <HStack gap={2} vAlign="center" wrap="wrap">
+          <Text weight="medium">{backup.fileName}</Text>
+          {backup.isNewest ? <Badge variant="success" label="Mới nhất" /> : null}
+          {backup.isUploaded ? (
+            <Badge variant="neutral" label="Tải lên thủ công" />
+          ) : null}
+        </HStack>
+      ),
+    },
+    {
+      key: 'createdAtUtc',
+      header: 'Thời gian tạo',
+      width: proportional(1.3),
+      renderCell: (backup) => formatDate(backup.createdAtUtc),
+    },
+    {
+      key: 'sizeBytes',
+      header: 'Kích thước',
+      width: proportional(1),
+      renderCell: (backup) =>
+        backup.sizeBytes === 0 ? (
+          <HStack gap={2} vAlign="center">
+            <Text>0 B</Text>
+            <Badge variant="warning" label="Có thể lỗi" />
+          </HStack>
+        ) : (
+          formatSize(backup.sizeBytes)
+        ),
+    },
+    {
+      key: 'actions',
+      header: 'Thao tác',
+      width: pixel(200),
+      align: 'end',
+      renderCell: (backup) => (
+        <HStack gap={2} vAlign="center">
+          <Button
+            label="Tải xuống"
+            variant="ghost"
+            size="sm"
+            href={downloadBackupUrl(backup.fileName)}
+          />
+          <Button
+            label="Khôi phục"
+            variant="destructive"
+            size="sm"
+            onClick={() => setRestoringBackup(backup)}
+          />
+        </HStack>
+      ),
+    },
+  ];
+
   return (
     <VStack gap={4} hAlign="stretch">
-      <HStack hAlign="between" vAlign="center">
+      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
         <VStack gap={1}>
           <Heading level={1}>Sao lưu &amp; khôi phục dữ liệu</Heading>
           <Text color="secondary">
@@ -56,11 +159,13 @@ export function BackupList() {
           <Button
             label="Tải lên bản sao lưu"
             variant="secondary"
+            icon={<Icon icon={IconUpload} size="sm" />}
             onClick={() => setIsUploadOpen(true)}
           />
           <Button
             label="Tạo bản sao lưu mới"
             variant="primary"
+            icon={<Icon icon={IconPlus} size="sm" />}
             isLoading={createBackupMutation.isPending}
             onClick={() => createBackupMutation.mutate()}
           />
@@ -68,7 +173,7 @@ export function BackupList() {
       </HStack>
 
       {listResult && !listResult.success ? (
-        <Banner status="error" title={listResult.message} container="card" />
+        <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
       {createBackupMutation.isError ||
@@ -84,42 +189,23 @@ export function BackupList() {
         />
       ) : null}
 
-      {backupsQuery.isLoading ? (
-        <Text color="secondary">Đang tải...</Text>
-      ) : backups.length === 0 ? (
-        <EmptyState
-          title="Chưa có bản sao lưu nào"
-          description='Bấm "Tạo bản sao lưu mới" để tạo bản đầu tiên.'
-        />
-      ) : (
-        <VStack gap={2} hAlign="stretch">
-          {backups.map((backup) => (
-            <Card key={backup.fileName} padding={4}>
-              <HStack hAlign="between" vAlign="center">
-                <VStack gap={1}>
-                  <Text weight="medium">{backup.fileName}</Text>
-                  <Text color="secondary" size="sm">
-                    {formatDate(backup.createdAtUtc)} ·{' '}
-                    {formatSize(backup.sizeBytes)}
-                  </Text>
-                </VStack>
-                <HStack gap={2}>
-                  <Button
-                    label="Tải xuống"
-                    variant="ghost"
-                    href={downloadBackupUrl(backup.fileName)}
-                  />
-                  <Button
-                    label="Khôi phục"
-                    variant="destructive"
-                    onClick={() => setRestoringBackup(backup)}
-                  />
-                </HStack>
-              </HStack>
-            </Card>
-          ))}
-        </VStack>
-      )}
+      <AdvanceTable
+        toolbarLabel="Thao tác danh sách bản sao lưu"
+        searchFieldDefs={SEARCH_FIELD_DEFS}
+        entityLabel="Bản sao lưu"
+        contentSearchFieldKey="fileName"
+        searchPlaceholder="Tìm theo tên file..."
+        columnOptions={COLUMN_OPTIONS}
+        initialColumnKeys={ALL_COLUMN_KEYS}
+        defaultColumnKeys={ALL_COLUMN_KEYS}
+        tableColumns={columns}
+        data={rows}
+        idKey="fileName"
+        isLoading={backupsQuery.isLoading}
+        skeletonRows={skeletonRows}
+        onRefresh={() => backupsQuery.refetch()}
+        isRefreshing={backupsQuery.isFetching}
+      />
 
       {restoringBackup ? (
         <RestoreBackupDialog
