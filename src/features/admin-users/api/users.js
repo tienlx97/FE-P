@@ -6,6 +6,8 @@ const GENERIC_UPDATE_ERROR = 'Không thể cập nhật người dùng';
 const GENERIC_RESET_PASSWORD_ERROR = 'Không thể đặt lại mật khẩu';
 const GENERIC_CONCURRENT_SESSIONS_ERROR =
   'Không thể cập nhật quyền đăng nhập đồng thời';
+const GENERIC_GRANT_ADMIN_ERROR = 'Không thể cấp quyền Admin';
+const GENERIC_REVOKE_ADMIN_ERROR = 'Không thể thu hồi quyền Admin';
 
 /**
  * Admin-only. Returns one page — the endpoint is paginated and its rows are a
@@ -137,6 +139,46 @@ export async function setConcurrentSessions(userId, allowed) {
       body: { Allowed: allowed },
     },
   );
+
+  if (!result.success) {
+    return { success: false, message: result.message };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Admin-only (BE-kt-xnk `[Authorize(Roles = "Admin")]` on the command —
+ * only an existing Admin can promote someone else, never self-service; see
+ * `UsersController.GrantAdminRole`'s doc comment, docs/security.md C-1).
+ * Rotates the target's `SecurityStamp`, so it takes effect on their very
+ * next request/token refresh.
+ * @param {string} userId
+ * @returns {Promise<{ success: true } | { success: false, message: string }>}
+ */
+export async function grantAdminRole(userId) {
+  const result = await apiRequest(`/api/v1/users/${userId}/admin-role`, {
+    method: 'POST',
+    errorMessage: GENERIC_GRANT_ADMIN_ERROR,
+  });
+
+  if (!result.success) {
+    return { success: false, message: result.message };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Admin-only. Also rotates the target's `SecurityStamp`.
+ * @param {string} userId
+ * @returns {Promise<{ success: true } | { success: false, message: string }>}
+ */
+export async function revokeAdminRole(userId) {
+  const result = await apiRequest(`/api/v1/users/${userId}/admin-role`, {
+    method: 'DELETE',
+    errorMessage: GENERIC_REVOKE_ADMIN_ERROR,
+  });
 
   if (!result.success) {
     return { success: false, message: result.message };

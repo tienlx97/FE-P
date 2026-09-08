@@ -1,5 +1,7 @@
 'use client';
 
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
+import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -14,13 +16,17 @@ import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { Token } from '@astryxdesign/core/Token';
 import { VStack } from '@astryxdesign/core/VStack';
-import { KeyRound, Pencil, UserRound } from 'lucide-react';
+import { KeyRound, Pencil, ShieldMinus, ShieldPlus, UserRound } from 'lucide-react';
 import { useState } from 'react';
 
 import { expandableRowStyles } from '@/shared/components/expandable-row-styles.jsx';
 
 import { labelForPermission } from '../config/grantable-permissions.js';
 import { useAdminBankAccountsQuery } from '../hooks/use-admin-bank-accounts-query.js';
+import {
+  useGrantAdminRoleMutation,
+  useRevokeAdminRoleMutation,
+} from '../hooks/use-admin-role-mutation.js';
 import { useInheritedPermissionsQuery } from '../hooks/use-inherited-permissions-query.js';
 import {
   useBranchesQuery,
@@ -68,8 +74,25 @@ export function UserExpandedDetails({
   positionNameById,
 }) {
   const [activeTab, setActiveTab] = useState(/** @type {ExpandedTab} */ ('info'));
+  const [isConfirmingAdminChange, setIsConfirmingAdminChange] = useState(false);
+  const [adminRoleError, setAdminRoleError] = useState('');
 
   const detailQuery = useUserDetailQuery(user.id);
+  const grantAdminRoleMutation = useGrantAdminRoleMutation(user.id);
+  const revokeAdminRoleMutation = useRevokeAdminRoleMutation(user.id);
+  const adminRoleMutation = user.isAdmin
+    ? revokeAdminRoleMutation
+    : grantAdminRoleMutation;
+
+  async function handleConfirmAdminRoleChange() {
+    setAdminRoleError('');
+    const result = await adminRoleMutation.mutateAsync();
+    if (result.success) {
+      setIsConfirmingAdminChange(false);
+    } else {
+      setAdminRoleError(result.message);
+    }
+  }
   const detail = detailQuery.data?.success ? detailQuery.data.user : null;
   const isLoadingDetail = !detailQuery.data?.success;
 
@@ -114,10 +137,24 @@ export function UserExpandedDetails({
             </Text>
           </VStack>
         </HStack>
-        {user.isAdmin ? (
-          <Token label="Admin" color="red" size="sm" />
-        ) : null}
+        <HStack gap={2} vAlign="center">
+          {user.isAdmin ? <Token label="Admin" color="red" size="sm" /> : null}
+          <Button
+            label={user.isAdmin ? 'Thu hồi quyền Admin' : 'Cấp quyền Admin'}
+            variant="secondary"
+            size="sm"
+            icon={<Icon icon={user.isAdmin ? ShieldMinus : ShieldPlus} />}
+            onClick={() => {
+              setAdminRoleError('');
+              setIsConfirmingAdminChange(true);
+            }}
+          />
+        </HStack>
       </HStack>
+
+      {adminRoleError ? (
+        <Banner status="error" title={adminRoleError} container="card" />
+      ) : null}
 
       <TabList
         value={activeTab}
@@ -327,6 +364,24 @@ export function UserExpandedDetails({
           onClick={() => onEdit(user)}
         />
       </HStack>
+
+      <AlertDialog
+        isOpen={isConfirmingAdminChange}
+        onOpenChange={setIsConfirmingAdminChange}
+        title={
+          user.isAdmin
+            ? `Thu hồi quyền Admin của "${fullName}"?`
+            : `Cấp quyền Admin cho "${fullName}"?`
+        }
+        description={
+          user.isAdmin
+            ? 'Người này sẽ mất toàn bộ quyền Admin (bao gồm quản lý người dùng, phòng ban, và mọi dữ liệu hệ thống) ngay lập tức. Phiên đăng nhập hiện tại của họ sẽ bị vô hiệu.'
+            : 'Người này sẽ có toàn quyền truy cập hệ thống — quản lý người dùng, phòng ban, và mọi dữ liệu, kể cả dữ liệu private của hợp đồng. Chỉ cấp cho người thực sự tin cậy.'
+        }
+        actionLabel={user.isAdmin ? 'Thu hồi' : 'Cấp quyền'}
+        isActionLoading={adminRoleMutation.isPending}
+        onAction={handleConfirmAdminRoleChange}
+      />
     </VStack>
   );
 }
