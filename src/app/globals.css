@@ -227,3 +227,22 @@
 }
 
 @stylex;
+
+/* `defineTheme`'s `components.button['variant:secondary']` override (see
+ * `theme.js`) sets this to white too, but that override compiles into
+ * `@layer astryx-theme`, and per CSS Cascade Layers, ANY layered rule loses
+ * to ANY unlayered rule for the same property — regardless of selector
+ * specificity or which layer loads first. `@astryxdesign/core`'s own
+ * button-variant color (`--color-text-primary`, dark) and/or an unrelated
+ * `stylex.create()` call elsewhere in this app that happens to hash to the
+ * same atomic class both land in a layer (`astryx-base` / one of StyleX's
+ * `priority1`-`priority5` layers), so they were winning over the themed
+ * white text/icon on every red "secondary" button (Hủy, Thêm đợt, the
+ * quick-add "+" buttons, "Phóng to"...). A plain, unlayered declaration
+ * — this rule — sidesteps that entirely instead of fighting over layer
+ * order. Mirrors the `!important`/derived-var escape hatches
+ * @astryxdesign/core's own CHANGELOG documents for the identical failure
+ * mode in Banner and ProgressBar. */
+.astryx-button.secondary {
+  color: #ffffff;
+}
