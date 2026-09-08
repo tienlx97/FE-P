@@ -1,5 +1,6 @@
 'use client';
 /** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo'} ExpandedTab */
+import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -16,8 +17,12 @@ import {
 } from '@/shared/components/advance-table.jsx';
 import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
 import { useFullscreenToggle } from '@/shared/components/fullscreen-panel.jsx';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
-import { labelForContractStatus } from '../config/contract-status.js';
+import {
+  badgeVariantForContractStatus,
+  labelForContractStatus,
+} from '../config/contract-status.js';
 import { labelForContractType } from '../config/contract-types.js';
 import {
   COLUMN_OPTIONS,
@@ -220,7 +225,12 @@ export function ContractsList() {
       header: 'Trạng thái',
       width: pixel(140),
       filter: 'status',
-      renderCell: (contract) => labelForContractStatus(contract.status),
+      renderCell: (contract) => (
+        <Badge
+          label={labelForContractStatus(contract.status)}
+          variant={badgeVariantForContractStatus(contract.status)}
+        />
+      ),
     },
     {
       key: 'projectName',
@@ -264,7 +274,7 @@ export function ContractsList() {
       key: 'createdDate',
       header: 'Ngày tạo',
       width: pixel(150),
-      renderCell: (contract) => contract.createdDate,
+      renderCell: (contract) => formatDisplayDate(contract.createdDate),
     },
     {
       key: 'quotationDate',
@@ -274,7 +284,7 @@ export function ContractsList() {
       // proportional() — the 120px proportional minimum fits "2026-08-27"
       // fine but clips the label itself.
       width: pixel(150),
-      renderCell: (contract) => orDash(contract.quotationDate),
+      renderCell: (contract) => formatDisplayDate(contract.quotationDate),
     },
     {
       key: 'category',

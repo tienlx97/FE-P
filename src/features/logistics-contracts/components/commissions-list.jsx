@@ -27,6 +27,7 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import {
   COLUMN_OPTIONS,
@@ -196,7 +197,7 @@ export function CommissionsList() {
       key: 'signedDate',
       header: 'Ngày ký',
       width: pixel(120),
-      renderCell: (row) => orDash(row.signedDate),
+      renderCell: (row) => formatDisplayDate(row.signedDate),
     },
     {
       key: 'sellerSigned',

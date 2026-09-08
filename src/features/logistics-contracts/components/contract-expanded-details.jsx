@@ -15,6 +15,7 @@ import { Pencil, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import { formatMoney } from '../config/currencies.js';
@@ -102,6 +103,11 @@ export function ContractExpandedDetails({
     ? paymentSchedulesQuery.data.schedules
     : [];
 
+  const paymentSchedulesTotal = paymentSchedules.reduce(
+    (total, schedule) => total + schedule.amount,
+    0,
+  );
+
   const shipmentsQuery = useShipmentsQuery(contract.id);
   const shipments = shipmentsQuery.data?.success
     ? shipmentsQuery.data.shipments
@@ -120,7 +126,7 @@ export function ContractExpandedDetails({
       key: 'paymentDate',
       header: 'Ngày',
       width: pixel(120),
-      renderCell: (schedule) => schedule.paymentDate,
+      renderCell: (schedule) => formatDisplayDate(schedule.paymentDate),
     },
     {
       key: 'note',
@@ -337,13 +343,21 @@ export function ContractExpandedDetails({
           {paymentSchedules.length === 0 ? (
             <Text color="secondary">Chưa có đợt thanh toán</Text>
           ) : (
-            <Table
-              columns={paymentScheduleColumns}
-              data={paymentSchedules}
-              idKey="id"
-              dividers="rows"
-              density="compact"
-            />
+            <>
+              <Table
+                columns={paymentScheduleColumns}
+                data={paymentSchedules}
+                idKey="id"
+                dividers="rows"
+                density="compact"
+              />
+              <HStack hAlign="between" vAlign="center">
+                <Text weight="semibold">Tổng cộng:</Text>
+                <Text weight="semibold">
+                  {formatMoney(paymentSchedulesTotal, contract.currency)}
+                </Text>
+              </HStack>
+            </>
           )}
         </VStack>
       )}

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   createContractAnnex,
+  deleteContractAnnex,
   listContractAnnexes,
   updateContractAnnex,
 } from '../api/contract-annexes.js';
@@ -56,6 +57,21 @@ export function useUpdateContractAnnexMutation(contractId) {
         values,
       },
     ) => updateContractAnnex(contractId, annexId, values),
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: queryKey(contractId) });
+      }
+    },
+  });
+}
+
+/** @param {string} contractId */
+export function useDeleteContractAnnexMutation(contractId) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (/** @type {string} */ annexId) =>
+      deleteContractAnnex(contractId, annexId),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKey(contractId) });

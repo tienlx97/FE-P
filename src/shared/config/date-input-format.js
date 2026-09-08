@@ -12,3 +12,22 @@ export function formatDateInputValue(iso) {
   const [year, month, day] = iso.split('-');
   return `${day}/${month}/${year}`;
 }
+
+/**
+ * Same dd/mm/yyyy convention as `formatDateInputValue`, for plain-text date
+ * display (table cells, read-only text) outside of `DateInput` fields —
+ * those render the raw ISO string today, which is inconsistent with every
+ * `DateInput` in the app. Takes a plain `string` (not the branded
+ * `ISODateString`) since API response typedefs type date fields as `string`.
+ * @param {string | null | undefined} iso
+ * @returns {string}
+ */
+export function formatDisplayDate(iso) {
+  return iso
+    ? formatDateInputValue(
+        /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+          iso
+        ),
+      )
+    : '—';
+}

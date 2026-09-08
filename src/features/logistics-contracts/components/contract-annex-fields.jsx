@@ -4,6 +4,7 @@ import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
+import { TextArea } from '@astryxdesign/core/TextArea';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
@@ -22,6 +23,8 @@ import { contractAnnexTypeOptions } from '../config/contract-annex-types.js';
  * }} props
  */
 export function ContractAnnexFields({ values, setField, fieldStatuses }) {
+  const isValueChange = values.type === 'ValueChange';
+
   return (
     <VStack gap={4} hAlign="stretch">
       <Selector
@@ -42,29 +45,40 @@ export function ContractAnnexFields({ values, setField, fieldStatuses }) {
         statusVariant="tooltip"
       />
 
-      <HStack gap={3}>
-        <FormattedNumberTextInput
-          label="Số tiền"
-          value={values.amount}
-          onChange={(value) => setField('amount', value)}
-          isRequired
-          status={fieldStatuses.amount}
-          statusVariant="tooltip"
-        />
-        <DateInput
-          label="Ngày ký"
-          value={
-            /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-              values.signedDate
-            )
-          }
-          onChange={(value) => setField('signedDate', value ?? '')}
-          format={formatDateInputValue}
-          isRequired
-          status={fieldStatuses.signedDate}
-          statusVariant="tooltip"
-        />
-      </HStack>
+      <FormattedNumberTextInput
+        label="Số tiền"
+        value={values.amount}
+        onChange={(value) => setField('amount', value)}
+        isDisabled={isValueChange}
+        isRequired={!isValueChange}
+        status={fieldStatuses.amount}
+        statusVariant="tooltip"
+      />
+
+      <TextArea
+        label="Ghi chú"
+        value={values.note}
+        onChange={(value) => setField('note', value)}
+        isRequired={isValueChange}
+        isOptional={!isValueChange}
+        maxLength={1000}
+        status={fieldStatuses.note}
+        statusVariant="tooltip"
+      />
+
+      <DateInput
+        label="Ngày ký"
+        value={
+          /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+            values.signedDate
+          )
+        }
+        onChange={(value) => setField('signedDate', value ?? '')}
+        format={formatDateInputValue}
+        isRequired
+        status={fieldStatuses.signedDate}
+        statusVariant="tooltip"
+      />
 
       <HStack gap={4}>
         <CheckboxInput

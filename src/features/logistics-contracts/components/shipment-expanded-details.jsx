@@ -17,6 +17,7 @@ import {
   expandableRowStyles,
   UnderlinedMetadataListItem as MetadataListItem,
 } from '@/shared/components/expandable-row-styles.jsx';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
@@ -201,10 +202,10 @@ export function ShipmentExpandedDetails({
                 {orDash(shipment.coNumber)}
               </MetadataListItem>
               <MetadataListItem label="Ngày khai C/O">
-                {orDash(shipment.coDeclarationDate)}
+                {formatDisplayDate(shipment.coDeclarationDate)}
               </MetadataListItem>
               <MetadataListItem label="Ngày có C/O">
-                {orDash(shipment.coIssuedDate)}
+                {formatDisplayDate(shipment.coIssuedDate)}
               </MetadataListItem>
             </MetadataList>
           </>

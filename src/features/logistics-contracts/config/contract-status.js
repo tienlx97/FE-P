@@ -22,3 +22,17 @@ export function labelForContractStatus(status) {
     status
   );
 }
+
+/**
+ * `Badge` color for the contracts list's "Trạng thái" column (per user
+ * request, 2026-09-08): blue = hoàn thành, green = đang thực hiện,
+ * red = đã huỷ.
+ * @param {import('../types/index.js').ContractStatus | string} status
+ * @returns {'blue' | 'green' | 'red' | 'neutral'}
+ */
+export function badgeVariantForContractStatus(status) {
+  if (status === 'Completed') return 'blue';
+  if (status === 'InProgress') return 'green';
+  if (status === 'Cancelled') return 'red';
+  return 'neutral';
+}

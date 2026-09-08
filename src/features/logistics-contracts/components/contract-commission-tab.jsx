@@ -11,6 +11,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Pencil, Plus } from 'lucide-react';
 
 import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { labelForCommissionAnnexType } from '../config/commission-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
@@ -77,7 +78,7 @@ export function ContractCommissionTab({
           {orDash(customersById.get(commission.partyCustomerId)?.companyName)}
         </MetadataListItem>
         <MetadataListItem label="Ngày ký">
-          {orDash(commission.signedDate)}
+          {formatDisplayDate(commission.signedDate)}
         </MetadataListItem>
         <MetadataListItem label="Bên nhận hoa hồng">
           {commission.partySigned ? 'Đã ký' : 'Chưa ký'}

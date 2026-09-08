@@ -3,6 +3,7 @@ import { apiRequest } from '@/shared/api/api-client.js';
 const GENERIC_LIST_ERROR = 'Không thể tải danh sách phụ lục';
 const GENERIC_CREATE_ERROR = 'Không thể thêm phụ lục';
 const GENERIC_UPDATE_ERROR = 'Không thể cập nhật phụ lục';
+const GENERIC_DELETE_ERROR = 'Không thể xoá phụ lục';
 
 /**
  * Requires `logistics:contracts:view`, scoped to the contract's branch.
@@ -38,6 +39,7 @@ export async function createContractAnnex(contractId, values) {
       SignedDate: values.signedDate,
       BuyerSigned: values.buyerSigned,
       SellerSigned: values.sellerSigned,
+      Note: values.note || null,
     },
   });
 
@@ -68,6 +70,7 @@ export async function updateContractAnnex(contractId, annexId, values) {
         SignedDate: values.signedDate,
         BuyerSigned: values.buyerSigned,
         SellerSigned: values.sellerSigned,
+        Note: values.note || null,
       },
     },
   );
@@ -77,4 +80,23 @@ export async function updateContractAnnex(contractId, annexId, values) {
   }
 
   return { success: true, annex: result.data };
+}
+
+/**
+ * Requires `logistics:contracts:manage`, scoped to the contract's branch.
+ * @param {string} contractId
+ * @param {string} annexId
+ * @returns {Promise<{ success: true } | { success: false, message: string }>}
+ */
+export async function deleteContractAnnex(contractId, annexId) {
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/annexes/${annexId}`,
+    { method: 'DELETE', errorMessage: GENERIC_DELETE_ERROR },
+  );
+
+  if (!result.success) {
+    return { success: false, message: result.message };
+  }
+
+  return { success: true };
 }

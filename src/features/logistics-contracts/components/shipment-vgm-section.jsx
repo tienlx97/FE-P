@@ -16,6 +16,8 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
+
 import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
 import {
   useDeleteShipmentVgmMutation,
@@ -97,7 +99,7 @@ export function ShipmentVgmSection({
       key: 'packingDate',
       header: 'Ngày đóng hàng',
       width: pixel(150),
-      renderCell: (vgm) => vgm.packingDate,
+      renderCell: (vgm) => formatDisplayDate(vgm.packingDate),
     },
     {
       key: 'containerType',

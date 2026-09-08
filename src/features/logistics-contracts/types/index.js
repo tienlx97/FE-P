@@ -175,10 +175,12 @@ export {};
  * @property {number} annexNumber
  * @property {string} annexCode
  * @property {ContractAnnexType} type
- * @property {number} amount
+ * @property {number} amount - Meaningless for `ValueChange` (see `note`).
  * @property {string} signedDate - ISO date (YYYY-MM-DD)
  * @property {boolean} buyerSigned
  * @property {boolean} sellerSigned
+ * @property {string | null} note - Required for `ValueChange`: describes the
+ *   (non-monetary) information that changed. Optional otherwise.
  */
 
 /**
@@ -188,6 +190,7 @@ export {};
  * @property {string} signedDate - ISO date (YYYY-MM-DD)
  * @property {boolean} buyerSigned
  * @property {boolean} sellerSigned
+ * @property {string} note
  */
 
 /**

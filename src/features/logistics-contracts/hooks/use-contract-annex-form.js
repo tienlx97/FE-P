@@ -16,6 +16,7 @@ function emptyValues() {
     signedDate: '',
     buyerSigned: false,
     sellerSigned: false,
+    note: '',
   };
 }
 
@@ -27,6 +28,7 @@ function valuesFromAnnex(annex) {
     signedDate: annex.signedDate,
     buyerSigned: annex.buyerSigned,
     sellerSigned: annex.sellerSigned,
+    note: annex.note ?? '',
   };
 }
 

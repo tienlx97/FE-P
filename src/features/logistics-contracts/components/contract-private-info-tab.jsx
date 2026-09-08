@@ -5,16 +5,12 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 /** @param {number | null | undefined} value @param {string} [suffix] */
 function orDashNumber(value, suffix = '') {
   if (value == null) return '—';
   return `${value.toLocaleString('en-US')}${suffix ? ` ${suffix}` : ''}`;
-}
-
-/** @param {string | null | undefined} value */
-function orDash(value) {
-  return value == null || value === '' ? '—' : value;
 }
 
 /** @param {import('../types/index.js').ContractPrivateInfo} privateInfo */
@@ -50,7 +46,7 @@ export function ContractPrivateInfoTab({ privateInfo }) {
     <VStack gap={4} hAlign="stretch">
       <MetadataList columns={3} label={{ position: 'top' }}>
         <MetadataListItem label="BOQ · Ngày gửi">
-          {orDash(privateInfo.boqSentDate)}
+          {formatDisplayDate(privateInfo.boqSentDate)}
         </MetadataListItem>
       </MetadataList>
 
@@ -69,11 +65,7 @@ export function ContractPrivateInfoTab({ privateInfo }) {
         </MetadataListItem>
       </MetadataList>
 
-      <MetadataList
-        title="Đơn giá vốn"
-        columns={4}
-        label={{ position: 'top' }}
-      >
+      <MetadataList title="Đơn giá vốn" columns={4} label={{ position: 'top' }}>
         <MetadataListItem label="Nhân công">
           {orDashNumber(privateInfo.unitCostLabor, 'VNĐ')}
         </MetadataListItem>

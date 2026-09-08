@@ -1,4 +1,5 @@
 'use client';
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -14,21 +15,27 @@ import { Text } from '@astryxdesign/core/Text';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
-import { formatDateInputValue } from '@/shared/config/date-input-format.js';
+import {
+  formatDateInputValue,
+  formatDisplayDate,
+} from '@/shared/config/date-input-format.js';
 
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { contractStatusOptions } from '../config/contract-status.js';
 import { contractTypeOptions } from '../config/contract-types.js';
 import { currencyOptions, formatMoney } from '../config/currencies.js';
 import { incotermOptions } from '../config/incoterms.js';
-import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
+import {
+  useContractAnnexesQuery,
+  useDeleteContractAnnexMutation,
+} from '../hooks/use-contract-annexes-query.js';
 import { BuyerFields } from './buyer-fields.jsx';
 import { QuickCreateCountryDialog } from './quick-create-country-dialog.jsx';
 import { QuickCreatePlaceDialog } from './quick-create-place-dialog.jsx';
@@ -52,17 +59,22 @@ function withSavedOption(options, value) {
 }
 
 /**
- * Signed amount label for one contract-annex row — `ValueChange` never
- * represents an amount change, so it gets no sign (same sign convention as
- * `commission-fields.jsx`'s `annexAmountLabel`).
+ * Signed amount label for one contract-annex row — `ValueChange` describes a
+ * non-monetary information change (see its `note`), never an amount, so it
+ * has no amount to show here.
  * @param {import('../types/index.js').ContractAnnex} annex
  * @param {string} currency
  */
 function annexAmountLabel(annex, currency) {
+  if (annex.type === 'ValueChange') return '—';
   const formatted = formatMoney(annex.amount, currency);
   if (annex.type === 'AmountIncrease') return `+ ${formatted}`;
-  if (annex.type === 'AmountDecrease') return `− ${formatted}`;
-  return formatted;
+  return `− ${formatted}`;
+}
+
+/** @param {string | null | undefined} value */
+function orDash(value) {
+  return value == null || value === '' ? '—' : value;
 }
 
 /**
@@ -117,6 +129,9 @@ export function ContractGeneralFields({
     useState(false);
   const [isQuickCreateDischargePlaceOpen, setIsQuickCreateDischargePlaceOpen] =
     useState(false);
+  const [deletingAnnex, setDeletingAnnex] = useState(
+    /** @type {import('../types/index.js').ContractAnnex | null} */ (null),
+  );
 
   /** @type {Record<string, { type: 'error', message: string } | undefined>} */
   const sellerFieldStatuses = {};
@@ -125,6 +140,16 @@ export function ContractGeneralFields({
 
   const annexesQuery = useContractAnnexesQuery(contract?.id);
   const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
+  const deleteAnnexMutation = useDeleteContractAnnexMutation(
+    contract?.id ?? '',
+  );
+
+  async function handleConfirmDeleteAnnex() {
+    if (!deletingAnnex) return;
+    await deleteAnnexMutation.mutateAsync(deletingAnnex.id);
+    setDeletingAnnex(null);
+  }
+
   const annexesTotal = annexes.reduce((total, annex) => {
     if (annex.type === 'AmountIncrease') return total + annex.amount;
     if (annex.type === 'AmountDecrease') return total - annex.amount;
@@ -145,7 +170,7 @@ export function ContractGeneralFields({
       key: 'signedDate',
       header: 'Ngày ký',
       width: pixel(120),
-      renderCell: (annex) => annex.signedDate,
+      renderCell: (annex) => formatDisplayDate(annex.signedDate),
     },
     {
       key: 'buyerSigned',
@@ -166,21 +191,37 @@ export function ContractGeneralFields({
       align: 'end',
       renderCell: (annex) => annexAmountLabel(annex, values.currency),
     },
+    {
+      key: 'note',
+      header: 'Ghi chú',
+      width: proportional(1),
+      renderCell: (annex) => orDash(annex.note),
+    },
   ];
   if (onEditAnnex) {
     annexColumns.push({
       key: 'actions',
       header: '',
-      width: pixel(60),
+      width: pixel(90),
       renderCell: (annex) => (
-        <IconButton
-          label={`Sửa ${annex.annexCode}`}
-          tooltip="Sửa phụ lục"
-          icon={<Icon icon={Pencil} size="sm" />}
-          variant="ghost"
-          size="sm"
-          onClick={() => onEditAnnex(annex)}
-        />
+        <HStack gap={1} vAlign="center" hAlign="end">
+          <IconButton
+            label={`Sửa ${annex.annexCode}`}
+            tooltip="Sửa phụ lục"
+            icon={<Icon icon={Pencil} size="sm" />}
+            variant="ghost"
+            size="sm"
+            onClick={() => onEditAnnex(annex)}
+          />
+          <IconButton
+            label={`Xoá ${annex.annexCode}`}
+            tooltip="Xoá phụ lục"
+            icon={<Icon icon={Trash2} size="sm" />}
+            variant="ghost"
+            size="sm"
+            onClick={() => setDeletingAnnex(annex)}
+          />
+        </HStack>
       ),
     });
   }
@@ -197,7 +238,7 @@ export function ContractGeneralFields({
           <VStack gap={3} hAlign="stretch">
             <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
               <TextInput
-                isReadOnly={isReadOnly}
+                isDisabled={isReadOnly}
                 label="Số hợp đồng"
                 value={values.contractNumber}
                 onChange={(value) => setField('contractNumber', value)}
@@ -207,7 +248,7 @@ export function ContractGeneralFields({
                 statusVariant="tooltip"
               />
               <TextInput
-                isReadOnly={isReadOnly}
+                isDisabled={isReadOnly}
                 label="Tên dự án"
                 value={values.projectName}
                 onChange={(value) => setField('projectName', value)}
@@ -230,7 +271,7 @@ export function ContractGeneralFields({
 
             <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
               <TextInput
-                isReadOnly={isReadOnly}
+                isDisabled={isReadOnly}
                 label="Hạng mục"
                 value={values.category}
                 onChange={(value) => setField('category', value)}
@@ -250,7 +291,7 @@ export function ContractGeneralFields({
                 statusVariant="tooltip"
               />
               <NumberInput
-                isReadOnly={isReadOnly}
+                isDisabled={isReadOnly}
                 label="Năm Incoterm"
                 value={values.incotermYear}
                 onChange={(value) => setField('incotermYear', value)}
@@ -453,7 +494,7 @@ export function ContractGeneralFields({
             isRequired
             status={fieldStatuses.contractValue}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
         </StackItem>
         <StackItem size="static">
@@ -516,7 +557,7 @@ export function ContractGeneralFields({
         maxLength={2000}
         status={fieldStatuses.note}
         statusVariant="tooltip"
-        isReadOnly={isReadOnly}
+        isDisabled={isReadOnly}
       />
 
       <HStack gap={4}>
@@ -524,13 +565,13 @@ export function ContractGeneralFields({
           label="Bên bán ký"
           value={values.sellerSigned}
           onChange={(checked) => setField('sellerSigned', checked)}
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
         <CheckboxInput
           label="Bên mua ký"
           value={values.buyerSigned}
           onChange={(checked) => setField('buyerSigned', checked)}
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       </HStack>
 
@@ -600,6 +641,17 @@ export function ContractGeneralFields({
               {formatMoney(contractGrandTotal, values.currency)}
             </Text>
           </HStack>
+
+          <AlertDialog
+            isOpen={deletingAnnex !== null}
+            onOpenChange={(nextIsOpen) => {
+              if (!nextIsOpen) setDeletingAnnex(null);
+            }}
+            title={`Xoá phụ lục ${deletingAnnex?.annexCode ?? ''}?`}
+            description="Hành động này không thể hoàn tác."
+            actionLabel="Xoá"
+            onAction={handleConfirmDeleteAnnex}
+          />
         </>
       ) : null}
     </FormSection>
