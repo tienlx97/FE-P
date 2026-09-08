@@ -29,10 +29,7 @@ import { useContractPrivateInfoQuery } from '../hooks/use-contract-private-info-
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { ContractCommissionTab } from './contract-commission-tab.jsx';
-import {
-  ContractPrivateInfoTab,
-  isPrivateInfoEntirelyEmpty,
-} from './contract-private-info-tab.jsx';
+import { ContractPrivateInfoPanel } from './contract-private-info-panel.jsx';
 import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 
 /** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo'} ExpandedTab */
@@ -67,7 +64,11 @@ function orDash(value) {
  * @param {() => void} props.onAddCommissionAnnex
  * @param {(annex: import('../types/index.js').CommissionAnnex) => void} props.onEditCommissionAnnex
  * @param {(commission: import('../types/index.js').Commission) => void} props.onAddCommissionPayment
- * @param {(payload: { contractId: string, privateInfo: import('../types/index.js').ContractPrivateInfo | null }) => void} props.onOpenPrivateInfo
+ * @param {import('react').Ref<{ startEditing: () => void, cancelEditing: () => void, submit: () => void }>} [props.privateInfoPanelRef]
+ *   Forwarded to `ContractPrivateInfoPanel` — lets the Contract dialog's own
+ *   footer (`contract-form-dialog.jsx`) drive editing for this tab instead of
+ *   a second, tab-local edit button (see that panel's own doc comment).
+ * @param {(status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string }) => void} [props.onPrivateInfoStatusChange]
  */
 export function ContractExpandedDetails({
   contract,
@@ -84,7 +85,8 @@ export function ContractExpandedDetails({
   onAddCommissionAnnex,
   onEditCommissionAnnex,
   onAddCommissionPayment,
-  onOpenPrivateInfo,
+  privateInfoPanelRef,
+  onPrivateInfoStatusChange,
 }) {
   const [expandedShipmentId, setExpandedShipmentId] = useState(
     /** @type {string | null} */ (null),
@@ -438,23 +440,14 @@ export function ContractExpandedDetails({
         </VStack>
       )}
 
-      {activeTab === 'privateInfo' && (
-        <VStack gap={4} hAlign="stretch">
-          <Button
-            label={
-              privateInfo && !isPrivateInfoEntirelyEmpty(privateInfo)
-                ? 'Sửa Thông tin private'
-                : 'Nhập Thông tin private'
-            }
-            variant="secondary"
-            onClick={() =>
-              onOpenPrivateInfo({ contractId: contract.id, privateInfo })
-            }
-          />
-          {privateInfo ? (
-            <ContractPrivateInfoTab privateInfo={privateInfo} />
-          ) : null}
-        </VStack>
+      {activeTab === 'privateInfo' && privateInfo && (
+        <ContractPrivateInfoPanel
+          controllerRef={privateInfoPanelRef}
+          contractId={contract.id}
+          privateInfo={privateInfo}
+          hideOwnActions
+          onStatusChange={onPrivateInfoStatusChange}
+        />
       )}
     </VStack>
   );

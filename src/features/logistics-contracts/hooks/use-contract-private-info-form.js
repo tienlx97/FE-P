@@ -53,10 +53,12 @@ function fieldStatus(message) {
 }
 
 /**
- * Backs `ContractPrivateInfoFormDialog` — unlike `useCommissionForm`, there
- * is no create/edit split: the backend endpoint is a single idempotent
- * `PUT` (upsert), so this hook only ever calls one mutation regardless of
- * whether `privateInfo` already has values.
+ * Backs the "Thông tin private" tab's inline edit mode in
+ * `ContractExpandedDetails` (same `isReadOnly`-toggle convention as the
+ * "Thông tin" tab's `useContractForm`, not a separate dialog) — unlike
+ * `useCommissionForm`, there is no create/edit split: the backend endpoint
+ * is a single idempotent `PUT` (upsert), so this hook only ever calls one
+ * mutation regardless of whether `privateInfo` already has values.
  * @param {{
  *   contractId: string,
  *   privateInfo?: import('../types/index.js').ContractPrivateInfo | null,

@@ -2,6 +2,80 @@ import { apiRequest } from '@/shared/api/api-client.js';
 
 const GENERIC_GET_ERROR = 'Không thể tải Thông tin private';
 const GENERIC_UPSERT_ERROR = 'Không thể lưu Thông tin private';
+const GENERIC_LIST_ERROR = 'Không thể tải danh sách BOQ';
+
+/**
+ * System-wide "BOQ" list across every contract the caller has
+ * `logistics:secret` on (unlike `logistics:contracts:view`, this permission
+ * is individually granted, never role/department-derived — see
+ * `docs/api/Contracts.md`, BE-kt-xnk). A caller with no `logistics:secret`
+ * grant anywhere gets a real 403, folded into the generic error message.
+ * @param {{ page?: number, pageSize?: number }} [options]
+ * @returns {Promise<{ success: true, items: import('../types/index.js').ContractPrivateInfoListItem[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
+ */
+export async function listContractPrivateInfos({ page = 1, pageSize = 25 } = {}) {
+  const result = await apiRequest(
+    `/api/v1/contracts/private-info?page=${page}&pageSize=${pageSize}`,
+    { errorMessage: GENERIC_LIST_ERROR },
+  );
+
+  if (!result.success) {
+    return { success: false, message: result.message, conflict: result.status === 409 };
+  }
+
+  return {
+    success: true,
+    items: result.data?.items ?? [],
+    page: result.data?.page ?? page,
+    pageSize: result.data?.pageSize ?? pageSize,
+    totalCount: result.data?.totalCount ?? 0,
+    totalPages: result.data?.totalPages ?? 0,
+  };
+}
+
+/**
+ * Same as `listContractPrivateInfos`, additionally narrowed by `conditions`
+ * (the advanced-search condition builder) — filters the same `Contract`
+ * fields as `searchAllContracts`/`searchAllShipments` (contractNumber,
+ * projectName, ...), not BOQ-specific fields. An empty `conditions` array
+ * behaves identically to `listContractPrivateInfos`.
+ * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
+ * @returns {Promise<{ success: true, items: import('../types/index.js').ContractPrivateInfoListItem[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
+ */
+export async function searchContractPrivateInfos({
+  page = 1,
+  pageSize = 25,
+  conditions = [],
+} = {}) {
+  const result = await apiRequest('/api/v1/contracts/private-info/search', {
+    method: 'POST',
+    errorMessage: GENERIC_LIST_ERROR,
+    body: {
+      Page: page,
+      PageSize: pageSize,
+      Conditions: conditions.map((condition) => ({
+        Field: condition.field,
+        Operator: condition.operator,
+        Value: condition.value || null,
+        ValueTo: condition.valueTo || null,
+        Connector: condition.connector,
+      })),
+    },
+  });
+
+  if (!result.success) {
+    return { success: false, message: result.message, conflict: result.status === 409 };
+  }
+
+  return {
+    success: true,
+    items: result.data?.items ?? [],
+    page: result.data?.page ?? page,
+    pageSize: result.data?.pageSize ?? pageSize,
+    totalCount: result.data?.totalCount ?? 0,
+    totalPages: result.data?.totalPages ?? 0,
+  };
+}
 
 /**
  * Unlike `getCommission`, a `404` here is a real error (the contract

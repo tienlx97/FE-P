@@ -9,7 +9,7 @@ import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Maximize2, Minimize2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import {
   AdvanceTable,
@@ -45,7 +45,6 @@ import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-
 import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractExpandedDetails } from './contract-expanded-details.jsx';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
-import { ContractPrivateInfoFormDialog } from './contract-private-info-form-dialog.jsx';
 import { PaymentScheduleFormDialog } from './payment-schedule-form-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
@@ -84,6 +83,25 @@ export function ContractsList() {
   const [expandedTab, setExpandedTab] = useState(
     /** @type {ExpandedTab} */ ('info'),
   );
+  // Bridges the "Thông tin private" tab's own edit state up to
+  // `ContractFormDialog`'s footer (see `ContractPrivateInfoPanel`'s doc
+  // comment) — the ref triggers start/cancel/submit, the state mirrors it
+  // back down for the footer's label/loading/disabled props. Reset
+  // whenever the tab changes away so a stale status never leaks into the
+  // footer for a tab that isn't privateInfo.
+  const privateInfoPanelRef = useRef(
+    /** @type {{ startEditing: () => void, cancelEditing: () => void, submit: () => void } | null} */ (
+      null
+    ),
+  );
+  // Not reset on tab change — harmless staleness: `ContractFormDialog`
+  // only ever reads this through `privateInfoEditController`, which is
+  // only built (below) while `expandedTab === 'privateInfo'`.
+  const [privateInfoStatus, setPrivateInfoStatus] = useState(
+    /** @type {{ isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null} */ (
+      null
+    ),
+  );
   const [shipmentDialog, setShipmentDialog] = useState(
     /** @type {{ contractId: string, contract: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
       null
@@ -116,11 +134,6 @@ export function ContractsList() {
   );
   const [vgmDialog, setVgmDialog] = useState(
     /** @type {{ contractId: string, shipmentId: string, vgm?: import('../types/index.js').ShipmentVgm } | null} */ (
-      null
-    ),
-  );
-  const [privateInfoDialog, setPrivateInfoDialog] = useState(
-    /** @type {{ contractId: string, privateInfo: import('../types/index.js').ContractPrivateInfo | null } | null} */ (
       null
     ),
   );
@@ -491,6 +504,16 @@ export function ContractsList() {
             setExpandedTab('info');
             setWorkspace({ contract: saved, revision: workspace.revision + 1 });
           }}
+          privateInfoEditController={
+            expandedTab === 'privateInfo'
+              ? {
+                  status: privateInfoStatus,
+                  startEditing: () => privateInfoPanelRef.current?.startEditing(),
+                  cancelEditing: () => privateInfoPanelRef.current?.cancelEditing(),
+                  submit: () => privateInfoPanelRef.current?.submit(),
+                }
+              : null
+          }
         >
           {contract ? (
             <ContractExpandedDetails
@@ -498,6 +521,8 @@ export function ContractsList() {
               customersById={customersById}
               costCategoriesById={costCategoriesById}
               activeTab={expandedTab}
+              privateInfoPanelRef={privateInfoPanelRef}
+              onPrivateInfoStatusChange={setPrivateInfoStatus}
               onAddPaymentSchedule={() =>
                 setPaymentScheduleDialog({ contractId: contract.id })
               }
@@ -530,7 +555,6 @@ export function ContractsList() {
                   commission,
                 })
               }
-              onOpenPrivateInfo={(payload) => setPrivateInfoDialog(payload)}
             />
           ) : null}
         </ContractFormDialog>
@@ -631,18 +655,6 @@ export function ContractsList() {
           shipmentId={vgmDialog.shipmentId}
           vgm={vgmDialog.vgm}
           onSuccess={() => setVgmDialog(null)}
-        />
-      ) : null}
-
-      {privateInfoDialog ? (
-        <ContractPrivateInfoFormDialog
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setPrivateInfoDialog(null);
-          }}
-          contractId={privateInfoDialog.contractId}
-          privateInfo={privateInfoDialog.privateInfo}
-          onSuccess={() => setPrivateInfoDialog(null)}
         />
       ) : null}
     </VStack>

@@ -15,6 +15,25 @@ import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
 
+/** @param {import('../types/index.js').ContractPrivateInfo} privateInfo */
+export function isPrivateInfoEntirelyEmpty(privateInfo) {
+  return [
+    privateInfo.boqSentDate,
+    privateInfo.containerCount,
+    privateInfo.costPricePerContainer,
+    privateInfo.quotedPricePerContainer,
+    privateInfo.unitCostLabor,
+    privateInfo.unitCostSandblasting,
+    privateInfo.unitCostPainting,
+    privateInfo.unitCostFactory,
+    privateInfo.volumeSale,
+    privateInfo.volumeMaterial,
+    privateInfo.profit,
+    privateInfo.totalAmountUsd,
+    privateInfo.exchangeRateVnd,
+  ].every((value) => value == null);
+}
+
 /**
  * One boxed sub-section (BOQ Logistics / Đơn giá vốn / Khối lượng) — same
  * plain non-collapsible `Card` convention as `CommissionFields`'s

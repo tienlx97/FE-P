@@ -299,6 +299,23 @@ export {};
  */
 
 /**
+ * One row of the cross-contract "BOQ" list (`GET`/`POST search` on
+ * `/contracts/private-info`, BE-kt-xnk) — a slimmer projection than
+ * `ContractPrivateInfo`, just enough for the list's columns (no
+ * `volumeDeclaration`/`extraFields`/`Đơn giá vốn`/`Khối lượng`/`Tổng
+ * tiền`/`Tỷ giá` — open the row to see/edit the full BOQ).
+ * @typedef {Object} ContractPrivateInfoListItem
+ * @property {string} contractId
+ * @property {string} contractNumber
+ * @property {string} projectName
+ * @property {number | null} containerCount
+ * @property {number | null} costPricePerContainer
+ * @property {number | null} quotedPricePerContainer
+ * @property {number | null} logisticsTotal - computed, read-only
+ * @property {number | null} profit
+ */
+
+/**
  * `PUT /contracts/{id}/private-info` body shape — every numeric field is
  * optional (`undefined` submits `null`), mirroring the backend's
  * `UpsertContractPrivateInfoCommandValidator` (no field is required to

@@ -52,5 +52,9 @@ export const routeAccessRules = [
     pathPrefix: '/logistics/config',
     allowedPermissions: ['logistics:contracts:view'],
   },
+  {
+    pathPrefix: '/logistics/boq',
+    allowedPermissions: ['logistics:secret'],
+  },
   { pathPrefix: '/logistics', allowedPermissions: ['logistics:view'] },
 ];

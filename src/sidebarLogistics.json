@@ -21,6 +21,10 @@
         {
           "title": "Khách hàng",
           "path": "/logistics/customers"
+        },
+        {
+          "title": "BOQ",
+          "path": "/logistics/boq"
         }
       ]
     },

@@ -7445,3 +7445,69 @@ ward reference data (free-text inputs, matching the backend).
 - Final gate passed: `harness/runs/20260907-153812-3249/` — lint, typecheck,
   structure, harness tests, 131 unit tests, build and quality thresholds.
   Shared gzip remains 168.7 kB (<250 kB). Task 1.1 complete.
+
+## 2026-09-09 — Contract "Thông tin private" (BOQ): tab unification + list page
+
+- Full detail in `../BE-kt-xnk/harness/PROGRESS.md`'s same-dated entry
+  (cross-repo change, BE list/search endpoint + FE). Summary here for this
+  repo's own history:
+- Unified the "Thông tin private" tab's Xem and Sửa around one component
+  (`components/contract-private-info-panel.jsx`, new) instead of a
+  read-only `ContractPrivateInfoTab` summary drifting from the edit
+  dialog's `ContractPrivateInfoFields` layout (the drift was the original
+  bug report). Deleted `contract-private-info-tab.jsx` and
+  `contract-private-info-form-dialog.jsx`.
+- Added a system-wide "BOQ" list page (`/logistics/boq`, sidenav entry
+  under Hợp đồng) — `AdvanceTable`, same pattern as `ShipmentsList`, backed
+  by the new BE-side `GET`/`POST search` on `/api/v1/contracts/private-info`.
+  Gated by a new `logistics:secret` rule in
+  `shared/config/route-access.js` (middleware-enforced) — noted this
+  repo's sidenav trees are not permission-filtered (pre-existing gap, not
+  introduced here; `routeAccessRules` still blocks direct navigation).
+- `pnpm lint`/`pnpm structure`/`pnpm test` (136 tests) clean on every
+  touched file. `pnpm typecheck` has 3 pre-existing failing files
+  unrelated to this session (confirmed identical before/after), so did not
+  run `./harness/verify.sh` end-to-end (would report that as a false
+  regression) — ran each gate individually instead.
+- Live-verified against the real dev BE-kt-xnk stack: rebuilt the dev API
+  container (was missing a same-day commit), imported `db/sample-data.sql`
+  into an empty dev DB, confirmed both the unified tab layout and the new
+  BOQ list + its Sửa-opens-directly-into-edit-mode flow.
+- No commit made — user has not asked for one yet.
+
+### Follow-up: "Sửa Thông tin private" button placement (same day)
+
+- User feedback: the button was awkwardly placed at the *top* of the
+  panel, and inside the Contract dialog it duplicated the dialog's own
+  "Sửa hợp đồng" footer action.
+- `contract-private-info-panel.jsx`: moved the Sửa/Nhập · Hủy/Lưu action
+  row from above the fields to *below* them (still self-contained —
+  standalone usage, the BOQ list's detail dialog). Added `hideOwnActions`
+  + `controllerRef` (a plain prop wired to `useImperativeHandle`, not JSX
+  `ref=` — a `forwardRef` version broke `tsc --noEmit` here since this
+  codebase's JSDoc/checkJs setup can't infer `forwardRef` prop types) +
+  `onStatusChange` so an external footer can drive `startEditing`/
+  `cancelEditing`/`submit` and read `{isEditing, isSubmitting,
+  submitLabel}` without hoisting the panel's own form state.
+- `contract-expanded-details.jsx`'s "Thông tin private" tab now renders
+  the panel with `hideOwnActions` + forwards `privateInfoPanelRef`/
+  `onPrivateInfoStatusChange` (new props) instead of showing its own
+  button.
+- `contracts-list.jsx` (the only real caller of
+  `ContractExpandedDetails`+`ContractFormDialog` together) owns the ref +
+  status state, passes a `privateInfoEditController` object down to
+  `ContractFormDialog` only while `expandedTab === 'privateInfo'`.
+- `contract-form-dialog.jsx`'s persistent footer now branches on
+  `activeTab === 'privateInfo'`: when active, "Sửa hợp đồng" becomes
+  "Sửa Thông tin private" and toggles/submits that tab in place (no more
+  jumping back to "Thông tin" the way the old unconditional footer did);
+  widened that button (144→200px) since the label is longer than "Sửa hợp
+  đồng" and was clipping.
+- `pnpm lint`/`pnpm structure`/`pnpm test` (136 tests) all clean; `pnpm
+  typecheck` back to the same 3 pre-existing failures (confirmed
+  unchanged) after fixing the `forwardRef` typing regression it initially
+  caught. Live-verified both call sites in the browser: BOQ list's detail
+  dialog (button now bottom, Sửa opens edit mode, Hủy discards), and the
+  Contract dialog's "Thông tin private" tab (footer's "Sửa Thông tin
+  private" edits in place, no duplicate tab-local button, Hủy reverts).
+- No commit made — user has not asked for one yet.

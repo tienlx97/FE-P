@@ -50,13 +50,18 @@ const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 /**
  * One fullscreen workspace for creation, inspection and editing. Xem and
  * Sửa share the same "Thông tin" tab layout — only `isReadOnly` differs per
- * field (mirrors `CommissionFormDialog`/`ShipmentFormDialog`); the other
- * tabs (Lịch sử thanh toán/Shipment/Commission/Thông tin private) have no
- * edit mode of their own in this dialog — each is edited via its own
- * `*FormDialog` — so they always render `children` regardless of
- * `isEditing`. "Thông tin private" only renders at all for a caller with
- * `logistics:secret` (unlike every other tab, not role/department-derived
- * — see `openspec/changes/add-contract-private-info/`, BE-kt-xnk).
+ * field (mirrors `CommissionFormDialog`/`ShipmentFormDialog`); Lịch sử
+ * thanh toán/Shipment/Commission have no edit mode of their own in this
+ * dialog — each is edited via its own `*FormDialog` — so they always
+ * render `children` regardless of `isEditing`. "Thông tin private" only
+ * renders at all for a caller with `logistics:secret` (unlike every other
+ * tab, not role/department-derived — see
+ * `openspec/changes/add-contract-private-info/`, BE-kt-xnk); unlike those
+ * three, its own edit mode *is* driven by this dialog's footer —
+ * `privateInfoEditController` bridges to `ContractPrivateInfoPanel`'s
+ * imperative ref/status (see that component's doc comment for why: it
+ * has no separate `*FormDialog`, and a second tab-local edit button next
+ * to "Sửa hợp đồng" was redundant).
  * @param {{
  *   isOpen: boolean,
  *   initialMode?: 'view' | 'edit',
@@ -67,6 +72,12 @@ const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
  *   onActiveTabChange: (tab: 'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo') => void,
  *   onAddAnnex?: () => void,
  *   onEditAnnex?: (annex: import('../types/index.js').ContractAnnex) => void,
+ *   privateInfoEditController?: {
+ *     status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null,
+ *     startEditing: () => void,
+ *     cancelEditing: () => void,
+ *     submit: () => void,
+ *   } | null,
  *   children?: import('react').ReactNode,
  * }} props
  */
@@ -80,6 +91,7 @@ export function ContractFormDialog({
   onActiveTabChange,
   onAddAnnex,
   onEditAnnex,
+  privateInfoEditController = null,
   children,
 }) {
   const [isEditing, setIsEditing] = useState(
@@ -113,6 +125,10 @@ export function ContractFormDialog({
   const hasLogisticsSecret = useSessionPermissions().includes(
     LOGISTICS_SECRET_PERMISSION,
   );
+  const isPrivateInfoTab =
+    activeTab === 'privateInfo' && privateInfoEditController != null;
+  const privateInfoStatus = privateInfoEditController?.status ?? null;
+  const privateInfoIsEditing = privateInfoStatus?.isEditing ?? false;
 
   /** @param {'close' | 'cancel'} action */
   function finish(action) {
@@ -283,49 +299,85 @@ export function ContractFormDialog({
           }
           footer={
             <LayoutFooter>
-              <HStack hAlign="between" gap={2}>
-                <Text color="secondary" xstyle={styles.hint}>
-                  {isEditing
-                    ? isDirty
-                      ? 'Có thay đổi chưa lưu'
-                      : 'Nhập thông tin hợp đồng'
-                    : contract?.projectName}
-                </Text>
-                <HStack gap={2}>
-                  <Button
-                    width={80}
-                    label={isEditing ? 'Hủy' : 'Đóng'}
-                    variant="secondary"
-                    isDisabled={isSubmitting}
-                    onClick={() => requestExit(isEditing ? 'cancel' : 'close')}
-                  />
-                  {isEditing ? (
+              {isPrivateInfoTab ? (
+                <HStack hAlign="between" gap={2}>
+                  <Text color="secondary" xstyle={styles.hint}>
+                    {privateInfoIsEditing
+                      ? 'Có thay đổi Thông tin private chưa lưu'
+                      : 'Thông tin private'}
+                  </Text>
+                  <HStack gap={2}>
                     <Button
-                      key="save"
-                      width={144}
-                      label={submitLabel}
-                      type="submit"
-                      form={formId}
-                      variant="primary"
-                      isLoading={isSubmitting}
-                      onClick={() => onActiveTabChange('info')}
+                      width={80}
+                      label={privateInfoIsEditing ? 'Hủy' : 'Đóng'}
+                      variant="secondary"
+                      isDisabled={privateInfoStatus?.isSubmitting}
+                      onClick={() =>
+                        privateInfoIsEditing
+                          ? privateInfoEditController.cancelEditing()
+                          : requestExit('close')
+                      }
                     />
-                  ) : (
                     <Button
-                      key="edit"
-                      width={144}
+                      key="private-info-action"
+                      width={200}
                       type="button"
-                      label="Sửa hợp đồng"
+                      label={privateInfoStatus?.submitLabel ?? 'Sửa Thông tin private'}
                       variant="primary"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        onActiveTabChange('info');
-                        setIsEditing(true);
-                      }}
+                      isLoading={privateInfoStatus?.isSubmitting}
+                      onClick={() =>
+                        privateInfoIsEditing
+                          ? privateInfoEditController.submit()
+                          : privateInfoEditController.startEditing()
+                      }
                     />
-                  )}
+                  </HStack>
                 </HStack>
-              </HStack>
+              ) : (
+                <HStack hAlign="between" gap={2}>
+                  <Text color="secondary" xstyle={styles.hint}>
+                    {isEditing
+                      ? isDirty
+                        ? 'Có thay đổi chưa lưu'
+                        : 'Nhập thông tin hợp đồng'
+                      : contract?.projectName}
+                  </Text>
+                  <HStack gap={2}>
+                    <Button
+                      width={80}
+                      label={isEditing ? 'Hủy' : 'Đóng'}
+                      variant="secondary"
+                      isDisabled={isSubmitting}
+                      onClick={() => requestExit(isEditing ? 'cancel' : 'close')}
+                    />
+                    {isEditing ? (
+                      <Button
+                        key="save"
+                        width={144}
+                        label={submitLabel}
+                        type="submit"
+                        form={formId}
+                        variant="primary"
+                        isLoading={isSubmitting}
+                        onClick={() => onActiveTabChange('info')}
+                      />
+                    ) : (
+                      <Button
+                        key="edit"
+                        width={144}
+                        type="button"
+                        label="Sửa hợp đồng"
+                        variant="primary"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          onActiveTabChange('info');
+                          setIsEditing(true);
+                        }}
+                      />
+                    )}
+                  </HStack>
+                </HStack>
+              )}
             </LayoutFooter>
           }
         />
