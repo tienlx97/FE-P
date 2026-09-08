@@ -81,7 +81,9 @@ async function handleSessionExpired(reason) {
 /**
  * @typedef {object} ApiRequestOptions
  * @property {string} [method] Defaults to `GET`.
- * @property {unknown} [body] JSON-serialised when present.
+ * @property {unknown} [body] JSON-serialised when present, unless it is a
+ *   `FormData` — sent as-is so the browser sets the multipart boundary
+ *   itself (used for file uploads, e.g. backups).
  * @property {string} [errorMessage] Fallback shown when the backend sends no
  *   usable `detail`.
  * @property {boolean} [redirectOnSessionExpiry] Defaults to `true`.
@@ -108,9 +110,11 @@ export async function apiRequest(path, options = {}) {
     redirectOnSessionExpiry = true,
   } = options;
 
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
   /** @type {Record<string, string>} */
   const headers = {};
-  if (body !== undefined) {
+  if (body !== undefined && !isFormData) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -119,7 +123,7 @@ export async function apiRequest(path, options = {}) {
     response = await fetch(`${API_PROXY_PREFIX}${path}`, {
       method,
       headers,
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isFormData ? body : JSON.stringify(body),
     });
   } catch {
     return {

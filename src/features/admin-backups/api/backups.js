@@ -4,6 +4,7 @@ import { API_PROXY_PREFIX } from '@/shared/config/api-config.js';
 const GENERIC_LIST_ERROR = 'Không thể tải danh sách bản sao lưu';
 const GENERIC_CREATE_ERROR = 'Không thể tạo bản sao lưu';
 const GENERIC_RESTORE_ERROR = 'Không thể khôi phục bản sao lưu';
+const GENERIC_UPLOAD_ERROR = 'Không thể tải file lên';
 
 /**
  * Admin-only. All backups currently on the server, newest first.
@@ -69,6 +70,30 @@ export async function restoreBackup(fileName, confirmDatabaseName) {
   }
 
   return { success: true };
+}
+
+/**
+ * Admin-only. Uploads a `.sql` file (e.g. a backup downloaded from another
+ * machine) into the server's backup directory — it can then be restored
+ * like any server-generated backup. Does not touch the database itself.
+ * @param {File} file
+ * @returns {Promise<{ success: true, backup: import('../types/index.js').BackupFile } | { success: false, message: string }>}
+ */
+export async function uploadBackup(file) {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const result = await apiRequest('/api/v1/backups/upload', {
+    method: 'POST',
+    body: formData,
+    errorMessage: GENERIC_UPLOAD_ERROR,
+  });
+
+  if (!result.success) {
+    return { success: false, message: result.message };
+  }
+
+  return { success: true, backup: result.data };
 }
 
 /**

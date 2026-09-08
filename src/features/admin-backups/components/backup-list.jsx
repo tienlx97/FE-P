@@ -13,6 +13,7 @@ import { downloadBackupUrl } from '../api/backups.js';
 import { useBackupsQuery } from '../hooks/use-backups-query.js';
 import { useCreateBackupMutation } from '../hooks/use-create-backup-mutation.js';
 import { RestoreBackupDialog } from './restore-backup-dialog.jsx';
+import { UploadBackupDialog } from './upload-backup-dialog.jsx';
 
 const BYTES_IN_KB = 1024;
 
@@ -35,6 +36,7 @@ export function BackupList() {
   const [restoringBackup, setRestoringBackup] = useState(
     /** @type {import('../types/index.js').BackupFile | null} */ (null),
   );
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   const listResult = backupsQuery.data;
   const backups = listResult?.success ? listResult.backups : [];
@@ -50,12 +52,19 @@ export function BackupList() {
             công dùng (xem README.LAN.md).
           </Text>
         </VStack>
-        <Button
-          label="Tạo bản sao lưu mới"
-          variant="primary"
-          isLoading={createBackupMutation.isPending}
-          onClick={() => createBackupMutation.mutate()}
-        />
+        <HStack gap={2}>
+          <Button
+            label="Tải lên bản sao lưu"
+            variant="secondary"
+            onClick={() => setIsUploadOpen(true)}
+          />
+          <Button
+            label="Tạo bản sao lưu mới"
+            variant="primary"
+            isLoading={createBackupMutation.isPending}
+            onClick={() => createBackupMutation.mutate()}
+          />
+        </HStack>
       </HStack>
 
       {listResult && !listResult.success ? (
@@ -122,6 +131,11 @@ export function BackupList() {
           backup={restoringBackup}
         />
       ) : null}
+
+      <UploadBackupDialog
+        isOpen={isUploadOpen}
+        onOpenChange={setIsUploadOpen}
+      />
     </VStack>
   );
 }
