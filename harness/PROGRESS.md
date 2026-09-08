@@ -7590,3 +7590,24 @@ ward reference data (free-text inputs, matching the backend).
   "Sửa Commission" still toggles editing correctly, "Hủy" still reverts
   cleanly.
 - No commit made — user has not asked for one yet.
+
+## 2026-09-09 — LAN operations implementation
+
+- Implemented accepted `BE-kt-xnk/docs/lan-operations-plan.md` across both apps
+  and sibling `ops-lan`: CI/image exclusions, Caddy HTTPS, Portainer, independent
+  Kuma 2.5.3, PowerShell release/backup/restore/monitoring/provisioning, explicit
+  backend migrate/seed/schema commands and Admin-only operational status UI.
+- Verification and limits: `../ops-lan/verification.md`; both full harnesses
+  PASS. Real isolated Docker tests verified trusted TLS, Secure cookies,
+  maintenance 503, dependency outage/recovery, dump/checksum/restore with
+  Vietnamese data, and Kuma bounded maintenance. Desktop/mobile evidence in
+  `../ops-lan/logs/`. No production database was modified.
+- Restored frontend CI required repairing existing typecheck issues and moving
+  the Astryx workflow out of AGENTS.md to keep the map within audit limits.
+- Harness gaps fixed: image-route assertion catches context exclusions; real
+  Caddy test catches maintenance matcher mistakes; latest sample-data import
+  runs twice after baseline upgrade, preserving a frozen historical fixture.
+  Gitignore now allows Backup HTTP examples and unit tests.
+- Pending: actual Windows installation, NTFS/DPAPI/CMS, SMB and SMTP drills,
+  Portainer operator drill, remote CI for release SHAs, measured four-hour
+  recovery goal. Track in `../ops-lan/acceptance.md`; not marked accepted.

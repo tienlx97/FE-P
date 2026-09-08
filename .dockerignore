@@ -6,3 +6,19 @@ harness/runs
 .env
 .env.*
 !.env.example
+
+# Operational state and secrets never enter the build context.
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.pfx
+**/*.sql
+backups/
+logs/
+state/
+releases/
+**/[[]DATABASE]
+.memsearch
+.agents
+.codex

@@ -78,6 +78,7 @@ export function useCommissionPaymentQuickAddForm({
 
     const mutationResult = await updateMutation.mutateAsync({
       values: {
+        code: commission.code,
         signedDate: commission.signedDate,
         partyCustomerId: commission.partyCustomerId,
         value: commission.value,

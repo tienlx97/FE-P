@@ -22,9 +22,11 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile --config.dangerouslyAllowAllBuilds=true
 
 COPY . .
-RUN pnpm build
+RUN pnpm build && node harness/checks/image-routes.mjs
 
 EXPOSE 3000
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+    CMD node -e "fetch('http://localhost:3000/login').then(r=>{if(r.status!==200)process.exit(1)}).catch(()=>process.exit(1))"
 # -H 0.0.0.0: `next start`'s default host is not guaranteed to accept
 # connections from outside the container's own network namespace, so the
 # nginx service in docker-compose.prod.yml (a different container) needs it

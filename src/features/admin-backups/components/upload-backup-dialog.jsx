@@ -78,15 +78,17 @@ export function UploadBackupDialog({ isOpen, onOpenChange }) {
       {!didSucceed ? (
         <VStack gap={3} hAlign="stretch">
           <Text color="secondary">
-            Chọn một file <strong>.sql</strong> (ví dụ: bản sao lưu đã tải về
-            từ máy khác) để lưu vào server. Thao tác này chỉ lưu file — chưa
-            khôi phục dữ liệu; sau khi tải lên xong, bấm &quot;Khôi phục&quot;
-            trên file vừa tải lên nếu muốn ghi đè dữ liệu hiện tại.
+            Chọn một file <strong>.sql</strong> (ví dụ: bản sao lưu đã tải về từ
+            máy khác) để lưu vào server. Thao tác này chỉ lưu file — chưa khôi
+            phục dữ liệu; sau khi tải lên xong, bấm &quot;Khôi phục&quot; trên
+            file vừa tải lên nếu muốn ghi đè dữ liệu hiện tại.
           </Text>
           <FileInput
             label="File backup (.sql)"
             value={file}
-            onChange={setFile}
+            onChange={(files) =>
+              setFile(Array.isArray(files) ? (files[0] ?? null) : files)
+            }
             accept=".sql"
             isRequired
           />

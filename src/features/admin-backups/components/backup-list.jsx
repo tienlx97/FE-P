@@ -20,6 +20,7 @@ import { IconUpload } from '@/shared/components/icon/icon-upload.jsx';
 import { downloadBackupUrl } from '../api/backups.js';
 import { useBackupsQuery } from '../hooks/use-backups-query.js';
 import { useCreateBackupMutation } from '../hooks/use-create-backup-mutation.js';
+import { OperationsStatus } from './operations-status.jsx';
 import { RestoreBackupDialog } from './restore-backup-dialog.jsx';
 import { UploadBackupDialog } from './upload-backup-dialog.jsx';
 
@@ -52,15 +53,18 @@ const COLUMN_OPTIONS = [
 ];
 const ALL_COLUMN_KEYS = COLUMN_OPTIONS.map((column) => column.key);
 
+/** @satisfies {ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>} */
 const SEARCH_FIELD_DEFS = [
   { key: 'fileName', type: 'string', label: 'Tên file' },
 ];
 
 const SKELETON_ROW_COUNT = 4;
-/** @type {import('../types/index.js').BackupFile[]} */
+/** @type {(import('../types/index.js').BackupFile & {isNewest: boolean, isUploaded: boolean})[]} */
 const skeletonRows = Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => ({
   fileName: `skeleton-${index}`,
   sizeBytes: 0,
+  isNewest: false,
+  isUploaded: false,
   createdAtUtc: new Date().toISOString(),
 }));
 
@@ -93,7 +97,9 @@ export function BackupList() {
       renderCell: (backup) => (
         <HStack gap={2} vAlign="center" wrap="wrap">
           <Text weight="medium">{backup.fileName}</Text>
-          {backup.isNewest ? <Badge variant="success" label="Mới nhất" /> : null}
+          {backup.isNewest ? (
+            <Badge variant="success" label="Mới nhất" />
+          ) : null}
           {backup.isUploaded ? (
             <Badge variant="neutral" label="Tải lên thủ công" />
           ) : null}
@@ -150,9 +156,8 @@ export function BackupList() {
         <VStack gap={1}>
           <Heading level={1}>Sao lưu &amp; khôi phục dữ liệu</Heading>
           <Text color="secondary">
-            Bản sao lưu logic của toàn bộ cơ sở dữ liệu (`mysqldump`) — cùng
-            định dạng file mà cron sao lưu hàng đêm và thao tác khôi phục thủ
-            công dùng (xem README.LAN.md).
+            Tạo và khôi phục bản sao lưu dữ liệu. Theo dõi bản sao ngoài máy chủ
+            và kết quả khôi phục thử tự động.
           </Text>
         </VStack>
         <HStack gap={2}>
@@ -171,6 +176,8 @@ export function BackupList() {
           />
         </HStack>
       </HStack>
+
+      <OperationsStatus />
 
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />

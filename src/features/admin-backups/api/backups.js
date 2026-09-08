@@ -106,3 +106,12 @@ export async function uploadBackup(file) {
 export function downloadBackupUrl(fileName) {
   return `${API_PROXY_PREFIX}/api/v1/backups/${encodeURIComponent(fileName)}/download`;
 }
+
+/** @returns {Promise<import('../types/index.js').OperationsStatus>} */
+export async function getOperationsStatus() {
+  const result = await apiRequest('/api/v1/backups/operations-status', {
+    errorMessage: 'Không thể tải trạng thái sao lưu tự động',
+  });
+  if (!result.success) throw new Error(result.message);
+  return result.data;
+}
