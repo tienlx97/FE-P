@@ -7,6 +7,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { paymentTypeOptions } from '../config/payment-schedule-types.js';
 
@@ -33,6 +34,7 @@ export function PaymentScheduleFields({ values, setField, fieldStatuses }) {
             )
           }
           onChange={(value) => setField('paymentDate', value ?? '')}
+          format={formatDateInputValue}
           isRequired
           status={fieldStatuses.paymentDate}
           statusVariant="tooltip"

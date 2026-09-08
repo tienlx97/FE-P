@@ -5,6 +5,7 @@ import { TextArea } from '@astryxdesign/core/TextArea';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 /**
  * Single-`CommissionPayment` field-set, used by the "Thêm nhanh" quick-add
@@ -34,7 +35,7 @@ export function CommissionPaymentFields({
           )
         }
         onChange={(value) => setField('paymentDate', value ?? '')}
-        format="system_date"
+        format={formatDateInputValue}
         isRequired
         status={fieldStatuses.paymentDate}
         statusVariant="tooltip"

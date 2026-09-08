@@ -21,6 +21,7 @@ import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { contractStatusOptions } from '../config/contract-status.js';
@@ -278,7 +279,7 @@ export function ContractGeneralFields({
                   )
                 }
                 onChange={(value) => setField('createdDate', value ?? '')}
-                format="system_date"
+                format={formatDateInputValue}
                 isRequired
                 status={fieldStatuses.createdDate}
                 statusVariant="tooltip"
@@ -292,7 +293,7 @@ export function ContractGeneralFields({
                   )
                 }
                 onChange={(value) => setField('quotationDate', value ?? '')}
-                format="system_date"
+                format={formatDateInputValue}
                 isRequired
                 status={fieldStatuses.quotationDate}
                 statusVariant="tooltip"

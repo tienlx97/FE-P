@@ -11,6 +11,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
 
@@ -64,7 +65,7 @@ export function ContractPrivateInfoFields({
   return (
     <VStack gap={5} hAlign="stretch">
       <DateInput
-        format="system_date"
+        format={formatDateInputValue}
         isDisabled={isReadOnly}
         label="BOQ · Ngày gửi"
         value={

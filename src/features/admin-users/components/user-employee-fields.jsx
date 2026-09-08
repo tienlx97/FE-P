@@ -10,6 +10,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { UserAddressFields } from './user-address-fields.jsx';
 
@@ -112,7 +113,7 @@ export function UserEmployeeFields({
               )
             }
             onChange={(value) => setField('nationalIdIssueDate', value ?? '')}
-            format="system_date"
+            format={formatDateInputValue}
             isRequired
             status={fieldStatuses.nationalIdIssueDate}
             statusVariant="tooltip"

@@ -12,6 +12,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Trash2 } from 'lucide-react';
 
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 
 /** @typedef {'string' | 'enum' | 'number' | 'date'} AdvancedFilterFieldType */
@@ -205,7 +206,7 @@ export function AdvancedFilterBuilder({ fields, conditions, onChange }) {
                         onChange={(next) =>
                           updateCondition(condition.id, { value: next ?? '' })
                         }
-                        format="system_date"
+                        format={formatDateInputValue}
                       />
                       <DateInput
                         label="Đến ngày"
@@ -221,7 +222,7 @@ export function AdvancedFilterBuilder({ fields, conditions, onChange }) {
                             valueTo: next ?? '',
                           })
                         }
-                        format="system_date"
+                        format={formatDateInputValue}
                       />
                     </>
                   ) : (

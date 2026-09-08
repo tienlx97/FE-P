@@ -16,6 +16,8 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
+
 import { useEditUserForm } from '../hooks/use-edit-user-form.js';
 import { UserFormTabs } from './user-form-tabs.jsx';
 import { UserOrgFields } from './user-org-fields.jsx';
@@ -182,7 +184,7 @@ export function EditUserForm({ isOpen, onOpenChange, user, onSuccess }) {
                           onChange={(value) =>
                             setField('nationalIdIssueDate', value ?? '')
                           }
-                          format="system_date"
+                          format={formatDateInputValue}
                           isRequired
                           status={fieldStatuses.nationalIdIssueDate}
                           statusVariant="tooltip"

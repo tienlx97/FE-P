@@ -7,6 +7,7 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { commissionAnnexTypeOptions } from '../config/commission-annex-types.js';
 
@@ -59,6 +60,7 @@ export function CommissionAnnexFields({ values, setField, fieldStatuses }) {
             )
           }
           onChange={(value) => setField('signedDate', value ?? '')}
+          format={formatDateInputValue}
           isRequired
           status={fieldStatuses.signedDate}
           statusVariant="tooltip"

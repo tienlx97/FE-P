@@ -15,6 +15,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
 
@@ -81,7 +82,7 @@ export function PaymentHistoryFields({
           onChange={(value) =>
             onUpdateRowField(row.rowKey, 'paymentDate', value ?? '')
           }
-          format="system_date"
+          format={formatDateInputValue}
           size="sm"
           width="100%"
         />

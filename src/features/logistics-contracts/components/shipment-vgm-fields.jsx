@@ -12,6 +12,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { shipmentContainerTypeOptions } from '../config/shipment-container-types.js';
 
@@ -51,6 +52,7 @@ export function ShipmentVgmFields({
           )
         }
         onChange={(value) => setField('packingDate', value ?? '')}
+        format={formatDateInputValue}
         isRequired
         status={fieldStatuses.packingDate}
         statusVariant="tooltip"

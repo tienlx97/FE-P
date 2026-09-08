@@ -17,6 +17,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
 import { IconShuffle } from '@/shared/components/icon/icon-shuffle.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { generateRandomPassword } from '../config/generate-password.js';
 import { useCreateUserForm } from '../hooks/use-create-user-form.js';
@@ -157,7 +158,7 @@ export function CreateUserForm({ isOpen, onOpenChange, onSuccess }) {
                         onChange={(value) =>
                           setField('nationalIdIssueDate', value ?? '')
                         }
-                        format="system_date"
+                        format={formatDateInputValue}
                         isRequired
                         status={fieldStatuses.nationalIdIssueDate}
                         statusVariant="tooltip"

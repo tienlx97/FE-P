@@ -8,6 +8,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 /** @param {{
  * values: import('../types/index.js').ShipmentFormValues,
@@ -105,7 +106,7 @@ export function ShipmentBookingFields({
               )
             }
             onChange={(value) => setField('etd', value ?? '')}
-            format="system_date"
+            format={formatDateInputValue}
             isOptional
             status={fieldStatuses.etd}
             statusVariant="tooltip"
@@ -121,7 +122,7 @@ export function ShipmentBookingFields({
               )
             }
             onChange={(value) => setField('eta', value ?? '')}
-            format="system_date"
+            format={formatDateInputValue}
             isOptional
             status={fieldStatuses.eta}
             statusVariant="tooltip"
@@ -178,7 +179,7 @@ export function ShipmentBookingFields({
               )
             }
             onChange={(value) => setField('coDeclarationDate', value ?? '')}
-            format="system_date"
+            format={formatDateInputValue}
             isOptional
             status={fieldStatuses.coDeclarationDate}
             statusVariant="tooltip"
@@ -194,7 +195,7 @@ export function ShipmentBookingFields({
               )
             }
             onChange={(value) => setField('coIssuedDate', value ?? '')}
-            format="system_date"
+            format={formatDateInputValue}
             isOptional
             status={fieldStatuses.coIssuedDate}
             statusVariant="tooltip"

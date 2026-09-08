@@ -20,6 +20,7 @@ import { Pencil, Plus } from 'lucide-react';
 
 import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { labelForCommissionAnnexType } from '../config/commission-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
@@ -142,7 +143,7 @@ export function CommissionFields({
 
       <Grid columns={isNarrow ? 1 : 2} gap={3}>
         <DateInput
-          format="system_date"
+          format={formatDateInputValue}
           isDisabled={isReadOnly}
           label="Ngày ký"
           value={
