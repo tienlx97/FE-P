@@ -25,7 +25,14 @@ import { usePlacesQuery } from './use-places-query.js';
 import { useSellersQuery } from './use-sellers-query.js';
 
 const TODAY_ISO = new Date().toISOString().slice(0, 10);
-const CURRENT_YEAR = new Date().getFullYear();
+// Every contract to date has used the Incoterms 2010 rulebook — default to
+// it rather than the current year so the field doesn't drift year over year
+// while the business is still on the 2010 edition.
+const DEFAULT_INCOTERM_YEAR = 2010;
+// Every contract to date has been steel-structure work — default the field
+// instead of making every user retype the same value (still freely editable
+// for the day a different category shows up).
+const DEFAULT_CATEGORY = 'STEEL STRUCTURE';
 
 /**
  * `placeOfLoading`/`placeOfDischarge` are plain strings on the wire (see
@@ -60,14 +67,14 @@ function emptyValues() {
     createdDate: TODAY_ISO,
     quotationDate: TODAY_ISO,
     projectName: '',
-    category: '',
+    category: DEFAULT_CATEGORY,
     countryId: '',
     placeOfLoading: '',
     placeOfDischarge: '',
     contractValue: undefined,
     currency: DEFAULT_CURRENCY,
     incoterm: '',
-    incotermYear: CURRENT_YEAR,
+    incotermYear: DEFAULT_INCOTERM_YEAR,
     companyId: '',
     sourceSellerId: '',
     sellerInline: {
