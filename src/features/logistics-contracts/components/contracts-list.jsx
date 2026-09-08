@@ -40,7 +40,6 @@ import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
 import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
-import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
 import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractExpandedDetails } from './contract-expanded-details.jsx';
@@ -83,25 +82,50 @@ export function ContractsList() {
   const [expandedTab, setExpandedTab] = useState(
     /** @type {ExpandedTab} */ ('info'),
   );
-  // Bridges the "Thông tin private" tab's own edit state up to
+  // Bridges "Thông tin private"/"Commission" tabs' own edit state up to
   // `ContractFormDialog`'s footer (see `ContractPrivateInfoPanel`'s doc
-  // comment) — the ref triggers start/cancel/submit, the state mirrors it
-  // back down for the footer's label/loading/disabled props. Reset
-  // whenever the tab changes away so a stale status never leaks into the
-  // footer for a tab that isn't privateInfo.
+  // comment) — each ref triggers start/cancel/submit on its panel, each
+  // status state mirrors it back down for the footer's label/loading/
+  // disabled props. Neither status is reset on tab change — harmless
+  // staleness: `ContractFormDialog` only ever reads one of these through
+  // `activeTabEditController`, computed below from `expandedTab`.
   const privateInfoPanelRef = useRef(
     /** @type {{ startEditing: () => void, cancelEditing: () => void, submit: () => void } | null} */ (
       null
     ),
   );
-  // Not reset on tab change — harmless staleness: `ContractFormDialog`
-  // only ever reads this through `privateInfoEditController`, which is
-  // only built (below) while `expandedTab === 'privateInfo'`.
   const [privateInfoStatus, setPrivateInfoStatus] = useState(
     /** @type {{ isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null} */ (
       null
     ),
   );
+  const commissionPanelRef = useRef(
+    /** @type {{ startEditing: () => void, cancelEditing: () => void, submit: () => void } | null} */ (
+      null
+    ),
+  );
+  const [commissionStatus, setCommissionStatus] = useState(
+    /** @type {{ isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null} */ (
+      null
+    ),
+  );
+  /** @type {{ status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null, startEditing: () => void, cancelEditing: () => void, submit: () => void } | null} */
+  const activeTabEditController =
+    expandedTab === 'privateInfo'
+      ? {
+          status: privateInfoStatus,
+          startEditing: () => privateInfoPanelRef.current?.startEditing(),
+          cancelEditing: () => privateInfoPanelRef.current?.cancelEditing(),
+          submit: () => privateInfoPanelRef.current?.submit(),
+        }
+      : expandedTab === 'commission'
+        ? {
+            status: commissionStatus,
+            startEditing: () => commissionPanelRef.current?.startEditing(),
+            cancelEditing: () => commissionPanelRef.current?.cancelEditing(),
+            submit: () => commissionPanelRef.current?.submit(),
+          }
+        : null;
   const [shipmentDialog, setShipmentDialog] = useState(
     /** @type {{ contractId: string, contract: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
       null
@@ -114,11 +138,6 @@ export function ContractsList() {
   );
   const [paymentScheduleDialog, setPaymentScheduleDialog] = useState(
     /** @type {{ contractId: string, schedule?: import('../types/index.js').PaymentSchedule } | null} */ (
-      null
-    ),
-  );
-  const [commissionDialog, setCommissionDialog] = useState(
-    /** @type {{ contractId: string, currency: string, commission: import('../types/index.js').Commission | null } | null} */ (
       null
     ),
   );
@@ -504,16 +523,7 @@ export function ContractsList() {
             setExpandedTab('info');
             setWorkspace({ contract: saved, revision: workspace.revision + 1 });
           }}
-          privateInfoEditController={
-            expandedTab === 'privateInfo'
-              ? {
-                  status: privateInfoStatus,
-                  startEditing: () => privateInfoPanelRef.current?.startEditing(),
-                  cancelEditing: () => privateInfoPanelRef.current?.cancelEditing(),
-                  submit: () => privateInfoPanelRef.current?.submit(),
-                }
-              : null
-          }
+          activeTabEditController={activeTabEditController}
         >
           {contract ? (
             <ContractExpandedDetails
@@ -541,7 +551,8 @@ export function ContractsList() {
               }
               onAddVgm={(payload) => setVgmDialog(payload)}
               onEditVgm={(payload) => setVgmDialog(payload)}
-              onOpenCommission={(payload) => setCommissionDialog(payload)}
+              commissionPanelRef={commissionPanelRef}
+              onCommissionStatusChange={setCommissionStatus}
               onAddCommissionAnnex={() =>
                 setCommissionAnnexDialog({ contractId: contract.id })
               }
@@ -599,22 +610,6 @@ export function ContractsList() {
           contractId={paymentScheduleDialog.contractId}
           schedule={paymentScheduleDialog.schedule}
           onSuccess={() => setPaymentScheduleDialog(null)}
-        />
-      ) : null}
-
-      {commissionDialog ? (
-        <CommissionFormDialog
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setCommissionDialog(null);
-          }}
-          contractId={commissionDialog.contractId}
-          currency={commissionDialog.currency}
-          commission={commissionDialog.commission}
-          onSuccess={() => {
-            setExpandedTab('commission');
-            setCommissionDialog(null);
-          }}
         />
       ) : null}
 

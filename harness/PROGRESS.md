@@ -7511,3 +7511,82 @@ ward reference data (free-text inputs, matching the backend).
   Contract dialog's "Thông tin private" tab (footer's "Sửa Thông tin
   private" edits in place, no duplicate tab-local button, Hủy reverts).
 - No commit made — user has not asked for one yet.
+
+### Follow-up: unify Commission tab the same way (same day)
+
+- User: apply the same Xem/Sửa-in-one-layout treatment to the Contract
+  dialog's "Commission" tab, and minimize component position shifting in
+  general. The real "shift" for Commission was structural, not visual:
+  clicking "Sửa Commission" opened `CommissionFormDialog` — a second
+  fullscreen dialog stacked on top of the Contract dialog — instead of
+  editing in place.
+- New `contract-commission-panel.jsx`, mirroring `ContractPrivateInfoPanel`
+  exactly (same `hideOwnActions`/`controllerRef`/`onStatusChange` shape),
+  wrapping the already-`isReadOnly`-capable `CommissionFields` +
+  `useCommissionForm` (both already shared by `commissions-list.jsx`'s own
+  Xem/Sửa, just never reused here before). A contract has at most one
+  Commission, so `commission == null` now starts the panel directly in
+  editing mode (no "Chưa có Commission" prompt state) — same idea as the
+  "Thông tin" tab starting in edit mode for a brand-new Contract; `Hủy`
+  while creating just clears the draft since there's no view state to
+  revert to.
+- Verified via ADR-0004 (`docs/adr/0004-...`) that inlining
+  `CommissionFields`' `Selector` field here is safe: the ADR's stacking
+  bug only triggers when a `Selector`-bearing `*FormDialog` is rendered
+  inside `renderExpanded` (an ancestor `<table>` breaks the portal
+  target); `ContractExpandedDetails`'s Commission tab lives inside
+  `ContractFormDialog`'s own `<dialog>`, never inside a `renderExpanded`
+  table row — `harness/tests/selector-dialog-stacking.test.cjs` (part of
+  `pnpm run test:harness`) confirms no `*FormDialog` ended up nested in a
+  `renderExpanded` callback.
+- Generalized `contract-form-dialog.jsx`'s footer: renamed
+  `privateInfoEditController` → `activeTabEditController` (now covers
+  either tab, driven by whichever panel matches `activeTab`, built once in
+  `contracts-list.jsx`) instead of a privateInfo-only branch duplicated a
+  second time for commission. `contract-expanded-details.jsx` dropped the
+  now-dead `commissionAnnexesQuery`/`commissionGrandTotal` computation
+  (`CommissionFields` already fetches/rolls that up itself off
+  `commission.contractId`). Deleted `contract-commission-tab.jsx` (fully
+  replaced); `commission-form-dialog.jsx` stays — still used standalone by
+  `commissions-list.jsx`, out of scope here. `contracts-list.jsx` dropped
+  the `commissionDialog` state/render block for this call site.
+- `pnpm lint`/`pnpm structure`/`pnpm test` (136) clean; `pnpm typecheck`
+  unchanged (same 3 pre-existing failures); `pnpm run test:harness` (6,
+  including the ADR-0004 stacking check) all pass. Live-verified in the
+  browser: Commission tab on a contract with no Commission yet renders the
+  create form directly (no dialog jump), Hủy clears the draft and stays
+  editable, switching to "Thông tin private" and back to "Thông tin" both
+  still behave correctly (each tab's footer swaps cleanly, no shared-state
+  bleed between the two controller-driven tabs).
+- No commit made — user has not asked for one yet.
+
+### Bug fix: Commission tab opened editable without clicking "Sửa Commission" (same day)
+
+- User-reported bug: opening the Contract dialog's Commission tab on a
+  contract that already HAS a Commission still showed the fields
+  editable, before ever clicking "Sửa Commission".
+- Root cause: `useCommissionQuery` is loading when
+  `ContractCommissionPanel` first mounts (`contract-expanded-details.jsx`
+  rendered it unconditionally, not gated on load state) — during that
+  window `commission` is `null` (same value as "confirmed none exists"),
+  so `ContractCommissionPanel`'s `useState(!commission)` locks in
+  `isEditing = true` at mount. Once the query resolves and a real
+  Commission arrives, `useState`'s initial value never re-runs, so the
+  panel stayed stuck in editing mode even though a Commission existed.
+  (`ContractPrivateInfoPanel` never had this bug: its tab is gated on
+  `privateInfo &&` — private info is never `null` once loaded, so there's
+  no "loading looks like empty" ambiguity there.)
+- Fix (`contract-expanded-details.jsx`): only mount
+  `ContractCommissionPanel` once `commissionQuery.isLoading` is false (a
+  plain "Đang tải Commission..." `Text` shows during the brief loading
+  window instead); added `key={commission?.id ?? 'create'}` so a
+  null→real-commission transition (e.g. right after creating one) forces
+  a fresh mount with the correct initial `isEditing` too, rather than
+  reusing state computed for the old identity.
+- `pnpm lint`/`pnpm typecheck` (no new errors)/`pnpm structure`/`pnpm
+  test` (136) all clean. Live-verified against the real dev BE-kt-xnk
+  stack on the contract's actual seeded Commission (Công ty TNHH Môi Giới
+  Thương Mại Quốc Tế, 3,500 USD): tab now opens read-only as expected,
+  "Sửa Commission" still toggles editing correctly, "Hủy" still reverts
+  cleanly.
+- No commit made — user has not asked for one yet.

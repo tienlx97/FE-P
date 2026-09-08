@@ -23,12 +23,11 @@ import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import { labelForShipmentStatus } from '../config/shipment-status.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
-import { useCommissionAnnexesQuery } from '../hooks/use-commission-annexes-query.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractPrivateInfoQuery } from '../hooks/use-contract-private-info-query.js';
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
-import { ContractCommissionTab } from './contract-commission-tab.jsx';
+import { ContractCommissionPanel } from './contract-commission-panel.jsx';
 import { ContractPrivateInfoPanel } from './contract-private-info-panel.jsx';
 import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 
@@ -42,13 +41,20 @@ function orDash(value) {
 }
 
 /**
- * All dialogs opened from within this component's own tabs (Shipment,
- * Payment Schedule, Annex, Commission, VGM) are deliberately owned
- * and rendered by `ContractsList`, not here — see the "Selector popover
- * stacking" note above `ContractsList` for why. This component only
- * forwards trigger callbacks (`onAddShipment`, `onEditShipment`, ...) up to
- * whichever entity the click was about; it never opens a `*FormDialog`
- * itself.
+ * Dialogs opened from within this component's own tabs for entities with
+ * their own list-level `*FormDialog` (Shipment, Payment Schedule, Annex,
+ * VGM) are deliberately owned and rendered by `ContractsList`, not here —
+ * see the "Selector popover stacking" note above `ContractsList` (ADR-0004)
+ * for why. This component only forwards trigger callbacks
+ * (`onAddShipment`, `onEditShipment`, ...) up to whichever entity the
+ * click was about for those.
+ * "Thông tin private" and "Commission" are the exception: both edit in
+ * place via `ContractPrivateInfoPanel`/`ContractCommissionPanel` — no
+ * `*FormDialog`, no ADR-0004 concern (neither panel is ever reached
+ * through a `renderExpanded` table row, only through this component's own
+ * tabs, which live inside `ContractFormDialog`'s own `<dialog>`, not a
+ * `<table>`) — driven by `ContractFormDialog`'s footer via the forwarded
+ * `*PanelRef`/`on*StatusChange` pairs below.
  * @param {object} props
  * @param {import('../types/index.js').Contract} props.contract
  * @param {Map<string, import('../types/index.js').Customer>} props.customersById
@@ -60,7 +66,6 @@ function orDash(value) {
  * @param {(shipment: import('../types/index.js').Shipment) => void} props.onEditShipment
  * @param {(payload: { contractId: string, shipmentId: string }) => void} props.onAddVgm
  * @param {(payload: { contractId: string, shipmentId: string, vgm: import('../types/index.js').ShipmentVgm }) => void} props.onEditVgm
- * @param {(payload: { contractId: string, currency: string, commission: import('../types/index.js').Commission | null }) => void} props.onOpenCommission
  * @param {() => void} props.onAddCommissionAnnex
  * @param {(annex: import('../types/index.js').CommissionAnnex) => void} props.onEditCommissionAnnex
  * @param {(commission: import('../types/index.js').Commission) => void} props.onAddCommissionPayment
@@ -69,6 +74,9 @@ function orDash(value) {
  *   footer (`contract-form-dialog.jsx`) drive editing for this tab instead of
  *   a second, tab-local edit button (see that panel's own doc comment).
  * @param {(status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string }) => void} [props.onPrivateInfoStatusChange]
+ * @param {import('react').Ref<{ startEditing: () => void, cancelEditing: () => void, submit: () => void }>} [props.commissionPanelRef]
+ *   Same idea as `privateInfoPanelRef`, for `ContractCommissionPanel`.
+ * @param {(status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string }) => void} [props.onCommissionStatusChange]
  */
 export function ContractExpandedDetails({
   contract,
@@ -81,12 +89,13 @@ export function ContractExpandedDetails({
   onEditShipment,
   onAddVgm,
   onEditVgm,
-  onOpenCommission,
   onAddCommissionAnnex,
   onEditCommissionAnnex,
   onAddCommissionPayment,
   privateInfoPanelRef,
   onPrivateInfoStatusChange,
+  commissionPanelRef,
+  onCommissionStatusChange,
 }) {
   const [expandedShipmentId, setExpandedShipmentId] = useState(
     /** @type {string | null} */ (null),
@@ -290,32 +299,16 @@ export function ContractExpandedDetails({
     ? privateInfoQuery.data.privateInfo
     : null;
 
+  // `CommissionFields` (via `ContractCommissionPanel`) fetches its own
+  // annexes/grand-total off `commission.contractId` — no need to duplicate
+  // that query/rollup here the way the old read-only `ContractCommissionTab`
+  // required.
   const commissionQuery = useCommissionQuery(contract.id);
   const commissionResult = commissionQuery.data;
   const commission =
     commissionResult?.success && commissionResult.exists
       ? commissionResult.commission
       : null;
-  const hasCommission = commission !== null;
-
-  const commissionAnnexesQuery = useCommissionAnnexesQuery(
-    hasCommission ? contract.id : undefined,
-  );
-  const commissionAnnexes = commissionAnnexesQuery.data?.success
-    ? commissionAnnexesQuery.data.annexes
-    : [];
-
-  // "Tổng cộng" = the commission's own `value` plus every annex's `amount`,
-  // signed by its `type` — same rollup as `commissions-list.jsx`'s
-  // `grandTotal`.
-  const commissionAnnexesTotal = commissionAnnexes.reduce((total, annex) => {
-    if (annex.type === 'AmountIncrease') return total + annex.amount;
-    if (annex.type === 'AmountDecrease') return total - annex.amount;
-    return total;
-  }, 0);
-  const commissionGrandTotal = commission
-    ? commission.value + commissionAnnexesTotal
-    : 0;
 
   return (
     <VStack gap={4} hAlign="stretch">
@@ -395,50 +388,37 @@ export function ContractExpandedDetails({
         </VStack>
       )}
 
-      {activeTab === 'commission' && !commission && (
-        <VStack gap={4} hAlign="stretch" vAlign="center">
-          <Text color="secondary">Hợp đồng chưa có Commission</Text>
-          <Button
-            label="Tạo Commission"
-            variant="secondary"
-            size="sm"
-            icon={<Icon icon={Plus} />}
-            onClick={() =>
-              onOpenCommission({
-                contractId: contract.id,
-                currency: contract.currency,
-                commission: null,
-              })
+      {activeTab === 'commission' &&
+        (commissionQuery.isLoading ? (
+          <Text color="secondary">Đang tải Commission...</Text>
+        ) : (
+          <ContractCommissionPanel
+            // `commission` is `null` both "still loading" and "confirmed
+            // none exists" — gating the mount above on `isLoading` (not
+            // just `commission`) means the panel's own `useState(!commission)`
+            // (initial editing mode) only ever runs once the real value is
+            // known, instead of transiently seeing `null` and getting
+            // stuck in editing mode even once a real Commission loads in.
+            key={commission?.id ?? 'create'}
+            controllerRef={commissionPanelRef}
+            contractId={contract.id}
+            currency={contract.currency}
+            commission={
+              commission
+                ? {
+                    ...commission,
+                    contractNumber: contract.contractNumber,
+                    projectName: contract.projectName,
+                  }
+                : null
             }
+            onAddAnnex={onAddCommissionAnnex}
+            onEditAnnex={onEditCommissionAnnex}
+            onAddPayment={onAddCommissionPayment}
+            hideOwnActions
+            onStatusChange={onCommissionStatusChange}
           />
-        </VStack>
-      )}
-
-      {activeTab === 'commission' && commission && (
-        <VStack gap={4} hAlign="stretch">
-          <Button
-            label="Sửa Commission"
-            variant="secondary"
-            onClick={() =>
-              onOpenCommission({
-                contractId: contract.id,
-                currency: contract.currency,
-                commission,
-              })
-            }
-          />
-          <ContractCommissionTab
-            contract={contract}
-            customersById={customersById}
-            onAddCommissionAnnex={onAddCommissionAnnex}
-            onEditCommissionAnnex={onEditCommissionAnnex}
-            onAddCommissionPayment={onAddCommissionPayment}
-            commission={commission}
-            commissionAnnexes={commissionAnnexes}
-            commissionGrandTotal={commissionGrandTotal}
-          />
-        </VStack>
-      )}
+        ))}
 
       {activeTab === 'privateInfo' && privateInfo && (
         <ContractPrivateInfoPanel

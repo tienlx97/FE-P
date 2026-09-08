@@ -50,18 +50,24 @@ const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 /**
  * One fullscreen workspace for creation, inspection and editing. Xem and
  * Sửa share the same "Thông tin" tab layout — only `isReadOnly` differs per
- * field (mirrors `CommissionFormDialog`/`ShipmentFormDialog`); Lịch sử
- * thanh toán/Shipment/Commission have no edit mode of their own in this
- * dialog — each is edited via its own `*FormDialog` — so they always
- * render `children` regardless of `isEditing`. "Thông tin private" only
- * renders at all for a caller with `logistics:secret` (unlike every other
- * tab, not role/department-derived — see
- * `openspec/changes/add-contract-private-info/`, BE-kt-xnk); unlike those
- * three, its own edit mode *is* driven by this dialog's footer —
- * `privateInfoEditController` bridges to `ContractPrivateInfoPanel`'s
- * imperative ref/status (see that component's doc comment for why: it
- * has no separate `*FormDialog`, and a second tab-local edit button next
- * to "Sửa hợp đồng" was redundant).
+ * field (mirrors `CommissionFields`/`ShipmentFormDialog`); Lịch sử thanh
+ * toán/Shipment have no edit mode of their own in this dialog — each is
+ * edited via its own `*FormDialog` — so they always render `children`
+ * regardless of `isEditing`. "Thông tin private" only renders at all for a
+ * caller with `logistics:secret` (unlike every other tab, not
+ * role/department-derived — see
+ * `openspec/changes/add-contract-private-info/`, BE-kt-xnk).
+ *
+ * "Thông tin private" and "Commission" are the two tabs whose own edit
+ * mode *is* driven by this dialog's footer instead —
+ * `activeTabEditController` (built by the caller from whichever panel
+ * matches `activeTab`) bridges to `ContractPrivateInfoPanel`/
+ * `ContractCommissionPanel`'s imperative ref/status (see either
+ * component's doc comment for why: neither has a separate `*FormDialog`,
+ * and a second tab-local edit button next to "Sửa hợp đồng" was
+ * redundant/caused an extra dialog-open jump). The caller passes `null`
+ * for any other tab, so the footer falls back to the "Thông tin" tab's
+ * own `isEditing`.
  * @param {{
  *   isOpen: boolean,
  *   initialMode?: 'view' | 'edit',
@@ -72,7 +78,7 @@ const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
  *   onActiveTabChange: (tab: 'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo') => void,
  *   onAddAnnex?: () => void,
  *   onEditAnnex?: (annex: import('../types/index.js').ContractAnnex) => void,
- *   privateInfoEditController?: {
+ *   activeTabEditController?: {
  *     status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null,
  *     startEditing: () => void,
  *     cancelEditing: () => void,
@@ -91,7 +97,7 @@ export function ContractFormDialog({
   onActiveTabChange,
   onAddAnnex,
   onEditAnnex,
-  privateInfoEditController = null,
+  activeTabEditController = null,
   children,
 }) {
   const [isEditing, setIsEditing] = useState(
@@ -125,10 +131,9 @@ export function ContractFormDialog({
   const hasLogisticsSecret = useSessionPermissions().includes(
     LOGISTICS_SECRET_PERMISSION,
   );
-  const isPrivateInfoTab =
-    activeTab === 'privateInfo' && privateInfoEditController != null;
-  const privateInfoStatus = privateInfoEditController?.status ?? null;
-  const privateInfoIsEditing = privateInfoStatus?.isEditing ?? false;
+  const hasSecondaryTabController = activeTabEditController != null;
+  const secondaryTabStatus = activeTabEditController?.status ?? null;
+  const secondaryTabIsEditing = secondaryTabStatus?.isEditing ?? false;
 
   /** @param {'close' | 'cancel'} action */
   function finish(action) {
@@ -299,36 +304,39 @@ export function ContractFormDialog({
           }
           footer={
             <LayoutFooter>
-              {isPrivateInfoTab ? (
+              {hasSecondaryTabController ? (
                 <HStack hAlign="between" gap={2}>
                   <Text color="secondary" xstyle={styles.hint}>
-                    {privateInfoIsEditing
-                      ? 'Có thay đổi Thông tin private chưa lưu'
-                      : 'Thông tin private'}
+                    {secondaryTabIsEditing
+                      ? `Có thay đổi ${TAB_LABELS[activeTab]} chưa lưu`
+                      : TAB_LABELS[activeTab]}
                   </Text>
                   <HStack gap={2}>
                     <Button
                       width={80}
-                      label={privateInfoIsEditing ? 'Hủy' : 'Đóng'}
+                      label={secondaryTabIsEditing ? 'Hủy' : 'Đóng'}
                       variant="secondary"
-                      isDisabled={privateInfoStatus?.isSubmitting}
+                      isDisabled={secondaryTabStatus?.isSubmitting}
                       onClick={() =>
-                        privateInfoIsEditing
-                          ? privateInfoEditController.cancelEditing()
+                        secondaryTabIsEditing
+                          ? activeTabEditController.cancelEditing()
                           : requestExit('close')
                       }
                     />
                     <Button
-                      key="private-info-action"
+                      key="secondary-tab-action"
                       width={200}
                       type="button"
-                      label={privateInfoStatus?.submitLabel ?? 'Sửa Thông tin private'}
+                      label={
+                        secondaryTabStatus?.submitLabel ??
+                        `Sửa ${TAB_LABELS[activeTab]}`
+                      }
                       variant="primary"
-                      isLoading={privateInfoStatus?.isSubmitting}
+                      isLoading={secondaryTabStatus?.isSubmitting}
                       onClick={() =>
-                        privateInfoIsEditing
-                          ? privateInfoEditController.submit()
-                          : privateInfoEditController.startEditing()
+                        secondaryTabIsEditing
+                          ? activeTabEditController.submit()
+                          : activeTabEditController.startEditing()
                       }
                     />
                   </HStack>
