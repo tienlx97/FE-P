@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 
+import { generateRowKey } from '@/shared/config/generate-row-key.js';
+
 /** @returns {import('../types/index.js').ExtraFieldRow} */
 function emptyRow() {
-  return { rowKey: crypto.randomUUID(), key: '', value: '' };
+  return { rowKey: generateRowKey(), key: '', value: '' };
 }
 
 /**

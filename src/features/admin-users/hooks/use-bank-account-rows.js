@@ -2,13 +2,15 @@
 
 import { useState } from 'react';
 
+import { generateRowKey } from '@/shared/config/generate-row-key.js';
+
 /**
  * @param {boolean} isPrimary
  * @returns {import('../types/index.js').BankAccountRow}
  */
 function emptyRow(isPrimary) {
   return {
-    rowKey: crypto.randomUUID(),
+    rowKey: generateRowKey(),
     bankAccountId: null,
     vietnamBankId: '',
     accountNumber: '',

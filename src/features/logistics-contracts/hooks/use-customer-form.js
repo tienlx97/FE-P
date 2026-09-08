@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { generateRowKey } from '@/shared/config/generate-row-key.js';
+
 import { customerSchema } from '../config/customer-schema.js';
 import {
   useCreateCustomerMutation,
@@ -32,7 +34,7 @@ function valuesFromCustomer(customer) {
 /** @param {import('../types/index.js').Customer} customer @returns {import('../types/index.js').ExtraFieldRow[]} */
 function extraFieldRowsFromCustomer(customer) {
   return customer.extraFields.map((field) => ({
-    rowKey: crypto.randomUUID(),
+    rowKey: generateRowKey(),
     key: field.key,
     value: field.value,
   }));

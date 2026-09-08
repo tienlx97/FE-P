@@ -12,6 +12,8 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Trash2 } from 'lucide-react';
 
+import { generateRowKey } from '@/shared/config/generate-row-key.js';
+
 /** @typedef {'string' | 'enum' | 'number' | 'date'} AdvancedFilterFieldType */
 
 /**
@@ -83,11 +85,11 @@ function defaultOperatorFor(type) {
  * for that: Fast Refresh re-executes this module (resetting the counter)
  * without remounting the component holding already-generated ids, so a
  * freshly added condition could collide with one from before the reload —
- * `crypto.randomUUID()` (already the convention for row keys elsewhere in
+ * `generateRowKey()` (already the convention for row keys elsewhere in
  * this codebase, e.g. `use-shipment-cost-line-rows.js`) has no such
  * lifetime tied to the module. */
 function makeConditionId() {
-  return `condition-${crypto.randomUUID()}`;
+  return `condition-${generateRowKey()}`;
 }
 
 /**

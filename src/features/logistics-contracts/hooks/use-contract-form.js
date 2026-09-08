@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { generateRowKey } from '@/shared/config/generate-row-key.js';
+
 import { contractSchema } from '../config/contract-schema.js';
 import { CONTRACT_STATUSES } from '../config/contract-status.js';
 import { CONTRACT_TYPES } from '../config/contract-types.js';
@@ -216,14 +218,14 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   );
   const sellerExtraFieldRows = useExtraFieldRows(
     (contract?.seller.extraFields ?? []).map((field) => ({
-      rowKey: crypto.randomUUID(),
+      rowKey: generateRowKey(),
       key: field.key,
       value: field.value,
     })),
   );
   const buyerExtraFieldRows = useExtraFieldRows(
     (contract?.buyer.extraFields ?? []).map((field) => ({
-      rowKey: crypto.randomUUID(),
+      rowKey: generateRowKey(),
       key: field.key,
       value: field.value,
     })),
@@ -306,7 +308,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     }));
     sellerExtraFieldRows.setRows(
       (seller?.extraFields ?? []).map((field) => ({
-        rowKey: crypto.randomUUID(),
+        rowKey: generateRowKey(),
         key: field.key,
         value: field.value,
       })),
@@ -359,7 +361,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     }));
     buyerExtraFieldRows.setRows(
       (customer?.extraFields ?? []).map((field) => ({
-        rowKey: crypto.randomUUID(),
+        rowKey: generateRowKey(),
         key: field.key,
         value: field.value,
       })),

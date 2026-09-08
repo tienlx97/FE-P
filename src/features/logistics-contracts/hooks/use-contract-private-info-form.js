@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { generateRowKey } from '@/shared/config/generate-row-key.js';
+
 import { contractPrivateInfoSchema } from '../config/contract-private-info-schema.js';
 import { useUpsertContractPrivateInfoMutation } from './use-contract-private-info-query.js';
 import { useExtraFieldRows } from './use-extra-field-rows.js';
@@ -77,7 +79,7 @@ export function useContractPrivateInfoForm({
 
   const extraFieldRows = useExtraFieldRows(
     (privateInfo?.extraFields ?? []).map((field) => ({
-      rowKey: crypto.randomUUID(),
+      rowKey: generateRowKey(),
       key: field.key,
       value: field.value,
     })),
@@ -90,7 +92,7 @@ export function useContractPrivateInfoForm({
     setSubmitError('');
     extraFieldRows.setRows(
       (privateInfo?.extraFields ?? []).map((field) => ({
-        rowKey: crypto.randomUUID(),
+        rowKey: generateRowKey(),
         key: field.key,
         value: field.value,
       })),

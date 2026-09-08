@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 
+import { generateRowKey } from '@/shared/config/generate-row-key.js';
+
 /** @returns {import('../types/index.js').ShipmentCostLineRow} */
 function emptyRow() {
   return {
-    rowKey: crypto.randomUUID(),
+    rowKey: generateRowKey(),
     costCategoryId: '',
     name: '',
     amount: undefined,
