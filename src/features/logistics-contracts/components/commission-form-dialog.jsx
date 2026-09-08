@@ -86,6 +86,7 @@ export function CommissionFormDialog({
         values={form.values}
         setField={form.setField}
         fieldStatuses={form.fieldStatuses}
+        isCheckingCode={form.isCheckingCode}
         customers={form.customers}
         currency={currency}
         paymentTermRows={form.paymentTermRows}

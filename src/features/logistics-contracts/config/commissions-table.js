@@ -42,11 +42,9 @@ export const DEFAULT_COLUMN_KEYS = [
   'actions',
 ];
 
-// `code` (computed from Year+Number) has no backend search field —
-// excluded here, still searchable via the quick-search box above
-// (`SEARCH_FIELD_DEFS`, client-side over the loaded page).
 /** @satisfies {ReadonlyArray<import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterFieldDef>} */
 export const FILTER_FIELD_DEFS = [
+  { key: 'code', label: 'Mã', type: 'string' },
   { key: 'contractNumber', label: 'Số hợp đồng', type: 'string' },
   { key: 'projectName', label: 'Dự án', type: 'string' },
   { key: 'partyCustomerName', label: 'Bên nhận hoa hồng', type: 'string' },
@@ -84,8 +82,6 @@ export const skeletonRows = Array.from(
   (_, index) => ({
     id: `skeleton-${index}`,
     contractId: '',
-    year: 0,
-    number: 0,
     code: '',
     signedDate: '',
     partyCustomerId: '',

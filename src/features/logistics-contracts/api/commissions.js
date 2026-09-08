@@ -4,6 +4,7 @@ const GENERIC_LIST_ERROR = 'Không thể tải danh sách Commission';
 const GENERIC_GET_ERROR = 'Không thể tải Commission';
 const GENERIC_CREATE_ERROR = 'Không thể tạo Commission';
 const GENERIC_UPDATE_ERROR = 'Không thể cập nhật Commission';
+const GENERIC_EXISTS_ERROR = 'Không thể kiểm tra trùng mã Commission';
 
 /**
  * System-wide list across every contract (unlike the other functions here,
@@ -112,6 +113,7 @@ export async function createCommission(
     method: 'POST',
     errorMessage: GENERIC_CREATE_ERROR,
     body: {
+      Code: values.code,
       SignedDate: values.signedDate,
       PartyCustomerId: values.partyCustomerId,
       Value: values.value,
@@ -153,6 +155,7 @@ export async function updateCommission(
     method: 'PUT',
     errorMessage: GENERIC_UPDATE_ERROR,
     body: {
+      Code: values.code,
       SignedDate: values.signedDate,
       PartyCustomerId: values.partyCustomerId,
       Value: values.value,
@@ -175,4 +178,35 @@ export async function updateCommission(
   }
 
   return { success: true, commission: result.data };
+}
+
+/**
+ * Real-time duplicate check for the "Mã" field — backs the Commission
+ * form's live validation, separate from the `409 Conflict` the backend
+ * still returns on submit (this is a UX aid, not the source of truth).
+ * Not scoped under a contract — a code must be unique across every
+ * commission, not just within one contract's own (at most one) commission.
+ * `excludeCommissionId` lets the edit form check "does any *other*
+ * commission use this code" without the commission colliding with its own
+ * current code (see `GET /commissions/exists`, `docs/api/Commissions.md`,
+ * BE-kt-xnk).
+ * @param {{ code: string, excludeCommissionId?: string | null }} params
+ * @returns {Promise<{ success: true, exists: boolean } | { success: false, message: string, conflict: boolean }>}
+ */
+export async function checkCommissionCodeExists({ code, excludeCommissionId }) {
+  const params = new URLSearchParams({ code });
+  if (excludeCommissionId) {
+    params.set('excludeCommissionId', excludeCommissionId);
+  }
+
+  const result = await apiRequest(
+    `/api/v1/commissions/exists?${params.toString()}`,
+    { errorMessage: GENERIC_EXISTS_ERROR },
+  );
+
+  if (!result.success) {
+    return { success: false, message: result.message, conflict: result.status === 409 };
+  }
+
+  return { success: true, exists: Boolean(result.data?.exists) };
 }

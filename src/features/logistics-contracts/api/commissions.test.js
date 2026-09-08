@@ -14,6 +14,7 @@ import {
 } from './commissions.js';
 
 const FORM_VALUES = {
+  code: '26CM01',
   signedDate: '2026-09-04',
   partyCustomerId: 'customer-1',
   value: 1250,

@@ -20,10 +20,12 @@ export const commissionPaymentSchema = z.object({
 
 /**
  * Mirrors the backend's `CreateCommissionCommandValidator`/
- * `UpdateCommissionCommandValidator` (BE-kt-xnk). `year`/`number`/
- * `code` are backend-assigned, never part of this form.
+ * `UpdateCommissionCommandValidator` (BE-kt-xnk). `code` is user-entered,
+ * like `Contract.contractNumber` — the backend validates uniqueness on
+ * submit (409 on collision), not this schema.
  */
 export const commissionSchema = z.object({
+  code: z.string().trim().min(1, 'Vui lòng nhập mã Commission').max(100, 'Tối đa 100 ký tự'),
   signedDate: z.string().trim().min(1, 'Vui lòng chọn ngày ký'),
   partyCustomerId: z.string().trim().min(1, 'Vui lòng chọn bên nhận hoa hồng'),
   value: z

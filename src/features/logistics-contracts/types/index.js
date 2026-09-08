@@ -195,18 +195,15 @@ export {};
 
 /**
  * Commission commission with a third party ("hoa hồng") for one specific
- * contract — at most one per contract, optional. `year`/`number`/`code`
- * are backend-assigned (BE-kt-xnk): `code` is `{year%100}CM{number}`
- * (e.g. "26CM01"), a system-wide sequence scoped by the year it was
- * created in (not `signedDate`). Uses the parent contract's `currency` —
- * no currency of its own. `sellerSigned` tracks whether the *contract's*
- * own Seller signed (not a separate snapshot); `partySigned` tracks
- * `partyCustomerId` (the commission recipient).
+ * contract — at most one per contract, optional. `code` is user-entered
+ * (BE-kt-xnk), same as {@link Contract}'s `contractNumber` — required,
+ * unique system-wide, editable after creation. Uses the parent contract's
+ * `currency` — no currency of its own. `sellerSigned` tracks whether the
+ * *contract's* own Seller signed (not a separate snapshot); `partySigned`
+ * tracks `partyCustomerId` (the commission recipient).
  * @typedef {Object} Commission
  * @property {string} id
  * @property {string} contractId
- * @property {number} year
- * @property {number} number
  * @property {string} code
  * @property {string} signedDate - ISO date (YYYY-MM-DD)
  * @property {string} partyCustomerId - FK into the {@link Customer} catalog — the commission recipient
@@ -219,6 +216,7 @@ export {};
 
 /**
  * @typedef {Object} CommissionFormValues
+ * @property {string} code
  * @property {string} signedDate - ISO date (YYYY-MM-DD)
  * @property {string} partyCustomerId
  * @property {number | undefined} value

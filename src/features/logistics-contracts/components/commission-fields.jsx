@@ -14,6 +14,7 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { MetadataList } from '@astryxdesign/core/MetadataList';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
+import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Pencil, Plus } from 'lucide-react';
@@ -73,11 +74,16 @@ function Section({ title, children }) {
  * `Commission` field-set — single layout shared by both the Xem and Sửa
  * modes of `CommissionFormDialog`; `isReadOnly` toggles each field's
  * interactivity instead of switching to a separate read-only component.
- * `year`/`number`/`code` are backend-assigned and never editable, so they
- * keep a metadata slot with a creation placeholder. Uses the parent
- * contract's `currency`, so there is no currency field here. "Phụ lục" and
- * "Tổng cộng" are informational and have their own actions independent of
- * this form, so they render in both modes whenever `commission` exists.
+ * `code` is user-entered, like `Contract.contractNumber` — a live
+ * debounced duplicate check (`isCheckingCode`, wired through
+ * `useCommissionCodeExistsQuery`) warns while typing, same UX as
+ * `contractNumber`'s own field; the backend still validates uniqueness on
+ * submit as the source of truth (409 surfaces via the dialog's generic
+ * `submitError` banner, same as other server-side conflicts). Uses the
+ * parent contract's `currency`, so there is no currency field here. "Phụ
+ * lục" and "Tổng cộng" are informational and have their own actions
+ * independent of this form, so they render in both modes whenever
+ * `commission` exists.
  * @param {{
  *   commission?: (import('../types/index.js').Commission & {
  *     code?: string, contractNumber?: string, projectName?: string,
@@ -85,7 +91,8 @@ function Section({ title, children }) {
  *   isReadOnly?: boolean,
  *   values: import('../types/index.js').CommissionFormValues,
  *   setField: <K extends keyof import('../types/index.js').CommissionFormValues>(field: K, value: import('../types/index.js').CommissionFormValues[K]) => void,
- *   fieldStatuses: Record<string, { type: 'error', message: string } | undefined>,
+ *   fieldStatuses: Record<string, { type: 'error' | 'success', message: string } | undefined>,
+ *   isCheckingCode?: boolean,
  *   customers: import('../types/index.js').Customer[],
  *   currency: string,
  *   paymentTermRows: ReturnType<typeof import('../hooks/use-payment-term-rows.js').usePaymentTermRows>,
@@ -101,6 +108,7 @@ export function CommissionFields({
   values,
   setField,
   fieldStatuses,
+  isCheckingCode = false,
   customers,
   currency,
   paymentTermRows,
@@ -130,9 +138,6 @@ export function CommissionFields({
   return (
     <VStack gap={5} hAlign="stretch">
       <MetadataList columns={isNarrow ? 2 : 3} label={{ position: 'top' }}>
-        <MetadataListItem label="Mã">
-          {commission ? orDash(commission.code) : 'Tự động sau khi tạo'}
-        </MetadataListItem>
         <MetadataListItem label="Số hợp đồng">
           {orDash(commission?.contractNumber)}
         </MetadataListItem>
@@ -142,6 +147,17 @@ export function CommissionFields({
       </MetadataList>
 
       <Grid columns={isNarrow ? 1 : 2} gap={3}>
+        <TextInput
+          isDisabled={isReadOnly}
+          label="Mã Commission"
+          value={values.code}
+          onChange={(value) => setField('code', value)}
+          isRequired
+          isLoading={isCheckingCode}
+          status={fieldStatuses.code}
+          statusVariant="tooltip"
+        />
+
         <DateInput
           format={formatDateInputValue}
           isDisabled={isReadOnly}

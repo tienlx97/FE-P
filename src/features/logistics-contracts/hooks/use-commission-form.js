@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { commissionSchema } from '../config/commission-schema.js';
+import { useCommissionCodeExistsQuery } from './use-commission-code-exists-query.js';
 import {
   useCreateCommissionMutation,
   useUpdateCommissionMutation,
@@ -16,6 +17,7 @@ const TODAY_ISO = new Date().toISOString().slice(0, 10);
 /** @returns {import('../types/index.js').CommissionFormValues} */
 function emptyValues() {
   return {
+    code: '',
     signedDate: TODAY_ISO,
     partyCustomerId: '',
     value: undefined,
@@ -27,6 +29,7 @@ function emptyValues() {
 /** @param {import('../types/index.js').Commission} commission */
 function valuesFromCommission(commission) {
   return {
+    code: commission.code,
     signedDate: commission.signedDate,
     partyCustomerId: commission.partyCustomerId,
     value: commission.value,
@@ -113,6 +116,11 @@ export function useCommissionForm({
   const createMutation = useCreateCommissionMutation(contractId);
   const updateMutation = useUpdateCommissionMutation(contractId);
 
+  const commissionCodeExistsQuery = useCommissionCodeExistsQuery({
+    code: values.code,
+    excludeCommissionId: commission?.id,
+  });
+
   /**
    * @template {keyof import('../types/index.js').CommissionFormValues} K
    * @param {K} field
@@ -177,6 +185,25 @@ export function useCommissionForm({
     onSuccess?.(mutationResult.commission);
   }
 
+  // Same idiom as `useContractForm`'s `contractNumberDuplicateStatus`: only
+  // shown once the debounced check has actually completed, so the user
+  // isn't left guessing whether anything happened.
+  /** @type {{ type: 'error' | 'success', message: string } | undefined} */
+  const codeDuplicateStatus =
+    !commissionCodeExistsQuery.isChecking &&
+    commissionCodeExistsQuery.result?.success
+      ? commissionCodeExistsQuery.result.exists
+        ? { type: 'error', message: 'Mã Commission này đã được sử dụng' }
+        : { type: 'success', message: 'Mã Commission chưa được sử dụng' }
+      : undefined;
+
+  const baseFieldStatuses = Object.fromEntries(
+    Object.entries(fieldErrors).map(([key, message]) => [
+      key,
+      fieldStatus(message),
+    ]),
+  );
+
   return {
     reset,
     mode: isEdit ? 'edit' : 'create',
@@ -184,12 +211,11 @@ export function useCommissionForm({
     submitLabel: isEdit ? 'Lưu thay đổi' : 'Tạo Commission',
     values,
     setField,
-    fieldStatuses: Object.fromEntries(
-      Object.entries(fieldErrors).map(([key, message]) => [
-        key,
-        fieldStatus(message),
-      ]),
-    ),
+    fieldStatuses: {
+      ...baseFieldStatuses,
+      code: baseFieldStatuses.code ?? codeDuplicateStatus,
+    },
+    isCheckingCode: commissionCodeExistsQuery.isChecking,
     customers: customersQuery.data?.success
       ? customersQuery.data.customers
       : [],
