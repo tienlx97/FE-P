@@ -1,5 +1,7 @@
 'use client';
 
+import { useToast } from '@astryxdesign/core/Toast';
+
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { usePaymentScheduleForm } from '../hooks/use-payment-schedule-form.js';
@@ -25,10 +27,14 @@ export function PaymentScheduleFormDialog({
   schedule = null,
   onSuccess,
 }) {
+  const toast = useToast();
   const form = usePaymentScheduleForm({
     contractId,
     schedule,
     onSuccess: (savedSchedule) => {
+      toast({
+        body: schedule ? 'Đã cập nhật đợt thanh toán.' : 'Đã thêm đợt thanh toán.',
+      });
       onOpenChange(false);
       onSuccess?.(savedSchedule);
     },

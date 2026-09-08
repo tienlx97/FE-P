@@ -1,5 +1,7 @@
 'use client';
 
+import { useToast } from '@astryxdesign/core/Toast';
+
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { useCommissionPaymentQuickAddForm } from '../hooks/use-commission-payment-quick-add-form.js';
@@ -28,10 +30,12 @@ export function CommissionPaymentQuickAddDialog({
   currency,
   onSuccess,
 }) {
+  const toast = useToast();
   const form = useCommissionPaymentQuickAddForm({
     contractId,
     commission,
     onSuccess: (saved) => {
+      toast({ body: 'Đã thêm lần thanh toán.' });
       onOpenChange(false);
       onSuccess?.(saved);
     },

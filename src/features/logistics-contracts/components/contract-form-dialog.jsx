@@ -8,6 +8,7 @@ import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
 import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
+import { useToast } from '@astryxdesign/core/Toast';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useId, useState } from 'react';
@@ -87,7 +88,14 @@ export function ContractFormDialog({
   const [discardAction, setDiscardAction] = useState(
     /** @type {'close' | 'cancel' | null} */ (null),
   );
-  const form = useContractForm({ contract, onSuccess });
+  const toast = useToast();
+  const form = useContractForm({
+    contract,
+    onSuccess: (saved) => {
+      toast({ body: contract ? 'Đã cập nhật hợp đồng.' : 'Đã tạo hợp đồng.' });
+      onSuccess(saved);
+    },
+  });
   const {
     submitLabel,
     values,

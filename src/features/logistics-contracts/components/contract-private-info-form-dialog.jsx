@@ -1,5 +1,7 @@
 'use client';
 
+import { useToast } from '@astryxdesign/core/Toast';
+
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { useContractPrivateInfoForm } from '../hooks/use-contract-private-info-form.js';
@@ -30,10 +32,12 @@ export function ContractPrivateInfoFormDialog({
   privateInfo = null,
   onSuccess,
 }) {
+  const toast = useToast();
   const form = useContractPrivateInfoForm({
     contractId,
     privateInfo,
     onSuccess: (saved) => {
+      toast({ body: 'Đã cập nhật thông tin private.' });
       onOpenChange(false);
       onSuccess?.(saved);
     },

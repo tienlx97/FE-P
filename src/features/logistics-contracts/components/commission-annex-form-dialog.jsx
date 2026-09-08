@@ -1,5 +1,7 @@
 'use client';
 
+import { useToast } from '@astryxdesign/core/Toast';
+
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { useCommissionAnnexForm } from '../hooks/use-commission-annex-form.js';
@@ -25,10 +27,12 @@ export function CommissionAnnexFormDialog({
   annex = null,
   onSuccess,
 }) {
+  const toast = useToast();
   const form = useCommissionAnnexForm({
     contractId,
     annex,
     onSuccess: (savedAnnex) => {
+      toast({ body: annex ? 'Đã cập nhật phụ lục.' : 'Đã thêm phụ lục.' });
       onOpenChange(false);
       onSuccess?.(savedAnnex);
     },

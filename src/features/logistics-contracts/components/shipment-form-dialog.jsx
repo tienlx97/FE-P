@@ -2,6 +2,7 @@
 
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
+import { useToast } from '@astryxdesign/core/Toast';
 import * as stylex from '@stylexjs/stylex';
 import { useId, useState } from 'react';
 
@@ -43,11 +44,15 @@ export function ShipmentFormDialog({
 }) {
   const [mode, setMode] = useState(initialMode);
   const isViewing = mode === 'view' && Boolean(shipment);
+  const toast = useToast();
   const form = useShipmentForm({
     contractId,
     contract,
     shipment,
     onSuccess: (savedShipment) => {
+      toast({
+        body: shipment ? 'Đã cập nhật Shipment.' : 'Đã tạo Shipment.',
+      });
       onOpenChange(false);
       onSuccess?.(savedShipment);
     },

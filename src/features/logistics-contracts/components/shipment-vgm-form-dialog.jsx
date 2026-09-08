@@ -1,5 +1,6 @@
 'use client';
 import { CollapsibleGroup } from '@astryxdesign/core/Collapsible';
+import { useToast } from '@astryxdesign/core/Toast';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
@@ -39,11 +40,13 @@ export function ShipmentVgmFormDialog({
   vgm = null,
   onSuccess,
 }) {
+  const toast = useToast();
   const form = useShipmentVgmForm({
     contractId,
     shipmentId,
     vgm,
     onSuccess: (savedVgm) => {
+      toast({ body: vgm ? 'Đã cập nhật VGM.' : 'Đã thêm VGM.' });
       onOpenChange(false);
       onSuccess?.(savedVgm);
     },
