@@ -143,7 +143,7 @@ export function ShipmentCostLinesFields({
           value={row.name}
           onChange={(value) => onUpdateRowField(row.rowKey, 'name', value)}
           placeholder={isReadOnly ? '—' : 'Ví dụ: Phí THC, Phí D/O'}
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       ),
     },
@@ -159,7 +159,7 @@ export function ShipmentCostLinesFields({
           onChange={(value) => onUpdateRowField(row.rowKey, 'amount', value)}
           units="đ"
           size="sm"
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       ),
     },
@@ -177,7 +177,7 @@ export function ShipmentCostLinesFields({
           rows={1}
           size="sm"
           width="100%"
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       ),
     },
@@ -216,7 +216,7 @@ export function ShipmentCostLinesFields({
           value={row.invoiceNumber}
           onChange={(value) => onUpdateRowField(row.rowKey, 'invoiceNumber', value)}
           placeholder={isReadOnly ? '—' : 'Không bắt buộc'}
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       ),
     },

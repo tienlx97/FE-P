@@ -52,7 +52,7 @@ export function ShipmentBookingFields({
             isRequired
             status={fieldStatuses.bookingNumber}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
         </StackItem>
         <StackItem size="fill">
@@ -63,7 +63,7 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.billOfLadingNumber}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
         </StackItem>
       </FormGrid>
@@ -78,7 +78,7 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.shippingLine}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
         </StackItem>
         <StackItem size="fill">
@@ -90,7 +90,7 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.vesselName}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
         </StackItem>
       </FormGrid>
@@ -139,7 +139,7 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.placeOfLoading}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
         </StackItem>
         <StackItem size="fill">
@@ -150,7 +150,7 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.placeOfDischarge}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
         </StackItem>
       </FormGrid>
@@ -165,7 +165,7 @@ export function ShipmentBookingFields({
         isOptional
         status={fieldStatuses.coNumber}
         statusVariant="tooltip"
-        isReadOnly={isReadOnly}
+        isDisabled={isReadOnly}
       />
 
       <FormGrid>

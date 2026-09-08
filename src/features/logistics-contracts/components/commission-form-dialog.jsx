@@ -1,9 +1,9 @@
 'use client';
 
-import { useToast } from '@astryxdesign/core/Toast';
 import { useState } from 'react';
 
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { useCommissionForm } from '../hooks/use-commission-form.js';
 import { CommissionFields } from './commission-fields.jsx';
@@ -44,7 +44,7 @@ export function CommissionFormDialog({
 }) {
   const [mode, setMode] = useState(initialMode);
   const isViewing = mode === 'view' && Boolean(commission);
-  const toast = useToast();
+  const toast = useAppToast();
   const form = useCommissionForm({
     contractId,
     commission,

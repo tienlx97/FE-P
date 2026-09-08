@@ -1,8 +1,7 @@
 'use client';
 
-import { useToast } from '@astryxdesign/core/Toast';
-
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { usePaymentScheduleForm } from '../hooks/use-payment-schedule-form.js';
 import { PaymentScheduleFields } from './payment-schedule-fields.jsx';
@@ -27,7 +26,7 @@ export function PaymentScheduleFormDialog({
   schedule = null,
   onSuccess,
 }) {
-  const toast = useToast();
+  const toast = useAppToast();
   const form = usePaymentScheduleForm({
     contractId,
     schedule,

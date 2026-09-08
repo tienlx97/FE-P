@@ -1,8 +1,7 @@
 'use client';
 
-import { useToast } from '@astryxdesign/core/Toast';
-
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { useCommissionPaymentQuickAddForm } from '../hooks/use-commission-payment-quick-add-form.js';
 import { CommissionPaymentFields } from './commission-payment-fields.jsx';
@@ -30,7 +29,7 @@ export function CommissionPaymentQuickAddDialog({
   currency,
   onSuccess,
 }) {
-  const toast = useToast();
+  const toast = useAppToast();
   const form = useCommissionPaymentQuickAddForm({
     contractId,
     commission,

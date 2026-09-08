@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createSeller, listSellers } from '../api/sellers.js';
+import { createSeller, deleteSeller, listSellers } from '../api/sellers.js';
 
 const QUERY_KEY = ['logistics-contracts', 'sellers'];
 
@@ -23,6 +23,19 @@ export function useCreateSellerMutation() {
         extraFieldRows,
       },
     ) => createSeller(values, extraFieldRows),
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      }
+    },
+  });
+}
+
+export function useDeleteSellerMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (/** @type {string} */ sellerId) => deleteSeller(sellerId),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });

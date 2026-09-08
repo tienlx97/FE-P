@@ -30,6 +30,7 @@ const styles = stylex.create({
  *   isLabelHidden?: boolean,
  *   isRequired?: boolean,
  *   isReadOnly?: boolean,
+ *   isDisabled?: boolean,
  *   size?: 'sm' | 'md' | 'lg',
  *   status?: { type: 'error' | 'warning' | 'success', message?: string },
  *   statusVariant?: 'attached' | 'detached' | 'tooltip',
@@ -44,6 +45,7 @@ export function FormattedNumberTextInput({
   isLabelHidden = false,
   isRequired = false,
   isReadOnly = false,
+  isDisabled = false,
   size = 'md',
   status,
   statusVariant = 'tooltip',
@@ -78,6 +80,7 @@ export function FormattedNumberTextInput({
       description={units ? undefined : description}
       isRequired={isRequired}
       isReadOnly={isReadOnly}
+      isDisabled={isDisabled}
       size={size}
       status={units ? undefined : status}
       statusVariant={statusVariant}

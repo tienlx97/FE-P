@@ -8,13 +8,13 @@ import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
 import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
-import { useToast } from '@astryxdesign/core/Toast';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useId, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import { useContractForm } from '../hooks/use-contract-form.js';
@@ -88,7 +88,7 @@ export function ContractFormDialog({
   const [discardAction, setDiscardAction] = useState(
     /** @type {'close' | 'cancel' | null} */ (null),
   );
-  const toast = useToast();
+  const toast = useAppToast();
   const form = useContractForm({
     contract,
     onSuccess: (saved) => {

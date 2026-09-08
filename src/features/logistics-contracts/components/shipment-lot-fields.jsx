@@ -35,7 +35,7 @@ export function ShipmentLotFields({
       <FormGrid>
         <StackItem size="fill">
           <TextInput
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
             label="Tên lô hàng"
             value={values.name}
             onChange={(value) => setField('name', value)}
@@ -111,7 +111,7 @@ export function ShipmentLotFields({
       <FormGrid>
         <StackItem size="fill">
           <FormattedNumberTextInput
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
             label="Giá trị invoice"
             value={values.invoiceValue}
             onChange={(value) => setField('invoiceValue', value)}
@@ -139,7 +139,7 @@ export function ShipmentLotFields({
       <FormGrid>
         <StackItem size="fill">
           <FormattedNumberTextInput
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
             label="Giá trị tờ khai"
             value={values.declarationValue}
             onChange={(value) => setField('declarationValue', value)}
@@ -172,7 +172,7 @@ export function ShipmentLotFields({
         isRequired
         status={fieldStatuses.declarationExchangeRate}
         statusVariant="tooltip"
-        isReadOnly={isReadOnly}
+        isDisabled={isReadOnly}
       />
 
       <FormattedNumberTextInput
@@ -192,7 +192,7 @@ export function ShipmentLotFields({
         isRequired
         status={fieldStatuses.quantityAmount}
         statusVariant="tooltip"
-        isReadOnly={isReadOnly}
+        isDisabled={isReadOnly}
       />
 
       <FormattedNumberTextInput
@@ -203,7 +203,7 @@ export function ShipmentLotFields({
         isRequired
         status={fieldStatuses.declarationWeightKg}
         statusVariant="tooltip"
-        isReadOnly={isReadOnly}
+        isDisabled={isReadOnly}
       />
     </FormSection>
   );

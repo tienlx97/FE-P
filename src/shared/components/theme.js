@@ -164,5 +164,21 @@ export const ktxnkTheme = defineTheme({
     textarea: {
       readonly: { backgroundColor: 'var(--color-background-muted)' },
     },
+    // astryx's Toast only ships `type: 'info' | 'error'` — every save
+    // confirmation in this app fires an unthemed 'success' type (see
+    // `useAppToast`), which without this override renders identical to
+    // 'info' (same dark inverted surface). Per user request (2026-09-08),
+    // give it the conventional green instead.
+    // astryx's Toast only ships `type: 'info' | 'error'` — every save
+    // confirmation in this app fires an unthemed 'success' type (see
+    // `useAppToast`), which without this override renders identical to
+    // 'info' (same dark inverted surface). Per user request (2026-09-08),
+    // give it the conventional green instead.
+    toast: {
+      'type:success': {
+        backgroundColor: 'var(--color-success)',
+        color: 'var(--color-on-success)',
+      },
+    },
   },
 });

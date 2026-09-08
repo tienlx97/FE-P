@@ -23,6 +23,7 @@ mechanical quality gates, and change tracking under `openspec/changes/`.
 | Entropy management & cleanup duty | `harness/ENTROPY.md` |
 | Session history & handoffs | `harness/PROGRESS.md` |
 | Semantic recall of past conversations | memsearch over `.memsearch/memory/` — see `docs/adr/0002-memory-layer.md` |
+| Run dev alongside a production instance | `.env.development.example` (API_BASE_URL → BE dev stack :8081) + `pnpm dev -- -p 3001` — never `pnpm dev` bare, it collides with prod's port 3000 |
 
 ## Architectural constraints (mechanically enforced)
 

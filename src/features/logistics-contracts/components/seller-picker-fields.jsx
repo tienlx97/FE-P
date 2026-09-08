@@ -1,5 +1,6 @@
 'use client';
 
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -7,10 +8,13 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
+import { useDeleteSellerMutation } from '../hooks/use-sellers-query.js';
 import { QuickCreateSellerDialog } from './quick-create-seller-dialog.jsx';
 import { SellerFields } from './seller-fields.jsx';
 
@@ -48,8 +52,29 @@ export function SellerPickerFields({
   isReadOnly = false,
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const toast = useAppToast();
+  const deleteMutation = useDeleteSellerMutation();
 
   const selectedSeller = sellers.find((seller) => seller.id === sourceSellerId);
+
+  // Only the currently-selected seller can be removed from here — there is
+  // no standalone Sellers management page yet (per user request 2026-09-08,
+  // this covers the "tạo nhầm, muốn xoá" case: pick it in the Selector,
+  // then delete it). Hard-deletes the catalog entry; existing contracts are
+  // unaffected since they snapshot seller fields at creation time instead of
+  // referencing it live (see `docs/api/Sellers.md`, BE-kt-xnk).
+  async function handleConfirmDelete() {
+    if (!selectedSeller) return;
+    const result = await deleteMutation.mutateAsync(selectedSeller.id);
+    setIsConfirmingDelete(false);
+    if (result.success) {
+      onSwitchToInline();
+      toast({ body: `Đã xoá bên bán "${selectedSeller.companyName}".` });
+    } else {
+      toast({ body: result.message, type: 'error' });
+    }
+  }
 
   return (
     <VStack gap={3} hAlign="stretch">
@@ -74,6 +99,17 @@ export function SellerPickerFields({
             width="100%"
           />
         </StackItem>
+        {selectedSeller ? (
+          <IconButton
+            isDisabled={isReadOnly}
+            label="Xoá bên bán khỏi danh mục"
+            tooltip="Xoá bên bán khỏi danh mục"
+            icon={<Icon icon={Trash2} size="sm" />}
+            type="button"
+            variant="secondary"
+            onClick={() => setIsConfirmingDelete(true)}
+          />
+        ) : null}
         <IconButton
           isDisabled={isReadOnly}
           label="Thêm bên bán"
@@ -117,6 +153,16 @@ export function SellerPickerFields({
         isOpen={isQuickCreateOpen}
         onOpenChange={setIsQuickCreateOpen}
         onCreated={(seller) => onSelectExisting(seller.id, seller)}
+      />
+
+      <AlertDialog
+        isOpen={isConfirmingDelete}
+        onOpenChange={setIsConfirmingDelete}
+        title={`Xoá "${selectedSeller?.companyName ?? ''}" khỏi danh mục bên bán?`}
+        description="Công ty này sẽ không còn hiện trong danh sách chọn bên bán nữa. Hợp đồng đã tạo trước đó không bị ảnh hưởng. Hành động này không thể hoàn tác."
+        actionLabel="Xoá"
+        isActionLoading={deleteMutation.isPending}
+        onAction={handleConfirmDelete}
       />
     </VStack>
   );

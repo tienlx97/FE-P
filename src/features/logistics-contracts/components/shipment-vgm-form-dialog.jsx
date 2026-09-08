@@ -1,10 +1,10 @@
 'use client';
 import { CollapsibleGroup } from '@astryxdesign/core/Collapsible';
-import { useToast } from '@astryxdesign/core/Toast';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { useShipmentVgmForm } from '../hooks/use-shipment-vgm-form.js';
 import {
@@ -40,7 +40,7 @@ export function ShipmentVgmFormDialog({
   vgm = null,
   onSuccess,
 }) {
-  const toast = useToast();
+  const toast = useAppToast();
   const form = useShipmentVgmForm({
     contractId,
     shipmentId,

@@ -6,6 +6,7 @@ build/
 .env.*
 !.env.example
 !.env.production.example
+!.env.development.example
 
 # `astryx theme build` output — generated from src/shared/components/theme.js,
 # see `pnpm theme:build` (runs automatically before dev/build/verify)

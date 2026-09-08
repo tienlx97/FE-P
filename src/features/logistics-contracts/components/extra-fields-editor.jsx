@@ -44,7 +44,7 @@ export function ExtraFieldsEditor({
           value={row.key}
           onChange={(value) => onUpdateRowField(row.rowKey, 'key', value)}
           placeholder="Ví dụ: Mã số thuế"
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       ),
     },
@@ -58,7 +58,7 @@ export function ExtraFieldsEditor({
           isLabelHidden
           value={row.value}
           onChange={(value) => onUpdateRowField(row.rowKey, 'value', value)}
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       ),
     },

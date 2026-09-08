@@ -100,7 +100,7 @@ export function PaymentHistoryFields({
           onChange={(value) => onUpdateRowField(row.rowKey, 'amount', value)}
           units={currency || undefined}
           size="sm"
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       ),
     },
@@ -118,7 +118,7 @@ export function PaymentHistoryFields({
           rows={1}
           size="sm"
           width="100%"
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       ),
     },

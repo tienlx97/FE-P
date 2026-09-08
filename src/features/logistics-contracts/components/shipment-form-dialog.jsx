@@ -2,11 +2,11 @@
 
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
-import { useToast } from '@astryxdesign/core/Toast';
 import * as stylex from '@stylexjs/stylex';
 import { useId, useState } from 'react';
 
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { useShipmentForm } from '../hooks/use-shipment-form.js';
 import { ShipmentFields } from './shipment-fields.jsx';
@@ -44,7 +44,7 @@ export function ShipmentFormDialog({
 }) {
   const [mode, setMode] = useState(initialMode);
   const isViewing = mode === 'view' && Boolean(shipment);
-  const toast = useToast();
+  const toast = useAppToast();
   const form = useShipmentForm({
     contractId,
     contract,

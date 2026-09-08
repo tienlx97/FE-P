@@ -2,6 +2,7 @@ import { apiRequest } from '@/shared/api/api-client.js';
 
 const GENERIC_LIST_ERROR = 'Không thể tải danh sách bên bán';
 const GENERIC_CREATE_ERROR = 'Không thể thêm bên bán';
+const GENERIC_DELETE_ERROR = 'Không thể xoá bên bán';
 
 /**
  * Requires `logistics:contracts:view`.
@@ -45,4 +46,25 @@ export async function createSeller(values, extraFieldRows = []) {
   }
 
   return { success: true, seller: result.data };
+}
+
+/**
+ * Requires `logistics:contracts:manage`. Hard-deletes the seller from the
+ * catalog — safe for existing contracts, which snapshot a seller's fields
+ * into `ContractSeller` at creation time rather than referencing it live
+ * (see `docs/api/Sellers.md`, BE-kt-xnk).
+ * @param {string} sellerId
+ * @returns {Promise<{ success: true } | { success: false, message: string }>}
+ */
+export async function deleteSeller(sellerId) {
+  const result = await apiRequest(`/api/v1/sellers/${sellerId}`, {
+    method: 'DELETE',
+    errorMessage: GENERIC_DELETE_ERROR,
+  });
+
+  if (!result.success) {
+    return { success: false, message: result.message };
+  }
+
+  return { success: true };
 }

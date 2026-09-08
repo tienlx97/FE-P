@@ -184,7 +184,7 @@ export function CommissionFields({
         isRequired
         status={fieldStatuses.value}
         statusVariant="tooltip"
-        isReadOnly={isReadOnly}
+        isDisabled={isReadOnly}
       />
 
       <HStack gap={4}>
@@ -192,13 +192,13 @@ export function CommissionFields({
           label="Bên bán đã ký"
           value={values.sellerSigned}
           onChange={(checked) => setField('sellerSigned', checked)}
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
         <CheckboxInput
           label="Bên nhận hoa hồng đã ký"
           value={values.partySigned}
           onChange={(checked) => setField('partySigned', checked)}
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       </HStack>
 

@@ -28,7 +28,9 @@ export function ThemeProvider({ children }) {
     <LinkProvider component={NextLink}>
       <InternationalizationProvider locale="vi-VN" messages={{ 'vi-VN': viVN }}>
         <Theme theme={ktXnkTheme} mode="light">
-          <LayerProvider>{children}</LayerProvider>
+          <LayerProvider toast={{ position: 'topEnd' }}>
+            {children}
+          </LayerProvider>
         </Theme>
       </InternationalizationProvider>
     </LinkProvider>

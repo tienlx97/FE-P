@@ -1,8 +1,7 @@
 'use client';
 
-import { useToast } from '@astryxdesign/core/Toast';
-
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { useContractAnnexForm } from '../hooks/use-contract-annex-form.js';
 import { ContractAnnexFields } from './contract-annex-fields.jsx';
@@ -27,7 +26,7 @@ export function ContractAnnexFormDialog({
   annex = null,
   onSuccess,
 }) {
-  const toast = useToast();
+  const toast = useAppToast();
   const form = useContractAnnexForm({
     contractId,
     annex,

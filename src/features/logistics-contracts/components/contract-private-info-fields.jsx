@@ -82,7 +82,7 @@ export function ContractPrivateInfoFields({
       <Section title="Logistics">
         <Grid columns={isNarrow ? 1 : 3} gap={3}>
           <NumberInput
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
             label="Số cont"
             value={values.containerCount}
             onChange={(value) => setField('containerCount', value)}
@@ -97,7 +97,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.costPricePerContainer}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Giá báo khách"
@@ -106,7 +106,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.quotedPricePerContainer}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
         </Grid>
         <Text color="secondary">
@@ -126,7 +126,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.unitCostLabor}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Phun bi"
@@ -135,7 +135,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.unitCostSandblasting}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Sơn"
@@ -144,7 +144,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.unitCostPainting}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Nhà máy"
@@ -153,7 +153,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.unitCostFactory}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
         </Grid>
       </Section>
@@ -166,7 +166,7 @@ export function ContractPrivateInfoFields({
             onChange={(value) => setField('volumeSale', value)}
             status={fieldStatuses.volumeSale}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Vật tư"
@@ -174,7 +174,7 @@ export function ContractPrivateInfoFields({
             onChange={(value) => setField('volumeMaterial', value)}
             status={fieldStatuses.volumeMaterial}
             statusVariant="tooltip"
-            isReadOnly={isReadOnly}
+            isDisabled={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Tờ khai (tổng khối lượng Shipment)"
@@ -193,7 +193,7 @@ export function ContractPrivateInfoFields({
         units="VNĐ"
         status={fieldStatuses.profit}
         statusVariant="tooltip"
-        isReadOnly={isReadOnly}
+        isDisabled={isReadOnly}
       />
 
       <Grid columns={isNarrow ? 1 : 2} gap={3}>
@@ -204,7 +204,7 @@ export function ContractPrivateInfoFields({
           units="USD"
           status={fieldStatuses.totalAmountUsd}
           statusVariant="tooltip"
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
         <FormattedNumberTextInput
           label="Tỷ giá"
@@ -213,7 +213,7 @@ export function ContractPrivateInfoFields({
           units="VNĐ"
           status={fieldStatuses.exchangeRateVnd}
           statusVariant="tooltip"
-          isReadOnly={isReadOnly}
+          isDisabled={isReadOnly}
         />
       </Grid>
 
