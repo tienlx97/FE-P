@@ -2,8 +2,8 @@ const MAX_DECIMAL_DIGITS = 8;
 
 /**
  * Formats a non-negative numeric draft while it is being edited. Integer
- * groups intentionally run from left to right to match the product convention:
- * 1234 -> 123,4 and 12345 -> 123,45.
+ * groups run from the right in standard thousands groups: 1234 -> 1,234 and
+ * 12345 -> 12,345.
  * @param {string} rawValue
  */
 export function formatNumberInput(rawValue) {
@@ -24,8 +24,10 @@ export function formatNumberInput(rawValue) {
   if (!integerDigits && !hasDecimal) return '';
 
   const normalizedInteger = integerDigits || '0';
-  const groupedInteger =
-    normalizedInteger.match(/.{1,3}/g)?.join(',') ?? normalizedInteger;
+  const groupedInteger = normalizedInteger.replace(
+    /\B(?=(\d{3})+(?!\d))/g,
+    ',',
+  );
 
   return hasDecimal ? `${groupedInteger}.${decimalDigits}` : groupedInteger;
 }
