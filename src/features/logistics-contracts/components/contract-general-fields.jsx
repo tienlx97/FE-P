@@ -185,17 +185,17 @@ export function ContractGeneralFields({
       renderCell: (annex) => (annex.sellerSigned ? 'Đã ký' : 'Chưa ký'),
     },
     {
+      key: 'note',
+      header: 'Ghi chú',
+      width: proportional(1),
+      renderCell: (annex) => orDash(annex.note),
+    },
+    {
       key: 'amount',
       header: 'Số tiền',
       width: pixel(140),
       align: 'end',
       renderCell: (annex) => annexAmountLabel(annex, values.currency),
-    },
-    {
-      key: 'note',
-      header: 'Ghi chú',
-      width: proportional(1),
-      renderCell: (annex) => orDash(annex.note),
     },
   ];
   if (onEditAnnex) {
