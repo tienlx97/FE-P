@@ -2,7 +2,7 @@
 
 ## 2026-09-07 — Add: optimistic concurrency (Version) on Contract/Shipment forms, finished a Codex session that ran out of tokens mid-work
 
-**Context:** Codex was mid-implementation of the FE half of BE-kt-xnk's
+**Context:** Codex was mid-implementation of the FE half of BE-P's
 optimistic-concurrency feature (`Contract.Version`/`Shipment.Version`, see
 that repo's own `harness/PROGRESS.md` — no openspec change folder exists
 for this on either side, Codex never created one) and ran out of tokens
@@ -32,7 +32,7 @@ green after: lint, typecheck, structure, unit tests, build, quality
 thresholds.
 
 **Verified live** against a disposable, isolated Docker stack built from
-BE-kt-xnk's current code (project name `kt-xnk-verify`, ports remapped
+BE-P's current code (project name `kt-xnk-verify`, ports remapped
 off 8080/3307 so it never touched the real `docker-compose.lan.yml`
 deployment — that's a live LAN service with real data, not something to
 reseed for a manual check) with `db/sample-data.sql` freshly imported:
@@ -54,7 +54,7 @@ deployment) were never touched.
 
 **Not done this session:** no openspec change folder created (matching
 what Codex already didn't do) — out of scope for finishing an existing
-diff. Both repos' changes are committed (`BE-kt-xnk` and here) but not
+diff. Both repos' changes are committed (`BE-P` and here) but not
 pushed.
 
 ## 2026-09-07 — Add: Shipment cost invoice number + contract value/currency same row
@@ -67,7 +67,7 @@ on two separate rows in the Contract form, should be one row.
 `invoiceNumber` threaded through `shipment-schema.js`, `use-shipment-
 cost-line-rows.js`, `use-shipment-form.js`, `api/shipments.js`; new
 editable column in `ShipmentCostLinesFields` and read-only column in
-`ShipmentExpandedDetails`. Companion backend change: BE-kt-xnk's
+`ShipmentExpandedDetails`. Companion backend change: BE-P's
 `openspec/changes/add-shipment-cost-invoice-number/`. Separately,
 `contract-general-fields.jsx` now wraps "Giá trị hợp đồng" + "Tiền tệ"
 in `FormGrid`/`StackItem`, matching the existing money+currency row
@@ -85,8 +85,8 @@ phí Logistics" tab shows the new "Số hoá đơn" column with seeded values.
 "Cảng/nơi đến" validation error and refused to save the sample (FOB)
 Contract, even untouched. Root cause was split across both repos: the
 backend had never actually implemented the EXW/FOB-must-be-null rule
-kt-xnk's own `incoterm-driven-place-fields` change assumed already
-shipped (see BE-kt-xnk's `openspec/changes/fix-place-of-discharge-
+FE-P's own `incoterm-driven-place-fields` change assumed already
+shipped (see BE-P's `openspec/changes/fix-place-of-discharge-
 incoterm-validation/`), so every EXW/FOB save always 400'd. Fixing that
 backend mismatch then surfaced a second bug here: once the backend
 legitimately started returning `placeOfDischarge: null` for those
@@ -103,14 +103,14 @@ retyped `string | null`. `./harness/verify.sh` green (131 tests, no new
 coverage needed — the schema itself was already correct and tested; only
 the load-from-API path had the bug).
 
-**Verified live** against the real running BE-kt-xnk stack: opened the
+**Verified live** against the real running BE-P stack: opened the
 sample FOB Contract for edit — no more error/disabled state on "Cảng/nơi
 đến" — saved with no other changes, and confirmed via `GET` afterward
 that `placeOfDischarge: null` persisted correctly.
 
 ## 2026-09-07 — Contract and Shipment status fields
 
-**Context:** BE-kt-xnk shipped `Contract.Status`/`Shipment.Status` (see
+**Context:** BE-P shipped `Contract.Status`/`Shipment.Status` (see
 its `openspec/changes/add-contract-and-shipment-status/`). This session
 wires both up here, per the user's own instruction to do BE first, then
 FE.
@@ -132,7 +132,7 @@ FE.
 - `./harness/verify.sh` green: 131 unit tests (was 126), lint, typecheck,
   structure, build, quality.
 
-**Verified live** against the real running BE-kt-xnk stack: sample data
+**Verified live** against the real running BE-P stack: sample data
 (seeded by the BE session) showed "Đang thực hiện" on the Contract list
 and "Đã book"/"Đã hoàn thành" on its two Shipments correctly; the edit
 form's Status Selector opened with the right options and the current one
@@ -148,9 +148,9 @@ edit-form work next.
 
 ## 2026-09-07 — Contract "Thông tin private" tab (BOQ)
 
-**Context:** BE-kt-xnk shipped `GET`/`PUT /contracts/{id}/private-info`
+**Context:** BE-P shipped `GET`/`PUT /contracts/{id}/private-info`
 gated by a new `logistics:secret` permission that is deliberately not
-role/department-derived (see BE-kt-xnk's
+role/department-derived (see BE-P's
 `openspec/changes/add-contract-private-info/`). This session wires it up
 here, per the user's own instruction to do BE first, then FE.
 
@@ -174,8 +174,8 @@ here, per the user's own instruction to do BE first, then FE.
 
 **Verified live**, not just `harness/verify.sh` (126 tests, build,
 structure, lint, typecheck, quality — all green): logged into the real
-running BE-kt-xnk (dev server on :3000, API on :8080, sample data from
-BE-kt-xnk's own session) as Nguyễn Văn A (individually granted
+running BE-P (dev server on :3000, API on :8080, sample data from
+BE-P's own session) as Nguyễn Văn A (individually granted
 `logistics:secret`, not via his Logistics department) — the tab shows the
 seeded BOQ, editing `Số cont` 2→3 recomputed `Tổng` 17,000,000 →
 25,500,000 VNĐ correctly on save (reverted after). Logged in as Admin (no
@@ -465,7 +465,7 @@ Shipments — see `git status`). No test file exists for this yet; this was a
 manual browser pass, not an automated one.
 
 **Live-verified in a browser** (`pnpm dev` already running on `:3000` +
-BE-kt-xnk Docker; logged in as the documented dev Admin
+BE-P Docker; logged in as the documented dev Admin
 `DNG26F4A9C2`/`Admin@123456`):
 - `/logistics/contracts`: funnel icon opens "Bộ lọc nâng cao"; field picker
   lists all 14 `FILTER_FIELD_DEFS` fields and excludes fields already used in
@@ -494,7 +494,7 @@ author.
 
 ## 2026-09-04 — Rename frontend Service Agreement to Commission
 
-**Context:** The BE-kt-xnk resource was renamed end-to-end from
+**Context:** The BE-P resource was renamed end-to-end from
 `ServiceAgreement` to `Commission`, including breaking API routes and annex
 wire field names. User asked to apply the same rename in this frontend.
 
@@ -584,7 +584,7 @@ removed from project checks by explicitly ignoring `template/**` in ESLint and
 `template/` in Git; application code lives under `src/`. `pnpm test`: 107/107
 (unchanged — no test file covers this feature area). `pnpm run test:harness`:
 6/6 including the new test. **Live-verified in a
-browser** (`pnpm dev` + the already-running BE-kt-xnk Docker containers):
+browser** (`pnpm dev` + the already-running BE-P Docker containers):
 opened `/logistics/service-agreements`, expanded the one seeded row, opened
 both "Sửa Service Agreement" and "Thêm phụ lục", and mouse-clicked an option
 in each dialog's `Selector` dropdown — both registered correctly (field
@@ -605,7 +605,7 @@ end". `Customer`/Party A catalog (`customers-list.jsx`) already had a
 "Sửa khách hàng" footer button in the row's expanded panel — permanently
 disabled (`isDisabled`, `tooltip="Chưa hỗ trợ"`) since the backend had no
 Update endpoint. The backend gained `PUT /api/v1/customers/{id}` earlier
-today (separate BE-kt-xnk session/commit `338cc4c`), so this session wires
+today (separate BE-P session/commit `338cc4c`), so this session wires
 the existing button up.
 
 **What shipped**, mirroring `use-shipment-form.js`'s create/edit-in-one-hook
@@ -640,7 +640,7 @@ feature's scope, not touched this session). `pnpm test`: 107/107 green
 (unchanged count — no test file covers this feature area yet).
 
 **Live-verified in a browser**, not just tests: `pnpm dev` +
-`docker compose up -d --build api` (BE-kt-xnk) + logged in as
+`docker compose up -d --build api` (BE-P) + logged in as
 `DNG26F4A9C2`/`Admin@123456`. First save attempt hit a real bug, not a
 test gap: `PUT /api/v1/customers/{id}` returned `404` — the running
 Docker `api` container was still the image from *before* the backend's
@@ -1320,7 +1320,7 @@ through on the seeded `26KCTLIVE01` ("Live smoke test") contract via
   (`GET /api/backend/swagger/v1/swagger.json`): **zero** paths matching
   `/shipment/i` exist — not `/contracts/{id}/shipments`, not the VGM
   sub-routes, nothing. `add-contract-shipments`' own proposal says
-  BE-kt-xnk "shipped" this in the backend repo's own
+  BE-P "shipped" this in the backend repo's own
   `openspec/changes/add-contract-shipments/` — same situation as the
   Service Agreements list saga a few sessions back: built in that repo,
   not yet deployed to the backend instance this app's `/api/backend`
@@ -1366,7 +1366,7 @@ once deployed).
 below. User request (Vietnamese): each shipment needs VGM info per
 container — tên cont, tên seal, loại cont, tare, payload, max gross, net
 weight, gross weight (= net weight + khối lượng bao bì, computed), VGM
-(= gross weight + tare, computed). BE-kt-xnk shipped this as `ShipmentVgm`
+(= gross weight + tare, computed). BE-P shipped this as `ShipmentVgm`
 (1 shipment : many, **with delete** — the one child entity in this whole
 feature area that has it).
 
@@ -1420,7 +1420,7 @@ change.
 
 ## 2026-09-03 — Contract shipments (`add-contract-shipments`)
 
-**Context:** User asked to build the FE for BE-kt-xnk's `Shipment`
+**Context:** User asked to build the FE for BE-P's `Shipment`
 feature (`../CLEAN ARCHITECTURE/openspec/changes/add-contract-shipments/`,
 same session as this frontend one): a `Contract` has one or more shipments
 ("lần xuất hàng"), each with Book info (booking/B-L/vessel) and Shipment
@@ -1515,7 +1515,7 @@ session either (same gap as the entry below).
 ## 2026-09-03 — Contract signatures + Payment Schedules (`add-payment-schedule-and-contract-signatures`)
 
 **Context:** User asked (in the backend session, `../CLEAN ARCHITECTURE`)
-to check whether the ContractBank and PaymentSchedule features BE-kt-xnk
+to check whether the ContractBank and PaymentSchedule features BE-P
 had just shipped were wired into this frontend. ContractBank was already
 present (`contract-banks-fields.jsx`, `api/contract-banks.js`, etc., from
 earlier sessions). `PaymentSchedule` had nothing — no types, api, hooks,
@@ -1630,7 +1630,7 @@ cleanup still pending) — unchanged by this correction.
 the bank field on a Contract required) — it was previously optional
 (`BankIds` could be an empty array).
 
-**Backend** (`../CLEAN ARCHITECTURE`, BE-kt-xnk): added
+**Backend** (`../CLEAN ARCHITECTURE`, BE-P): added
 `RuleFor(x => x.BankIds).NotEmpty()` to both
 `CreateContractCommandValidator` and `UpdateContractCommandValidator` →
 `400 detail: "At least one bank is required"` on an empty array. Updated
@@ -1697,7 +1697,7 @@ rejected) actually succeeded and created a real, permanent bank named
 **"Test Bank XYZ"** in the live `contract-banks` catalog. There is no
 delete endpoint for `ContractBank` anywhere (list + create only) — could
 not clean this up. Flagged to the user in-session; **whoever picks this
-up should delete/rename that row** (direct DB access or ask BE-kt-xnk) if
+up should delete/rename that row** (direct DB access or ask BE-P) if
 it's polluting real data. Lesson: don't POST live mutating requests as a
 diagnostic probe without a way to undo them — a GET-only check (or
 reading backend source/docs first) is preferable when a delete endpoint
@@ -1889,7 +1889,7 @@ feature on the frontend) — turned out the FE side (`api/service-agreements.js`
 `components/service-agreements-list.jsx`, the `/logistics/service-agreements`
 route) was already fully built in the 2026-09-01 session below, coded ahead
 of the backend per this repo's practice. It was only blocked because the
-local dev backend (BE-kt-xnk, the CLEAN ARCHITECTURE repo) hadn't shipped
+local dev backend (BE-P, the CLEAN ARCHITECTURE repo) hadn't shipped
 `GET /api/v1/service-agreements` yet.
 
 **Done in the backend repo** (`../CLEAN ARCHITECTURE`): implemented
@@ -1945,14 +1945,14 @@ Agreement across contracts — checked the *live* dev backend's own swagger
 (`/api/backend/swagger/v1/swagger.json`) and only found the three
 contract-scoped paths (`/contracts/{id}/service-agreement[/annexes...]`).
 Asked the user how to proceed; they pasted the authoritative
-`docs/api/ServiceAgreements.md` (BE-kt-xnk) spec, which *does* document a
+`docs/api/ServiceAgreements.md` (BE-P) spec, which *does* document a
 `GET /api/v1/service-agreements` system-wide paginated endpoint
 (`{items, page, pageSize, totalCount, totalPages}`, same shape as
 `GET /contracts`). Re-checked the live backend against that exact path —
 still 404. **Conclusion: the endpoint is real and documented, just not
 yet deployed to this local dev backend instance.** Built the frontend
 against the documented contract anyway (matches this repo's established
-practice of coding to `docs/api/*.md, BE-kt-xnk` ahead of a backend
+practice of coding to `docs/api/*.md, BE-P` ahead of a backend
 deploy) rather than against a client-side N+1 workaround.
 
 **What was added:**
@@ -1982,7 +1982,7 @@ hiển thị" popover) and shows the expected
 `AdvanceTableErrorBanner` ("Không thể tải danh sách Service Agreement")
 because the *local* dev backend 404s on the endpoint — this is the
 correct/expected failure mode, not a bug; it'll resolve once
-BE-kt-xnk deploys the documented route to this environment.
+BE-P deploys the documented route to this environment.
 
 **Blockers:** the Service Agreement list page cannot show real data until
 `GET /api/v1/service-agreements` is live on whichever backend this app
@@ -2188,7 +2188,7 @@ exactly.
 
 ## 2026-09-01 — Contract Annex tab (`add-contract-annex-tab`)
 
-**Context:** BE-kt-xnk shipped `ContractAnnex` (full CRUD except delete,
+**Context:** BE-P shipped `ContractAnnex` (full CRUD except delete,
 system-assigned sequential `AnnexNumber`, computed `AnnexCode` —
 `add-contract-annexes` in the API repo). User asked for an "Annex" tab on
 the contract row's expanded-details `TabList`, enabled only when the
@@ -2251,7 +2251,7 @@ claiming a browser check that didn't happen.
 - No live click-through verification (see above) — needs a human or a
   session with browser tooling to confirm the disabled/enabled tab
   behavior and the create/edit dialogs actually work end-to-end against
-  BE-kt-xnk's live `ContractAnnex` endpoints.
+  BE-P's live `ContractAnnex` endpoints.
 - Delete is out of scope (backend doesn't support it yet either).
 
 ## 2026-09-01 — Fix stale country in QuickCreatePlaceDialog (real fix this time)
@@ -2405,9 +2405,9 @@ proposal's `specs/`).
 
 ---
 
-## 2026-09-01 — Rename Port catalog to Place (matches BE-kt-xnk rename)
+## 2026-09-01 — Rename Port catalog to Place (matches BE-P rename)
 
-**Request:** user reported the backend (`BE-kt-xnk`/CompanyManagement API)
+**Request:** user reported the backend (`BE-P`/CompanyManagement API)
 renamed its `Ports` table/entity to `Places` — `POST`/`GET /api/v1/ports`
 moved to `/api/v1/places` (same shapes: `{ id, name, countryId }` /
 `{ Name, CountryId }`). Asked to update this frontend to match.
@@ -2537,7 +2537,7 @@ precedent instead.
   added "Nước"/"Cảng" entries there. `route-access.js` gained
   `/logistics/countries`/`/logistics/ports` rules, `logistics:contracts:view`
   (matches `docs/api/Countries.md`/`docs/api/Ports.md`'s `GET` permission
-  in `BE-kt-xnk`; `POST`/create requires `logistics:contracts:manage`,
+  in `BE-P`; `POST`/create requires `logistics:contracts:manage`,
   enforced backend-side only — same as Customers, no separate FE gate on
   the create button).
 - Confirmed (by reading, not assuming) that
@@ -2555,7 +2555,7 @@ precedent of no component tests)/`build`/`quality-thresholds` all green,
 state). **Live verification:** no Chrome/browser tool was available in
 this session (unlike the prior session's screenshot-based check), so this
 was verified via `curl` against the actual running `pnpm dev` server
-(already up) and the already-running `BE-kt-xnk` Docker API — one login as
+(already up) and the already-running `BE-P` Docker API — one login as
 Nguyễn Văn A (`logistics:contracts:view`/`manage`), then through the app's
 own `/api/backend/*` proxy: created a country ("Verification Testland"),
 created a port under it ("Verification Port"), confirmed both appear in
@@ -2577,9 +2577,9 @@ either.
 
 ---
 
-## 2026-08-30 — Wire Contract Country/Port catalog + BE-kt-xnk field renames
+## 2026-08-30 — Wire Contract Country/Port catalog + BE-P field renames
 
-**Request:** BE-kt-xnk's Contracts API shipped (backend-only, already
+**Request:** BE-P's Contracts API shipped (backend-only, already
 merged) `PortOfLoading`→`PlaceOfLoading`, `PortOrPlaceOfDestination`→
 `PlaceOfDischarge`, `PartyA`→`Buyer`, free-text `ExportCountry`→required
 `CountryId` FK (new `Country` catalog), a new per-country `Port` lookup
@@ -2617,7 +2617,7 @@ validation rule. Wired the frontend to match.
   "Ghi chú" (maxLength 2000); "Party A (Khách hàng)" section →
   "Buyer (Khách hàng)".
 - `components/contracts-list.jsx`: "Khách hàng" column/labels now read
-  `contract.buyer.*`; confirmed via `docs/api/Contracts.md` (BE-kt-xnk)
+  `contract.buyer.*`; confirmed via `docs/api/Contracts.md` (BE-P)
   that `ContractResponse` does NOT denormalize a country name — only
   `countryId` — so added a `useCountriesQuery()` + `Map`-by-id lookup
   (`countriesById`) for display in both the table column and the
@@ -2646,7 +2646,7 @@ covering the quotation-date refine, `countryId` requiredness, and the
 `note` length cap — minus the net effect of consolidating some Party A
 tests into Buyer-named equivalents). See `harness/runs/20260830-014927-97537/`.
 
-**Live verification — partial, be honest about the gap:** BE-kt-xnk's
+**Live verification — partial, be honest about the gap:** BE-P's
 Docker stack (`cleanarchitecture-api-1`/`cleanarchitecture-mysql-1`) was
 already running; `docker compose ps` confirmed it, and `curl` confirmed
 login works (`POST /api/v1/authentication/login` with the seeded
@@ -2655,7 +2655,7 @@ documented `{id, name}` array shape our `api/countries.js` expects. A full
 API round-trip (create country → port → contract with `CountryId`/`Buyer`/
 `Note`, plus a bad-quotation-date 400 check) was attempted via curl but hit
 the login endpoint's 15-minute fixed-window rate limiter
-(`LoginRateLimitSettings`, BE-kt-xnk) after a handful of attempts —
+(`LoginRateLimitSettings`, BE-P) after a handful of attempts —
 did not wait it out. **No actual browser/UI interaction was performed** —
 this environment has no Playwright/browser-automation tool available, only
 `curl`/`WebFetch` (which doesn't drive an authenticated SPA's dialogs). So:
@@ -2835,7 +2835,7 @@ index signature when spread inline" `tsc` issue as `use-contract-form.js`'s
 ...>} */` annotation on the `const`.
 
 **Verification:** `pnpm lint`/`typecheck`/`structure`/`test` (83/83) green.
-**Not** live-tested in a browser this pass (no dev server + BE-kt-xnk Docker
+**Not** live-tested in a browser this pass (no dev server + BE-P Docker
 API running in this session) — recommend a manual smoke test (pick an
 existing customer, quick-create a new one mid-contract, and — if any
 pre-existing contracts have a catalog-less Party A — open one in edit mode)
@@ -2864,7 +2864,7 @@ pattern here — `contract-form-dialog.jsx`'s Công ty/Chi nhánh `HStack` (two
 each still `width="100%"`.
 
 **Verification:** `pnpm lint`/`typecheck`/`test` (83/83) green. **Not**
-re-verified live in a browser this pass (no dev server + BE-kt-xnk Docker
+re-verified live in a browser this pass (no dev server + BE-P Docker
 API running in this session) — the fix is applied by well-evidenced analogy
 to the confirmed admin-users root cause, not by reproducing this exact
 instance first. Recommend a live check (long company name, resize) before
@@ -2889,7 +2889,7 @@ sections instead of one fixed block plus three collapsible ones.
 (`contractValue × paymentRatioPercent / 100`, via `formatMoney`), a
 read-only derived display — not part of the submitted payload.
 
-**Real-time duplicate check.** The backend (`BE-kt-xnk`, sibling repo) had
+**Real-time duplicate check.** The backend (`BE-P`, sibling repo) had
 no endpoint for this — `IContractsRepository.ExistsByContractNumberAsync`
 only backed the `409` on submit. Added
 `GET /api/v1/contracts/exists?contractNumber=&excludeContractId=` there
@@ -2923,14 +2923,14 @@ without it, even assigned to a `const`, was not enough.
 
 **Verification:** `pnpm lint`/`typecheck`/`structure`/`test` (83/83, +2 new
 for `checkContractNumberExists`) green. Not live-tested against a running
-dev server + BE-kt-xnk Docker API in this session — only static
+dev server + BE-P Docker API in this session — only static
 verification; recommend a manual smoke test (type a duplicate number, an
 edit-mode-own-number, an unused number) before considering this fully done.
 
 ## 2026-08-27 — CommonDialog, currency display, optional branch (follow-up)
 
 **Context:** Same-day follow-up to "Logistics Contracts + Customers pages"
-after BE-kt-xnk added `Contract.Currency` and made `BranchId` nullable/
+after BE-P added `Contract.Currency` and made `BranchId` nullable/
 optional (see that repo's own PROGRESS.md entry). User asked for: (1) every
 dialog to open at a fixed distance from the top instead of Astryx's default
 vertical centering, wider/taller, via a reusable component; (2) money
@@ -2982,7 +2982,7 @@ default silently rejects decimals with no visible error.**
 
 **Verification:** `pnpm lint`/`typecheck`/`structure`/`test` (84, +1)/
 `build`/`quality-thresholds` all green — `./harness/verify.sh` 10/10.
-Live-tested against the local BE-kt-xnk Docker API: confirmed the dialog is
+Live-tested against the local BE-P Docker API: confirmed the dialog is
 now top-anchored and horizontally centered (screenshot before/after), the
 money preview renders `"12,345.61 USD"` live as typed, and — after the
 `step` fix — successfully created a contract with `BranchId: null` and a
@@ -2991,7 +2991,7 @@ the page console.
 
 ## 2026-08-27 — Logistics Contracts + Customers pages
 
-**Context:** BE-kt-xnk's contract-management backend (5 endpoints:
+**Context:** BE-P's contract-management backend (5 endpoints:
 `Contracts`, `Customers`, `NotifyPartyContacts`, `ConsigneeContacts`,
 `ContractBanks`) shipped with nothing consuming it. User asked for a
 Logistics side nav with `/logistics/contracts` and `/logistics/customers`:
@@ -3043,7 +3043,7 @@ accepted rough edge.
 **Verification:** `pnpm lint`/`typecheck`/`structure`/`test` (83 tests,
 +2 new for `api/contracts.js`'s Party A payload branching)/`build`/
 `quality-thresholds` all green — `./harness/verify.sh` 10/10. Live-tested
-against the local BE-kt-xnk Docker API (already running from that repo's
+against the local BE-P Docker API (already running from that repo's
 own session) as Nguyễn Văn A (Logistics dept, has
 `logistics:contracts:view`/`manage` on his branch): created a customer,
 created a contract picking that customer via the Selector, quick-added a
@@ -3055,7 +3055,7 @@ errors observed.
 ## 2026-08-21 — Assign inherited and additional permissions while creating employees
 
 **Context:** The backend change
-`../BE-kt-xnk/openspec/changes/assign-permissions-during-user-creation/`
+`../BE-P/openspec/changes/assign-permissions-during-user-creation/`
 made employee creation and direct permission grants atomic, and introduced an
 Admin-only inherited-permission preview by Department.
 
@@ -3079,7 +3079,7 @@ production build, and quality thresholds all pass. Full harness:
 route, visible/reachable only to accounts with the `logistics:view`
 permission. `site.js` already had a comment anticipating exactly this
 (`{ label: 'Logistics', href: '/logistics', allowedPermissions:
-['logistics:view'] }`), and `db/sample-data.sql` (BE-kt-xnk) already seeds
+['logistics:view'] }`), and `db/sample-data.sql` (BE-P) already seeds
 Nguyễn Văn A with that permission specifically for testing this. No
 `openspec/changes/` entry — direct request, small addition.
 
@@ -3105,7 +3105,7 @@ Docker BE, three accounts:
 - Nguyễn Văn A (Logistics dept, has `logistics:view`) — link visible, page
   renders.
 - System Admin — link also visible. Not a bug: `RolePermissions.Map`
-  (BE-kt-xnk) deliberately grants Admin `logistics:view` too.
+  (BE-P) deliberately grants Admin `logistics:view` too.
 - Trần Thị B (Kế toán dept, no `logistics:view`) — link absent from nav,
   and direct navigation to `/logistics` redirects to `/` via middleware
   (confirms the route is actually enforced, not just hidden from the nav).
@@ -3149,7 +3149,7 @@ session; build, typecheck, structure, and behavioral unit tests passed.
 ## 2026-08-21 — "+ Thêm mới" on the Công ty/Chi nhánh/Phòng ban/Chức vụ Selectors
 
 **Context:** User asked to add a "create new" affordance to the four
-org-directory Selectors in the create/edit user form. `BE-kt-xnk` already
+org-directory Selectors in the create/edit user form. `BE-P` already
 has Admin-only create endpoints for all four
 (`POST /companies`, `POST /companies/{id}/branches`, `POST /departments`,
 `POST /positions` — each just `[Authorize(Roles = "Admin")]` + a `Name`,
@@ -3201,7 +3201,7 @@ clean. Full browser flow against the local Docker BE (see bug note above).
 
 ## 2026-08-21 — Admin "Reset password" action on the user list
 
-**Context:** User asked for a reset-password feature on the FE. `BE-kt-xnk`
+**Context:** User asked for a reset-password feature on the FE. `BE-P`
 already exposes `POST /users/{id}/password/reset`
 (`[Authorize(Roles = "Admin")]`, sets the password directly, no current-
 password check) — a different endpoint from the self-service
@@ -3298,7 +3298,7 @@ the now-dead v1 files.
 
 ## 2026-08-20 — Admin UI to create a grantable permission; quality gate fixed
 
-**Context:** User asked for the FE UI to `BE-kt-xnk`'s
+**Context:** User asked for the FE UI to `BE-P`'s
 `POST /permissions/grantable`, plus a security check and to apply any
 improvements found. Change: `openspec/changes/add-create-grantable-permission/`.
 
@@ -3321,7 +3321,7 @@ of whether a build existed — it was never actually measuring bundle size.
 Fixed with `fileURLToPath`. `./harness/verify.sh` now passes **10/10 for
 the first time this session** (bundle: 168.7 kB / 250 kB threshold).
 
-**BE-side security fix (same date, `BE-kt-xnk`):** the new DB-backed
+**BE-side security fix (same date, `BE-P`):** the new DB-backed
 permission catalog had dropped a guard the old static whitelist enforced
 by omission — nothing stopped Admin from adding a role-derived permission
 (`logistics:view`) to the individually-grantable catalog, which would let
@@ -3332,7 +3332,7 @@ form's existing error banner already surfaces.
 
 ## 2026-08-20 — Grantable permissions catalog is now DB-backed (BE)
 
-**Context:** `BE-kt-xnk`'s `add-create-grantable-permission` moved
+**Context:** `BE-P`'s `add-create-grantable-permission` moved
 `GET /permissions/grantable` off a static array onto a real
 `GrantablePermission` DB catalog Admin can add to via a new `POST`. The
 response shape changed: `string[]` → `[{ key, description }]`.
@@ -3354,7 +3354,7 @@ pass; `quality-thresholds` fails on the same pre-existing path-encoding bug
 
 **Context:** `admin-user-permission-grants` (same date, earlier) hardcoded
 `GRANTABLE_PERMISSIONS` deliberately, flagged as YAGNI with an explicit
-trigger: do it as a real endpoint once the list grows. `BE-kt-xnk` shipped
+trigger: do it as a real endpoint once the list grows. `BE-P` shipped
 `GET /permissions/grantable` (`add-grantable-permissions-endpoint`, same
 date) once the user called that condition met. Change:
 `openspec/changes/admin-user-permission-grants/` (updated in place, no new
@@ -3376,7 +3376,7 @@ noted in the previous entry (directory path contains a space), unrelated.
 
 ## 2026-08-20 — Admin UI for individual permission grants
 
-**Context:** `BE-kt-xnk` shipped `add-user-permission-grants` (same date):
+**Context:** `BE-P` shipped `add-user-permission-grants` (same date):
 `POST/DELETE /users/{id}/permissions` lets Admin grant one permission to one
 specific user, independent of role/department — the escape hatch for "a
 department head" or "one hand-picked employee" that role/department buckets
@@ -3634,7 +3634,7 @@ fields.
   structure` all clean (same pre-existing `user-list.jsx`/
   `icon-canary.jsx`/`icon-rocket.jsx`/`react-dev-callouts.jsx` typecheck
   failures logged in prior entries, nothing new). Manually drove both
-  dialogs end-to-end against the live BE-kt-xnk docker backend: created a
+  dialogs end-to-end against the live BE-P docker backend: created a
   user filling every field across the top section + "Thông tin liên hệ"
   tab (confirming values persist correctly even while a *different* tab
   is active — the top section isn't part of the tab-switched content),
@@ -3657,10 +3657,10 @@ server running rather than risk another broad kill.
 
 **Context:** Follow-up to the personal/identity-fields session, same day.
 User asked whether registration already had bank account info (it didn't —
-BE-kt-xnk's bank account API was self-service only, no way for Admin to
+BE-P's bank account API was self-service only, no way for Admin to
 act on another user's behalf) and chose to have Admin add it directly
 when creating/editing a user, per their reference screenshot's "Tài khoản
-ngân hàng" grid. BE-kt-xnk gained a parallel Admin-only bank account API
+ngân hàng" grid. BE-P gained a parallel Admin-only bank account API
 (`/api/v1/users/{userId}/bank-accounts...`) first — see its PROGRESS.md,
 `add-admin-bank-account-management` — this session wires that into the FE.
 
@@ -3680,7 +3680,7 @@ ngân hàng" grid. BE-kt-xnk gained a parallel Admin-only bank account API
 - `api/bank-accounts.js`: `listVietnamBanks` (public) +
   `adminAddBankAccount`/`adminUpdateBankAccount`/`adminRemoveBankAccount`/
   `adminSetPrimaryBankAccount`/`adminListBankAccounts` (Admin-only, hit the
-  new BE-kt-xnk endpoints).
+  new BE-P endpoints).
 - `use-create-user-form.js`: after `Register` succeeds, sequentially
   `adminAddBankAccount`s every row that has both a bank and account number
   (empty rows silently dropped) using the newly-created user's id — order
@@ -3702,7 +3702,7 @@ ngân hàng" grid. BE-kt-xnk gained a parallel Admin-only bank account API
   structure` all clean (same pre-existing `icon-canary.jsx`/
   `icon-rocket.jsx`/`react-dev-callouts.jsx`/`user-list.jsx` typecheck
   failures as prior sessions, nothing new). Manually drove the full flow
-  in a real browser against the live BE-kt-xnk docker backend: created a
+  in a real browser against the live BE-P docker backend: created a
   user with one bank account row (bank dropdown populated from the real
   `GET /vietnam-banks`, 35 real banks) — confirmed via `curl` the account
   was persisted and marked primary; then opened that user's Edit dialog,
@@ -3723,7 +3723,7 @@ command. Prefer killing by the specific PID captured at launch time.
 
 ## 2026-08-19 — Personal + identity document fields on Create/Edit User (`admin-users`)
 
-**Context:** Backend (BE-kt-xnk) added `YearOfBirth`, `Gender`,
+**Context:** Backend (BE-P) added `YearOfBirth`, `Gender`,
 `NationalIdIssueDate`, `NationalIdIssuePlace`, `PassportNumber` to
 `RegisterCommand`/`UpdateUserCommand` (now required except passport) —
 without matching frontend fields, `CreateUserForm`/`EditUserForm` would
@@ -3770,7 +3770,7 @@ new ones ("Không cần chỉnh component").
   `user-list.jsx` failures logged repeatedly elsewhere in this file — none
   from this change). `pnpm run structure` clean (272 modules, 0
   violations). Manually drove the full Create User flow against the real
-  BE-kt-xnk docker backend on `localhost:3000` (logged in as the seeded
+  BE-P docker backend on `localhost:3000` (logged in as the seeded
   Admin, filled every field including the calendar picker for "Ngày cấp
   CCCD", submitted) — new user appeared in the list with `Nhân viên` role;
   opened its Edit dialog and confirmed all five new fields round-tripped
@@ -3794,7 +3794,7 @@ this while testing by hand.
 action opening create-user via drawer or modal (Astryx has no Drawer
 component — confirmed via `astryx search` — so modal/`Dialog` it is), plus
 a per-row edit action opening the same kind of dialog pre-filled. Backend
-(`BE-kt-xnk`) added `GET /users`/`PUT /users/{id}` for this
+(`BE-P`) added `GET /users`/`PUT /users/{id}` for this
 (`add-users-list-and-update`).
 
 **Done:**
@@ -3866,7 +3866,7 @@ a per-row edit action opening the same kind of dialog pre-filled. Backend
 
 ## 2026-08-19 — Claude Code (CreateUserForm: Position selector + random password button)
 
-**Context:** Backend (`BE-kt-xnk`) added a required `PositionId` to
+**Context:** Backend (`BE-P`) added a required `PositionId` to
 `POST /authentication/register` (`add-position-to-registration` change) —
 user asked for the create-user form to expose it, plus a "random password"
 button.
@@ -4085,15 +4085,15 @@ literal scope of what was asked).
 
 **Context:** User asked for an admin-only user-creation feature: a
 `/admin` topnav + sidenav visible only to Admins, with a "Tạo người dùng"
-page wired to the real backend (`BE-kt-xnk`'s admin-only
+page wired to the real backend (`BE-P`'s admin-only
 `POST /api/v1/authentication/register`, which by this point also requires
 `Phone` and an `AddressType`/`Province`/`District`/`Ward`/`AddressDetail`
-address block — see `BE-kt-xnk`'s `add-phone-and-password-management` and
+address block — see `BE-P`'s `add-phone-and-password-management` and
 `add-address-to-registration` changes). Active change:
 `openspec/changes/admin-create-user/`.
 
 **Done:**
-- **Backend** (`BE-kt-xnk`): new `Permission.UsersManage = "users:manage"`,
+- **Backend** (`BE-P`): new `Permission.UsersManage = "users:manage"`,
   granted to `Admin` in `RolePermissions.Map` — this repo's existing
   permission-based nav/route gating needed *some* permission string to key
   on for Admin-only UI, and none existed yet for user management
@@ -4171,7 +4171,7 @@ ward reference data (free-text inputs, matching the backend).
   renamed department silently breaks a stale `allowedRoles` entry;
   permission-based has the backend map role→permission once
   (`RolePermissions.Map`) and the FE only ever checks an abstract
-  capability string like `'logistics:view'`). The matching `BE-kt-xnk`
+  capability string like `'logistics:view'`). The matching `BE-P`
   session this same day populated `RolePermissions.Map` for real — this
   session is the FE half.
 - **Result:** done, code-complete. `shared/api/jwt.js` gained
@@ -4202,8 +4202,8 @@ ward reference data (free-text inputs, matching the backend).
   cookie → `200`; no token at all → still falls through to the existing
   `307` to `/login`. Reverted the temporary rule — `routeAccessRules`
   ships empty, same as the role-based version did. **Not tested against a
-  live `BE-kt-xnk` backend** — no instance was running this session
-  (`BE-kt-xnk`'s own same-day session did verify the `permissions` claim's
+  live `BE-P` backend** — no instance was running this session
+  (`BE-P`'s own same-day session did verify the `permissions` claim's
   JWT serialization shape live against Docker, both array and
   bare-string cases — see its `PROGRESS.md`).
 - **Decisions made:** see `proposal.md`'s decision log — permission
@@ -4214,7 +4214,7 @@ ward reference data (free-text inputs, matching the backend).
   `allowedPermissions` field on the matching `site.js` nav item, no gating
   code to write. Also still open: rename `src/middleware.js` →
   `src/proxy.js` per Next's deprecation notice (not done either session);
-  a real end-to-end login test once a `BE-kt-xnk` instance with a
+  a real end-to-end login test once a `BE-P` instance with a
   `RolePermissions`-mapped user is available.
 - **Blockers:** none.
 
@@ -4421,7 +4421,7 @@ ward reference data (free-text inputs, matching the backend).
   to the existing `307` to `/login` (this mechanism correctly did
   nothing); an unrelated route with a non-matching role → `200`
   (unaffected, rule didn't match). Reverted the temporary rule —
-  `routeAccessRules` ships empty. **Not tested against a live `BE-kt-xnk`
+  `routeAccessRules` ships empty. **Not tested against a live `BE-P`
   backend** — no instance was running this session; the synthetic-cookie
   test exercises the identical code paths a real login would populate.
 - **Decisions made:** roles cached as a cookie rather than decoded
@@ -4434,7 +4434,7 @@ ward reference data (free-text inputs, matching the backend).
   `shared/config/route-access.js` and one field on the matching entry in
   `shared/config/site.js` — no gating code to write. Also worth: (a)
   eventually renaming `src/middleware.js` → `src/proxy.js` per Next's
-  deprecation notice, (b) a real end-to-end login test once a `BE-kt-xnk`
+  deprecation notice, (b) a real end-to-end login test once a `BE-P`
   instance with a department-role user is available.
 - **Blockers:** none.
 
@@ -4444,7 +4444,7 @@ ward reference data (free-text inputs, matching the backend).
 
 - **Active change:** `openspec/changes/wire-nationalid-login/` (new,
   status done).
-- **Task worked:** the backend (`BE-kt-xnk`, sibling repo) removed `Email`
+- **Task worked:** the backend (`BE-P`, sibling repo) removed `Email`
   as the user identity field and replaced it with `NationalId` (Vietnamese
   CCCD, 12 digits) — see its `harness/PROGRESS.md`, 2026-08-18 entries.
   This frontend's login was still wired to the old shape from
@@ -4489,7 +4489,7 @@ ward reference data (free-text inputs, matching the backend).
   gate, since it would just report the same pre-existing format drift as
   a failure and add no new signal — the individual checks above cover
   everything it would run. **Not manually tested against a live
-  backend** — no `BE-kt-xnk` instance was running this session; whoever
+  backend** — no `BE-P` instance was running this session; whoever
   picks this up next should log in with a real national ID + password
   from a seeded backend user before calling this fully verified.
 - **Decisions made:** followed `wire-real-login-backend`'s established
@@ -4500,7 +4500,7 @@ ward reference data (free-text inputs, matching the backend).
 - **Next step:** the user is planning role-based nav/route gating next
   (e.g. hiding a `/logistics` route from non-Logistics staff) — that will
   need decoding the JWT's `roles` claim client-side (the backend embeds it
-  already; see `BE-kt-xnk`'s `docs/api/Authentication.md`) and a
+  already; see `BE-P`'s `docs/api/Authentication.md`) and a
   route→allowedRoles map, most likely via Next.js `middleware.js` so it's
   enforced before rendering, the same way `(protected)/layout.jsx`
   currently gates on "has a token" alone. Not started — this session was
@@ -6925,7 +6925,7 @@ ward reference data (free-text inputs, matching the backend).
   `openspec/changes/` entry — direct per user request, pasted a crash log)
 - **Task worked:** user hit, after a few successful requests then an HMR
   update: `FATAL: An unexpected Turbopack error occurred` /
-  `Resource path "projects/work/code/kt-xnk/src/app/layout.js" needs to be
+  `Resource path "projects/work/code/FE-P/src/app/layout.js" needs to be
   on project filesystem ""` (missing the `/home/capybara/` prefix — a
   path-resolution bug). Trace pointed at `WebpackLoadersProcessedAsset`,
   i.e. Babel-loader-processed files specifically (this project uses
@@ -7081,7 +7081,7 @@ ward reference data (free-text inputs, matching the backend).
   Astryx theme (no `openspec/changes/` entry — small follow-up to the
   Astryx migration above, done directly per user request after they pasted
   a `pnpm dev` log showing Astryx's own perf warning)
-- **Task worked:** `pnpm dev` was logging: `Theme: "kt-xnk" is using
+- **Task worked:** `pnpm dev` was logging: `Theme: "FE-P" is using
   runtime style injection. For better performance, use the pre-built
   theme... run 'npx @astryxdesign/cli theme build <file>'`. Ran
   `astryx theme build src/ui/theme.js -o src/ui/theme.built.css`, which
@@ -7133,7 +7133,7 @@ ward reference data (free-text inputs, matching the backend).
   `header.js`/`footer.js`/`hero.js` with real Astryx components
   (`TopNav`/`TopNavHeading`/`TopNavItem`, `Section`, `Heading`/`Text`).
 - **Result:** done.
-  - `src/ui/theme.js` — `defineTheme({name: 'kt-xnk', tokens: {...}})`
+  - `src/ui/theme.js` — `defineTheme({name: 'FE-P', tokens: {...}})`
     mapping our MD3 role values onto Astryx's CSS-custom-property token
     names (`--color-accent`, `--color-background-body`,
     `--color-background-surface`, `--color-background-card`,
@@ -7169,7 +7169,7 @@ ward reference data (free-text inputs, matching the backend).
     are sourced from `src/ui/theme.js`, not a StyleX token file.
 - **Verification:** `./harness/verify.sh` — full pass. Also ran `pnpm dev`
   against the actual page and inspected the rendered HTML/CSS: confirmed
-  `data-astryx-theme="kt-xnk" data-theme="light"` on the root wrapper,
+  `data-astryx-theme="FE-P" data-theme="light"` on the root wrapper,
   `<header><nav aria-label="Điều hướng chính">` from `TopNav`, and
   `#b91a24` (MD3 `primary`) present in the compiled CSS chunk. See
   `harness/runs/20260806-220202-9426/`.
@@ -7448,7 +7448,7 @@ ward reference data (free-text inputs, matching the backend).
 
 ## 2026-09-09 — Contract "Thông tin private" (BOQ): tab unification + list page
 
-- Full detail in `../BE-kt-xnk/harness/PROGRESS.md`'s same-dated entry
+- Full detail in `../BE-P/harness/PROGRESS.md`'s same-dated entry
   (cross-repo change, BE list/search endpoint + FE). Summary here for this
   repo's own history:
 - Unified the "Thông tin private" tab's Xem and Sửa around one component
@@ -7469,7 +7469,7 @@ ward reference data (free-text inputs, matching the backend).
   unrelated to this session (confirmed identical before/after), so did not
   run `./harness/verify.sh` end-to-end (would report that as a false
   regression) — ran each gate individually instead.
-- Live-verified against the real dev BE-kt-xnk stack: rebuilt the dev API
+- Live-verified against the real dev BE-P stack: rebuilt the dev API
   container (was missing a same-day commit), imported `db/sample-data.sql`
   into an empty dev DB, confirmed both the unified tab layout and the new
   BOQ list + its Sửa-opens-directly-into-edit-mode flow.
@@ -7584,7 +7584,7 @@ ward reference data (free-text inputs, matching the backend).
   a fresh mount with the correct initial `isEditing` too, rather than
   reusing state computed for the old identity.
 - `pnpm lint`/`pnpm typecheck` (no new errors)/`pnpm structure`/`pnpm
-  test` (136) all clean. Live-verified against the real dev BE-kt-xnk
+  test` (136) all clean. Live-verified against the real dev BE-P
   stack on the contract's actual seeded Commission (Công ty TNHH Môi Giới
   Thương Mại Quốc Tế, 3,500 USD): tab now opens read-only as expected,
   "Sửa Commission" still toggles editing correctly, "Hủy" still reverts
@@ -7593,7 +7593,7 @@ ward reference data (free-text inputs, matching the backend).
 
 ## 2026-09-09 — LAN operations implementation
 
-- Implemented accepted `BE-kt-xnk/docs/lan-operations-plan.md` across both apps
+- Implemented accepted `BE-P/docs/lan-operations-plan.md` across both apps
   and sibling `ops-lan`: CI/image exclusions, Caddy HTTPS, Portainer, independent
   Kuma 2.5.3, PowerShell release/backup/restore/monitoring/provisioning, explicit
   backend migrate/seed/schema commands and Admin-only operational status UI.
@@ -7611,3 +7611,13 @@ ward reference data (free-text inputs, matching the backend).
 - Pending: actual Windows installation, NTFS/DPAPI/CMS, SMB and SMTP drills,
   Portainer operator drill, remote CI for release SHAs, measured four-hour
   recovery goal. Track in `../ops-lan/acceptance.md`; not marked accepted.
+
+## 2026-09-09 — Repository directory names
+
+- Backend directory: `../BE-P`; frontend directory: `../FE-P`.
+- Updated harness documentation and cross-repository references to these names.
+- Verification scripts already resolve their repository relative to their own
+  location. Browser-test cookie names and generated theme filenames remain
+  application identifiers and do not follow repository-directory names.
+- Validation: full `./harness/verify.sh` PASS after rename; evidence
+  `harness/runs/20260909-072511-744142/`.
