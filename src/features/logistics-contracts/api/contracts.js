@@ -37,12 +37,19 @@ export async function listContracts({ page = 1, pageSize = 25 } = {}) {
  * /api/v1/contracts/search`, BE-kt-xnk) so results are correct across every
  * page, not just the one currently loaded.
  *
- * Unlike `listContracts`, the response is `{ page: {...}, valueTotals: [...] }`
- * rather than the flat paging envelope — `valueTotals` sums `contractValue`
- * per currency across every matching contract (not just this page), so the
- * list's "Tổng giá trị" line stays correct across pagination.
+ * Unlike `listContracts`, the response is
+ * `{ page: {...}, valueTotals: [...], settlements: [...] }` rather than the
+ * flat paging envelope:
+ * - `valueTotals` sums `contractValue` per currency across every matching
+ *   contract (not just this page), so the list's "Tổng giá trị" line stays
+ *   correct across pagination.
+ * - `settlements` has one entry per contract on *this page* (matched by
+ *   `contractId`) — `settlementValue` (contract value + annex adjustments),
+ *   `paidValue` (sum of recorded payment schedules) and `unpaidValue`
+ *   (`settlementValue - paidValue`), backing the list's "Quyết toán / Đã
+ *   thanh toán / Chưa thanh toán" columns.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
- * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number, valueTotals: { currency: string, total: number }[] } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number, valueTotals: { currency: string, total: number }[], settlements: { contractId: string, settlementValue: number, paidValue: number, unpaidValue: number }[] } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchContracts({
   page = 1,
@@ -77,6 +84,7 @@ export async function searchContracts({
     totalCount: result.data?.page?.totalCount ?? 0,
     totalPages: result.data?.page?.totalPages ?? 0,
     valueTotals: result.data?.valueTotals ?? [],
+    settlements: result.data?.settlements ?? [],
   };
 }
 

@@ -65,6 +65,24 @@ function formatPaymentTerms(terms) {
   return `${terms.length} đợt`;
 }
 
+/**
+ * Two-line header — a small "GIÁ TRỊ" caption over the specific label —
+ * so the three settlement columns read as one visual group even though
+ * the underlying `Table` has no spanning/grouped-header primitive to
+ * merge them under a single cell.
+ * @param {string} label
+ */
+function settlementColumnHeader(label) {
+  return (
+    <VStack gap={0} hAlign="end">
+      <Text type="supporting" color="secondary">
+        GIÁ TRỊ
+      </Text>
+      <Text weight="semibold">{label}</Text>
+    </VStack>
+  );
+}
+
 /** Contract workspace and related editors are siblings of the table so
  * Selector portals remain inside their dialog layers (ADR-0004). */
 export function ContractsList() {
@@ -172,6 +190,18 @@ export function ContractsList() {
   // `searchContracts`'s doc comment), grouped by currency since contracts
   // can be denominated in more than one.
   const valueTotals = listResult?.success ? listResult.valueTotals : [];
+  // Per-contract "Quyết toán / Đã thanh toán / Chưa thanh toán" — one entry
+  // per row on this page only (unlike `valueTotals`), keyed by contractId so
+  // `renderCell` below can look a row's up in O(1).
+  const settlementsByContractId = useMemo(
+    () =>
+      new Map(
+        (listResult?.success ? listResult.settlements : []).map(
+          (settlement) => [settlement.contractId, settlement],
+        ),
+      ),
+    [listResult],
+  );
 
   const banksQuery = useContractBanksQuery();
   const banksById = useMemo(
@@ -297,6 +327,43 @@ export function ContractsList() {
       filter: 'contractValue',
       renderCell: (contract) =>
         formatMoney(contract.contractValue, contract.currency),
+    },
+    {
+      key: 'settlementValue',
+      // No matching backend filter field — these three are computed
+      // (contract value + annex adjustments, and the payment position off
+      // it), not stored columns `ContractFilterFields` (BE-kt-xnk) knows
+      // how to filter on.
+      header: settlementColumnHeader('QUYẾT TOÁN'),
+      width: proportional(1),
+      align: 'end',
+      renderCell: (contract) =>
+        formatMoney(
+          settlementsByContractId.get(contract.id)?.settlementValue,
+          contract.currency,
+        ),
+    },
+    {
+      key: 'paidValue',
+      header: settlementColumnHeader('ĐÃ THANH TOÁN'),
+      width: proportional(1),
+      align: 'end',
+      renderCell: (contract) =>
+        formatMoney(
+          settlementsByContractId.get(contract.id)?.paidValue,
+          contract.currency,
+        ),
+    },
+    {
+      key: 'unpaidValue',
+      header: settlementColumnHeader('CHƯA THANH TOÁN'),
+      width: proportional(1),
+      align: 'end',
+      renderCell: (contract) =>
+        formatMoney(
+          settlementsByContractId.get(contract.id)?.unpaidValue,
+          contract.currency,
+        ),
     },
     {
       key: 'incoterm',
