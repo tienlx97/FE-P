@@ -21,6 +21,7 @@ import {
   TableHeaderGroupCaption,
 } from '@/shared/components/table-header-group.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
+import { generateRowKey } from '@/shared/config/generate-row-key.js';
 
 import {
   badgeVariantForContractStatus,
@@ -100,8 +101,15 @@ function settlementColumnHeader(label) {
 export function ContractsList() {
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreenToggle();
   const tableWrapperRef = useRef(null);
+  // `sessionKey` identifies one open workspace session — assigned once per
+  // open action (row Xem/Sửa, "Tạo hợp đồng") and never touched again for
+  // that session, including across a successful create (`contract` moves
+  // from `null` to the saved record in place). Unlike keying the dialog off
+  // `contract?.id`, this stays stable through that null→id transition, so
+  // saving a brand-new Contract doesn't force a remount either — the one
+  // thing task 1.2 exists to remove ("bỏ remount chỉ để đổi mode").
   const [workspace, setWorkspace] = useState(
-    /** @type {{ mode?: 'view' | 'edit', contract: import('../types/index.js').Contract | null, revision: number } | null} */ (
+    /** @type {{ mode?: 'view' | 'edit', contract: import('../types/index.js').Contract | null, sessionKey: string } | null} */ (
       null
     ),
   );
@@ -126,7 +134,7 @@ export function ContractsList() {
     ),
   );
   const [privateInfoStatus, setPrivateInfoStatus] = useState(
-    /** @type {{ isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null} */ (
+    /** @type {{ isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string } | null} */ (
       null
     ),
   );
@@ -136,11 +144,11 @@ export function ContractsList() {
     ),
   );
   const [commissionStatus, setCommissionStatus] = useState(
-    /** @type {{ isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null} */ (
+    /** @type {{ isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string } | null} */ (
       null
     ),
   );
-  /** @type {{ status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null, startEditing: () => void, cancelEditing: () => void, submit: () => void } | null} */
+  /** @type {{ status: { isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string } | null, startEditing: () => void, cancelEditing: () => void, submit: () => void } | null} */
   const activeTabEditController =
     expandedTab === 'privateInfo'
       ? {
@@ -157,6 +165,21 @@ export function ContractsList() {
             submit: () => commissionPanelRef.current?.submit(),
           }
         : null;
+  // Unlike `activeTabEditController` (scoped to whichever tab is visible,
+  // for the footer's own label/actions), the exit guard in
+  // `ContractFormDialog` must know about an unsaved Commission/private-info
+  // draft even when the user has switched away to another tab — both
+  // panels stay mounted (`ContractExpandedDetails`) so their drafts survive
+  // tab switches, but closing/leaving the whole workspace must still catch
+  // them.
+  const secondaryDraftsStatus = {
+    isDirty:
+      Boolean(commissionStatus?.isEditing && commissionStatus?.isDirty) ||
+      Boolean(privateInfoStatus?.isEditing && privateInfoStatus?.isDirty),
+    isSubmitting:
+      Boolean(commissionStatus?.isSubmitting) ||
+      Boolean(privateInfoStatus?.isSubmitting),
+  };
   const [shipmentDialog, setShipmentDialog] = useState(
     /** @type {{ contractId: string, contract: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
       null
@@ -486,11 +509,19 @@ export function ContractsList() {
         <RecordActionsMenu
           onView={() => {
             setExpandedTab('info');
-            setWorkspace({ contract: row, revision: 0, mode: 'view' });
+            setWorkspace({
+              contract: row,
+              sessionKey: generateRowKey(),
+              mode: 'view',
+            });
           }}
           onEdit={() => {
             setExpandedTab('info');
-            setWorkspace({ contract: row, revision: 0, mode: 'edit' });
+            setWorkspace({
+              contract: row,
+              sessionKey: generateRowKey(),
+              mode: 'edit',
+            });
           }}
         />
       ),
@@ -542,7 +573,7 @@ export function ContractsList() {
             variant="primary"
             onClick={() => {
               setExpandedTab('info');
-              setWorkspace({ contract: null, revision: 0 });
+              setWorkspace({ contract: null, sessionKey: generateRowKey() });
             }}
           />
         </HStack>
@@ -610,7 +641,7 @@ export function ContractsList() {
 
       {workspace ? (
         <ContractFormDialog
-          key={`${workspace.contract?.id ?? 'create'}-${workspace.revision}`}
+          key={workspace.sessionKey}
           isOpen
           onOpenChange={(open) => {
             if (!open) setWorkspace(null);
@@ -626,10 +657,15 @@ export function ContractsList() {
             contract && setAnnexDialog({ contractId: contract.id, annex })
           }
           onSuccess={(saved) => {
-            setExpandedTab('info');
-            setWorkspace({ contract: saved, revision: workspace.revision + 1 });
+            // Stays mounted (same `sessionKey`) — updates the Contract in
+            // place instead of remounting the workspace just to fall back
+            // to Xem; `ContractFormDialog` itself flips out of edit mode.
+            setWorkspace((current) =>
+              current ? { ...current, contract: saved } : current,
+            );
           }}
           activeTabEditController={activeTabEditController}
+          secondaryDraftsStatus={secondaryDraftsStatus}
         >
           {contract ? (
             <ContractExpandedDetails
@@ -689,7 +725,11 @@ export function ContractsList() {
           contractId={shipmentDialog.contractId}
           contract={shipmentDialog.contract}
           shipment={shipmentDialog.shipment}
-          onSuccess={() => setShipmentDialog(null)}
+          onSuccess={(saved) =>
+            setShipmentDialog((current) =>
+              current?.shipment ? { ...current, shipment: saved } : null,
+            )
+          }
         />
       ) : null}
 

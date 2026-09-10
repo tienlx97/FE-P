@@ -403,7 +403,11 @@ export function CommissionsList() {
           onAddPayment={() =>
             selectedCommission && setPaymentDialog(selectedCommission)
           }
-          onSuccess={() => setEditingCommissionRow(null)}
+          // This dialog only ever edits an existing Commission (creation
+          // uses `creatingCommission`/`CommissionFormDialog` without a
+          // `commission` prop below) — `CommissionFormDialog` itself
+          // returns to Xem in place on save, so nothing to close here.
+          onSuccess={() => {}}
         />
       ) : null}
 

@@ -353,7 +353,9 @@ export function ShipmentsList() {
           contract={shipmentDialog.contract}
           initialMode={shipmentDialog.mode}
           shipment={selectedShipment}
-          onSuccess={() => setShipmentDialog(null)}
+          onSuccess={() =>
+            setShipmentDialog((current) => (current?.shipment ? current : null))
+          }
         />
       ) : null}
     </VStack>

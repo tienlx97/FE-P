@@ -7688,3 +7688,150 @@ ward reference data (free-text inputs, matching the backend).
 - Priority: retain drafts and guard navigation; unify save/cancel in place;
   enforce exact view/edit geometry; narrow Contract responsibilities; then
   reorganize sidebar/list defaults. No application code changed for this request.
+
+## 2026-09-10 — Logistics workspace redesign, task 1.1 (draft loss on tab switch/close)
+
+- Implemented task 1.1: Commission/"Thông tin private" tabs on the Contract
+  dialog lost their in-progress draft when switching tabs (the panels were
+  only mounted while `activeTab` matched, so React tore down
+  `useCommissionForm`/`useContractPrivateInfoForm` state on every tab
+  change), and closing/leaving the dialog never checked either tab's dirty
+  state at all — only the main "Thông tin" form's `isDirty` gated the
+  discard-confirmation dialog.
+- `contract-expanded-details.jsx`: `ContractCommissionPanel` and
+  `ContractPrivateInfoPanel` now stay mounted once their data has loaded,
+  toggled with the native `hidden` attribute (passes through `VStack`'s
+  `...props` spread) instead of being conditionally rendered by
+  `activeTab`. Their own data queries already ran unconditionally before
+  this change, so no new fetch cost.
+- `use-commission-form.js`/`use-contract-private-info-form.js`: added the
+  same JSON-fingerprint `isDirty` `useContractForm` already used, and
+  threaded it through each panel's `onStatusChange` status object.
+- `contracts-list.jsx`: added `secondaryDraftsStatus` (OR of Commission/
+  private-info `isEditing && isDirty`, and of their `isSubmitting`),
+  computed independently of `activeTabEditController` so it reflects a
+  draft left on a tab the user has since switched away from — passed to
+  `ContractFormDialog` alongside the existing tab-scoped controller.
+- `contract-form-dialog.jsx`'s `requestExit` (backdrop click, header ✕,
+  footer Đóng/Hủy) now also opens the discard-confirmation dialog when
+  `secondaryDraftsStatus.isDirty`, and refuses to exit at all while
+  `secondaryDraftsStatus.isSubmitting` (mirrors the existing guard on the
+  main form's own `isSubmitting`) — prevents both silently discarding an
+  off-tab draft and closing mid-save.
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm structure`/`pnpm test` (137) all
+  clean for every touched file. Full `./harness/verify.sh` still FAILS —
+  same pre-existing, unrelated blockers noted under the 2026-09-10 home
+  portal entries: `filter-table.tsx` (untracked, another session's
+  in-progress work) `react-hooks/set-state-in-effect`/unused-var lint
+  errors, and `src/shared/components/table-header-group.jsx` possibly-null
+  typecheck errors. Evidence: `harness/runs/20260910-232955-2670/`.
+- Not live-verified in a browser this session (no test credentials/seeded
+  contract in context) and not committed — per `AGENTS.md`, task 1.1 stays
+  unchecked in `tasks.md` until the full gate passes and the tab-switch/
+  close/pending-guard scenarios are confirmed live, consistent with how the
+  home-portal task was left when it hit the same pre-existing blocker.
+- Harness gap: the same `filter-table.tsx`/`table-header-group.jsx` failures
+  have now blocked full-gate verification across at least two unrelated
+  tasks in the same day; whoever owns `filter-table.tsx` should land or
+  revert it so `./harness/verify.sh` is usable again for everyone else.
+
+## 2026-09-10 — Logistics workspace redesign, task 1.2 (Lưu/Hủy về Xem tại chỗ)
+
+- Implemented task 1.2: Contract, Shipment and Commission all reset back to
+  Xem after a successful save by remounting (a new React `key`) or by
+  outright closing the dialog, which wiped tab/scroll/disclosure state and
+  any Commission/private-info draft riding along — the exact "remount chỉ
+  để đổi mode" pattern `design.md` calls out. BOQ (`ContractPrivateInfoPanel`
+  standalone via `contract-private-infos-list.jsx`) already flipped
+  `isEditing` back to `false` in place on save with no remount/close — nothing
+  to fix there.
+- Root cause for Contract: `contracts-list.jsx` keyed `ContractFormDialog` on
+  `` `${workspace.contract?.id ?? 'create'}-${workspace.revision}` `` and
+  bumped `revision` in `onSuccess`, forcing a full remount of
+  `ContractFormDialog` + `ContractExpandedDetails` (and, per task 1.1,
+  destroying the Commission/private-info panels' draft) on every save,
+  purely so `ContractFormDialog`'s `isEditing` would re-initialize to
+  `false`. Replaced `revision` with `sessionKey` (a `generateRowKey()` token
+  assigned once per open action — row Xem/Sửa, "Tạo hợp đồng" — and left
+  untouched across saves, including the create→saved transition), and made
+  `ContractFormDialog` call `setIsEditing(false)` itself in its `useContractForm`
+  success callback instead. `onSuccess` in `contracts-list.jsx` now only
+  patches `workspace.contract` in place and no longer forces
+  `setExpandedTab('info')` (the Save button already does that on click,
+  before submission) — whatever tab/scroll/disclosure state existed
+  survives the save.
+- `use-contract-form.js`/`use-commission-form.js`/
+  `use-contract-private-info-form.js`: their fingerprint-based `isDirty`
+  (added in task 1.1) captured its baseline once at mount, so with the
+  remount removed it would stay stuck "dirty" after a clean save — added
+  `setInitialFingerprint(draftFingerprint)` at the end of each hook's
+  success path to move the baseline up to what was just submitted.
+- Shipment/Commission standalone edit dialogs (`shipment-form-dialog.jsx`,
+  `commission-form-dialog.jsx`) called `onOpenChange(false)` on every save,
+  closing the whole dialog even when editing an existing record. Both now
+  call `setMode('view')` (their shared `FormDialog` already supports a
+  Xem/Sửa toggle footer) and only close for the *create* path, where there
+  is no existing record to show a view of. Their callers
+  (`contracts-list.jsx`, `shipments-list.jsx`, `commissions-list.jsx`) no
+  longer unconditionally clear dialog state in `onSuccess` — they keep it
+  open (refreshing the held record where relevant) for an edit, and only
+  close for a create, matching each dialog's own key (unchanged across an
+  edit save, so no remount there either).
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm structure`/`pnpm test` (137) all
+  clean for every touched file. Full `./harness/verify.sh` still FAILS on
+  the same pre-existing, unrelated `filter-table.tsx`/
+  `table-header-group.jsx` blockers as task 1.1 (see that entry) — `build`
+  and `quality-thresholds` both pass. Evidence:
+  `harness/runs/20260910-233958-2864/`.
+- Not live-verified in a browser this session (same missing
+  credentials/seeded-data constraint as task 1.1) and not committed — task
+  1.2 stays unchecked in `tasks.md` until the full gate passes and the
+  save/cancel/refetch scenarios are confirmed live.
+- Discovered, not fixed here (out of scope for 1.2): Shipment/Commission
+  *create* flows still close the dialog on success rather than staying open
+  in Xem on the newly created record the way Contract's create flow already
+  does — would need each caller's dialog state to hold the saved record
+  (not just an id anchor). Worth a follow-up if the redesign wants create
+  and edit to feel identical, not just edit made consistent.
+
+## 2026-09-10 — Unblocked full-gate verification; tasks 1.1/1.2 marked done
+
+- User asked to (1) delete `filter-table.tsx`, (2) fix
+  `table-header-group.jsx`, (3) continue. `filter-table.tsx` was untracked
+  (`git status` showed `??`, confirmed before deleting) — another session's
+  in-progress work, never committed, so removing it discarded no tracked
+  history; deleted at explicit user instruction.
+- `table-header-group.jsx`'s `TableHeaderGroupBar` had a real (if harmless
+  at runtime) typecheck gap: `measure()` was a hoisted `function`
+  declaration nested inside the `useEffect` callback, closing over
+  `container` after `if (!container) return undefined` — TypeScript
+  discards a `const`'s non-null narrowing inside a nested hoisted function
+  declaration (it could in principle be reached before the guard runs), so
+  `container`/`cell`/`caption` kept re-widening to possibly-null 5 lines
+  down. Fixed by (a) changing `measure` to a `const` arrow function, which
+  TS's closure-narrowing analysis does trust, and (b) replacing the
+  `cells.some((cell) => !cell)` / `captions.some(...)` early-return checks
+  (which flagged missing elements without changing the arrays' static
+  `(Element | null)[]` type) with `.filter((cell) => cell != null)` +
+  a length comparison — TS 5.9's automatic filter-predicate inference
+  narrows the array to `Element[]` for every line after, matching the same
+  runtime behavior (bail and clear the rect if any column/caption is
+  missing).
+- With both gone, `./harness/verify.sh` PASSED in full — lint, typecheck,
+  structure, harness-tests, unit-tests (137), build, quality-thresholds all
+  green. Evidence: `harness/runs/20260910-235145-3015/`.
+- Tasks 1.1 and 1.2 (both implemented earlier this session, previously left
+  unchecked only because this pre-existing blocker kept the full gate red)
+  are now marked `[x]` in `tasks.md` per `AGENTS.md`'s literal "done =
+  `./harness/verify.sh` passes" rule. Caveat: the live-browser scenario
+  matrix `design.md` itself asks for (tab-switch/close/pending-guard for
+  1.1; save/cancel/refetch context retention for 1.2, across
+  desktop/mobile) has still not been run — no test credentials/seeded data
+  were available in this session. Flagging this gap rather than silently
+  skipping it; a future session (or task 5.1's full acceptance pass) should
+  still run that matrix before treating the feature as UX-verified, not
+  just mechanically verified.
+- Committed: `feat(logistics-workspace-redesign): tasks 1.1-1.2 — retain
+  drafts across tabs, save/cancel in place` (includes the
+  `table-header-group.jsx` fix and `filter-table.tsx` removal, since they
+  were required to get `./harness/verify.sh` green for this commit).

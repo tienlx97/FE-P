@@ -92,6 +92,16 @@ export function useCommissionForm({
       : undefined,
   );
 
+  // Same fingerprint idiom as `useContractForm` — lets a caller (the
+  // Contract dialog's footer) know whether this tab has an unsaved draft
+  // worth guarding navigation on, without hoisting the form state itself.
+  const draftFingerprint = JSON.stringify({
+    values,
+    paymentTerms: paymentTermRows.rows,
+    paymentHistory: paymentHistoryRows.rows,
+  });
+  const [initialFingerprint, setInitialFingerprint] = useState(draftFingerprint);
+
   function reset() {
     setValues(commission ? valuesFromCommission(commission) : emptyValues());
     setFieldErrors({});
@@ -182,6 +192,9 @@ export function useCommissionForm({
       return;
     }
 
+    // Moves the dirty baseline up to what was just submitted, so re-opening
+    // edit mode right after a clean save doesn't misreport `isDirty`.
+    setInitialFingerprint(draftFingerprint);
     onSuccess?.(mutationResult.commission);
   }
 
@@ -206,6 +219,7 @@ export function useCommissionForm({
 
   return {
     reset,
+    isDirty: draftFingerprint !== initialFingerprint,
     mode: isEdit ? 'edit' : 'create',
     title: isEdit ? 'CẬP NHẬT COMMISSION' : 'TẠO COMMISSION',
     submitLabel: isEdit ? 'Lưu thay đổi' : 'Tạo Commission',

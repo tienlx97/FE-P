@@ -53,8 +53,15 @@ export function ShipmentFormDialog({
       toast({
         body: shipment ? 'Đã cập nhật Shipment.' : 'Đã tạo Shipment.',
       });
-      onOpenChange(false);
+      // Editing an existing Shipment goes back to Xem in place (tab/scroll
+      // stay put) instead of closing; creating one still closes — there is
+      // no record yet for the caller to keep the dialog open on (see
+      // `onSuccess` at the call sites in `contracts-list.jsx`/
+      // `shipments-list.jsx`, which only keep `shipmentDialog` open when it
+      // already held a `shipment`).
+      if (shipment) setMode('view');
       onSuccess?.(savedShipment);
+      if (!shipment) onOpenChange(false);
     },
   });
 

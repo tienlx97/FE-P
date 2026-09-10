@@ -244,7 +244,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     sellerExtras: sellerExtraFieldRows.rows,
     buyerExtras: buyerExtraFieldRows.rows,
   });
-  const [initialFingerprint] = useState(draftFingerprint);
+  const [initialFingerprint, setInitialFingerprint] = useState(draftFingerprint);
 
   const createMutation = useCreateContractMutation();
   const updateMutation = useUpdateContractMutation();
@@ -439,6 +439,11 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
 
     setVersion(mutationResult.contract.version);
     setSubmitSuccess(isEdit ? 'Đã cập nhật hợp đồng.' : 'Đã tạo hợp đồng.');
+    // The caller no longer remounts this form on save success (see
+    // `ContractFormDialog`) — move the dirty baseline up to what was just
+    // submitted so `isDirty` doesn't stay stuck "true" (and misfire the
+    // discard-confirmation guard) after a clean save.
+    setInitialFingerprint(draftFingerprint);
     onSuccess?.(mutationResult.contract);
   }
 

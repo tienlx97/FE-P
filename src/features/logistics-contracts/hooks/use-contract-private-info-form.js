@@ -87,6 +87,15 @@ export function useContractPrivateInfoForm({
     })),
   );
 
+  // Same fingerprint idiom as `useContractForm`/`useCommissionForm` — lets
+  // a caller (the Contract dialog's footer) know whether this tab has an
+  // unsaved draft worth guarding navigation on, without hoisting state.
+  const draftFingerprint = JSON.stringify({
+    values,
+    extraFields: extraFieldRows.rows,
+  });
+  const [initialFingerprint, setInitialFingerprint] = useState(draftFingerprint);
+
   function reset() {
     setVersion(privateInfo?.version);
     setValues(privateInfo ? valuesFromPrivateInfo(privateInfo) : emptyValues());
@@ -145,11 +154,15 @@ export function useContractPrivateInfoForm({
     }
 
     setVersion(mutationResult.privateInfo.version);
+    // Moves the dirty baseline up to what was just submitted, so re-opening
+    // edit mode right after a clean save doesn't misreport `isDirty`.
+    setInitialFingerprint(draftFingerprint);
     onSuccess?.(mutationResult.privateInfo);
   }
 
   return {
     reset,
+    isDirty: draftFingerprint !== initialFingerprint,
     title: 'Thông tin private (BOQ)',
     submitLabel: 'Lưu thay đổi',
     values,

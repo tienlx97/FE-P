@@ -91,18 +91,23 @@ export function TableHeaderGroupBar({
     const container = containerRef.current;
     if (!container) return undefined;
 
-    function measure() {
-      const cells = columnKeys.map((key) =>
-        container.querySelector(`th[data-column-key="${key}"]`),
-      );
-      if (cells.some((cell) => !cell)) {
+    // Assigned to a `const` (not a hoisted `function` declaration) so
+    // TypeScript keeps `container`'s non-null narrowing from the guard
+    // above inside this closure — a hoisted declaration could in principle
+    // be reached before that guard runs, so tsc otherwise re-widens it back
+    // to `Element | null` here.
+    const measure = () => {
+      const cells = columnKeys
+        .map((key) => container.querySelector(`th[data-column-key="${key}"]`))
+        .filter((cell) => cell != null);
+      if (cells.length !== columnKeys.length) {
         setRect(null);
         return;
       }
-      const captions = cells.map((cell) =>
-        cell.querySelector(`[data-header-group="${groupKey}"]`),
-      );
-      if (captions.some((caption) => !caption)) {
+      const captions = cells
+        .map((cell) => cell.querySelector(`[data-header-group="${groupKey}"]`))
+        .filter((caption) => caption != null);
+      if (captions.length !== cells.length) {
         setRect(null);
         return;
       }
@@ -120,7 +125,7 @@ export function TableHeaderGroupBar({
       const bottom =
         Math.max(...captionRects.map((r) => r.bottom)) - containerRect.top;
       setRect({ left, top, width: right - left, height: bottom - top });
-    }
+    };
 
     measure();
     const resizeObserver = new ResizeObserver(measure);

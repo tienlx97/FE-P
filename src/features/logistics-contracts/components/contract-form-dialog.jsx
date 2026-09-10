@@ -79,11 +79,12 @@ const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
  *   onAddAnnex?: () => void,
  *   onEditAnnex?: (annex: import('../types/index.js').ContractAnnex) => void,
  *   activeTabEditController?: {
- *     status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string } | null,
+ *     status: { isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string } | null,
  *     startEditing: () => void,
  *     cancelEditing: () => void,
  *     submit: () => void,
  *   } | null,
+ *   secondaryDraftsStatus?: { isDirty: boolean, isSubmitting: boolean },
  *   children?: import('react').ReactNode,
  * }} props
  */
@@ -98,6 +99,7 @@ export function ContractFormDialog({
   onAddAnnex,
   onEditAnnex,
   activeTabEditController = null,
+  secondaryDraftsStatus = { isDirty: false, isSubmitting: false },
   children,
 }) {
   const [isEditing, setIsEditing] = useState(
@@ -111,6 +113,10 @@ export function ContractFormDialog({
     contract,
     onSuccess: (saved) => {
       toast({ body: contract ? 'Đã cập nhật hợp đồng.' : 'Đã tạo hợp đồng.' });
+      // Về Xem tại chỗ: flip out of edit mode here instead of relying on a
+      // remount (the caller no longer changes this dialog's `key` on save —
+      // see `contracts-list.jsx`) so tab/scroll/disclosure state survives.
+      setIsEditing(false);
       onSuccess(saved);
     },
   });
@@ -143,9 +149,17 @@ export function ContractFormDialog({
 
   /** @param {'close' | 'cancel'} action */
   function requestExit(action) {
-    if (isSubmitting) return;
-    if (isEditing && isDirty) setDiscardAction(action);
-    else finish(action);
+    // `secondaryDraftsStatus` tracks Commission/"Thông tin private" even
+    // when neither is the active tab (both panels stay mounted across tab
+    // switches — see `ContractExpandedDetails`) — closing/leaving the
+    // workspace must not silently drop an unsaved draft the user merely
+    // tabbed away from, and must not race a save already in flight there.
+    if (isSubmitting || secondaryDraftsStatus.isSubmitting) return;
+    if ((isEditing && isDirty) || secondaryDraftsStatus.isDirty) {
+      setDiscardAction(action);
+    } else {
+      finish(action);
+    }
   }
 
   return (

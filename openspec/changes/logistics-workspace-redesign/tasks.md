@@ -1,13 +1,13 @@
 # Tasks: Tối ưu workspace Logistics
 
-Status: planned, not started. Thực hiện tuần tự, một task mỗi lần.
+Status: in progress. Thực hiện tuần tự, một task mỗi lần.
 Mỗi task yêu cầu full `./harness/verify.sh` pass trước khi đánh dấu hoàn tất,
 cập nhật evidence/PROGRESS và commit theo quy trình repository.
 
 ## 1. Bảo vệ dữ liệu và thống nhất vòng đời
 
-- [ ] 1.1 Sửa mất draft của Commission/private khi đổi tab hoặc đóng Contract; giữ draft theo editor, đưa dirty/pending vào guard chung. Verify: đổi tab rồi quay lại giữ giá trị; đóng/rời có xác nhận; đang lưu không thoát hoặc gửi trùng.
-- [ ] 1.2 Chuẩn hóa Lưu/Hủy của Contract, Shipment, Commission và BOQ: về Xem tại chỗ, giữ tab/scroll/disclosure; bỏ remount chỉ để đổi mode. Verify: Lưu thành công, Hủy, lỗi lưu và refetch không làm mất ngữ cảnh/draft.
+- [x] 1.1 Sửa mất draft của Commission/private khi đổi tab hoặc đóng Contract; giữ draft theo editor, đưa dirty/pending vào guard chung. Verify: đổi tab rồi quay lại giữ giá trị; đóng/rời có xác nhận; đang lưu không thoát hoặc gửi trùng.
+- [x] 1.2 Chuẩn hóa Lưu/Hủy của Contract, Shipment, Commission và BOQ: về Xem tại chỗ, giữ tab/scroll/disclosure; bỏ remount chỉ để đổi mode. Verify: Lưu thành công, Hủy, lỗi lưu và refetch không làm mất ngữ cảnh/draft.
 
 ## 2. Hình học và chế độ Xem
 

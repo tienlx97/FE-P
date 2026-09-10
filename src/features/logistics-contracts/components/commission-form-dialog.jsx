@@ -52,8 +52,13 @@ export function CommissionFormDialog({
       toast({
         body: commission ? 'Đã cập nhật Commission.' : 'Đã tạo Commission.',
       });
-      onOpenChange(false);
+      // Same convention as `ShipmentFormDialog`: editing an existing
+      // Commission goes back to Xem in place; creating one still closes,
+      // since there is no record yet for the caller to keep the dialog
+      // open on.
+      if (commission) setMode('view');
       onSuccess?.(saved);
+      if (!commission) onOpenChange(false);
     },
   });
 

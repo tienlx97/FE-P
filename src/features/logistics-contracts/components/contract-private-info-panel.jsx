@@ -41,7 +41,7 @@ import {
  *   privateInfo: import('../types/index.js').ContractPrivateInfo,
  *   initialEditing?: boolean,
  *   hideOwnActions?: boolean,
- *   onStatusChange?: (status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string }) => void,
+ *   onStatusChange?: (status: { isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string }) => void,
  *   controllerRef?: import('react').Ref<{ startEditing: () => void, cancelEditing: () => void, submit: () => void }>,
  * }} props
  */
@@ -92,10 +92,18 @@ export function ContractPrivateInfoPanel({
   useEffect(() => {
     onStatusChange?.({
       isEditing,
+      isDirty: form.isDirty,
       isSubmitting: form.isSubmitting,
       submitLabel: isEditing ? form.submitLabel : editLabel,
     });
-  }, [isEditing, form.isSubmitting, form.submitLabel, editLabel, onStatusChange]);
+  }, [
+    isEditing,
+    form.isDirty,
+    form.isSubmitting,
+    form.submitLabel,
+    editLabel,
+    onStatusChange,
+  ]);
 
   return (
     <form

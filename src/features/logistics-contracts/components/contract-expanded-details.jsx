@@ -74,10 +74,10 @@ function orDash(value) {
  *   Forwarded to `ContractPrivateInfoPanel` — lets the Contract dialog's own
  *   footer (`contract-form-dialog.jsx`) drive editing for this tab instead of
  *   a second, tab-local edit button (see that panel's own doc comment).
- * @param {(status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string }) => void} [props.onPrivateInfoStatusChange]
+ * @param {(status: { isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string }) => void} [props.onPrivateInfoStatusChange]
  * @param {import('react').Ref<{ startEditing: () => void, cancelEditing: () => void, submit: () => void }>} [props.commissionPanelRef]
  *   Same idea as `privateInfoPanelRef`, for `ContractCommissionPanel`.
- * @param {(status: { isEditing: boolean, isSubmitting: boolean, submitLabel: string }) => void} [props.onCommissionStatusChange]
+ * @param {(status: { isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string }) => void} [props.onCommissionStatusChange]
  */
 export function ContractExpandedDetails({
   contract,
@@ -404,47 +404,64 @@ export function ContractExpandedDetails({
         </VStack>
       )}
 
-      {activeTab === 'commission' &&
-        (commissionQuery.isLoading ? (
-          <Text color="secondary">Đang tải Commission...</Text>
+      {
+        // Stays mounted regardless of `activeTab` (hidden, not unmounted)
+        // once the initial load resolves — switching away to another tab
+        // must not tear down `ContractCommissionPanel`'s in-progress draft
+        // (`useCommissionForm`'s state lives inside it). Only `isLoading`
+        // gates the mount itself, same reasoning as before.
+        commissionQuery.isLoading ? (
+          activeTab === 'commission' && (
+            <Text color="secondary">Đang tải Commission...</Text>
+          )
         ) : (
-          <ContractCommissionPanel
-            // `commission` is `null` both "still loading" and "confirmed
-            // none exists" — gating the mount above on `isLoading` (not
-            // just `commission`) means the panel's own `useState(!commission)`
-            // (initial editing mode) only ever runs once the real value is
-            // known, instead of transiently seeing `null` and getting
-            // stuck in editing mode even once a real Commission loads in.
-            key={commission?.id ?? 'create'}
-            controllerRef={commissionPanelRef}
-            contractId={contract.id}
-            currency={contract.currency}
-            commission={
-              commission
-                ? {
-                    ...commission,
-                    contractNumber: contract.contractNumber,
-                    projectName: contract.projectName,
-                  }
-                : null
-            }
-            onAddAnnex={onAddCommissionAnnex}
-            onEditAnnex={onEditCommissionAnnex}
-            onAddPayment={onAddCommissionPayment}
-            hideOwnActions
-            onStatusChange={onCommissionStatusChange}
-          />
-        ))}
+          <VStack gap={4} hAlign="stretch" hidden={activeTab !== 'commission'}>
+            <ContractCommissionPanel
+              // `commission` is `null` both "still loading" and "confirmed
+              // none exists" — gating the mount above on `isLoading` (not
+              // just `commission`) means the panel's own `useState(!commission)`
+              // (initial editing mode) only ever runs once the real value is
+              // known, instead of transiently seeing `null` and getting
+              // stuck in editing mode even once a real Commission loads in.
+              key={commission?.id ?? 'create'}
+              controllerRef={commissionPanelRef}
+              contractId={contract.id}
+              currency={contract.currency}
+              commission={
+                commission
+                  ? {
+                      ...commission,
+                      contractNumber: contract.contractNumber,
+                      projectName: contract.projectName,
+                    }
+                  : null
+              }
+              onAddAnnex={onAddCommissionAnnex}
+              onEditAnnex={onEditCommissionAnnex}
+              onAddPayment={onAddCommissionPayment}
+              hideOwnActions
+              onStatusChange={onCommissionStatusChange}
+            />
+          </VStack>
+        )
+      }
 
-      {activeTab === 'privateInfo' && privateInfo && (
-        <ContractPrivateInfoPanel
-          controllerRef={privateInfoPanelRef}
-          contractId={contract.id}
-          privateInfo={privateInfo}
-          hideOwnActions
-          onStatusChange={onPrivateInfoStatusChange}
-        />
-      )}
+      {
+        // Same reasoning as the Commission panel above — kept mounted
+        // (hidden) across tab switches once `privateInfo` has loaded, so
+        // `useContractPrivateInfoForm`'s draft survives.
+        privateInfo && (
+          <VStack gap={4} hAlign="stretch" hidden={activeTab !== 'privateInfo'}>
+            <ContractPrivateInfoPanel
+              controllerRef={privateInfoPanelRef}
+              contractId={contract.id}
+              privateInfo={privateInfo}
+              hideOwnActions
+              onStatusChange={onPrivateInfoStatusChange}
+            />
+          </VStack>
+        )
+      }
     </VStack>
   );
 }
