@@ -29,7 +29,7 @@ export function SectionHeading({
   return (
     <HStack gap={4} justify="between" vAlign="end" wrap="wrap">
       <VStack gap={1}>
-        <Heading id={id} level={2} type="display-3">
+        <Heading id={id} level={2}>
           {title}
         </Heading>
         {description ? (

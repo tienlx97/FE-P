@@ -14,16 +14,13 @@ import {
 const styles = stylex.create({
   root: {
     flexShrink: 0,
-    width: {
-      default: '100%',
-      '@media (min-width: 480px)': '300px',
-    },
+    width: '100%',
   },
   cell: {
-    aspectRatio: '1',
+    paddingBlock: 'var(--spacing-1)',
   },
   headCell: {
-    aspectRatio: '1',
+    paddingBlock: 'var(--spacing-1)',
   },
   dayHasEntry: {
     backgroundColor: colorVars['--color-accent'],

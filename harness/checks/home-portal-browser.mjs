@@ -9,7 +9,7 @@ assert.match(origin, /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/);
 const executable = process.platform === 'win32'
   ? join(process.env.APPDATA, 'npm/node_modules/agent-browser/bin/agent-browser-win32-x64.exe')
   : 'agent-browser';
-const run = 'harness/runs/20260907-home-portal';
+const run = 'harness/runs/20260910-home-portal';
 mkdirSync(run, { recursive: true });
 function browser(...args) {
   return execFileSync(executable, ['--session', 'home-portal-check', ...args], {
@@ -39,11 +39,17 @@ for (const width of [1440, 768, 390, 320]) {
     const notices = document.querySelector('[data-testid="home-notices"]');
     return {
       viewport: innerWidth, pageWidth: document.documentElement.scrollWidth,
-      notices: rect('#thong-bao'), hero: rect('.swiper'), holiday: rect('#lich-nghi'),
+      notices: rect('#thong-bao'), hero: rect('.swiper'), news: rect('#tin-tuc'),
+      duplicateHolidayPanel: Boolean(document.querySelector('#lich-nghi')),
+      newsCount: document.querySelectorAll('[data-testid="home-news"] li').length,
+      heroCopyFits: [...document.querySelectorAll('.swiper-slide-active h2, .swiper-slide-active p')].every(el => {
+        const box = el.getBoundingClientRect();
+        const slide = document.querySelector('.swiper').getBoundingClientRect();
+        return box.top >= slide.top && box.bottom <= slide.bottom;
+      }),
       noticeCount: notices.querySelectorAll('li').length,
       noticeLabel: document.getElementById(notices.getAttribute('aria-labelledby'))?.textContent,
       titlesFit: [...notices.querySelectorAll('a')].every(e => e.scrollWidth <= e.clientWidth + 1),
-      holidayBackground: getComputedStyle(document.querySelector('[aria-labelledby="lich-nghi"]')).backgroundColor,
     };
   })()`);
   assert.ok(geometry.pageWidth <= width + 1, `Overflow at ${width}`);
@@ -52,14 +58,17 @@ for (const width of [1440, 768, 390, 320]) {
   assert.ok(geometry.titlesFit);
   if (width >= 1100) {
     assert.ok(geometry.notices.x > geometry.hero.x + geometry.hero.width);
-    assert.ok(Math.abs(geometry.notices.y - geometry.hero.y) < 20);
+    assert.ok(Math.abs(geometry.notices.y - geometry.news.y) < 20);
   } else {
     assert.ok(geometry.notices.y >= geometry.hero.bottom);
   }
-  assert.notEqual(geometry.holidayBackground, 'rgba(0, 0, 0, 0)');
+  assert.equal(geometry.duplicateHolidayPanel, false);
+  assert.equal(geometry.newsCount, 3);
+  assert.ok(geometry.heroCopyFits, `Hero copy clipped at ${width}`);
   browser('eval', 'scrollTo(0,0)');
   browser('screenshot', `${run}/${width}-top.png`);
-  browser('scrollintoview', '#lich-nghi');
+  if (width === 1440) browser('screenshot', '--full', `${run}/desktop-full.png`);
+  browser('scrollintoview', '#su-kien');
   browser('screenshot', `${run}/${width}-calendar.png`);
   results.push({ scenario: `layout-${width}`, ...geometry });
 }
@@ -86,9 +95,11 @@ browser('focus', '[aria-label="Tháng trước"]');
 browser('press', 'Enter');
 assert.ok(agendaText().includes('Trong tháng 12/2026'));
 results.push({ scenario: 'month-navigation-empty-year-boundary-keyboard', passed: true });
-browser('find', 'role', 'link', 'click', '--name', 'Quy định nghỉ phép →');
-browser('wait', '--url', '**/docs/nghi-phep');
-results.push({ scenario: 'holiday-policy-link', passed: true });
+browser('find', 'role', 'button', 'click', '--name', 'Xem thêm 3 tin');
+assert.equal(evaluate(`document.querySelectorAll('[data-testid="home-news"] li').length`), 6);
+browser('find', 'role', 'button', 'click', '--name', 'Thu gọn tin');
+assert.equal(evaluate(`document.querySelectorAll('[data-testid="home-news"] li').length`), 3);
+results.push({ scenario: 'secondary-news-expand-collapse', passed: true });
 writeFileSync(`${run}/results.json`, JSON.stringify(results, null, 2));
 browser('close');
 console.log(`${results.length} home portal scenarios passed; evidence: ${run}`);

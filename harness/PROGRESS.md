@@ -7621,3 +7621,70 @@ ward reference data (free-text inputs, matching the backend).
   application identifiers and do not follow repository-directory names.
 - Validation: full `./harness/verify.sh` PASS after rename; evidence
   `harness/runs/20260909-072511-744142/`.
+
+## 2026-09-10 — Home portal simplification (task 1.2)
+
+- User requested less repetitive information and a portal-oriented home.
+  Grouped carousel and three expandable secondary news rows in one column,
+  notices and a compact company calendar in the other. Removed the redundant
+  holiday panel, news category pills and misleading news-archive link to Docs.
+  Reduced video copy and replaced six ecosystem cards with a logo strip.
+  Kept existing theme, navigation and content fixtures; carousel now advances
+  manually. Mobile uses a taller image and untruncated title.
+- Browser regression covers four widths (1440/768/390/320), overflow, a single
+  holiday/calendar region, news expansion, month navigation and keyboard/year
+  boundaries. Evidence: `harness/runs/20260910-home-portal/`.
+- Build, 137 unit tests, harness tests, dependency structure and shared bundle
+  threshold pass (168.3 kB gzip, threshold 250 kB). Home-scoped lint passes.
+  Final full gate: `harness/runs/20260910-224405-2144/`.
+  Full verification remains blocked by unrelated in-progress `filter-table.tsx`
+  lint failures and nullability errors in `src/shared/components/table-header-group.jsx`.
+  Task remains unchecked; no completion commit while full gate fails.
+- Harness gaps: desktop-only inspection missed clipped mobile hero copy;
+  browser check now asserts active-slide copy stays inside the image at all four
+  widths. Content test asserts featured and secondary news IDs are disjoint.
+  Shell scripts arrived as CRLF, and default Windows bash used WSL without
+  Node; verification uses Git Bash after local line-ending normalization.
+  A repository-wide LF policy is a follow-up, outside this UI task.
+- Discovered: news/video/notice data are illustrative fixtures; several story
+  targets still point to Docs. Real editorial detail pages/CMS are out of scope.
+
+## 2026-09-10 — Home portal layout polish (on top of task 1.2, still uncommitted)
+
+- User asked to further polish the home layout (swiper, news/video, company
+  calendar already present from 1.2) and make it look better. Added a page
+  subtitle under the "Bản tin công ty" H1 for orientation, and grouped
+  `VideoClips` + `Ecosystem` into a soft muted-background band
+  (`--color-background-muted`, rounded via `--radius-container`) so the page
+  reads as two rhythmic sections instead of one unbroken white column.
+  `src/app/(protected)/page.jsx`.
+- Harness gap hit while building this: wrapping the band in a second nested
+  `<Section>` (instead of a plain `VStack` + `xstyle`) shrank it to its
+  content's intrinsic width — `Section` does not stretch to fill available
+  inline width the way `VStack`/`Grid` do, so its `Grid` children fell back
+  to a single narrow column. Fixed by using a plain `VStack` with
+  `width: '100%'` in `xstyle` instead of nesting `Section`. Worth an Astryx
+  usage note if this trips up another session.
+- Verified live against the real dev server on `:3000` (Chrome automation);
+  desktop screenshot confirms full-width 4-up video grid and the new band.
+  Could not confirm narrow-viewport rendering live — `resize_window` did not
+  change the actual rendered viewport in this session's browser tooling — but
+  the change only adds a `width:100%` background/padding wrapper with its own
+  responsive padding step at 640px around already mobile-verified components,
+  so no responsive behavior inside those components changed.
+  `pnpm exec eslint`, `tsc --noEmit`, home feature `node --test`, and
+  `depcruise` (structure) all pass for the touched file.
+  Full `harness/verify.sh` still blocked by the same pre-existing unrelated
+  `filter-table.tsx` / `table-header-group.jsx` issues noted above — not
+  touched, out of scope. Not committed (bundled with unrelated in-progress
+  changes from other sessions per `git status`); left for the user to review
+  alongside the rest of task 1.2.
+
+## 2026-09-10 — Logistics workspace redesign plan
+
+- Saved requested review/design plan to
+  `openspec/changes/logistics-workspace-redesign/` (proposal, design, tasks,
+  and acceptance specs). Implementation has not started; all tasks unchecked.
+- Priority: retain drafts and guard navigation; unify save/cancel in place;
+  enforce exact view/edit geometry; narrow Contract responsibilities; then
+  reorganize sidebar/list defaults. No application code changed for this request.

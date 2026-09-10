@@ -16,7 +16,7 @@ import { SectionHeading } from './section-heading.jsx';
 
 const styles = stylex.create({
   region: { minWidth: 0 },
-  agenda: { flexBasis: '260px', flexGrow: 1, minWidth: 0 },
+  agenda: { minWidth: 0, width: '100%' },
 });
 
 /** @param {{ initialDate: string }} props */
@@ -66,7 +66,7 @@ export function UpcomingEvents({ initialDate }) {
           />
         </HStack>
       </HStack>
-      <HStack gap={5} wrap="wrap" vAlign="start">
+      <VStack gap={3}>
         <MiniCalendar
           year={cursor.year}
           month={cursor.month}
@@ -90,12 +90,6 @@ export function UpcomingEvents({ initialDate }) {
                       <Text type="supporting" color="secondary">
                         {formatEventWhen(event)}
                       </Text>
-                      <Text type="supporting" color="secondary">
-                        {event.location}
-                      </Text>
-                      <Text type="supporting" color="secondary">
-                        {event.audience}
-                      </Text>
                     </VStack>
                   }
                 />
@@ -110,7 +104,7 @@ export function UpcomingEvents({ initialDate }) {
             </VStack>
           )}
         </VStack>
-      </HStack>
+      </VStack>
     </VStack>
   );
 }

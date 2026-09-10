@@ -79,6 +79,11 @@ test('news splits into a non-empty hero set and a non-empty grid', () => {
   assert.ok(featuredNews.length > 0, 'the hero carousel would render empty');
   assert.ok(latestNews.length > 0, 'the news grid would render empty');
   assert.equal(featuredNews.length + latestNews.length, news.length);
+  const featuredIds = new Set(featuredNews.map(({ id }) => id));
+  assert.ok(
+    latestNews.every(({ id }) => !featuredIds.has(id)),
+    'a story must not appear in both home regions',
+  );
 });
 
 test('every link target is an in-app path or a page anchor', () => {

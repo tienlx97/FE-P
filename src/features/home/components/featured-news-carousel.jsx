@@ -7,17 +7,14 @@ import 'swiper/css/pagination';
 import { ClickableCard } from '@astryxdesign/core/ClickableCard';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Heading, Text } from '@astryxdesign/core/Text';
-import { colorVars, radiusVars } from '@astryxdesign/core/theme/tokens.stylex';
+import {
+  colorVars,
+  radiusVars,
+} from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import Image from 'next/image';
-import {
-  A11y,
-  Autoplay,
-  Keyboard,
-  Navigation,
-  Pagination,
-} from 'swiper/modules';
+import { A11y, Keyboard, Navigation, Pagination } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 
 import { formatLongDate } from '../api/date.js';
@@ -44,7 +41,10 @@ const styles = stylex.create({
     // no cap because its narrower width already keeps the ratio short.
     // `position: relative` is what makes `next/image` `fill` legal here:
     // the filled image resolves against the nearest positioned ancestor.
-    aspectRatio: '16 / 9',
+    aspectRatio: {
+      default: '4 / 3',
+      '@media (min-width: 640px)': '16 / 9',
+    },
     maxHeight: {
       default: 'none',
       '@media (min-width: 640px)': '420px',
@@ -93,12 +93,11 @@ const styles = stylex.create({
     paddingBlock: '4px',
     paddingInline: '10px',
   },
-  // Replaces the old "Đọc tiếp" CTA pill — kept deliberately small
-  // (`supporting`, 2 lines max) so the excerpt reads as secondary context
-  // under the headline, not a second competing headline.
-  excerpt: {
-    maxWidth: '46rem',
-    opacity: 0.85,
+  headline: {
+    fontSize: {
+      default: 'var(--font-size-xl)',
+      '@media (min-width: 640px)': 'var(--font-size-3xl)',
+    },
   },
 });
 
@@ -114,12 +113,7 @@ const styles = stylex.create({
 export function FeaturedNewsCarousel() {
   return (
     <Swiper
-      modules={[Autoplay, Navigation, Pagination, Keyboard, A11y]}
-      autoplay={{
-        delay: 7000,
-        disableOnInteraction: false,
-        pauseOnMouseEnter: true,
-      }}
+      modules={[Navigation, Pagination, Keyboard, A11y]}
       keyboard={{ enabled: true }}
       navigation
       pagination={{ clickable: true }}
@@ -142,7 +136,7 @@ export function FeaturedNewsCarousel() {
       }}
       {...stylex.props(styles.swiper)}
     >
-      {featuredNews.map(({ id, category, date, title, excerpt, image, href }, index) => (
+      {featuredNews.map(({ id, category, date, title, image, href }, index) => (
         <SwiperSlide key={id}>
           <ClickableCard
             href={href}
@@ -178,19 +172,10 @@ export function FeaturedNewsCarousel() {
                   level={2}
                   type="display-3"
                   color="inherit"
-                  maxLines={2}
+                  xstyle={styles.headline}
                 >
                   {title}
                 </Heading>
-                <Text
-                  type="supporting"
-                  color="inherit"
-                  display="block"
-                  maxLines={2}
-                  xstyle={styles.excerpt}
-                >
-                  {excerpt}
-                </Text>
               </VStack>
             </VStack>
           </ClickableCard>

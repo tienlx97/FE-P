@@ -1,5 +1,6 @@
 import { Grid } from '@astryxdesign/core/Grid';
 import { Section } from '@astryxdesign/core/Section';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { colorVars, radiusVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
@@ -7,49 +8,40 @@ import * as stylex from '@stylexjs/stylex';
 import {
   AnnouncementsBoard,
   Ecosystem,
-  HolidaySchedule,
   NewsHighlights,
   UpcomingEvents,
   VideoClips,
   WelcomeHero,
 } from '../../features/home/index.js';
 
-// Centered 80rem content column. Inline padding is deliberately NOT set
-// here: `ProtectedAppShell` already gives non-MDX routes a 24px `padding`
-// on `<main>` (its `paddedMain` style). See the react.dev docs shell's
-// /docs layout for the same contract applied to MDX routes, which opt out
-// of `paddedMain` and so set their own inline padding — this route does not
-// opt out, so adding its own padding on top would double it.
+// The protected shell owns the header and page inset.
 const styles = stylex.create({
-  content: {
-    marginInline: 'auto',
-  },
-  lead: {
+  content: { marginInline: 'auto' },
+  columns: {
     alignItems: 'start',
     gridTemplateColumns: {
       default: 'minmax(0, 1fr)',
-      '@media (min-width: 1100px)': 'minmax(0, 1.6fr) minmax(360px, 1fr)',
-    },
-  },
-  calendar: {
-    alignItems: 'start',
-    gridTemplateColumns: {
-      default: 'minmax(0, 1fr)',
-      '@media (min-width: 1100px)': '320px minmax(0, 1fr)',
+      '@media (min-width: 1100px)': 'minmax(0, 1.7fr) minmax(0, 1fr)',
     },
   },
   region: { minWidth: 0 },
-  // Tinted bands break the page into alternating pale/white groups so the
-  // sections read as distinct movements instead of one long scroll. Padding
-  // is responsive because a 24px inset on a 390px screen costs more of the
-  // content width than it earns in separation.
+  // A soft band for the secondary media/ecosystem block, so the page reads
+  // as two rhythmic bands instead of one unbroken white column. Applied to
+  // a plain VStack (not a nested Section) so it keeps inheriting full
+  // inline width from the page's Grid/VStack ancestors — a second Section
+  // here shrinks to its content's intrinsic width instead of stretching.
   band: {
     backgroundColor: colorVars['--color-background-muted'],
     borderRadius: radiusVars['--radius-container'],
-    padding: {
+    paddingBlock: {
+      default: '20px',
+      '@media (min-width: 640px)': '32px',
+    },
+    paddingInline: {
       default: '16px',
       '@media (min-width: 640px)': '24px',
     },
+    width: '100%',
   },
 });
 
@@ -61,26 +53,33 @@ export default function HomePage() {
     <Section
       variant="transparent"
       padding={0}
-      paddingBlock={8}
+      paddingBlock={4}
       maxWidth="80rem"
       xstyle={styles.content}
     >
-      <VStack gap={10}>
-        <Grid gap={6} xstyle={styles.lead}>
-          <VStack xstyle={styles.region}>
-            <WelcomeHero />
-          </VStack>
-          <AnnouncementsBoard />
-        </Grid>
-        <Grid gap={8} xstyle={styles.calendar}>
-          <HolidaySchedule />
-          <UpcomingEvents initialDate={today} />
-        </Grid>
-        <NewsHighlights />
-        <VStack xstyle={styles.band}>
-          <VideoClips />
+      <VStack gap={8}>
+        <VStack gap={1}>
+          <Heading id="tin-tuc" level={1}>
+            Bản tin công ty
+          </Heading>
+          <Text type="body" color="secondary">
+            Tin tức, thông báo nội bộ và lịch công ty được cập nhật mới nhất
+          </Text>
         </VStack>
-        <Ecosystem />
+        <Grid gap={8} xstyle={styles.columns}>
+          <VStack gap={4} xstyle={styles.region}>
+            <WelcomeHero />
+            <NewsHighlights />
+          </VStack>
+          <VStack gap={6} xstyle={styles.region}>
+            <AnnouncementsBoard />
+            <UpcomingEvents initialDate={today} />
+          </VStack>
+        </Grid>
+        <VStack gap={8} xstyle={styles.band}>
+          <VideoClips />
+          <Ecosystem />
+        </VStack>
       </VStack>
     </Section>
   );

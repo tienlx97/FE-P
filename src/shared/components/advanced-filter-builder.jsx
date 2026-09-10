@@ -246,6 +246,11 @@ export function AdvancedFilterBuilder({ fields, conditions, onChange }) {
                           size="sm"
                           width="100%"
                           hasClear
+                          // Search box inside the dropdown — some enum
+                          // fields (e.g. "Khách hàng") back onto a catalog
+                          // long enough that scrolling to find one isn't
+                          // practical.
+                          hasSearch
                           options={[...(field.options ?? [])]}
                           value={condition.value || null}
                           onChange={(next) =>

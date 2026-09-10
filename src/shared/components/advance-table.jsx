@@ -42,6 +42,9 @@ import { AdvanceTableSearchDialog } from './advance-table-search-dialog.jsx';
  * @property {string} placeholder
  * @property {ReadonlyArray<{ value: string, label?: string }>} options
  * @property {(option: { value: string, label?: string }) => string} renderValue
+ * @property {boolean} [hasSearch] Shows a search input inside the dropdown —
+ *   for fields whose option list is long enough (e.g. a customer catalog)
+ *   that scrolling to find one isn't practical.
  */
 
 /**
@@ -153,6 +156,7 @@ const styles = stylex.create({
  *   defaultStickyStart?: 'none' | 'one' | 'two',
  *   defaultStickyEnd?: 'none' | 'one' | 'two',
  *   summary?: import('react').ReactNode,
+ *   dividers?: import('@astryxdesign/core/Table').TableDividers,
  *   pagination?: {
  *     pageIndex: number,
  *     pageSize: number,
@@ -191,6 +195,7 @@ export function AdvanceTable({
   defaultStickyStart = 'one',
   defaultStickyEnd = 'one',
   summary,
+  dividers = 'rows',
   pagination,
 }) {
   const [searchFilters, setSearchFilters] = useState(
@@ -597,6 +602,7 @@ export function AdvanceTable({
               placeholder={quickFilter.placeholder}
               size="sm"
               hasClear
+              hasSearch={quickFilter.hasSearch}
               options={[...quickFilter.options]}
               value={getQuickFilterValue(quickFilter.field)}
               renderValue={quickFilter.renderValue}
@@ -648,7 +654,7 @@ export function AdvanceTable({
         columns={isLoading ? skeletonColumns : tableColumns}
         idKey={idKey}
         density={density}
-        dividers="rows"
+        dividers={dividers}
         hasHover
         plugins={{
           columnSettings: columnSettingsPlugin,

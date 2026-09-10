@@ -87,11 +87,7 @@ export function VideoClips() {
 
   return (
     <VStack gap={5}>
-      <SectionHeading
-        id="video"
-        title="Video clip"
-        description="Phóng sự, hướng dẫn và giới thiệu về hệ sinh thái Đại Nghĩa Group."
-      />
+      <SectionHeading id="video" title="Góc video" />
       <Grid columns={{ minWidth: 260, max: 4 }} gap={4}>
         {videos.map((video) => (
           <ClickableCard
@@ -140,14 +136,6 @@ export function VideoClips() {
                 <Heading level={3} maxLines={2}>
                   {video.title}
                 </Heading>
-                <Text
-                  type="body"
-                  color="secondary"
-                  display="block"
-                  maxLines={2}
-                >
-                  {video.description}
-                </Text>
                 <HStack gap={1.5} vAlign="center">
                   <Icon icon="calendar" size="xsm" color="secondary" />
                   <Text type="supporting">{formatLongDate(video.date)}</Text>

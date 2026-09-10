@@ -220,13 +220,6 @@ export function ContractFormDialog({
                 aria-label={TAB_LABELS[activeTab]}
                 tabIndex={0}
               >
-                {!contract ? (
-                  <Banner
-                    status="info"
-                    title="Lịch sử thanh toán, Shipment, Commission và Thông tin private được quản lý sau khi lưu hợp đồng."
-                    container="card"
-                  />
-                ) : null}
                 {activeTab === 'info' ? (
                   <form
                     id={formId}
@@ -356,7 +349,9 @@ export function ContractFormDialog({
                       label={isEditing ? 'Hủy' : 'Đóng'}
                       variant="secondary"
                       isDisabled={isSubmitting}
-                      onClick={() => requestExit(isEditing ? 'cancel' : 'close')}
+                      onClick={() =>
+                        requestExit(isEditing ? 'cancel' : 'close')
+                      }
                     />
                     {isEditing ? (
                       <Button

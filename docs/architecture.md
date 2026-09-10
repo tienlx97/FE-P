@@ -91,7 +91,8 @@ Enforced by `harness/structure.rules.cjs` (dependency-cruiser), run via
   See `docs/ui-components.md` and ADR-0005 for the current component map.
 
 - `src/features/home/` — internal portal: featured news, notices, published
-  holiday dates, monthly calendar/agenda, videos and ecosystem. Editorial
+  holiday dates within one monthly calendar/agenda, compact news rows, videos
+  and an ecosystem logo strip. Editorial
   fixtures live in `config/`; date/calendar helpers live in `api/`.
 - `src/features/design-system/` — `components/{showcase-section.jsx,sections/*.jsx}`,
   the internal component showcase at `/design-system`.

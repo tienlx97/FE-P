@@ -21,12 +21,26 @@ const AUTO_HIDE_DURATION = 9000;
  * above whatever dialog is currently open. Hide+show happen synchronously
  * in the same task, before the browser paints, so already-visible toasts
  * don't flash.
+ *
+ * Only runs while a `<dialog>` is actually open — the hide/show cycle
+ * forces the viewport (and every toast inside it) to `display: none` and
+ * back, which cancels any CSS transition in flight. Doing this
+ * unconditionally on every toast, as an earlier version did, could land
+ * mid-way through another toast's manual-dismiss exit transition and
+ * cancel it — `ToastViewport`'s `onTransitionEnd` (the only thing that
+ * actually removes a dismissed toast from state) then never fires, so that
+ * toast got stuck rendered forever, un-dismissable (a second click is a
+ * no-op — the viewport already marked it exiting). Gating on an open
+ * dialog keeps the fix scoped to the case it was written for, instead of
+ * running on every toast regardless of whether one is mid-exit.
  */
 function promoteToastViewportAboveDialogs() {
   if (typeof document === 'undefined') return;
-  const viewport = /** @type {(HTMLElement & { showPopover?: () => void, hidePopover?: () => void }) | null} */ (
-    document.querySelector('[role="region"][popover="manual"]')
-  );
+  if (!document.querySelector('dialog[open]')) return;
+  const viewport =
+    /** @type {(HTMLElement & { showPopover?: () => void, hidePopover?: () => void }) | null} */ (
+      document.querySelector('[role="region"][popover="manual"]')
+    );
   if (!viewport || typeof viewport.showPopover !== 'function') return;
   try {
     viewport.hidePopover?.();

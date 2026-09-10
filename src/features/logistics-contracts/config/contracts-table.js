@@ -15,7 +15,16 @@ export const SEARCH_FIELD_DEFS = [
     enumValues: contractTypeOptions,
   },
   { key: 'projectName', type: 'string', label: 'Dự án' },
-  { key: 'buyerCompanyName', type: 'string', label: 'Khách hàng' },
+  // `enumValues` starts empty — `ContractsList` overrides this field with the
+  // live customer catalog (see `searchFieldDefsWithCustomers`) so the header
+  // filter renders as a combobox of real customer names instead of a
+  // freetext match.
+  {
+    key: 'buyerCompanyName',
+    type: 'enum',
+    label: 'Khách hàng',
+    enumValues: [],
+  },
   { key: 'contractValue', type: 'number', label: 'Giá trị' },
   {
     key: 'currency',
@@ -56,7 +65,11 @@ export const FILTER_FIELD_DEFS = [
     options: contractTypeOptions,
   },
   { key: 'projectName', label: 'Dự án', type: 'string' },
-  { key: 'buyerCompanyName', label: 'Khách hàng', type: 'string' },
+  // `options` starts empty — `ContractsList` overrides this field with the
+  // live customer catalog (see `filterFieldDefsWithCustomers`) so the
+  // advanced-filter dialog renders a combobox of real customer names
+  // instead of a freetext match.
+  { key: 'buyerCompanyName', label: 'Khách hàng', type: 'enum', options: [] },
   { key: 'sellerCompanyName', label: 'Người bán', type: 'string' },
   { key: 'contractValue', label: 'Giá trị', type: 'number' },
   {
@@ -72,7 +85,7 @@ export const FILTER_FIELD_DEFS = [
     options: incotermOptions,
   },
   { key: 'incotermYear', label: 'Năm Incoterm', type: 'number' },
-  { key: 'createdDate', label: 'Ngày tạo', type: 'date' },
+  { key: 'createdDate', label: 'Ngày ký', type: 'date' },
   { key: 'quotationDate', label: 'Ngày báo giá', type: 'date' },
   { key: 'category', label: 'Hạng mục', type: 'string' },
   { key: 'placeOfLoading', label: 'Nơi xếp hàng', type: 'string' },
@@ -92,12 +105,12 @@ export const COLUMN_OPTIONS = [
   { key: 'status', label: 'Trạng thái' },
   { key: 'projectName', label: 'Dự án' },
   { key: 'buyer', label: 'Khách hàng' },
-  { key: 'contractValue', label: 'Giá trị' },
+  { key: 'contractValue', label: 'Giá trị hợp đồng' },
   { key: 'settlementValue', label: 'Giá trị quyết toán' },
   { key: 'paidValue', label: 'Giá trị đã thanh toán' },
   { key: 'unpaidValue', label: 'Giá trị chưa thanh toán' },
   { key: 'incoterm', label: 'Incoterm' },
-  { key: 'createdDate', label: 'Ngày tạo' },
+  { key: 'createdDate', label: 'Ngày ký' },
   { key: 'quotationDate', label: 'Ngày báo giá' },
   { key: 'category', label: 'Hạng mục' },
   { key: 'countryName', label: 'Nước xuất khẩu' },
@@ -114,17 +127,15 @@ export const COLUMN_OPTIONS = [
 // pre-existing default keeps today's screen unchanged for anyone who
 // already has it open.
 export const DEFAULT_COLUMN_KEYS = [
+  'createdDate',
   'contractNumber',
-  'contractType',
-  'status',
-  'projectName',
   'buyer',
+  'status',
   'contractValue',
   'settlementValue',
   'paidValue',
   'unpaidValue',
   'incoterm',
-  'createdDate',
   'actions',
 ];
 

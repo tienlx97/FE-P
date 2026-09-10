@@ -15,8 +15,11 @@ import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
-import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
 import { useFullscreenToggle } from '@/shared/components/fullscreen-panel.jsx';
+import {
+  TableHeaderGroupBar,
+  TableHeaderGroupCaption,
+} from '@/shared/components/table-header-group.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import {
@@ -65,19 +68,28 @@ function formatPaymentTerms(terms) {
   return `${terms.length} đợt`;
 }
 
+const SETTLEMENT_GROUP_KEY = 'settlement-value-group';
+const SETTLEMENT_GROUP_COLUMN_KEYS = [
+  'contractValue',
+  'settlementValue',
+  'paidValue',
+  'unpaidValue',
+];
+
 /**
- * Two-line header — a small "GIÁ TRỊ" caption over the specific label —
- * so the three settlement columns read as one visual group even though
- * the underlying `Table` has no spanning/grouped-header primitive to
- * merge them under a single cell.
+ * Two-line header — a blank caption line reserved above the specific label
+ * — so the three settlement columns line up under one spanning "GIÁ TRỊ"
+ * bar drawn by `TableHeaderGroupBar` (see its render site below), since the
+ * underlying `Table` has no spanning/grouped-header primitive to merge
+ * them under a single cell itself.
  * @param {string} label
  */
 function settlementColumnHeader(label) {
   return (
     <VStack gap={0} hAlign="end">
-      <Text type="supporting" color="secondary">
+      <TableHeaderGroupCaption groupKey={SETTLEMENT_GROUP_KEY}>
         GIÁ TRỊ
-      </Text>
+      </TableHeaderGroupCaption>
       <Text weight="semibold">{label}</Text>
     </VStack>
   );
@@ -87,6 +99,7 @@ function settlementColumnHeader(label) {
  * Selector portals remain inside their dialog layers (ADR-0004). */
 export function ContractsList() {
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreenToggle();
+  const tableWrapperRef = useRef(null);
   const [workspace, setWorkspace] = useState(
     /** @type {{ mode?: 'view' | 'edit', contract: import('../types/index.js').Contract | null, revision: number } | null} */ (
       null
@@ -244,6 +257,40 @@ export function ContractsList() {
     [customersQuery.data],
   );
 
+  // "Khách hàng" search/filter is matched against the denormalized
+  // `buyerCompanyName` string (see `searchableContracts` below), so the
+  // combobox's options are just the distinct customer names — picking one
+  // writes an exact-match `buyerCompanyName` clause instead of a freetext
+  // substring search.
+  const customerNameOptions = useMemo(() => {
+    const names = new Set(
+      (customersQuery.data?.success ? customersQuery.data.customers : []).map(
+        (customer) => customer.companyName,
+      ),
+    );
+    return [...names]
+      .sort((a, b) => a.localeCompare(b, 'vi'))
+      .map((name) => ({ value: name, label: name }));
+  }, [customersQuery.data]);
+  const searchFieldDefsWithCustomers = useMemo(
+    () =>
+      SEARCH_FIELD_DEFS.map((field) =>
+        field.key === 'buyerCompanyName'
+          ? { ...field, enumValues: customerNameOptions }
+          : field,
+      ),
+    [customerNameOptions],
+  );
+  const filterFieldDefsWithCustomers = useMemo(
+    () =>
+      FILTER_FIELD_DEFS.map((field) =>
+        field.key === 'buyerCompanyName'
+          ? { ...field, options: customerNameOptions }
+          : field,
+      ),
+    [customerNameOptions],
+  );
+
   // `Shipment.costs[].costCategoryId` is a live FK into the
   // `ShipmentCostCategory` catalog — resolved client-side for
   // `ShipmentExpandedDetails`'s cost-lines table, same pattern as
@@ -267,18 +314,19 @@ export function ContractsList() {
       header: 'Số hợp đồng',
       width: pixel(180),
       filter: 'contractNumber',
-      renderCell: (contract) => (
-        <Button
-          label={contract.contractNumber}
-          variant="ghost"
-          size="sm"
-          onClick={(event) => {
-            event.stopPropagation();
-            setExpandedTab('info');
-            setWorkspace({ contract, revision: 0 });
-          }}
-        />
-      ),
+      // renderCell: (contract) => (
+      //   <Button
+      //     label={contract.contractNumber}
+      //     variant="ghost"
+      //     size="sm"
+      //     onClick={(event) => {
+      //       event.stopPropagation();
+      //       setExpandedTab('info');
+      //       setWorkspace({ contract, revision: 0 });
+      //     }}
+      //   />
+      // ),
+      renderCell: (contract) => contract.contractNumber,
     },
     {
       key: 'contractType',
@@ -315,15 +363,12 @@ export function ContractsList() {
     },
     {
       key: 'contractValue',
-      // Fixed width, not proportional — a money value is compact and
-      // doesn't need to flex; letting `projectName`/`buyer` (both
-      // `proportional(1.4)`) be the only two columns sharing the table's
-      // leftover width keeps every column's width intentional instead of
-      // one absorbing slack it doesn't need (see the "Harness gaps" note
-      // in `harness/PROGRESS.md` about mixing `pixel()`/`proportional()`).
-      header: 'Giá trị',
+      // First of the four settlement-group columns (see
+      // `SETTLEMENT_GROUP_COLUMN_KEYS`) — the contract's own value, next to
+      // its quyết toán / đã thanh toán / chưa thanh toán position.
+      header: settlementColumnHeader('HỢP ĐỒNG'),
       width: proportional(1),
-      // align: 'end',
+      align: 'end',
       filter: 'contractValue',
       renderCell: (contract) =>
         formatMoney(contract.contractValue, contract.currency),
@@ -376,7 +421,7 @@ export function ContractsList() {
     },
     {
       key: 'createdDate',
-      header: 'Ngày tạo',
+      header: 'Ngày ký',
       width: pixel(150),
       renderCell: (contract) => formatDisplayDate(contract.createdDate),
     },
@@ -463,39 +508,6 @@ export function ContractsList() {
   }));
 
   const contract = workspace?.contract;
-  const rowInteractionPlugin = useMemo(
-    /** @returns {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').Contract & Record<string, unknown>>} */
-    () => {
-      /** @type {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').Contract & Record<string, unknown>>} */
-      const interaction = createRowExpansionInteractionPlugin({
-        expandedId: null,
-        onToggle: (id) => {
-          const selected = contracts.find((item) => item.id === id);
-          if (selected) {
-            setExpandedTab('info');
-            setWorkspace({ contract: selected, revision: 0 });
-          }
-        },
-        isExpandable: (item) => !item.id.startsWith('skeleton-'),
-      });
-      return {
-        ...interaction,
-        transformBodyRow: (props, row, context) => {
-          const result =
-            interaction.transformBodyRow?.(props, row, context) ?? props;
-          return {
-            ...result,
-            htmlProps: {
-              ...result.htmlProps,
-              'aria-expanded': undefined,
-              'aria-haspopup': 'dialog',
-            },
-          };
-        },
-      };
-    },
-    [contracts],
-  );
 
   const totalContracts = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
@@ -540,51 +552,61 @@ export function ContractsList() {
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
-      <AdvanceTable
-        toolbarLabel="Thao tác danh sách hợp đồng"
-        searchFieldDefs={SEARCH_FIELD_DEFS}
-        entityLabel="Hợp đồng"
-        contentSearchFieldKey="contractNumber"
-        searchPlaceholder="Tìm số HĐ, dự án..."
-        filterFieldDefs={FILTER_FIELD_DEFS}
-        advancedFilterConditions={filterConditions}
-        onAdvancedFilterChange={setFilterConditions}
-        columnOptions={COLUMN_OPTIONS}
-        initialColumnKeys={DEFAULT_COLUMN_KEYS}
-        defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-        fixedEndColumnKeys={['actions']}
-        tableColumns={columns}
-        data={searchableContracts}
-        idKey="id"
-        isLoading={isLoadingContracts}
-        skeletonRows={skeletonRows}
-        extraPlugins={{
-          rowInteraction: rowInteractionPlugin,
-        }}
-        onRefresh={() => contractsQuery.refetch()}
-        isRefreshing={contractsQuery.isFetching}
-        summary={
-          valueTotals.length > 0 ? (
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              <Text weight="semibold">Tổng giá trị:</Text>
-              {valueTotals.map((total) => (
-                <Text key={total.currency} weight="semibold" hasTabularNumbers>
-                  {formatMoney(total.total, total.currency)}
-                </Text>
-              ))}
-            </HStack>
-          ) : null
-        }
-        pagination={{
-          pageIndex,
-          pageSize,
-          totalCount: totalContracts,
-          totalPages,
-          onPageIndexChange: setPageIndex,
-          onPageSizeChange: setPageSize,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
-        }}
-      />
+      <div ref={tableWrapperRef} style={{ position: 'relative' }}>
+        <TableHeaderGroupBar
+          containerRef={tableWrapperRef}
+          groupKey={SETTLEMENT_GROUP_KEY}
+          columnKeys={SETTLEMENT_GROUP_COLUMN_KEYS}
+          label="GIÁ TRỊ"
+        />
+        <AdvanceTable
+          toolbarLabel="Thao tác danh sách hợp đồng"
+          searchFieldDefs={searchFieldDefsWithCustomers}
+          entityLabel="Hợp đồng"
+          contentSearchFieldKey="contractNumber"
+          searchPlaceholder="Tìm số HĐ, dự án..."
+          filterFieldDefs={filterFieldDefsWithCustomers}
+          advancedFilterConditions={filterConditions}
+          onAdvancedFilterChange={setFilterConditions}
+          dividers="grid"
+          columnOptions={COLUMN_OPTIONS}
+          initialColumnKeys={DEFAULT_COLUMN_KEYS}
+          defaultColumnKeys={DEFAULT_COLUMN_KEYS}
+          fixedEndColumnKeys={['actions']}
+          tableColumns={columns}
+          data={searchableContracts}
+          idKey="id"
+          isLoading={isLoadingContracts}
+          skeletonRows={skeletonRows}
+          onRefresh={() => contractsQuery.refetch()}
+          isRefreshing={contractsQuery.isFetching}
+          summary={
+            valueTotals.length > 0 ? (
+              <HStack gap={2} vAlign="center" wrap="wrap">
+                <Text weight="semibold">Tổng giá trị:</Text>
+                {valueTotals.map((total) => (
+                  <Text
+                    key={total.currency}
+                    weight="semibold"
+                    hasTabularNumbers
+                  >
+                    {formatMoney(total.total, total.currency)}
+                  </Text>
+                ))}
+              </HStack>
+            ) : null
+          }
+          pagination={{
+            pageIndex,
+            pageSize,
+            totalCount: totalContracts,
+            totalPages,
+            onPageIndexChange: setPageIndex,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: PAGE_SIZE_OPTIONS,
+          }}
+        />
+      </div>
 
       {workspace ? (
         <ContractFormDialog
