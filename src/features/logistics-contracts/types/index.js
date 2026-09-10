@@ -11,7 +11,7 @@ export {};
 /**
  * "Trạng thái hợp đồng" — independent of {@link ContractType} (Draft/
  * Official is a paperwork stage; this is the deal's real-world status).
- * @typedef {'InProgress' | 'Completed' | 'Cancelled'} ContractStatus
+ * @typedef {'NotStarted' | 'InProgress' | 'Completed' | 'Cancelled'} ContractStatus
  */
 
 /**
