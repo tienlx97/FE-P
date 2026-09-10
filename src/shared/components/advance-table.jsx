@@ -20,7 +20,7 @@ import {
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
-import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
+import { colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
@@ -99,6 +99,16 @@ const styles = stylex.create({
   searchInput: {
     flexGrow: 1,
   },
+  // Reads as the table's own footer row (bordered top, like a "Tổng cộng"
+  // row) rather than a separate element floating below it — same divider
+  // token `footer.jsx`'s top border uses.
+  summary: {
+    borderBlockStartColor: colorVars['--color-border'],
+    borderBlockStartStyle: 'solid',
+    borderBlockStartWidth: '1px',
+    paddingBlock: spacingVars['--spacing-3'],
+    paddingInline: spacingVars['--spacing-3'],
+  },
 });
 
 /**
@@ -142,6 +152,7 @@ const styles = stylex.create({
  *   isRefreshing?: boolean,
  *   defaultStickyStart?: 'none' | 'one' | 'two',
  *   defaultStickyEnd?: 'none' | 'one' | 'two',
+ *   summary?: import('react').ReactNode,
  *   pagination?: {
  *     pageIndex: number,
  *     pageSize: number,
@@ -179,6 +190,7 @@ export function AdvanceTable({
   isRefreshing = false,
   defaultStickyStart = 'one',
   defaultStickyEnd = 'one',
+  summary,
   pagination,
 }) {
   const [searchFilters, setSearchFilters] = useState(
@@ -645,6 +657,12 @@ export function AdvanceTable({
           ...extraPlugins,
         }}
       />
+
+      {summary && !isLoading ? (
+        <HStack hAlign="end" xstyle={styles.summary}>
+          {summary}
+        </HStack>
+      ) : null}
 
       <AdvanceTablePagination
         pagination={pagination}

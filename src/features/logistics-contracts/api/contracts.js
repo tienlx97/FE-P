@@ -36,8 +36,13 @@ export async function listContracts({ page = 1, pageSize = 25 } = {}) {
  * `listContracts` — filtering happens server-side (`POST
  * /api/v1/contracts/search`, BE-kt-xnk) so results are correct across every
  * page, not just the one currently loaded.
+ *
+ * Unlike `listContracts`, the response is `{ page: {...}, valueTotals: [...] }`
+ * rather than the flat paging envelope — `valueTotals` sums `contractValue`
+ * per currency across every matching contract (not just this page), so the
+ * list's "Tổng giá trị" line stays correct across pagination.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
- * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number, valueTotals: { currency: string, total: number }[] } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchContracts({
   page = 1,
@@ -66,11 +71,12 @@ export async function searchContracts({
 
   return {
     success: true,
-    contracts: result.data?.items ?? [],
-    page: result.data?.page ?? page,
-    pageSize: result.data?.pageSize ?? pageSize,
-    totalCount: result.data?.totalCount ?? 0,
-    totalPages: result.data?.totalPages ?? 0,
+    contracts: result.data?.page?.items ?? [],
+    page: result.data?.page?.page ?? page,
+    pageSize: result.data?.page?.pageSize ?? pageSize,
+    totalCount: result.data?.page?.totalCount ?? 0,
+    totalPages: result.data?.page?.totalPages ?? 0,
+    valueTotals: result.data?.valueTotals ?? [],
   };
 }
 

@@ -6,7 +6,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { Heading } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
@@ -167,6 +167,11 @@ export function ContractsList() {
     () => (listResult?.success ? listResult.contracts : []),
     [listResult],
   );
+  // Sum of `contractValue` across every contract matching the current
+  // filters (not just this page — the backend computes it pre-paging, see
+  // `searchContracts`'s doc comment), grouped by currency since contracts
+  // can be denominated in more than one.
+  const valueTotals = listResult?.success ? listResult.valueTotals : [];
 
   const banksQuery = useContractBanksQuery();
   const banksById = useMemo(
@@ -491,6 +496,18 @@ export function ContractsList() {
         }}
         onRefresh={() => contractsQuery.refetch()}
         isRefreshing={contractsQuery.isFetching}
+        summary={
+          valueTotals.length > 0 ? (
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              <Text weight="semibold">Tổng giá trị:</Text>
+              {valueTotals.map((total) => (
+                <Text key={total.currency} weight="semibold" hasTabularNumbers>
+                  {formatMoney(total.total, total.currency)}
+                </Text>
+              ))}
+            </HStack>
+          ) : null
+        }
         pagination={{
           pageIndex,
           pageSize,
