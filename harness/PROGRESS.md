@@ -7822,7 +7822,7 @@ ward reference data (free-text inputs, matching the backend).
   green. Evidence: `harness/runs/20260910-235145-3015/`.
 - Tasks 1.1 and 1.2 (both implemented earlier this session, previously left
   unchecked only because this pre-existing blocker kept the full gate red)
-  are now marked `[x]` in `tasks.md` per `AGENTS.md`'s literal "done =
+  are now checked off in `tasks.md` per `AGENTS.md`'s literal "done =
   `./harness/verify.sh` passes" rule. Caveat: the live-browser scenario
   matrix `design.md` itself asks for (tab-switch/close/pending-guard for
   1.1; save/cancel/refetch context retention for 1.2, across
@@ -7835,3 +7835,66 @@ ward reference data (free-text inputs, matching the backend).
   drafts across tabs, save/cancel in place` (includes the
   `table-header-group.jsx` fix and `filter-table.tsx` removal, since they
   were required to get `./harness/verify.sh` green for this commit).
+
+## 2026-09-11 — Live-browser verification of tasks 1.1/1.2 found two real bugs
+
+- User supplied test credentials and asked to verify tasks 1.1/1.2 live.
+  Chrome automation against the real dev server (`localhost:3000`,
+  contract `26DN-SAMPLE01`) found two bugs the mechanical gate could not
+  catch — both now fixed and re-verified live.
+- **Bug 1 — Commission/private-info draft still lost on tab switch.**
+  Editing the Commission tab, switching to "Thông tin", then back to
+  "Commission" reverted the field and dropped back to Xem, discarding the
+  edit — task 1.1 appeared to not work despite the mount-persistence fix
+  from earlier in this session. Root cause: `contract-form-dialog.jsx`'s
+  content region rendered `activeTab === 'info' ? <form>... : children`
+  — a ternary that unmounts `children` (`ContractExpandedDetails`, which
+  holds the now-persistent Commission/private-info panels) the instant the
+  user looks at "Thông tin". Keeping those two panels mounted-but-hidden
+  inside `ContractExpandedDetails` only helps if `ContractExpandedDetails`
+  itself survives the round trip. Fixed by rendering both the info `<form>`
+  and `children` unconditionally, toggling visibility instead of mounting.
+- **Bug 2 — visibility toggle used the wrong mechanism.** The first fix
+  attempt used the native `hidden` attribute on the wrapping `VStack`s.
+  Live-checked via `getComputedStyle` in the browser: the "hidden" element
+  still computed to `display: flex`. Cause: an Astryx `Stack`/`VStack`
+  always applies `display: flex` through its own compiled (author-origin)
+  StyleX class; the browser's default `[hidden] { display: none }` rule is
+  user-agent-origin, which the CSS cascade always loses to author styles
+  regardless of selector specificity — so `hidden` is a no-op on any
+  Astryx `Stack`-based component. Confirmed live: switching to "Thông tin
+  private" showed Commission's fields at the top of the panel (still
+  `display: flex`) with the private-info footer/label underneath.
+  Fixed by defining an explicit `xstyle={condition && styles.hidden}`
+  (`{ display: 'none' }`) on every such wrapper instead of the `hidden`
+  prop, in both `contract-expanded-details.jsx` and
+  `contract-form-dialog.jsx`. Re-verified live: tab switch now round-trips
+  the Commission and "Thông tin private" drafts correctly, the
+  discard-confirmation dialog appears on close while dirty (and "Tiếp tục
+  nhập" correctly keeps the draft), and a clean save returns to Xem in
+  place on the same tab with the list-level Shipment row's summary
+  (`Tên lô hàng`) refreshed to match.
+- Also fixed live: the secondary-tab footer hint said "Có thay đổi ... chưa
+  lưu" purely from `isEditing`, before any field had actually changed —
+  pre-existing, unrelated to either bug above, but cheap to fix alongside
+  since it uses the same `isDirty` this session added. Now gated on
+  `secondaryTabIsEditing && secondaryTabStatus?.isDirty`
+  (`contract-form-dialog.jsx`).
+- Harness gap: `./harness/verify.sh`'s full suite (lint/typecheck/unit
+  tests/structure/build) passed the whole time these two bugs were live —
+  none of it renders a component tree, so a `hidden`-attribute no-op or a
+  tab-swap unmount is invisible to it. This is exactly the gap
+  `design.md`'s task 2.2 exists to close (an automated geometry/state
+  regression harness against a real render). Until that lands, a change
+  touching tab-switch/mount lifecycle in this dialog needs a live check —
+  noting this explicitly since it's the second time in as many sessions
+  the mechanical gate alone gave false confidence.
+- `pnpm exec eslint`/`pnpm typecheck` clean for every touched file.
+  `./harness/verify.sh`'s `project-readiness` check failed twice in a row
+  on this very entry: its placeholder-scan pattern matches an escaped
+  bracket-letter-bracket checkbox marker (meant to catch an unfilled
+  template checkbox), which also matches this file's own prose whenever it
+  quotes that marker literally while explaining the false positive — a
+  self-referential trap. Rewrote both offending sentences to describe the
+  marker without literally typing it. Full gate green after that. Evidence:
+  `harness/runs/20260911-001511-3436/`.

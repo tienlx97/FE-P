@@ -11,6 +11,7 @@ import {
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 import { Pencil, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -35,6 +36,17 @@ import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 /** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo'} ExpandedTab */
 
 const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
+
+// The native `hidden` attribute alone does NOT hide an Astryx `Stack`/
+// `VStack` — its own compiled `display: flex` class is author-origin CSS,
+// which the cascade always prefers over the user-agent's `[hidden] {
+// display: none }` regardless of selector specificity. An explicit
+// `xstyle` override is required to actually hide one.
+const styles = stylex.create({
+  hidden: {
+    display: 'none',
+  },
+});
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -415,7 +427,11 @@ export function ContractExpandedDetails({
             <Text color="secondary">Đang tải Commission...</Text>
           )
         ) : (
-          <VStack gap={4} hAlign="stretch" hidden={activeTab !== 'commission'}>
+          <VStack
+            gap={4}
+            hAlign="stretch"
+            xstyle={activeTab !== 'commission' && styles.hidden}
+          >
             <ContractCommissionPanel
               // `commission` is `null` both "still loading" and "confirmed
               // none exists" — gating the mount above on `isLoading` (not
@@ -451,7 +467,11 @@ export function ContractExpandedDetails({
         // (hidden) across tab switches once `privateInfo` has loaded, so
         // `useContractPrivateInfoForm`'s draft survives.
         privateInfo && (
-          <VStack gap={4} hAlign="stretch" hidden={activeTab !== 'privateInfo'}>
+          <VStack
+            gap={4}
+            hAlign="stretch"
+            xstyle={activeTab !== 'privateInfo' && styles.hidden}
+          >
             <ContractPrivateInfoPanel
               controllerRef={privateInfoPanelRef}
               contractId={contract.id}

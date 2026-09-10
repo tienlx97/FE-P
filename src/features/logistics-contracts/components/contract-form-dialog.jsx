@@ -32,6 +32,11 @@ const styles = stylex.create({
   },
   surface: { backgroundColor: colorVars['--color-background-surface'] },
   disabledTab: { cursor: 'not-allowed', opacity: 0.5 },
+  // The native `hidden` attribute alone does NOT hide a `VStack` — its own
+  // compiled `display: flex` class is author-origin CSS, which the cascade
+  // always prefers over the user-agent's `[hidden] { display: none }`
+  // regardless of selector specificity.
+  hidden: { display: 'none' },
 });
 
 const TAB_LABELS = {
@@ -234,78 +239,93 @@ export function ContractFormDialog({
                 aria-label={TAB_LABELS[activeTab]}
                 tabIndex={0}
               >
-                {activeTab === 'info' ? (
-                  <form
-                    id={formId}
-                    onSubmit={(event) => {
-                      if (!isEditing) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        return;
-                      }
-                      event.currentTarget.scrollIntoView({ block: 'start' });
-                      handleSubmit(event);
-                    }}
-                  >
-                    <VStack gap={4} hAlign="stretch">
-                      {submitError ? (
-                        <Banner
-                          status="error"
-                          title={submitError}
-                          container="card"
+                {
+                  // Both branches stay mounted (toggled with `hidden`)
+                  // instead of a ternary that swaps them — `children` is
+                  // `ContractExpandedDetails`, which itself keeps the
+                  // Commission/"Thông tin private" panels mounted across
+                  // *their* tab switches (see that component), but that
+                  // only holds if `ContractExpandedDetails` itself survives
+                  // switching back to "Thông tin" — a ternary here would
+                  // unmount it (and every draft inside it) the moment the
+                  // user looked at the "Thông tin" tab.
+                }
+                <form
+                  id={formId}
+                  hidden={activeTab !== 'info'}
+                  onSubmit={(event) => {
+                    if (!isEditing) {
+                      event.preventDefault();
+                      event.stopPropagation();
+                      return;
+                    }
+                    event.currentTarget.scrollIntoView({ block: 'start' });
+                    handleSubmit(event);
+                  }}
+                >
+                  <VStack gap={4} hAlign="stretch">
+                    {submitError ? (
+                      <Banner
+                        status="error"
+                        title={submitError}
+                        container="card"
+                      />
+                    ) : null}
+                    <CollapsibleGroup
+                      type="multiple"
+                      defaultValue={['general', 'paymentTerms', 'banks']}
+                    >
+                      <VStack gap={3} hAlign="stretch">
+                        <ContractGeneralFields
+                          form={form}
+                          contract={contract}
+                          isReadOnly={!isEditing}
+                          onAddAnnex={onAddAnnex}
+                          onEditAnnex={onEditAnnex}
                         />
-                      ) : null}
-                      <CollapsibleGroup
-                        type="multiple"
-                        defaultValue={['general', 'paymentTerms', 'banks']}
-                      >
-                        <VStack gap={3} hAlign="stretch">
-                          <ContractGeneralFields
-                            form={form}
-                            contract={contract}
+
+                        <FormSection
+                          value="paymentTerms"
+                          title="Đợt thanh toán"
+                          isDisabled
+                        >
+                          <PaymentTermsFields
+                            rows={paymentTermRows.rows}
+                            totalPercent={paymentTermRows.totalPercent}
+                            status={fieldStatuses.paymentTerms}
+                            contractValue={values.contractValue}
+                            currency={values.currency}
                             isReadOnly={!isEditing}
-                            onAddAnnex={onAddAnnex}
-                            onEditAnnex={onEditAnnex}
+                            onAddRow={paymentTermRows.addRow}
+                            onRemoveRow={paymentTermRows.removeRow}
+                            onUpdateRowField={paymentTermRows.updateRowField}
                           />
+                        </FormSection>
 
-                          <FormSection
-                            value="paymentTerms"
-                            title="Đợt thanh toán"
-                            isDisabled
-                          >
-                            <PaymentTermsFields
-                              rows={paymentTermRows.rows}
-                              totalPercent={paymentTermRows.totalPercent}
-                              status={fieldStatuses.paymentTerms}
-                              contractValue={values.contractValue}
-                              currency={values.currency}
-                              isReadOnly={!isEditing}
-                              onAddRow={paymentTermRows.addRow}
-                              onRemoveRow={paymentTermRows.removeRow}
-                              onUpdateRowField={paymentTermRows.updateRowField}
-                            />
-                          </FormSection>
-
-                          <FormSection
-                            value="banks"
-                            title="Ngân hàng thụ hưởng"
-                            isDisabled
-                          >
-                            <ContractBanksFields
-                              banks={banks}
-                              selectedBankIds={values.bankIds}
-                              onChange={setBankIds}
-                              status={fieldStatuses.bankIds}
-                              isReadOnly={!isEditing}
-                            />
-                          </FormSection>
-                        </VStack>
-                      </CollapsibleGroup>
-                    </VStack>
-                  </form>
-                ) : (
-                  children
-                )}
+                        <FormSection
+                          value="banks"
+                          title="Ngân hàng thụ hưởng"
+                          isDisabled
+                        >
+                          <ContractBanksFields
+                            banks={banks}
+                            selectedBankIds={values.bankIds}
+                            onChange={setBankIds}
+                            status={fieldStatuses.bankIds}
+                            isReadOnly={!isEditing}
+                          />
+                        </FormSection>
+                      </VStack>
+                    </CollapsibleGroup>
+                  </VStack>
+                </form>
+                <VStack
+                  gap={4}
+                  hAlign="stretch"
+                  xstyle={activeTab === 'info' && styles.hidden}
+                >
+                  {children}
+                </VStack>
               </section>
             </LayoutContent>
           }
@@ -314,7 +334,7 @@ export function ContractFormDialog({
               {hasSecondaryTabController ? (
                 <HStack hAlign="between" gap={2}>
                   <Text color="secondary" xstyle={styles.hint}>
-                    {secondaryTabIsEditing
+                    {secondaryTabIsEditing && secondaryTabStatus?.isDirty
                       ? `Có thay đổi ${TAB_LABELS[activeTab]} chưa lưu`
                       : TAB_LABELS[activeTab]}
                   </Text>
