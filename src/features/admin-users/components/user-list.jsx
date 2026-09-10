@@ -319,11 +319,15 @@ export function UserList() {
       />
 
       {hasOpenedCreate ? (
+        // No `onSuccess` here (unlike the edit dialog below): closing
+        // immediately on success would take the CCCD/mật khẩu confirmation
+        // in `submitSuccess` down with it before the Admin ever reads it —
+        // the whole reason that message exists. The Admin closes manually
+        // once they've copied it.
         <UserFormDialog
           mode="create"
           isOpen={isCreateOpen}
           onOpenChange={setIsCreateOpen}
-          onSuccess={() => setIsCreateOpen(false)}
         />
       ) : null}
 
