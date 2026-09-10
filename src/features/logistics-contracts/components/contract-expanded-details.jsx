@@ -24,6 +24,7 @@ import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.
 import { labelForShipmentStatus } from '../config/shipment-status.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
+import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { useContractPrivateInfoQuery } from '../hooks/use-contract-private-info-query.js';
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
@@ -118,6 +119,15 @@ export function ContractExpandedDetails({
     (total, schedule) => total + schedule.amount,
     0,
   );
+
+  const annexesQuery = useContractAnnexesQuery(contract.id);
+  const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
+  const annexesTotal = annexes.reduce((total, annex) => {
+    if (annex.type === 'AmountIncrease') return total + annex.amount;
+    if (annex.type === 'AmountDecrease') return total - annex.amount;
+    return total;
+  }, 0);
+  const contractGrandTotal = (contract.contractValue ?? 0) + annexesTotal;
 
   const shipmentsQuery = useShipmentsQuery(contract.id);
   const shipments = shipmentsQuery.data?.success
@@ -347,9 +357,15 @@ export function ContractExpandedDetails({
                 density="compact"
               />
               <HStack hAlign="between" vAlign="center">
-                <Text weight="semibold">Tổng cộng:</Text>
+                <Text weight="semibold">Tổng cộng thanh toán:</Text>
                 <Text weight="semibold">
                   {formatMoney(paymentSchedulesTotal, contract.currency)}
+                </Text>
+              </HStack>
+              <HStack hAlign="between" vAlign="center">
+                <Text weight="semibold">Tổng cộng giá trị:</Text>
+                <Text weight="semibold">
+                  {formatMoney(contractGrandTotal, contract.currency)}
                 </Text>
               </HStack>
             </>
