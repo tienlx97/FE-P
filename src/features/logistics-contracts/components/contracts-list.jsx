@@ -603,12 +603,12 @@ export function ContractsList() {
           key={workspace.sessionKey}
           // Hidden (not unmounted — `CommonDialog`/`Dialog` keep children
           // mounted regardless of `isOpen`, see `ShipmentFormDialog`'s doc
-          // comment) while a Shipment opened from "Liên quan" is showing,
-          // instead of stacking two fullscreen dialogs (task 3.2). Every
-          // other related editor (Commission/BOQ/annex/payment/VGM
-          // dialogs) still stacks on top for now — narrowing those is task
-          // 3.3.
-          isOpen={!shipmentDialog}
+          // comment) while a Shipment/Commission/BOQ opened from "Liên
+          // quan" is showing, instead of stacking a second fullscreen
+          // dialog (tasks 3.2/3.3). The short quick-add dialogs (annex/
+          // payment/VGM) still stack on top — those stay "gọn" per
+          // design.md section 3, not full workspaces of their own.
+          isOpen={!shipmentDialog && !relatedCommissionDialog && !relatedBoqDialog}
           onOpenChange={(open) => {
             if (!open) setWorkspace(null);
           }}
@@ -682,6 +682,7 @@ export function ContractsList() {
           contractId={relatedCommissionDialog.contractId}
           currency={relatedCommissionDialog.currency}
           commission={relatedCommissionDialog.commission}
+          closeLabel="Quay lại Contract"
           onSuccess={(saved) =>
             setRelatedCommissionDialog((current) =>
               current ? { ...current, commission: saved } : current,
@@ -714,6 +715,7 @@ export function ContractsList() {
           key={relatedBoqDialog.contractId}
           contractId={relatedBoqDialog.contractId}
           contractNumber={relatedBoqDialog.contractNumber}
+          closeLabel="Quay lại Contract"
           onOpenChange={(isOpen) => {
             if (!isOpen) setRelatedBoqDialog(null);
           }}

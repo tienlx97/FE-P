@@ -30,6 +30,7 @@ import { CommissionFields } from './commission-fields.jsx';
  *   onAddAnnex?: () => void,
  *   onEditAnnex?: (annex: import('../types/index.js').CommissionAnnex) => void,
  *   onAddPayment?: () => void,
+ *   closeLabel?: string,
  * }} props
  */
 export function CommissionFormDialog({
@@ -43,6 +44,7 @@ export function CommissionFormDialog({
   onAddAnnex,
   onEditAnnex,
   onAddPayment,
+  closeLabel = 'Đóng',
 }) {
   const [mode, setMode] = useState(initialMode);
   const isViewing = mode === 'view' && Boolean(commission);
@@ -73,6 +75,7 @@ export function CommissionFormDialog({
         setMode('edit');
       }}
       onOpenChange={onOpenChange}
+      closeLabel={closeLabel}
       title={commission ? `Commission · ${commission.code}` : form.title}
       submitLabel={form.submitLabel}
       width={720}

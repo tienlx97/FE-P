@@ -4,7 +4,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useContractPrivateInfoForm } from '../hooks/use-contract-private-info-form.js';
 import {
@@ -28,16 +28,24 @@ import {
  * dialog footer drove this panel directly (pre-task-3.1); that entrypoint
  * is gone now that BOQ only ever opens through the standalone detail
  * dialog, so this only has the one convention left.
+ * `onDirtyChange` — much lighter than the old `controllerRef`/
+ * `onStatusChange` bridge (this panel drives its own editing/submit again)
+ * — only reports whether there's an in-progress edit worth guarding, so
+ * `contract-private-info-detail-dialog.jsx` can confirm before its header
+ * close/backdrop/Escape discards it, the same way `FormDialog` guards its
+ * own close (task 3.3's "dirty guard" requirement).
  * @param {{
  *   contractId: string,
  *   privateInfo: import('../types/index.js').ContractPrivateInfo,
  *   initialEditing?: boolean,
+ *   onDirtyChange?: (isDirty: boolean) => void,
  * }} props
  */
 export function ContractPrivateInfoPanel({
   contractId,
   privateInfo,
   initialEditing = false,
+  onDirtyChange,
 }) {
   const [isEditing, setIsEditing] = useState(initialEditing);
   const form = useContractPrivateInfoForm({
@@ -45,6 +53,10 @@ export function ContractPrivateInfoPanel({
     privateInfo,
     onSuccess: () => setIsEditing(false),
   });
+
+  useEffect(() => {
+    onDirtyChange?.(isEditing && form.isDirty);
+  }, [isEditing, form.isDirty, onDirtyChange]);
 
   const editLabel = isPrivateInfoEntirelyEmpty(privateInfo)
     ? 'Nhập Thông tin private'

@@ -8155,3 +8155,50 @@ ward reference data (free-text inputs, matching the backend).
   stack a second fullscreen dialog when opened from Contract's "Liên
   quan" — same fix shape (`isOpen={!relatedCommissionDialog &&
   !relatedBoqDialog}`, or similar) should apply there too.
+
+## 2026-09-11 — Task 3.3: Commission/BOQ share the editor, no stacking, dirty-guarded
+
+- Most of "dùng chung editor Commission/BOQ ... summary/link" was already
+  landed in task 3.1; what remained was the same no-stacking fix task 3.2
+  gave Shipment, plus a dirty guard BOQ's dialog never had.
+- `contracts-list.jsx`: `ContractFormDialog`'s `isOpen` now also excludes
+  `relatedCommissionDialog`/`relatedBoqDialog` (`!shipmentDialog &&
+  !relatedCommissionDialog && !relatedBoqDialog`) — same mechanism as task
+  3.2 (hide, don't unmount). Quick-add dialogs (annex/payment/VGM) still
+  stack on top deliberately — design.md section 3 calls those "gọn"
+  (short) dialogs, not full workspaces needing this treatment.
+- `CommissionFormDialog` already used the shared `FormDialog`, which
+  already guards its own close on a `draft`-fingerprint `isDirty` — task
+  3.3's "dirty guard" requirement was already satisfied there before
+  touching anything; only needed a `closeLabel` prop (added to
+  `form-dialog.jsx`/`CommissionFormDialog`, same as task 3.2's Shipment
+  change) so `contracts-list.jsx` can say "Quay lại Contract" instead of
+  "Đóng".
+- `ContractPrivateInfoDetailDialog` (BOQ) had no dirty guard at all — its
+  header X/backdrop/Escape closed unconditionally, and it had no footer
+  action to speak of. Added `onDirtyChange` to `ContractPrivateInfoPanel`
+  (much lighter than the `controllerRef`/`onStatusChange` bridge task 3.1
+  removed — one boolean, not a full imperative status/controller
+  surface — this panel still drives its own editing/submit), and gave the
+  dialog a real footer with a `closeLabel` button, both routed through a
+  `requestClose`/confirm-discard `AlertDialog` pair copied from
+  `ContractFormDialog`'s own convention.
+- Live-verified end to end: exactly one `<dialog open>` throughout
+  Commission and BOQ round trips from "Liên quan" (confirmed via
+  `document.querySelectorAll('dialog')`); "Liên quan" stays the active tab
+  on return either way; BOQ's new dirty guard shows "Bỏ thay đổi chưa
+  lưu?" when closing mid-edit, "Tiếp tục nhập" keeps the draft, "Bỏ thay
+  đổi" discards and returns to Contract. Commission's pre-existing
+  `FormDialog` guard re-confirmed the same way (an earlier check of this
+  session gave a false negative — traced to querying `document` globally
+  instead of the currently-open `<dialog>`, so it hit the *hidden*
+  Contract dialog's same-prefixed "Giá trị hợp đồng" field instead of
+  Commission's own "Giá trị"; scoping the query to `dialog[open]` fixed
+  the test, not the app). Commission's 1:1-with-Contract relationship and
+  the `logistics:secret` gate on BOQ's card/query are both unchanged from
+  task 3.1 — nothing in this task touched either.
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm test` (137)/`pnpm structure`
+  all clean. Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260911-141604-2106/`.
+- All of section 3 ("Thu hẹp Contract và tái sử dụng editor") is done as
+  of this task.
