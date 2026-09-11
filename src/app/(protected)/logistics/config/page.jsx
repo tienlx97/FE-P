@@ -23,9 +23,12 @@ const ITEMS = [
 
 /**
  * Access is gated by `routeAccessRules` (`logistics:contracts:view`),
- * enforced in middleware before this renders. Lands here when the "Cấu
- * hình" sidebar group itself is clicked (`sidebarLogistics.json`), rather
- * than one of its children.
+ * enforced in middleware before this renders. Kept for backward
+ * compatibility with existing bookmarks/links (task 4.1,
+ * `openspec/changes/logistics-workspace-redesign/design.md` section 4) —
+ * `sidebarLogistics.json` no longer links here; "Nước" and "Cảng / Nơi"
+ * are now flat "Danh mục" sidebar entries pointing straight at their own
+ * pages.
  */
 export default function LogisticsConfigPage() {
   return (

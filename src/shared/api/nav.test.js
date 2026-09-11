@@ -4,6 +4,7 @@ import test from 'node:test';
 
 import {
   filterNavLinksByPermissions,
+  filterSidebarRoutesByPermissions,
   getActiveSidebarGroupKey,
   getSidebarBreadcrumbs,
   toggleSidebarGroup,
@@ -67,6 +68,76 @@ test('keeps a permission-restricted nav link only for a matching permission', ()
     [],
   );
   assert.deepEqual(filterNavLinksByPermissions(navLinks, []), []);
+});
+
+test('keeps a sidebar route with no allowedPermissions for anyone', () => {
+  const routes = [{ title: 'Hợp đồng', path: '/logistics/contracts' }];
+  assert.deepEqual(filterSidebarRoutesByPermissions(routes, []), routes);
+});
+
+test('keeps a permission-restricted sidebar route only for a matching permission', () => {
+  const routes = [
+    {
+      title: 'BOQ',
+      path: '/logistics/boq',
+      allowedPermissions: ['logistics:secret'],
+    },
+  ];
+
+  assert.deepEqual(
+    filterSidebarRoutesByPermissions(routes, ['logistics:secret']),
+    routes,
+  );
+  assert.deepEqual(
+    filterSidebarRoutesByPermissions(routes, ['logistics:contracts:view']),
+    [],
+  );
+});
+
+test('drops a section header once every route beneath it is filtered out', () => {
+  const routes = [
+    { hasSectionHeader: true, sectionHeader: 'NGHIỆP VỤ' },
+    {
+      title: 'Hợp đồng',
+      path: '/logistics/contracts',
+      allowedPermissions: ['logistics:contracts:view'],
+    },
+    { hasSectionHeader: true, sectionHeader: 'DANH MỤC' },
+    {
+      title: 'Khách hàng',
+      path: '/logistics/customers',
+      allowedPermissions: ['logistics:contracts:view'],
+    },
+  ];
+
+  assert.deepEqual(
+    filterSidebarRoutesByPermissions(routes, ['logistics:contracts:view']),
+    routes,
+  );
+  assert.deepEqual(filterSidebarRoutesByPermissions(routes, []), []);
+});
+
+test('recurses into nested sidebar route groups', () => {
+  const routes = [
+    {
+      title: 'Nghiệp vụ',
+      routes: [
+        {
+          title: 'BOQ',
+          path: '/logistics/boq',
+          allowedPermissions: ['logistics:secret'],
+        },
+        { title: 'Danh sách', path: '/logistics/list' },
+      ],
+    },
+  ];
+
+  assert.deepEqual(filterSidebarRoutesByPermissions(routes, []), [
+    {
+      title: 'Nghiệp vụ',
+      routes: [{ title: 'Danh sách', path: '/logistics/list' }],
+    },
+  ]);
 });
 
 test('toggles sidebar groups as an exclusive accordion', () => {

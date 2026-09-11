@@ -3,7 +3,10 @@ import { redirect } from 'next/navigation';
 
 import { UserMenu } from '../../features/auth/index.js';
 import { parsePermissionsCookie } from '../../shared/api/jwt.js';
-import { filterNavLinksByPermissions } from '../../shared/api/nav.js';
+import {
+  filterNavLinksByPermissions,
+  filterSidebarRoutesByPermissions,
+} from '../../shared/api/nav.js';
 import { ProtectedAppShell } from '../../shared/components/protected-app-shell.jsx';
 import {
   ACCESS_TOKEN_KEY,
@@ -42,7 +45,18 @@ export default async function ProtectedLayout({ children }) {
     <ProtectedAppShell
       endContent={<UserMenu />}
       navLinks={filterNavLinksByPermissions(topNavLinks, permissions)}
-      sideNavRouteTrees={[sidebarTutorial, sidebarPost, sidebarAdmin, sidebarLogistics]}
+      sideNavRouteTrees={[
+        sidebarTutorial,
+        sidebarPost,
+        sidebarAdmin,
+        {
+          ...sidebarLogistics,
+          routes: filterSidebarRoutesByPermissions(
+            sidebarLogistics.routes,
+            permissions,
+          ),
+        },
+      ]}
       site={site}
       year={new Date().getFullYear()}
     >

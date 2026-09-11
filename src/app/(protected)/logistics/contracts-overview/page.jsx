@@ -33,9 +33,11 @@ const ITEMS = [
 
 /**
  * Access is gated by `routeAccessRules` (`logistics:contracts:view`),
- * enforced in middleware before this renders. Lands here when the "Hợp
- * đồng" sidebar group itself is clicked (`sidebarLogistics.json`), rather
- * than one of its children.
+ * enforced in middleware before this renders. Kept for backward
+ * compatibility with existing bookmarks/links (task 4.1,
+ * `openspec/changes/logistics-workspace-redesign/design.md` section 4) —
+ * `sidebarLogistics.json` no longer links here; "Hợp đồng" is now its own
+ * flat sidebar entry pointing straight at `/logistics/contracts`.
  */
 export default function LogisticsContractsOverviewPage() {
   return (

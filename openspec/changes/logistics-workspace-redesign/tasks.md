@@ -22,7 +22,7 @@ cập nhật evidence/PROGRESS và commit theo quy trình repository.
 
 ## 4. Điều hướng và bảng
 
-- [ ] 4.1 Sắp sidebar Nghiệp vụ/Danh mục, xử lý trang /logistics và tương thích hub URL cũ theo quyền. Verify: route direct, Back, menu desktop/mobile và user chỉ có logistics:view.
+- [x] 4.1 Sắp sidebar Nghiệp vụ/Danh mục, xử lý trang /logistics và tương thích hub URL cũ theo quyền. Verify: route direct, Back, menu desktop/mobile và user chỉ có logistics:view.
 - [ ] 4.2 Tối ưu cột mặc định/chế độ xem tài chính, hành động bản ghi và chi tiết khách hàng; giữ filter/pagination/column preferences. Verify: dữ liệu dài, không có dữ liệu, cuộn bảng, mở/đóng chi tiết không reset danh sách.
 
 ## 5. Nghiệm thu toàn luồng

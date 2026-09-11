@@ -32,6 +32,45 @@ export function filterNavLinksByPermissions(navLinks, permissions) {
 }
 
 /**
+ * Keeps only the sidebar route-tree items a visitor with the given
+ * permissions is allowed to see — the tree-shaped counterpart of
+ * `filterNavLinksByPermissions` above, for `SidebarRouteItem[]` instead of
+ * flat `NavLink[]`. Recurses into `routes` (child groups), and also drops a
+ * `hasSectionHeader` divider once every item under it has been filtered
+ * out, so a permission gap never leaves a dangling "NGHIỆP VỤ" label with
+ * nothing beneath it (`sidebarLogistics.json`, task 4.1 —
+ * `openspec/changes/logistics-workspace-redesign/design.md` section 4).
+ * @param {import('../types/index.js').SidebarRouteItem[]} routes
+ * @param {string[]} permissions
+ * @returns {import('../types/index.js').SidebarRouteItem[]}
+ */
+export function filterSidebarRoutesByPermissions(routes, permissions) {
+  const allowed = routes
+    .filter(
+      (route) =>
+        route.hasSectionHeader ||
+        !route.allowedPermissions ||
+        route.allowedPermissions.some((allowedPermission) =>
+          permissions.includes(allowedPermission),
+        ),
+    )
+    .map((route) =>
+      route.routes
+        ? {
+            ...route,
+            routes: filterSidebarRoutesByPermissions(route.routes, permissions),
+          }
+        : route,
+    );
+
+  return allowed.filter((route, index) => {
+    if (!route.hasSectionHeader) return true;
+    const next = allowed[index + 1];
+    return next != null && !next.hasSectionHeader;
+  });
+}
+
+/**
  * Return a stable identity for a top-level sidebar record.
  * @param {SidebarRouteItem} route
  * @param {number} [index]

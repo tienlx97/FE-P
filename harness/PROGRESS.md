@@ -8202,3 +8202,59 @@ ward reference data (free-text inputs, matching the backend).
   `harness/runs/20260911-141604-2106/`.
 - All of section 3 ("Thu hẹp Contract và tái sử dụng editor") is done as
   of this task.
+
+## 2026-09-11 — Task 4.1: sidebar Nghiệp vụ/Danh mục, /logistics entrypoint, old hub URLs
+
+- `sidebarLogistics.json` flattened into two sections (`hasSectionHeader`
+  dividers) per `design.md` section 4: "NGHIỆP VỤ" (Hợp đồng, Shipment,
+  Commission, BOQ) and "DANH MỤC" (Khách hàng, Quốc gia, Cảng / Nơi) — the
+  old two-level "Hợp đồng" / "Cấu hình" hub grouping is gone from the
+  sidebar, but `/logistics/contracts-overview` and `/logistics/config`
+  pages themselves are kept (unrouted from the sidebar, still resolve
+  directly) so old bookmarks/links don't 404.
+- New `filterSidebarRoutesByPermissions` in `shared/api/nav.js` — the
+  tree-shaped counterpart of the existing `filterNavLinksByPermissions`,
+  per-item `allowedPermissions` (added to `SidebarRouteItem` in
+  `shared/types/index.js`), recurses into nested `routes`, and drops a
+  `hasSectionHeader` divider once everything under it is filtered out (no
+  dangling "DANH MỤC" label with nothing beneath for a narrower-permission
+  visitor). `(protected)/layout.jsx` runs the Logistics tree through it
+  before handing `sideNavRouteTrees` to the shell; the other three trees
+  (Tutorial/Post/Admin) are unaffected. Unit tests added to `nav.test.js`
+  (no-permissions-field passthrough, permission match/mismatch, dangling-
+  header drop, nested recursion).
+- `/logistics/page.jsx`: was a static landing page; now reads the
+  permissions cookie server-side and redirects to `/logistics/contracts`
+  for the common case (`logistics:contracts:view`). `routeAccessRules`'
+  `/logistics` rule only requires `logistics:view` — per `design.md`
+  section 4 ("không redirect vào route người dùng không được mở"), this
+  deliberately never redirects based on `logistics:contracts:view` alone
+  without the visitor also actually having `logistics:view` on top of it
+  (confirmed live: a synthetic cookie with `logistics:contracts:view` but
+  not `logistics:view` gets redirected to `/` by `proxy.js`'s own check on
+  `/logistics` itself, same as any other `logistics:view`-less visitor —
+  this page's redirect logic doesn't bypass that).
+- `LogisticsOverview` (rendered when `/logistics` doesn't redirect) now
+  takes a `hasSecretOnly` prop: a `logistics:secret`-only visitor (no
+  `logistics:contracts:view`) gets a `RouteHubList` pointing at `/logistics
+  /boq` instead of a dead-end "Đang xây dựng" banner; everyone else (bare
+  `logistics:view`) gets a banner naming the areas that need a specific
+  permission, with no links `routeAccessRules` would then reject.
+- Live-verified with `next dev` + synthetic `kt-xnk-access-token`/
+  `kt-xnk-session-permissions` cookies via `curl` (no real backend, same
+  approach as the 2026-08-21 permissions-cookie session): `logistics:view`
+  + `logistics:contracts:view` → `307` to `/logistics/contracts`;
+  `logistics:view` + `logistics:secret` → `200` with a BOQ link;
+  `logistics:view` alone → `200` with the plain banner, zero sidebar items
+  under Logistics (`AppSideNav` renders per active route-tree, confirmed
+  the emptied `routes: []` array produces no leftover heading — it only
+  ever shows the active tree's own children, never a cross-tree group
+  list, so there's no separate "dangling parent title" case to guard).
+  Old hub URLs `/logistics/contracts-overview` and `/logistics/config`
+  both still `200`. Full-permission sidebar shows both section headers and
+  all 7 flattened items. Desktop/mobile share the same `AppSideNav`
+  filtering path — no separate mobile-only logic to re-verify.
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm test` (141)/`pnpm structure`
+  all clean. Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260911-145458-160/`.
+- Next: task 4.2 (table defaults/financial view/record actions).

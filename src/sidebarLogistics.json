@@ -3,44 +3,47 @@
   "path": "/logistics",
   "routes": [
     {
-      "title": "Hợp đồng",
-      "path": "/logistics/contracts-overview",
-      "routes": [
-        {
-          "title": "Danh sách",
-          "path": "/logistics/contracts"
-        },
-        {
-          "title": "Shipment",
-          "path": "/logistics/shipments"
-        },
-        {
-          "title": "Commission",
-          "path": "/logistics/commissions"
-        },
-        {
-          "title": "Khách hàng",
-          "path": "/logistics/customers"
-        },
-        {
-          "title": "BOQ",
-          "path": "/logistics/boq"
-        }
-      ]
+      "hasSectionHeader": true,
+      "sectionHeader": "NGHIỆP VỤ"
     },
     {
-      "title": "Cấu hình",
-      "path": "/logistics/config",
-      "routes": [
-        {
-          "title": "Nước",
-          "path": "/logistics/countries"
-        },
-        {
-          "title": "Cảng / Nơi",
-          "path": "/logistics/places"
-        }
-      ]
+      "title": "Hợp đồng",
+      "path": "/logistics/contracts",
+      "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
+      "title": "Shipment",
+      "path": "/logistics/shipments",
+      "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
+      "title": "Commission",
+      "path": "/logistics/commissions",
+      "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
+      "title": "BOQ",
+      "path": "/logistics/boq",
+      "allowedPermissions": ["logistics:secret"]
+    },
+    {
+      "hasSectionHeader": true,
+      "sectionHeader": "DANH MỤC"
+    },
+    {
+      "title": "Khách hàng",
+      "path": "/logistics/customers",
+      "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
+      "title": "Quốc gia",
+      "path": "/logistics/countries",
+      "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
+      "title": "Cảng / Nơi",
+      "path": "/logistics/places",
+      "allowedPermissions": ["logistics:contracts:view"]
     }
   ]
 }

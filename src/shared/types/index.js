@@ -13,13 +13,18 @@
  */
 
 /**
- * React Docs-compatible sidebar registry item.
+ * React Docs-compatible sidebar registry item. `allowedPermissions` mirrors
+ * `NavLink`'s field of the same name (see above) — omitted means visible to
+ * any logged-in visitor; present means only one whose session permissions
+ * intersect it, via `src/shared/api/nav.js`'s
+ * `filterSidebarRoutesByPermissions`.
  * @typedef {{
  *   title?: string,
  *   path?: string,
  *   routes?: SidebarRouteItem[],
  *   hasSectionHeader?: boolean,
  *   sectionHeader?: string,
+ *   allowedPermissions?: string[],
  * }} SidebarRouteItem
  */
 

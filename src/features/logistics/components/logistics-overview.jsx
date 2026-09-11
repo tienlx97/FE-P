@@ -1,18 +1,24 @@
-'use client';
-
 import { Banner } from '@astryxdesign/core/Banner';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 
+import { RouteHubList } from '@/shared/components/route-hub-list.jsx';
+
 /**
- * Landing page for the `logistics:view`-gated `/logistics` route
- * (`shared/config/site.js`'s top nav link, `shared/config/route-access.js`'s
- * middleware rule). Placeholder content only — no logistics data/API exists
- * yet; this establishes the route and its permission gate so both can be
- * built out feature-by-feature later without touching the nav/gate wiring
- * again.
+ * Landing page for the `logistics:view`-gated `/logistics` route, reached
+ * only by a visitor `logistics/page.jsx` didn't already redirect past (no
+ * `logistics:contracts:view`, so `/logistics/contracts` and everything
+ * else under `routeAccessRules`' broad `logistics:contracts:view` rule
+ * would 403) — task 4.1,
+ * `openspec/changes/logistics-workspace-redesign/design.md` section 4.
+ * `hasSecretOnly` covers the one narrower case: a visitor with
+ * `logistics:secret` but not `logistics:contracts:view` can still open BOQ
+ * directly (`routeAccessRules` checks BOQ's own, more specific rule first),
+ * so that's offered instead of nothing. Neither case ever links to a route
+ * `routeAccessRules` would then reject.
+ * @param {{ hasSecretOnly?: boolean }} props
  */
-export function LogisticsOverview() {
+export function LogisticsOverview({ hasSecretOnly = false }) {
   return (
     <VStack gap={4} hAlign="stretch">
       <VStack gap={1}>
@@ -22,12 +28,24 @@ export function LogisticsOverview() {
         </Text>
       </VStack>
 
-      <Banner
-        status="info"
-        title="Đang xây dựng"
-        description="Trang này hiện chỉ là khung — nghiệp vụ Logistics sẽ được bổ sung sau."
-        container="card"
-      />
+      {hasSecretOnly ? (
+        <RouteHubList
+          items={[
+            {
+              title: 'BOQ',
+              description: 'Giá vốn, báo giá và lợi nhuận theo hợp đồng.',
+              href: '/logistics/boq',
+            },
+          ]}
+        />
+      ) : (
+        <Banner
+          status="info"
+          title="Chưa có quyền truy cập nghiệp vụ cụ thể"
+          description="Tài khoản của bạn hiện chỉ có quyền xem tổng quan Logistics. Liên hệ quản trị viên nếu cần quyền truy cập Hợp đồng, Shipment, Commission hoặc danh mục liên quan."
+          container="card"
+        />
+      )}
     </VStack>
   );
 }
