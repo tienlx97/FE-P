@@ -6,6 +6,7 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { InputGroup } from '@astryxdesign/core/InputGroup';
 import { usePowerSearchConfig } from '@astryxdesign/core/PowerSearch';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { StackItem } from '@astryxdesign/core/Stack';
@@ -54,6 +55,20 @@ import { AdvanceTableSearchDialog } from './advance-table-search-dialog.jsx';
  * @property {string} [placeholder]
  * @property {'string' | 'enum'} [type]
  * @property {ReadonlyArray<{ value: string, label?: string }>} [options] Required when type is 'enum'.
+ */
+
+/**
+ * One quick-switch column preset — e.g. an operational default vs. a
+ * financial-detail view — offered as a {@link SegmentedControl} in the
+ * toolbar next to "Tuỳ chọn hiển thị". Selecting one just replaces the
+ * active column set (same state the column picker itself edits), so a
+ * visitor can still fine-tune from there afterward; the segmented control
+ * doesn't track or enforce which preset (if any) the current column set
+ * still matches.
+ * @typedef {Object} AdvanceTableViewPreset
+ * @property {string} key
+ * @property {string} label
+ * @property {string[]} columnKeys
  */
 
 // A pinned cell paints an opaque background of its own; without this it
@@ -143,6 +158,7 @@ const styles = stylex.create({
  *   columnOptions: ReadonlyArray<{ key: string, label: string, isAlwaysVisible?: boolean }>,
  *   initialColumnKeys?: string[],
  *   defaultColumnKeys?: string[],
+ *   viewPresets?: ReadonlyArray<AdvanceTableViewPreset>,
  *   fixedEndColumnKeys?: string[],
  *   tableColumns: import('@astryxdesign/core/Table').TableColumn<T>[],
  *   data: T[],
@@ -182,6 +198,7 @@ export function AdvanceTable({
   columnOptions,
   initialColumnKeys,
   defaultColumnKeys,
+  viewPresets,
   fixedEndColumnKeys = [],
   tableColumns,
   data,
@@ -203,6 +220,13 @@ export function AdvanceTable({
   );
   const [activeColumnKeys, setActiveColumnKeys] = useState(
     initialColumnKeys ?? columnOptions.map((column) => column.key),
+  );
+  // Which `viewPresets` segment reads as selected — a label only, not a
+  // strict mode: manually editing columns via the picker afterward doesn't
+  // clear or resync this, same as the picker's own "Khôi phục" button
+  // doesn't track a mode either.
+  const [activePresetKey, setActivePresetKey] = useState(
+    viewPresets?.[0]?.key ?? '',
   );
   const [density, setDensity] = useState(
     /** @type {import('@astryxdesign/core/Table').TableDensity} */ ('balanced'),
@@ -538,6 +562,28 @@ export function AdvanceTable({
               />
             </StackItem>
             <HStack gap={2} vAlign="center" xstyle={styles.toolbarEnd}>
+              {viewPresets && viewPresets.length > 0 ? (
+                <SegmentedControl
+                  label="Chế độ xem cột"
+                  size="sm"
+                  value={activePresetKey}
+                  onChange={(key) => {
+                    setActivePresetKey(key);
+                    const preset = viewPresets.find(
+                      (candidate) => candidate.key === key,
+                    );
+                    if (preset) setActiveColumnKeys([...preset.columnKeys]);
+                  }}
+                >
+                  {viewPresets.map((preset) => (
+                    <SegmentedControlItem
+                      key={preset.key}
+                      value={preset.key}
+                      label={preset.label}
+                    />
+                  ))}
+                </SegmentedControl>
+              ) : null}
               <TableViewOptionsPopover
                 fixedEndLabel={fixedEndColumnKeys
                   .map(

@@ -119,19 +119,46 @@ export function ShipmentsList() {
     };
   });
 
+  /**
+   * Shared by the "Mã" cell (design.md section 4: "Mã bản ghi mở Xem") and
+   * `RecordActionsMenu`'s own "Xem"/"Sửa" below.
+   * @param {ShipmentListRow} row
+   * @param {'view' | 'edit'} mode
+   */
+  function openShipment(row, mode) {
+    setShipmentDialog({
+      mode,
+      contractId: row.contractId,
+      contract: contractsById.get(row.contractId),
+      shipment: row,
+    });
+  }
+
   /** @type {import('@astryxdesign/core/Table').TableColumn<ShipmentListRow>[]} */
   const columns = [
     {
       key: 'shipmentCode',
       header: 'Mã',
-      width: pixel(160),
+      width: pixel(200),
       filter: 'shipmentCode',
-      renderCell: (row) => row.shipmentCode,
+      // "Mã bản ghi mở Xem" (design.md section 4) — same handler
+      // `RecordActionsMenu`'s "Xem" below uses.
+      renderCell: (row) => (
+        <Button
+          label={row.shipmentCode}
+          variant="ghost"
+          size="sm"
+          onClick={(event) => {
+            event.stopPropagation();
+            openShipment(row, 'view');
+          }}
+        />
+      ),
     },
     {
       key: 'contractNumber',
       header: 'Số hợp đồng',
-      width: pixel(160),
+      width: pixel(200),
       filter: 'contractNumber',
       renderCell: (row) => orDash(row.contractNumber),
     },
@@ -195,22 +222,8 @@ export function ShipmentsList() {
       align: 'end',
       renderCell: (row) => (
         <RecordActionsMenu
-          onView={() =>
-            setShipmentDialog({
-              mode: 'view',
-              contractId: row.contractId,
-              contract: contractsById.get(row.contractId),
-              shipment: row,
-            })
-          }
-          onEdit={() =>
-            setShipmentDialog({
-              mode: 'edit',
-              contractId: row.contractId,
-              contract: contractsById.get(row.contractId),
-              shipment: row,
-            })
-          }
+          onView={() => openShipment(row, 'view')}
+          onEdit={() => openShipment(row, 'edit')}
         />
       ),
     },

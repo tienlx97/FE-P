@@ -8258,3 +8258,68 @@ ward reference data (free-text inputs, matching the backend).
   all clean. Full `./harness/verify.sh` PASSED. Evidence:
   `harness/runs/20260911-145458-160/`.
 - Next: task 4.2 (table defaults/financial view/record actions).
+
+## 2026-09-11 — Task 4.2: default columns, financial view, record actions, customer detail
+
+- `AdvanceTable` (`shared/components/advance-table.jsx`) gained an optional
+  `viewPresets` prop — an array of `{ key, label, columnKeys }` rendered as
+  a `SegmentedControl` in the toolbar (before "Tuỳ chọn hiển thị") that
+  quick-swaps `activeColumnKeys`. Deliberately loose, not a strict mode:
+  picking a segment just replaces the column set (same state the picker
+  itself edits), so a visitor can still fine-tune afterward — the control
+  doesn't track or enforce which preset the current set still matches, the
+  same way the picker's own "Khôi phục" button doesn't track a mode either.
+- `contracts-table.js`: `DEFAULT_COLUMN_KEYS` dropped the settlement group
+  (contractValue/settlementValue/paidValue/unpaidValue) — design.md
+  section 4 ("Bảng mặc định ưu tiên mã, đối tác/dự án, trạng thái và các
+  thông tin vận hành thường dùng") — leaving createdDate/contractNumber/
+  buyer/status/projectName/incoterm/actions. New `FINANCIAL_COLUMN_KEYS`
+  (identifying context + the full settlement group) and `VIEW_PRESETS`
+  (`Mặc định`/`Tài chính`) exports, wired into `ContractsList` via
+  `viewPresets={VIEW_PRESETS}`. Shipments/Commissions were left alone —
+  each has only one financial-ish column already in its (already narrow)
+  default, so there's no "detailed financial group" to split out a view
+  for; only Contracts' four-column settlement group qualifies.
+- "Mã bản ghi mở Xem" (design.md section 4): the code/number cell in
+  `contracts-list.jsx`, `shipments-list.jsx`, `commissions-list.jsx`, and
+  `contract-private-infos-list.jsx` (BOQ, contractNumber is that list's own
+  row identifier) is now a ghost `Button` opening the same Xem the
+  existing `RecordActionsMenu` "Xem" item opens — extracted into one
+  `open<Entity>(row, mode)` helper per list so the code-cell and the menu
+  can never drift. `contracts-list.jsx`'s version was commented-out
+  groundwork from an earlier session (`d162228b`, "carry forward in-
+  progress groundwork... ahead of that plan's implementation") — this task
+  is that plan, so it's now real instead of commented out, and applied
+  consistently to the other three lists that had the same plain-text gap.
+- "Chi tiết khách hàng": `customers-list.jsx` already used inline row-
+  expansion (click row → expanded panel with Sửa) rather than a fullscreen
+  dialog — already matches design.md section 4's "Khách hàng dùng cùng quy
+  ước Xem/Sửa nếu cần chi tiết; danh mục nhỏ không bắt buộc fullscreen."
+  No changes needed there.
+- "Giữ filter/pagination/column preferences": none of the above touches
+  how `AdvanceTable` owns search/filter/column/pagination state — the new
+  `viewPresets` state is additive (its own `useState`, doesn't replace or
+  reset `activeColumnKeys`'s existing owner), so no regression risk there.
+- Live-verified against the local `BE-kt-xnk` (Admin/`000000000000`/
+  `Admin@123456`, `db/sample-data.sql`'s seed): `/logistics/contracts` —
+  "Mặc định"/"Tài chính" `SegmentedControl` visible and toggling correctly
+  swaps to/from the GIÁ TRỊ settlement group (with its spanning header
+  bar), row count and list state untouched by the toggle or by opening/
+  closing a contract's Xem. Clicking "26DN-TESTAI01" (contractNumber),
+  "26DN-TESTAI01/LCL-01" (shipmentCode), "26CM03" (Commission code), and
+  "26DN-SAMPLE01" on `/logistics/boq` (contractNumber) each opened that
+  record's Xem exactly like its own "Chức năng ▾ → Xem" does.
+- One hiccup mid-session, not a regression from this work: after editing
+  `shipments-list.jsx` twice, a `Read` tool call reported the file "changed
+  on disk since you last read it" and the diff showed the shipmentCode
+  cell's `renderCell` reverted to plain text (`row.shipmentCode`) while an
+  unrelated width tweak (160px→200px on two columns) had appeared — an
+  external change this session didn't make, cause unconfirmed (possibly a
+  concurrent editor/session against the same file). Caught live when the
+  shipmentCode click didn't open a dialog; reapplied the Button cell and
+  re-verified live afterward (confirmed above). Left the unexplained width
+  tweak in place per instructions — it's cosmetic and not wrong.
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm test`/`pnpm structure` all
+  clean. Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260911-153725-2014/`.
+- Next: task 5.1 (full-workspace geometry/behavior matrix, docs/ADR).

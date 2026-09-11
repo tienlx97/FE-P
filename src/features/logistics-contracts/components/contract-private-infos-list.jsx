@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@astryxdesign/core/Button';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -65,7 +66,20 @@ export function ContractPrivateInfosList() {
       header: 'Số hợp đồng',
       width: pixel(160),
       filter: 'contractNumber',
-      renderCell: (row) => row.contractNumber,
+      // "Mã bản ghi mở Xem" (design.md section 4) — same handler
+      // `RecordActionsMenu`'s "Xem" below uses. BOQ rows are 1:1 with a
+      // Contract, so its number is this row's own identifier.
+      renderCell: (row) => (
+        <Button
+          label={row.contractNumber}
+          variant="ghost"
+          size="sm"
+          onClick={(event) => {
+            event.stopPropagation();
+            setDetailDialog({ row, initialEditing: false });
+          }}
+        />
+      ),
     },
     {
       key: 'projectName',

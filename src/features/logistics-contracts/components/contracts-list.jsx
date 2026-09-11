@@ -36,6 +36,7 @@ import {
   PAGE_SIZE_OPTIONS,
   SEARCH_FIELD_DEFS,
   skeletonRows,
+  VIEW_PRESETS,
 } from '../config/contracts-table.js';
 import { formatMoney } from '../config/currencies.js';
 import { useContractBanksQuery } from '../hooks/use-contract-banks-query.js';
@@ -289,6 +290,18 @@ export function ContractsList() {
     [costCategoriesQuery.data],
   );
 
+  /**
+   * Shared by the "Số hợp đồng" cell (design.md section 4: "Mã bản ghi mở
+   * Xem") and `RecordActionsMenu`'s own "Xem"/"Sửa" — one place deciding
+   * what opening a Contract means, so the two entry points can never drift.
+   * @param {import('../types/index.js').Contract} row
+   * @param {'view' | 'edit'} mode
+   */
+  function openContract(row, mode) {
+    setExpandedTab('profile');
+    setWorkspace({ contract: row, sessionKey: generateRowKey(), mode });
+  }
+
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Contract & Record<string, unknown>>[]} */
   const columns = [
     {
@@ -296,19 +309,17 @@ export function ContractsList() {
       header: 'Số hợp đồng',
       width: pixel(180),
       filter: 'contractNumber',
-      // renderCell: (contract) => (
-      //   <Button
-      //     label={contract.contractNumber}
-      //     variant="ghost"
-      //     size="sm"
-      //     onClick={(event) => {
-      //       event.stopPropagation();
-      //       setExpandedTab('profile');
-      //       setWorkspace({ contract, revision: 0 });
-      //     }}
-      //   />
-      // ),
-      renderCell: (contract) => contract.contractNumber,
+      renderCell: (contract) => (
+        <Button
+          label={contract.contractNumber}
+          variant="ghost"
+          size="sm"
+          onClick={(event) => {
+            event.stopPropagation();
+            openContract(contract, 'view');
+          }}
+        />
+      ),
     },
     {
       key: 'contractType',
@@ -466,22 +477,8 @@ export function ContractsList() {
       align: 'end',
       renderCell: (row) => (
         <RecordActionsMenu
-          onView={() => {
-            setExpandedTab('profile');
-            setWorkspace({
-              contract: row,
-              sessionKey: generateRowKey(),
-              mode: 'view',
-            });
-          }}
-          onEdit={() => {
-            setExpandedTab('profile');
-            setWorkspace({
-              contract: row,
-              sessionKey: generateRowKey(),
-              mode: 'edit',
-            });
-          }}
+          onView={() => openContract(row, 'view')}
+          onEdit={() => openContract(row, 'edit')}
         />
       ),
     },
@@ -562,6 +559,7 @@ export function ContractsList() {
           columnOptions={COLUMN_OPTIONS}
           initialColumnKeys={DEFAULT_COLUMN_KEYS}
           defaultColumnKeys={DEFAULT_COLUMN_KEYS}
+          viewPresets={VIEW_PRESETS}
           fixedEndColumnKeys={['actions']}
           tableColumns={columns}
           data={searchableContracts}

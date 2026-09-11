@@ -121,11 +121,27 @@ export const COLUMN_OPTIONS = [
 ];
 
 // The picker opens on this set rather than every column at once — the API
-// carries more fields than a first glance needs, and starting from the
-// pre-existing default keeps today's screen unchanged for anyone who
-// already has it open.
+// carries more fields than a first glance needs. Operational-first per
+// design.md section 4 ("mã, đối tác/dự án, trạng thái và các thông tin vận
+// hành thường dùng") — the four settlement-group columns are detailed
+// financial info, grouped into `FINANCIAL_COLUMN_KEYS`/`VIEW_PRESETS`
+// below instead of always being on.
 export const DEFAULT_COLUMN_KEYS = [
   'createdDate',
+  'contractNumber',
+  'buyer',
+  'status',
+  'projectName',
+  'incoterm',
+  'actions',
+];
+
+// The settlement group (`SETTLEMENT_GROUP_COLUMN_KEYS` in
+// `contracts-list.jsx`) plus enough identifying context (code/khách hàng/
+// trạng thái) to still place each row — switched to via `VIEW_PRESETS`'
+// "Tài chính" segment, design.md section 4's "Nhóm tài chính chi tiết
+// thành chế độ xem riêng".
+export const FINANCIAL_COLUMN_KEYS = [
   'contractNumber',
   'buyer',
   'status',
@@ -133,8 +149,13 @@ export const DEFAULT_COLUMN_KEYS = [
   'settlementValue',
   'paidValue',
   'unpaidValue',
-  'incoterm',
   'actions',
+];
+
+/** @satisfies {ReadonlyArray<import('@/shared/components/advance-table.jsx').AdvanceTableViewPreset>} */
+export const VIEW_PRESETS = [
+  { key: 'default', label: 'Mặc định', columnKeys: DEFAULT_COLUMN_KEYS },
+  { key: 'financial', label: 'Tài chính', columnKeys: FINANCIAL_COLUMN_KEYS },
 ];
 
 export const SKELETON_ROW_COUNT = 6;

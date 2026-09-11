@@ -156,6 +156,17 @@ export function CommissionsList() {
     };
   });
 
+  /**
+   * Shared by the "Mã" cell (design.md section 4: "Mã bản ghi mở Xem") and
+   * `RecordActionsMenu`'s own "Xem"/"Sửa" below.
+   * @param {CommissionListRow} row
+   * @param {'view' | 'edit'} mode
+   */
+  function openCommission(row, mode) {
+    setDialogMode(mode);
+    setEditingCommissionRow(row);
+  }
+
   /** @type {import('@astryxdesign/core/Table').TableColumn<CommissionListRow>[]} */
   const columns = [
     {
@@ -163,7 +174,17 @@ export function CommissionsList() {
       header: 'Mã',
       width: pixel(120),
       filter: 'code',
-      renderCell: (row) => row.code,
+      renderCell: (row) => (
+        <Button
+          label={row.code}
+          variant="ghost"
+          size="sm"
+          onClick={(event) => {
+            event.stopPropagation();
+            openCommission(row, 'view');
+          }}
+        />
+      ),
     },
     {
       key: 'contractNumber',
@@ -218,14 +239,8 @@ export function CommissionsList() {
       align: 'end',
       renderCell: (row) => (
         <RecordActionsMenu
-          onView={() => {
-            setDialogMode('view');
-            setEditingCommissionRow(row);
-          }}
-          onEdit={() => {
-            setDialogMode('edit');
-            setEditingCommissionRow(row);
-          }}
+          onView={() => openCommission(row, 'view')}
+          onEdit={() => openCommission(row, 'edit')}
         />
       ),
     },
