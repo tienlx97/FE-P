@@ -16,8 +16,15 @@ const styles = stylex.create({
 });
 
 /**
- * Create/edit dialog for one `Contract`'s shipments — opened from
- * `ContractExpandedDetails`'s "Shipment" tab (`contracts-list.jsx`).
+ * Create/edit dialog for one `Contract`'s shipments — one editor, two
+ * entrypoints (task 3.2,
+ * `openspec/changes/logistics-workspace-redesign/design.md` section 3):
+ * `shipments-list.jsx`'s own row, and the Contract dialog's "Liên quan" tab
+ * (`contracts-list.jsx`, which also hides its own `ContractFormDialog`
+ * while this one is open — `isOpen` toggling doesn't unmount either
+ * dialog's content, so the Contract workspace's tab/scroll survives the
+ * round trip — and passes `closeLabel="Quay lại Contract"` so the button
+ * that returns there says so instead of a bare "Đóng").
  * Pass `shipment` to edit an existing one; omit it
  * to create a new one (its `shipmentNumber`/`shipmentCode` are assigned by
  * the backend on success). Xem and Sửa share the same `ShipmentFields`
@@ -31,6 +38,7 @@ const styles = stylex.create({
  *   contract?: import('../types/index.js').Contract | null,
  *   shipment?: import('../types/index.js').Shipment | null,
  *   onSuccess?: (shipment: import('../types/index.js').Shipment) => void,
+ *   closeLabel?: string,
  * }} props
  */
 export function ShipmentFormDialog({
@@ -41,6 +49,7 @@ export function ShipmentFormDialog({
   contract = null,
   shipment = null,
   onSuccess,
+  closeLabel = 'Đóng',
 }) {
   const [mode, setMode] = useState(initialMode);
   const isViewing = mode === 'view' && Boolean(shipment);
@@ -82,6 +91,7 @@ export function ShipmentFormDialog({
         setMode('edit');
       }}
       onOpenChange={handleOpenChange}
+      closeLabel={closeLabel}
       variant="fullscreen"
       title={shipment ? `Shipment · ${shipment.shipmentCode}` : 'Thêm Shipment'}
       submitLabel={shipment ? 'Lưu thay đổi' : 'Tạo Shipment'}

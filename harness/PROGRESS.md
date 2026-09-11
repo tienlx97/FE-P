@@ -8104,3 +8104,54 @@ ward reference data (free-text inputs, matching the backend).
 - `pnpm exec eslint`/`pnpm typecheck`/`pnpm test` (137)/`pnpm structure`
   all clean. Full `./harness/verify.sh` PASSED. Evidence:
   `harness/runs/20260911-133334-1760/`.
+
+## 2026-09-11 — Task 3.2: one Shipment editor, no stacked fullscreen dialogs
+
+- `ShipmentFormDialog` was already the one editor both
+  `shipments-list.jsx` and the Contract dialog's "Liên quan" tab used —
+  the actual gap was that opening it from Contract stacked a second
+  fullscreen `<dialog>` on top of the still-open Contract one (confirmed
+  live: `document.querySelectorAll('dialog')` showed both `open`
+  simultaneously before this fix).
+- Root cause of why the fix could be this small: read Astryx's `Dialog`
+  source (`node_modules/@astryxdesign/core/src/Dialog/Dialog.tsx`) instead
+  of assuming — the only `if (!isOpen) return null` is inside the
+  documentation-preview (`isInline`) branch; the real portal path never
+  unmounts `children` when `isOpen` flips to `false`, it just hides the
+  native `<dialog>`. That means `ContractFormDialog`'s `isOpen` prop was
+  already a safe toggle for "hide without losing state" — no new
+  stacking/context-save mechanism needed.
+- `contracts-list.jsx`: `ContractFormDialog`'s `isOpen` is now
+  `!shipmentDialog` — the Contract dialog hides (not unmounts) the instant
+  a Shipment editor opens from it, and reappears exactly where the user
+  left it (same `expandedTab`, same scroll — nothing was ever torn down)
+  the moment `shipmentDialog` clears. Live-verified: exactly one `<dialog
+  open>` at a time through the whole round trip, and "Liên quan" is still
+  the active tab on return.
+- Added `closeLabel` to the shared `form-dialog.jsx` (`FormDialog`) —
+  overrides the read-only-mode close button's default "Đóng" — and
+  threaded it through `ShipmentFormDialog`. `contracts-list.jsx` passes
+  `closeLabel="Quay lại Contract"` on its instance only;
+  `shipments-list.jsx`'s standalone instance keeps the default "Đóng"
+  (verified live, unaffected). Only shows once Xem-in-place is reached
+  (after Sửa, or after a save) — the pencil-icon entrypoint still opens
+  straight into edit mode as before, where "Hủy" already reads correctly
+  as "cancel and go back".
+- "VGM/chi phí thuộc Shipment": already true going in (both are tabs
+  inside `ShipmentFormDialog`, not embedded in Contract) — confirmed
+  `useUpdateShipmentMutation`/`useCreateShipmentMutation` already
+  invalidate both the contract-scoped and the standalone shipments list
+  query keys, so "refresh tóm tắt" on return needed no new code either.
+  Nothing to do for either beyond what task 3.1 had already left in place.
+- Live-verified: edit-from-pencil → save → "Quay lại Contract" round trip
+  (single dialog throughout, tab preserved); "Thêm Shipment" (create) also
+  single-dialog and returns to Contract on Hủy; the standalone
+  `shipments-list.jsx` entrypoint unaffected (still "Đóng", still its own
+  independent dialog with no Contract to hide).
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm test` (137)/`pnpm structure`
+  all clean. Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260911-135533-1954/`.
+- Deliberately out of scope here (task 3.3's job): Commission/BOQ still
+  stack a second fullscreen dialog when opened from Contract's "Liên
+  quan" — same fix shape (`isOpen={!relatedCommissionDialog &&
+  !relatedBoqDialog}`, or similar) should apply there too.

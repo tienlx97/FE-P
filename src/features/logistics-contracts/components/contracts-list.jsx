@@ -601,7 +601,14 @@ export function ContractsList() {
       {workspace ? (
         <ContractFormDialog
           key={workspace.sessionKey}
-          isOpen
+          // Hidden (not unmounted — `CommonDialog`/`Dialog` keep children
+          // mounted regardless of `isOpen`, see `ShipmentFormDialog`'s doc
+          // comment) while a Shipment opened from "Liên quan" is showing,
+          // instead of stacking two fullscreen dialogs (task 3.2). Every
+          // other related editor (Commission/BOQ/annex/payment/VGM
+          // dialogs) still stacks on top for now — narrowing those is task
+          // 3.3.
+          isOpen={!shipmentDialog}
           onOpenChange={(open) => {
             if (!open) setWorkspace(null);
           }}
@@ -725,6 +732,7 @@ export function ContractsList() {
           contractId={shipmentDialog.contractId}
           contract={shipmentDialog.contract}
           shipment={shipmentDialog.shipment}
+          closeLabel="Quay lại Contract"
           onSuccess={(saved) =>
             setShipmentDialog((current) =>
               current?.shipment ? { ...current, shipment: saved } : null,

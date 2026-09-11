@@ -51,6 +51,7 @@ const getServerSnapshot = () => false;
  * navigation?: import('react').ReactNode,
  * onValidation?: () => void,
  * isReadOnly?: boolean, onEdit?: () => void,
+ * closeLabel?: string,
  * }} props
  */
 export function FormDialog(props) {
@@ -88,6 +89,7 @@ function FormDialogSession({
   onValidation,
   isReadOnly = false,
   onEdit,
+  closeLabel = 'Đóng',
 }) {
   const formId = useId();
   const fingerprint = JSON.stringify(draft);
@@ -218,7 +220,7 @@ function FormDialogSession({
                   <HStack gap={2}>
                     <Button
                       width={80}
-                      label={isReadOnly ? 'Đóng' : 'Hủy'}
+                      label={isReadOnly ? closeLabel : 'Hủy'}
                       type="button"
                       variant="secondary"
                       isDisabled={isBusy}
