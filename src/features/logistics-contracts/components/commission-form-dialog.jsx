@@ -74,6 +74,14 @@ export function CommissionFormDialog({
         form.reset();
         setMode('edit');
       }}
+      onCancelEdit={
+        commission
+          ? () => {
+              form.reset();
+              setMode('view');
+            }
+          : undefined
+      }
       onOpenChange={onOpenChange}
       closeLabel={closeLabel}
       title={commission ? `Commission · ${commission.code}` : form.title}

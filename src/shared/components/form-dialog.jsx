@@ -51,6 +51,7 @@ const getServerSnapshot = () => false;
  * navigation?: import('react').ReactNode,
  * onValidation?: () => void,
  * isReadOnly?: boolean, onEdit?: () => void,
+ * onCancelEdit?: () => void,
  * closeLabel?: string,
  * }} props
  */
@@ -89,6 +90,7 @@ function FormDialogSession({
   onValidation,
   isReadOnly = false,
   onEdit,
+  onCancelEdit,
   closeLabel = 'Đóng',
 }) {
   const formId = useId();
@@ -123,10 +125,22 @@ function FormDialogSession({
       ? 'Vui lòng kiểm tra các trường được đánh dấu trước khi lưu.'
       : '');
 
+  // "Về Xem tại chỗ" (design.md section 1/task 1.2): cancelling an edit on
+  // an existing record — `onCancelEdit` is only given when one exists, see
+  // `ShipmentFormDialog`/`CommissionFormDialog` — drops back to Xem in
+  // place instead of closing the whole dialog, same as `ContractFormDialog`
+  // (its own bespoke shell)'s `finish('cancel')`. Creating a new record has
+  // no Xem to return to, so `onCancelEdit` stays unset there and this falls
+  // back to closing, same as before.
+  function cancelEditOrClose() {
+    if (!isReadOnly && onCancelEdit) onCancelEdit();
+    else onOpenChange(false);
+  }
+
   function requestClose() {
     if (isBusy || savingRef.current) return;
     if (isDirty) setConfirmDiscard(true);
-    else onOpenChange(false);
+    else cancelEditOrClose();
   }
 
   /** @param {import('react').FormEvent<HTMLFormElement>} event */
@@ -268,7 +282,7 @@ function FormDialogSession({
         actionLabel="Bỏ thay đổi"
         onAction={() => {
           setConfirmDiscard(false);
-          onOpenChange(false);
+          cancelEditOrClose();
         }}
       />
     </>

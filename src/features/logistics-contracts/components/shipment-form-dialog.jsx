@@ -90,6 +90,14 @@ export function ShipmentFormDialog({
         form.reset();
         setMode('edit');
       }}
+      onCancelEdit={
+        shipment
+          ? () => {
+              form.reset();
+              setMode('view');
+            }
+          : undefined
+      }
       onOpenChange={handleOpenChange}
       closeLabel={closeLabel}
       variant="fullscreen"

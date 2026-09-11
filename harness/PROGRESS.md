@@ -8323,3 +8323,93 @@ ward reference data (free-text inputs, matching the backend).
   clean. Full `./harness/verify.sh` PASSED. Evidence:
   `harness/runs/20260911-153725-2014/`.
 - Next: task 5.1 (full-workspace geometry/behavior matrix, docs/ADR).
+
+## 2026-09-11 — Task 2.2: regression harness closes end-to-end, catches a real Hủy bug
+
+- Picked up where `f6ec3d7` (2026-09-11 12:33) left off — that session wrote
+  all the harness source fixes task 2.2 needed but could never get a clean
+  run: `agent-browser wait --fn` hung/misreported on this Windows box even
+  when a parallel `eval` against the same session independently confirmed
+  the condition true. Reproduced that exact symptom live this session too
+  (confirmed via `agent-browser eval` on the paused session immediately
+  after a `wait --fn` timeout) — filed as tool feedback, then worked around
+  it: `wait()` now polls via repeated `eval` calls from the Node side
+  (`Atomics.wait`-based sync sleep between polls) instead of trusting the
+  CLI's own `wait` subcommand.
+- That surfaced a second, unrelated Windows-only bug in the harness script
+  itself: `execFileSync('cmd.exe', ['/c','agent-browser',...])` doesn't
+  quote args that contain no whitespace, so an eval expression like
+  `e=>e>1` reached `cmd.exe` with a bare unescaped `>` — parsed as output
+  redirection, truncating the JS mid-expression ("Unexpected end of
+  input"). Fixed with a proper MSVCRT-style `winQuoteArg` + `windowsVerbatimArguments: true`
+  (quoting every arg ourselves since verbatim mode disables Node's own
+  quoting) — reproduced and confirmed the fix with a minimal repro
+  (`[1,2,3].some(e=>e>1)`) before touching the real script. `agent-browser`
+  itself has to stay unquoted (quoting it broke cmd.exe's own `.cmd`
+  lookup for the /c command token) — every argument after it is quoted.
+- With the CLI reliably driveable, the harness then found three genuine
+  gaps of its own, not app bugs — each traced with a live paused session
+  (`agent-browser eval`/`console`) before touching anything:
+  - `editable` (Xem-mode field check) only recognized `readOnly`/
+    `disabled`/`aria-disabled` as "locked" — Shipment's ETD/ETA `DatePicker`
+    fields use `ReadOnlyLock` (`shared/components/read-only-lock.jsx`,
+    a capture-phase event-blocking wrapper, deliberately not
+    `isDisabled`/ARIA per that file's own doc comment) and have none of
+    those. Added a plain `data-readonly-lock="true"` attribute to that
+    wrapper's span (harmless to accessibility — `display:contents` already
+    drops the span from the a11y tree regardless of any `aria-*`, but a
+    `data-*` attribute still resolves via `closest()` on the DOM) and
+    taught the check's `editable` query to exclude it.
+  - `searchContracts` (`api/contracts.js`) nests its paging envelope under
+    `page` alongside sibling `valueTotals`/`settlements` — the only search
+    endpoint that does (shipments/commissions are flat) — but the harness's
+    generic `page()` fixture helper produced the flat shape for
+    `contracts/search` too, so the mocked list silently rendered
+    "Chưa có dữ liệu" and the whole contract/costs/vgm/error-scenario tail
+    of the check could never run. Added `contractsSearchPage()` matching
+    the real nested shape.
+  - The submit handler (`form-dialog.jsx`) deliberately `scrollIntoView`s
+    the first invalid field, or the error `Banner` itself, after a failed
+    submit — correct UX, but it uniformly shifts every field's viewport Y
+    by the scroll delta, which the original absolute-rect comparison read
+    as a layout regression. Adjusted both error-scenario comparisons to
+    restore the pre-submit scroll position before re-probing (isolates the
+    banner's own space-reservation push, which is real content growth, not
+    scroll) and to tolerate one common vertical offset (the banner pushing
+    every field down together) while still flagging any per-field
+    divergence, x-shift, or height change, and width growth/shrink outside
+    the one field actually gaining/losing its error decoration.
+- Once those were fixed, the check caught a real regression, not a harness
+  gap: `form-dialog.jsx` (shared by `ShipmentFormDialog`/
+  `CommissionFormDialog`) had no path back to Xem on "Hủy" — `requestClose()`
+  called `onOpenChange(false)` unconditionally once the draft wasn't dirty,
+  closing the whole dialog instead of "về Xem tại chỗ" (design.md section 1,
+  task 1.2's own requirement). `ContractFormDialog`'s bespoke shell already
+  got this right (`finish('cancel')`: revert the draft and flip
+  `isEditing` false, only truly close when there's no `contract` yet to
+  view) — `form-dialog.jsx` just never grew the equivalent. Added an
+  `onCancelEdit` prop: when the parent supplies it (only when an existing
+  record exists — `ShipmentFormDialog`/`CommissionFormDialog` pass it
+  conditionally on `shipment`/`commission`, exactly mirroring
+  `ContractFormDialog`'s `!contract` check) and the dialog isn't already
+  read-only, both `requestClose()`'s not-dirty path and the "Bỏ thay đổi"
+  discard-confirm call it instead of `onOpenChange(false)`; creating a new
+  record still has no Xem to return to, so `onCancelEdit` stays unset there
+  and Hủy still closes, unchanged from before.
+- Live-verified the fix against the real local `BE-kt-xnk` (not just the
+  mocked harness): opened a Shipment's Xem, "Sửa", "Hủy" with zero edits —
+  dialog stayed open, footer read "Đóng"/"Sửa" again (back in Xem), instead
+  of the dialog disappearing.
+- Full harness run after all fixes: `node harness/checks/stable-dialog-layout-browser.mjs`
+  exits 0 — 12 `compare()` scenarios (shipment/commission/contract/costs/
+  vgm/commission-empty × 1440px/390px) all zero-shift, zero writes leaked
+  during Xem, reverse Hủy transition exactly matches the original Xem
+  geometry, plus both `errorScenarios()` (client validation, network abort)
+  keep the dialog open/editable with the draft intact and no real reflow.
+  Screenshots: `harness/runs/20260911-stable-dialog-layout/` (36 PNGs +
+  `geometry.json`).
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm test`/`pnpm structure` all
+  clean. Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260911-161745-1541/`.
+- Next: task 5.1 (full-workspace geometry/behavior matrix, docs/ADR) — the
+  harness this task just closed is exactly what 5.1 needs to run at scale.

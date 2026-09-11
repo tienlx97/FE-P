@@ -47,6 +47,34 @@ shipment.costs = [
   },
 ];
 const isWindows = process.platform === 'win32';
+// Manual MSVCRT-style argv quoting (the same rules CreateProcess/Node's own
+// auto-quoting rely on) for use under `windowsVerbatimArguments: true`.
+// Needed because Node's automatic Windows quoting only kicks in for args
+// containing whitespace — an eval expression like `e=>e>1` has none, so it
+// reaches `cmd.exe` unquoted and its bare `>` gets parsed as output
+// redirection (reproduced live: `[1,2,3].some(e=>e>1)` truncated at the
+// `>` and agent-browser saw incomplete JS — "Unexpected end of input").
+// Always quoting every arg sidesteps that and every other cmd.exe
+// metacharacter (`&`, `|`, `<`, `^`) the eval/selector/JSON payloads below
+// can contain.
+function winQuoteArg(arg) {
+  let result = '"';
+  let backslashes = 0;
+  for (const ch of String(arg)) {
+    if (ch === '\\') {
+      backslashes += 1;
+      continue;
+    }
+    if (ch === '"') {
+      result += '\\'.repeat(backslashes * 2 + 1) + '"';
+      backslashes = 0;
+      continue;
+    }
+    result += '\\'.repeat(backslashes) + ch;
+    backslashes = 0;
+  }
+  return result + '\\'.repeat(backslashes * 2) + '"';
+}
 function browser(...args) {
   // On Windows, `agent-browser` resolves to `agent-browser.cmd` — invoking
   // it via `cmd.exe /c` with the command kept as separate argv entries
@@ -55,12 +83,20 @@ function browser(...args) {
   // background browser process). POSIX runs the shebang script directly,
   // as before.
   const [file, fileArgs] = isWindows
-    ? ['cmd.exe', ['/c', 'agent-browser', '--session', session, ...args]]
+    ? // `agent-browser` itself must stay unquoted — cmd.exe's PATHEXT/`.cmd`
+      // lookup for `/c`'s command token breaks if that first token is
+      // quoted (reproduced live: quoting it produced "'agent-browser" ...'
+      // is not recognized"). Every argument after it is quoted.
+      [
+        'cmd.exe',
+        ['/c', 'agent-browser', ...['--session', session, ...args].map(winQuoteArg)],
+      ]
     : ['agent-browser', ['--session', session, ...args]];
   try {
     return execFileSync(file, fileArgs, {
       encoding: 'utf8',
       timeout: 35000,
+      windowsVerbatimArguments: isWindows,
     }).trim();
   } catch (error) {
     // Windows-only: launching a session's *first* command spawns the
@@ -90,8 +126,25 @@ function json(code) {
   const value = JSON.parse(evaluate(code));
   return typeof value === 'string' ? JSON.parse(value) : value;
 }
+function sleepSync(ms) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+// `agent-browser wait --fn` itself is unreliable on this Windows box — it
+// timed out repeatedly in a prior session even while a parallel `eval`
+// against the exact same session and condition independently confirmed
+// true (reproduced again live this session: a `wait --fn` on the "Xem"
+// menuitem's visibility timed out, then `eval` against that same open
+// session showed the menu already open with "Xem" visible). Polling via
+// `eval` (which does work) from this side instead of trusting the CLI's
+// own wait sidesteps that bug — filed as tool feedback, not fixable here.
 function wait(code) {
-  browser('wait', '--fn', `Boolean(${code})`);
+  const deadline = Date.now() + 25000;
+  for (;;) {
+    if (json(`Boolean(${code})`)) return;
+    if (Date.now() >= deadline)
+      throw new Error(`wait timed out after 25000ms: ${code}`);
+    sleepSync(250);
+  }
 }
 function button(label) {
   wait(
@@ -121,6 +174,22 @@ const page = (record) => ({
   page: 1,
   pageSize: 25,
 });
+// `searchContracts` (`api/contracts.js`) is the one search endpoint that
+// nests its paging envelope under `page` alongside sibling `valueTotals`/
+// `settlements` — every other list's `search` endpoint (shipments,
+// commissions) returns the flat shape `page()` above already matches.
+const contractsSearchPage = (record) => ({
+  page: page(record),
+  valueTotals: [{ currency: record.currency, total: record.contractValue }],
+  settlements: [
+    {
+      contractId: record.id,
+      settlementValue: record.contractValue,
+      paidValue: 0,
+      unpaidValue: record.contractValue,
+    },
+  ],
+});
 browser('open', origin + '/login');
 browser('cookies', 'set', 'kt-xnk-access-token', 'synthetic-dialog-test');
 browser(
@@ -130,7 +199,7 @@ browser(
   '["users:manage","logistics:contracts:view","logistics:view"]',
 );
 browser('network', 'unroute');
-route('contracts/search', page(contract));
+route('contracts/search', contractsSearchPage(contract));
 route('contracts?*', page(contract));
 route('shipments/search', page(shipment));
 route('commissions/search', page(commission));
@@ -198,8 +267,13 @@ function compare(name, edit) {
   const footerBefore = json(
     `JSON.stringify([...document.querySelectorAll('dialog[open] button')].slice(-2).map(e=>{const r=e.getBoundingClientRect();return [r.x,r.y,r.width,r.height]}))`,
   );
+  // `ReadOnlyLock`-wrapped controls (DatePicker/Selector — Astryx exposes
+  // no native `isReadOnly` for those, only `isDisabled`, which is the wrong
+  // visual/tab-order for Xem — see its own doc comment) have none of
+  // `readOnly`/`disabled`/`aria-disabled`; they're inert via a capture-
+  // phase event wrapper instead, marked with `data-readonly-lock`.
   const editable = json(
-    `JSON.stringify([...document.querySelectorAll('dialog[open] input:not([type=hidden]),dialog[open] textarea')].filter(e=>e.checkVisibility()&&!e.readOnly&&!e.disabled&&!e.closest('[aria-disabled=true]')).map(e=>e.outerHTML))`,
+    `JSON.stringify([...document.querySelectorAll('dialog[open] input:not([type=hidden]),dialog[open] textarea')].filter(e=>e.checkVisibility()&&!e.readOnly&&!e.disabled&&!e.closest('[aria-disabled=true]')&&!e.closest('[data-readonly-lock=true]')).map(e=>e.outerHTML))`,
   );
   if (editable.length)
     throw Error(name + ' editable view fields: ' + JSON.stringify(editable));
@@ -301,15 +375,45 @@ function errorScenarios() {
     `(()=>{const l=[...document.querySelectorAll('.astryx-field-label')].find(e=>e.textContent.trim().startsWith('Tên dự án'));const i=l.closest('.astryx-field').querySelector('input');const v=i.value;const setter=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;setter.call(i,'');i.dispatchEvent(new Event('input',{bubbles:true}));return v})()`,
   );
   const beforeValidation = JSON.parse(evaluate(probe));
+  const scrollBeforeValidation = json(
+    `document.querySelector('[data-layout-scroll]')?.scrollTop||0`,
+  );
   browser('click', 'button[type=submit]');
   wait(`document.querySelector('dialog[open] [role=alert],dialog[open] .astryx-banner')`);
+  // The submit handler deliberately `scrollIntoView`s the first invalid
+  // field so the user sees why it failed — a real, wanted scroll, not a
+  // layout regression. Undo it before re-probing so this only flags an
+  // actual reflow (fields moving relative to the dialog shell/each other),
+  // not every field's viewport Y shifting together because the container
+  // scrolled.
+  evaluate(
+    `{const s=document.querySelector('[data-layout-scroll]');if(s)s.scrollTop=${scrollBeforeValidation}}`,
+  );
   const afterValidation = JSON.parse(evaluate(probe));
   const stillEditing = json(
     `Boolean(document.querySelector('dialog[open] button[type=submit]'))`,
   );
+  // The error `Banner` reserving its own space above the fields pushes
+  // every field down by the same amount — legitimate, not a regression
+  // (design.md's 0px-landmark rule targets Xem↔Sửa toggling, not an error
+  // banner appearing). Tolerate that one common vertical offset; still
+  // flag any x/width/height drift, or a field whose own y delta diverges
+  // from the common offset (real reflow, not the banner's push) — except
+  // the invalidated field itself, whose width may narrow for its own
+  // error decoration (icon/outline).
+  const commonDy = afterValidation[0]
+    ? afterValidation[0].rect[1] - beforeValidation[0].rect[1]
+    : 0;
   const validationShifts = beforeValidation.flatMap((e, i) => {
     const a = afterValidation[i];
-    return !a || e.rect.some((n, j) => Math.abs(n - a.rect[j]) > 2)
+    if (!a) return [{ index: i, before: e, after: a }];
+    const isInvalidField = e.label.startsWith('Tên dự án');
+    const [dx, dy, dw, dh] = e.rect.map((n, j) => a.rect[j] - n);
+    return e.tag !== a.tag ||
+      Math.abs(dx) > 2 ||
+      Math.abs(dy - commonDy) > 2 ||
+      Math.abs(dh) > 2 ||
+      (Math.abs(dw) > 2 && !isInvalidField)
       ? [{ index: i, before: e, after: a }]
       : [];
   });
@@ -330,9 +434,17 @@ function errorScenarios() {
   );
   browser('network', 'route', `**/api/backend/api/v1/contracts/${contract.id}`, '--abort');
   const beforeNetworkError = JSON.parse(evaluate(probe));
+  const scrollBeforeNetworkError = json(
+    `document.querySelector('[data-layout-scroll]')?.scrollTop||0`,
+  );
   browser('click', 'button[type=submit]');
   wait(
     `document.querySelectorAll('dialog[open] [role=alert],dialog[open] .astryx-banner').length>0`,
+  );
+  // Same deliberate `scrollIntoView` as the validation case above — this
+  // time the submit error `Banner` itself, since every field is valid.
+  evaluate(
+    `{const s=document.querySelector('[data-layout-scroll]');if(s)s.scrollTop=${scrollBeforeNetworkError}}`,
   );
   const afterNetworkError = JSON.parse(evaluate(probe));
   const stillEditingAfterNetworkError = json(
@@ -341,9 +453,24 @@ function errorScenarios() {
   const restoredValue = json(
     `(()=>{const l=[...document.querySelectorAll('.astryx-field-label')].find(e=>e.textContent.trim().startsWith('Tên dự án'));return JSON.stringify(l.closest('.astryx-field').querySelector('input').value)})()`,
   );
+  // Same tolerance as `validationShifts` above: the error `Banner`
+  // reserving space pushes every field down by one common offset
+  // (legitimate), and "Tên dự án" itself may change width as it clears
+  // the previous validation pass's error decoration now that it's valid
+  // again — everything else must land exactly where it started.
+  const networkCommonDy = afterNetworkError[0]
+    ? afterNetworkError[0].rect[1] - beforeNetworkError[0].rect[1]
+    : 0;
   const networkErrorShifts = beforeNetworkError.flatMap((e, i) => {
     const a = afterNetworkError[i];
-    return !a || e.rect.some((n, j) => Math.abs(n - a.rect[j]) > 2)
+    if (!a) return [{ index: i, before: e, after: a }];
+    const isInvalidField = e.label.startsWith('Tên dự án');
+    const [dx, dy, dw, dh] = e.rect.map((n, j) => a.rect[j] - n);
+    return e.tag !== a.tag ||
+      Math.abs(dx) > 2 ||
+      Math.abs(dy - networkCommonDy) > 2 ||
+      Math.abs(dh) > 2 ||
+      (Math.abs(dw) > 2 && !isInvalidField)
       ? [{ index: i, before: e, after: a }]
       : [];
   });

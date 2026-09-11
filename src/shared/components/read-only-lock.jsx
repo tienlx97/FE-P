@@ -54,6 +54,14 @@ export function ReadOnlyLock({ isActive, children }) {
   if (!isActive) return children;
   return (
     <span
+      // Plain data attribute, not ARIA — `display: contents` drops this
+      // span from the accessibility tree regardless (see the doc comment
+      // above), so an `aria-*` attribute here would be silently discarded,
+      // but a `data-*` one still resolves via `closest()` on the DOM tree.
+      // Lets tooling (e.g. `harness/checks/stable-dialog-layout-browser.mjs`)
+      // recognize this as the read-only mechanism it is, without adding
+      // anything screen readers would pick up.
+      data-readonly-lock="true"
       style={{ display: 'contents' }}
       onClickCapture={(event) => {
         event.preventDefault();

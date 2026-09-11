@@ -12,7 +12,7 @@ cập nhật evidence/PROGRESS và commit theo quy trình repository.
 ## 2. Hình học và chế độ Xem
 
 - [x] 2.1 Chuẩn hóa shared shell, footer, field slots, readonly và vùng validation; giữ chữ dễ đọc/copy và màu hành động nhất quán. Verify: exact 0px landmarks hai chiều tại 1440/768/390/320px, không tràn/che nút.
-- [ ] 2.2 Mở rộng regression harness: fixture API search mới, ID landmark ổn định, Lưu/Hủy, lỗi validation/mạng và VGM có dữ liệu; không chấp nhận ca 0 controls như chứng minh field geometry. Verify: test bắt được dịch chuyển có chủ ý và mất draft; lưu ảnh trước/sau.
+- [x] 2.2 Mở rộng regression harness: fixture API search mới, ID landmark ổn định, Lưu/Hủy, lỗi validation/mạng và VGM có dữ liệu; không chấp nhận ca 0 controls như chứng minh field geometry. Verify: test bắt được dịch chuyển có chủ ý và mất draft; lưu ảnh trước/sau.
 
 ## 3. Thu hẹp Contract và tái sử dụng editor
 
