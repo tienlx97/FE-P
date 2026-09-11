@@ -16,7 +16,7 @@ cập nhật evidence/PROGRESS và commit theo quy trình repository.
 
 ## 3. Thu hẹp Contract và tái sử dụng editor
 
-- [ ] 3.1 Gom Contract thành Hồ sơ/Phụ lục/Thanh toán/Liên quan; giữ dữ liệu và quyền hiện tại, làm rõ phạm vi hành động từng tab. Verify: đủ nội dung cũ, tạo mới khóa quan hệ chưa lưu, private không lộ qua query/UI.
+- [x] 3.1 Gom Contract thành Hồ sơ/Phụ lục/Thanh toán/Liên quan; giữ dữ liệu và quyền hiện tại, làm rõ phạm vi hành động từng tab. Verify: đủ nội dung cũ, tạo mới khóa quan hệ chưa lưu, private không lộ qua query/UI.
 - [ ] 3.2 Dùng một editor Shipment từ Contract và danh sách; VGM/chi phí thuộc Shipment, điều hướng quay lại giữ ngữ cảnh và không chồng fullscreen. Verify: mở từ hai entrypoint, thao tác con, trở lại Contract và refresh tóm tắt.
 - [ ] 3.3 Dùng chung editor Commission/BOQ từ Contract và danh sách, chuyển phần Contract thành summary/link theo quyền. Verify: quan hệ 1:1 Commission, phụ lục/thanh toán, dirty guard, quay lại và quyền logistics:secret.
 

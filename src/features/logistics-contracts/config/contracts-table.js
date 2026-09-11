@@ -3,8 +3,6 @@ import { contractTypeOptions } from './contract-types.js';
 import { currencyOptions } from './currencies.js';
 import { incotermOptions } from './incoterms.js';
 
-/** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission'} ExpandedTab */
-
 /** @satisfies {ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>} */
 export const SEARCH_FIELD_DEFS = [
   { key: 'contractNumber', type: 'string', label: 'Số hợp đồng' },

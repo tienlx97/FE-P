@@ -8049,3 +8049,58 @@ ward reference data (free-text inputs, matching the backend).
   contract or DOM structure, not guessed), but "the source looks right" is
   not the same as "verified" — a session with a working `agent-browser` on
   this box (or run from Linux/CI) should confirm before checking this off.
+
+## 2026-09-11 — Task 3.1: Contract narrowed to Hồ sơ/Phụ lục/Thanh toán/Liên quan
+
+- Confirmed the "Liên quan" shape with the user before touching code (it
+  wasn't fully spelled out per-task in design.md, only in section 3's
+  general prose): 3 summary cards (Shipment/Commission/BOQ) each with an
+  "Mở" action reusing the existing standalone dialog, no editor unification
+  with the list yet (that's tasks 3.2/3.3).
+- `ContractFormDialog`: 5 tabs → 4 (`profile`/`annexes`/`payments`/`related`
+  replacing `info`/`paymentSchedule`/`shipment`/`commission`/`privateInfo`).
+  Dropped `activeTabEditController`/`secondaryDraftsStatus` entirely —
+  those existed only to bridge Commission/"Thông tin private"'s embedded
+  editors up to this dialog's footer (task 1.1/1.2); with neither embedded
+  anymore, the footer only ever reflects "Hồ sơ"'s own `isEditing`/
+  `isDirty`, a real simplification, not just a rename.
+- Extracted annexes out of `ContractGeneralFields` into a new
+  `contract-annexes-panel.jsx` (`ContractAnnexesPanel`) — its own "Phụ lục"
+  tab now, using the contract's last-saved `contractValue`/`currency`
+  instead of the "Hồ sơ" form's live (possibly unsaved, and no longer
+  reachable from a sibling tab) draft.
+- Commission and BOQ no longer embed their full editors in "Liên quan" —
+  each is a `Card` summary (code/value/signed-status for Commission,
+  profit/empty-state for BOQ) with an "Mở" button. Commission opens the
+  same standalone `CommissionFormDialog` `commissions-list.jsx` already
+  used (in `initialMode="view"`, enriched with `contractNumber`/
+  `projectName` the way the old embedded panel did — a real gap live
+  testing caught: without it the dialog's header showed "—"). BOQ opens a
+  newly-extracted `contract-private-info-detail-dialog.jsx`
+  (`ContractPrivateInfoDetailDialog`, pulled out of
+  `contract-private-infos-list.jsx` so both entrypoints share one dialog
+  instead of two copies). The BOQ card/query stay gated on
+  `logistics:secret` exactly as the old tab was — no query fires and no
+  card renders without it.
+- Deleted `contract-commission-panel.jsx` (`ContractCommissionPanel`) —
+  fully dead once nothing embeds it anymore (confirmed via repo-wide
+  grep before deleting, not assumed). Stripped
+  `contract-private-info-panel.jsx`'s `hideOwnActions`/`controllerRef`/
+  `onStatusChange` — the imperative-ref bridge for an embedded caller that
+  no longer exists (its only remaining caller, the new detail dialog,
+  never passed them); this panel only has the one standalone
+  Hủy/Lưu-at-bottom convention left, so the doc comment's old "two call
+  sites" description was rewritten instead of left stale.
+- Live-verified against the real dev server end to end: all 4 tabs render
+  correct content (Hồ sơ has no trailing annexes section anymore; Phụ lục
+  shows the extracted list/total/add button; Thanh toán unchanged; Liên
+  quan shows Shipment table + both summary cards); "Mở Commission" opens
+  the standalone dialog with the right contract number/project name; "Mở
+  BOQ" opens the extracted detail dialog with real data; creating a new
+  Contract shows `aria-disabled="true"` on Phụ lục/Thanh toán/Liên quan
+  (child relations locked until the Contract itself is saved, per task
+  3.1's own verify line). Re-ran the deletion/cleanup through the same
+  live checks afterward to confirm nothing broke.
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm test` (137)/`pnpm structure`
+  all clean. Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260911-133334-1760/`.

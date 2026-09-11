@@ -1,5 +1,4 @@
 'use client';
-import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -10,12 +9,10 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
-import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { TextArea } from '@astryxdesign/core/TextArea';
 import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
@@ -25,18 +22,12 @@ import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import {
   formatDateInputValue,
-  formatDisplayDate,
 } from '@/shared/config/date-input-format.js';
 
-import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { contractStatusOptions } from '../config/contract-status.js';
 import { contractTypeOptions } from '../config/contract-types.js';
-import { currencyOptions, formatMoney } from '../config/currencies.js';
+import { currencyOptions } from '../config/currencies.js';
 import { incotermOptions } from '../config/incoterms.js';
-import {
-  useContractAnnexesQuery,
-  useDeleteContractAnnexMutation,
-} from '../hooks/use-contract-annexes-query.js';
 import { BuyerFields } from './buyer-fields.jsx';
 import { QuickCreateCountryDialog } from './quick-create-country-dialog.jsx';
 import { QuickCreatePlaceDialog } from './quick-create-place-dialog.jsx';
@@ -60,46 +51,18 @@ function withSavedOption(options, value) {
 }
 
 /**
- * Signed amount label for one contract-annex row — `ValueChange` describes a
- * non-monetary information change (see its `note`), never an amount, so it
- * has no amount to show here.
- * @param {import('../types/index.js').ContractAnnex} annex
- * @param {string} currency
- */
-function annexAmountLabel(annex, currency) {
-  if (annex.type === 'ValueChange') return '—';
-  const formatted = formatMoney(annex.amount, currency);
-  if (annex.type === 'AmountIncrease') return `+ ${formatted}`;
-  return `− ${formatted}`;
-}
-
-/** @param {string | null | undefined} value */
-function orDash(value) {
-  return value == null || value === '' ? '—' : value;
-}
-
-/**
  * `Contract` general field-set — single layout shared by both the Xem and
  * Sửa modes of `ContractFormDialog`; `isReadOnly` toggles each field's
  * interactivity instead of switching to a separate read-only component
- * (mirrors `CommissionFields`/`ShipmentFields`). "Phụ lục hợp đồng" and
- * "Tổng cộng" are informational and have their own actions independent of
- * this form, so they render in both modes whenever `contract` exists.
+ * (mirrors `CommissionFields`/`ShipmentFields`). Annexes have their own
+ * "Phụ lục" tab now (`ContractAnnexesPanel`, task 3.1) — this component no
+ * longer renders them.
  * @param {{
  *   form: ReturnType<typeof import('../hooks/use-contract-form.js').useContractForm>,
- *   contract?: import('../types/index.js').Contract | null,
  *   isReadOnly?: boolean,
- *   onAddAnnex?: () => void,
- *   onEditAnnex?: (annex: import('../types/index.js').ContractAnnex) => void,
  * }} props
  */
-export function ContractGeneralFields({
-  form,
-  contract = null,
-  isReadOnly = false,
-  onAddAnnex,
-  onEditAnnex,
-}) {
+export function ContractGeneralFields({ form, isReadOnly = false }) {
   const isNarrow = useMediaQuery('(max-width: 768px)');
   const {
     values,
@@ -130,102 +93,10 @@ export function ContractGeneralFields({
     useState(false);
   const [isQuickCreateDischargePlaceOpen, setIsQuickCreateDischargePlaceOpen] =
     useState(false);
-  const [deletingAnnex, setDeletingAnnex] = useState(
-    /** @type {import('../types/index.js').ContractAnnex | null} */ (null),
-  );
-
   /** @type {Record<string, { type: 'error', message: string } | undefined>} */
   const sellerFieldStatuses = {};
   /** @type {Record<string, { type: 'error', message: string } | undefined>} */
   const buyerFieldStatuses = {};
-
-  const annexesQuery = useContractAnnexesQuery(contract?.id);
-  const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
-  const deleteAnnexMutation = useDeleteContractAnnexMutation(
-    contract?.id ?? '',
-  );
-
-  async function handleConfirmDeleteAnnex() {
-    if (!deletingAnnex) return;
-    await deleteAnnexMutation.mutateAsync(deletingAnnex.id);
-    setDeletingAnnex(null);
-  }
-
-  const annexesTotal = annexes.reduce((total, annex) => {
-    if (annex.type === 'AmountIncrease') return total + annex.amount;
-    if (annex.type === 'AmountDecrease') return total - annex.amount;
-    return total;
-  }, 0);
-  const contractGrandTotal = (values.contractValue ?? 0) + annexesTotal;
-
-  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ContractAnnex & Record<string, unknown>>[]} */
-  const annexColumns = [
-    {
-      key: 'annexCode',
-      header: 'Mã phụ lục',
-      width: proportional(1.2),
-      renderCell: (annex) =>
-        `${annex.annexCode} · ${labelForContractAnnexType(annex.type)}`,
-    },
-    {
-      key: 'signedDate',
-      header: 'Ngày ký',
-      width: pixel(120),
-      renderCell: (annex) => formatDisplayDate(annex.signedDate),
-    },
-    {
-      key: 'buyerSigned',
-      header: 'Mua ký',
-      width: pixel(90),
-      renderCell: (annex) => (annex.buyerSigned ? 'Đã ký' : 'Chưa ký'),
-    },
-    {
-      key: 'sellerSigned',
-      header: 'Bán ký',
-      width: pixel(90),
-      renderCell: (annex) => (annex.sellerSigned ? 'Đã ký' : 'Chưa ký'),
-    },
-    {
-      key: 'note',
-      header: 'Ghi chú',
-      width: proportional(1),
-      renderCell: (annex) => orDash(annex.note),
-    },
-    {
-      key: 'amount',
-      header: 'Số tiền',
-      width: pixel(140),
-      align: 'end',
-      renderCell: (annex) => annexAmountLabel(annex, values.currency),
-    },
-  ];
-  if (onEditAnnex) {
-    annexColumns.push({
-      key: 'actions',
-      header: '',
-      width: pixel(90),
-      renderCell: (annex) => (
-        <HStack gap={1} vAlign="center" hAlign="end">
-          <IconButton
-            label={`Sửa ${annex.annexCode}`}
-            tooltip="Sửa phụ lục"
-            icon={<Icon icon={Pencil} size="sm" />}
-            variant="ghost"
-            size="sm"
-            onClick={() => onEditAnnex(annex)}
-          />
-          <IconButton
-            label={`Xoá ${annex.annexCode}`}
-            tooltip="Xoá phụ lục"
-            icon={<Icon icon={Trash2} size="sm" />}
-            variant="ghost"
-            size="sm"
-            onClick={() => setDeletingAnnex(annex)}
-          />
-        </HStack>
-      ),
-    });
-  }
 
   return (
     <FormSection value="general" title="Thông tin chung" isDisabled>
@@ -628,53 +499,6 @@ export function ContractGeneralFields({
         isReadOnly={isReadOnly}
       />
 
-      {contract ? (
-        <>
-          <HStack hAlign="between" vAlign="center">
-            <Text weight="semibold">Phụ lục hợp đồng</Text>
-            {onAddAnnex ? (
-              <IconButton
-                label="Thêm phụ lục"
-                tooltip="Thêm phụ lục"
-                icon={<Icon icon={IconPlus} size="sm" />}
-                variant="secondary"
-                size="sm"
-                onClick={onAddAnnex}
-              />
-            ) : null}
-          </HStack>
-
-          {annexes.length === 0 ? (
-            <Text color="secondary">Chưa có phụ lục</Text>
-          ) : (
-            <Table
-              columns={annexColumns}
-              data={annexes}
-              idKey="id"
-              dividers="rows"
-              density="compact"
-            />
-          )}
-
-          <HStack hAlign="between" vAlign="center">
-            <Text weight="semibold">Tổng cộng:</Text>
-            <Text weight="semibold">
-              {formatMoney(contractGrandTotal, values.currency)}
-            </Text>
-          </HStack>
-
-          <AlertDialog
-            isOpen={deletingAnnex !== null}
-            onOpenChange={(nextIsOpen) => {
-              if (!nextIsOpen) setDeletingAnnex(null);
-            }}
-            title={`Xoá phụ lục ${deletingAnnex?.annexCode ?? ''}?`}
-            description="Hành động này không thể hoàn tác."
-            actionLabel="Xoá"
-            onAction={handleConfirmDeleteAnnex}
-          />
-        </>
-      ) : null}
     </FormSection>
   );
 }

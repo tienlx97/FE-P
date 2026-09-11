@@ -9,12 +9,14 @@ import { useCommissionForm } from '../hooks/use-commission-form.js';
 import { CommissionFields } from './commission-fields.jsx';
 
 /**
- * Create/edit dialog for one `Contract`'s `Commission` — opened from
- * `ContractExpandedDetails`'s "Commission" tab (`contracts-list.jsx`).
- * A contract has at most one, so pass `commission` to edit the
- * existing one; omit it to create the first (and only) one. Xem and Sửa
- * share the same `CommissionFields` layout — only `isReadOnly` differs
- * per field — so there is no separate view-only content branch.
+ * Create/edit dialog for one `Contract`'s `Commission` — two entrypoints
+ * share this one dialog (`commissions-list.jsx`'s own row, and the
+ * Contract dialog's "Liên quan" tab summary card via `contracts-list.jsx`,
+ * task 3.1 — see `ContractExpandedDetails`'s doc comment). A contract has
+ * at most one, so pass `commission` to edit the existing one; omit it to
+ * create the first (and only) one. Xem and Sửa share the same
+ * `CommissionFields` layout — only `isReadOnly` differs per field — so
+ * there is no separate view-only content branch.
  * @param {{
  *   isOpen: boolean,
  *   initialMode?: 'view' | 'edit',

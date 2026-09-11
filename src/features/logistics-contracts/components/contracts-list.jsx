@@ -1,5 +1,5 @@
 'use client';
-/** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo'} ExpandedTab */
+/** @typedef {'profile' | 'annexes' | 'payments' | 'related'} ExpandedTab */
 import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -44,10 +44,12 @@ import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
 import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
+import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
 import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractExpandedDetails } from './contract-expanded-details.jsx';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
+import { ContractPrivateInfoDetailDialog } from './contract-private-info-detail-dialog.jsx';
 import { PaymentScheduleFormDialog } from './payment-schedule-form-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
@@ -119,67 +121,24 @@ export function ContractsList() {
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
   const [expandedTab, setExpandedTab] = useState(
-    /** @type {ExpandedTab} */ ('info'),
+    /** @type {ExpandedTab} */ ('profile'),
   );
-  // Bridges "Thông tin private"/"Commission" tabs' own edit state up to
-  // `ContractFormDialog`'s footer (see `ContractPrivateInfoPanel`'s doc
-  // comment) — each ref triggers start/cancel/submit on its panel, each
-  // status state mirrors it back down for the footer's label/loading/
-  // disabled props. Neither status is reset on tab change — harmless
-  // staleness: `ContractFormDialog` only ever reads one of these through
-  // `activeTabEditController`, computed below from `expandedTab`.
-  const privateInfoPanelRef = useRef(
-    /** @type {{ startEditing: () => void, cancelEditing: () => void, submit: () => void } | null} */ (
+  // "Commission"/"BOQ" (private info) no longer embed their editors inside
+  // the Contract dialog (task 3.1) — "Liên quan" shows a summary card for
+  // each and opens the same standalone dialog `commissions-list.jsx`/
+  // `contract-private-infos-list.jsx` use, one at a time (ADR-0004: no
+  // stacked fullscreen dialogs, this workspace's own `ContractFormDialog`
+  // stays open underneath).
+  const [relatedCommissionDialog, setRelatedCommissionDialog] = useState(
+    /** @type {{ contractId: string, currency: string, commission: import('../types/index.js').Commission | null } | null} */ (
       null
     ),
   );
-  const [privateInfoStatus, setPrivateInfoStatus] = useState(
-    /** @type {{ isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string } | null} */ (
+  const [relatedBoqDialog, setRelatedBoqDialog] = useState(
+    /** @type {{ contractId: string, contractNumber: string } | null} */ (
       null
     ),
   );
-  const commissionPanelRef = useRef(
-    /** @type {{ startEditing: () => void, cancelEditing: () => void, submit: () => void } | null} */ (
-      null
-    ),
-  );
-  const [commissionStatus, setCommissionStatus] = useState(
-    /** @type {{ isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string } | null} */ (
-      null
-    ),
-  );
-  /** @type {{ status: { isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string } | null, startEditing: () => void, cancelEditing: () => void, submit: () => void } | null} */
-  const activeTabEditController =
-    expandedTab === 'privateInfo'
-      ? {
-          status: privateInfoStatus,
-          startEditing: () => privateInfoPanelRef.current?.startEditing(),
-          cancelEditing: () => privateInfoPanelRef.current?.cancelEditing(),
-          submit: () => privateInfoPanelRef.current?.submit(),
-        }
-      : expandedTab === 'commission'
-        ? {
-            status: commissionStatus,
-            startEditing: () => commissionPanelRef.current?.startEditing(),
-            cancelEditing: () => commissionPanelRef.current?.cancelEditing(),
-            submit: () => commissionPanelRef.current?.submit(),
-          }
-        : null;
-  // Unlike `activeTabEditController` (scoped to whichever tab is visible,
-  // for the footer's own label/actions), the exit guard in
-  // `ContractFormDialog` must know about an unsaved Commission/private-info
-  // draft even when the user has switched away to another tab — both
-  // panels stay mounted (`ContractExpandedDetails`) so their drafts survive
-  // tab switches, but closing/leaving the whole workspace must still catch
-  // them.
-  const secondaryDraftsStatus = {
-    isDirty:
-      Boolean(commissionStatus?.isEditing && commissionStatus?.isDirty) ||
-      Boolean(privateInfoStatus?.isEditing && privateInfoStatus?.isDirty),
-    isSubmitting:
-      Boolean(commissionStatus?.isSubmitting) ||
-      Boolean(privateInfoStatus?.isSubmitting),
-  };
   const [shipmentDialog, setShipmentDialog] = useState(
     /** @type {{ contractId: string, contract: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
       null
@@ -344,7 +303,7 @@ export function ContractsList() {
       //     size="sm"
       //     onClick={(event) => {
       //       event.stopPropagation();
-      //       setExpandedTab('info');
+      //       setExpandedTab('profile');
       //       setWorkspace({ contract, revision: 0 });
       //     }}
       //   />
@@ -508,7 +467,7 @@ export function ContractsList() {
       renderCell: (row) => (
         <RecordActionsMenu
           onView={() => {
-            setExpandedTab('info');
+            setExpandedTab('profile');
             setWorkspace({
               contract: row,
               sessionKey: generateRowKey(),
@@ -516,7 +475,7 @@ export function ContractsList() {
             });
           }}
           onEdit={() => {
-            setExpandedTab('info');
+            setExpandedTab('profile');
             setWorkspace({
               contract: row,
               sessionKey: generateRowKey(),
@@ -572,7 +531,7 @@ export function ContractsList() {
             label="Tạo hợp đồng"
             variant="primary"
             onClick={() => {
-              setExpandedTab('info');
+              setExpandedTab('profile');
               setWorkspace({ contract: null, sessionKey: generateRowKey() });
             }}
           />
@@ -650,12 +609,6 @@ export function ContractsList() {
           initialMode={workspace.mode}
           activeTab={expandedTab}
           onActiveTabChange={setExpandedTab}
-          onAddAnnex={() =>
-            contract && setAnnexDialog({ contractId: contract.id })
-          }
-          onEditAnnex={(annex) =>
-            contract && setAnnexDialog({ contractId: contract.id, annex })
-          }
           onSuccess={(saved) => {
             // Stays mounted (same `sessionKey`) — updates the Contract in
             // place instead of remounting the workspace just to fall back
@@ -664,8 +617,6 @@ export function ContractsList() {
               current ? { ...current, contract: saved } : current,
             );
           }}
-          activeTabEditController={activeTabEditController}
-          secondaryDraftsStatus={secondaryDraftsStatus}
         >
           {contract ? (
             <ContractExpandedDetails
@@ -673,8 +624,10 @@ export function ContractsList() {
               customersById={customersById}
               costCategoriesById={costCategoriesById}
               activeTab={expandedTab}
-              privateInfoPanelRef={privateInfoPanelRef}
-              onPrivateInfoStatusChange={setPrivateInfoStatus}
+              onAddAnnex={() => setAnnexDialog({ contractId: contract.id })}
+              onEditAnnex={(annex) =>
+                setAnnexDialog({ contractId: contract.id, annex })
+              }
               onAddPaymentSchedule={() =>
                 setPaymentScheduleDialog({ contractId: contract.id })
               }
@@ -693,24 +646,71 @@ export function ContractsList() {
               }
               onAddVgm={(payload) => setVgmDialog(payload)}
               onEditVgm={(payload) => setVgmDialog(payload)}
-              commissionPanelRef={commissionPanelRef}
-              onCommissionStatusChange={setCommissionStatus}
-              onAddCommissionAnnex={() =>
-                setCommissionAnnexDialog({ contractId: contract.id })
-              }
-              onEditCommissionAnnex={(annex) =>
-                setCommissionAnnexDialog({ contractId: contract.id, annex })
-              }
-              onAddCommissionPayment={(commission) =>
-                setCommissionPaymentDialog({
+              onOpenCommission={(commission) =>
+                setRelatedCommissionDialog({
                   contractId: contract.id,
                   currency: contract.currency,
                   commission,
                 })
               }
+              onOpenBoq={() =>
+                setRelatedBoqDialog({
+                  contractId: contract.id,
+                  contractNumber: contract.contractNumber,
+                })
+              }
             />
           ) : null}
         </ContractFormDialog>
+      ) : null}
+
+      {relatedCommissionDialog ? (
+        <CommissionFormDialog
+          key={relatedCommissionDialog.commission?.id ?? 'create'}
+          isOpen
+          initialMode="view"
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setRelatedCommissionDialog(null);
+          }}
+          contractId={relatedCommissionDialog.contractId}
+          currency={relatedCommissionDialog.currency}
+          commission={relatedCommissionDialog.commission}
+          onSuccess={(saved) =>
+            setRelatedCommissionDialog((current) =>
+              current ? { ...current, commission: saved } : current,
+            )
+          }
+          onAddAnnex={() =>
+            setCommissionAnnexDialog({
+              contractId: relatedCommissionDialog.contractId,
+            })
+          }
+          onEditAnnex={(annex) =>
+            setCommissionAnnexDialog({
+              contractId: relatedCommissionDialog.contractId,
+              annex,
+            })
+          }
+          onAddPayment={() =>
+            relatedCommissionDialog.commission &&
+            setCommissionPaymentDialog({
+              contractId: relatedCommissionDialog.contractId,
+              currency: relatedCommissionDialog.currency,
+              commission: relatedCommissionDialog.commission,
+            })
+          }
+        />
+      ) : null}
+
+      {relatedBoqDialog ? (
+        <ContractPrivateInfoDetailDialog
+          key={relatedBoqDialog.contractId}
+          contractId={relatedBoqDialog.contractId}
+          contractNumber={relatedBoqDialog.contractNumber}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setRelatedBoqDialog(null);
+          }}
+        />
       ) : null}
 
       {/* Related editors stay outside tables (ADR-0004). */}

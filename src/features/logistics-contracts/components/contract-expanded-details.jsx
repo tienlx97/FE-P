@@ -1,5 +1,6 @@
 'use client';
 import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -11,7 +12,6 @@ import {
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import * as stylex from '@stylexjs/stylex';
 import { Pencil, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -29,24 +29,13 @@ import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js'
 import { useContractPrivateInfoQuery } from '../hooks/use-contract-private-info-query.js';
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
-import { ContractCommissionPanel } from './contract-commission-panel.jsx';
-import { ContractPrivateInfoPanel } from './contract-private-info-panel.jsx';
+import { ContractAnnexesPanel } from './contract-annexes-panel.jsx';
+import { isPrivateInfoEntirelyEmpty } from './contract-private-info-fields.jsx';
 import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 
-/** @typedef {'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo'} ExpandedTab */
+/** @typedef {'profile' | 'annexes' | 'payments' | 'related'} ExpandedTab */
 
 const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
-
-// The native `hidden` attribute alone does NOT hide an Astryx `Stack`/
-// `VStack` — its own compiled `display: flex` class is author-origin CSS,
-// which the cascade always prefers over the user-agent's `[hidden] {
-// display: none }` regardless of selector specificity. An explicit
-// `xstyle` override is required to actually hide one.
-const styles = stylex.create({
-  hidden: {
-    display: 'none',
-  },
-});
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -54,69 +43,56 @@ function orDash(value) {
 }
 
 /**
- * Dialogs opened from within this component's own tabs for entities with
- * their own list-level `*FormDialog` (Shipment, Payment Schedule, Annex,
- * VGM) are deliberately owned and rendered by `ContractsList`, not here —
- * see the "Selector popover stacking" note above `ContractsList` (ADR-0004)
- * for why. This component only forwards trigger callbacks
- * (`onAddShipment`, `onEditShipment`, ...) up to whichever entity the
- * click was about for those.
- * "Thông tin private" and "Commission" are the exception: both edit in
- * place via `ContractPrivateInfoPanel`/`ContractCommissionPanel` — no
- * `*FormDialog`, no ADR-0004 concern (neither panel is ever reached
- * through a `renderExpanded` table row, only through this component's own
- * tabs, which live inside `ContractFormDialog`'s own `<dialog>`, not a
- * `<table>`) — driven by `ContractFormDialog`'s footer via the forwarded
- * `*PanelRef`/`on*StatusChange` pairs below.
+ * Renders the "Phụ lục"/"Thanh toán"/"Liên quan" tab bodies for the
+ * Contract workspace (`ContractFormDialog`'s "Hồ sơ" tab is its own
+ * `<form>`, not this component — see that file). Task 3.1
+ * (`openspec/changes/logistics-workspace-redesign/design.md` section 3)
+ * narrowed this from five tabs down to four: Commission and "Thông tin
+ * private" (BOQ) no longer embed their full editors here — "Liên quan"
+ * shows a summary card for each with a button that opens the same
+ * standalone dialog `commissions-list.jsx`/`contract-private-infos-list.jsx`
+ * use (`onOpenCommission`/`onOpenBoq`, owned by `ContractsList` per
+ * ADR-0004 — Selector portals stay inside their dialog layers). The BOQ
+ * card only renders for a caller with `logistics:secret`, gating both the
+ * query and the summary the same way the old tab did — never just the UI.
  * @param {object} props
  * @param {import('../types/index.js').Contract} props.contract
  * @param {Map<string, import('../types/index.js').Customer>} props.customersById
  * @param {Map<string, import('../types/index.js').ShipmentCostCategory>} props.costCategoriesById
  * @param {ExpandedTab} props.activeTab
+ * @param {() => void} props.onAddAnnex
+ * @param {(annex: import('../types/index.js').ContractAnnex) => void} props.onEditAnnex
  * @param {() => void} props.onAddPaymentSchedule
  * @param {(schedule: import('../types/index.js').PaymentSchedule) => void} props.onEditPaymentSchedule
  * @param {() => void} props.onAddShipment
  * @param {(shipment: import('../types/index.js').Shipment) => void} props.onEditShipment
  * @param {(payload: { contractId: string, shipmentId: string }) => void} props.onAddVgm
  * @param {(payload: { contractId: string, shipmentId: string, vgm: import('../types/index.js').ShipmentVgm }) => void} props.onEditVgm
- * @param {() => void} props.onAddCommissionAnnex
- * @param {(annex: import('../types/index.js').CommissionAnnex) => void} props.onEditCommissionAnnex
- * @param {(commission: import('../types/index.js').Commission) => void} props.onAddCommissionPayment
- * @param {import('react').Ref<{ startEditing: () => void, cancelEditing: () => void, submit: () => void }>} [props.privateInfoPanelRef]
- *   Forwarded to `ContractPrivateInfoPanel` — lets the Contract dialog's own
- *   footer (`contract-form-dialog.jsx`) drive editing for this tab instead of
- *   a second, tab-local edit button (see that panel's own doc comment).
- * @param {(status: { isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string }) => void} [props.onPrivateInfoStatusChange]
- * @param {import('react').Ref<{ startEditing: () => void, cancelEditing: () => void, submit: () => void }>} [props.commissionPanelRef]
- *   Same idea as `privateInfoPanelRef`, for `ContractCommissionPanel`.
- * @param {(status: { isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string }) => void} [props.onCommissionStatusChange]
+ * @param {(commission: (import('../types/index.js').Commission & { contractNumber?: string, projectName?: string }) | null) => void} props.onOpenCommission
+ * @param {() => void} props.onOpenBoq
  */
 export function ContractExpandedDetails({
   contract,
   customersById,
   costCategoriesById,
   activeTab,
+  onAddAnnex,
+  onEditAnnex,
   onAddPaymentSchedule,
   onEditPaymentSchedule,
   onAddShipment,
   onEditShipment,
   onAddVgm,
   onEditVgm,
-  onAddCommissionAnnex,
-  onEditCommissionAnnex,
-  onAddCommissionPayment,
-  privateInfoPanelRef,
-  onPrivateInfoStatusChange,
-  commissionPanelRef,
-  onCommissionStatusChange,
+  onOpenCommission,
+  onOpenBoq,
 }) {
   const [expandedShipmentId, setExpandedShipmentId] = useState(
     /** @type {string | null} */ (null),
   );
 
-  // Gates the query itself, not just the tab button (`contract-form-
-  // dialog.jsx` hides the tab entirely without this permission) — a caller
-  // who can't see the tab shouldn't fire a request that only ever 403s.
+  // Gates the query itself, not just the BOQ card — a caller who can't see
+  // it shouldn't fire a request that only ever 403s.
   const hasLogisticsSecret = useSessionPermissions().includes(
     LOGISTICS_SECRET_PERMISSION,
   );
@@ -145,6 +121,20 @@ export function ContractExpandedDetails({
   const shipments = shipmentsQuery.data?.success
     ? shipmentsQuery.data.shipments
     : [];
+
+  const commissionQuery = useCommissionQuery(contract.id);
+  const commissionResult = commissionQuery.data;
+  const commission =
+    commissionResult?.success && commissionResult.exists
+      ? commissionResult.commission
+      : null;
+
+  const privateInfoQuery = useContractPrivateInfoQuery(
+    hasLogisticsSecret ? contract.id : undefined,
+  );
+  const privateInfo = privateInfoQuery.data?.success
+    ? privateInfoQuery.data.privateInfo
+    : null;
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').PaymentSchedule & Record<string, unknown>>[]} */
   const paymentScheduleColumns = [
@@ -314,27 +304,17 @@ export function ContractExpandedDetails({
     [expandedShipmentId],
   );
 
-  const privateInfoQuery = useContractPrivateInfoQuery(
-    hasLogisticsSecret ? contract.id : undefined,
-  );
-  const privateInfo = privateInfoQuery.data?.success
-    ? privateInfoQuery.data.privateInfo
-    : null;
-
-  // `CommissionFields` (via `ContractCommissionPanel`) fetches its own
-  // annexes/grand-total off `commission.contractId` — no need to duplicate
-  // that query/rollup here the way the old read-only `ContractCommissionTab`
-  // required.
-  const commissionQuery = useCommissionQuery(contract.id);
-  const commissionResult = commissionQuery.data;
-  const commission =
-    commissionResult?.success && commissionResult.exists
-      ? commissionResult.commission
-      : null;
-
   return (
     <VStack gap={4} hAlign="stretch">
-      {activeTab === 'paymentSchedule' && (
+      {activeTab === 'annexes' && (
+        <ContractAnnexesPanel
+          contract={contract}
+          onAddAnnex={onAddAnnex}
+          onEditAnnex={onEditAnnex}
+        />
+      )}
+
+      {activeTab === 'payments' && (
         <VStack gap={4} hAlign="stretch">
           {/* Requires the contract to be fully signed to create; the
               backend also enforces this (`400` otherwise), the disabled
@@ -385,103 +365,103 @@ export function ContractExpandedDetails({
         </VStack>
       )}
 
-      {activeTab === 'shipment' && (
+      {activeTab === 'related' && (
         <VStack gap={4} hAlign="stretch">
-          <HStack hAlign="between" vAlign="center">
-            <Text weight="semibold">Shipment</Text>
-            <Button
-              label="Thêm Shipment"
-              variant="secondary"
-              size="sm"
-              icon={<Icon icon={Plus} />}
-              onClick={onAddShipment}
-            />
-          </HStack>
+          <VStack gap={4} hAlign="stretch">
+            <HStack hAlign="between" vAlign="center">
+              <Text weight="semibold">Shipment</Text>
+              <Button
+                label="Thêm Shipment"
+                variant="secondary"
+                size="sm"
+                icon={<Icon icon={Plus} />}
+                onClick={onAddShipment}
+              />
+            </HStack>
 
-          {shipments.length === 0 ? (
-            <Text color="secondary">Chưa có Shipment nào</Text>
-          ) : (
-            <Table
-              columns={shipmentColumns}
-              data={shipments}
-              idKey="id"
-              dividers="rows"
-              density="compact"
-              plugins={{
-                expansion: shipmentExpansionPlugin,
-                rowInteraction: shipmentRowInteractionPlugin,
-              }}
-            />
-          )}
-        </VStack>
-      )}
+            {shipments.length === 0 ? (
+              <Text color="secondary">Chưa có Shipment nào</Text>
+            ) : (
+              <Table
+                columns={shipmentColumns}
+                data={shipments}
+                idKey="id"
+                dividers="rows"
+                density="compact"
+                plugins={{
+                  expansion: shipmentExpansionPlugin,
+                  rowInteraction: shipmentRowInteractionPlugin,
+                }}
+              />
+            )}
+          </VStack>
 
-      {
-        // Stays mounted regardless of `activeTab` (hidden, not unmounted)
-        // once the initial load resolves — switching away to another tab
-        // must not tear down `ContractCommissionPanel`'s in-progress draft
-        // (`useCommissionForm`'s state lives inside it). Only `isLoading`
-        // gates the mount itself, same reasoning as before.
-        commissionQuery.isLoading ? (
-          activeTab === 'commission' && (
-            <Text color="secondary">Đang tải Commission...</Text>
-          )
-        ) : (
-          <VStack
-            gap={4}
-            hAlign="stretch"
-            xstyle={activeTab !== 'commission' && styles.hidden}
-          >
-            <ContractCommissionPanel
-              // `commission` is `null` both "still loading" and "confirmed
-              // none exists" — gating the mount above on `isLoading` (not
-              // just `commission`) means the panel's own `useState(!commission)`
-              // (initial editing mode) only ever runs once the real value is
-              // known, instead of transiently seeing `null` and getting
-              // stuck in editing mode even once a real Commission loads in.
-              key={commission?.id ?? 'create'}
-              controllerRef={commissionPanelRef}
-              contractId={contract.id}
-              currency={contract.currency}
-              commission={
-                commission
-                  ? {
+          <Card>
+            <HStack hAlign="between" vAlign="center" gap={3}>
+              <VStack gap={1}>
+                <Text weight="semibold">Commission</Text>
+                {commissionQuery.isLoading ? (
+                  <Text color="secondary">Đang tải...</Text>
+                ) : commission ? (
+                  <Text color="secondary">
+                    {commission.code} ·{' '}
+                    {formatMoney(commission.value, contract.currency)} ·{' '}
+                    {commission.sellerSigned && commission.partySigned
+                      ? 'Đã ký đủ'
+                      : 'Chưa ký đủ'}
+                  </Text>
+                ) : (
+                  <Text color="secondary">Chưa có Commission</Text>
+                )}
+              </VStack>
+              <Button
+                label={commission ? 'Mở Commission' : 'Tạo Commission'}
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  onOpenCommission(
+                    // `useCommissionQuery` returns the raw entity with no
+                    // denormalized contract context (unlike a commissions
+                    // *list* row) — inject it the same way the old embedded
+                    // panel did, so the standalone dialog's header shows
+                    // the contract number/project name instead of "—".
+                    commission && {
                       ...commission,
                       contractNumber: contract.contractNumber,
                       projectName: contract.projectName,
-                    }
-                  : null
-              }
-              onAddAnnex={onAddCommissionAnnex}
-              onEditAnnex={onEditCommissionAnnex}
-              onAddPayment={onAddCommissionPayment}
-              hideOwnActions
-              onStatusChange={onCommissionStatusChange}
-            />
-          </VStack>
-        )
-      }
+                    },
+                  )
+                }
+              />
+            </HStack>
+          </Card>
 
-      {
-        // Same reasoning as the Commission panel above — kept mounted
-        // (hidden) across tab switches once `privateInfo` has loaded, so
-        // `useContractPrivateInfoForm`'s draft survives.
-        privateInfo && (
-          <VStack
-            gap={4}
-            hAlign="stretch"
-            xstyle={activeTab !== 'privateInfo' && styles.hidden}
-          >
-            <ContractPrivateInfoPanel
-              controllerRef={privateInfoPanelRef}
-              contractId={contract.id}
-              privateInfo={privateInfo}
-              hideOwnActions
-              onStatusChange={onPrivateInfoStatusChange}
-            />
-          </VStack>
-        )
-      }
+          {hasLogisticsSecret ? (
+            <Card>
+              <HStack hAlign="between" vAlign="center" gap={3}>
+                <VStack gap={1}>
+                  <Text weight="semibold">BOQ</Text>
+                  {privateInfoQuery.isLoading ? (
+                    <Text color="secondary">Đang tải...</Text>
+                  ) : privateInfo ? (
+                    <Text color="secondary">
+                      {isPrivateInfoEntirelyEmpty(privateInfo)
+                        ? 'Chưa nhập dữ liệu'
+                        : `Lợi nhuận: ${formatMoney(privateInfo.profit ?? 0, 'VND')}`}
+                    </Text>
+                  ) : null}
+                </VStack>
+                <Button
+                  label="Mở BOQ"
+                  variant="secondary"
+                  size="sm"
+                  onClick={onOpenBoq}
+                />
+              </HStack>
+            </Card>
+          ) : null}
+        </VStack>
+      )}
     </VStack>
   );
 }

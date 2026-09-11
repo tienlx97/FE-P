@@ -1,7 +1,5 @@
 'use client';
 
-import { DialogHeader } from '@astryxdesign/core/Dialog';
-import { Layout, LayoutContent } from '@astryxdesign/core/Layout';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -11,7 +9,6 @@ import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
-import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import {
@@ -23,9 +20,8 @@ import {
   SEARCH_FIELD_DEFS,
   skeletonRows,
 } from '../config/contract-private-infos-table.js';
-import { useContractPrivateInfoQuery } from '../hooks/use-contract-private-info-query.js';
 import { useContractPrivateInfosListQuery } from '../hooks/use-contract-private-infos-list-query.js';
-import { ContractPrivateInfoPanel } from './contract-private-info-panel.jsx';
+import { ContractPrivateInfoDetailDialog } from './contract-private-info-detail-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 
 const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
@@ -34,49 +30,6 @@ const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 function orDashNumber(value, suffix = '') {
   if (value == null) return '—';
   return `${value.toLocaleString('en-US')}${suffix ? ` ${suffix}` : ''}`;
-}
-
-/**
- * Detail dialog for one row — re-fetches the full `ContractPrivateInfo`
- * (the list row is a slim projection, see `ContractPrivateInfoListItem`)
- * and renders the exact same `ContractPrivateInfoPanel` the "Thông tin
- * private" tab uses, so Xem/Sửa here can never drift from the tab's.
- * @param {{ contractId: string, contractNumber: string, initialEditing: boolean, onOpenChange: (isOpen: boolean) => void }} props
- */
-function ContractPrivateInfoDetailDialog({
-  contractId,
-  contractNumber,
-  initialEditing,
-  onOpenChange,
-}) {
-  const privateInfoQuery = useContractPrivateInfoQuery(contractId);
-  const privateInfo = privateInfoQuery.data?.success
-    ? privateInfoQuery.data.privateInfo
-    : null;
-
-  return (
-    <CommonDialog isOpen onOpenChange={onOpenChange} width={720} variant="fullscreen">
-      <Layout
-        header={
-          <DialogHeader
-            title={`BOQ · ${contractNumber}`}
-            onOpenChange={() => onOpenChange(false)}
-          />
-        }
-        content={
-          <LayoutContent padding={4}>
-            {privateInfo ? (
-              <ContractPrivateInfoPanel
-                contractId={contractId}
-                privateInfo={privateInfo}
-                initialEditing={initialEditing}
-              />
-            ) : null}
-          </LayoutContent>
-        }
-      />
-    </CommonDialog>
-  );
 }
 
 export function ContractPrivateInfosList() {

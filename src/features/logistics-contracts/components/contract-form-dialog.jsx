@@ -15,7 +15,6 @@ import { useId, useState } from 'react';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
-import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import { useContractForm } from '../hooks/use-contract-form.js';
 import { ContractBanksFields } from './contract-banks-fields.jsx';
@@ -40,56 +39,35 @@ const styles = stylex.create({
 });
 
 const TAB_LABELS = {
-  info: 'Thông tin',
-  paymentSchedule: 'Lịch sử thanh toán',
-  shipment: 'Shipment',
-  commission: 'Commission',
-  privateInfo: 'Thông tin private',
+  profile: 'Hồ sơ',
+  annexes: 'Phụ lục',
+  payments: 'Thanh toán',
+  related: 'Liên quan',
 };
 
-// Deliberately NOT role/department-derived — gates the tab the same way
-// the backend gates the endpoint (see
-// `openspec/changes/add-contract-private-info/`, BE-kt-xnk).
-const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
-
 /**
- * One fullscreen workspace for creation, inspection and editing. Xem and
- * Sửa share the same "Thông tin" tab layout — only `isReadOnly` differs per
- * field (mirrors `CommissionFields`/`ShipmentFormDialog`); Lịch sử thanh
- * toán/Shipment have no edit mode of their own in this dialog — each is
- * edited via its own `*FormDialog` — so they always render `children`
- * regardless of `isEditing`. "Thông tin private" only renders at all for a
- * caller with `logistics:secret` (unlike every other tab, not
- * role/department-derived — see
- * `openspec/changes/add-contract-private-info/`, BE-kt-xnk).
- *
- * "Thông tin private" and "Commission" are the two tabs whose own edit
- * mode *is* driven by this dialog's footer instead —
- * `activeTabEditController` (built by the caller from whichever panel
- * matches `activeTab`) bridges to `ContractPrivateInfoPanel`/
- * `ContractCommissionPanel`'s imperative ref/status (see either
- * component's doc comment for why: neither has a separate `*FormDialog`,
- * and a second tab-local edit button next to "Sửa hợp đồng" was
- * redundant/caused an extra dialog-open jump). The caller passes `null`
- * for any other tab, so the footer falls back to the "Thông tin" tab's
- * own `isEditing`.
+ * One fullscreen workspace for creation, inspection and editing, grouped
+ * into `Hồ sơ · Phụ lục · Thanh toán · Liên quan`
+ * (`openspec/changes/logistics-workspace-redesign/design.md` section 3,
+ * task 3.1). Xem and Sửa share the same "Hồ sơ" tab layout — only
+ * `isReadOnly` differs per field (mirrors `CommissionFields`/
+ * `ShipmentFormDialog`); "Phụ lục"/"Thanh toán"/"Liên quan" have no edit
+ * mode of their own in this dialog — each row is edited via its own
+ * `*FormDialog`, and "Liên quan" only ever shows a summary + a button that
+ * opens Shipment/Commission/BOQ's own standalone dialog (never embeds
+ * their editors here) — so `children` always renders regardless of
+ * `isEditing`. Commission and "Thông tin private" used to drive this
+ * footer directly through an imperative ref/status bridge before task
+ * 3.1; that's gone now that neither is embedded, so this footer only ever
+ * reflects the "Hồ sơ" form's own `isEditing`/`isDirty`.
  * @param {{
  *   isOpen: boolean,
  *   initialMode?: 'view' | 'edit',
  *   onOpenChange: (open: boolean) => void,
  *   contract?: import('../types/index.js').Contract | null,
  *   onSuccess: (contract: import('../types/index.js').Contract) => void,
- *   activeTab: 'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo',
- *   onActiveTabChange: (tab: 'info' | 'paymentSchedule' | 'shipment' | 'commission' | 'privateInfo') => void,
- *   onAddAnnex?: () => void,
- *   onEditAnnex?: (annex: import('../types/index.js').ContractAnnex) => void,
- *   activeTabEditController?: {
- *     status: { isEditing: boolean, isDirty: boolean, isSubmitting: boolean, submitLabel: string } | null,
- *     startEditing: () => void,
- *     cancelEditing: () => void,
- *     submit: () => void,
- *   } | null,
- *   secondaryDraftsStatus?: { isDirty: boolean, isSubmitting: boolean },
+ *   activeTab: 'profile' | 'annexes' | 'payments' | 'related',
+ *   onActiveTabChange: (tab: 'profile' | 'annexes' | 'payments' | 'related') => void,
  *   children?: import('react').ReactNode,
  * }} props
  */
@@ -101,10 +79,6 @@ export function ContractFormDialog({
   onSuccess,
   activeTab,
   onActiveTabChange,
-  onAddAnnex,
-  onEditAnnex,
-  activeTabEditController = null,
-  secondaryDraftsStatus = { isDirty: false, isSubmitting: false },
   children,
 }) {
   const [isEditing, setIsEditing] = useState(
@@ -139,12 +113,6 @@ export function ContractFormDialog({
   } = form;
   const formId = useId();
   const panelId = useId();
-  const hasLogisticsSecret = useSessionPermissions().includes(
-    LOGISTICS_SECRET_PERMISSION,
-  );
-  const hasSecondaryTabController = activeTabEditController != null;
-  const secondaryTabStatus = activeTabEditController?.status ?? null;
-  const secondaryTabIsEditing = secondaryTabStatus?.isEditing ?? false;
 
   /** @param {'close' | 'cancel'} action */
   function finish(action) {
@@ -161,13 +129,8 @@ export function ContractFormDialog({
 
   /** @param {'close' | 'cancel'} action */
   function requestExit(action) {
-    // `secondaryDraftsStatus` tracks Commission/"Thông tin private" even
-    // when neither is the active tab (both panels stay mounted across tab
-    // switches — see `ContractExpandedDetails`) — closing/leaving the
-    // workspace must not silently drop an unsaved draft the user merely
-    // tabbed away from, and must not race a save already in flight there.
-    if (isSubmitting || secondaryDraftsStatus.isSubmitting) return;
-    if ((isEditing && isDirty) || secondaryDraftsStatus.isDirty) {
+    if (isSubmitting) return;
+    if (isEditing && isDirty) {
       setDiscardAction(action);
     } else {
       finish(action);
@@ -198,43 +161,34 @@ export function ContractFormDialog({
               <TabList
                 value={activeTab}
                 onChange={(tab) => {
-                  if (contract || tab === 'info')
+                  if (contract || tab === 'profile')
                     onActiveTabChange(/** @type {typeof activeTab} */ (tab));
                 }}
                 role="tablist"
                 hasDivider
               >
-                <Tab value="info" label="Thông tin" panelId={panelId} />
+                <Tab value="profile" label={TAB_LABELS.profile} panelId={panelId} />
                 <Tab
-                  value="paymentSchedule"
-                  label="Lịch sử thanh toán"
+                  value="annexes"
+                  label={TAB_LABELS.annexes}
                   panelId={panelId}
                   aria-disabled={!contract}
                   xstyle={!contract && styles.disabledTab}
                 />
                 <Tab
-                  value="shipment"
-                  label="Shipment"
+                  value="payments"
+                  label={TAB_LABELS.payments}
                   panelId={panelId}
                   aria-disabled={!contract}
                   xstyle={!contract && styles.disabledTab}
                 />
                 <Tab
-                  value="commission"
-                  label="Commission"
+                  value="related"
+                  label={TAB_LABELS.related}
                   panelId={panelId}
                   aria-disabled={!contract}
                   xstyle={!contract && styles.disabledTab}
                 />
-                {hasLogisticsSecret ? (
-                  <Tab
-                    value="privateInfo"
-                    label="Thông tin private"
-                    panelId={panelId}
-                    aria-disabled={!contract}
-                    xstyle={!contract && styles.disabledTab}
-                  />
-                ) : null}
               </TabList>
             </VStack>
           }
@@ -247,19 +201,15 @@ export function ContractFormDialog({
                 tabIndex={0}
               >
                 {
-                  // Both branches stay mounted (toggled with `hidden`)
-                  // instead of a ternary that swaps them — `children` is
-                  // `ContractExpandedDetails`, which itself keeps the
-                  // Commission/"Thông tin private" panels mounted across
-                  // *their* tab switches (see that component), but that
-                  // only holds if `ContractExpandedDetails` itself survives
-                  // switching back to "Thông tin" — a ternary here would
-                  // unmount it (and every draft inside it) the moment the
-                  // user looked at the "Thông tin" tab.
+                  // Both branches stay mounted (toggled with `xstyle`
+                  // display:none) instead of a ternary that swaps them —
+                  // `children` (`ContractExpandedDetails`) owns its own
+                  // per-tab queries and would otherwise refetch/reset scroll
+                  // every time the user glanced at "Hồ sơ".
                 }
                 <form
                   id={formId}
-                  hidden={activeTab !== 'info'}
+                  hidden={activeTab !== 'profile'}
                   onSubmit={(event) => {
                     if (!isEditing) {
                       event.preventDefault();
@@ -283,13 +233,7 @@ export function ContractFormDialog({
                       defaultValue={['general', 'paymentTerms', 'banks']}
                     >
                       <VStack gap={3} hAlign="stretch">
-                        <ContractGeneralFields
-                          form={form}
-                          contract={contract}
-                          isReadOnly={!isEditing}
-                          onAddAnnex={onAddAnnex}
-                          onEditAnnex={onEditAnnex}
-                        />
+                        <ContractGeneralFields form={form} isReadOnly={!isEditing} />
 
                         <FormSection
                           value="paymentTerms"
@@ -329,7 +273,7 @@ export function ContractFormDialog({
                 <VStack
                   gap={4}
                   hAlign="stretch"
-                  xstyle={activeTab === 'info' && styles.hidden}
+                  xstyle={activeTab === 'profile' && styles.hidden}
                 >
                   {children}
                 </VStack>
@@ -338,90 +282,49 @@ export function ContractFormDialog({
           }
           footer={
             <LayoutFooter>
-              {hasSecondaryTabController ? (
-                <HStack hAlign="between" gap={2}>
-                  <Text color="secondary" xstyle={styles.hint}>
-                    {secondaryTabIsEditing && secondaryTabStatus?.isDirty
-                      ? `Có thay đổi ${TAB_LABELS[activeTab]} chưa lưu`
-                      : TAB_LABELS[activeTab]}
-                  </Text>
-                  <HStack gap={2}>
+              <HStack hAlign="between" gap={2}>
+                <Text color="secondary" xstyle={styles.hint}>
+                  {isEditing
+                    ? isDirty
+                      ? 'Có thay đổi chưa lưu'
+                      : 'Nhập thông tin hợp đồng'
+                    : contract?.projectName}
+                </Text>
+                <HStack gap={2}>
+                  <Button
+                    width={80}
+                    label={isEditing ? 'Hủy' : 'Đóng'}
+                    variant="secondary"
+                    isDisabled={isSubmitting}
+                    onClick={() => requestExit(isEditing ? 'cancel' : 'close')}
+                  />
+                  {isEditing ? (
                     <Button
-                      width={80}
-                      label={secondaryTabIsEditing ? 'Hủy' : 'Đóng'}
-                      variant="secondary"
-                      isDisabled={secondaryTabStatus?.isSubmitting}
-                      onClick={() =>
-                        secondaryTabIsEditing
-                          ? activeTabEditController.cancelEditing()
-                          : requestExit('close')
-                      }
-                    />
-                    <Button
-                      key="secondary-tab-action"
-                      width={200}
-                      type="button"
-                      label={
-                        secondaryTabStatus?.submitLabel ??
-                        `Sửa ${TAB_LABELS[activeTab]}`
-                      }
+                      key="save"
+                      width={144}
+                      label={submitLabel}
+                      type="submit"
+                      form={formId}
                       variant="primary"
-                      isLoading={secondaryTabStatus?.isSubmitting}
-                      onClick={() =>
-                        secondaryTabIsEditing
-                          ? activeTabEditController.submit()
-                          : activeTabEditController.startEditing()
-                      }
+                      isLoading={isSubmitting}
+                      onClick={() => onActiveTabChange('profile')}
                     />
-                  </HStack>
-                </HStack>
-              ) : (
-                <HStack hAlign="between" gap={2}>
-                  <Text color="secondary" xstyle={styles.hint}>
-                    {isEditing
-                      ? isDirty
-                        ? 'Có thay đổi chưa lưu'
-                        : 'Nhập thông tin hợp đồng'
-                      : contract?.projectName}
-                  </Text>
-                  <HStack gap={2}>
+                  ) : (
                     <Button
-                      width={80}
-                      label={isEditing ? 'Hủy' : 'Đóng'}
-                      variant="secondary"
-                      isDisabled={isSubmitting}
-                      onClick={() =>
-                        requestExit(isEditing ? 'cancel' : 'close')
-                      }
+                      key="edit"
+                      width={144}
+                      type="button"
+                      label="Sửa hợp đồng"
+                      variant="primary"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        onActiveTabChange('profile');
+                        setIsEditing(true);
+                      }}
                     />
-                    {isEditing ? (
-                      <Button
-                        key="save"
-                        width={144}
-                        label={submitLabel}
-                        type="submit"
-                        form={formId}
-                        variant="primary"
-                        isLoading={isSubmitting}
-                        onClick={() => onActiveTabChange('info')}
-                      />
-                    ) : (
-                      <Button
-                        key="edit"
-                        width={144}
-                        type="button"
-                        label="Sửa hợp đồng"
-                        variant="primary"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          onActiveTabChange('info');
-                          setIsEditing(true);
-                        }}
-                      />
-                    )}
-                  </HStack>
+                  )}
                 </HStack>
-              )}
+              </HStack>
             </LayoutFooter>
           }
         />
