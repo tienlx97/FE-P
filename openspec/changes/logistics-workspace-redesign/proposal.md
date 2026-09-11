@@ -1,7 +1,8 @@
 # Proposal: Tối ưu workspace Logistics
 
-**Status:** draft
+**Status:** implemented
 **Created:** 2026-09-10
+**Completed:** 2026-09-11
 
 ## Why
 
@@ -48,3 +49,4 @@ về phạm vi nút Lưu và điều hướng.
 | Date | Decision | Why |
 |---|---|---|
 | 2026-09-10 | Lưu đề xuất thành plan; chưa triển khai | Người dùng yêu cầu lưu plan sau khảo sát. |
+| 2026-09-11 | Toàn bộ tasks.md (1.1–5.1) hoàn tất; xem `harness/PROGRESS.md` các mục 2026-09-11 và ADR-0008 | `stable-dialog-layout-browser.mjs` chạy sạch 0 CSS px ở cả 1440/768/390/320px, hai chiều Xem↔Sửa↔Hủy, lỗi validation/mạng và keyboard/focus/readonly; đúng như dự đoán ở "Evidence and limits", runner cũ cần cập nhật fixture search Contract sang envelope `{ page, valueTotals, settlements }` trước khi tái sử dụng được — đã sửa. |

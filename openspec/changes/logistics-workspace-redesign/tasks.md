@@ -1,6 +1,6 @@
 # Tasks: Tối ưu workspace Logistics
 
-Status: in progress. Thực hiện tuần tự, một task mỗi lần.
+Status: done (2026-09-11). Thực hiện tuần tự, một task mỗi lần.
 Mỗi task yêu cầu full `./harness/verify.sh` pass trước khi đánh dấu hoàn tất,
 cập nhật evidence/PROGRESS và commit theo quy trình repository.
 
@@ -27,4 +27,4 @@ cập nhật evidence/PROGRESS và commit theo quy trình repository.
 
 ## 5. Nghiệm thu toàn luồng
 
-- [ ] 5.1 Chạy ma trận geometry và hành vi toàn bộ workspace, rà keyboard/focus/readonly/permissions; cập nhật docs và ADR cho cấu trúc cuối. Verify: tất cả scenarios trong specs pass, screenshots đầy đủ và full gate pass.
+- [x] 5.1 Chạy ma trận geometry và hành vi toàn bộ workspace, rà keyboard/focus/readonly/permissions; cập nhật docs và ADR cho cấu trúc cuối. Verify: tất cả scenarios trong specs pass, screenshots đầy đủ và full gate pass.

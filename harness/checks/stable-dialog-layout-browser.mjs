@@ -489,8 +489,76 @@ function errorScenarios() {
   button('Hủy');
 }
 
-for (const width of [1440, 390]) {
-  browser('set', 'viewport', String(width), width === 1440 ? '900' : '844');
+// Task 5.1: "rà keyboard/focus/readonly" — a `ReadOnlyLock`-wrapped
+// control (design.md section 1: full opacity, announced value, still
+// reachable by Tab, just not editable) must actually stay in the tab
+// order and actually reject typed input; and Escape on a dirty edit must
+// go through the same discard-confirm guard as the "Hủy" button, not
+// silently drop the draft (native `<dialog>` fires its own `cancel`/
+// `close` events on Escape — confirms `CommonDialog`/`FormDialog` route
+// that through `requestClose()` rather than bypassing it).
+function keyboardScenarios() {
+  openView('shipments');
+  const etdBefore = json(
+    `(()=>{const l=[...document.querySelectorAll('.astryx-field-label')].find(e=>e.textContent.trim().startsWith('ETD'));return JSON.stringify(l.closest('.astryx-field').querySelector('input').value)})()`,
+  );
+  evaluate(
+    `(()=>{const l=[...document.querySelectorAll('.astryx-field-label')].find(e=>e.textContent.trim().startsWith('ETD'));l.closest('.astryx-field').querySelector('input').focus()})()`,
+  );
+  const etdFocused = json(
+    `(()=>{const l=[...document.querySelectorAll('.astryx-field-label')].find(e=>e.textContent.trim().startsWith('ETD'));return document.activeElement===l.closest('.astryx-field').querySelector('input')})()`,
+  );
+  if (!etdFocused)
+    throw Error('ReadOnlyLock field (ETD) is not reachable by Tab/focus() in Xem');
+  browser('press', '9');
+  browser('press', 'Enter');
+  const etdAfter = json(
+    `(()=>{const l=[...document.querySelectorAll('.astryx-field-label')].find(e=>e.textContent.trim().startsWith('ETD'));return JSON.stringify(l.closest('.astryx-field').querySelector('input').value)})()`,
+  );
+  if (etdAfter !== etdBefore)
+    throw Error(
+      `ReadOnlyLock field (ETD) accepted keyboard input in Xem: ${etdBefore} -> ${etdAfter}`,
+    );
+
+  button('Sửa');
+  wait(`document.querySelector('dialog[open] button[type=submit]')`);
+  evaluate(
+    `(()=>{const l=[...document.querySelectorAll('.astryx-field-label')].find(e=>e.textContent.trim().startsWith('Tên lô hàng'));const i=l.closest('.astryx-field').querySelector('input');const setter=Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,'value').set;setter.call(i,i.value+' (đã sửa)');i.dispatchEvent(new Event('input',{bubbles:true}))})()`,
+  );
+  browser('press', 'Escape');
+  wait(
+    `[...document.querySelectorAll('.astryx-alert-dialog, [role=alertdialog]')].some(e=>e.checkVisibility())`,
+  );
+  const stillInEditAfterEscape = json(
+    `Boolean(document.querySelector('dialog[open] button[type=submit]'))`,
+  );
+  if (!stillInEditAfterEscape)
+    throw Error('Escape on a dirty edit closed the dialog without the discard-confirm guard');
+  button('Tiếp tục nhập');
+  const nameAfterContinue = json(
+    `(()=>{const l=[...document.querySelectorAll('.astryx-field-label')].find(e=>e.textContent.trim().startsWith('Tên lô hàng'));return JSON.stringify(l.closest('.astryx-field').querySelector('input').value)})()`,
+  );
+  if (!nameAfterContinue.includes('(đã sửa)'))
+    throw Error('"Tiếp tục nhập" lost the draft instead of keeping it');
+  browser('screenshot', `${run}/keyboard-escape-guard.png`);
+  browser('press', 'Escape');
+  wait(
+    `[...document.querySelectorAll('.astryx-alert-dialog, [role=alertdialog]')].some(e=>e.checkVisibility())`,
+  );
+  button('Bỏ thay đổi');
+  // Discarding an existing record's edit goes back to Xem in place (task
+  // 2.2's `onCancelEdit`), not a full close — same guard, same outcome as
+  // clicking "Hủy" with a dirty draft.
+  wait(`!document.querySelector('dialog[open] button[type=submit]')`);
+  if (!json(`Boolean(document.querySelector('dialog[open]'))`))
+    throw Error('Escape discard closed the whole dialog instead of returning to Xem in place');
+}
+
+// design.md's acceptance evidence bullet and workspace.md's "Acceptance
+// evidence" section both name this exact four-width matrix.
+const VIEWPORT_HEIGHTS = { 1440: 900, 768: 1024, 390: 844, 320: 568 };
+for (const width of [1440, 768, 390, 320]) {
+  browser('set', 'viewport', String(width), String(VIEWPORT_HEIGHTS[width]));
   for (const [name, path, edit] of [
     ['shipment', 'shipments', 'Sửa'],
     ['commission', 'commissions', 'Sửa'],
@@ -519,4 +587,5 @@ for (const width of [1440, 390]) {
 }
 browser('set', 'viewport', '1440', '900');
 errorScenarios();
+keyboardScenarios();
 browser('close');

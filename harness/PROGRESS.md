@@ -8413,3 +8413,58 @@ ward reference data (free-text inputs, matching the backend).
   `harness/runs/20260911-161745-1541/`.
 - Next: task 5.1 (full-workspace geometry/behavior matrix, docs/ADR) — the
   harness this task just closed is exactly what 5.1 needs to run at scale.
+
+## 2026-09-11 — Task 5.1: full-workspace matrix, keyboard/focus/readonly/permissions audit, docs+ADR — logistics-workspace-redesign COMPLETE
+
+- Extended `stable-dialog-layout-browser.mjs`'s breakpoint matrix from
+  1440/390 to the full 1440/768/390/320 workspace.md's "Acceptance
+  evidence" section names, with per-width viewport heights
+  (900/1024/844/568). All 24 `compare()` scenarios (shipment/commission/
+  contract/costs/vgm/commission-empty × 4 widths) pass at 0px tolerance
+  (2px in practice, matching the existing per-control cap).
+- Added `keyboardScenarios()` (task 5.1's own "rà keyboard/focus/readonly"):
+  focuses a `ReadOnlyLock`-wrapped field (Shipment's ETD DatePicker) in Xem
+  and confirms it's reachable by `focus()`/Tab and rejects a typed key
+  (value unchanged); dirties an edit, presses Escape, confirms the native
+  `<dialog>`'s own cancel event routes through the same "Bỏ thay đổi chưa
+  lưu?" discard-confirm `requestClose()` uses (not a silent close) —
+  "Tiếp tục nhập" keeps the draft, a second Escape + "Bỏ thay đổi" then
+  correctly returns to Xem in place (task 2.2's `onCancelEdit`, not a full
+  close — the test's own initial assumption of "closes the dialog" was
+  wrong and corrected once run against the real behavior). Screenshot:
+  `keyboard-escape-guard.png`.
+- Permissions: re-verified live against the real local `BE-kt-xnk` with
+  synthetic cookies (same method as tasks 2.2/4.1) — a
+  `logistics:contracts:view`-only visitor gets `307` on `/logistics/boq`
+  (redirected to `/`, matching `routeAccessRules`), `200` on
+  `/logistics/customers`; a `logistics:secret`-only visitor gets `200` on
+  `/logistics/boq`. Sidebar filtering and BOQ query-gating were already
+  covered live in tasks 4.1/3.1's own sessions — not re-litigated here.
+- Full run: `node harness/checks/stable-dialog-layout-browser.mjs` exits 0
+  — 24 geometry scenarios, both error scenarios, and the new keyboard
+  scenario, zero exceptions. 40 PNGs + `geometry.json`:
+  `harness/runs/20260911-stable-dialog-layout/`.
+- Docs: rewrote `docs/ui-components.md`'s Logistics/Operational-dialogs/
+  Stable-view-edit-geometry sections for the final structure — Contract's
+  four tabs, the shared hide-not-unmount Shipment/Commission/BOQ editors,
+  `sidebarLogistics.json`'s permission-filtered NGHIỆP VỤ/DANH MỤC groups
+  and `/logistics` entrypoint rules, `AdvanceTable.viewPresets`, record-
+  code-opens-Xem, `FormDialog.onCancelEdit`, and `ReadOnlyLock` replacing
+  the old (now-wrong) "retain isDisabled" readonly note.
+- Added `docs/adr/0008-logistics-workspace-redesign.md` — the six
+  structural decisions across the whole change (draft/lifecycle guard, one
+  editor per entity hidden not stacked, Contract's four tabs, `ReadOnlyLock`
+  over `isDisabled`, sidebar/`/logistics` permission boundaries, operational-
+  first tables with an opt-in financial view), consequences, and the
+  enforcement surface (this harness, `logistics-actions-browser.mjs`,
+  `selector-dialog-stacking.test.cjs`, `nav.test.js`).
+- `openspec/changes/logistics-workspace-redesign/proposal.md` status
+  flipped draft → implemented (completed 2026-09-11), with a closing
+  decision-log entry — its own "Evidence and limits" section had
+  correctly predicted the fixture-shape fix task 2.2 ended up needing.
+  `tasks.md` status line updated; every task 1.1–5.1 now checked.
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm test`/`pnpm structure` all
+  clean. Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260911-163534-851/`.
+- **`logistics-workspace-redesign` is complete.** No further tasks in
+  `tasks.md`.
