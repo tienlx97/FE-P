@@ -384,6 +384,40 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     setValues((current) => ({ ...current, bankIds }));
   }
 
+  // "Hủy" (no remount to fall back on — see `ContractFormDialog`, task
+  // 1.2) needs an explicit way back to the last-saved baseline, same idea
+  // as `useCommissionForm`/`useContractPrivateInfoForm`'s `reset`.
+  function reset() {
+    setValues(contract ? valuesFromContract(contract) : emptyValues());
+    setFieldErrors({});
+    setSubmitError('');
+    setSubmitSuccess('');
+    setVersion(contract?.version);
+    paymentTermRows.setRows(
+      contract
+        ? contract.paymentTerms.map((term) => ({
+            rowKey: term.id,
+            paymentRatioPercent: term.paymentRatioPercent,
+            paymentCondition: term.paymentCondition,
+          }))
+        : [],
+    );
+    sellerExtraFieldRows.setRows(
+      (contract?.seller.extraFields ?? []).map((field) => ({
+        rowKey: generateRowKey(),
+        key: field.key,
+        value: field.value,
+      })),
+    );
+    buyerExtraFieldRows.setRows(
+      (contract?.buyer.extraFields ?? []).map((field) => ({
+        rowKey: generateRowKey(),
+        key: field.key,
+        value: field.value,
+      })),
+    );
+  }
+
   /** @param {import('react').FormEvent<HTMLFormElement>} event */
   async function handleSubmit(event) {
     event.preventDefault();
@@ -477,6 +511,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
 
   return {
     isDirty: draftFingerprint !== initialFingerprint,
+    reset,
     mode: isEdit ? 'edit' : 'create',
     title: isEdit ? 'CẬP NHẬT HỢP ĐỒNG' : 'TẠO HỢP ĐỒNG',
     submitLabel: isEdit ? 'Lưu thay đổi' : 'Tạo hợp đồng',

@@ -20,6 +20,7 @@ import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/compone
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 
 import { formatMoney } from '../config/currencies.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
@@ -102,34 +103,35 @@ export function ShipmentCostLinesFields({
       header: 'Nhóm chi phí',
       width: pixel(280),
       renderCell: (row) => (
-        <Selector
-          isDisabled={isReadOnly}
-          label="Nhóm chi phí"
-          isLabelHidden
-          hasSearch
-          placeholder={isReadOnly ? '—' : 'Chọn nhóm chi phí'}
-          value={row.costCategoryId}
-          onChange={(value) => {
-            if (value === ADD_COST_CATEGORY_OPTION_VALUE) {
-              setQuickCreateForRowKey(row.rowKey);
-              return;
-            }
-            onUpdateRowField(row.rowKey, 'costCategoryId', value ?? '');
-          }}
-          options={[
-            ...costCategories.map((costCategory) => ({
-              value: costCategory.id,
-              label: costCategory.name,
-            })),
-            { type: 'divider' },
-            {
-              value: ADD_COST_CATEGORY_OPTION_VALUE,
-              label: 'Thêm nhóm chi phí',
-              icon: <Icon icon={IconPlus} size="sm" />,
-            },
-          ]}
-          width="100%"
-        />
+        <ReadOnlyLock isActive={isReadOnly}>
+          <Selector
+            label="Nhóm chi phí"
+            isLabelHidden
+            hasSearch
+            placeholder={isReadOnly ? '—' : 'Chọn nhóm chi phí'}
+            value={row.costCategoryId}
+            onChange={(value) => {
+              if (value === ADD_COST_CATEGORY_OPTION_VALUE) {
+                setQuickCreateForRowKey(row.rowKey);
+                return;
+              }
+              onUpdateRowField(row.rowKey, 'costCategoryId', value ?? '');
+            }}
+            options={[
+              ...costCategories.map((costCategory) => ({
+                value: costCategory.id,
+                label: costCategory.name,
+              })),
+              { type: 'divider' },
+              {
+                value: ADD_COST_CATEGORY_OPTION_VALUE,
+                label: 'Thêm nhóm chi phí',
+                icon: <Icon icon={IconPlus} size="sm" />,
+              },
+            ]}
+            width="100%"
+          />
+        </ReadOnlyLock>
       ),
     },
     {
@@ -143,7 +145,7 @@ export function ShipmentCostLinesFields({
           value={row.name}
           onChange={(value) => onUpdateRowField(row.rowKey, 'name', value)}
           placeholder={isReadOnly ? '—' : 'Ví dụ: Phí THC, Phí D/O'}
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -159,7 +161,7 @@ export function ShipmentCostLinesFields({
           onChange={(value) => onUpdateRowField(row.rowKey, 'amount', value)}
           units="đ"
           size="sm"
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -177,7 +179,7 @@ export function ShipmentCostLinesFields({
           rows={1}
           size="sm"
           width="100%"
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -186,23 +188,24 @@ export function ShipmentCostLinesFields({
       header: 'Nhà cung cấp',
       width: pixel(300),
       renderCell: (row) => (
-        <Selector
-          isDisabled={isReadOnly}
-          label="Nhà cung cấp"
-          isLabelHidden
-          hasSearch
-          hasClear
-          placeholder={isReadOnly ? '—' : 'Chưa xác định'}
-          value={row.providerCustomerId || null}
-          onChange={(value) =>
-            onUpdateRowField(row.rowKey, 'providerCustomerId', value ?? '')
-          }
-          options={customers.map((customer) => ({
-            value: customer.id,
-            label: customer.companyName,
-          }))}
-          width="100%"
-        />
+        <ReadOnlyLock isActive={isReadOnly}>
+          <Selector
+            label="Nhà cung cấp"
+            isLabelHidden
+            hasSearch
+            hasClear
+            placeholder={isReadOnly ? '—' : 'Chưa xác định'}
+            value={row.providerCustomerId || null}
+            onChange={(value) =>
+              onUpdateRowField(row.rowKey, 'providerCustomerId', value ?? '')
+            }
+            options={customers.map((customer) => ({
+              value: customer.id,
+              label: customer.companyName,
+            }))}
+            width="100%"
+          />
+        </ReadOnlyLock>
       ),
     },
     {
@@ -216,7 +219,7 @@ export function ShipmentCostLinesFields({
           value={row.invoiceNumber}
           onChange={(value) => onUpdateRowField(row.rowKey, 'invoiceNumber', value)}
           placeholder={isReadOnly ? '—' : 'Không bắt buộc'}
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       ),
     },

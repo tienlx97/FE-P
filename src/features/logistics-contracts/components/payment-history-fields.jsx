@@ -15,6 +15,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
@@ -69,23 +70,24 @@ export function PaymentHistoryFields({
       header: 'Ngày thanh toán',
       width: pixel(220),
       renderCell: (row) => (
-        <DateInput
-          placeholder={isReadOnly ? '—' : 'Chọn ngày'}
-          isDisabled={isReadOnly}
-          label="Ngày thanh toán"
-          isLabelHidden
-          value={
-            /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-              row.paymentDate || null
-            )
-          }
-          onChange={(value) =>
-            onUpdateRowField(row.rowKey, 'paymentDate', value ?? '')
-          }
-          format={formatDateInputValue}
-          size="sm"
-          width="100%"
-        />
+        <ReadOnlyLock isActive={isReadOnly}>
+          <DateInput
+            placeholder={isReadOnly ? '—' : 'Chọn ngày'}
+            label="Ngày thanh toán"
+            isLabelHidden
+            value={
+              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                row.paymentDate || null
+              )
+            }
+            onChange={(value) =>
+              onUpdateRowField(row.rowKey, 'paymentDate', value ?? '')
+            }
+            format={formatDateInputValue}
+            size="sm"
+            width="100%"
+          />
+        </ReadOnlyLock>
       ),
     },
     {
@@ -100,7 +102,7 @@ export function PaymentHistoryFields({
           onChange={(value) => onUpdateRowField(row.rowKey, 'amount', value)}
           units={currency || undefined}
           size="sm"
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -118,7 +120,7 @@ export function PaymentHistoryFields({
           rows={1}
           size="sm"
           width="100%"
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       ),
     },

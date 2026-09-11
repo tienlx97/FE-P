@@ -7,6 +7,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 
 import { currencyOptions } from '../config/currencies.js';
 import { paymentTypeOptions } from '../config/payment-schedule-types.js';
@@ -35,7 +36,7 @@ export function ShipmentLotFields({
       <FormGrid>
         <StackItem size="fill">
           <TextInput
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
             label="Tên lô hàng"
             value={values.name}
             onChange={(value) => setField('name', value)}
@@ -45,73 +46,77 @@ export function ShipmentLotFields({
           />
         </StackItem>
         <StackItem size="static">
-          <Selector
-            label="Loại hình"
-            placeholder={isReadOnly ? '—' : 'LCL/FCL'}
-            value={values.type}
-            onChange={(value) =>
-              setField(
-                'type',
-                /** @type {import('../types/index.js').ShipmentType | ''} */ (
-                  value ?? ''
-                ),
-              )
-            }
-            options={shipmentTypeOptions}
-            width={140}
-            isDisabled={isReadOnly || isEditing}
-            disabledMessage="Không thể đổi loại hình sau khi đã tạo"
-            isRequired
-            status={fieldStatuses.type}
-            statusVariant="tooltip"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Loại hình"
+              placeholder={isReadOnly ? '—' : 'LCL/FCL'}
+              value={values.type}
+              onChange={(value) =>
+                setField(
+                  'type',
+                  /** @type {import('../types/index.js').ShipmentType | ''} */ (
+                    value ?? ''
+                  ),
+                )
+              }
+              options={shipmentTypeOptions}
+              width={140}
+              isDisabled={!isReadOnly && isEditing}
+              disabledMessage="Không thể đổi loại hình sau khi đã tạo"
+              isRequired
+              status={fieldStatuses.type}
+              statusVariant="tooltip"
+            />
+          </ReadOnlyLock>
         </StackItem>
       </FormGrid>
 
-      <Selector
-        isDisabled={isReadOnly}
-        label="Điều kiện thanh toán"
-        placeholder={isReadOnly ? '—' : 'Chọn điều kiện thanh toán'}
-        value={values.paymentCondition}
-        onChange={(value) =>
-          setField(
-            'paymentCondition',
-            /** @type {import('../types/index.js').PaymentType | ''} */ (
-              value ?? ''
-            ),
-          )
-        }
-        options={paymentTypeOptions}
-        isRequired
-        status={fieldStatuses.paymentCondition}
-        statusVariant="tooltip"
-        width="100%"
-      />
+      <ReadOnlyLock isActive={isReadOnly}>
+        <Selector
+          label="Điều kiện thanh toán"
+          placeholder={isReadOnly ? '—' : 'Chọn điều kiện thanh toán'}
+          value={values.paymentCondition}
+          onChange={(value) =>
+            setField(
+              'paymentCondition',
+              /** @type {import('../types/index.js').PaymentType | ''} */ (
+                value ?? ''
+              ),
+            )
+          }
+          options={paymentTypeOptions}
+          isRequired
+          status={fieldStatuses.paymentCondition}
+          statusVariant="tooltip"
+          width="100%"
+        />
+      </ReadOnlyLock>
 
-      <Selector
-        isDisabled={isReadOnly}
-        label="Tình trạng"
-        placeholder={isReadOnly ? '—' : 'Chọn tình trạng'}
-        value={values.status}
-        onChange={(value) =>
-          setField(
-            'status',
-            /** @type {import('../types/index.js').ShipmentStatus | ''} */ (
-              value ?? ''
-            ),
-          )
-        }
-        options={shipmentStatusOptions}
-        isRequired
-        status={fieldStatuses.status}
-        statusVariant="tooltip"
-        width="100%"
-      />
+      <ReadOnlyLock isActive={isReadOnly}>
+        <Selector
+          label="Tình trạng"
+          placeholder={isReadOnly ? '—' : 'Chọn tình trạng'}
+          value={values.status}
+          onChange={(value) =>
+            setField(
+              'status',
+              /** @type {import('../types/index.js').ShipmentStatus | ''} */ (
+                value ?? ''
+              ),
+            )
+          }
+          options={shipmentStatusOptions}
+          isRequired
+          status={fieldStatuses.status}
+          statusVariant="tooltip"
+          width="100%"
+        />
+      </ReadOnlyLock>
 
       <FormGrid>
         <StackItem size="fill">
           <FormattedNumberTextInput
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
             label="Giá trị invoice"
             value={values.invoiceValue}
             onChange={(value) => setField('invoiceValue', value)}
@@ -122,24 +127,25 @@ export function ShipmentLotFields({
           />
         </StackItem>
         <StackItem size="static">
-          <Selector
-            isDisabled={isReadOnly}
-            label="Đơn vị"
-            value={values.invoiceCurrency}
-            onChange={(value) => setField('invoiceCurrency', value ?? '')}
-            options={currencyOptions}
-            width={180}
-            isRequired
-            status={fieldStatuses.invoiceCurrency}
-            statusVariant="tooltip"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Đơn vị"
+              value={values.invoiceCurrency}
+              onChange={(value) => setField('invoiceCurrency', value ?? '')}
+              options={currencyOptions}
+              width={180}
+              isRequired
+              status={fieldStatuses.invoiceCurrency}
+              statusVariant="tooltip"
+            />
+          </ReadOnlyLock>
         </StackItem>
       </FormGrid>
 
       <FormGrid>
         <StackItem size="fill">
           <FormattedNumberTextInput
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
             label="Giá trị tờ khai"
             value={values.declarationValue}
             onChange={(value) => setField('declarationValue', value)}
@@ -150,17 +156,18 @@ export function ShipmentLotFields({
           />
         </StackItem>
         <StackItem size="static">
-          <Selector
-            isDisabled={isReadOnly}
-            label="Đơn vị"
-            value={values.declarationCurrency}
-            onChange={(value) => setField('declarationCurrency', value ?? '')}
-            options={currencyOptions}
-            width={180}
-            isRequired
-            status={fieldStatuses.declarationCurrency}
-            statusVariant="tooltip"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Đơn vị"
+              value={values.declarationCurrency}
+              onChange={(value) => setField('declarationCurrency', value ?? '')}
+              options={currencyOptions}
+              width={180}
+              isRequired
+              status={fieldStatuses.declarationCurrency}
+              statusVariant="tooltip"
+            />
+          </ReadOnlyLock>
         </StackItem>
       </FormGrid>
 
@@ -172,7 +179,7 @@ export function ShipmentLotFields({
         isRequired
         status={fieldStatuses.declarationExchangeRate}
         statusVariant="tooltip"
-        isDisabled={isReadOnly}
+        isReadOnly={isReadOnly}
       />
 
       <FormattedNumberTextInput
@@ -192,7 +199,7 @@ export function ShipmentLotFields({
         isRequired
         status={fieldStatuses.quantityAmount}
         statusVariant="tooltip"
-        isDisabled={isReadOnly}
+        isReadOnly={isReadOnly}
       />
 
       <FormattedNumberTextInput
@@ -203,7 +210,7 @@ export function ShipmentLotFields({
         isRequired
         status={fieldStatuses.declarationWeightKg}
         statusVariant="tooltip"
-        isDisabled={isReadOnly}
+        isReadOnly={isReadOnly}
       />
     </FormSection>
   );

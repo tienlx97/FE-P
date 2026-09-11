@@ -148,8 +148,15 @@ export function ContractFormDialog({
 
   /** @param {'close' | 'cancel'} action */
   function finish(action) {
-    if (action === 'close' || !contract) onOpenChange(false);
-    else onSuccess(contract);
+    if (action === 'close' || !contract) {
+      onOpenChange(false);
+      return;
+    }
+    // Về Xem tại chỗ: discard the draft back to the last-saved baseline
+    // and flip out of edit mode here — same reasoning as the `onSuccess`
+    // path above, nothing remounts this dialog to do it implicitly anymore.
+    form.reset();
+    setIsEditing(false);
   }
 
   /** @param {'close' | 'cancel'} action */

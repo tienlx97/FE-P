@@ -10,6 +10,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 
 import { CustomerFields } from './customer-fields.jsx';
 import { QuickCreateCustomerDialog } from './quick-create-customer-dialog.jsx';
@@ -61,24 +62,25 @@ export function BuyerFields({
     <VStack gap={3} hAlign="stretch">
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
-          <Selector
-            isDisabled={isReadOnly}
-            label="Khách hàng"
-            hasSearch
-            placeholder="Chọn khách hàng"
-            value={sourceCustomerId}
-            onChange={(value) =>
-              value ? onSelectExisting(value) : onSwitchToInline()
-            }
-            options={customers.map((customer) => ({
-              value: customer.id,
-              label: customer.companyName,
-            }))}
-            isRequired
-            status={sourceCustomerIdStatus}
-            statusVariant="tooltip"
-            width="100%"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Khách hàng"
+              hasSearch
+              placeholder={isReadOnly ? '—' : 'Chọn khách hàng'}
+              value={sourceCustomerId}
+              onChange={(value) =>
+                value ? onSelectExisting(value) : onSwitchToInline()
+              }
+              options={customers.map((customer) => ({
+                value: customer.id,
+                label: customer.companyName,
+              }))}
+              isRequired
+              status={sourceCustomerIdStatus}
+              statusVariant="tooltip"
+              width="100%"
+            />
+          </ReadOnlyLock>
         </StackItem>
         <IconButton
           isDisabled={isReadOnly}

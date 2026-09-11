@@ -21,6 +21,7 @@ import { Pencil, Plus } from 'lucide-react';
 
 import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { labelForCommissionAnnexType } from '../config/commission-annex-types.js';
@@ -148,7 +149,7 @@ export function CommissionFields({
 
       <Grid columns={isNarrow ? 1 : 2} gap={3}>
         <TextInput
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
           label="Mã Commission"
           value={values.code}
           onChange={(value) => setField('code', value)}
@@ -158,38 +159,40 @@ export function CommissionFields({
           statusVariant="tooltip"
         />
 
-        <DateInput
-          format={formatDateInputValue}
-          isDisabled={isReadOnly}
-          label="Ngày ký"
-          value={
-            /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-              values.signedDate
-            )
-          }
-          onChange={(value) => setField('signedDate', value ?? '')}
-          isRequired
-          status={fieldStatuses.signedDate}
-          statusVariant="tooltip"
-          width="100%"
-        />
+        <ReadOnlyLock isActive={isReadOnly}>
+          <DateInput
+            format={formatDateInputValue}
+            label="Ngày ký"
+            value={
+              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                values.signedDate
+              )
+            }
+            onChange={(value) => setField('signedDate', value ?? '')}
+            isRequired
+            status={fieldStatuses.signedDate}
+            statusVariant="tooltip"
+            width="100%"
+          />
+        </ReadOnlyLock>
 
-        <Selector
-          isDisabled={isReadOnly}
-          label="Bên nhận hoa hồng"
-          hasSearch
-          placeholder={isReadOnly ? '—' : 'Chọn khách hàng'}
-          value={values.partyCustomerId}
-          onChange={(value) => setField('partyCustomerId', value ?? '')}
-          options={customers.map((customer) => ({
-            value: customer.id,
-            label: customer.companyName,
-          }))}
-          isRequired
-          status={fieldStatuses.partyCustomerId}
-          statusVariant="tooltip"
-          width="100%"
-        />
+        <ReadOnlyLock isActive={isReadOnly}>
+          <Selector
+            label="Bên nhận hoa hồng"
+            hasSearch
+            placeholder={isReadOnly ? '—' : 'Chọn khách hàng'}
+            value={values.partyCustomerId}
+            onChange={(value) => setField('partyCustomerId', value ?? '')}
+            options={customers.map((customer) => ({
+              value: customer.id,
+              label: customer.companyName,
+            }))}
+            isRequired
+            status={fieldStatuses.partyCustomerId}
+            statusVariant="tooltip"
+            width="100%"
+          />
+        </ReadOnlyLock>
       </Grid>
 
       <FormattedNumberTextInput
@@ -200,7 +203,7 @@ export function CommissionFields({
         isRequired
         status={fieldStatuses.value}
         statusVariant="tooltip"
-        isDisabled={isReadOnly}
+        isReadOnly={isReadOnly}
       />
 
       <HStack gap={4}>
@@ -208,13 +211,13 @@ export function CommissionFields({
           label="Bên bán đã ký"
           value={values.sellerSigned}
           onChange={(checked) => setField('sellerSigned', checked)}
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
         <CheckboxInput
           label="Bên nhận hoa hồng đã ký"
           value={values.partySigned}
           onChange={(checked) => setField('partySigned', checked)}
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       </HStack>
 

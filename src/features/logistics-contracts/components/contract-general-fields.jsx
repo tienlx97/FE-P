@@ -22,6 +22,7 @@ import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import {
   formatDateInputValue,
   formatDisplayDate,
@@ -238,7 +239,7 @@ export function ContractGeneralFields({
           <VStack gap={3} hAlign="stretch">
             <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
               <TextInput
-                isDisabled={isReadOnly}
+                isReadOnly={isReadOnly}
                 label="Số hợp đồng"
                 value={values.contractNumber}
                 onChange={(value) => setField('contractNumber', value)}
@@ -248,7 +249,7 @@ export function ContractGeneralFields({
                 statusVariant="tooltip"
               />
               <TextInput
-                isDisabled={isReadOnly}
+                isReadOnly={isReadOnly}
                 label="Tên dự án"
                 value={values.projectName}
                 onChange={(value) => setField('projectName', value)}
@@ -256,22 +257,23 @@ export function ContractGeneralFields({
                 status={fieldStatuses.projectName}
                 statusVariant="tooltip"
               />
-              <Selector
-                isDisabled={isReadOnly}
-                label="Loại hợp đồng"
-                placeholder={isReadOnly ? '—' : 'Chọn loại hợp đồng'}
-                value={values.contractType}
-                onChange={(value) => setField('contractType', value ?? '')}
-                options={contractTypeOptions}
-                isRequired
-                status={fieldStatuses.contractType}
-                statusVariant="tooltip"
-              />
+              <ReadOnlyLock isActive={isReadOnly}>
+                <Selector
+                  label="Loại hợp đồng"
+                  placeholder={isReadOnly ? '—' : 'Chọn loại hợp đồng'}
+                  value={values.contractType}
+                  onChange={(value) => setField('contractType', value ?? '')}
+                  options={contractTypeOptions}
+                  isRequired
+                  status={fieldStatuses.contractType}
+                  statusVariant="tooltip"
+                />
+              </ReadOnlyLock>
             </Grid>
 
             <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
               <TextInput
-                isDisabled={isReadOnly}
+                isReadOnly={isReadOnly}
                 label="Hạng mục"
                 value={values.category}
                 onChange={(value) => setField('category', value)}
@@ -279,19 +281,20 @@ export function ContractGeneralFields({
                 status={fieldStatuses.category}
                 statusVariant="tooltip"
               />
-              <Selector
-                isDisabled={isReadOnly}
-                label="Incoterm"
-                placeholder={isReadOnly ? '—' : 'Chọn Incoterm'}
-                value={values.incoterm}
-                onChange={(value) => setField('incoterm', value ?? '')}
-                options={incotermOptions}
-                isRequired
-                status={fieldStatuses.incoterm}
-                statusVariant="tooltip"
-              />
+              <ReadOnlyLock isActive={isReadOnly}>
+                <Selector
+                  label="Incoterm"
+                  placeholder={isReadOnly ? '—' : 'Chọn Incoterm'}
+                  value={values.incoterm}
+                  onChange={(value) => setField('incoterm', value ?? '')}
+                  options={incotermOptions}
+                  isRequired
+                  status={fieldStatuses.incoterm}
+                  statusVariant="tooltip"
+                />
+              </ReadOnlyLock>
               <NumberInput
-                isDisabled={isReadOnly}
+                isReadOnly={isReadOnly}
                 label="Năm Incoterm"
                 value={values.incotermYear}
                 onChange={(value) => setField('incotermYear', value)}
@@ -311,34 +314,36 @@ export function ContractGeneralFields({
             width={isNarrow ? '100%' : DATE_COLUMN_WIDTH}
           >
             <>
-              <DateInput
-                isDisabled={isReadOnly}
-                label="Ngày tạo hợp đồng"
-                value={
-                  /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                    values.createdDate
-                  )
-                }
-                onChange={(value) => setField('createdDate', value ?? '')}
-                format={formatDateInputValue}
-                isRequired
-                status={fieldStatuses.createdDate}
-                statusVariant="tooltip"
-              />
-              <DateInput
-                isDisabled={isReadOnly}
-                label="Ngày báo giá"
-                value={
-                  /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                    values.quotationDate
-                  )
-                }
-                onChange={(value) => setField('quotationDate', value ?? '')}
-                format={formatDateInputValue}
-                isRequired
-                status={fieldStatuses.quotationDate}
-                statusVariant="tooltip"
-              />
+              <ReadOnlyLock isActive={isReadOnly}>
+                <DateInput
+                  label="Ngày tạo hợp đồng"
+                  value={
+                    /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                      values.createdDate
+                    )
+                  }
+                  onChange={(value) => setField('createdDate', value ?? '')}
+                  format={formatDateInputValue}
+                  isRequired
+                  status={fieldStatuses.createdDate}
+                  statusVariant="tooltip"
+                />
+              </ReadOnlyLock>
+              <ReadOnlyLock isActive={isReadOnly}>
+                <DateInput
+                  label="Ngày báo giá"
+                  value={
+                    /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                      values.quotationDate
+                    )
+                  }
+                  onChange={(value) => setField('quotationDate', value ?? '')}
+                  format={formatDateInputValue}
+                  isRequired
+                  status={fieldStatuses.quotationDate}
+                  statusVariant="tooltip"
+                />
+              </ReadOnlyLock>
             </>
           </VStack>
         </StackItem>
@@ -347,22 +352,23 @@ export function ContractGeneralFields({
       <Grid columns={GENERAL_FIELD_COLUMNS} gap={3}>
         <HStack gap={2} vAlign="end">
           <StackItem size="fill">
-            <Selector
-              isDisabled={isReadOnly}
-              label="Nước xuất khẩu"
-              hasSearch
-              placeholder={isReadOnly ? '—' : 'Chọn nước'}
-              value={values.countryId}
-              onChange={(value) => setField('countryId', value ?? '')}
-              options={countries.map((country) => ({
-                value: country.id,
-                label: country.name,
-              }))}
-              isRequired
-              status={fieldStatuses.countryId}
-              statusVariant="tooltip"
-              width="100%"
-            />
+            <ReadOnlyLock isActive={isReadOnly}>
+              <Selector
+                label="Nước xuất khẩu"
+                hasSearch
+                placeholder={isReadOnly ? '—' : 'Chọn nước'}
+                value={values.countryId}
+                onChange={(value) => setField('countryId', value ?? '')}
+                options={countries.map((country) => ({
+                  value: country.id,
+                  label: country.name,
+                }))}
+                isRequired
+                status={fieldStatuses.countryId}
+                statusVariant="tooltip"
+                width="100%"
+              />
+            </ReadOnlyLock>
           </StackItem>
           <IconButton
             isDisabled={isReadOnly}
@@ -377,30 +383,32 @@ export function ContractGeneralFields({
 
         <HStack gap={2} vAlign="end">
           <StackItem size="fill">
-            <Selector
-              label="Nơi xếp hàng"
-              hasSearch
-              placeholder={isReadOnly ? '—' : 'Chọn nơi xếp hàng'}
-              disabledMessage={
-                vietnamCountryId
-                  ? undefined
-                  : 'Danh mục nước chưa có "Việt Nam"'
-              }
-              isDisabled={isReadOnly || !vietnamCountryId}
-              value={values.placeOfLoading}
-              onChange={(value) => setField('placeOfLoading', value ?? '')}
-              options={withSavedOption(
-                loadingPlaces.map((place) => ({
-                  value: place.name,
-                  label: place.name,
-                })),
-                values.placeOfLoading,
-              )}
-              isRequired
-              status={fieldStatuses.placeOfLoading}
-              statusVariant="tooltip"
-              width="100%"
-            />
+            <ReadOnlyLock isActive={isReadOnly}>
+              <Selector
+                label="Nơi xếp hàng"
+                hasSearch
+                placeholder={isReadOnly ? '—' : 'Chọn nơi xếp hàng'}
+                disabledMessage={
+                  vietnamCountryId
+                    ? undefined
+                    : 'Danh mục nước chưa có "Việt Nam"'
+                }
+                isDisabled={!isReadOnly && !vietnamCountryId}
+                value={values.placeOfLoading}
+                onChange={(value) => setField('placeOfLoading', value ?? '')}
+                options={withSavedOption(
+                  loadingPlaces.map((place) => ({
+                    value: place.name,
+                    label: place.name,
+                  })),
+                  values.placeOfLoading,
+                )}
+                isRequired
+                status={fieldStatuses.placeOfLoading}
+                statusVariant="tooltip"
+                width="100%"
+              />
+            </ReadOnlyLock>
           </StackItem>
           <IconButton
             label="Thêm nơi xếp hàng"
@@ -415,34 +423,37 @@ export function ContractGeneralFields({
 
         <HStack gap={2} vAlign="end">
           <StackItem size="fill">
-            <Selector
-              label="Cảng/nơi đến"
-              hasSearch
-              placeholder={isReadOnly ? '—' : 'Chọn cảng/nơi đến'}
-              disabledMessage={
-                !isPlaceOfDischargeApplicable
-                  ? 'Không áp dụng cho Incoterm EXW/FOB'
-                  : !values.countryId
-                    ? 'Vui lòng chọn nước xuất khẩu trước'
-                    : undefined
-              }
-              isDisabled={
-                isReadOnly || !isPlaceOfDischargeApplicable || !values.countryId
-              }
-              value={values.placeOfDischarge}
-              onChange={(value) => setField('placeOfDischarge', value ?? '')}
-              options={withSavedOption(
-                dischargePlaces.map((place) => ({
-                  value: place.name,
-                  label: place.name,
-                })),
-                values.placeOfDischarge,
-              )}
-              isRequired={isPlaceOfDischargeApplicable}
-              status={fieldStatuses.placeOfDischarge}
-              statusVariant="tooltip"
-              width="100%"
-            />
+            <ReadOnlyLock isActive={isReadOnly}>
+              <Selector
+                label="Cảng/nơi đến"
+                hasSearch
+                placeholder={isReadOnly ? '—' : 'Chọn cảng/nơi đến'}
+                disabledMessage={
+                  !isPlaceOfDischargeApplicable
+                    ? 'Không áp dụng cho Incoterm EXW/FOB'
+                    : !values.countryId
+                      ? 'Vui lòng chọn nước xuất khẩu trước'
+                      : undefined
+                }
+                isDisabled={
+                  !isReadOnly &&
+                  (!isPlaceOfDischargeApplicable || !values.countryId)
+                }
+                value={values.placeOfDischarge}
+                onChange={(value) => setField('placeOfDischarge', value ?? '')}
+                options={withSavedOption(
+                  dischargePlaces.map((place) => ({
+                    value: place.name,
+                    label: place.name,
+                  })),
+                  values.placeOfDischarge,
+                )}
+                isRequired={isPlaceOfDischargeApplicable}
+                status={fieldStatuses.placeOfDischarge}
+                statusVariant="tooltip"
+                width="100%"
+              />
+            </ReadOnlyLock>
           </StackItem>
           <IconButton
             label="Thêm cảng / nơi đến"
@@ -494,60 +505,70 @@ export function ContractGeneralFields({
             isRequired
             status={fieldStatuses.contractValue}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
         <StackItem size="static">
-          <Selector
-            isDisabled={isReadOnly}
-            label="Tiền tệ"
-            placeholder={isReadOnly ? '—' : 'Đơn vị'}
-            value={values.currency}
-            onChange={(value) => setField('currency', value ?? '')}
-            options={currencyOptions}
-            width={120}
-            isRequired
-            status={fieldStatuses.currency}
-            statusVariant="tooltip"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Tiền tệ"
+              placeholder={isReadOnly ? '—' : 'Đơn vị'}
+              value={values.currency}
+              onChange={(value) => setField('currency', value ?? '')}
+              options={currencyOptions}
+              width={120}
+              isRequired
+              status={fieldStatuses.currency}
+              statusVariant="tooltip"
+            />
+          </ReadOnlyLock>
         </StackItem>
       </FormGrid>
 
-      <Selector
-        isDisabled={isReadOnly || isCompanyFixed}
-        disabledMessage={
-          isCompanyFixed ? 'Không thể thay đổi công ty sau khi tạo' : undefined
-        }
-        label="Công ty"
-        hasSearch
-        placeholder={isReadOnly ? '—' : 'Chọn công ty'}
-        value={values.companyId}
-        onChange={(value) => setField('companyId', value ?? '')}
-        options={withSavedOption(
-          companies.map((company) => ({
-            value: company.id,
-            label: company.name,
-          })),
-          values.companyId,
-        )}
-        isRequired
-        status={fieldStatuses.companyId}
-        statusVariant="tooltip"
-        width="100%"
-      />
+      {/* Fixed after creation regardless of Xem/Sửa (backend never accepts
+          a changed CompanyId on update) — `isDisabled` still applies its
+          own dimmed+tooltip treatment while editing (`isCompanyFixed`), but
+          Xem itself always goes through `ReadOnlyLock` like every other
+          field so the value reads the same (full opacity, copyable) as the
+          rest of the "Thông tin" tab. */}
+      <ReadOnlyLock isActive={isReadOnly}>
+        <Selector
+          isDisabled={!isReadOnly && isCompanyFixed}
+          disabledMessage={
+            isCompanyFixed ? 'Không thể thay đổi công ty sau khi tạo' : undefined
+          }
+          label="Công ty"
+          hasSearch
+          placeholder={isReadOnly ? '—' : 'Chọn công ty'}
+          value={values.companyId}
+          onChange={(value) => setField('companyId', value ?? '')}
+          options={withSavedOption(
+            companies.map((company) => ({
+              value: company.id,
+              label: company.name,
+            })),
+            values.companyId,
+          )}
+          isRequired
+          status={fieldStatuses.companyId}
+          statusVariant="tooltip"
+          width="100%"
+        />
+      </ReadOnlyLock>
 
-      <Selector
-        isDisabled={isReadOnly}
-        label="Trạng thái hợp đồng"
-        placeholder={isReadOnly ? '—' : 'Chọn trạng thái'}
-        value={values.status}
-        onChange={(value) => setField('status', value ?? '')}
-        options={contractStatusOptions}
-        isRequired
-        status={fieldStatuses.status}
-        statusVariant="tooltip"
-        width="100%"
-      />
+      <ReadOnlyLock isActive={isReadOnly}>
+        <Selector
+          label="Trạng thái hợp đồng"
+          placeholder={isReadOnly ? '—' : 'Chọn trạng thái'}
+          value={values.status}
+          onChange={(value) => setField('status', value ?? '')}
+          options={contractStatusOptions}
+          isRequired
+          status={fieldStatuses.status}
+          statusVariant="tooltip"
+          width="100%"
+        />
+      </ReadOnlyLock>
 
       <TextArea
         label="Ghi chú"
@@ -557,7 +578,7 @@ export function ContractGeneralFields({
         maxLength={2000}
         status={fieldStatuses.note}
         statusVariant="tooltip"
-        isDisabled={isReadOnly}
+        isReadOnly={isReadOnly}
       />
 
       <HStack gap={4}>
@@ -565,13 +586,13 @@ export function ContractGeneralFields({
           label="Bên bán ký"
           value={values.sellerSigned}
           onChange={(checked) => setField('sellerSigned', checked)}
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
         <CheckboxInput
           label="Bên mua ký"
           value={values.buyerSigned}
           onChange={(checked) => setField('buyerSigned', checked)}
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       </HStack>
 

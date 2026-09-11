@@ -11,6 +11,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
@@ -83,25 +84,26 @@ export function ContractPrivateInfoFields({
 
   return (
     <VStack gap={5} hAlign="stretch">
-      <DateInput
-        format={formatDateInputValue}
-        isDisabled={isReadOnly}
-        label="BOQ · Ngày gửi"
-        value={
-          /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-            values.boqSentDate
-          )
-        }
-        onChange={(value) => setField('boqSentDate', value ?? '')}
-        status={fieldStatuses.boqSentDate}
-        statusVariant="tooltip"
-        width="100%"
-      />
+      <ReadOnlyLock isActive={isReadOnly}>
+        <DateInput
+          format={formatDateInputValue}
+          label="BOQ · Ngày gửi"
+          value={
+            /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+              values.boqSentDate
+            )
+          }
+          onChange={(value) => setField('boqSentDate', value ?? '')}
+          status={fieldStatuses.boqSentDate}
+          statusVariant="tooltip"
+          width="100%"
+        />
+      </ReadOnlyLock>
 
       <Section title="Logistics">
         <Grid columns={isNarrow ? 1 : 3} gap={3}>
           <NumberInput
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
             label="Số cont"
             value={values.containerCount}
             onChange={(value) => setField('containerCount', value)}
@@ -116,7 +118,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.costPricePerContainer}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Giá báo khách"
@@ -125,7 +127,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.quotedPricePerContainer}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </Grid>
         <Text color="secondary">
@@ -145,7 +147,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.unitCostLabor}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Phun bi"
@@ -154,7 +156,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.unitCostSandblasting}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Sơn"
@@ -163,7 +165,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.unitCostPainting}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Nhà máy"
@@ -172,7 +174,7 @@ export function ContractPrivateInfoFields({
             units="VNĐ"
             status={fieldStatuses.unitCostFactory}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </Grid>
       </Section>
@@ -185,7 +187,7 @@ export function ContractPrivateInfoFields({
             onChange={(value) => setField('volumeSale', value)}
             status={fieldStatuses.volumeSale}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Vật tư"
@@ -193,7 +195,7 @@ export function ContractPrivateInfoFields({
             onChange={(value) => setField('volumeMaterial', value)}
             status={fieldStatuses.volumeMaterial}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
           <FormattedNumberTextInput
             label="Tờ khai (tổng khối lượng Shipment)"
@@ -212,7 +214,7 @@ export function ContractPrivateInfoFields({
         units="VNĐ"
         status={fieldStatuses.profit}
         statusVariant="tooltip"
-        isDisabled={isReadOnly}
+        isReadOnly={isReadOnly}
       />
 
       <Grid columns={isNarrow ? 1 : 2} gap={3}>
@@ -223,7 +225,7 @@ export function ContractPrivateInfoFields({
           units="USD"
           status={fieldStatuses.totalAmountUsd}
           statusVariant="tooltip"
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
         <FormattedNumberTextInput
           label="Tỷ giá"
@@ -232,7 +234,7 @@ export function ContractPrivateInfoFields({
           units="VNĐ"
           status={fieldStatuses.exchangeRateVnd}
           statusVariant="tooltip"
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       </Grid>
 

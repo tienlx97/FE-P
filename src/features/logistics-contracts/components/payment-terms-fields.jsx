@@ -80,7 +80,7 @@ export function PaymentTermsFields({
           }
           units="%"
           size="sm"
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       ),
     },
@@ -99,7 +99,7 @@ export function PaymentTermsFields({
           placeholder="Ví dụ: L/C at sight, T/T..."
           size="sm"
           width="100%"
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       ),
     },

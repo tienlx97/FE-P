@@ -12,6 +12,7 @@ import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { useDeleteSellerMutation } from '../hooks/use-sellers-query.js';
@@ -80,24 +81,25 @@ export function SellerPickerFields({
     <VStack gap={3} hAlign="stretch">
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
-          <Selector
-            isDisabled={isReadOnly}
-            label="Bên bán"
-            hasSearch
-            placeholder="Chọn bên bán"
-            value={sourceSellerId}
-            onChange={(value) =>
-              value ? onSelectExisting(value) : onSwitchToInline()
-            }
-            options={sellers.map((seller) => ({
-              value: seller.id,
-              label: seller.companyName,
-            }))}
-            isRequired
-            status={sourceSellerIdStatus}
-            statusVariant="tooltip"
-            width="100%"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Bên bán"
+              hasSearch
+              placeholder={isReadOnly ? '—' : 'Chọn bên bán'}
+              value={sourceSellerId}
+              onChange={(value) =>
+                value ? onSelectExisting(value) : onSwitchToInline()
+              }
+              options={sellers.map((seller) => ({
+                value: seller.id,
+                label: seller.companyName,
+              }))}
+              isRequired
+              status={sourceSellerIdStatus}
+              statusVariant="tooltip"
+              width="100%"
+            />
+          </ReadOnlyLock>
         </StackItem>
         {selectedSeller ? (
           <IconButton

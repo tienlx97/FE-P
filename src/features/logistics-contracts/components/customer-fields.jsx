@@ -61,7 +61,7 @@ export function CustomerFields({
             label="Người đại diện"
             value={values.representativeName}
             onChange={(value) => setField('representativeName', value)}
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
         <StackItem size="fill">
@@ -69,7 +69,7 @@ export function CustomerFields({
             label="Chức vụ"
             value={values.representativeTitle}
             onChange={(value) => setField('representativeTitle', value)}
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
       </FormGrid>
@@ -78,7 +78,7 @@ export function CustomerFields({
         label="Địa chỉ"
         value={values.address}
         onChange={(value) => setField('address', value)}
-        isDisabled={isReadOnly}
+        isReadOnly={isReadOnly}
       />
 
       <ExtraFieldsEditor
@@ -101,7 +101,7 @@ export function CustomerFields({
           isRequired
           status={fieldStatuses.companyName}
           statusVariant="tooltip"
-          isDisabled={isReadOnly}
+          isReadOnly={isReadOnly}
         />
       ) : null}
 

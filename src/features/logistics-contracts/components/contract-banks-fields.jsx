@@ -13,6 +13,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 
 import { QuickCreateBankDialog } from './quick-create-bank-dialog.jsx';
 
@@ -45,30 +46,31 @@ export function ContractBanksFields({
 
       <HStack hAlign="between" vAlign="start">
         {banks.length > 0 ? (
-          <CheckboxList
-            isDisabled={isReadOnly}
-            label="Ngân hàng thụ hưởng"
-            isLabelHidden
-            value={selectedBankIds}
-            onChange={onChange}
-            hasDividers
-            width="100%"
-          >
-            {banks.map((bank) => (
-              <CheckboxListItem
-                key={bank.id}
-                value={bank.id}
-                label={bank.bankName || 'Ngân hàng chưa đặt tên'}
-                description={[
-                  bank.beneficiary,
-                  bank.bankAccountNumber,
-                  bank.branchName,
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              />
-            ))}
-          </CheckboxList>
+          <ReadOnlyLock isActive={isReadOnly}>
+            <CheckboxList
+              label="Ngân hàng thụ hưởng"
+              isLabelHidden
+              value={selectedBankIds}
+              onChange={onChange}
+              hasDividers
+              width="100%"
+            >
+              {banks.map((bank) => (
+                <CheckboxListItem
+                  key={bank.id}
+                  value={bank.id}
+                  label={bank.bankName || 'Ngân hàng chưa đặt tên'}
+                  description={[
+                    bank.beneficiary,
+                    bank.bankAccountNumber,
+                    bank.branchName,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                />
+              ))}
+            </CheckboxList>
+          </ReadOnlyLock>
         ) : (
           <Text color="secondary">Chưa có ngân hàng nào trong danh mục.</Text>
         )}

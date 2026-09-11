@@ -7898,3 +7898,90 @@ ward reference data (free-text inputs, matching the backend).
   self-referential trap. Rewrote both offending sentences to describe the
   marker without literally typing it. Full gate green after that. Evidence:
   `harness/runs/20260911-001511-3436/`.
+
+## 2026-09-11 — Task 2.1: shared shell/field-slot geometry and readonly
+
+- Measured Xem↔Sửa geometry for the Contract dialog's "Thông tin",
+  "Commission" and "Thông tin private" tabs, and the standalone Shipment
+  editor, using a same-origin iframe sized to each of 1440/768/390/320
+  (real `window.innerWidth` 1436/764/386/316 after scrollbar) so CSS media
+  queries respond to a true narrow viewport — `resize_window` does not
+  resize the actual rendered viewport in this environment (confirmed
+  again this session; tracked as a standing harness-tooling gap). Captured
+  every `.astryx-field` landmark's `getBoundingClientRect()` in Xem, then
+  in Sửa, and diffed: 0px on every field and both footer buttons (Đóng/Hủy,
+  Sửa/Lưu — same width, same x) at all four widths, no horizontal overflow
+  at 390/320. This confirms Astryx's own `TextInput`/`Selector`/
+  `DateInput`/etc. already keep identical geometry across `isReadOnly`/
+  `isDisabled` toggles — the shell/footer/field-slot half of task 2.1 was
+  already correct, nothing to fix there.
+- Found and fixed the real defect the task's other half exists for: 94
+  call sites across 15 files in `logistics-contracts` used
+  `isDisabled={isReadOnly}` to render Xem, not `isReadOnly` — `isDisabled`
+  dims the control and (per Astryx's own docs for every affected
+  component) drops it from the tab order, and a browser cannot select or
+  copy text out of a `disabled` input at all. Live-confirmed the bug first
+  (`input.disabled === true` on a plain Xem field, `.select()` a no-op).
+  Fixed in two ways:
+  - `TextInput`/`TextArea`/`NumberInput`/`CheckboxInput`/
+    `FormattedNumberTextInput` (55 sites) already have (or, for
+    `FormattedNumberTextInput`, a local `src/shared/components/` wrapper
+    already forwards) a proper `isReadOnly` prop — mechanical prop rename.
+  - `Selector`/`DateInput`/`CheckboxList` (25 sites) have no `isReadOnly` of
+    their own (confirmed via `astryx component <Name>` for each, not
+    assumed) — added `src/shared/components/read-only-lock.jsx`
+    (`ReadOnlyLock`), matching design.md's own anticipated "adapter" for
+    exactly this gap. Renders as `display: contents` (zero layout box, so
+    it cannot perturb the geometry just verified) and blocks interaction
+    with a capture-phase `click`/`keydown` (allowlist: Tab, Shift, Escape,
+    arrow-left/right, Home/End, Ctrl/Cmd+C, Ctrl/Cmd+A — everything else,
+    including typed characters and paste, is blocked) plus `paste`/`cut` —
+    read from each component's own source
+    (`node_modules/@astryxdesign/core/src/{Selector,DateInput}`) to confirm
+    both only open via `click`/`keydown` on their trigger, never on focus,
+    so this interception is complete, not a guess. The wrapped control
+    itself keeps `isDisabled={false}` (or omits it), so it stays full
+    opacity and tab-reachable. Three sites (`contract-general-fields.jsx`
+    "Công ty"/"Nơi xếp hàng"/"Cảng/nơi đến",
+    `shipment-lot-fields.jsx` "Loại hình") had a second, legitimate
+    business-rule `isDisabled` reason (company fixed after creation, a
+    place catalog prerequisite missing, type locked after creation) ANDed
+    with `isReadOnly` — rewrote each to `!isReadOnly && <business rule>` so
+    Sửa keeps its dimmed+tooltip explanation while Xem still goes through
+    `ReadOnlyLock` like every other field.
+  - Also fixed, found along the way: a couple of Selectors had a plain
+    `placeholder="Chọn ..."` regardless of mode instead of the
+    `isReadOnly ? '—' : ...` convention every sibling field already used.
+  - Deliberately did not add ARIA to `ReadOnlyLock`: `display: contents`
+    removes an element from the accessibility tree in every major engine,
+    so `aria-readonly`/`role` placed on it would be silently dropped —
+    documented as a known limitation in the component's own comment rather
+    than a false claim.
+- Re-verified live after the fix (real dev server, not just the iframe
+  harness): the "Loại hợp đồng" Selector and "Ngày tạo hợp đồng" DateInput
+  no longer open on click or Enter while Xem (`aria-expanded` stays
+  `false`, no listbox becomes visible); the "Ngân hàng thụ hưởng"
+  `CheckboxList` doesn't toggle on click; all three report
+  `disabled: false` and `tabIndex: 0` (still reachable, not dimmed); a
+  plain `TextInput` now reports `readOnly: true` (not `disabled`) and
+  `input.select()` actually selects its full text (proof it's copyable,
+  where before it was a no-op on the disabled input). Re-ran the full
+  Xem↔Sửa field-geometry diff afterward: still 0px on all 25 landmarks —
+  `ReadOnlyLock` didn't disturb anything.
+- Harness gap hit mid-session: the Chrome extension's connection dropped
+  and `switch_browser`/`select_browser` couldn't recover it on the first
+  few tries even after the user reconnected — cost real time. Also started
+  the dev server once with `pnpm dev -- -p 3001`, which fails
+  (`next dev "--" "-p" "3001"`, `--` not stripped) in this Git Bash
+  environment; `pnpm exec next dev -p 3001` (skipping the wrapper script,
+  theme already built) works. Worth a `harness/` note or wrapper fix so
+  the next session doesn't rediscover this.
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm test` (137)/`pnpm structure`
+  all clean. Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260911-100940-813/`.
+- Not yet done (deferred, not blocking 2.1's own verify): re-running the
+  full click/keyboard/tab-order live check at 768/390/320 specifically
+  (only done at the real default desktop width this session) — the
+  `display: contents` mechanism is width-independent by construction, and
+  the geometry re-diff above already covers all four widths, so this is
+  low-risk, but flagging it as unconfirmed rather than silently assuming.

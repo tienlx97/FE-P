@@ -8,6 +8,7 @@ import { TextInput } from '@astryxdesign/core/TextInput';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 /** @param {{
@@ -26,22 +27,23 @@ export function ShipmentBookingFields({
 }) {
   return (
     <FormSection value="book" title="Thông tin Book">
-      <Selector
-        isDisabled={isReadOnly}
-        label="Forwarder"
-        hasSearch
-        placeholder={isReadOnly ? '—' : 'Chọn forwarder'}
-        value={values.supplierCustomerId}
-        onChange={(value) => setField('supplierCustomerId', value ?? '')}
-        options={customers.map((customer) => ({
-          value: customer.id,
-          label: customer.companyName,
-        }))}
-        isRequired
-        status={fieldStatuses.supplierCustomerId}
-        statusVariant="tooltip"
-        width="100%"
-      />
+      <ReadOnlyLock isActive={isReadOnly}>
+        <Selector
+          label="Forwarder"
+          hasSearch
+          placeholder={isReadOnly ? '—' : 'Chọn forwarder'}
+          value={values.supplierCustomerId}
+          onChange={(value) => setField('supplierCustomerId', value ?? '')}
+          options={customers.map((customer) => ({
+            value: customer.id,
+            label: customer.companyName,
+          }))}
+          isRequired
+          status={fieldStatuses.supplierCustomerId}
+          statusVariant="tooltip"
+          width="100%"
+        />
+      </ReadOnlyLock>
 
       <FormGrid>
         <StackItem size="fill">
@@ -52,7 +54,7 @@ export function ShipmentBookingFields({
             isRequired
             status={fieldStatuses.bookingNumber}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
         <StackItem size="fill">
@@ -63,7 +65,7 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.billOfLadingNumber}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
       </FormGrid>
@@ -78,7 +80,7 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.shippingLine}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
         <StackItem size="fill">
@@ -90,43 +92,45 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.vesselName}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
       </FormGrid>
 
       <FormGrid>
         <StackItem size="fill">
-          <DateInput
-            isDisabled={isReadOnly}
-            label="ETD"
-            value={
-              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                values.etd || null
-              )
-            }
-            onChange={(value) => setField('etd', value ?? '')}
-            format={formatDateInputValue}
-            isOptional
-            status={fieldStatuses.etd}
-            statusVariant="tooltip"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <DateInput
+              label="ETD"
+              value={
+                /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                  values.etd || null
+                )
+              }
+              onChange={(value) => setField('etd', value ?? '')}
+              format={formatDateInputValue}
+              isOptional
+              status={fieldStatuses.etd}
+              statusVariant="tooltip"
+            />
+          </ReadOnlyLock>
         </StackItem>
         <StackItem size="fill">
-          <DateInput
-            isDisabled={isReadOnly}
-            label="ETA"
-            value={
-              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                values.eta || null
-              )
-            }
-            onChange={(value) => setField('eta', value ?? '')}
-            format={formatDateInputValue}
-            isOptional
-            status={fieldStatuses.eta}
-            statusVariant="tooltip"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <DateInput
+              label="ETA"
+              value={
+                /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                  values.eta || null
+                )
+              }
+              onChange={(value) => setField('eta', value ?? '')}
+              format={formatDateInputValue}
+              isOptional
+              status={fieldStatuses.eta}
+              statusVariant="tooltip"
+            />
+          </ReadOnlyLock>
         </StackItem>
       </FormGrid>
 
@@ -139,7 +143,7 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.placeOfLoading}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
         <StackItem size="fill">
@@ -150,7 +154,7 @@ export function ShipmentBookingFields({
             isOptional
             status={fieldStatuses.placeOfDischarge}
             statusVariant="tooltip"
-            isDisabled={isReadOnly}
+            isReadOnly={isReadOnly}
           />
         </StackItem>
       </FormGrid>
@@ -165,41 +169,43 @@ export function ShipmentBookingFields({
         isOptional
         status={fieldStatuses.coNumber}
         statusVariant="tooltip"
-        isDisabled={isReadOnly}
+        isReadOnly={isReadOnly}
       />
 
       <FormGrid>
         <StackItem size="fill">
-          <DateInput
-            isDisabled={isReadOnly}
-            label="Ngày khai C/O"
-            value={
-              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                values.coDeclarationDate || null
-              )
-            }
-            onChange={(value) => setField('coDeclarationDate', value ?? '')}
-            format={formatDateInputValue}
-            isOptional
-            status={fieldStatuses.coDeclarationDate}
-            statusVariant="tooltip"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <DateInput
+              label="Ngày khai C/O"
+              value={
+                /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                  values.coDeclarationDate || null
+                )
+              }
+              onChange={(value) => setField('coDeclarationDate', value ?? '')}
+              format={formatDateInputValue}
+              isOptional
+              status={fieldStatuses.coDeclarationDate}
+              statusVariant="tooltip"
+            />
+          </ReadOnlyLock>
         </StackItem>
         <StackItem size="fill">
-          <DateInput
-            isDisabled={isReadOnly}
-            label="Ngày có C/O"
-            value={
-              /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                values.coIssuedDate || null
-              )
-            }
-            onChange={(value) => setField('coIssuedDate', value ?? '')}
-            format={formatDateInputValue}
-            isOptional
-            status={fieldStatuses.coIssuedDate}
-            statusVariant="tooltip"
-          />
+          <ReadOnlyLock isActive={isReadOnly}>
+            <DateInput
+              label="Ngày có C/O"
+              value={
+                /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                  values.coIssuedDate || null
+                )
+              }
+              onChange={(value) => setField('coIssuedDate', value ?? '')}
+              format={formatDateInputValue}
+              isOptional
+              status={fieldStatuses.coIssuedDate}
+              statusVariant="tooltip"
+            />
+          </ReadOnlyLock>
         </StackItem>
       </FormGrid>
     </FormSection>
