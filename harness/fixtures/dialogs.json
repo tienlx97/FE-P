@@ -65,7 +65,30 @@
     "quantityAmount": 10,
     "quantityUnit": "Package",
     "declarationWeightKg": 100,
-    "costs": []
+    "costs": [],
+    "vgms": [
+      {
+        "id": "vgm-1",
+        "shipmentId": "shipment-1",
+        "sequenceNumber": 1,
+        "containerNumber": "TEMU1234567",
+        "sealNumber": "SEAL0001",
+        "containerType": "20GP",
+        "tare": 2200,
+        "payload": 25000,
+        "maxGross": 30480,
+        "netWeight": 18000,
+        "packagingWeight": 500,
+        "grossWeight": 18500,
+        "vgm": 20700,
+        "packingDate": "2026-09-01",
+        "plannedPackingTime": "08:00:00",
+        "actualPackingTime": "08:30:00",
+        "truckArrivalTime": "07:45:00",
+        "carrierCustomerId": "customer-1",
+        "note": "Kiểm thử VGM có dữ liệu đầy đủ."
+      }
+    ]
   },
   "user": {
     "id": "user-1",

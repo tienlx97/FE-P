@@ -7985,3 +7985,67 @@ ward reference data (free-text inputs, matching the backend).
   `display: contents` mechanism is width-independent by construction, and
   the geometry re-diff above already covers all four widths, so this is
   low-risk, but flagging it as unconfirmed rather than silently assuming.
+
+## 2026-09-11 — Task 2.2 (regression harness): fixed in source, not fully verified
+
+- Started `harness/checks/stable-dialog-layout-browser.mjs` — the
+  `agent-browser`-driven local-only script `design.md` names for this task.
+  Ran the dev server on `:3001` (`pnpm dev -- -p 3001` fails in this Git
+  Bash environment — `--` isn't stripped, `next dev "--" "-p" "3001"`
+  treats `-p` as a project directory; `pnpm exec next dev -p 3001` works,
+  theme already built by a prior `pnpm dev`).
+- Fixed real defects in the script itself:
+  - It never ran on Windows at all (`execFileSync('agent-browser', ...)`
+    → `ENOENT`, since Windows only resolves `agent-browser.cmd` through a
+    shell). Switched to `cmd.exe /c` with the command kept as separate
+    argv entries (not `shell: true`, which conflates everything into one
+    re-quoted string and — confirmed by testing both — hangs waiting on
+    the CLI's own detached browser process instead of returning).
+  - `browser('click', '[role=menuitem]')` in `openView()` selected by tag
+    alone — every row's "Xem"/"Sửa" pair exists in the DOM at once (only
+    the open row's is visible), so this could silently click a hidden
+    item from a different row and never open anything. Scoped it to the
+    visible "Xem" item, the same pattern `button()` already used for
+    exact-text button matches.
+  - Added a real VGM fixture (`harness/fixtures/dialogs.json`) and its
+    route — the `vgm-*` `compare()` case was exercising the *empty* state
+    only, which reads as passing without ever probing a real control
+    (task 2.2's own "không chấp nhận ca 0 controls").
+  - `compare()` now throws immediately if the Xem probe matches 0
+    controls, instead of letting an empty tab pass by vacuous truth.
+  - Added the reverse transition `compare()` was missing: after Sửa, click
+    Hủy (no edits made) and diff back against the original Xem snapshot —
+    catches a Hủy that doesn't return to the same geometry or silently
+    leaves stale state, which is exactly the class of bug task 1.2's
+    Hủy-fix above turned out to have.
+  - Added `errorScenarios()`: client-side validation (clear a required
+    field, submit, dialog must stay open/editable with no field shift) and
+    a real network failure (`network route --abort` on the update PUT,
+    confirmed the exact endpoint and method against
+    `src/features/logistics-contracts/api/contracts.js` rather than
+    guessing) — draft value must survive, dialog stays open, no shift.
+- Could not get a clean end-to-end run in this session despite several
+  fix attempts — `agent-browser`'s `wait --fn` polling appears to hang or
+  report false in this Windows sandbox even when the condition is
+  independently confirmed `true` at that exact moment (checked via a
+  parallel interactive `agent-browser eval` against the same stuck
+  session while the script's `wait` was still failing). This reproduced
+  after fixing the two real bugs above (cmd.exe invocation, menuitem
+  scoping) and is not something in this repository — flagging as an
+  external tool limitation, not a false "it passes" claim. Filed as
+  product feedback (see below) rather than continuing to chase it blind.
+- Not done in this pass, deferred: "ID landmark ổn định" — the probe still
+  keys landmarks by `aria-label`/associated-label text/`textContent`, no
+  more stable than before. A real fix means adding stable `data-*`
+  identifiers across ~15 field components, which is its own scoped change,
+  not a harness-only edit — didn't attempt it blind under this task.
+- `node --check` on the script passes (valid syntax); `./harness/verify.sh`
+  full gate still green (harness/fixtures and harness/checks aren't in its
+  lint/typecheck globs) — evidence `harness/runs/20260911-123030-1054/`.
+- Task 2.2 left unchecked in `tasks.md`: its own verify line ("test bắt
+  được dịch chuyển có chủ ý và mất draft; lưu ảnh trước/sau") requires an
+  actual passing run, which this session could not produce. The fixes
+  above are real and reasoned through (each traced to the app's actual API
+  contract or DOM structure, not guessed), but "the source looks right" is
+  not the same as "verified" — a session with a working `agent-browser` on
+  this box (or run from Linux/CI) should confirm before checking this off.
