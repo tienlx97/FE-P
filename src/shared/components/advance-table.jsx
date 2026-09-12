@@ -71,14 +71,6 @@ import { AdvanceTableSearchDialog } from './advance-table-search-dialog.jsx';
  * @property {string[]} columnKeys
  */
 
-// A pinned cell paints an opaque background of its own; without this it
-// defaults to the card surface token, which mismatches the page's own
-// surface token in dark mode (see useTableStickyColumns). Plain `style`,
-// not `xstyle` — `@stylexjs/valid-styles` rejects raw `--*` keys.
-const stickyBackgroundStyle = /** @type {import('react').CSSProperties} */ ({
-  '--table-sticky-background': colorVars['--color-background-surface'],
-});
-
 const styles = stylex.create({
   // Fills the StackItem it sits in rather than a fixed/expand-on-focus
   // width — the search bar claims the toolbar's full remaining width, same
@@ -503,7 +495,7 @@ export function AdvanceTable({
   }));
 
   return (
-    <VStack gap={0} hAlign="stretch" style={stickyBackgroundStyle}>
+    <VStack gap={0} hAlign="stretch">
       <Toolbar
         label={toolbarLabel}
         size="sm"

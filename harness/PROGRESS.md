@@ -8681,3 +8681,21 @@ ward reference data (free-text inputs, matching the backend).
   shared response factories and assertions that fixture rows appear (discovered,
   outside this theme task). Git Bash lives under E:/apps/core/Git on this host;
   discover its location from Get-Command git instead of assuming Program Files.
+
+## 2026-09-12 — refresh-workspace-colors task 1.2: pinned cell parity
+
+- User caught pinned cells retaining a different fill after the color refresh.
+  `AdvanceTable` still set `--table-sticky-background` to the page/surface
+  token. Removed that obsolete override so Astryx uses background-card,
+  matching the white table body; the plugin's hover overlay remains intact.
+- Added `harness/checks/pinned-table-colors-browser.mjs`, a local fixture
+  regression check for two pinned edges, consistent header colors, body
+  backgrounds and hover overlays at 1440px/390px. It asserts the fixture row
+  exists and saves screenshots plus computed values. Mobile scrollLeft=640.
+  Evidence: `harness/runs/2026-09-12T04-26-55-903Z-pinned-colors/`.
+- Harness gap addressed: the previous screenshot review missed pinned body
+  surfaces. The new browser assertions compare computed pinned backgrounds
+  with the table body and compare hover overlays with the row background.
+  Run manually with `node harness/checks/pinned-table-colors-browser.mjs`
+  against an existing local dev server (TABLE_TEST_ORIGIN overrides origin).
+- Full ./harness/verify.sh PASSED: harness/runs/20260912-112709-2883/.
