@@ -167,8 +167,23 @@ export function ContractsList() {
   );
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
+  // Defaults to "Loại hợp đồng: Chính thức" per user request (2026-09-12) —
+  // Draft contracts are working copies, not the operational default this
+  // list should open on. Still just the ordinary advanced-filter condition
+  // array, so the funnel dialog shows it as an active filter the user can
+  // edit or remove like any other.
   const [filterConditions, setFilterConditions] = useState(
-    /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
+    /** @type {() => import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ (
+      () => [
+        {
+          id: generateRowKey(),
+          field: 'contractType',
+          operator: 'Equals',
+          value: 'Official',
+          connector: 'And',
+        },
+      ]
+    ),
   );
   const [expandedTab, setExpandedTab] = useState(
     /** @type {ExpandedTab} */ ('profile'),

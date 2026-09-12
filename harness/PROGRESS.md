@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-09-12 — Default: contracts list opens filtered to Loại hợp đồng = Chính thức
+
+**Context:** User asked for the Hợp đồng list to default-load with "Loại
+hợp đồng: Chính thức" applied — Draft contracts are working copies, not
+what this list should open on by default.
+
+**What changed:** `contracts-list.jsx`'s `filterConditions` state now
+lazy-initializes to a single `{ field: 'contractType', operator: 'Equals',
+value: 'Official', connector: 'And' }` condition instead of `[]`. It's an
+ordinary advanced-filter condition — shows up in the funnel dialog and
+"Đang áp dụng N điều kiện lọc" count like any user-added one, and the user
+can remove or change it same as before.
+
+**Verified:** `./harness/verify.sh` full gate green.
+
 ## 2026-09-12 — Add: per-column totals row on the Hợp đồng (contracts) list
 
 **Context:** User asked for a totals row on the contracts list table (Giá
