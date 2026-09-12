@@ -40,9 +40,10 @@ export const ktxnkTheme = defineTheme({
     '--color-text-accent': '#247768',
     '--color-icon-accent': '#247768',
 
-    // Subtle colored canvas; elevated cards, inputs and data remain white.
-    '--color-background-body': '#f3f8f6',
-    '--color-background-surface': '#f3f8f6',
+    // Per user request (2026-09-12): plain white canvas instead of the
+    // teal-tinted one; elevated cards, inputs and data stay white too.
+    '--color-background-body': '#ffffff',
+    '--color-background-surface': '#ffffff',
     '--color-background-muted': '#edf5f1',
     '--color-background-card': '#ffffff',
     '--color-background-popover': '#ffffff',
