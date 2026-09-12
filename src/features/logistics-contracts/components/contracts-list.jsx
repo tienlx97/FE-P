@@ -72,6 +72,55 @@ function formatPaymentTerms(terms) {
   return `${terms.length} đợt`;
 }
 
+/**
+ * @typedef {{
+ *   id: string,
+ *   __isTotalsRow: true,
+ *   currency: string,
+ *   contractValue: number,
+ *   settlementValue: number,
+ *   paidValue: number,
+ *   unpaidValue: number,
+ *   isMultiCurrency: boolean,
+ * }} ContractTotalsRow
+ */
+
+/**
+ * Cell renderers used only for the synthetic totals row(s) appended via
+ * `AdvanceTable`'s `totalsRows` prop — keyed by column `key`, same shape
+ * `columnsWithTotalsRow` below looks up. `contractNumber` doubles as the
+ * label cell since `COLUMN_OPTIONS` marks it `isAlwaysVisible`, so it's
+ * never hidden out from under the label.
+ * @type {Record<string, (row: ContractTotalsRow) => import('react').ReactNode>}
+ */
+const TOTALS_ROW_CELL_RENDERERS = {
+  contractNumber: (row) => (
+    <Text weight="semibold">
+      {row.isMultiCurrency ? `Tổng cộng (${row.currency})` : 'Tổng cộng'}
+    </Text>
+  ),
+  contractValue: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.contractValue, row.currency)}
+    </Text>
+  ),
+  settlementValue: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.settlementValue, row.currency)}
+    </Text>
+  ),
+  paidValue: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.paidValue, row.currency)}
+    </Text>
+  ),
+  unpaidValue: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.unpaidValue, row.currency)}
+    </Text>
+  ),
+};
+
 const SETTLEMENT_GROUP_KEY = 'settlement-value-group';
 const SETTLEMENT_GROUP_COLUMN_KEYS = [
   'contractValue',
@@ -181,14 +230,30 @@ export function ContractsList() {
     () => (listResult?.success ? listResult.contracts : []),
     [listResult],
   );
-  // Sum of `contractValue` across every contract matching the current
-  // filters (not just this page — the backend computes it pre-paging, see
-  // `searchContracts`'s doc comment), grouped by currency since contracts
-  // can be denominated in more than one.
-  const valueTotals = listResult?.success ? listResult.valueTotals : [];
+  // Sum of contractValue/settlementValue/paidValue/unpaidValue across every
+  // contract matching the current filters (not just this page — the
+  // backend computes it pre-paging, see `searchContracts`'s doc comment),
+  // grouped by currency since contracts can be denominated in more than
+  // one. Rendered as a synthetic last row per currency (see
+  // `TOTALS_ROW_LABEL_COLUMN_KEY`/`isTotalsRow` below) rather than a
+  // separate summary line, so each sum lines up under its own column.
+  const totalsRows = useMemo(() => {
+    if (!listResult?.success) return [];
+    const totals = listResult.totals;
+    return totals.map((total) => ({
+      id: `totals-${total.currency}`,
+      __isTotalsRow: true,
+      currency: total.currency,
+      contractValue: total.contractValue,
+      settlementValue: total.settlementValue,
+      paidValue: total.paidValue,
+      unpaidValue: total.unpaidValue,
+      isMultiCurrency: totals.length > 1,
+    }));
+  }, [listResult]);
   // Per-contract "Quyết toán / Đã thanh toán / Chưa thanh toán" — one entry
-  // per row on this page only (unlike `valueTotals`), keyed by contractId so
-  // `renderCell` below can look a row's up in O(1).
+  // per row on this page only (unlike `totalsRows` above), keyed by
+  // contractId so `renderCell` below can look a row's up in O(1).
   const settlementsByContractId = useMemo(
     () =>
       new Map(
@@ -484,6 +549,27 @@ export function ContractsList() {
     },
   ];
 
+  // Every column's `renderCell` runs against the synthetic totals row(s)
+  // too — `Table` has no footer concept in data-driven mode, so
+  // `advance-table.jsx`'s `totalsRows` prop just appends them as ordinary
+  // rows (see `totalsRows` above). Most columns render blank for it; these
+  // four render the pre-summed amount, and the label column names the row.
+  // Wrapping every column here (instead of hand-editing each `renderCell`
+  // above) means a column added later doesn't need to remember this case.
+  const columnsWithTotalsRow = columns.map((column) => {
+    const totalsRenderCell = TOTALS_ROW_CELL_RENDERERS[column.key];
+    return {
+      ...column,
+      /** @param {import('../types/index.js').Contract & Record<string, unknown> & Partial<ContractTotalsRow>} row */
+      renderCell: (row) =>
+        row.__isTotalsRow
+          ? (totalsRenderCell
+              ? totalsRenderCell(/** @type {ContractTotalsRow} */ (row))
+              : null)
+          : column.renderCell?.(row),
+    };
+  });
+
   const searchableContracts = contracts.map((contract) => ({
     ...contract,
     buyerCompanyName: contract.buyer.companyName,
@@ -561,29 +647,14 @@ export function ContractsList() {
           defaultColumnKeys={DEFAULT_COLUMN_KEYS}
           viewPresets={VIEW_PRESETS}
           fixedEndColumnKeys={['actions']}
-          tableColumns={columns}
+          tableColumns={columnsWithTotalsRow}
           data={searchableContracts}
+          totalsRows={totalsRows}
           idKey="id"
           isLoading={isLoadingContracts}
           skeletonRows={skeletonRows}
           onRefresh={() => contractsQuery.refetch()}
           isRefreshing={contractsQuery.isFetching}
-          summary={
-            valueTotals.length > 0 ? (
-              <HStack gap={2} vAlign="center" wrap="wrap">
-                <Text weight="semibold">Tổng giá trị:</Text>
-                {valueTotals.map((total) => (
-                  <Text
-                    key={total.currency}
-                    weight="semibold"
-                    hasTabularNumbers
-                  >
-                    {formatMoney(total.total, total.currency)}
-                  </Text>
-                ))}
-              </HStack>
-            ) : null
-          }
           pagination={{
             pageIndex,
             pageSize,

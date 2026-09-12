@@ -163,6 +163,7 @@ const styles = stylex.create({
  *   isRefreshing?: boolean,
  *   defaultStickyStart?: 'none' | 'one' | 'two',
  *   defaultStickyEnd?: 'none' | 'one' | 'two',
+ *   totalsRows?: Partial<T>[],
  *   summary?: import('react').ReactNode,
  *   dividers?: import('@astryxdesign/core/Table').TableDividers,
  *   pagination?: {
@@ -203,6 +204,7 @@ export function AdvanceTable({
   isRefreshing = false,
   defaultStickyStart = 'one',
   defaultStickyEnd = 'one',
+  totalsRows,
   summary,
   dividers = 'rows',
   pagination,
@@ -452,6 +454,15 @@ export function AdvanceTable({
       )
     )
   );
+  // Appended after filtering, never before — a totals row's cells (labels,
+  // pre-summed amounts) aren't real per-contract field values, so running
+  // them through the quick-search/header-filter engine above would either
+  // hide the row under an active filter or throw on a filter expecting a
+  // shape the row doesn't have.
+  const renderedData =
+    totalsRows && totalsRows.length > 0
+      ? /** @type {T[]} */ (/** @type {any} */ ([...filteredData, ...totalsRows]))
+      : filteredData;
 
   const columnSettingsState = useTableColumnSettingsState({
     columns: columnOptions,
@@ -688,7 +699,7 @@ export function AdvanceTable({
             </VStack>
           )
         }
-        data={isLoading ? (skeletonRows ?? []) : filteredData}
+        data={isLoading ? (skeletonRows ?? []) : renderedData}
         columns={isLoading ? skeletonColumns : tableColumns}
         idKey={idKey}
         density={density}

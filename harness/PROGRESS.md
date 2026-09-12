@@ -1,5 +1,48 @@
 # Progress Log
 
+## 2026-09-12 — Add: per-column totals row on the Hợp đồng (contracts) list
+
+**Context:** User asked for a totals row on the contracts list table (Giá
+trị hợp đồng / Quyết toán / Đã thanh toán / Chưa thanh toán, summed), canh
+theo cột (aligned under each column) rather than the existing single
+"Tổng giá trị: …" summary line. Also required a backend change
+(BE-kt-xnk's `openspec/changes/add-contract-totals-by-currency/`) since
+`settlementValue`/`paidValue`/`unpaidValue` previously only existed
+per-contract for the current page. See
+`openspec/changes/add-contracts-totals-row/`.
+
+**What changed:** `advance-table.jsx` gained a `totalsRows` prop —
+synthetic rows appended to the table's data **after** the client-side
+search/header-filter pipeline (so they're immune to it, never hidden by an
+active filter or crashing a filter expecting real Contract fields).
+`contracts-list.jsx` builds one totals row per currency from the backend's
+new `totals` field and wraps every column's `renderCell` (not just the 4
+financial ones — `Table` calls every visible column's renderer for every
+row) to special-case it: the 4 settlement columns render the pre-summed
+amount, the first visible column ("Số hợp đồng") renders a "Tổng cộng"
+label, everything else renders blank. The old single-line summary is gone;
+the `summary` prop stays on `AdvanceTable` itself for other lists.
+
+**Known limitation (accepted, see change's "Out of scope"):** `Table` has
+no `<tfoot>`/sticky-row concept in data-driven mode, so the totals row is
+an ordinary last row — it scrolls with the table body and repeats
+identically on every page (the backend total already covers the whole
+filtered set, not just the current page).
+
+**Verified:** `./harness/verify.sh` full gate green (lint, typecheck,
+structure, harness-tests, unit-tests, build, quality-thresholds) on both
+repos (BE-kt-xnk's own `dotnet test` — 518 tests, including a new
+totals-specific assertion — run directly rather than through
+`harness/verify.sh` due to an unrelated `DOTNET_ROOT` harness gap logged in
+that repo's `PROGRESS.md`). Rebuilt and restarted the BE-kt-xnk dev Docker
+stack (`docker-compose.dev.yml`, port 8081) with the new backend code.
+**Not verified live in-browser**: `pnpm dev -- -p 3001` collided with an
+already-running `next dev` process on port 3000 (PID 50704, not started by
+this session) — left it alone rather than killing another session's
+process. Follow-up: manually open `/logistics/contracts`, apply the
+"Tài chính" view preset, and confirm the totals row renders correctly
+(single currency and, if test data allows, multi-currency).
+
 ## 2026-09-07 — Add: optimistic concurrency (Version) on Contract/Shipment forms, finished a Codex session that ran out of tokens mid-work
 
 **Context:** Codex was mid-implementation of the FE half of BE-P's

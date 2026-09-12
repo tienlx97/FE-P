@@ -38,18 +38,20 @@ export async function listContracts({ page = 1, pageSize = 25 } = {}) {
  * page, not just the one currently loaded.
  *
  * Unlike `listContracts`, the response is
- * `{ page: {...}, valueTotals: [...], settlements: [...] }` rather than the
- * flat paging envelope:
- * - `valueTotals` sums `contractValue` per currency across every matching
- *   contract (not just this page), so the list's "Tổng giá trị" line stays
- *   correct across pagination.
+ * `{ page: {...}, totals: [...], settlements: [...] }` rather than the flat
+ * paging envelope:
+ * - `totals` sums `contractValue`/`settlementValue`/`paidValue`/
+ *   `unpaidValue` per currency across every matching contract (not just
+ *   this page) — backs the list's per-column totals row. Grouped by
+ *   currency because contracts can be denominated in different currencies;
+ *   a single cross-currency sum would be meaningless.
  * - `settlements` has one entry per contract on *this page* (matched by
  *   `contractId`) — `settlementValue` (contract value + annex adjustments),
  *   `paidValue` (sum of recorded payment schedules) and `unpaidValue`
  *   (`settlementValue - paidValue`), backing the list's "Quyết toán / Đã
  *   thanh toán / Chưa thanh toán" columns.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
- * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number, valueTotals: { currency: string, total: number }[], settlements: { contractId: string, settlementValue: number, paidValue: number, unpaidValue: number }[] } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, contractValue: number, settlementValue: number, paidValue: number, unpaidValue: number }[], settlements: { contractId: string, settlementValue: number, paidValue: number, unpaidValue: number }[] } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchContracts({
   page = 1,
@@ -83,7 +85,7 @@ export async function searchContracts({
     pageSize: result.data?.page?.pageSize ?? pageSize,
     totalCount: result.data?.page?.totalCount ?? 0,
     totalPages: result.data?.page?.totalPages ?? 0,
-    valueTotals: result.data?.valueTotals ?? [],
+    totals: result.data?.totals ?? [],
     settlements: result.data?.settlements ?? [],
   };
 }
