@@ -87,6 +87,9 @@ export const shipmentSchema = z.object({
   coNumber: z.string().trim().max(50, 'Tối đa 50 ký tự'),
   coDeclarationDate: z.string(),
   coIssuedDate: z.string(),
+  customsDeclarationNumber: z.string().trim().max(50, 'Tối đa 50 ký tự'),
+  customsDeclarationDate: z.string(),
+  customsInspected: z.boolean(),
   costLines: z.array(shipmentCostLineSchema),
   status: z.enum(SHIPMENT_STATUSES, { error: 'Vui lòng chọn tình trạng' }),
 });

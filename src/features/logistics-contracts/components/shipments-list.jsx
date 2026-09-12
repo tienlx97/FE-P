@@ -17,7 +17,7 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { Heading } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -29,6 +29,10 @@ import {
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 
 import { formatMoney } from '../config/currencies.js';
+import {
+  isContractEligibleForShipment,
+  reasonContractIneligibleForShipment,
+} from '../config/shipment-contract-eligibility.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import { labelForShipmentStatus } from '../config/shipment-status.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
@@ -236,7 +240,7 @@ export function ShipmentsList() {
   );
 
   function handleContinuePickingContract() {
-    if (!pickedContractId) return;
+    if (!pickedContractId || !canContinuePickingContract) return;
     setIsPickingContract(false);
     setShipmentDialog({
       contractId: pickedContractId,
@@ -244,6 +248,12 @@ export function ShipmentsList() {
     });
     setPickedContractId(null);
   }
+
+  const pickedContract = pickedContractId
+    ? contractsById.get(pickedContractId)
+    : undefined;
+  const canContinuePickingContract =
+    !!pickedContract && isContractEligibleForShipment(pickedContract);
 
   const selectedShipment =
     shipments.find((row) => row.id === shipmentDialog?.shipment?.id) ??
@@ -323,12 +333,22 @@ export function ShipmentsList() {
                   placeholder="Chọn hợp đồng cần thêm Shipment"
                   value={pickedContractId}
                   onChange={setPickedContractId}
-                  options={contracts.map((contract) => ({
-                    value: contract.id,
-                    label: `${contract.contractNumber} · ${contract.projectName}`,
-                  }))}
+                  options={contracts.map((contract) => {
+                    const ineligibleReason =
+                      reasonContractIneligibleForShipment(contract);
+                    return {
+                      value: contract.id,
+                      label: `${contract.contractNumber} · ${contract.projectName}`,
+                      description: ineligibleReason ?? undefined,
+                      disabled: ineligibleReason != null,
+                    };
+                  })}
                   width="100%"
                 />
+                <Text color="secondary">
+                  Chỉ hợp đồng Chính thức, đã ký bởi cả hai bên và chưa huỷ
+                  mới có thể tạo Shipment mới.
+                </Text>
               </LayoutContent>
             }
             footer={
@@ -345,7 +365,7 @@ export function ShipmentsList() {
                   <Button
                     label="Tiếp tục"
                     variant="primary"
-                    isDisabled={!pickedContractId}
+                    isDisabled={!canContinuePickingContract}
                     onClick={handleContinuePickingContract}
                   />
                 </HStack>

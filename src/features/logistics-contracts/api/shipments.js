@@ -6,6 +6,25 @@ const GENERIC_CREATE_ERROR = 'Không thể thêm lần xuất hàng';
 const GENERIC_UPDATE_ERROR = 'Không thể cập nhật lần xuất hàng';
 
 /**
+ * Backend `detail` strings (English, BE-kt-xnk's `CreateShipmentCommandHandler`)
+ * for the Official/signed/not-cancelled contract rule — translated here
+ * since every other error message in this app is already Vietnamese. The
+ * contract picker (`shipments-list.jsx`) and "Thêm Shipment" button
+ * (`contract-expanded-details.jsx`) both pre-filter/disable on this same
+ * rule client-side, so this only fires if a contract's state changed
+ * between load and submit.
+ * @type {Record<string, string>}
+ */
+const CONTRACT_ELIGIBILITY_ERROR_TRANSLATIONS = {
+  'Contract must be Official to create a shipment':
+    'Hợp đồng phải ở trạng thái Chính thức để tạo Shipment',
+  'Contract must be signed by both parties to create a shipment':
+    'Hợp đồng phải được ký bởi cả hai bên để tạo Shipment',
+  'Cannot create a shipment for a cancelled contract':
+    'Không thể tạo Shipment cho hợp đồng đã huỷ',
+};
+
+/**
  * `Costs` is sent as the full list on both create and update (whole-list
  * replace, same contract as `Commission.PaymentHistory`/`PaymentTerms` —
  * see `docs/api/Shipments.md`, BE-kt-xnk).
@@ -52,6 +71,9 @@ function toCreateRequestBody(values, costLines) {
     CoNumber: values.coNumber || null,
     CoDeclarationDate: values.coDeclarationDate || null,
     CoIssuedDate: values.coIssuedDate || null,
+    CustomsDeclarationNumber: values.customsDeclarationNumber || null,
+    CustomsDeclarationDate: values.customsDeclarationDate || null,
+    CustomsInspected: values.customsInspected,
     Costs: toCostsRequestBody(costLines),
     Status: values.status,
   };
@@ -86,6 +108,9 @@ function toUpdateRequestBody(values, costLines) {
     CoNumber: values.coNumber || null,
     CoDeclarationDate: values.coDeclarationDate || null,
     CoIssuedDate: values.coIssuedDate || null,
+    CustomsDeclarationNumber: values.customsDeclarationNumber || null,
+    CustomsDeclarationDate: values.customsDeclarationDate || null,
+    CustomsInspected: values.customsInspected,
     Costs: toCostsRequestBody(costLines),
     Status: values.status,
   };
@@ -195,7 +220,13 @@ export async function createShipment(contractId, values, costLines = []) {
   });
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message:
+        CONTRACT_ELIGIBILITY_ERROR_TRANSLATIONS[result.message] ??
+        result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return { success: true, shipment: result.data };

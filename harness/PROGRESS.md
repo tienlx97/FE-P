@@ -8468,3 +8468,185 @@ ward reference data (free-text inputs, matching the backend).
   `harness/runs/20260911-163534-851/`.
 - **`logistics-workspace-redesign` is complete.** No further tasks in
   `tasks.md`.
+
+## 2026-09-12 — `add-contract-full-view-tab`: 5th Contract tab "Xem đầy đủ" for quick lookup
+
+- User request: the "Liên quan" tab's Shipment row-expansion + inner tabs
+  (Thông tin/VGM/Chi phí) take too many clicks for a quick read-only
+  lookup. Clarified scope via `AskUserQuestion` before coding: a 5th tab
+  alongside Hồ sơ/Phụ lục/Thanh toán/Liên quan (not a rework of "Liên
+  quan"); each Shipment sub-tab shows info + VGM + costs stacked on one
+  screen (all 3, not just info+VGM); the search bar filters the Shipment
+  tab list (not in-page highlight) and must match VGM/cost fields too, not
+  just Shipment fields.
+- Factored `ShipmentInfoSection`/`ShipmentCostsSection` out of
+  `ShipmentExpandedDetails` (new files, same directory) so the new panel
+  and the existing "Liên quan" row-expansion share the exact same fields
+  instead of duplicating JSX — mirrors how `ShipmentVgmSection` was already
+  factored out earlier for the same reason. `ShipmentExpandedDetails`
+  itself is behavior-unchanged, just composed from the three sections now.
+- New `hooks/use-shipments-vgms-queries.js`: `useQueries`-based batch VGM
+  fetch across every Shipment of a contract (no per-shipment API exists),
+  sharing `queryKey`/`queryFn` with `useShipmentVgmsQuery` so cache is
+  shared with the per-shipment VGM tab elsewhere. Only ever called from
+  `ContractFullViewPanel`, which itself only mounts while its tab is
+  active (`ContractExpandedDetails`'s existing `activeTab === '…' &&`
+  pattern), so contracts with many Shipments don't pay this cost on every
+  dialog open — just when this tab is opened.
+- New `components/contract-full-view-panel.jsx`: `TextInput` search (same
+  `startIcon="search"`/`hasClear` pattern as `AdvanceTable`'s quick
+  search) filtering a Shipment `TabList` by a lowercased substring match
+  across shipment/cost/VGM fields (no diacritics folding — matches
+  `AdvanceTable`'s own search); selection falls back to the first filtered
+  Shipment when the prior pick drops out, computed inline during render
+  (not a `useEffect` + `setState` — caught by
+  `react-hooks/set-state-in-effect` during lint, fixed by deriving instead
+  of syncing). Selected Shipment renders `ShipmentInfoSection` →
+  `ShipmentVgmSection` (`isReadOnly`) → `ShipmentCostsSection` stacked.
+- Wired the tab: `ContractFormDialog`'s `TAB_LABELS.fullView = 'Xem đầy
+  đủ'` + 5th `Tab` (`aria-disabled` while creating, matching the other
+  three); `ContractExpandedDetails`/`ContractsList`'s `ExpandedTab`
+  typedef gains `'fullView'`; a new `activeTab === 'fullView'` branch in
+  `ContractExpandedDetails` renders the panel with the `shipments`/
+  `customersById`/`costCategoriesById` already in scope there.
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm test`/`pnpm structure` all
+  clean. Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260912-090500-548/`.
+- Live-verified against the real local `BE-kt-xnk` (already running on
+  `:8081`; used the app's existing `:3000` dev server rather than starting
+  a second `next dev` — Next.js refuses a second dev instance against the
+  same project directory, confirmed when a `pnpm exec next dev -p 3001`
+  attempt logged "Another next dev server is already running" and exited).
+  `/logistics/contracts` → "26DN-TESTAI01" (1 shipment, no VGM/costs yet):
+  "Xem đầy đủ" tab renders, single Shipment sub-tab, info stacked correctly,
+  VGM's "Thêm VGM" visibly disabled (muted pink vs. the enabled red/green
+  footer buttons) confirming `isReadOnly` reaches it. "26DN-SAMPLE01" (3
+  shipments, one with 2 cost lines): all 3 sub-tabs render
+  (LCL-01/LOT-01/LCL-02), switching tabs swaps info/VGM/costs correctly
+  (cost table + per-category totals rendered), search "BK-DN-002" narrowed
+  the tab list from 3 to the 1 matching shipment, a no-match query showed
+  "Không tìm thấy Shipment phù hợp". No console errors during any of this.
+  Screenshots not saved to `harness/runs/` this pass (ad hoc manual check,
+  not a scripted harness run) — a follow-up session should still add a
+  `stable-dialog-layout-browser.mjs` scenario for this tab if it wants
+  durable regression coverage; none exists yet.
+- Follow-up per user request ("bạn tự thêm vgm... để test"): added a real
+  VGM record (`TESTCONT0001`/`SEALTEST01`, 40', via "Liên quan"'s own
+  add-VGM dialog on `26DN-SAMPLE01/LOT-01`) to verify the cross-shipment
+  search actually reaches VGM data, not just the already-loaded Shipment/
+  cost fields. Confirmed: switching to "Xem đầy đủ" and searching
+  `TESTCONT0001` from a *different* shipment's tab (LCL-01) correctly
+  jumped the filtered list to LOT-01 — proves `useShipmentsVgmsQueries`'s
+  batch fetch is actually populated and reaching `buildSearchHaystack`,
+  not just the same-shipment case task 1's pass already covered. Also
+  confirmed the read-only VGM row's edit `IconButton` is truly inert (not
+  just visually disabled) — clicked it directly, no dialog opened.
+  Searching an existing cost's invoice number (`HD-DN-2026-0001`, already
+  on `26DN-SAMPLE01`'s data) also correctly isolated its shipment. Deleted
+  the test VGM record afterward (`Liên quan` tab's own delete, confirmed
+  the "Xoá VGM" prompt) to leave `26DN-SAMPLE01` back at its original seed
+  state. No console errors throughout.
+- A second VGM-visibility report from the user ("VGM tôi test chưa thấy")
+  turned out to be a false alarm once reproduced end-to-end fresh: added a
+  new VGM (`RETESTCONT02`) via "Liên quan" while "Xem đầy đủ" was already
+  open on a *different* Shipment tab, switched back — it showed
+  immediately, and searching its container number from yet another
+  Shipment tab correctly found it too. No code change needed; left the
+  record in place afterward at the user's follow-up request (see below)
+  rather than re-deleting it mid-investigation. Confirms
+  `ContractExpandedDetails`'s unmount-on-tab-switch + fresh `useQueries`
+  refetch on remount is sufficient — no stale-cache bug exists here.
+
+## 2026-09-12 — `add-contract-full-view-tab` follow-up: advanced search (2 rounds of feedback)
+
+- User asked to add a "Search nâng cao" affordance next to "Xem đầy đủ"'s
+  search bar. First pass: a funnel `IconButton` (lucide `Filter` icon)
+  opening a small dialog with 5 fixed `TextInput`s (one per field),
+  AND-ed, replacing plain search when applied — confirmed via
+  `AskUserQuestion` (fixed field set over adding enum fields; "replace"
+  over "AND-combine" with plain search).
+- User feedback round 1: "Nút tìm kiếm nâng cao làm giống nút tìm kiếm ở
+  danh sách hợp đồng" (make the button look like the one on the contracts
+  list). Swapped the lucide `Filter` icon for Astryx's built-in
+  `icon="funnel"` and `variant="ghost"` (was `variant={applied ?
+  'primary' : 'ghost'}`) — now pixel-identical to `AdvanceTable`'s own
+  funnel trigger in `contracts-list.jsx`'s search bar.
+- User feedback round 2 (before the round-1 fix's `verify.sh` output even
+  finished printing): "Tìm kiếm nâng cao làm giống Tìm kiếm trong hợp
+  đồng, có dialog, nút thêm field" — the *dialog* itself should match
+  `AdvanceTable`'s "Bộ lọc nâng cao" (the server-filter-mode one with a
+  field/operator/value condition builder and a "Chọn điều kiện lọc"
+  add-field control), not a fixed 5-textbox form. Reused
+  `@/shared/components/advanced-filter-builder.jsx`'s
+  `AdvancedFilterBuilder` directly (same component `AdvanceTable` itself
+  uses) instead of hand-rolling — `contract-full-view-panel.jsx` now owns
+  `AdvancedFilterCondition[]` state (`appliedConditions`/`advancedDraft`)
+  and a small client-side evaluator (`fieldValues`/`matchesCondition`/
+  `matchesAllConditions`) for the builder's string operators (Equals/
+  Contains/NotContains/StartsWith/EndsWith/IsEmpty/IsNotEmpty), since
+  there's no server to send conditions to here. Container/seal/cost-name
+  are one-to-many per Shipment (multiple VGM rows or cost lines) — a
+  condition matches if ANY value satisfies it, an approximation the
+  operator set has no purpose-built answer for on a real single-value
+  column, but correct for "does this Shipment have a VGM/cost matching
+  this". Dialog: `CommonDialog` width 800 (matching `AdvanceTable`'s own
+  filter-builder dialog), title "Bộ lọc nâng cao", "Bỏ lọc"/"Lọc" footer
+  mirroring `handleAdvancedFilterClear`'s "clear immediately, don't close"
+  vs. "Lọc" applies-and-closes split.
+- `pnpm exec eslint`/`pnpm typecheck`/`pnpm structure` clean after each
+  round. Full `./harness/verify.sh` PASSED (final round). Evidence:
+  `harness/runs/20260912-102735-2304/`.
+- Live-verified the final (round 2) version against the real local
+  `BE-kt-xnk` on `26DN-SAMPLE01`: funnel button visually confirmed
+  matching the contracts-list search bar (zoomed screenshot comparison);
+  opened "Bộ lọc nâng cao", "Chọn điều kiện lọc" listed all 5 fields,
+  picked "Số booking", operator dropdown showed all 7 string operators,
+  set "Chứa" + `DN-001`, clicked "Lọc" — narrowed the Shipment tab list
+  from 3 to the 1 matching (`LOT-01`, booking `BK-DN-001`), plain search
+  box disabled with the "đang dùng" hint. Clicked "Bỏ lọc" — all 3 tabs
+  came back, plain search re-enabled. No console errors. (Repeated
+  transient CDP screenshot-capture timeouts throughout this session,
+  always resolved by an immediate retry with `get_page_text` confirming
+  the DOM was correct in between — tooling hiccups, not app freezes; not
+  investigated further since retries were 100% reliable.)
+- Between sessions, `contract-full-view-panel.jsx`'s `FILTER_FIELD_DEFS`
+  grew from 5 to 16 fields (Loại hình, Tình trạng, Số B/L, Line tàu, Tên
+  tàu, Cảng/nơi xếp hàng, Cảng/nơi đến, Forwarder, Mã C/O, Số tờ khai, Số
+  hoá đơn added) and `fieldValues()`/`matchesCondition()` gained a
+  `customersById` param for the new "Forwarder" field — found already on
+  disk at the start of this entry's session (per the user's own follow-up
+  request, "Bộ lọc nâng cao... thêm nhiều trường khác", interrupted before
+  this session could act on it — another session or a resumed one
+  finished it first). Left as-is per the shared-file-ownership note in
+  `AGENTS.md`; not re-verified from scratch here since `./harness/verify.sh`
+  below covers the file as it now stands.
+
+## 2026-09-12 — Table header background color (theme-wide)
+
+- User request: "Tôi muốn header table có background color được không.
+  Hiện tại toàn màu trắng đen" — every `Table` in the app (`AdvanceTable`'s
+  own lists included, not just the logistics workspace) had an unstyled
+  `<thead>`, so the header row read as plain text on the same white as the
+  body with nothing marking the boundary.
+- `astryx theme targets Table` confirmed the theming key: `table-header`
+  (paints `.astryx-table-header`, no props/states). Added a `base`
+  override to `src/shared/components/theme.js`'s `components` block:
+  `backgroundColor: 'var(--color-background-muted)'` — the same neutral
+  gray wash (`#f5f5f5`) already used for hover/press fills elsewhere,
+  deliberately NOT `--color-accent-muted` (that token is reserved for
+  selected-nav-item/`<Note>` callout per this file's own existing comment
+  a few lines up — reusing it here would turn every table header into a
+  third thing resolving to the same mint tint).
+- `pnpm theme:build` — output line changed from "5 component overrides" to
+  "6", confirming the new rule compiled into `theme.built.css` (gitignored
+  build artifact, regenerated by `harness/verify.sh`'s own `theme-build`
+  step, not hand-edited).
+- Full `./harness/verify.sh` PASSED. Evidence:
+  `harness/runs/20260912-111349-2539/`.
+- Live-verified against the real local `BE-kt-xnk`: `/logistics/contracts`
+  list header row now shows the gray background (zoomed screenshot
+  confirmed distinct from the white body rows below it); opened
+  `26DN-SAMPLE01` → "Liên quan" → the nested Shipment table's header
+  picked up the same background with zero extra wiring, confirming the
+  theme override applies to every `Table` instance, not just the one the
+  user was looking at when they asked. No console errors.

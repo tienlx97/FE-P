@@ -43,6 +43,7 @@ const TAB_LABELS = {
   annexes: 'Phụ lục',
   payments: 'Thanh toán',
   related: 'Liên quan',
+  fullView: 'Xem đầy đủ',
 };
 
 /**
@@ -66,8 +67,8 @@ const TAB_LABELS = {
  *   onOpenChange: (open: boolean) => void,
  *   contract?: import('../types/index.js').Contract | null,
  *   onSuccess: (contract: import('../types/index.js').Contract) => void,
- *   activeTab: 'profile' | 'annexes' | 'payments' | 'related',
- *   onActiveTabChange: (tab: 'profile' | 'annexes' | 'payments' | 'related') => void,
+ *   activeTab: 'profile' | 'annexes' | 'payments' | 'related' | 'fullView',
+ *   onActiveTabChange: (tab: 'profile' | 'annexes' | 'payments' | 'related' | 'fullView') => void,
  *   children?: import('react').ReactNode,
  * }} props
  */
@@ -185,6 +186,13 @@ export function ContractFormDialog({
                 <Tab
                   value="related"
                   label={TAB_LABELS.related}
+                  panelId={panelId}
+                  aria-disabled={!contract}
+                  xstyle={!contract && styles.disabledTab}
+                />
+                <Tab
+                  value="fullView"
+                  label={TAB_LABELS.fullView}
                   panelId={panelId}
                   aria-disabled={!contract}
                   xstyle={!contract && styles.disabledTab}

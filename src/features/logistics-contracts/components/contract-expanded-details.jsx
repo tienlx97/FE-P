@@ -21,6 +21,7 @@ import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js
 
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
+import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import { labelForShipmentStatus } from '../config/shipment-status.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
@@ -30,10 +31,11 @@ import { useContractPrivateInfoQuery } from '../hooks/use-contract-private-info-
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { ContractAnnexesPanel } from './contract-annexes-panel.jsx';
+import { ContractFullViewPanel } from './contract-full-view-panel.jsx';
 import { isPrivateInfoEntirelyEmpty } from './contract-private-info-fields.jsx';
 import { ShipmentExpandedDetails } from './shipment-expanded-details.jsx';
 
-/** @typedef {'profile' | 'annexes' | 'payments' | 'related'} ExpandedTab */
+/** @typedef {'profile' | 'annexes' | 'payments' | 'related' | 'fullView'} ExpandedTab */
 
 const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 
@@ -43,7 +45,7 @@ function orDash(value) {
 }
 
 /**
- * Renders the "Phụ lục"/"Thanh toán"/"Liên quan" tab bodies for the
+ * Renders the "Phụ lục"/"Thanh toán"/"Liên quan"/"Xem đầy đủ" tab bodies for the
  * Contract workspace (`ContractFormDialog`'s "Hồ sơ" tab is its own
  * `<form>`, not this component — see that file). Task 3.1
  * (`openspec/changes/logistics-workspace-redesign/design.md` section 3)
@@ -98,6 +100,7 @@ export function ContractExpandedDetails({
   );
 
   const isFullySigned = contract.sellerSigned && contract.buyerSigned;
+  const shipmentIneligibleReason = reasonContractIneligibleForShipment(contract);
   const paymentSchedulesQuery = usePaymentSchedulesQuery(contract.id);
   const paymentSchedules = paymentSchedulesQuery.data?.success
     ? paymentSchedulesQuery.data.schedules
@@ -370,11 +373,17 @@ export function ContractExpandedDetails({
           <VStack gap={4} hAlign="stretch">
             <HStack hAlign="between" vAlign="center">
               <Text weight="semibold">Shipment</Text>
+              {/* Requires the contract to be Official, fully signed, and
+                  not cancelled to create; the backend also enforces this
+                  (`400` otherwise) — the disabled button + tooltip here is
+                  just the UX-level mirror of that rule. */}
               <Button
                 label="Thêm Shipment"
                 variant="secondary"
                 size="sm"
                 icon={<Icon icon={Plus} />}
+                isDisabled={shipmentIneligibleReason != null}
+                tooltip={shipmentIneligibleReason ?? undefined}
                 onClick={onAddShipment}
               />
             </HStack>
@@ -461,6 +470,15 @@ export function ContractExpandedDetails({
             </Card>
           ) : null}
         </VStack>
+      )}
+
+      {activeTab === 'fullView' && (
+        <ContractFullViewPanel
+          contract={contract}
+          shipments={shipments}
+          customersById={customersById}
+          costCategoriesById={costCategoriesById}
+        />
       )}
     </VStack>
   );

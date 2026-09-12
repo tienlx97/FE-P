@@ -45,6 +45,9 @@ function emptyValues(contract = null) {
     coNumber: '',
     coDeclarationDate: '',
     coIssuedDate: '',
+    customsDeclarationNumber: '',
+    customsDeclarationDate: '',
+    customsInspected: false,
     // New shipments default to "Đã book" — matches the backend's own
     // default (BE-kt-xnk).
     status: SHIPMENT_STATUSES[0],
@@ -76,6 +79,9 @@ function valuesFromShipment(shipment) {
     coNumber: shipment.coNumber ?? '',
     coDeclarationDate: shipment.coDeclarationDate ?? '',
     coIssuedDate: shipment.coIssuedDate ?? '',
+    customsDeclarationNumber: shipment.customsDeclarationNumber ?? '',
+    customsDeclarationDate: shipment.customsDeclarationDate ?? '',
+    customsInspected: shipment.customsInspected,
     status: shipment.status,
   };
 }

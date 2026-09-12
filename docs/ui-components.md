@@ -30,13 +30,29 @@ through them.
 
 - Contract (`contracts-list.jsx` → `contract-form-dialog.jsx`, a bespoke
   `CommonDialog` shell, not `FormDialog`): one fullscreen workspace with
-  four tabs — Hồ sơ (profile), Phụ lục (annexes), Thanh toán (payment
-  schedule), Liên quan (related: Shipment/Commission/BOQ). New contracts
-  keep Phụ lục/Thanh toán/Liên quan `aria-disabled` until the contract
-  itself is saved (no `contractId` to key child relations on yet). "Liên
-  quan" opens Shipment/Commission/BOQ's own shared editor (below) — a
-  summary card per related entity, not embedded fields; BOQ's card/query is
-  gated on `logistics:secret` at the UI, route and query layer.
+  five tabs — Hồ sơ (profile), Phụ lục (annexes), Thanh toán (payment
+  schedule), Liên quan (related: Shipment/Commission/BOQ), Xem đầy đủ (full
+  view). New contracts keep Phụ lục/Thanh toán/Liên quan/Xem đầy đủ
+  `aria-disabled` until the contract itself is saved (no `contractId` to
+  key child relations on yet). "Liên quan" opens Shipment/Commission/BOQ's
+  own shared editor (below) — a summary card per related entity, not
+  embedded fields; BOQ's card/query is gated on `logistics:secret` at the
+  UI, route and query layer. "Xem đầy đủ" (`contract-full-view-panel.jsx`)
+  is a read-only quick-lookup screen, not a management surface: a search
+  bar filters a `TabList` of the contract's Shipments (matching
+  Shipment/cost/VGM fields, lowercased substring — VGM is fetched for
+  every Shipment up front via `use-shipments-vgms-queries.js`'s
+  `useQueries` batch, only while this tab is mounted), and the selected
+  Shipment's info/VGM(`isReadOnly`)/costs render stacked on one screen —
+  no row-expansion, no inner tabs, unlike "Liên quan". `ShipmentInfoSection`/
+  `ShipmentCostsSection` are shared with `ShipmentExpandedDetails`'s own
+  Thông tin/Chi phí inner tabs (factored out to avoid duplicating the
+  field lists). A funnel button opens "Bộ lọc nâng cao", reusing
+  `AdvancedFilterBuilder` (the same field/operator/value condition-row
+  component `AdvanceTable`'s own filter-builder dialog uses) evaluated
+  client-side over 5 string fields (Shipment/booking/VGM container/VGM
+  seal/cost name) instead of sent to a server; applying it replaces the
+  plain search box (disabled while active).
 - Shipment/Commission/BOQ share **one editor each** between Contract's
   "Liên quan" tab and their own standalone list —
   `shipment-form-dialog.jsx`/`commission-form-dialog.jsx`/
@@ -140,7 +156,7 @@ shared-form guards.
 
 ## Stable view/edit geometry
 
-Contract (Hồ sơ/Phụ lục/Thanh toán/Liên quan), Shipment and Commission keep
+Contract (Hồ sơ/Phụ lục/Thanh toán/Liên quan/Xem đầy đủ), Shipment and Commission keep
 the same field grid in every mode. Prefer a control's own read-only API
 (`isReadOnly` on `TextInput`/etc.); Astryx's `Selector`/`DateInput`/
 `CheckboxList` expose no such prop, only `isDisabled` — the wrong visual/tab-

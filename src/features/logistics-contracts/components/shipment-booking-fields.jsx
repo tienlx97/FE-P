@@ -1,5 +1,6 @@
 'use client';
 
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
@@ -206,6 +207,47 @@ export function ShipmentBookingFields({
               statusVariant="tooltip"
             />
           </ReadOnlyLock>
+        </StackItem>
+      </FormGrid>
+
+      <Text weight="semibold">Tờ khai Hải quan</Text>
+
+      <TextInput
+        label="Số tờ khai"
+        placeholder={isReadOnly ? '—' : 'Do hải quan cấp, tự nhập'}
+        value={values.customsDeclarationNumber}
+        onChange={(value) => setField('customsDeclarationNumber', value)}
+        isOptional
+        status={fieldStatuses.customsDeclarationNumber}
+        statusVariant="tooltip"
+        isReadOnly={isReadOnly}
+      />
+
+      <FormGrid>
+        <StackItem size="fill">
+          <ReadOnlyLock isActive={isReadOnly}>
+            <DateInput
+              label="Ngày Khai"
+              value={
+                /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                  values.customsDeclarationDate || null
+                )
+              }
+              onChange={(value) => setField('customsDeclarationDate', value ?? '')}
+              format={formatDateInputValue}
+              isOptional
+              status={fieldStatuses.customsDeclarationDate}
+              statusVariant="tooltip"
+            />
+          </ReadOnlyLock>
+        </StackItem>
+        <StackItem size="fill">
+          <CheckboxInput
+            label="Bị kiểm hoá"
+            value={values.customsInspected}
+            onChange={(checked) => setField('customsInspected', checked)}
+            isReadOnly={isReadOnly}
+          />
         </StackItem>
       </FormGrid>
     </FormSection>

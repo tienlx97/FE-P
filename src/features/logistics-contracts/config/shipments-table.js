@@ -78,6 +78,10 @@ export const FILTER_FIELD_DEFS = [
   // Shipment itself (BE-kt-xnk's `ShipmentFilterFields`) — a lô hàng
   // matches if *any* of its cost lines carries this invoice number.
   { key: 'invoiceNumber', label: 'Số hoá đơn', type: 'string' },
+  { key: 'coNumber', label: 'Số C/O', type: 'string' },
+  { key: 'coIssuedDate', label: 'Ngày có C/O', type: 'date' },
+  { key: 'customsDeclarationNumber', label: 'Số tờ khai', type: 'string' },
+  { key: 'customsDeclarationDate', label: 'Ngày Khai', type: 'date' },
 ];
 
 export const SKELETON_ROW_COUNT = 6;
@@ -118,6 +122,9 @@ export const skeletonRows = Array.from(
     coNumber: null,
     coDeclarationDate: null,
     coIssuedDate: null,
+    customsDeclarationNumber: null,
+    customsDeclarationDate: null,
+    customsInspected: false,
     costs: [],
     costTotalsByCategory: [],
     status: 'Booked',

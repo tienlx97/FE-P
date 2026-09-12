@@ -604,6 +604,9 @@ export {};
  * @property {string | null} coNumber - customs-issued, manually entered
  * @property {string | null} coDeclarationDate - ISO date, "ngày khai C/O"
  * @property {string | null} coIssuedDate - ISO date, "ngày có C/O"
+ * @property {string | null} customsDeclarationNumber - customs-issued, manually entered, "số tờ khai"
+ * @property {string | null} customsDeclarationDate - ISO date, "ngày khai"
+ * @property {boolean} customsInspected - "bị kiểm hoá"
  * @property {ShipmentCostLine[]} costs
  * @property {ShipmentCostTotal[]} costTotalsByCategory - computed at read time, never stored
  * @property {ShipmentStatus} status
@@ -633,6 +636,9 @@ export {};
  * @property {string} coNumber
  * @property {string} coDeclarationDate
  * @property {string} coIssuedDate
+ * @property {string} customsDeclarationNumber
+ * @property {string} customsDeclarationDate
+ * @property {boolean} customsInspected
  * @property {ShipmentStatus | ''} status
  */
 

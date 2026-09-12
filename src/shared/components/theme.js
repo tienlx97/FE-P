@@ -180,5 +180,18 @@ export const ktxnkTheme = defineTheme({
         color: 'var(--color-on-success)',
       },
     },
+    // Astryx's default `<thead>` has no background at all — header text sits
+    // directly on the same white the body rows use, so a table reads as
+    // plain black-on-white with nothing marking where the header row ends.
+    // Per user request (2026-09-12), give it a background one step darker
+    // than body/surface. `--color-background-muted` (not the brand accent)
+    // on purpose: it's the same neutral wash already used for hover/press
+    // fills elsewhere, so every table in the app gets a consistent, visibly
+    // distinct header without turning into a second brand-colored surface —
+    // reserving `--color-accent-muted` for its existing meaning (selected
+    // nav item, `<Note>` callout) instead of overloading it here too.
+    'table-header': {
+      base: { backgroundColor: 'var(--color-background-muted)' },
+    },
   },
 });

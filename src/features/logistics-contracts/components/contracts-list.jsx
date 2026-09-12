@@ -1,5 +1,5 @@
 'use client';
-/** @typedef {'profile' | 'annexes' | 'payments' | 'related'} ExpandedTab */
+/** @typedef {'profile' | 'annexes' | 'payments' | 'related' | 'fullView'} ExpandedTab */
 import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
