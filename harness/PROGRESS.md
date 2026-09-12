@@ -1,5 +1,57 @@
 # Progress Log
 
+## 2026-09-12 — Fix + add: sticky-header regression fix, and pin the totals row too
+
+**Context:** Live-checking `pin-table-header` (previous entry below)
+surfaced a real regression: `TableHeaderGroupBar`'s "GIÁ TRỊ" spanning
+label disappeared once the page scrolled, because it's `position:
+absolute` inside a non-sticky wrapper while the header `<th>` it overlays
+became `position: sticky` — the absolute overlay scrolled away underneath
+the now-fixed header. User then asked me to pick the optimal way to also
+pin the "Tổng cộng" totals row (deferred in the previous entry pending a
+decision between swizzling `Table` or a scoped overlay). See
+`openspec/changes/pin-table-header/` (fix) and
+`openspec/changes/pin-totals-row/` (new feature).
+
+**Fix:** `table-header-group.jsx`'s `TableHeaderGroupBar` switched from
+`position: absolute` (container-relative) to `position: fixed`
+(viewport-relative), and now also re-measures on `scroll` (previously
+only resize/mutation) — so it tracks the sticky header continuously, not
+just once.
+
+**New:** `TableStickyTotalsBar` (`table-sticky-totals-bar.jsx`) — a
+`position: fixed` bar pinned to the viewport bottom, built with the same
+DOM-measurement technique as `TableHeaderGroupBar`: for each real header
+`<th data-column-key>`, measure its `left`/`width`, then re-render that
+column's totals cell at the same X position using the *same* `renderCell`
+each list's `columnsWithTotalsRow` already special-cases for
+`__isTotalsRow` — no separate totals-rendering logic to keep in sync.
+Stacks one row per `totalsRows` entry (multi-currency lists), and only
+shows while the table itself is at least partly on screen
+(`IntersectionObserver`), so it doesn't float over unrelated page content
+once scrolled well past the table. `AdvanceTable` wires it automatically
+whenever `totalsRows` is non-empty — no changes needed in any of the 4
+lists that already pass it. Picked this over swizzling `Table` (which
+would opt the whole shared component out of upstream Astryx updates for a
+benefit scoped to 4 lists) — see the change's decision log.
+
+**Known limitation:** the real totals row still renders normally inside
+the `<table>` too (no way to suppress one specific row in data-driven
+mode) — when scrolled to the table's own bottom, totals may briefly show
+twice (inline + fixed bar). Accepted, minor.
+
+**Verified:** `./harness/verify.sh` full gate green both times. **Not
+verified live in-browser this round** — `pnpm exec next dev -p 3001`
+could not start (Next's single-instance-per-directory lock is held by
+another process on port 3000 on this machine, which per this repo's own
+`.env.development.example` comment is the **production** port — did not
+navigate there to "test" against it, since that could be a live service
+with real data). The earlier `pin-table-header` entry's live check (sticky
+header `getComputedStyle`, contracts/shipments totals rendering) still
+stands as evidence the underlying mechanism works; this session's two
+follow-on changes are verified by static checks only. Ask the user to
+confirm visually on their own running instance.
+
 ## 2026-09-12 — Add: pin (sticky) table header while scrolling
 
 **Context:** User asked for the table header and the "Tổng cộng" totals

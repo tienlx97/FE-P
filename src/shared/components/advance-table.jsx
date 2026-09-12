@@ -25,9 +25,10 @@ import { colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 
 import { IconRefresh } from '@/shared/components/icon/icon-refresh.jsx';
+import { TableStickyTotalsBar } from '@/shared/components/table-sticky-totals-bar.jsx';
 import {
   stickyColumnKeys,
   TableViewOptionsPopover,
@@ -209,6 +210,10 @@ export function AdvanceTable({
   dividers = 'rows',
   pagination,
 }) {
+  // Measured by `TableStickyTotalsBar` (real header `<th>` positions) to
+  // pin `totalsRows` to the viewport bottom — see that component's doc
+  // comment for why a `<tr>` itself can't just be made sticky.
+  const tableWrapperRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [searchFilters, setSearchFilters] = useState(
     /** @type {import('@astryxdesign/core/PowerSearch').PowerSearchFilter[]} */ ([]),
   );
@@ -680,38 +685,48 @@ export function AdvanceTable({
         </HStack>
       ) : null}
 
-      <Table
-        emptyState={
-          isLoading ? (
-            false
-          ) : (
-            <VStack gap={2} hAlign="center" paddingBlock={6}>
-              <Text weight="semibold">
-                {activeFilterCount > 0
-                  ? 'Không tìm thấy kết quả phù hợp'
-                  : 'Chưa có dữ liệu'}
-              </Text>
-              <Text type="supporting" color="secondary">
-                {activeFilterCount > 0
-                  ? 'Thử từ khóa khác hoặc xóa bộ lọc để xem lại danh sách.'
-                  : 'Dữ liệu sẽ xuất hiện tại đây sau khi được thêm.'}
-              </Text>
-            </VStack>
-          )
-        }
-        data={isLoading ? (skeletonRows ?? []) : renderedData}
-        columns={isLoading ? skeletonColumns : tableColumns}
-        idKey={idKey}
-        density={density}
-        dividers={dividers}
-        hasHover
-        plugins={{
-          columnSettings: columnSettingsPlugin,
-          stickyColumns: stickyColumnsPlugin,
-          filter: filterPlugin,
-          ...extraPlugins,
-        }}
-      />
+      <div ref={tableWrapperRef}>
+        <Table
+          emptyState={
+            isLoading ? (
+              false
+            ) : (
+              <VStack gap={2} hAlign="center" paddingBlock={6}>
+                <Text weight="semibold">
+                  {activeFilterCount > 0
+                    ? 'Không tìm thấy kết quả phù hợp'
+                    : 'Chưa có dữ liệu'}
+                </Text>
+                <Text type="supporting" color="secondary">
+                  {activeFilterCount > 0
+                    ? 'Thử từ khóa khác hoặc xóa bộ lọc để xem lại danh sách.'
+                    : 'Dữ liệu sẽ xuất hiện tại đây sau khi được thêm.'}
+                </Text>
+              </VStack>
+            )
+          }
+          data={isLoading ? (skeletonRows ?? []) : renderedData}
+          columns={isLoading ? skeletonColumns : tableColumns}
+          idKey={idKey}
+          density={density}
+          dividers={dividers}
+          hasHover
+          plugins={{
+            columnSettings: columnSettingsPlugin,
+            stickyColumns: stickyColumnsPlugin,
+            filter: filterPlugin,
+            ...extraPlugins,
+          }}
+        />
+      </div>
+
+      {totalsRows && totalsRows.length > 0 && !isLoading ? (
+        <TableStickyTotalsBar
+          containerRef={tableWrapperRef}
+          tableColumns={tableColumns}
+          totalsRows={totalsRows}
+        />
+      ) : null}
 
       {summary && !isLoading ? (
         <HStack hAlign="end" xstyle={styles.summary}>

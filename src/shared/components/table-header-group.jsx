@@ -31,7 +31,17 @@ const styles = stylex.create({
     display: 'flex',
     justifyContent: 'center',
     pointerEvents: 'none',
-    position: 'absolute',
+    // `fixed`, not `absolute` — the real header `<th>` this bar overlays
+    // is itself `position: sticky` (`theme.js`'s `table-header-cell`), so
+    // once the page scrolls it visually stays pinned at the viewport's
+    // top edge while an `absolute` sibling (positioned relative to the
+    // scrolling `containerRef`) would scroll away underneath it, making
+    // the "GIÁ TRỊ" label disappear (2026-09-12 regression). `fixed` keeps
+    // this bar anchored to the viewport too, and `measure()` below
+    // recomputes on scroll (not just resize/mutation) to track the sticky
+    // header's on-screen position throughout the scroll, not just once
+    // it's fully stuck.
+    position: 'fixed',
     zIndex: 1,
   },
   hiddenCaption: {
@@ -119,19 +129,18 @@ export function TableHeaderGroupBar({
         setRect(null);
         return;
       }
-      const containerRect = container.getBoundingClientRect();
+      // Viewport-relative, not offset against `containerRect` — the bar is
+      // `position: fixed` now (see `styles.bar`'s comment), so its `left`/
+      // `top` need to be actual viewport coordinates, the same frame
+      // `getBoundingClientRect()` already reports in.
       const cellRects = cells.map((cell) => cell.getBoundingClientRect());
       const captionRects = captions.map((caption) =>
         caption.getBoundingClientRect(),
       );
-      const left =
-        Math.min(...cellRects.map((r) => r.left)) - containerRect.left;
-      const right =
-        Math.max(...cellRects.map((r) => r.right)) - containerRect.left;
-      const top =
-        Math.min(...captionRects.map((r) => r.top)) - containerRect.top;
-      const bottom =
-        Math.max(...captionRects.map((r) => r.bottom)) - containerRect.top;
+      const left = Math.min(...cellRects.map((r) => r.left));
+      const right = Math.max(...cellRects.map((r) => r.right));
+      const top = Math.min(...captionRects.map((r) => r.top));
+      const bottom = Math.max(...captionRects.map((r) => r.bottom));
       // Read the real header cell's own resolved background instead of
       // guessing a token — whatever the theme paints `<th>` with, this bar
       // matches exactly, with nothing to keep in sync by hand.
@@ -152,10 +161,18 @@ export function TableHeaderGroupBar({
       attributeFilter: ['style', 'class'],
     });
     window.addEventListener('resize', measure);
+    // The sticky header's on-screen position changes continuously while
+    // scrolling (until it's fully stuck at `top: 0`), and this bar is
+    // `position: fixed` now — without tracking scroll too, it would only
+    // ever reflect the pre-scroll position. `capture: true` also catches
+    // scroll on an inner scrollable ancestor (e.g. the table's own
+    // horizontal-scroll wrapper), not just the window.
+    window.addEventListener('scroll', measure, { passive: true, capture: true });
     return () => {
       resizeObserver.disconnect();
       mutationObserver.disconnect();
       window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, { capture: true });
     };
     // columnKeys is a fresh array literal from the caller on every render —
     // compare by content instead of restarting the observers each render.
