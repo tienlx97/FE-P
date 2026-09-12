@@ -150,11 +150,21 @@ export const ktxnkTheme = defineTheme({
       },
     },
     // Paint cells as well as the section so pinned headers stay opaque.
+    // `position: sticky` goes on the header *cells* (`<th>`), not the
+    // `<thead>` itself — sticky on a table-header-group isn't reliably
+    // supported across browsers, sticky on each cell is (2026-09-12, per
+    // user request to keep the header visible while scrolling).
     'table-header': {
       base: { backgroundColor: '#dceee8' },
     },
     'table-header-cell': {
-      base: { backgroundColor: '#dceee8', color: '#18594e' },
+      base: {
+        backgroundColor: '#dceee8',
+        color: '#18594e',
+        position: 'sticky',
+        top: '0',
+        zIndex: '1',
+      },
     },
     'table-body': {
       base: { backgroundColor: 'var(--color-background-card)' },

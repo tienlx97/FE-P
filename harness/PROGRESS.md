@@ -1,5 +1,38 @@
 # Progress Log
 
+## 2026-09-12 — Add: pin (sticky) table header while scrolling
+
+**Context:** User asked for the table header and the "Tổng cộng" totals
+row to stay visible while scrolling. See
+`openspec/changes/pin-table-header/`.
+
+**What changed:** `theme.js`'s `table-header-cell` component override
+gains `position: sticky; top: 0; z-index: 1` (sticky per `<th>`, not on
+`<thead>` — cross-browser support for sticky on a table-header-group is
+unreliable, per-cell is standard). Theme-wide: every `Table` in the app
+now has a sticky header, not just the four lists with a totals row.
+
+**Totals row NOT pinned — deferred, needs a decision:** `Table`'s
+data-driven mode (used everywhere via `AdvanceTable`) has no `<tfoot>`
+and no per-row styling hook, so the totals row is just the last ordinary
+`<tr>`; `position: sticky` isn't reliably supported on `<tr>` itself, and
+a theme override can't single out one specific row from the rest of the
+body. Achieving this needs either `astryx swizzle Table` (ejects the
+component from the shared design system, opts out of upgrades) or moving
+the totals row out of the `<table>` into a separately-positioned bar with
+manually mirrored column widths (tracks `AdvanceTable`'s column
+visibility/order/width state, syncs horizontal scroll). Asked the user
+which they'd prefer; not implemented yet.
+
+**Verified:** `./harness/verify.sh` full gate green. Live-checked against
+the running dev stack (`pnpm exec next dev -p 3001` + BE-kt-xnk dev Docker
+stack) — Hợp đồng and Shipment lists both render correctly, totals row
+values match; confirmed via `getComputedStyle` in the browser that a
+header `<th>` is `position: sticky; top: 0px; z-index: 1` with an opaque
+background. Sample data didn't have enough rows to make the page taller
+than the viewport, so the actual "scrolls away or not" visual couldn't be
+observed directly — the computed-style check is the evidence instead.
+
 ## 2026-09-12 — Add: totals row on Shipments/Commissions/BOQ lists (follow-on to contracts)
 
 **Context:** User asked to replicate the contracts-list totals-row feature
