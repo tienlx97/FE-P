@@ -12,11 +12,19 @@ const styles = stylex.create({
     // border for its *entire* height, including the blank caption strip
     // this bar covers — without a matching background those dividers cut
     // straight through the middle of the spanning label. Painting over
-    // them here (same surface as the header row) merges the group visually
-    // while leaving those dividers doing their job one row down, between
-    // the actual sub-column labels — same as a spreadsheet's merged header
-    // cell.
-    backgroundColor: colorVars['--color-background-surface'],
+    // them here merges the group visually while leaving those dividers
+    // doing their job one row down, between the actual sub-column labels —
+    // same as a spreadsheet's merged header cell.
+    //
+    // No `backgroundColor` here — `measure()` below reads the real header
+    // cell's own computed background and applies it inline instead. A
+    // theme's `table-header-cell` override (`astryx theme targets Table`)
+    // compiles straight to a literal color in the built CSS, not a
+    // reusable token, so hardcoding a second copy of that color here would
+    // silently drift out of sync the next time the theme changes the
+    // header color (as happened once already) — reading the live computed
+    // style instead means this bar always matches whatever the header
+    // actually looks like, with nothing to keep in sync by hand.
     borderBottomColor: colorVars['--color-border'],
     borderBottomStyle: 'solid',
     borderBottomWidth: borderVars['--border-width'],
@@ -82,7 +90,7 @@ export function TableHeaderGroupBar({
   label,
 }) {
   const [rect, setRect] = useState(
-    /** @type {{ left: number, top: number, width: number, height: number } | null} */ (
+    /** @type {{ left: number, top: number, width: number, height: number, background: string } | null} */ (
       null
     ),
   );
@@ -124,7 +132,13 @@ export function TableHeaderGroupBar({
         Math.min(...captionRects.map((r) => r.top)) - containerRect.top;
       const bottom =
         Math.max(...captionRects.map((r) => r.bottom)) - containerRect.top;
-      setRect({ left, top, width: right - left, height: bottom - top });
+      // Read the real header cell's own resolved background instead of
+      // guessing a token — whatever the theme paints `<th>` with, this bar
+      // matches exactly, with nothing to keep in sync by hand.
+      const background = getComputedStyle(
+        /** @type {Element} */ (cells[0]),
+      ).backgroundColor;
+      setRect({ left, top, width: right - left, height: bottom - top, background });
     };
 
     measure();
@@ -159,6 +173,7 @@ export function TableHeaderGroupBar({
         top: rect.top,
         width: rect.width,
         height: rect.height,
+        backgroundColor: rect.background,
       }}
     >
       <Text type="supporting" color="secondary">

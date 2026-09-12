@@ -8699,3 +8699,37 @@ ward reference data (free-text inputs, matching the backend).
   Run manually with `node harness/checks/pinned-table-colors-browser.mjs`
   against an existing local dev server (TABLE_TEST_ORIGIN overrides origin).
 - Full ./harness/verify.sh PASSED: harness/runs/20260912-112709-2883/.
+
+## 2026-09-12 — `refresh-workspace-colors` task 1.3: "GIÁ TRỊ" group-bar background
+
+- Started this task with my own separate `openspec/changes/table-header-background/`
+  in progress (a smaller, standalone `table-header` theme override made
+  before task 1.1's branch/session existed) — found `theme.js` and
+  `contracts-list.jsx` had moved well past that on disk (a full palette
+  refresh: mint headers, pale teal canvas, pinned-cell parity, on branch
+  `feat/refresh-workspace-colors`). Deleted my now-redundant proposal
+  folder rather than leaving two competing change records for the same
+  area; folded this session's actual fix into task 1.3 above instead.
+- User caught the real remaining bug live: "cột GIÁ TRỊ, đang có background
+  khác" — `contracts-list.jsx`'s financial view spans "HỢP ĐỒNG"/"QUYẾT
+  TOÁN"/"ĐÃ THANH TOÁN"/"CHƯA THANH TOÁN" under one "GIÁ TRỊ" caption via
+  `table-header-group.jsx`'s `TableHeaderGroupBar` — an absolutely-
+  positioned overlay div, not a real spanning `<th>` (Astryx's `Table` has
+  no colspan-header primitive). That div's own stylex style still had
+  `backgroundColor: colorVars['--color-background-surface']` hardcoded
+  from before task 1.1 recolored `table-header-cell` to mint (`#dceee8`)
+  — two different colors side by side where the header should read as one
+  continuous bar.
+- Fixed by removing the hardcoded color entirely: `measure()` now reads
+  the real header `<th>`'s own `getComputedStyle(...).backgroundColor` and
+  applies it as the bar's inline `style` (which already carries the
+  measured left/top/width/height). This can never drift out of sync again
+  — whatever a future theme sets `table-header-cell` to, the bar copies it
+  live, instead of a second hardcoded value someone has to remember to
+  update alongside the theme.
+- `pnpm exec eslint`/`pnpm typecheck` clean. Full `./harness/verify.sh`
+  PASSED: `harness/runs/20260912-113657-3039/`.
+- Live-verified against the real local `BE-kt-xnk`: `/logistics/contracts`
+  → "Tài chính" view → zoomed screenshot of the "GIÁ TRỊ" bar over its
+  three sub-columns shows one continuous mint background, no seam. No
+  console errors.
