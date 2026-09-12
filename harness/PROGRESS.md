@@ -8650,3 +8650,34 @@ ward reference data (free-text inputs, matching the backend).
   picked up the same background with zero extra wiring, confirming the
   theme override applies to every `Table` instance, not just the one the
   user was looking at when they asked. No console errors.
+
+## 2026-09-12 — refresh-workspace-colors task 1.1
+
+- User requested a less monochrome interface, starting with colored table
+  headings, after committing all existing work and creating a new branch.
+  Baseline commit: `68ab085`; branch: `feat/refresh-workspace-colors`.
+- Shared theme now uses a pale teal canvas, white data/card/popover surfaces,
+  mint table headers with deep teal labels, and tinted selected tabs.
+  Header cells are opaque too, covering sticky/pinned columns. Existing logo
+  colors, fonts, spacing and business statuses retain their roles.
+- `./init.sh` passed. Full `./harness/verify.sh` PASSED:
+  `harness/runs/20260912-112042-2663/`.
+- Browser evidence: `harness/runs/20260912-color-refresh/` contains fixture
+  setup script, desktop/mobile screenshots, filter dialog, nested Shipment
+  table, computed header colors and contrast measurements. Reviewed at
+  1440x900 and 390x844. Mobile page width = viewport width = 390px.
+  Opened/closed advanced filtering and contract dialogs, changed to the
+  Related tab, checked nested headers. Browser errors command returned none.
+  Tests use synthetic cookies and mocked API data; no real records changed.
+- Astryx contrastRatio: header text 6.76:1; teal selected text on selection
+  tint 4.70:1; input outline on muted surface 3.40:1.
+- Environment: port 3000 already held a Next development server. Attempting
+  the documented port 3001 command correctly refused a duplicate dev process;
+  reused the existing server for browser checks without stopping it.
+- Harness gaps: initial fixture setup used the obsolete flat contract-search
+  envelope and a catch-all mock before specific routes, producing empty data.
+  Corrected the evidence script to the current page/valueTotals/settlements
+  response and specific-first ordering. Existing browser fixture helpers need
+  shared response factories and assertions that fixture rows appear (discovered,
+  outside this theme task). Git Bash lives under E:/apps/core/Git on this host;
+  discover its location from Get-Command git instead of assuming Program Files.

@@ -1,30 +1,8 @@
 import { defineTheme } from '@astryxdesign/core/theme';
 
-// Color system for the kt-xnk brand, built the way react.dev builds theirs
-// (github.com/reactjs/react.dev -> colors.js), measured with Astryx's own
-// hexToHct/contrastRatio. Three rules carried over from that palette:
-//
-//   1. The brand token IS the logo color. react.dev's `brand`/`link` is
-//      literally the React logo cyan (#087EA4), not a darkened variant. Ours
-//      are sampled straight off public/images/logo-dn-group.png: teal
-//      #247768 (accent) and red #c2252a (secondary). Both clear WCAG AA on
-//      white (5.37:1 / 5.85:1 — react.dev's own brand only manages 4.64:1),
-//      so there is no reason to darken them.
-//   2. One hue for every neutral, with chroma shaped by tone — near-zero at
-//      light tones, peaking mid, easing off dark. react.dev runs hue ~275 at
-//      chroma 1.1 (tone 97) -> 14.2 (tone 55) -> 5.8 (tone 16). Ours runs the
-//      brand hue 178.4 on the same curve. This replaced a split-brain palette
-//      where surfaces were pure gray (chroma 0) but text and borders were
-//      still teal-tinted (chroma 4-8) — two unrelated systems in one theme.
-//   3. The page background stays pure white. react.dev's `wash` is #FFFFFF
-//      too; the tint only ever shows up in mid-tones, never behind the page.
-//
-// Status hues (green/amber/red) stay conventional rather than rebranded —
-// react.dev keeps theirs too — but are retinted into react.dev's soft band
-// (chroma ~6, tone ~95) so callouts stop shouting.
-//
-// Light theme only, per openspec/project.md, so every token below is a single
-// value rather than Astryx's [light, dark] tuple form.
+// Light-only DN Group palette: logo teal anchors actions, mint identifies
+// table headings and selection, and pale teal surfaces frame white data.
+// Keep business statuses on their conventional green/amber/red hues.
 export const ktxnkTheme = defineTheme({
   name: 'kt-xnk',
   // Astryx's neutral default (14px base / 1.2 ratio) is the site-wide
@@ -56,26 +34,16 @@ export const ktxnkTheme = defineTheme({
     // Brand teal, exactly as it appears in the logo — drives primary buttons,
     // focus rings, links, and accent-colored icons.
     '--color-accent': '#247768',
-    // react.dev's `highlight` recipe: brand hue at chroma 7 / tone 96, a
-    // whisper of brand rather than a fill. Astryx resolves BOTH the selected
-    // selected SideNavItem and every <Note> callout to this token, so an
-    // over-saturated value here turns both into mint blobs.
-    '--color-accent-muted': '#e5f8f3',
+    // Shared selection/callout tint, deliberately softer than table headers.
+    '--color-accent-muted': '#e5f3ed',
     '--color-on-accent': '#ffffff',
     '--color-text-accent': '#247768',
     '--color-icon-accent': '#247768',
 
-    // Flat white across every surface layer — body, surface, card, popover
-    // all resolve to the same #ffffff instead of the brand-tinted ramp this
-    // used to run (tone 100/98/97/96/94, chroma 0-2). Cards and popovers
-    // still separate from the page via their own border + elevation shadow,
-    // not a background tint.
-    '--color-background-body': '#ffffff',
-    '--color-background-surface': '#ffffff',
-    // Hover/press fill for interactive rows (nav links, menu items) is the
-    // one background that has to stay visibly distinct from white — kept as
-    // a neutral gray (no brand hue) rather than reintroducing the tint.
-    '--color-background-muted': '#f5f5f5',
+    // Subtle colored canvas; elevated cards, inputs and data remain white.
+    '--color-background-body': '#f3f8f6',
+    '--color-background-surface': '#f3f8f6',
+    '--color-background-muted': '#edf5f1',
     '--color-background-card': '#ffffff',
     '--color-background-popover': '#ffffff',
 
@@ -180,18 +148,24 @@ export const ktxnkTheme = defineTheme({
         color: 'var(--color-on-success)',
       },
     },
-    // Astryx's default `<thead>` has no background at all — header text sits
-    // directly on the same white the body rows use, so a table reads as
-    // plain black-on-white with nothing marking where the header row ends.
-    // Per user request (2026-09-12), give it a background one step darker
-    // than body/surface. `--color-background-muted` (not the brand accent)
-    // on purpose: it's the same neutral wash already used for hover/press
-    // fills elsewhere, so every table in the app gets a consistent, visibly
-    // distinct header without turning into a second brand-colored surface —
-    // reserving `--color-accent-muted` for its existing meaning (selected
-    // nav item, `<Note>` callout) instead of overloading it here too.
+    // Paint cells as well as the section so pinned headers stay opaque.
     'table-header': {
+      base: { backgroundColor: '#dceee8' },
+    },
+    'table-header-cell': {
+      base: { backgroundColor: '#dceee8', color: '#18594e' },
+    },
+    'table-body': {
+      base: { backgroundColor: 'var(--color-background-card)' },
+    },
+    'table-footer': {
       base: { backgroundColor: 'var(--color-background-muted)' },
+    },
+    tab: {
+      selected: {
+        backgroundColor: 'var(--color-accent-muted)',
+        color: 'var(--color-text-accent)',
+      },
     },
   },
 });

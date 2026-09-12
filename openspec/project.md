@@ -93,8 +93,8 @@ build with messages that explain the fix.
   `public/images/logo-dn-group.png`; (2) every neutral shares the brand hue
   (178.4) with chroma shaped by tone — near-zero light, peaking mid, easing
   off dark — so surfaces, text, and borders belong to one ramp instead of
-  drifting apart; (3) the page background stays pure white, the tint only
-  appears in mid-tones. Status hues (green/amber/red) stay conventional
+  drifting apart; (3) the page background uses a pale teal canvas, with white data/card
+  surfaces and mint table headers (refresh-workspace-colors). Status hues (green/amber/red) stay conventional
   rather than rebranded, retinted into the same soft band (chroma ~6, tone
   ~95). Every value is contrast-checked with Astryx's own `contrastRatio`
   before it lands (AA 4.5:1 for text, 3:1 for non-text boundaries per WCAG
