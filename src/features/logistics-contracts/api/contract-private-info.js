@@ -39,8 +39,15 @@ export async function listContractPrivateInfos({ page = 1, pageSize = 25 } = {})
  * fields as `searchAllContracts`/`searchAllShipments` (contractNumber,
  * projectName, ...), not BOQ-specific fields. An empty `conditions` array
  * behaves identically to `listContractPrivateInfos`.
+ *
+ * Unlike `listContractPrivateInfos`, the response is
+ * `{ page: {...}, totals: {...} }` rather than the flat paging envelope —
+ * `totals` sums `containerCount`/`logisticsTotal`/`profit` across every
+ * matching contract (not just this page), backing the list's per-column
+ * totals row. Always VNĐ, no currency grouping (unlike the other lists'
+ * `totals`, this is a single object, not an array).
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
- * @returns {Promise<{ success: true, items: import('../types/index.js').ContractPrivateInfoListItem[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, items: import('../types/index.js').ContractPrivateInfoListItem[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { containerCount: number, logisticsTotal: number, profit: number } } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchContractPrivateInfos({
   page = 1,
@@ -69,11 +76,12 @@ export async function searchContractPrivateInfos({
 
   return {
     success: true,
-    items: result.data?.items ?? [],
-    page: result.data?.page ?? page,
-    pageSize: result.data?.pageSize ?? pageSize,
-    totalCount: result.data?.totalCount ?? 0,
-    totalPages: result.data?.totalPages ?? 0,
+    items: result.data?.page?.items ?? [],
+    page: result.data?.page?.page ?? page,
+    pageSize: result.data?.page?.pageSize ?? pageSize,
+    totalCount: result.data?.page?.totalCount ?? 0,
+    totalPages: result.data?.page?.totalPages ?? 0,
+    totals: result.data?.totals ?? { containerCount: 0, logisticsTotal: 0, profit: 0 },
   };
 }
 

@@ -4,7 +4,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   AdvanceTable,
@@ -33,6 +33,47 @@ function orDashNumber(value, suffix = '') {
   return `${value.toLocaleString('en-US')}${suffix ? ` ${suffix}` : ''}`;
 }
 
+/**
+ * @typedef {{
+ *   contractId: string,
+ *   __isTotalsRow: true,
+ *   containerCount: number,
+ *   logisticsTotal: number,
+ *   profit: number,
+ * }} PrivateInfoTotalsRow
+ */
+
+/**
+ * Cell renderers used only for the synthetic totals row appended via
+ * `AdvanceTable`'s `totalsRows` prop — same pattern as
+ * `contracts-list.jsx`'s `TOTALS_ROW_CELL_RENDERERS`. `contractNumber`
+ * doubles as the label cell since `COLUMN_OPTIONS` marks it
+ * `isAlwaysVisible`. Unlike the other lists, no currency grouping — these
+ * three are always VNĐ, so there's exactly one totals row, not one per
+ * currency. `costPricePerContainer`/`quotedPricePerContainer` (per-unit
+ * prices) are deliberately not summed — summing a unit price across
+ * different contracts isn't a meaningful total.
+ * @type {Record<string, (row: PrivateInfoTotalsRow) => import('react').ReactNode>}
+ */
+const TOTALS_ROW_CELL_RENDERERS = {
+  contractNumber: () => <Text weight="semibold">Tổng cộng</Text>,
+  containerCount: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {row.containerCount.toLocaleString('en-US')}
+    </Text>
+  ),
+  logisticsTotal: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {row.logisticsTotal.toLocaleString('en-US')} VNĐ
+    </Text>
+  ),
+  profit: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {row.profit.toLocaleString('en-US')} VNĐ
+    </Text>
+  ),
+};
+
 export function ContractPrivateInfosList() {
   const hasLogisticsSecret = useSessionPermissions().includes(
     LOGISTICS_SECRET_PERMISSION,
@@ -58,6 +99,25 @@ export function ContractPrivateInfosList() {
   });
   const listResult = privateInfosQuery.data;
   const items = listResult?.success ? listResult.items : [];
+
+  // Sum of containerCount/logisticsTotal/profit across every contract
+  // matching the current filters (not just this page — the backend
+  // computes it pre-paging, see `searchContractPrivateInfos`'s doc
+  // comment). Always VNĐ, so exactly one row (unlike the currency-grouped
+  // totals on the other lists) — rendered as a synthetic last row, same
+  // pattern as `contracts-list.jsx`.
+  const totalsRows = useMemo(() => {
+    if (!listResult?.success) return [];
+    return [
+      {
+        contractId: 'totals',
+        __isTotalsRow: true,
+        containerCount: listResult.totals.containerCount,
+        logisticsTotal: listResult.totals.logisticsTotal,
+        profit: listResult.totals.profit,
+      },
+    ];
+  }, [listResult]);
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ContractPrivateInfoListItem>[]} */
   const columns = [
@@ -132,6 +192,28 @@ export function ContractPrivateInfosList() {
     },
   ];
 
+  // Every column's `renderCell` runs against the synthetic totals row too
+  // — see `contracts-list.jsx`'s `columnsWithTotalsRow` for the reason
+  // this wraps every column instead of hand-editing each `renderCell`.
+  const columnsWithTotalsRow = columns.map((column) => {
+    const totalsRenderCell = TOTALS_ROW_CELL_RENDERERS[column.key];
+    return {
+      ...column,
+      // `containerCount`/`logisticsTotal`/`profit` are nullable on a real
+      // row but never-null on the totals row, so a strict intersection
+      // type (like `contracts-list.jsx`'s `columnsWithTotalsRow` uses)
+      // doesn't typecheck here — `any` is the pragmatic escape, the actual
+      // branching below is still guarded by `__isTotalsRow`.
+      /** @param {any} row */
+      renderCell: (row) =>
+        row.__isTotalsRow
+          ? (totalsRenderCell
+              ? totalsRenderCell(/** @type {PrivateInfoTotalsRow} */ (row))
+              : null)
+          : column.renderCell?.(row),
+    };
+  });
+
   const totalItems = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(1, listResult?.success ? listResult.totalPages : 1);
 
@@ -167,8 +249,9 @@ export function ContractPrivateInfosList() {
         columnOptions={COLUMN_OPTIONS}
         initialColumnKeys={DEFAULT_COLUMN_KEYS}
         defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-        tableColumns={columns}
+        tableColumns={columnsWithTotalsRow}
         data={items}
+        totalsRows={totalsRows}
         idKey="contractId"
         isLoading={privateInfosQuery.isLoading}
         skeletonRows={skeletonRows}

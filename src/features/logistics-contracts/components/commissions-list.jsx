@@ -17,7 +17,7 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
 import { pixel } from '@astryxdesign/core/Table';
-import { Heading } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
@@ -51,6 +51,36 @@ import { RecordActionsMenu } from './record-actions-menu.jsx';
 function orDash(value) {
   return value == null || value === '' ? '—' : value;
 }
+
+/**
+ * @typedef {{
+ *   id: string,
+ *   __isTotalsRow: true,
+ *   currency: string,
+ *   value: number,
+ *   isMultiCurrency: boolean,
+ * }} CommissionTotalsRow
+ */
+
+/**
+ * Cell renderers used only for the synthetic totals row(s) appended via
+ * `AdvanceTable`'s `totalsRows` prop — same pattern as
+ * `contracts-list.jsx`'s `TOTALS_ROW_CELL_RENDERERS`. `code` doubles as the
+ * label cell since `COLUMN_OPTIONS` marks it `isAlwaysVisible`.
+ * @type {Record<string, (row: CommissionTotalsRow) => import('react').ReactNode>}
+ */
+const TOTALS_ROW_CELL_RENDERERS = {
+  code: (row) => (
+    <Text weight="semibold">
+      {row.isMultiCurrency ? `Tổng cộng (${row.currency})` : 'Tổng cộng'}
+    </Text>
+  ),
+  value: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.value, row.currency)}
+    </Text>
+  ),
+};
 
 /** Standalone list opens shared entity dialogs; related editors stay outside tables (ADR-0004). */
 export function CommissionsList() {
@@ -88,6 +118,24 @@ export function CommissionsList() {
   });
   const listResult = commissionsQuery.data;
   const commissions = listResult?.success ? listResult.commissions : [];
+
+  // Sum of value across every commission matching the current filters (not
+  // just this page — the backend computes it pre-paging, see
+  // `searchCommissions`'s doc comment), grouped by the parent contract's
+  // currency since commissions can belong to contracts in more than one.
+  // Rendered as a synthetic last row per currency, same pattern as
+  // `contracts-list.jsx`.
+  const totalsRows = useMemo(() => {
+    if (!listResult?.success) return [];
+    const totals = listResult.totals;
+    return totals.map((total) => ({
+      id: `totals-${total.currency}`,
+      __isTotalsRow: true,
+      currency: total.currency,
+      value: total.value,
+      isMultiCurrency: totals.length > 1,
+    }));
+  }, [listResult]);
 
   // Every contract's `id` that already has a Commission (at most 1 per
   // contract, see `docs/api/Commissions.md`, BE-kt-xnk) — a separate,
@@ -246,6 +294,23 @@ export function CommissionsList() {
     },
   ];
 
+  // Every column's `renderCell` runs against the synthetic totals row(s)
+  // too — see `contracts-list.jsx`'s `columnsWithTotalsRow` for the reason
+  // this wraps every column instead of hand-editing each `renderCell`.
+  const columnsWithTotalsRow = columns.map((column) => {
+    const totalsRenderCell = TOTALS_ROW_CELL_RENDERERS[column.key];
+    return {
+      ...column,
+      /** @param {CommissionListRow & Partial<CommissionTotalsRow>} row */
+      renderCell: (row) =>
+        row.__isTotalsRow
+          ? (totalsRenderCell
+              ? totalsRenderCell(/** @type {CommissionTotalsRow} */ (row))
+              : null)
+          : column.renderCell?.(row),
+    };
+  });
+
   const totalCommissions = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
     1,
@@ -295,8 +360,9 @@ export function CommissionsList() {
         columnOptions={COLUMN_OPTIONS}
         initialColumnKeys={DEFAULT_COLUMN_KEYS}
         defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-        tableColumns={columns}
+        tableColumns={columnsWithTotalsRow}
         data={searchableCommissions}
+        totalsRows={totalsRows}
         idKey="id"
         isLoading={commissionsQuery.isLoading}
         skeletonRows={skeletonRows}

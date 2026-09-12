@@ -56,6 +56,37 @@ function orDash(value) {
   return value == null || value === '' ? '—' : value;
 }
 
+/**
+ * @typedef {{
+ *   id: string,
+ *   __isTotalsRow: true,
+ *   currency: string,
+ *   invoiceValue: number,
+ *   isMultiCurrency: boolean,
+ * }} ShipmentTotalsRow
+ */
+
+/**
+ * Cell renderers used only for the synthetic totals row(s) appended via
+ * `AdvanceTable`'s `totalsRows` prop — same pattern as
+ * `contracts-list.jsx`'s `TOTALS_ROW_CELL_RENDERERS`. `shipmentCode`
+ * doubles as the label cell since `COLUMN_OPTIONS` marks it
+ * `isAlwaysVisible`.
+ * @type {Record<string, (row: ShipmentTotalsRow) => import('react').ReactNode>}
+ */
+const TOTALS_ROW_CELL_RENDERERS = {
+  shipmentCode: (row) => (
+    <Text weight="semibold">
+      {row.isMultiCurrency ? `Tổng cộng (${row.currency})` : 'Tổng cộng'}
+    </Text>
+  ),
+  invoiceValue: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.invoiceValue, row.currency)}
+    </Text>
+  ),
+};
+
 export function ShipmentsList() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
@@ -83,6 +114,23 @@ export function ShipmentsList() {
   });
   const listResult = shipmentsQuery.data;
   const shipments = listResult?.success ? listResult.shipments : [];
+
+  // Sum of invoiceValue across every shipment matching the current filters
+  // (not just this page — the backend computes it pre-paging, see
+  // `searchAllShipments`'s doc comment), grouped by currency since
+  // shipments can be invoiced in more than one. Rendered as a synthetic
+  // last row per currency, same pattern as `contracts-list.jsx`.
+  const totalsRows = useMemo(() => {
+    if (!listResult?.success) return [];
+    const totals = listResult.totals;
+    return totals.map((total) => ({
+      id: `totals-${total.currency}`,
+      __isTotalsRow: true,
+      currency: total.currency,
+      invoiceValue: total.invoiceValue,
+      isMultiCurrency: totals.length > 1,
+    }));
+  }, [listResult]);
 
   // Neither field the table needs alongside a Shipment — the parent
   // contract's number/project, and the forwarder's company name — comes
@@ -233,6 +281,23 @@ export function ShipmentsList() {
     },
   ];
 
+  // Every column's `renderCell` runs against the synthetic totals row(s)
+  // too — see `contracts-list.jsx`'s `columnsWithTotalsRow` for the reason
+  // this wraps every column instead of hand-editing each `renderCell`.
+  const columnsWithTotalsRow = columns.map((column) => {
+    const totalsRenderCell = TOTALS_ROW_CELL_RENDERERS[column.key];
+    return {
+      ...column,
+      /** @param {ShipmentListRow & Partial<ShipmentTotalsRow>} row */
+      renderCell: (row) =>
+        row.__isTotalsRow
+          ? (totalsRenderCell
+              ? totalsRenderCell(/** @type {ShipmentTotalsRow} */ (row))
+              : null)
+          : column.renderCell?.(row),
+    };
+  });
+
   const totalShipments = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
     1,
@@ -287,8 +352,9 @@ export function ShipmentsList() {
         columnOptions={COLUMN_OPTIONS}
         initialColumnKeys={DEFAULT_COLUMN_KEYS}
         defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-        tableColumns={columns}
+        tableColumns={columnsWithTotalsRow}
         data={searchableShipments}
+        totalsRows={totalsRows}
         idKey="id"
         isLoading={shipmentsQuery.isLoading}
         skeletonRows={skeletonRows}

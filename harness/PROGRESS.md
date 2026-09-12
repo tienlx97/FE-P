@@ -1,5 +1,34 @@
 # Progress Log
 
+## 2026-09-12 — Add: totals row on Shipments/Commissions/BOQ lists (follow-on to contracts)
+
+**Context:** User asked to replicate the contracts-list totals-row feature
+on Shipments (Giá trị invoice), Commissions (Giá trị), and BOQ/Contract
+Private Infos (Số cont/Tổng/Lợi nhuận). Depended on a BE-kt-xnk change
+(`add-shipment-commission-privateinfo-totals`) adding the same
+full-filtered-set aggregate to those three search endpoints. See
+`openspec/changes/add-shipment-commission-privateinfo-totals-row/`.
+
+**What changed:** `api/shipments.js`/`api/commissions.js`/
+`api/contract-private-info.js` updated to parse the new `{ page, totals }`
+response envelope (was flat). `shipments-list.jsx`/`commissions-list.jsx`/
+`contract-private-infos-list.jsx` each build a `totalsRows` array from
+`totals` and wrap every column's `renderCell` with the same
+`TOTALS_ROW_CELL_RENDERERS`-map pattern `contracts-list.jsx` established —
+no changes needed to `advance-table.jsx` itself, its `totalsRows` prop was
+already generic. BOQ's totals row is a single row (no currency grouping,
+always VNĐ) and deliberately skips `costPricePerContainer`/
+`quotedPricePerContainer` (per-unit prices — summing across contracts
+isn't meaningful); only `containerCount`/`logisticsTotal`/`profit` total.
+
+**Verified:** `./harness/verify.sh` full gate green (lint, typecheck,
+structure, harness-tests, unit-tests, build, quality-thresholds). Rebuilt
++ restarted the BE-kt-xnk dev Docker stack with the paired backend change.
+**Not verified live in-browser** — same pre-existing `next dev` process
+conflict on this machine as the previous session's entry below; a manual
+check of `/logistics/shipments`, `/logistics/commissions`, and the BOQ tab
+is still outstanding.
+
 ## 2026-09-12 — Default: contracts list opens filtered to Loại hợp đồng = Chính thức
 
 **Context:** User asked for the Hợp đồng list to default-load with "Loại

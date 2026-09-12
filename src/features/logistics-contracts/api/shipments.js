@@ -168,8 +168,13 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
  * advanced-search condition builder). An empty `conditions` array behaves
  * identically to `listAllShipments` — filtering happens server-side (`POST
  * /api/v1/shipments/search`, BE-kt-xnk).
+ *
+ * Unlike `listAllShipments`, the response is `{ page: {...}, totals: [...] }`
+ * rather than the flat paging envelope — `totals` sums `invoiceValue` per
+ * currency (`invoiceCurrency`) across every matching shipment (not just
+ * this page), backing the list's per-column totals row.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
- * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number }[] } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchAllShipments({ page = 1, pageSize = 25, conditions = [] } = {}) {
   const result = await apiRequest('/api/v1/shipments/search', {
@@ -194,11 +199,12 @@ export async function searchAllShipments({ page = 1, pageSize = 25, conditions =
 
   return {
     success: true,
-    shipments: result.data?.items ?? [],
-    page: result.data?.page ?? page,
-    pageSize: result.data?.pageSize ?? pageSize,
-    totalCount: result.data?.totalCount ?? 0,
-    totalPages: result.data?.totalPages ?? 0,
+    shipments: result.data?.page?.items ?? [],
+    page: result.data?.page?.page ?? page,
+    pageSize: result.data?.page?.pageSize ?? pageSize,
+    totalCount: result.data?.page?.totalCount ?? 0,
+    totalPages: result.data?.page?.totalPages ?? 0,
+    totals: result.data?.totals ?? [],
   };
 }
 

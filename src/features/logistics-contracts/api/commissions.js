@@ -40,8 +40,14 @@ export async function listCommissions({ page = 1, pageSize = 25 } = {}) {
  * advanced-search condition builder). An empty `conditions` array behaves
  * identically to `listCommissions` — filtering happens server-side (`POST
  * /api/v1/commissions/search`, BE-kt-xnk).
+ *
+ * Unlike `listCommissions`, the response is `{ page: {...}, totals: [...] }`
+ * rather than the flat paging envelope — `totals` sums `value` per currency
+ * (the parent contract's, since a Commission carries none of its own)
+ * across every matching commission (not just this page), backing the
+ * list's per-column totals row.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
- * @returns {Promise<{ success: true, commissions: import('../types/index.js').Commission[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string }>}
+ * @returns {Promise<{ success: true, commissions: import('../types/index.js').Commission[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, value: number }[] } | { success: false, message: string }>}
  */
 export async function searchCommissions({ page = 1, pageSize = 25, conditions = [] } = {}) {
   const result = await apiRequest('/api/v1/commissions/search', {
@@ -66,11 +72,12 @@ export async function searchCommissions({ page = 1, pageSize = 25, conditions = 
 
   return {
     success: true,
-    commissions: result.data?.items ?? [],
-    page: result.data?.page ?? page,
-    pageSize: result.data?.pageSize ?? pageSize,
-    totalCount: result.data?.totalCount ?? 0,
-    totalPages: result.data?.totalPages ?? 0,
+    commissions: result.data?.page?.items ?? [],
+    page: result.data?.page?.page ?? page,
+    pageSize: result.data?.page?.pageSize ?? pageSize,
+    totalCount: result.data?.page?.totalCount ?? 0,
+    totalPages: result.data?.page?.totalPages ?? 0,
+    totals: result.data?.totals ?? [],
   };
 }
 
