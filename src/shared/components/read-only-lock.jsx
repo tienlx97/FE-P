@@ -1,5 +1,21 @@
 'use client';
 
+import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
+import * as stylex from '@stylexjs/stylex';
+import { cloneElement, isValidElement } from 'react';
+
+const styles = stylex.create({
+  // Matches the tint `theme.js` gives native `isReadOnly` TextInput/
+  // NumberInput/Textarea — those get it for free from Astryx's `readonly`
+  // theme state, but Selector/DateInput/CheckboxList have no such state to
+  // hook (no native `isReadOnly`), so a read-only Selector used to render
+  // with a plain white background right next to a tinted read-only
+  // TextInput in the same field grid. Background only, same reasoning as
+  // theme.js's text-input/number-input/textarea overrides: clearing a
+  // border here could erase a shared InputGroup seam.
+  tinted: { backgroundColor: colorVars['--color-background-muted'] },
+});
+
 /**
  * @param {import('react').KeyboardEvent} event
  */
@@ -42,6 +58,15 @@ function isAllowedKeyEvent(event) {
  * typed input — pass the control its normal `isDisabled={false}` (or
  * simply omit it) so it keeps its enabled appearance and tab stop.
  *
+ * Also clones the child to add the same muted background `theme.js` gives
+ * a native `isReadOnly` TextInput/NumberInput/Textarea — Selector/
+ * DateInput/CheckboxList have no `readonly` theme state of their own to
+ * hook (no native `isReadOnly` prop for it to key off), so without this a
+ * read-only Selector used to render with a plain white background right
+ * next to a tinted read-only TextInput in the same field grid (reported
+ * 2026-09-14). `cloneElement` merges into the child's own `xstyle` rather
+ * than replacing it, since some callers already pass one.
+ *
  * Deliberately does not attempt `aria-readonly`/`role` on this element:
  * `display: contents` removes an element from the accessibility tree in
  * every major engine, so ARIA attributes placed here would be silently
@@ -52,6 +77,22 @@ function isAllowedKeyEvent(event) {
  */
 export function ReadOnlyLock({ isActive, children }) {
   if (!isActive) return children;
+  let tintedChild = children;
+  if (isValidElement(children)) {
+    const element =
+      /** @type {import('react').ReactElement<{ xstyle?: unknown }>} */ (
+        children
+      );
+    const existingXstyle = element.props.xstyle;
+    tintedChild = cloneElement(element, {
+      xstyle: [
+        .../** @type {unknown[]} */ (
+          Array.isArray(existingXstyle) ? existingXstyle : [existingXstyle]
+        ),
+        styles.tinted,
+      ].filter(Boolean),
+    });
+  }
   return (
     <span
       // Plain data attribute, not ARIA — `display: contents` drops this
@@ -76,7 +117,7 @@ export function ReadOnlyLock({ isActive, children }) {
       onPasteCapture={(event) => event.preventDefault()}
       onCutCapture={(event) => event.preventDefault()}
     >
-      {children}
+      {tintedChild}
     </span>
   );
 }

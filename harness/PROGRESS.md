@@ -1,5 +1,39 @@
 # Progress Log
 
+## 2026-09-14 — Fix: read-only background inconsistency (Selector/DateInput/CheckboxList vs TextInput)
+
+**Context:** User audit: "TextInput, Combobox, Calendar... khi isReadOnly:
+có component có background xanh, có component lại không có — không có sự
+đồng nhất." Traced to a known, self-documented gap: `theme.js`'s
+2026-09-07 readonly-tint override only covers `text-input`/`number-input`/
+`textarea` (Astryx's native `isReadOnly` state) — its own doc comment even
+names the exact contrast case ("a locked 'Loại hình' Selector next to a
+read-only 'Số booking' TextInput") but never fixed Selector, because
+Astryx's `Selector`/`DateInput`/`CheckboxList` have no native `isReadOnly`
+at all. This app already has `read-only-lock.jsx`'s `ReadOnlyLock` wrapper
+to fake read-only behavior for exactly those three components (blocks
+interaction, keeps full opacity/tab order) — but it was `display: contents`
+and added zero visual styling, so the wrapped control kept its normal
+(white) enabled appearance.
+
+**Fix:** `ReadOnlyLock` now clones its child (`React.cloneElement`) to
+merge the same `--color-background-muted` tint into the child's own
+`xstyle`, when active — verified against the actual Astryx Selector/
+DateInput source that `xstyle` lands on the same visible box as the
+component's own background styles (last in the `stylex.props()` call, so
+it wins), not some outer non-visual wrapper. Background only, matching
+`theme.js`'s existing reasoning (clearing a border could erase a shared
+`InputGroup` seam).
+
+**Verified:** `./harness/verify.sh` full green. Live: opened a contract in
+Xem (read-only) mode and read every `[data-readonly-lock="true"]`
+control's computed `background-color` via JS — all 13 (9 Selector, 2
+DateInput, 1 CheckboxList-wrapping-bank-list) came back `rgb(237, 245,
+241)` (`#edf5f1`), identical to the native-readonly TextInput/NumberInput
+fields in the same form (`Số hợp đồng`, `Đợt thanh toán` percentages).
+Screenshots confirm no layout/geometry regression (the `display: contents`
+wrapper still adds no box of its own — only backgroundColor changed).
+
 ## 2026-09-13 — Follow-ups: duplicate totals row, mobile toggle, export columns, customer print, automated check
 
 **Context:** After the export dropdown + layout settings work (previous
