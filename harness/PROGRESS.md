@@ -1,5 +1,44 @@
 # Progress Log
 
+## 2026-09-14 — Item 4 resolved: diacritic-insensitive table search
+
+**Context:** Continuation of the same-day batch above. User said "oke làm"
+(go ahead) rather than picking one of the three options laid out for
+"optimize the table filter" — took that as authorization to pick myself,
+and picked (c) from that list: accent-insensitive search. Reasoning: (a)
+debounce/perf wasn't a measured problem (small page sizes, cheap
+synchronous scan); (b) consolidating the three filter surfaces is a real
+UX redesign that shouldn't be guessed at; (c) is concrete, self-contained,
+low-risk, and fixes a genuine, common complaint for Vietnamese users
+typing without dấu — the highest-value option that didn't require another
+round-trip.
+
+**What changed:** `advance-table.jsx` gained `normalizeForSearch` (NFD
+decomposition to strip combining diacritics, plus an explicit `đ`/`Đ`
+replace since those are distinct base letters, not decomposable) and
+`applyFiltersDiacriticInsensitive`, which wraps PowerSearch's own
+`applyFilters` (from `usePowerSearchConfig` — its `matchesFilter` only
+lowercases, never normalizes) by running the real filter against a
+same-shape clone with every string field and string filter value
+normalized, then mapping matches back to the original row objects by
+array position (so returned rows stay byte-identical to the input — no
+re-derived fields, no risk of drifting from what the caller expects).
+Applied at both `applyFilters` call sites (the main `filteredData` and
+`exportAllRows`'s "toàn bộ dữ liệu" path), so it covers quick search,
+per-column header filters, and the advanced-search popover uniformly —
+all three funnel into the same one or two call sites already.
+
+**Verified:** `./harness/verify.sh` full green. Live: quick search on
+Quốc gia ("thai lan" → "Thái Lan") and Khách hàng ("giao nhan van tai" →
+"Công ty CP Giao Nhận Vận Tải Sao Việt") both matched. Per-column header
+filter on Shipment's "Tên lô hàng" ("da sua" → "...(đã sửa)") matched,
+exercising the `đ` special-case specifically. One false alarm during
+testing: Shipment's own quick-search box only searches `shipmentCode`
+(`contentSearchFieldKey="shipmentCode"`) despite its placeholder text
+implying it also searches the shipment name — pre-existing, unrelated to
+this fix (confirmed by testing the same query against the header filter,
+which does target `name`, and it matched immediately).
+
 ## 2026-09-14 — Six UI fixes: footer removal, header column borders, sticky-hover repaint bug, contracts fullscreen button, create-user success message
 
 **Context:** User batch of 7 requests (effort raised to `high` for this

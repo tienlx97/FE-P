@@ -66,6 +66,66 @@ function escapeCsvCell(value) {
 }
 
 /**
+ * Strips Vietnamese diacritics and lowercases, so search matches
+ * regardless of whether the user types with or without dấu — a common
+ * complaint (2026-09-14) since Astryx's own `applyFilters`
+ * (`usePowerSearchConfig.js`) only lowercases, never normalizes. NFD
+ * decomposition strips combining marks (á, à, ả, ã, ạ, ...); `đ`/`Đ`
+ * aren't decomposable that way (they're distinct base letters, not a
+ * letter+diacritic), so they need an explicit replace.
+ * @param {string} value
+ */
+function normalizeForSearch(value) {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd');
+}
+
+/**
+ * Wraps PowerSearch's `applyFilters` (from `usePowerSearchConfig`) with
+ * diacritic-insensitive matching for string filters. Astryx's own
+ * `matchesFilter` does a plain `s.toLowerCase().includes(t.toLowerCase())`
+ * with no normalization, so it never matched "khach hang" typed without
+ * dấu against "Khách hàng" data. Runs the real filter against a
+ * same-shape clone with every string field (and every string filter
+ * value) normalized, then maps matches back to the original row objects
+ * by array position — a plain diacritic-preserving clone would come back
+ * from `.filter()` by reference, so position-mapping (not re-deriving
+ * fields) is what keeps the returned rows byte-identical to the input.
+ * @template {Record<string, unknown>} T
+ * @param {(filters: readonly unknown[], rows: T[]) => T[]} applyFiltersFn
+ * @param {readonly unknown[]} filters
+ * @param {T[]} rows
+ * @returns {T[]}
+ */
+function applyFiltersDiacriticInsensitive(applyFiltersFn, filters, rows) {
+  if (filters.length === 0) return [...rows];
+  const normalizedFilters = filters.map((filter) => {
+    const value = /** @type {any} */ (filter)?.value;
+    return value?.type === 'string' && typeof value.value === 'string'
+      ? {
+          .../** @type {any} */ (filter),
+          value: { ...value, value: normalizeForSearch(value.value) },
+        }
+      : filter;
+  });
+  const normalizedRows = rows.map((row, index) => {
+    const normalized = /** @type {any} */ ({ __rowIndex: index });
+    for (const [key, value] of Object.entries(row)) {
+      normalized[key] = typeof value === 'string' ? normalizeForSearch(value) : value;
+    }
+    return normalized;
+  });
+  const matched = applyFiltersFn(
+    /** @type {any} */ (normalizedFilters),
+    normalizedRows,
+  );
+  return matched.map((row) => rows[/** @type {any} */ (row).__rowIndex]);
+}
+
+/**
  * @typedef {Object} AdvanceTableQuickFilter
  * @property {string} field
  * @property {string} label
@@ -488,16 +548,15 @@ export function AdvanceTable({
     );
 
   const filteredData = /** @type {T[]} */ (
-    /** @type {any} */ (
-      applyFilters(
-        [
-          ...searchFilters,
-          .../** @type {any} */ (
-            toSearchFilters(headerFilters, tableColumns, searchConfig)
-          ),
-        ],
-        /** @type {any} */ (data),
-      )
+    applyFiltersDiacriticInsensitive(
+      /** @type {any} */ (applyFilters),
+      [
+        ...searchFilters,
+        .../** @type {any} */ (
+          toSearchFilters(headerFilters, tableColumns, searchConfig)
+        ),
+      ],
+      /** @type {any} */ (data),
     )
   );
   // Appended after filtering, never before — a totals row's cells (labels,
@@ -628,16 +687,15 @@ export function AdvanceTable({
     try {
       const allRows = await fetchAllRows();
       const filteredAllRows = /** @type {T[]} */ (
-        /** @type {any} */ (
-          applyFilters(
-            [
-              ...searchFilters,
-              .../** @type {any} */ (
-                toSearchFilters(headerFilters, tableColumns, searchConfig)
-              ),
-            ],
-            /** @type {any} */ (allRows),
-          )
+        applyFiltersDiacriticInsensitive(
+          /** @type {any} */ (applyFilters),
+          [
+            ...searchFilters,
+            .../** @type {any} */ (
+              toSearchFilters(headerFilters, tableColumns, searchConfig)
+            ),
+          ],
+          /** @type {any} */ (allRows),
         )
       );
       if (format === 'excel') exportExcel(filteredAllRows, { allColumns: true });
