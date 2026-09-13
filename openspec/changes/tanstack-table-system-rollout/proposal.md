@@ -1,6 +1,6 @@
 # TanStack table system rollout
 
-**Status:** in-progress
+**Status:** done
 **Created:** 2026-09-13
 
 ## Why
