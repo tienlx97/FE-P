@@ -5,6 +5,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -22,9 +23,11 @@ import {
 } from '@/shared/components/table-header-group.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
+import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
 
 import {
   badgeVariantForContractStatus,
+  contractStatusOptions,
   labelForContractStatus,
 } from '../config/contract-status.js';
 import { labelForContractType } from '../config/contract-types.js';
@@ -185,6 +188,26 @@ export function ContractsList() {
       ]
     ),
   );
+  // Quick-filter pills for "Trạng thái" — server-side (writes into the same
+  // `filterConditions` the funnel dialog edits, unlike `AdvanceTable`'s own
+  // `quickFilters` prop, which only filters the already-fetched page
+  // client-side). "Tất cả" means no status condition at all, not a
+  // specific value.
+  const statusQuickFilterValue =
+    filterConditions.find((condition) => condition.field === 'status')
+      ?.value ?? 'all';
+  /** @param {string} nextValue */
+  function handleStatusQuickFilterChange(nextValue) {
+    setFilterConditions((current) =>
+      upsertEqualsFilterCondition(
+        current,
+        'status',
+        nextValue === 'all' ? null : nextValue,
+      ),
+    );
+    setPageIndex(1);
+  }
+
   const [expandedTab, setExpandedTab] = useState(
     /** @type {ExpandedTab} */ ('profile'),
   );
@@ -382,7 +405,7 @@ export function ContractsList() {
     setWorkspace({ contract: row, sessionKey: generateRowKey(), mode });
   }
 
-  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Contract & Record<string, unknown>>[]} */
+  /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<import('../types/index.js').Contract & Record<string, unknown>>[]} */
   const columns = [
     {
       key: 'contractNumber',
@@ -407,6 +430,7 @@ export function ContractsList() {
       width: pixel(130),
       filter: 'contractType',
       renderCell: (contract) => labelForContractType(contract.contractType),
+      exportValue: (contract) => labelForContractType(contract.contractType),
     },
     {
       key: 'status',
@@ -419,6 +443,7 @@ export function ContractsList() {
           variant={badgeVariantForContractStatus(contract.status)}
         />
       ),
+      exportValue: (contract) => labelForContractStatus(contract.status),
     },
     {
       key: 'projectName',
@@ -433,6 +458,7 @@ export function ContractsList() {
       width: proportional(1),
       filter: 'buyerCompanyName',
       renderCell: (contract) => contract.buyer.companyName,
+      exportValue: (contract) => contract.buyer.companyName,
     },
     {
       key: 'contractValue',
@@ -460,6 +486,8 @@ export function ContractsList() {
           settlementsByContractId.get(contract.id)?.settlementValue,
           contract.currency,
         ),
+      exportValue: (contract) =>
+        settlementsByContractId.get(contract.id)?.settlementValue ?? '',
     },
     {
       key: 'paidValue',
@@ -471,6 +499,8 @@ export function ContractsList() {
           settlementsByContractId.get(contract.id)?.paidValue,
           contract.currency,
         ),
+      exportValue: (contract) =>
+        settlementsByContractId.get(contract.id)?.paidValue ?? '',
     },
     {
       key: 'unpaidValue',
@@ -482,6 +512,8 @@ export function ContractsList() {
           settlementsByContractId.get(contract.id)?.unpaidValue,
           contract.currency,
         ),
+      exportValue: (contract) =>
+        settlementsByContractId.get(contract.id)?.unpaidValue ?? '',
     },
     {
       key: 'incoterm',
@@ -491,6 +523,7 @@ export function ContractsList() {
       width: pixel(140),
       filter: 'incoterm',
       renderCell: (contract) => `${contract.incoterm} ${contract.incotermYear}`,
+      exportValue: (contract) => `${contract.incoterm} ${contract.incotermYear}`,
     },
     {
       key: 'createdDate',
@@ -540,6 +573,12 @@ export function ContractsList() {
       header: 'Đợt thanh toán',
       width: pixel(160),
       renderCell: (contract) => formatPaymentTerms(contract.paymentTerms),
+      exportValue: (contract) =>
+        contract.paymentTerms
+          .map(
+            (term) => `${term.paymentRatioPercent}% ${term.paymentCondition}`,
+          )
+          .join('; '),
     },
     {
       key: 'bankIds',
@@ -549,6 +588,11 @@ export function ContractsList() {
         contract.bankIds.length === 0
           ? '—'
           : `${contract.bankIds.length} ngân hàng`,
+      exportValue: (contract) =>
+        contract.bankIds
+          .map((bankId) => banksById.get(bankId)?.bankName)
+          .filter(Boolean)
+          .join('; '),
     },
     {
       key: 'actions',
@@ -639,6 +683,22 @@ export function ContractsList() {
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
+
+      <SegmentedControl
+        label="Lọc theo trạng thái"
+        size="sm"
+        value={statusQuickFilterValue}
+        onChange={handleStatusQuickFilterChange}
+      >
+        <SegmentedControlItem value="all" label="Tất cả" />
+        {contractStatusOptions.map((option) => (
+          <SegmentedControlItem
+            key={option.value}
+            value={option.value}
+            label={option.label}
+          />
+        ))}
+      </SegmentedControl>
 
       <div ref={tableWrapperRef} style={{ position: 'relative' }}>
         <TableHeaderGroupBar

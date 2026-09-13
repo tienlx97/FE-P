@@ -215,7 +215,7 @@ export function CommissionsList() {
     setEditingCommissionRow(row);
   }
 
-  /** @type {import('@astryxdesign/core/Table').TableColumn<CommissionListRow>[]} */
+  /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<CommissionListRow>[]} */
   const columns = [
     {
       key: 'code',
@@ -273,12 +273,14 @@ export function CommissionsList() {
       header: 'Bên bán đã ký',
       width: pixel(130),
       renderCell: (row) => (row.sellerSigned ? 'Đã ký' : 'Chưa ký'),
+      exportValue: (row) => (row.sellerSigned ? 'Đã ký' : 'Chưa ký'),
     },
     {
       key: 'partySigned',
       header: 'Bên nhận hoa hồng đã ký',
       width: pixel(170),
       renderCell: (row) => (row.partySigned ? 'Đã ký' : 'Chưa ký'),
+      exportValue: (row) => (row.partySigned ? 'Đã ký' : 'Chưa ký'),
     },
     {
       key: 'actions',

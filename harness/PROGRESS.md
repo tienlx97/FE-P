@@ -1,5 +1,53 @@
 # Progress Log
 
+## 2026-09-13 — Add: status quick-filter (Hợp đồng/Shipment) + CSV export (all 4 lists)
+
+**Context:** Reviewed the UI live (Hợp đồng, Shipment, Commission, BOQ,
+Khách hàng), then user picked 2 of the proposed follow-ups: server-side
+quick filter by Trạng thái/Tình trạng, and CSV export. Also asked me to
+double-check the payment-term "Tổng tỷ lệ: 200%/100%" red warning seen on
+sample data — confirmed the backend DOES reject a create/update whose
+payment terms don't sum to 100%
+(`ContractInputValidator.PaymentRatiosSumTo100`); that 200% row only
+exists because `db/sample-data.sql` inserts directly, bypassing the API's
+own validation — not a real gap. See
+`openspec/changes/add-status-quickfilter-csv-export/`.
+
+**What changed:**
+- Contracts list: `SegmentedControl` pill row (Tất cả/4 statuses) above
+  the table. Shipments list: `Selector` dropdown (8 statuses, too many for
+  pills). Both write into the SAME `filterConditions` state the funnel
+  dialog already edits (server-side, full-dataset), not `AdvanceTable`'s
+  own `quickFilters` prop — that one only filters the already-fetched page
+  client-side (confirmed by reading its implementation before building on
+  it, same known limitation the existing per-column header filters
+  already have).
+- New shared `upsertEqualsFilterCondition` (`src/shared/config/`) —
+  replace-or-remove one condition by field, leaving everything else (e.g.
+  the default `contractType Equals Official`) alone.
+- `AdvanceTable` gained a CSV export button (toolbar, next to Refresh).
+  New `AdvanceTableColumn<T>` type adds an optional `exportValue(row)` per
+  column for cases where the raw `row[key]` isn't the right export value
+  — added to the columns that needed it across Contracts/Shipments/
+  Commissions (enum codes, nested objects, combined fields, booleans).
+  UTF-8 BOM prefix so Excel doesn't mangle Vietnamese diacritics.
+  Deliberately scoped to the **current page only** — every list here is
+  server-paginated, exporting the whole filtered dataset would need a
+  second unpaginated fetch per list.
+
+**Verified:** `./harness/verify.sh` green. Live: clicked through the
+Contracts status pills (Đang thực hiện → 1 match, Đã hoàn thành → 0/empty
+state, Tất cả → clears back to the default filter) and the Shipments
+status dropdown (Đã hoàn thành → 1 match, clear button works) — confirmed
+via screenshots that each click triggered a real server refetch, not a
+client-side re-slice. Clicked the CSV export button on Contracts and read
+the actual downloaded file from disk: header row + data row matched the
+screen exactly, with `exportValue` overrides correctly translating status/
+contractType/incoterm instead of dumping raw enum codes. (The download
+landed as an incomplete `.tmp` in this automated browser session rather
+than a finished `.csv` — a quirk of the automation harness, not the app;
+cleaned up the leftover `.tmp` files afterward.)
+
 ## 2026-09-12 — Fix: sticky header never actually stuck to anything (needed a real scroll test to catch)
 
 **Context:** User asked me to seed real test data (50 rows) and actually

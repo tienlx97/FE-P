@@ -25,6 +25,7 @@ import { colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
+import { Download } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 
 import { IconRefresh } from '@/shared/components/icon/icon-refresh.jsx';
@@ -36,6 +37,30 @@ import {
 
 import { AdvanceTablePagination } from './advance-table-pagination.jsx';
 import { AdvanceTableSearchDialog } from './advance-table-search-dialog.jsx';
+
+/**
+ * `TableColumn` plus an optional CSV-export override — see
+ * `exportVisibleRowsToCsv`'s doc comment below for when a column needs
+ * one (enum codes, nested objects, combined display fields) versus
+ * falling back to the raw `row[key]` dump.
+ * @template {Record<string, unknown>} T
+ * @typedef {import('@astryxdesign/core/Table').TableColumn<T> & {
+ *   exportValue?: (row: T) => string | number | null | undefined,
+ * }} AdvanceTableColumn
+ */
+
+// So Excel opens an exported CSV as UTF-8 instead of guessing
+// Windows-1252 and mangling every Vietnamese diacritic. Written as the
+// escape sequence, not a literal BOM character — a real BOM byte in
+// source trips ESLint's `no-irregular-whitespace` rule.
+const CSV_BOM = String.fromCharCode(0xfeff);
+
+/** @param {string} value */
+function escapeCsvCell(value) {
+  const needsQuoting = /[",\n\r]/.test(value);
+  const escaped = value.replace(/"/g, '""');
+  return needsQuoting ? `"${escaped}"` : escaped;
+}
 
 /**
  * @typedef {Object} AdvanceTableQuickFilter
@@ -153,7 +178,7 @@ const styles = stylex.create({
  *   defaultColumnKeys?: string[],
  *   viewPresets?: ReadonlyArray<AdvanceTableViewPreset>,
  *   fixedEndColumnKeys?: string[],
- *   tableColumns: import('@astryxdesign/core/Table').TableColumn<T>[],
+ *   tableColumns: AdvanceTableColumn<T>[],
  *   data: T[],
  *   idKey: string,
  *   isLoading?: boolean,
@@ -469,6 +494,51 @@ export function AdvanceTable({
       ? /** @type {T[]} */ (/** @type {any} */ ([...filteredData, ...totalsRows]))
       : filteredData;
 
+  /**
+   * Current page only — `data` is whatever the caller already fetched
+   * (server-paginated everywhere `AdvanceTable` is used), so exporting
+   * "everything" would need a separate unpaginated request per list.
+   * Exports exactly what's currently on screen: the same visible/ordered
+   * columns (respecting the View options picker), minus `fixedEndColumnKeys`
+   * (the actions column has nothing to export) and any totals row. A
+   * column's optional `exportValue(row)` overrides the plain `row[key]`
+   * dump for cases where the rendered cell isn't the raw field (enum
+   * codes, nested objects, combined fields) — falls back to the raw value
+   * when absent.
+   */
+  function exportVisibleRowsToCsv() {
+    const exportColumnKeys = columnSettingsState.activeColumnKeys.filter(
+      (key) => !fixedEndColumnKeys.includes(key),
+    );
+    const columnsByKey = new Map(tableColumns.map((column) => [column.key, column]));
+    const headerRow = exportColumnKeys.map(
+      (key) => columnOptions.find((column) => column.key === key)?.label ?? key,
+    );
+    const dataRows = filteredData
+      .filter((row) => !/** @type {any} */ (row).__isTotalsRow)
+      .map((row) =>
+        exportColumnKeys.map((key) => {
+          const column = /** @type {any} */ (columnsByKey.get(key));
+          const value = column?.exportValue
+            ? column.exportValue(row)
+            : /** @type {any} */ (row)[key];
+          return value == null ? '' : String(value);
+        }),
+      );
+    const csv = [headerRow, ...dataRows]
+      .map((cells) => cells.map(escapeCsvCell).join(','))
+      .join('\r\n');
+    // Leading BOM so Excel opens the file as UTF-8 instead of guessing
+    // Windows-1252 and mangling every Vietnamese diacritic.
+    const blob = new Blob([CSV_BOM + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${entityLabel}-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
   const columnSettingsState = useTableColumnSettingsState({
     columns: columnOptions,
     activeColumnKeys: [
@@ -622,6 +692,15 @@ export function AdvanceTable({
                 onChangeStickyEnd={(value) =>
                   setStickyEnd(/** @type {'none' | 'one' | 'two'} */ (value))
                 }
+              />
+              <IconButton
+                label="Xuất CSV (trang hiện tại)"
+                tooltip="Xuất CSV (trang hiện tại)"
+                icon={<Icon icon={Download} size="sm" />}
+                variant="ghost"
+                size="sm"
+                isDisabled={isLoading || filteredData.length === 0}
+                onClick={exportVisibleRowsToCsv}
               />
               {onRefresh ? (
                 <IconButton

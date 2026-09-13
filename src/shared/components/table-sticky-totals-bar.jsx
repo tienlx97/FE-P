@@ -27,12 +27,12 @@ const styles = stylex.create({
   },
   cell: {
     alignItems: 'center',
+    bottom: 0,
     display: 'flex',
+    overflow: 'hidden',
     paddingInline: spacingVars['--spacing-3'],
     position: 'absolute',
     top: 0,
-    bottom: 0,
-    overflow: 'hidden',
   },
 });
 
@@ -130,7 +130,6 @@ export function TableStickyTotalsBar({ containerRef, tableColumns, totalsRows })
     <div aria-hidden="true" {...stylex.props(styles.wrapper)}>
       {totalsRows.map((totalsRow, rowIndex) => (
         <div
-          // eslint-disable-next-line react/no-array-index-key -- totalsRows has no stable id of its own worth threading through just for this key
           key={rowIndex}
           {...stylex.props(styles.row)}
           style={{ backgroundColor: 'var(--color-background-muted)' }}

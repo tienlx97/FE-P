@@ -119,7 +119,7 @@ export function ContractPrivateInfosList() {
     ];
   }, [listResult]);
 
-  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ContractPrivateInfoListItem>[]} */
+  /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<import('../types/index.js').ContractPrivateInfoListItem>[]} */
   const columns = [
     {
       key: 'contractNumber',

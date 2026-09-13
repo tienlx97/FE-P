@@ -27,6 +27,7 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
 
 import { formatMoney } from '../config/currencies.js';
 import {
@@ -34,7 +35,10 @@ import {
   reasonContractIneligibleForShipment,
 } from '../config/shipment-contract-eligibility.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
-import { labelForShipmentStatus } from '../config/shipment-status.js';
+import {
+  labelForShipmentStatus,
+  shipmentStatusOptions,
+} from '../config/shipment-status.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
 import {
   COLUMN_OPTIONS,
@@ -93,6 +97,20 @@ export function ShipmentsList() {
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
+  // Server-side quick filter for "Tình trạng" — writes into the same
+  // `filterConditions` the funnel dialog edits (unlike `AdvanceTable`'s own
+  // `quickFilters` prop, client-side-only). `null` clears the pill back to
+  // "no filter" rather than a specific status.
+  const statusQuickFilterValue =
+    filterConditions.find((condition) => condition.field === 'status')
+      ?.value ?? null;
+  /** @param {string | null} nextValue */
+  function handleStatusQuickFilterChange(nextValue) {
+    setFilterConditions((current) =>
+      upsertEqualsFilterCondition(current, 'status', nextValue),
+    );
+    setPageIndex(1);
+  }
   // Dialogs are all rendered as siblings of `AdvanceTable` below, never
   // inside `renderExpanded` — `contracts-list.jsx`'s big comment above
   // `ContractsList` explains why: a `Selector`-bearing dialog opened from
@@ -186,7 +204,7 @@ export function ShipmentsList() {
     });
   }
 
-  /** @type {import('@astryxdesign/core/Table').TableColumn<ShipmentListRow>[]} */
+  /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<ShipmentListRow>[]} */
   const columns = [
     {
       key: 'shipmentCode',
@@ -233,6 +251,7 @@ export function ShipmentsList() {
       header: 'Loại hình',
       width: pixel(90),
       renderCell: (row) => labelForShipmentType(row.type),
+      exportValue: (row) => labelForShipmentType(row.type),
     },
     {
       key: 'status',
@@ -240,12 +259,15 @@ export function ShipmentsList() {
       width: pixel(150),
       filter: 'status',
       renderCell: (row) => labelForShipmentStatus(row.status),
+      exportValue: (row) => labelForShipmentStatus(row.status),
     },
     {
       key: 'quantity',
       header: 'Số lượng',
       width: pixel(110),
       renderCell: (row) =>
+        `${row.quantityAmount} ${labelForShipmentQuantityUnit(row.quantityUnit)}`,
+      exportValue: (row) =>
         `${row.quantityAmount} ${labelForShipmentQuantityUnit(row.quantityUnit)}`,
     },
     {
@@ -260,6 +282,7 @@ export function ShipmentsList() {
       header: 'Forwarder',
       width: proportional(1),
       renderCell: (row) => orDash(row.supplierName),
+      exportValue: (row) => row.supplierName,
     },
     {
       key: 'invoiceValue',
@@ -339,6 +362,18 @@ export function ShipmentsList() {
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
+
+      <Selector
+        label="Lọc theo tình trạng"
+        placeholder="Tất cả tình trạng"
+        size="sm"
+        hasClear
+        hasSearch
+        options={shipmentStatusOptions}
+        value={statusQuickFilterValue}
+        onChange={handleStatusQuickFilterChange}
+        width={280}
+      />
 
       <AdvanceTable
         toolbarLabel="Thao tác danh sách Shipment"
