@@ -9604,3 +9604,39 @@ ward reference data (free-text inputs, matching the backend).
   Live-verified: "Tổng số: **1**" on `/logistics/contracts` renders the
   count darker/bold against the plain-gray label, no console errors.
 - Nothing outstanding from this round.
+
+## 2026-09-13 (continued) — GitHub Actions CI broken since `231be08`, unrelated to this session's changes
+
+- User asked to commit + push (done, `54f513e`), then pasted what looked
+  like a local `verify.sh` failure referencing
+  `harness/runs/20260913-155337-2418/` — that exact directory never
+  existed locally, but `gh run list` showed a real "Frontend CI" failure
+  on GitHub Actions at almost the identical UTC timestamp (15:53:37Z) for
+  this same push. The pasted message was the CI log, not a local run.
+- `gh run view --log-failed` pinpointed it: `tanstack-table-only FAILED`
+  with `./harness/checks/tanstack-table-only.sh: Permission denied`.
+  `git ls-files -s` showed it tracked as mode `100644` while its sibling
+  check scripts (`memory-secrets.sh`, `project-readiness.sh`) are
+  `100755` — it was committed without the executable bit back in
+  `231be08` ("migrate every list table to TanStack Table"), a commit from
+  well before this session. **This broke CI for every push since**,
+  confirmed via `gh run list`: the 4 most recent runs before this fix all
+  failed the same way, including ones with no relation to today's work.
+  Invisible locally because this machine's `core.fileMode=false` (typical
+  Windows/Git-for-Windows default) makes git ignore filesystem executable
+  bits entirely — `chmod +x` alone did nothing (`git diff` showed no
+  change); had to force it into the index directly with `git update-index
+  --chmod=+x harness/checks/tanstack-table-only.sh`, which produces a
+  pure mode-change diff (`old mode 100644` / `new mode 100755`, 0
+  insertions/deletions).
+  Pushed as `3159f9e`. Watched via `gh run watch <run-id> --exit-status`
+  end to end — new run `34767592394` PASSED every step.
+- Harness gap: `./harness/verify.sh` passing locally on Windows is not
+  sufficient evidence the same push will pass CI — `core.fileMode=false`
+  silently hides exactly this class of bug (any script mode regression).
+  Nothing in the documented session lifecycle (`AGENTS.md`) currently
+  says to check `gh run list`/`gh run watch` after a push; worth adding
+  there, or a pre-push hook that runs `git diff --summary` for mode
+  changes, so this isn't only caught when a human happens to paste a CI
+  log. Not fixed in this session — flagging per AGENTS.md's failure
+  protocol rather than expanding scope further.
