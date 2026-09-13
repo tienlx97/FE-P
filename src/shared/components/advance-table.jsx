@@ -264,6 +264,7 @@ const styles = stylex.create({
  *   defaultStickyStart?: 'none' | 'one' | 'two',
  *   defaultStickyEnd?: 'none' | 'one' | 'two',
  *   totalsRows?: Partial<T>[],
+ *   totalsRowLabel?: (row: any) => import('react').ReactNode,
  *   summary?: import('react').ReactNode,
  *   dividers?: import('@astryxdesign/core/Table').TableDividers,
  *   pagination?: {
@@ -307,6 +308,7 @@ export function AdvanceTable({
   defaultStickyStart = 'one',
   defaultStickyEnd = 'one',
   totalsRows,
+  totalsRowLabel,
   summary,
   dividers = 'rows',
   pagination,
@@ -728,7 +730,28 @@ export function AdvanceTable({
     ]),
   ];
 
-  const skeletonColumns = tableColumns.map((column, columnIndex) => ({
+  // The totals-row label always lands on whichever column key is actually
+  // first in `columnSettingsState.activeColumnKeys` — the real render order
+  // (`tanstack-data-table.jsx` feeds it straight in as `columnOrder`) —
+  // instead of a column key a feature hardcodes, which drifts out of the
+  // leftmost spot the moment a view preset or column-visibility change
+  // reorders things (e.g. a date column moving ahead of it).
+  const firstActiveColumnKey = columnSettingsState.activeColumnKeys[0];
+  const renderedTableColumns = totalsRowLabel
+    ? tableColumns.map((column) =>
+        column.key === firstActiveColumnKey
+          ? {
+              ...column,
+              renderCell: (/** @type {any} */ row) =>
+                row.__isTotalsRow
+                  ? totalsRowLabel(row)
+                  : column.renderCell?.(row),
+            }
+          : column,
+      )
+    : tableColumns;
+
+  const skeletonColumns = renderedTableColumns.map((column, columnIndex) => ({
     ...column,
     renderCell: () => <Skeleton height={16} width="70%" index={columnIndex} />,
   }));
@@ -851,6 +874,15 @@ export function AdvanceTable({
                   setStickyEnd(/** @type {'none' | 'one' | 'two'} */ (value))
                 }
               />
+              <IconButton
+                label="In"
+                tooltip="In (trang hiện tại)"
+                icon={<Icon icon={Printer} size="sm" />}
+                variant="ghost"
+                size="sm"
+                isDisabled={isLoading || filteredData.length === 0}
+                onClick={() => printRows(filteredData)}
+              />
               <DropdownMenu
                 button={{
                   label: 'Xuất',
@@ -876,12 +908,6 @@ export function AdvanceTable({
                         label: 'Xuất CSV (trang hiện tại)',
                         icon: <Icon icon={Download} size="sm" />,
                         onClick: () => exportCsv(filteredData),
-                      },
-                      {
-                        id: 'print-page',
-                        label: 'In (trang hiện tại)',
-                        icon: <Icon icon={Printer} size="sm" />,
-                        onClick: () => printRows(filteredData),
                       },
                     ],
                   },
@@ -1004,7 +1030,7 @@ export function AdvanceTable({
             )
           }
           data={isLoading ? (skeletonRows ?? []) : renderedData}
-          columns={isLoading ? skeletonColumns : tableColumns}
+          columns={isLoading ? skeletonColumns : renderedTableColumns}
           idKey={idKey}
           density={density}
           dividers={dividers}
@@ -1014,7 +1040,7 @@ export function AdvanceTable({
       {totalsRows && totalsRows.length > 0 && !isLoading ? (
         <TableStickyTotalsBar
           containerRef={tableWrapperRef}
-          tableColumns={tableColumns}
+          tableColumns={renderedTableColumns}
           totalsRows={totalsRows}
         />
       ) : null}

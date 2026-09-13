@@ -28,6 +28,7 @@ import {
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
+import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 
 import { searchCommissions } from '../api/commissions.js';
 import {
@@ -64,18 +65,26 @@ function orDash(value) {
  */
 
 /**
- * Cell renderers used only for the synthetic totals row(s) appended via
- * `AdvanceTable`'s `totalsRows` prop — same pattern as
- * `contracts-list.jsx`'s `TOTALS_ROW_CELL_RENDERERS`. `code` doubles as the
- * label cell since `COLUMN_OPTIONS` marks it `isAlwaysVisible`.
- * @type {Record<string, (row: CommissionTotalsRow) => import('react').ReactNode>}
+ * "Tổng cộng" label for the synthetic totals row(s) — passed to
+ * `AdvanceTable`'s `totalsRowLabel` prop, same pattern as
+ * `contracts-list.jsx`'s `totalsRowLabel`.
+ * @param {CommissionTotalsRow} row
  */
-const TOTALS_ROW_CELL_RENDERERS = {
-  code: (row) => (
+function totalsRowLabel(row) {
+  return (
     <Text weight="semibold">
       {row.isMultiCurrency ? `Tổng cộng (${row.currency})` : 'Tổng cộng'}
     </Text>
-  ),
+  );
+}
+
+/**
+ * Cell renderers used only for the synthetic totals row(s) appended via
+ * `AdvanceTable`'s `totalsRows` prop — same pattern as
+ * `contracts-list.jsx`'s `TOTALS_ROW_CELL_RENDERERS`.
+ * @type {Record<string, (row: CommissionTotalsRow) => import('react').ReactNode>}
+ */
+const TOTALS_ROW_CELL_RENDERERS = {
   value: (row) => (
     <Text weight="semibold" hasTabularNumbers>
       {formatMoney(row.value, row.currency)}
@@ -312,22 +321,10 @@ export function CommissionsList() {
     },
   ];
 
-  // Every column's `renderCell` runs against the synthetic totals row(s)
-  // too — see `contracts-list.jsx`'s `columnsWithTotalsRow` for the reason
-  // this wraps every column instead of hand-editing each `renderCell`.
-  const columnsWithTotalsRow = columns.map((column) => {
-    const totalsRenderCell = TOTALS_ROW_CELL_RENDERERS[column.key];
-    return {
-      ...column,
-      /** @param {CommissionListRow & Partial<CommissionTotalsRow>} row */
-      renderCell: (row) =>
-        row.__isTotalsRow
-          ? (totalsRenderCell
-              ? totalsRenderCell(/** @type {CommissionTotalsRow} */ (row))
-              : null)
-          : column.renderCell?.(row),
-    };
-  });
+  const columnsWithTotalsRow = withTotalsRowCells(
+    columns,
+    TOTALS_ROW_CELL_RENDERERS,
+  );
 
   const totalCommissions = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
@@ -381,6 +378,7 @@ export function CommissionsList() {
         tableColumns={columnsWithTotalsRow}
         data={searchableCommissions}
         totalsRows={totalsRows}
+        totalsRowLabel={totalsRowLabel}
         idKey="id"
         isLoading={commissionsQuery.isLoading}
         skeletonRows={skeletonRows}

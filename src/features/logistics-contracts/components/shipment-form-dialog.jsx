@@ -115,7 +115,9 @@ export function ShipmentFormDialog({
         <TabList
           value={activeTab}
           onChange={(tab) => {
-            if (tab !== 'vgm' || shipment) setActiveTab(tab);
+            if ((tab !== 'vgm' && tab !== 'costs') || shipment) {
+              setActiveTab(tab);
+            }
           }}
           role="tablist"
           hasDivider
@@ -128,13 +130,18 @@ export function ShipmentFormDialog({
             aria-disabled={!shipment}
             xstyle={!shipment && styles.disabledTab}
           />
-          <Tab value="costs" label="Chi phí Logistics" panelId={panelId} />
+          <Tab
+            value="costs"
+            label="Chi phí Logistics"
+            panelId={panelId}
+            aria-disabled={!shipment}
+            xstyle={!shipment && styles.disabledTab}
+          />
         </TabList>
       }
     >
       <Text color="secondary">
-        VGM được quản lý sau khi lưu Shipment. Chi phí Logistics được lưu cùng
-        Shipment.
+        VGM và Chi phí Logistics được quản lý sau khi lưu Shipment.
       </Text>
       <section
         id={panelId}

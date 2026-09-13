@@ -26,14 +26,35 @@ import { resolveTableSizes } from '@/shared/config/tanstack-table-columns.js';
 
 const EXPANSION_COLUMN_KEY = '__expansion';
 
+// Plain (non-StyleX) copies of the same four row-background values `styles`
+// below compiles — StyleX's Babel plugin statically analyzes `stylex.create`
+// and rejects a `backgroundColor` that resolves through an external `const`
+// instead of a literal expression, so those colors have to stay inlined
+// there. These exist only so a pinned cell's runtime inline `style` (see
+// `rowBg` below) can use the exact same values without a third copy.
+const CARD_BG = colorVars['--color-background-card'];
+const CARD_HOVER_BG = `color-mix(in srgb, ${colorVars['--color-overlay-hover']}, ${CARD_BG})`;
+const TOTALS_BG = colorVars['--color-background-muted'];
+const TOTALS_HOVER_BG = `color-mix(in srgb, ${colorVars['--color-overlay-hover']}, ${TOTALS_BG})`;
+
 const styles = stylex.create({
   wrapper: { minWidth: 0 },
+  // `minWidth` is the real sum of column widths (`resolveTableSizes`,
+  // keyed off `availableWidth` — 0 until the wrapper's `ResizeObserver`
+  // fires its first callback post-mount), so a table with more columns
+  // than fit the viewport still triggers the scroll wrapper's horizontal
+  // scroll. `width: '100%'` (not the same `width` value) is what actually
+  // fills the container the moment it renders — relying on the JS-measured
+  // width alone left a visible gap on the right for that first frame (or
+  // longer, on a table whose columns never reach the container's true
+  // width) instead of stretching, reported as "table/skeleton chưa full
+  // width" 2026-09-14.
   table: (width) => ({
     borderCollapse: 'separate',
     borderSpacing: 0,
     minWidth: width,
     tableLayout: 'fixed',
-    width,
+    width: '100%',
   }),
   header: { position: 'sticky', top: 0, zIndex: 3 },
   // Column-separator border between header cells (both the group row and
@@ -50,20 +71,16 @@ const styles = stylex.create({
   align: (align) => ({ textAlign: align }),
   pinned: (left, right) => ({ left, position: 'sticky', right, zIndex: 1 }),
   // Row hover is driven by React state (`hoveredRowId`), not a CSS `:hover`
-  // pseudo-class: a pinned cell's `background-color: inherit` (below)
-  // failed to repaint reliably when only the ancestor row's *pseudo-class*
-  // changed — `position: sticky` promotes the cell to its own compositing
-  // layer, and Chromium doesn't always invalidate that layer's cached
-  // background on a pure `:hover` toggle, so moving the pointer from a
-  // plain cell onto the pinned cell could show a stale color for a frame
-  // (reported 2026-09-14). Toggling a real class via React forces a normal
-  // style recalc instead, which sticky layers do pick up reliably.
+  // pseudo-class, because `position: sticky` promotes a pinned cell to its
+  // own compositing layer and Chromium doesn't reliably repaint that
+  // layer from a pure `:hover` toggle on the ancestor row.
   row: { backgroundColor: colorVars['--color-background-card'] },
   rowHovered: {
     backgroundColor: `color-mix(in srgb, ${colorVars['--color-overlay-hover']}, ${colorVars['--color-background-card']})`,
   },
-  bodyPin: {
-    backgroundColor: 'inherit',
+  totalsRow: { backgroundColor: colorVars['--color-background-muted'] },
+  totalsRowHovered: {
+    backgroundColor: `color-mix(in srgb, ${colorVars['--color-overlay-hover']}, ${colorVars['--color-background-muted']})`,
   },
   width: (width) => ({ width }),
   headerContent: { minWidth: 0 },
@@ -388,16 +405,28 @@ export function TanStackDataTable({
                 rowExpansion.expandedIds.has(expansionKey),
             );
             const isRowHovered = hoveredRowId === row.id;
+            const isTotalsRow = Boolean(
+              /** @type {any} */ (row.original).__isTotalsRow,
+            );
+            const rowBg = isTotalsRow
+              ? isRowHovered
+                ? TOTALS_HOVER_BG
+                : TOTALS_BG
+              : isRowHovered
+                ? CARD_HOVER_BG
+                : CARD_BG;
             return (
               <Fragment key={row.id}>
                 <TableRow
-                  data-is-totals-row={
-                    /** @type {any} */ (row.original).__isTotalsRow
-                      ? 'true'
-                      : undefined
-                  }
+                  data-is-totals-row={isTotalsRow ? 'true' : undefined}
                   xstyle={[
-                    isRowHovered ? styles.rowHovered : styles.row,
+                    isTotalsRow
+                      ? isRowHovered
+                        ? styles.totalsRowHovered
+                        : styles.totalsRow
+                      : isRowHovered
+                        ? styles.rowHovered
+                        : styles.row,
                     isExpandable && expandableRowStyles.clickableRow,
                     isExpanded && expandableRowStyles.expandedRow,
                   ]}
@@ -436,10 +465,20 @@ export function TanStackDataTable({
                         xstyle={[
                           styles.align(source.align ?? 'start'),
                           pinStyle(cell.column),
-                          cell.column.getIsPinned()
-                            ? styles.bodyPin
-                            : undefined,
                         ]}
+                        // Plain inline `style`, not `xstyle` — StyleX only
+                        // takes background-color from its fixed token/
+                        // keyword list, and `rowBg` is a runtime value (the
+                        // whole point: it must be the row's OWN currently-
+                        // resolved color, not a value the pinned cell
+                        // merely `inherit`s — see the comment on `row`
+                        // above for why `inherit` alone left pinned cells
+                        // visibly stale on hover).
+                        style={
+                          cell.column.getIsPinned()
+                            ? { backgroundColor: rowBg }
+                            : undefined
+                        }
                       >
                         {flexRender(
                           cell.column.columnDef.cell,

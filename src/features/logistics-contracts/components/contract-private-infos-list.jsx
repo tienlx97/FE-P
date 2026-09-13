@@ -10,6 +10,7 @@ import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
+import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import { searchContractPrivateInfos } from '../api/contract-private-info.js';
@@ -45,19 +46,26 @@ function orDashNumber(value, suffix = '') {
  */
 
 /**
+ * "Tổng cộng" label for the synthetic totals row — passed to
+ * `AdvanceTable`'s `totalsRowLabel` prop, same pattern as
+ * `contracts-list.jsx`'s `totalsRowLabel`.
+ */
+function totalsRowLabel() {
+  return <Text weight="semibold">Tổng cộng</Text>;
+}
+
+/**
  * Cell renderers used only for the synthetic totals row appended via
  * `AdvanceTable`'s `totalsRows` prop — same pattern as
- * `contracts-list.jsx`'s `TOTALS_ROW_CELL_RENDERERS`. `contractNumber`
- * doubles as the label cell since `COLUMN_OPTIONS` marks it
- * `isAlwaysVisible`. Unlike the other lists, no currency grouping — these
- * three are always VNĐ, so there's exactly one totals row, not one per
- * currency. `costPricePerContainer`/`quotedPricePerContainer` (per-unit
- * prices) are deliberately not summed — summing a unit price across
- * different contracts isn't a meaningful total.
+ * `contracts-list.jsx`'s `TOTALS_ROW_CELL_RENDERERS`. Unlike the other
+ * lists, no currency grouping — these three are always VNĐ, so there's
+ * exactly one totals row, not one per currency.
+ * `costPricePerContainer`/`quotedPricePerContainer` (per-unit prices) are
+ * deliberately not summed — summing a unit price across different
+ * contracts isn't a meaningful total.
  * @type {Record<string, (row: PrivateInfoTotalsRow) => import('react').ReactNode>}
  */
 const TOTALS_ROW_CELL_RENDERERS = {
-  contractNumber: () => <Text weight="semibold">Tổng cộng</Text>,
   containerCount: (row) => (
     <Text weight="semibold" hasTabularNumbers>
       {row.containerCount.toLocaleString('en-US')}
@@ -203,27 +211,10 @@ export function ContractPrivateInfosList() {
     },
   ];
 
-  // Every column's `renderCell` runs against the synthetic totals row too
-  // — see `contracts-list.jsx`'s `columnsWithTotalsRow` for the reason
-  // this wraps every column instead of hand-editing each `renderCell`.
-  const columnsWithTotalsRow = columns.map((column) => {
-    const totalsRenderCell = TOTALS_ROW_CELL_RENDERERS[column.key];
-    return {
-      ...column,
-      // `containerCount`/`logisticsTotal`/`profit` are nullable on a real
-      // row but never-null on the totals row, so a strict intersection
-      // type (like `contracts-list.jsx`'s `columnsWithTotalsRow` uses)
-      // doesn't typecheck here — `any` is the pragmatic escape, the actual
-      // branching below is still guarded by `__isTotalsRow`.
-      /** @param {any} row */
-      renderCell: (row) =>
-        row.__isTotalsRow
-          ? (totalsRenderCell
-              ? totalsRenderCell(/** @type {PrivateInfoTotalsRow} */ (row))
-              : null)
-          : column.renderCell?.(row),
-    };
-  });
+  const columnsWithTotalsRow = withTotalsRowCells(
+    columns,
+    TOTALS_ROW_CELL_RENDERERS,
+  );
 
   const totalItems = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(1, listResult?.success ? listResult.totalPages : 1);
@@ -263,6 +254,7 @@ export function ContractPrivateInfosList() {
         tableColumns={columnsWithTotalsRow}
         data={items}
         totalsRows={totalsRows}
+        totalsRowLabel={totalsRowLabel}
         idKey="contractId"
         isLoading={privateInfosQuery.isLoading}
         skeletonRows={skeletonRows}

@@ -27,6 +27,7 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
 
 import { searchAllShipments } from '../api/shipments.js';
@@ -72,19 +73,26 @@ function orDash(value) {
  */
 
 /**
- * Cell renderers used only for the synthetic totals row(s) appended via
- * `AdvanceTable`'s `totalsRows` prop — same pattern as
- * `contracts-list.jsx`'s `TOTALS_ROW_CELL_RENDERERS`. `shipmentCode`
- * doubles as the label cell since `COLUMN_OPTIONS` marks it
- * `isAlwaysVisible`.
- * @type {Record<string, (row: ShipmentTotalsRow) => import('react').ReactNode>}
+ * "Tổng cộng" label for the synthetic totals row(s) — passed to
+ * `AdvanceTable`'s `totalsRowLabel` prop, same pattern as
+ * `contracts-list.jsx`'s `totalsRowLabel`.
+ * @param {ShipmentTotalsRow} row
  */
-const TOTALS_ROW_CELL_RENDERERS = {
-  shipmentCode: (row) => (
+function totalsRowLabel(row) {
+  return (
     <Text weight="semibold">
       {row.isMultiCurrency ? `Tổng cộng (${row.currency})` : 'Tổng cộng'}
     </Text>
-  ),
+  );
+}
+
+/**
+ * Cell renderers used only for the synthetic totals row(s) appended via
+ * `AdvanceTable`'s `totalsRows` prop — same pattern as
+ * `contracts-list.jsx`'s `TOTALS_ROW_CELL_RENDERERS`.
+ * @type {Record<string, (row: ShipmentTotalsRow) => import('react').ReactNode>}
+ */
+const TOTALS_ROW_CELL_RENDERERS = {
   invoiceValue: (row) => (
     <Text weight="semibold" hasTabularNumbers>
       {formatMoney(row.invoiceValue, row.currency)}
@@ -320,22 +328,10 @@ export function ShipmentsList() {
     },
   ];
 
-  // Every column's `renderCell` runs against the synthetic totals row(s)
-  // too — see `contracts-list.jsx`'s `columnsWithTotalsRow` for the reason
-  // this wraps every column instead of hand-editing each `renderCell`.
-  const columnsWithTotalsRow = columns.map((column) => {
-    const totalsRenderCell = TOTALS_ROW_CELL_RENDERERS[column.key];
-    return {
-      ...column,
-      /** @param {ShipmentListRow & Partial<ShipmentTotalsRow>} row */
-      renderCell: (row) =>
-        row.__isTotalsRow
-          ? (totalsRenderCell
-              ? totalsRenderCell(/** @type {ShipmentTotalsRow} */ (row))
-              : null)
-          : column.renderCell?.(row),
-    };
-  });
+  const columnsWithTotalsRow = withTotalsRowCells(
+    columns,
+    TOTALS_ROW_CELL_RENDERERS,
+  );
 
   const totalShipments = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
@@ -406,6 +402,7 @@ export function ShipmentsList() {
         tableColumns={columnsWithTotalsRow}
         data={searchableShipments}
         totalsRows={totalsRows}
+        totalsRowLabel={totalsRowLabel}
         idKey="id"
         isLoading={shipmentsQuery.isLoading}
         skeletonRows={skeletonRows}

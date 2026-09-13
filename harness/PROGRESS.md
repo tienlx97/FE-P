@@ -9380,3 +9380,227 @@ ward reference data (free-text inputs, matching the backend).
   → "Tài chính" view → zoomed screenshot of the "GIÁ TRỊ" bar over its
   three sub-columns shows one continuous mint background, no seam. No
   console errors.
+
+## 2026-09-13 — AdvanceTablePagination: numbered page buttons
+
+- User pointed at a live MISA AMIS report page
+  (`RPDynamicViewer/JCIncomeSummaryByProjectWork`, real customer data —
+  browsed via claude-in-chrome, not scraped/reproduced) as a UI reference
+  and asked to optimize "some components" against it. Compared its layout
+  to our `AdvanceTable`/`contracts-list.jsx`: the grouped-header-bar,
+  totals row, sticky columns and export toolbar already match; the one
+  real gap was pagination — MISA has clickable page-number buttons
+  (`1 2 3 4 …`), `advance-table-pagination.jsx` only had prev/next icon
+  buttons plus a "1-30" text range. Confirmed scope with the user before
+  touching a mature, actively-developed area with no matching open task
+  in any `tasks.md`.
+- `src/shared/components/advance-table-pagination.jsx`: replaced the
+  hand-rolled `Selector` + 4 `IconButton`s with Astryx's own `Pagination`
+  component (`variant="pages"`, `size="sm"`), discovered via
+  `astryx search "pagination"` rather than hand-rolling page-number/
+  ellipsis logic ourselves. Dropped the explicit first/last chevrons —
+  Astryx's `pages` variant omits them by design (`showFirstLast` is
+  `input`-variant-only in the swizzled source), since numbered buttons
+  already surface the boundary pages. `pageSizeOptions` is coerced with
+  `.map(Number)` since every caller (`contracts-table.js`,
+  `shipments-table.js`, etc.) still passes the historical `['10','25',…]`
+  string tuples Astryx's `Selector` no longer wants as bare strings for
+  this prop. `onPageSizeChange` is passed straight through — the
+  component's own `handlePageSizeChange` already calls `onChange(1)`
+  internally, so the old manual `onPageIndexChange(1)` reset would have
+  double-fired.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260913-214534-10421/`.
+- Live-verified against the real local `BE-kt-xnk` dev server (port 3001,
+  already running against the :8081 dev API): `/logistics/contracts` and
+  `/logistics/shipments` render the new pager with no console errors;
+  toggled the page-size dropdown (25→10) on Shipment and confirmed it
+  re-renders correctly. Every seeded list in this dev DB has too few rows
+  (≤6) to actually produce a second page, so multi-page numbered-button
+  rendering itself was verified by reading Astryx's own (already-tested)
+  `Pagination` source via `astryx swizzle Pagination` rather than live
+  clicking a page 2/3 button — not full visual proof, flagged here rather
+  than left implicit.
+- Harness gap: no seeded fixture in this dev stack has enough rows to
+  exercise real multi-page pagination live; the browser-fixture pattern
+  used for `pinned-table-colors-browser.mjs` (synthetic mocked API data)
+  would be the fix if this needs re-verifying with actual clicks later.
+
+## 2026-09-13 — Print button split + totals-row label follows the true leftmost column
+
+- Same MISA reference session, follow-up round. User pointed at more
+  concrete items to compare ("Nút xuất, Nút in, Row Header style, vị trí
+  text Tổng cộng, style table"). Checked each against the live
+  `/logistics/contracts` "Tài chính" view: header background/bold/borders/
+  group-bar, overall table style, and the settlement group's uppercase
+  sub-headers (`'HỢP ĐỒNG'` etc., a deliberate literal label in
+  `contracts-list.jsx`'s column defs, not a CSS bug) already matched or
+  were intentional — confirmed only two real, scoped gaps with the user
+  before touching shared code.
+- **Print button**: `advance-table.jsx`'s toolbar had "In (trang hiện tại)"
+  buried inside the "Xuất" dropdown's "Trang hiện tại" section. Promoted it
+  to a standalone `IconButton` next to "Xuất" (MISA gives Print equal
+  billing with its own icon), reusing the existing `printRows()` — no
+  behavior change, just discoverability. Applies to every `AdvanceTable`
+  toolbar (contracts/shipments/commissions/BOQ/customers/users).
+- **"Tổng cộng" position**: found the real bug was deeper than expected.
+  Each of the 4 list files with a totals row (`contracts-list.jsx`,
+  `shipments-list.jsx`, `commissions-list.jsx`,
+  `contract-private-infos-list.jsx`) hardcoded the label onto one
+  `isAlwaysVisible` column (e.g. `contractNumber`), reasoning it could
+  never be toggled off — but that column's position in the RAW `columns`
+  array a feature declares is not the actual on-screen order: the real
+  left-to-right order is `columnSettingsState.activeColumnKeys` inside
+  `advance-table.jsx` (fed straight into `tanstack-data-table.jsx` as
+  `columnOrder`), built from each feature's `DEFAULT_COLUMN_KEYS`/view
+  presets, which the feature-level code has no access to when it builds
+  its columns. On contracts' default view, `createdDate` ("Ngày ký") sits
+  ahead of `contractNumber` in `DEFAULT_COLUMN_KEYS`, so the totals row
+  showed a blank leading cell and "Tổng cộng" one column later than MISA's
+  always-first-column convention.
+  - Fix lives in `advance-table.jsx`, the only place that knows the true
+    render order: new `totalsRowLabel?: (row) => ReactNode` prop: right
+    before building the columns actually passed to `TanStackDataTable`
+    (and to `TableStickyTotalsBar`, which must show the same label in the
+    same spot once the real row scrolls out of view), whichever column key
+    equals `columnSettingsState.activeColumnKeys[0]` gets the label
+    injected into its totals-row cell — self-correcting if a future
+    reorder/hide changes which column that is, instead of a hardcoded key.
+  - Extracted the repeated "wrap every column's renderCell for
+    `row.__isTotalsRow`" boilerplate (previously hand-duplicated near-
+    identically across all 4 files) into
+    `src/shared/config/totals-row.js`'s `withTotalsRowCells(columns,
+    cellRenderers)` — cellRenderers now holds only the summed-amount
+    columns; each feature's own `totalsRowLabel(row)` function (extracted
+    from the old `label`/hardcoded-key entry) is passed to `AdvanceTable`
+    directly instead.
+  - `totalsRowLabel`'s JSDoc type is `(row: any) => ReactNode`, not
+    `(row: Partial<T>) => ReactNode` — each feature's totals-row shape
+    (`ContractTotalsRow`, etc.) adds fields (`__isTotalsRow`,
+    `isMultiCurrency`, `currency`...) `Partial<T>` doesn't have, and
+    TS's contravariant parameter check rejected the stricter callback
+    type; confirmed via `pnpm run typecheck` before/after.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260913-220740-10610/`.
+- Live-verified against the real local `BE-kt-xnk` dev server (port 3001):
+  `/logistics/contracts` (both "Mặc định" and "Tài chính" views),
+  `/logistics/shipments`, `/logistics/commissions`, `/logistics/boq`, and
+  `/logistics/customers` (no totals row there — confirmed no regression,
+  print icon still present). "Tổng cộng" now lands under "Ngày ký" on
+  contracts' default view (was "Số hợp đồng"); every other view's label
+  stayed exactly where it already was correct. No console errors. Did not
+  click "In" itself — `printRows()` opens a real browser print dialog via
+  `window.print()`, which the browser-automation tooling's own guidance
+  says not to trigger (blocks the session); the underlying function was
+  already shipped and unchanged, only its entry point moved.
+
+## 2026-09-13 (continued) — table full-width bug + cost tab gated behind Shipment save
+
+- Same session, third round of user requests. Two of three items needed a
+  design screenshot / reproduction location the user hadn't attached yet
+  (the "Tổng cộng"/"Tổng số" row redesign, and where exactly the cost bug
+  showed up) — asked before touching anything; only "skeleton table chưa
+  full width, table cũng chưa full width" was actionable as reported.
+- **Table/skeleton not full width**: root-caused in
+  `tanstack-data-table.jsx`. `<table xstyle={styles.table(table.getTotalSize())}>`
+  set both `width` AND `min-width` to the exact JS-computed sum of column
+  pixel sizes (`resolveTableSizes`, driven by a `ResizeObserver`-measured
+  `availableWidth` that starts at `useState(0)` and only corrects one
+  render after mount). Live-measured via `javascript_tool` on
+  `/logistics/customers`: table rendered at 640px while its own scroll
+  wrapper was already 2144px wide — confirmed with two back-to-back reads
+  a few seconds apart (640 → 2144), i.e. a real, momentarily-visible
+  narrow-then-snap flash, worse/stickier while a page is still loading
+  (the skeleton). Fixed by decoupling the two: `width: '100%'` (always
+  fills the wrapper immediately, independent of the JS measurement's
+  timing) while keeping `minWidth: width` (still forces the pre-existing
+  horizontal-scroll behavior once column widths exceed the true
+  container). Confirmed live: table now measures 2144px matching its
+  wrapper immediately on load; re-checked `/logistics/contracts` for the
+  wider "Tuỳ chọn hiển thị" column set — same shared `styles.table`, no
+  separate code path, so covered without further changes.
+- **"Chưa tạo Shipment vẫn thêm chi phí được"**: turned out to be a
+  deliberate existing design (comment in `shipment-form-dialog.jsx`:
+  "Chi phí Logistics được lưu cùng Shipment", unlike VGM which requires
+  saving first) — flagged this to the user before changing it, since
+  reverting an intentional design needs the same sign-off as anything
+  else non-trivial. User confirmed: wants "Chi phí Logistics" gated
+  exactly like VGM, in the "Thêm Shipment" (create) dialog specifically.
+  Applied the identical pattern VGM already used: `TabList`'s `onChange`
+  now blocks switching into `'costs'` (not just `'vgm'`) while
+  `!shipment`, and the "Chi phí Logistics" `Tab` gets the same
+  `aria-disabled`/`styles.disabledTab` treatment; updated the helper text
+  from two separate sentences to one covering both tabs. Did NOT touch
+  `use-shipment-form.js`'s submit path — `costLineRows.rows` is simply
+  always empty on create now (tab unreachable), so `costLines: []` still
+  flows into `createMutation` harmlessly, same as before this change.
+  Checked `handleSubmit`'s "jump to the `'costs'` tab on a `costLines.*`
+  validation error" branch: now unreachable on create (no rows exist to
+  fail validation), still exercised normally on edit (tab unlocked once
+  `shipment` exists) — left as-is, correct either way.
+- Full `./harness/verify.sh` PASSED twice, once per fix:
+  `harness/runs/20260913-221837-10766/` (table width),
+  `harness/runs/20260913-222640-10892/` (cost tab gating).
+- Live-verified against the real local `BE-kt-xnk` dev server: opened
+  "Thêm Shipment" from `/logistics/shipments` → picked contract
+  `26DN-SAMPLE01` → both "VGM" and "Chi phí Logistics" tabs render dimmed
+  with the shared helper text above them; clicking "Chi phí Logistics"
+  does not switch tabs (stays on "Thông tin"), matching "VGM"'s existing
+  behavior exactly. No console errors. Closed without submitting (Hủy) —
+  didn't create a real shipment record for this check.
+- Still owed to the user: the "Tổng cộng"/"Tổng số" row redesign, pending
+  the screenshot they said they'd resend.
+
+## 2026-09-13 (continued) — totals-row background + pinned-column hover repaint
+
+- User resent the same MISA report link (for the still-owed totals-row
+  redesign) plus a new bug: "hover table row, các cột được PIN vẫn đổi
+  màu". Re-examined MISA's own totals row closely this time (zoomed): it
+  has a light gray fill distinct from the white data rows above it, not
+  just bold text on white like ours — folded that into this fix.
+- **Totals row background**: `tanstack-data-table.jsx` rendered
+  `row.original.__isTotalsRow` rows with the exact same `styles.row`/
+  `styles.rowHovered` as any other row — a `data-is-totals-row` attribute
+  already existed but was only ever read by `table-sticky-totals-bar.jsx`
+  to measure position, never used to style the real inline row. Added
+  `styles.totalsRow`/`totalsRowHovered` using
+  `--color-background-muted` — the same token the sticky totals-bar
+  overlay already used, so the real row and its scrolled-out-of-view
+  sticky replacement now finally look identical instead of only the
+  sticky one having the gray wash.
+- **Pinned-column hover bug**: reproduced live before touching code —
+  widened `/logistics/contracts` to all columns (horizontal scroll), then
+  hovered a row with the first column pinned. Zoomed screenshots showed
+  the pinned cell staying white while the rest of the row tinted gray, but
+  `getComputedStyle` on both reported the *identical* `background-color` —
+  a real Chromium compositing bug, not a logic bug: `position: sticky`
+  promotes a cell to its own layer, and an *inherited* background-color
+  change (the pinned cell used `background-color: inherit` off its parent
+  `<tr>`) updates the computed value but doesn't reliably invalidate that
+  layer's own paint. This is the same class of bug a 2026-09-12 comment
+  already claimed to have fixed (by switching row hover from CSS `:hover`
+  to a React-state class toggle) — evidently that only fixed the
+  *:hover-vs-class* half of it, not the *inherit*-specific repaint gap.
+  Fix: pinned cells now get the resolved color (row/rowHovered/totalsRow/
+  totalsRowHovered, whichever applies) as their own **explicit** inline
+  `style={{backgroundColor}}`, not an inherited StyleX class — StyleX's
+  compiler rejects a non-literal `backgroundColor` in `stylex.create`
+  (confirmed via `pnpm exec eslint`: "must be one of: a string literal ..."),
+  so this one property has to bypass `xstyle` and go through plain React
+  `style` instead; everything else on the cell (alignment, sticky
+  left/right offset) stays on `xstyle` as before.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260913-224013-11072/`.
+- Live-verified against the real local `BE-kt-xnk` dev server: default
+  contracts view shows the totals row with a visible gray fill against the
+  white data row above it; widened to all columns, scrolled right, hovered
+  both a data row and the totals row — the pinned "Ngày ký" cell now tints
+  in lockstep with the rest of the row in both cases, no seam. Spot-checked
+  `/logistics/customers` (no pinned columns needed there, table fits) for
+  a plain regression check — hover still fine, no console errors anywhere.
+- Also finished the other half of the still-owed "Tổng số" row while the
+  MISA reference was open: it bolds only the count, not the "Tổng số:"
+  label. `advance-table-pagination.jsx` nested a second `<Text as="span"
+  type="supporting" color="primary" weight="semibold">` inside the outer
+  supporting/secondary one, matching that split exactly. Full
+  `./harness/verify.sh` PASSED again: `harness/runs/20260913-224515-11204/`.
+  Live-verified: "Tổng số: **1**" on `/logistics/contracts` renders the
+  count darker/bold against the plain-gray label, no console errors.
+- Nothing outstanding from this round.

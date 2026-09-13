@@ -19,6 +19,7 @@ import {
 } from '@/shared/components/advance-table.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
+import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
 
 import { searchContracts } from '../api/contracts.js';
@@ -86,19 +87,26 @@ function formatPaymentTerms(terms) {
  */
 
 /**
- * Cell renderers used only for the synthetic totals row(s) appended via
- * `AdvanceTable`'s `totalsRows` prop — keyed by column `key`, same shape
- * `columnsWithTotalsRow` below looks up. `contractNumber` doubles as the
- * label cell since `COLUMN_OPTIONS` marks it `isAlwaysVisible`, so it's
- * never hidden out from under the label.
- * @type {Record<string, (row: ContractTotalsRow) => import('react').ReactNode>}
+ * "Tổng cộng" label for the synthetic totals row(s) — passed to
+ * `AdvanceTable`'s `totalsRowLabel` prop, which renders it in whichever
+ * column is actually leftmost once view presets and column visibility are
+ * applied (not a hardcoded column here).
+ * @param {ContractTotalsRow} row
  */
-const TOTALS_ROW_CELL_RENDERERS = {
-  contractNumber: (row) => (
+function totalsRowLabel(row) {
+  return (
     <Text weight="semibold">
       {row.isMultiCurrency ? `Tổng cộng (${row.currency})` : 'Tổng cộng'}
     </Text>
-  ),
+  );
+}
+
+/**
+ * Cell renderers used only for the synthetic totals row(s) appended via
+ * `AdvanceTable`'s `totalsRows` prop — keyed by column `key`.
+ * @type {Record<string, (row: ContractTotalsRow) => import('react').ReactNode>}
+ */
+const TOTALS_ROW_CELL_RENDERERS = {
   contractValue: (row) => (
     <Text weight="semibold" hasTabularNumbers>
       {formatMoney(row.contractValue, row.currency)}
@@ -610,22 +618,11 @@ export function ContractsList() {
   // too — `Table` has no footer concept in data-driven mode, so
   // `advance-table.jsx`'s `totalsRows` prop just appends them as ordinary
   // rows (see `totalsRows` above). Most columns render blank for it; these
-  // four render the pre-summed amount, and the label column names the row.
-  // Wrapping every column here (instead of hand-editing each `renderCell`
-  // above) means a column added later doesn't need to remember this case.
-  const columnsWithTotalsRow = columns.map((column) => {
-    const totalsRenderCell = TOTALS_ROW_CELL_RENDERERS[column.key];
-    return {
-      ...column,
-      /** @param {import('../types/index.js').Contract & Record<string, unknown> & Partial<ContractTotalsRow>} row */
-      renderCell: (row) =>
-        row.__isTotalsRow
-          ? totalsRenderCell
-            ? totalsRenderCell(/** @type {ContractTotalsRow} */ (row))
-            : null
-          : column.renderCell?.(row),
-    };
-  });
+  // four render the pre-summed amount, and the leftmost column names the row.
+  const columnsWithTotalsRow = withTotalsRowCells(
+    columns,
+    TOTALS_ROW_CELL_RENDERERS,
+  );
 
   const searchableContracts = contracts.map((contract) => ({
     ...contract,
@@ -705,6 +702,7 @@ export function ContractsList() {
         tableColumns={columnsWithTotalsRow}
         data={searchableContracts}
         totalsRows={totalsRows}
+        totalsRowLabel={totalsRowLabel}
         idKey="id"
         isLoading={isLoadingContracts}
         skeletonRows={skeletonRows}
