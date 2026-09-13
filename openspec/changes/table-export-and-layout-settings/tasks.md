@@ -16,3 +16,11 @@
 
 - [x] 3.1 `.pnpm-store/` added to `.gitignore`
 - [x] 3.2 `./harness/verify.sh` full green
+
+## 4. Follow-ups (from user review)
+
+- [x] 4.1 Fix duplicate "Tổng cộng": `TableStickyTotalsBar` no longer renders when the real totals row is already fully on screen (short lists showed both at once) — verify: `harness/checks/table-export-and-layout-browser.mjs`
+- [x] 4.2 Mobile hamburger nav toggle only renders when there's an actual side nav to open (`Header` takes a `hasSideNav` prop) — verify: same script
+- [x] 4.3 "Xuất toàn bộ dữ liệu" always exports every column, ignoring the View-options hidden-columns setting (current-page export still respects it) — verify: same script (magic-byte check on both current-page and toàn-bộ exports)
+- [x] 4.4 Customer detail panel's "In" button (previously permanently disabled) now opens a print-ready window for that one customer's profile
+- [x] 4.5 New automated browser check `harness/checks/table-export-and-layout-browser.mjs` covering all of the above; `tanstack-contracts-browser.mjs` updated for the new "Xuất" dropdown (its CSV button no longer exists as a bare icon button)

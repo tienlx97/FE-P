@@ -1,5 +1,70 @@
 # Progress Log
 
+## 2026-09-13 — Follow-ups: duplicate totals row, mobile toggle, export columns, customer print, automated check
+
+**Context:** After the export dropdown + layout settings work (previous
+entry), user reported a real bug ("2 chỗ hiện Tổng cộng") and asked for
+every open follow-up from that entry to be finished, not just listed.
+
+**What changed:**
+- **Bug fix:** `TableStickyTotalsBar` was showing its fixed duplicate
+  whenever the table container merely intersected the viewport — a short
+  list that fits on one page has the real totals row AND the fixed bar
+  visible at once. It now also checks whether the real totals row(s)
+  (`data-is-totals-row="true"`, newly added to `TanStackDataTable`'s body
+  rows) are already fully on screen via `getBoundingClientRect`, and hides
+  itself when they are. The pin-while-scrolling behavior for long tables
+  is unaffected (verified both directions).
+- Mobile hamburger nav toggle (`Header`) now takes a `hasSideNav` prop and
+  only renders when there's an actual side nav to open — it used to always
+  render, including on routes/states with nothing to toggle.
+- `AdvanceTable`'s "Xuất toàn bộ dữ liệu" export now always includes every
+  column (`buildExportTable`'s new `allColumns` option), ignoring whatever
+  the View-options popover currently has hidden — exporting "everything"
+  but silently dropping hidden columns would be a data-loss surprise.
+  Current-page export is unchanged (still respects hidden columns, i.e.
+  what's on screen). Export dropdown item labels got their "(trang hiện
+  tại)" / "(toàn bộ dữ liệu)" suffixes back (matching the old CSV button's
+  naming) so automated tests (and users) can tell the two apart — the
+  "Trang hiện tại"/"Toàn bộ dữ liệu" section headings alone weren't a
+  reliable disambiguator for accessible-name-based lookups.
+- Customer detail panel's "In" button (`customers-list.jsx`) was a
+  permanently-disabled placeholder ("Chưa hỗ trợ") — now opens a
+  print-ready window with that one customer's fields, same
+  new-window-plus-`window.print()` approach as the table-level print
+  export.
+- New automated browser check, `harness/checks/table-export-and-layout-browser.mjs`,
+  covering all of the above plus the settings popover and hide-side-nav/
+  focus-mode persistence — no automated coverage existed for any of this
+  before. `harness/checks/tanstack-contracts-browser.mjs` updated for the
+  new "Xuất" dropdown (its old bare "Xuất CSV (trang hiện tại)" icon
+  button no longer exists on its own; it's now a menu item behind the
+  "Xuất" trigger).
+
+**Verified:** `./harness/verify.sh` full green. Both browser check scripts
+pass end-to-end against the running dev stack
+(`harness/runs/2026-09-13T12-46-02-517Z-table-export-layout/checks.json`):
+no duplicate totals row on a short list, sticky bar still pins on a long
+list and unpins at the true bottom, both Excel exports (current-page and
+toàn-bộ) are valid zip/OOXML (`PK` magic bytes), hide-side-nav persists
+across a reload, focus mode's exit button restores the header, and the
+mobile toggle appears/disappears correctly with the side-nav setting.
+
+**Harness gaps found while writing the check script (fixed in the script,
+noted here since they'll bite the next person too):**
+- `network route` matches are checked in registration order (first match
+  wins) — re-registering just the one pattern that changed mid-test
+  leaves it ordered *after* an already-registered broad catch-all, which
+  then wins instead. Fix: clear and re-register every route together
+  (`setupRoutes()` in the new script) whenever a fixture changes.
+- This app's table scrolls within `[data-table-engine="tanstack"]`'s own
+  parent wrapper, not the window — `window.scrollTo()` in a test is a
+  silent no-op here; scroll `table.parentElement.scrollTop` instead
+  (matches what `tanstack-contracts-browser.mjs` already did).
+- Astryx's `Popover` stays open after clicking a `Switch` inside it —
+  reopening the same trigger without an intervening `Escape` (or a full
+  navigation) closes it instead of reopening.
+
 ## 2026-09-13 — Table export dropdown + app-wide layout settings
 
 **Context:** User request: turn the CSV export button into a proper "Xuất"

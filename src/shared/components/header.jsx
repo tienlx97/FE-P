@@ -195,6 +195,7 @@ function MobileMenuIcon({ isOpen }) {
  *   siteName: string,
  *   navLinks: NavLink[],
  *   endContent?: import('react').ReactNode,
+ *   hasSideNav?: boolean,
  *   isMobileNavOpen: boolean,
  *   mobileToggleRef: import('react').RefObject<HTMLButtonElement | null>,
  *   onMobileNavToggle: () => void,
@@ -204,6 +205,7 @@ export function Header({
   siteName,
   navLinks,
   endContent,
+  hasSideNav = false,
   isMobileNavOpen,
   mobileToggleRef,
   onMobileNavToggle,
@@ -218,20 +220,22 @@ export function Header({
     >
       <div {...stylex.props(styles.inner)}>
         <div {...stylex.props(styles.brandArea)}>
-          <button
-            ref={mobileToggleRef}
-            type="button"
-            aria-label={isMobileNavOpen ? 'Đóng menu' : 'Mở menu'}
-            aria-controls="mobile-docs-navigation"
-            aria-expanded={isMobileNavOpen}
-            onClick={onMobileNavToggle}
-            {...stylex.props(
-              styles.mobileToggle,
-              isMobileNavOpen && styles.openMobileToggle,
-            )}
-          >
-            <MobileMenuIcon isOpen={isMobileNavOpen} />
-          </button>
+          {hasSideNav ? (
+            <button
+              ref={mobileToggleRef}
+              type="button"
+              aria-label={isMobileNavOpen ? 'Đóng menu' : 'Mở menu'}
+              aria-controls="mobile-docs-navigation"
+              aria-expanded={isMobileNavOpen}
+              onClick={onMobileNavToggle}
+              {...stylex.props(
+                styles.mobileToggle,
+                isMobileNavOpen && styles.openMobileToggle,
+              )}
+            >
+              <MobileMenuIcon isOpen={isMobileNavOpen} />
+            </button>
+          ) : null}
           <Link
             href="/"
             aria-label={siteName}

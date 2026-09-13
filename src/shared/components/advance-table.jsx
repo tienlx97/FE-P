@@ -517,18 +517,25 @@ export function AdvanceTable({
   /**
    * Shared by every export/print format: the same visible/ordered columns
    * (respecting the View options picker), minus `fixedEndColumnKeys` (the
-   * actions column has nothing to export) and any totals row. A column's
-   * optional `exportValue(row)` overrides the plain `row[key]` dump for
-   * cases where the rendered cell isn't the raw field (enum codes, nested
-   * objects, combined fields) — falls back to the raw value when absent.
-   * Values are left as their raw type (number/string/null) — CSV/print
-   * stringify them, Excel keeps numbers numeric.
+   * actions column has nothing to export) and any totals row — unless
+   * `allColumns` asks for every column regardless of what's currently
+   * hidden (used by "Xuất toàn bộ dữ liệu": exporting everything but
+   * dropping columns the user happened to have hidden on screen would be
+   * a silent data loss surprise). A column's optional `exportValue(row)`
+   * overrides the plain `row[key]` dump for cases where the rendered cell
+   * isn't the raw field (enum codes, nested objects, combined fields) —
+   * falls back to the raw value when absent. Values are left as their raw
+   * type (number/string/null) — CSV/print stringify them, Excel keeps
+   * numbers numeric.
    * @param {T[]} rows
+   * @param {{ allColumns?: boolean }} [options]
    */
-  function buildExportTable(rows) {
-    const exportColumnKeys = columnSettingsState.activeColumnKeys.filter(
-      (key) => !fixedEndColumnKeys.includes(key),
-    );
+  function buildExportTable(rows, { allColumns = false } = {}) {
+    const exportColumnKeys = (
+      allColumns
+        ? columnOptions.map((column) => column.key)
+        : columnSettingsState.activeColumnKeys
+    ).filter((key) => !fixedEndColumnKeys.includes(key));
     const columnsByKey = new Map(
       tableColumns.map((column) => [column.key, column]),
     );
@@ -548,9 +555,9 @@ export function AdvanceTable({
     return { headerRow, dataRows };
   }
 
-  /** @param {T[]} rows */
-  function exportCsv(rows) {
-    const { headerRow, dataRows } = buildExportTable(rows);
+  /** @param {T[]} rows @param {{ allColumns?: boolean }} [options] */
+  function exportCsv(rows, options) {
+    const { headerRow, dataRows } = buildExportTable(rows, options);
     const csv = [headerRow, ...dataRows]
       .map((cells) =>
         cells
@@ -569,9 +576,9 @@ export function AdvanceTable({
     URL.revokeObjectURL(url);
   }
 
-  /** @param {T[]} rows */
-  function exportExcel(rows) {
-    const { headerRow, dataRows } = buildExportTable(rows);
+  /** @param {T[]} rows @param {{ allColumns?: boolean }} [options] */
+  function exportExcel(rows, options) {
+    const { headerRow, dataRows } = buildExportTable(rows, options);
     const worksheet = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
@@ -633,8 +640,8 @@ export function AdvanceTable({
           )
         )
       );
-      if (format === 'excel') exportExcel(filteredAllRows);
-      else exportCsv(filteredAllRows);
+      if (format === 'excel') exportExcel(filteredAllRows, { allColumns: true });
+      else exportCsv(filteredAllRows, { allColumns: true });
     } finally {
       setIsExportingAll(false);
     }
@@ -802,19 +809,19 @@ export function AdvanceTable({
                     items: [
                       {
                         id: 'excel-page',
-                        label: 'Xuất Excel',
+                        label: 'Xuất Excel (trang hiện tại)',
                         icon: <Icon icon={FileSpreadsheet} size="sm" />,
                         onClick: () => exportExcel(filteredData),
                       },
                       {
                         id: 'csv-page',
-                        label: 'Xuất CSV',
+                        label: 'Xuất CSV (trang hiện tại)',
                         icon: <Icon icon={Download} size="sm" />,
                         onClick: () => exportCsv(filteredData),
                       },
                       {
                         id: 'print-page',
-                        label: 'In',
+                        label: 'In (trang hiện tại)',
                         icon: <Icon icon={Printer} size="sm" />,
                         onClick: () => printRows(filteredData),
                       },
@@ -830,7 +837,7 @@ export function AdvanceTable({
                               id: 'excel-all',
                               label: isExportingAll
                                 ? 'Đang xuất...'
-                                : 'Xuất Excel',
+                                : 'Xuất Excel (toàn bộ dữ liệu)',
                               icon: <Icon icon={FileSpreadsheet} size="sm" />,
                               isDisabled: isExportingAll,
                               onClick: () => exportAllRows('excel'),
@@ -839,7 +846,7 @@ export function AdvanceTable({
                               id: 'csv-all',
                               label: isExportingAll
                                 ? 'Đang xuất...'
-                                : 'Xuất CSV',
+                                : 'Xuất CSV (toàn bộ dữ liệu)',
                               icon: <Icon icon={Download} size="sm" />,
                               isDisabled: isExportingAll,
                               onClick: () => exportAllRows('csv'),

@@ -299,6 +299,7 @@ export function ProtectedAppShell({
             siteName={site.name}
             navLinks={navLinks}
             endContent={endContent}
+            hasSideNav={hasSideNav}
             isMobileNavOpen={isMobileNavOpen}
             mobileToggleRef={mobileToggleRef}
             onMobileNavToggle={() =>

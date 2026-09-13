@@ -76,6 +76,15 @@ export function TableStickyTotalsBar({
     /** @type {{ key: string, left: number, width: number, align: string | undefined, pinned: boolean }[]} */ ([]),
   );
   const [isContainerVisible, setIsContainerVisible] = useState(false);
+  // The real totals row(s) already being fully on screen is a separate
+  // condition from the container merely intersecting the viewport — a
+  // short table that fits on one page has BOTH true at once, which used
+  // to show the real row AND this fixed duplicate simultaneously. Hiding
+  // the fixed bar whenever the real row is already fully visible fixes
+  // that without weakening the actual pin-while-scrolling behavior (a
+  // long table's totals row starts off-screen, so this stays false until
+  // the user scrolls all the way down to it).
+  const [isRealTotalsRowVisible, setIsRealTotalsRowVisible] = useState(false);
   const [clip, setClip] = useState({ left: 0, right: 0 });
 
   useEffect(() => {
@@ -102,6 +111,17 @@ export function TableStickyTotalsBar({
             pinned: getComputedStyle(cell).position === 'sticky',
           };
         }),
+      );
+
+      const totalsRowElements = Array.from(
+        container.querySelectorAll('[data-is-totals-row="true"]'),
+      );
+      setIsRealTotalsRowVisible(
+        totalsRowElements.length > 0 &&
+          totalsRowElements.every((row) => {
+            const rect = row.getBoundingClientRect();
+            return rect.top >= 0 && rect.bottom <= window.innerHeight;
+          }),
       );
     };
 
@@ -141,6 +161,7 @@ export function TableStickyTotalsBar({
 
   if (
     !isContainerVisible ||
+    isRealTotalsRowVisible ||
     columnRects.length === 0 ||
     totalsRows.length === 0
   ) {
@@ -154,6 +175,7 @@ export function TableStickyTotalsBar({
   return (
     <div
       aria-hidden="true"
+      data-testid="sticky-totals-bar"
       {...stylex.props(styles.wrapper, styles.clip(clip.left, clip.right))}
     >
       {totalsRows.map((totalsRow, rowIndex) => (

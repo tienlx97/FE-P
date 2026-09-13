@@ -43,6 +43,55 @@ const styles = stylex.create({
   },
 });
 
+/** @param {unknown} value */
+function escapeHtml(value) {
+  return String(value ?? '').replace(
+    /[&<>]/g,
+    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[char] ?? char,
+  );
+}
+
+/**
+ * Opens a print-ready window for one customer's profile — same
+ * new-window + `window.print()` approach as `AdvanceTable`'s table-level
+ * print export (`buildExportTable`'s doc comment), just for a single
+ * record's fields instead of a table of rows.
+ * @param {import('../types/index.js').Customer} customer
+ */
+function printCustomer(customer) {
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) return;
+  const fields = [
+    ['Tên công ty', customer.companyName],
+    ['Người đại diện', orDash(customer.representativeName)],
+    ['Chức vụ', orDash(customer.representativeTitle)],
+    ['Địa chỉ', orDash(customer.address)],
+    ...customer.extraFields.map(
+      (field) => /** @type {[string, string]} */ ([field.key, orDash(field.value)]),
+    ),
+  ];
+  printWindow.document.write(`<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><title>${escapeHtml(customer.companyName)}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 13px; }
+  h1 { font-size: 18px; margin-bottom: 24px; }
+  dl { display: grid; grid-template-columns: 200px 1fr; row-gap: 10px; }
+  dt { font-weight: bold; color: dimgray; }
+  dd { margin: 0; }
+</style></head><body>
+<h1>${escapeHtml(customer.companyName)}</h1>
+<dl>${fields
+    .map(
+      ([label, value]) =>
+        `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`,
+    )
+    .join('')}</dl>
+</body></html>`);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.onload = () => printWindow.print();
+}
+
 /**
  * @param {object} props
  * @param {import('../types/index.js').Customer} props.customer
@@ -111,8 +160,7 @@ function CustomerExpandedDetails({ customer, onEdit }) {
             variant="secondary"
             size="sm"
             icon={<Icon icon={Printer} />}
-            isDisabled
-            tooltip="Chưa hỗ trợ"
+            onClick={() => printCustomer(customer)}
           />
           <Button
             label="Sửa khách hàng"

@@ -371,6 +371,11 @@ export function TanStackDataTable({
             return (
               <Fragment key={row.id}>
                 <TableRow
+                  data-is-totals-row={
+                    /** @type {any} */ (row.original).__isTotalsRow
+                      ? 'true'
+                      : undefined
+                  }
                   xstyle={[
                     styles.row,
                     isExpandable && expandableRowStyles.clickableRow,
