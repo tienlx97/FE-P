@@ -4,7 +4,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { MetadataList } from '@astryxdesign/core/MetadataList';
-import { proportional, useTableRowExpansion } from '@astryxdesign/core/Table';
+import { proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
@@ -16,7 +16,6 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import {
-  createRowExpansionInteractionPlugin,
   expandableRowStyles,
   UnderlinedMetadataListItem as MetadataListItem,
 } from '@/shared/components/expandable-row-styles.jsx';
@@ -205,41 +204,27 @@ export function CustomersList() {
     },
   ];
 
-  const expandedKeys = useMemo(
+  const expandedIds = useMemo(
     () => new Set(expandedCustomerId ? [expandedCustomerId] : []),
     [expandedCustomerId],
   );
-  const expansionPlugin =
-    /** @type {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').Customer & Record<string, unknown>>} */ (
-      useTableRowExpansion({
-        expandedKeys,
-        onToggle: (customerId) =>
-          setExpandedCustomerId((current) =>
-            current === customerId ? null : customerId,
-          ),
-        getRowKey: (customer) => customer.id,
-        getIsItemExpandable: (customer) => !customer.id.startsWith('skeleton-'),
-        renderExpanded: (customer) => (
-          <CustomerExpandedDetails
-            customer={customer}
-            onEdit={() => setEditingCustomer(customer)}
-          />
-        ),
-      })
-    );
-  const rowInteractionPlugin = useMemo(
-    /** @returns {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').Customer & Record<string, unknown>>} */
-    () =>
-      createRowExpansionInteractionPlugin({
-        expandedId: expandedCustomerId,
-        onToggle: (customerId) =>
-          setExpandedCustomerId((current) =>
-            current === customerId ? null : customerId,
-          ),
-        isExpandable: (customer) => !customer.id.startsWith('skeleton-'),
-      }),
-    [expandedCustomerId],
-  );
+  const rowExpansion = {
+    expandedIds,
+    onToggle: (/** @type {string} */ customerId) =>
+      setExpandedCustomerId((current) =>
+        current === customerId ? null : customerId,
+      ),
+    getRowKey: (/** @type {import('../types/index.js').Customer} */ customer) =>
+      customer.id,
+    isExpandable: (/** @type {import('../types/index.js').Customer} */ customer) =>
+      !customer.id.startsWith('skeleton-'),
+    renderExpanded: (/** @type {import('../types/index.js').Customer} */ customer) => (
+      <CustomerExpandedDetails
+        customer={customer}
+        onEdit={() => setEditingCustomer(customer)}
+      />
+    ),
+  };
 
   return (
     <VStack gap={4} hAlign="stretch">
@@ -274,10 +259,7 @@ export function CustomersList() {
         idKey="id"
         isLoading={customersQuery.isLoading}
         skeletonRows={skeletonRows}
-        extraPlugins={{
-          expansion: expansionPlugin,
-          rowInteraction: rowInteractionPlugin,
-        }}
+        rowExpansion={rowExpansion}
         onRefresh={() => customersQuery.refetch()}
         isRefreshing={customersQuery.isFetching}
         defaultStickyEnd="none"

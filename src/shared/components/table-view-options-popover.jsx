@@ -286,12 +286,15 @@ export function TableViewOptionsPopover({
         </HStack>
       }
     >
-      <Button
-        label="Tuỳ chọn hiển thị"
-        variant="ghost"
-        size="sm"
-        endContent={<Icon icon="chevronDown" size="sm" />}
-      />
+      {(triggerProps) => (
+        <Button
+          {...triggerProps}
+          label="Tuỳ chọn hiển thị"
+          variant="ghost"
+          size="sm"
+          endContent={<Icon icon="chevronDown" size="sm" />}
+        />
+      )}
     </Popover>
   );
 }

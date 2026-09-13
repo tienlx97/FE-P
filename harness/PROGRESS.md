@@ -1,5 +1,100 @@
 # Progress Log
 
+## 2026-09-13 — TanStack table system rollout (Golden Rule #13)
+
+**Context:** User set a system-wide golden rule after the contracts-only
+TanStack migration: every table in kt-xnk renders through TanStack Table,
+not just contracts. See `openspec/changes/tanstack-table-system-rollout/`
+and `harness/GOLDEN_RULES.md` rule #13.
+
+**What changed:**
+- `AdvanceTable` (`src/shared/components/advance-table.jsx`) no longer has
+  a legacy non-TanStack renderer branch — it always renders through
+  `TanStackDataTable`. `headerGroups` stays optional (flat single-row
+  headers when absent), so this was mechanical for 7 of 9 remaining
+  consumers: `countries-list.jsx`, `places-list.jsx`,
+  `contract-private-infos-list.jsx`, `backup-list.jsx`,
+  `commissions-list.jsx`, `contract-full-view-panel.jsx`,
+  `shipments-list.jsx`. Dead plugin hooks (`useTableColumnSettings`,
+  `useTableStickyColumns`) and the `plugins`/`extraPlugins` props were
+  removed along with the branch.
+- `TanStackDataTable` (`src/shared/components/tanstack-data-table.jsx`)
+  gained row-expansion support (`rowExpansion` prop: `expandedIds`,
+  `onToggle`, `getRowKey`, `isExpandable`, `renderExpanded`) — a leading
+  chevron column, whole-row click/keyboard toggle, the existing
+  `expandableRowStyles` accent-outline treatment, and a full-width detail
+  panel — replacing Astryx's `useTableRowExpansion` +
+  `createRowExpansionInteractionPlugin` plugins. `user-list.jsx` and
+  `customers-list.jsx` (the only two callers using row expansion) were
+  migrated onto it; Golden Rule #12 (no `*FormDialog` inside
+  `renderExpanded`) still holds — neither expanded-detail component
+  renders one.
+- New mechanical check `harness/checks/tanstack-table-only.sh`, wired
+  into `./harness/verify.sh`, enforcing Golden Rule #13: fails if
+  `AdvanceTable` regains a legacy renderer branch, or if any feature file
+  imports Astryx `Table` render primitives directly.
+- No visual/behavioral changes intended anywhere — column widths,
+  pinning, density, dividers, filters, CSV export, server pagination and
+  dialogs are all unchanged per list.
+
+**Verified:** `./harness/verify.sh` full green (lint, typecheck,
+structure, harness-tests, unit-tests, build, quality-thresholds):
+`harness/runs/20260913-154306-7520/`. Live browser check against the
+already-running dev stack (BE on :8081, `next dev -p 3001`, using an
+already-authenticated session — no credentials were entered): Người dùng
+(user-list, row expansion + detail tabs), Khách hàng (customers-list, row
+expansion + action buttons inside the panel), Shipment (sticky totals bar
+intact), Nước xuất khẩu (countries-list, plain list), Sao lưu & khôi phục
+(backup-list, empty state), and Hợp đồng (contracts-list, confirming the
+already-migrated grouped-header table has zero regression from the
+engine-switch refactor in `advance-table.jsx`). Screenshots taken for
+each; not saved as harness evidence files this session — a follow-up
+should add a `harness/checks/*-browser.mjs` script (matching
+`tanstack-contracts-browser.mjs`'s pattern) for reproducible evidence
+across all 9 lists, since this pass was interactive/manual.
+- `places-list.jsx` and `contract-private-infos-list.jsx` and
+  `contract-full-view-panel.jsx` were verified by lint/typecheck/build
+  only (not clicked through live in this session) — same code path as
+  the browser-checked lists, so risk is low, but flagging honestly per
+  AGENTS.md ("don't assert visual correctness from code alone").
+
+## 2026-09-13 — TanStack contracts table
+
+- Migrated the contracts list to TanStack Table v8.21.3 row/column models,
+  retaining Astryx table primitives in children mode for the current mint
+  headings, white body, typography, density, dividers and filter controls.
+  Other list renderers and API/query contracts remain unchanged.
+- Replaced the measured GIÁ TRỊ overlay with real colspan/rowspan headers;
+  removed the unused `table-header-group.jsx` (recoverable from Git).
+  Financial columns have sufficient minimum widths for their longer labels.
+- Controlled visible/order/pinned columns feed TanStack; proportional widths
+  are converted into exact pixels so sticky offsets remain aligned. Header
+  groups are built per pinned region, including the split unpaid-value case.
+- Preserved search, advanced filters, CSV, server pagination and contract
+  dialogs. Totals stay independent of filtering; empty results show their
+  message even with totals. Fixed totals now inherit computed text alignment,
+  paint pinned cells opaquely and clip to the table's horizontal bounds.
+- Browser evidence: `harness/runs/2026-09-13T08-20-51-389Z-tanstack-contracts/`.
+  Synthetic API fixtures only; no real records changed. 20 rows exercise a
+  250px vertical scroll on 1440px and 390px viewports, both pinned edges,
+  financial presets, hide/show, compact density, two pinned columns, split
+  financial groups, search/empty/reset, actual CSV contents, advanced-filter
+  and contract dialogs. Browser errors output empty.
+- Harness gaps addressed: multi-row browser check asserts header/body
+  alignment, matching colors, no horizontal page overflow, and split groups.
+  It caught mobile toolbar overflow, empty-with-totals rendering, and the
+  automatic Popover trigger failing to open view settings; replaced that
+  trigger with Astryx's explicit render-prop API. Width distribution has
+  regression tests for fixed/proportional/hidden columns and narrow screens.
+- Fixture pitfalls: the current contract-search envelope is `totals`, not
+  the older `valueTotals`; sample status must be explicit. Use 20 rows to
+  stay below Windows command-line limits, and click the clear button instead
+  of passing an empty CLI argument. Browser launch requires unsandboxed access
+  on this host. User-added TanStack skills and skills-lock changes are unrelated.
+- Full verification passed before the final pinned-region header adjustment:
+  `harness/runs/20260913-151313-6950/`. Final verification recorded below.
+
+
 ## 2026-09-13 — Add: status quick-filter (Hợp đồng/Shipment) + CSV export (all 4 lists)
 
 **Context:** Reviewed the UI live (Hợp đồng, Shipment, Commission, BOQ,

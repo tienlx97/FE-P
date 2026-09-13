@@ -8,7 +8,7 @@ A rule with enforcement "manual" is a harness gap — plan to automate it.
 Raising the version creates cleanup work: see harness/ENTROPY.md.
 -->
 
-## v3 — 2026-09-04
+## v4 — 2026-09-13
 
 | # | Rule | Enforcement |
 |---|---|---|
@@ -24,9 +24,14 @@ Raising the version creates cleanup work: see harness/ENTROPY.md.
 | 10 | Stale docs are bugs; updating `docs/`/`openspec/` is part of the task that made them stale | cleanup agent scan |
 | 11 | Shared memory must not contain credentials or private keys | `harness/checks/memory-secrets.sh` |
 | 12 | A `*FormDialog` never renders inside a table's `renderExpanded` callback (a `Selector` field inside it would portal underneath the dialog instead of above it — see ADR-0004) | `harness/tests/selector-dialog-stacking.test.cjs` |
+| 13 | Every list/data table in the system renders through TanStack Table v8 (`AdvanceTable` → `TanStackDataTable`, `src/shared/components/tanstack-data-table.jsx`); no feature builds a bespoke table renderer or drops down to Astryx `Table` row/body primitives directly | `harness/checks/tanstack-table-only.sh` |
 
 ## Changelog
 
+- v4 (2026-09-13): rule #13 — TanStack Table is now the single engine for
+  every list in the system (`openspec/changes/tanstack-table-system-rollout/`),
+  not just contracts. `AdvanceTable` no longer has a legacy non-TanStack
+  renderer branch, so there is nothing left to grade C on this axis.
 - v3 (2026-09-04): rule #12 — the Selector-in-dialog portal-stacking bug had
   already been found and fixed once (`contracts-list.jsx`), then found again
   independently in `commissions-list.jsx` (per

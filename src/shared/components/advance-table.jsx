@@ -6,18 +6,18 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { InputGroup } from '@astryxdesign/core/InputGroup';
 import { usePowerSearchConfig } from '@astryxdesign/core/PowerSearch';
-import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { StackItem } from '@astryxdesign/core/Stack';
 import {
-  Table,
   toSearchFilters,
-  useTableColumnSettings,
   useTableColumnSettingsState,
   useTableFiltering,
   useTableFilterState,
-  useTableStickyColumns,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
@@ -37,6 +37,7 @@ import {
 
 import { AdvanceTablePagination } from './advance-table-pagination.jsx';
 import { AdvanceTableSearchDialog } from './advance-table-search-dialog.jsx';
+import { TanStackDataTable } from './tanstack-data-table.jsx';
 
 /**
  * `TableColumn` plus an optional CSV-export override — see
@@ -117,6 +118,8 @@ const styles = stylex.create({
   // when the search bar next to it grows to fill the row.
   toolbarEnd: {
     flexShrink: 0,
+    maxWidth: '100%',
+    minWidth: 0,
   },
   searchSlot: {
     minWidth: 'min(100%, 16rem)',
@@ -150,7 +153,8 @@ const styles = stylex.create({
 /**
  * Shared list-page table shell: search + per-column filters + a "View
  * options" popover (columns / density / sticky columns) + optional quick
- * filter chips, wired to an Astryx `<Table>`, with a footer that's either a
+ * filter chips, wired to `TanStackDataTable` (TanStack Table v8; the
+ * system's single table engine, Golden Rule #13), with a footer that's either a
  * plain row count or full pagination controls. Extracted from the Hợp đồng
  * (contracts) list so every list screen gets the same toolbar/table/footer
  * chrome instead of re-implementing it per feature.
@@ -179,11 +183,18 @@ const styles = stylex.create({
  *   viewPresets?: ReadonlyArray<AdvanceTableViewPreset>,
  *   fixedEndColumnKeys?: string[],
  *   tableColumns: AdvanceTableColumn<T>[],
+ *   headerGroups?: {id: string, label: string, columnKeys: string[]}[],
  *   data: T[],
  *   idKey: string,
  *   isLoading?: boolean,
  *   skeletonRows?: T[],
- *   extraPlugins?: Record<string, import('@astryxdesign/core/Table').TablePlugin<T>>,
+ *   rowExpansion?: {
+ *     expandedIds: ReadonlySet<string>,
+ *     onToggle: (id: string) => void,
+ *     getRowKey: (row: T) => string,
+ *     isExpandable?: (row: T) => boolean,
+ *     renderExpanded: (row: T) => import('react').ReactNode,
+ *   },
  *   primaryAction?: { label: string, onClick: () => void },
  *   onRefresh?: () => void,
  *   isRefreshing?: boolean,
@@ -220,11 +231,12 @@ export function AdvanceTable({
   viewPresets,
   fixedEndColumnKeys = [],
   tableColumns,
+  headerGroups,
   data,
   idKey,
   isLoading = false,
   skeletonRows,
-  extraPlugins,
+  rowExpansion,
   primaryAction,
   onRefresh,
   isRefreshing = false,
@@ -491,7 +503,9 @@ export function AdvanceTable({
   // shape the row doesn't have.
   const renderedData =
     totalsRows && totalsRows.length > 0
-      ? /** @type {T[]} */ (/** @type {any} */ ([...filteredData, ...totalsRows]))
+      ? /** @type {T[]} */ (
+          /** @type {any} */ ([...filteredData, ...totalsRows])
+        )
       : filteredData;
 
   /**
@@ -510,12 +524,14 @@ export function AdvanceTable({
     const exportColumnKeys = columnSettingsState.activeColumnKeys.filter(
       (key) => !fixedEndColumnKeys.includes(key),
     );
-    const columnsByKey = new Map(tableColumns.map((column) => [column.key, column]));
+    const columnsByKey = new Map(
+      tableColumns.map((column) => [column.key, column]),
+    );
     const headerRow = exportColumnKeys.map(
       (key) => columnOptions.find((column) => column.key === key)?.label ?? key,
     );
     const dataRows = filteredData
-      .filter((row) => !/** @type {any} */ (row).__isTotalsRow)
+      .filter((row) => !(/** @type {any} */ (row).__isTotalsRow))
       .map((row) =>
         exportColumnKeys.map((key) => {
           const column = /** @type {any} */ (columnsByKey.get(key));
@@ -547,33 +563,20 @@ export function AdvanceTable({
     ],
     onChangeActiveColumnKeys: (keys) => setActiveColumnKeys([...keys]),
   });
-  const columnSettingsPlugin =
-    /** @type {import('@astryxdesign/core/Table').TablePlugin<T>} */ (
-      useTableColumnSettings(columnSettingsState.columnSettingsConfig)
-    );
   // Pins whichever edge columns the View options popover currently asks
   // for, computed from the table's own visible/ordered column keys so the
   // pin always tracks what "first/last column(s)" actually means on screen.
-  const stickyColumnsPlugin =
-    /** @type {import('@astryxdesign/core/Table').TablePlugin<T>} */ (
-      useTableStickyColumns({
-        startKeys: stickyColumnKeys(
-          stickyStart,
-          columnSettingsState.activeColumnKeys,
-          false,
-        ).filter((key) => !fixedEndColumnKeys.includes(key)),
-        endKeys: [
-          ...new Set([
-            ...stickyColumnKeys(
-              stickyEnd,
-              columnSettingsState.activeColumnKeys,
-              true,
-            ),
-            ...fixedEndColumnKeys,
-          ]),
-        ],
-      })
-    );
+  const tableStartKeys = stickyColumnKeys(
+    stickyStart,
+    columnSettingsState.activeColumnKeys,
+    false,
+  ).filter((key) => !fixedEndColumnKeys.includes(key));
+  const tableEndKeys = [
+    ...new Set([
+      ...stickyColumnKeys(stickyEnd, columnSettingsState.activeColumnKeys, true),
+      ...fixedEndColumnKeys,
+    ]),
+  ];
 
   const skeletonColumns = tableColumns.map((column, columnIndex) => ({
     ...column,
@@ -639,7 +642,12 @@ export function AdvanceTable({
                 handleAdvancedSearchSubmit={handleAdvancedSearchSubmit}
               />
             </StackItem>
-            <HStack gap={2} vAlign="center" xstyle={styles.toolbarEnd}>
+            <HStack
+              gap={2}
+              vAlign="center"
+              wrap="wrap"
+              xstyle={styles.toolbarEnd}
+            >
               {viewPresets && viewPresets.length > 0 ? (
                 <SegmentedControl
                   label="Chế độ xem cột"
@@ -765,7 +773,13 @@ export function AdvanceTable({
       ) : null}
 
       <div ref={tableWrapperRef}>
-        <Table
+        <TanStackDataTable
+          headerGroups={headerGroups}
+          activeColumnKeys={columnSettingsState.activeColumnKeys}
+          startKeys={tableStartKeys}
+          endKeys={tableEndKeys}
+          filterPlugin={filterPlugin}
+          rowExpansion={rowExpansion}
           emptyState={
             isLoading ? (
               false
@@ -789,13 +803,6 @@ export function AdvanceTable({
           idKey={idKey}
           density={density}
           dividers={dividers}
-          hasHover
-          plugins={{
-            columnSettings: columnSettingsPlugin,
-            stickyColumns: stickyColumnsPlugin,
-            filter: filterPlugin,
-            ...extraPlugins,
-          }}
         />
       </div>
 

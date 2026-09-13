@@ -5,22 +5,22 @@ import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { SegmentedControl, SegmentedControlItem } from '@astryxdesign/core/SegmentedControl';
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@astryxdesign/core/SegmentedControl';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 import { Maximize2, Minimize2 } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { useFullscreenToggle } from '@/shared/components/fullscreen-panel.jsx';
-import {
-  TableHeaderGroupBar,
-  TableHeaderGroupCaption,
-} from '@/shared/components/table-header-group.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
@@ -132,30 +132,22 @@ const SETTLEMENT_GROUP_COLUMN_KEYS = [
   'unpaidValue',
 ];
 
-/**
- * Two-line header — a blank caption line reserved above the specific label
- * — so the three settlement columns line up under one spanning "GIÁ TRỊ"
- * bar drawn by `TableHeaderGroupBar` (see its render site below), since the
- * underlying `Table` has no spanning/grouped-header primitive to merge
- * them under a single cell itself.
- * @param {string} label
- */
-function settlementColumnHeader(label) {
-  return (
-    <VStack gap={0} hAlign="end">
-      <TableHeaderGroupCaption groupKey={SETTLEMENT_GROUP_KEY}>
-        GIÁ TRỊ
-      </TableHeaderGroupCaption>
-      <Text weight="semibold">{label}</Text>
-    </VStack>
-  );
-}
+const CONTRACT_HEADER_GROUPS = [
+  {
+    id: SETTLEMENT_GROUP_KEY,
+    label: 'GIÁ TRỊ',
+    columnKeys: SETTLEMENT_GROUP_COLUMN_KEYS,
+  },
+];
+
+const styles = stylex.create({
+  statusFilter: { maxWidth: '100%', overflowX: 'auto' },
+});
 
 /** Contract workspace and related editors are siblings of the table so
  * Selector portals remain inside their dialog layers (ADR-0004). */
 export function ContractsList() {
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreenToggle();
-  const tableWrapperRef = useRef(null);
   // `sessionKey` identifies one open workspace session — assigned once per
   // open action (row Xem/Sửa, "Tạo hợp đồng") and never touched again for
   // that session, including across a successful create (`contract` moves
@@ -194,8 +186,8 @@ export function ContractsList() {
   // client-side). "Tất cả" means no status condition at all, not a
   // specific value.
   const statusQuickFilterValue =
-    filterConditions.find((condition) => condition.field === 'status')
-      ?.value ?? 'all';
+    filterConditions.find((condition) => condition.field === 'status')?.value ??
+    'all';
   /** @param {string} nextValue */
   function handleStatusQuickFilterChange(nextValue) {
     setFilterConditions((current) =>
@@ -223,9 +215,7 @@ export function ContractsList() {
     ),
   );
   const [relatedBoqDialog, setRelatedBoqDialog] = useState(
-    /** @type {{ contractId: string, contractNumber: string } | null} */ (
-      null
-    ),
+    /** @type {{ contractId: string, contractNumber: string } | null} */ (null),
   );
   const [shipmentDialog, setShipmentDialog] = useState(
     /** @type {{ contractId: string, contract: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
@@ -465,8 +455,8 @@ export function ContractsList() {
       // First of the four settlement-group columns (see
       // `SETTLEMENT_GROUP_COLUMN_KEYS`) — the contract's own value, next to
       // its quyết toán / đã thanh toán / chưa thanh toán position.
-      header: settlementColumnHeader('HỢP ĐỒNG'),
-      width: proportional(1),
+      header: 'HỢP ĐỒNG',
+      width: proportional(1, { minWidth: 180 }),
       align: 'end',
       filter: 'contractValue',
       renderCell: (contract) =>
@@ -478,8 +468,8 @@ export function ContractsList() {
       // (contract value + annex adjustments, and the payment position off
       // it), not stored columns `ContractFilterFields` (BE-kt-xnk) knows
       // how to filter on.
-      header: settlementColumnHeader('QUYẾT TOÁN'),
-      width: proportional(1),
+      header: 'QUYẾT TOÁN',
+      width: proportional(1, { minWidth: 180 }),
       align: 'end',
       renderCell: (contract) =>
         formatMoney(
@@ -491,8 +481,8 @@ export function ContractsList() {
     },
     {
       key: 'paidValue',
-      header: settlementColumnHeader('ĐÃ THANH TOÁN'),
-      width: proportional(1),
+      header: 'ĐÃ THANH TOÁN',
+      width: proportional(1, { minWidth: 180 }),
       align: 'end',
       renderCell: (contract) =>
         formatMoney(
@@ -504,8 +494,8 @@ export function ContractsList() {
     },
     {
       key: 'unpaidValue',
-      header: settlementColumnHeader('CHƯA THANH TOÁN'),
-      width: proportional(1),
+      header: 'CHƯA THANH TOÁN',
+      width: proportional(1, { minWidth: 200 }),
       align: 'end',
       renderCell: (contract) =>
         formatMoney(
@@ -523,7 +513,8 @@ export function ContractsList() {
       width: pixel(140),
       filter: 'incoterm',
       renderCell: (contract) => `${contract.incoterm} ${contract.incotermYear}`,
-      exportValue: (contract) => `${contract.incoterm} ${contract.incotermYear}`,
+      exportValue: (contract) =>
+        `${contract.incoterm} ${contract.incotermYear}`,
     },
     {
       key: 'createdDate',
@@ -622,9 +613,9 @@ export function ContractsList() {
       /** @param {import('../types/index.js').Contract & Record<string, unknown> & Partial<ContractTotalsRow>} row */
       renderCell: (row) =>
         row.__isTotalsRow
-          ? (totalsRenderCell
-              ? totalsRenderCell(/** @type {ContractTotalsRow} */ (row))
-              : null)
+          ? totalsRenderCell
+            ? totalsRenderCell(/** @type {ContractTotalsRow} */ (row))
+            : null
           : column.renderCell?.(row),
     };
   });
@@ -686,6 +677,7 @@ export function ContractsList() {
 
       <SegmentedControl
         label="Lọc theo trạng thái"
+        xstyle={styles.statusFilter}
         size="sm"
         value={statusQuickFilterValue}
         onChange={handleStatusQuickFilterChange}
@@ -700,47 +692,40 @@ export function ContractsList() {
         ))}
       </SegmentedControl>
 
-      <div ref={tableWrapperRef} style={{ position: 'relative' }}>
-        <TableHeaderGroupBar
-          containerRef={tableWrapperRef}
-          groupKey={SETTLEMENT_GROUP_KEY}
-          columnKeys={SETTLEMENT_GROUP_COLUMN_KEYS}
-          label="GIÁ TRỊ"
-        />
-        <AdvanceTable
-          toolbarLabel="Thao tác danh sách hợp đồng"
-          searchFieldDefs={searchFieldDefsWithCustomers}
-          entityLabel="Hợp đồng"
-          contentSearchFieldKey="contractNumber"
-          searchPlaceholder="Tìm số HĐ, dự án..."
-          filterFieldDefs={filterFieldDefsWithCustomers}
-          advancedFilterConditions={filterConditions}
-          onAdvancedFilterChange={setFilterConditions}
-          dividers="grid"
-          columnOptions={COLUMN_OPTIONS}
-          initialColumnKeys={DEFAULT_COLUMN_KEYS}
-          defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-          viewPresets={VIEW_PRESETS}
-          fixedEndColumnKeys={['actions']}
-          tableColumns={columnsWithTotalsRow}
-          data={searchableContracts}
-          totalsRows={totalsRows}
-          idKey="id"
-          isLoading={isLoadingContracts}
-          skeletonRows={skeletonRows}
-          onRefresh={() => contractsQuery.refetch()}
-          isRefreshing={contractsQuery.isFetching}
-          pagination={{
-            pageIndex,
-            pageSize,
-            totalCount: totalContracts,
-            totalPages,
-            onPageIndexChange: setPageIndex,
-            onPageSizeChange: setPageSize,
-            pageSizeOptions: PAGE_SIZE_OPTIONS,
-          }}
-        />
-      </div>
+      <AdvanceTable
+        headerGroups={CONTRACT_HEADER_GROUPS}
+        toolbarLabel="Thao tác danh sách hợp đồng"
+        searchFieldDefs={searchFieldDefsWithCustomers}
+        entityLabel="Hợp đồng"
+        contentSearchFieldKey="contractNumber"
+        searchPlaceholder="Tìm số HĐ, dự án..."
+        filterFieldDefs={filterFieldDefsWithCustomers}
+        advancedFilterConditions={filterConditions}
+        onAdvancedFilterChange={setFilterConditions}
+        dividers="grid"
+        columnOptions={COLUMN_OPTIONS}
+        initialColumnKeys={DEFAULT_COLUMN_KEYS}
+        defaultColumnKeys={DEFAULT_COLUMN_KEYS}
+        viewPresets={VIEW_PRESETS}
+        fixedEndColumnKeys={['actions']}
+        tableColumns={columnsWithTotalsRow}
+        data={searchableContracts}
+        totalsRows={totalsRows}
+        idKey="id"
+        isLoading={isLoadingContracts}
+        skeletonRows={skeletonRows}
+        onRefresh={() => contractsQuery.refetch()}
+        isRefreshing={contractsQuery.isFetching}
+        pagination={{
+          pageIndex,
+          pageSize,
+          totalCount: totalContracts,
+          totalPages,
+          onPageIndexChange: setPageIndex,
+          onPageSizeChange: setPageSize,
+          pageSizeOptions: PAGE_SIZE_OPTIONS,
+        }}
+      />
 
       {workspace ? (
         <ContractFormDialog
@@ -752,7 +737,9 @@ export function ContractsList() {
           // dialog (tasks 3.2/3.3). The short quick-add dialogs (annex/
           // payment/VGM) still stack on top — those stay "gọn" per
           // design.md section 3, not full workspaces of their own.
-          isOpen={!shipmentDialog && !relatedCommissionDialog && !relatedBoqDialog}
+          isOpen={
+            !shipmentDialog && !relatedCommissionDialog && !relatedBoqDialog
+          }
           onOpenChange={(open) => {
             if (!open) setWorkspace(null);
           }}

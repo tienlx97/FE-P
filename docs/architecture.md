@@ -137,6 +137,21 @@ StyleX remains the only styling runtime. Source-contract tests under
 `src/shared/components/` protect geometry, responsive thresholds, semantic
 markup, and the absence of direct Astryx UI imports.
 
+## Operational tables
+
+Every list/data table in the system renders through
+`shared/components/tanstack-data-table.jsx` (TanStack Table v8 row/column
+models) — Golden Rule #13, `harness/GOLDEN_RULES.md`. `AdvanceTable` owns
+toolbar/filter controls and always renders through this adapter; there is
+no remaining data-driven Astryx `Table` renderer path. Astryx table
+primitives are used in children mode to retain the shared theme; native
+`colgroup` sizing, real grouped headers (contracts' GIÁ TRỊ) and row
+expansion (`user-list`, `customers-list`) are all handled by this one
+adapter. See `openspec/changes/tanstack-contracts-table/` (initial,
+contracts-scoped migration) and
+`openspec/changes/tanstack-table-system-rollout/` (system-wide rollout)
+for the migration contracts.
+
 ## Non-goals
 
 - No dark theme — light only, by explicit product decision

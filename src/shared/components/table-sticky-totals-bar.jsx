@@ -1,18 +1,23 @@
 'use client';
-import { borderVars, colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
+import {
+  borderVars,
+  colorVars,
+  spacingVars,
+} from '@astryxdesign/core/theme/tokens.stylex';
 import * as stylex from '@stylexjs/stylex';
 import { useEffect, useState } from 'react';
 
 const styles = stylex.create({
+  clip: (left, right) => ({ clipPath: `inset(0 ${right}px 0 ${left}px)` }),
   wrapper: {
     // Fixed, spanning the full viewport width — child rows/cells below
     // position themselves with viewport-absolute `left`/`width` (measured
-    // from the real header `<th>`s, same technique
-    // `table-header-group.jsx`'s `TableHeaderGroupBar` uses), which only
+    // from the real header `<th>`s), which only
     // lines up correctly if this ancestor's own containing block starts at
     // viewport x=0.
     bottom: 0,
     left: 0,
+    overflow: 'hidden',
     pointerEvents: 'none',
     position: 'fixed',
     right: 0,
@@ -27,6 +32,7 @@ const styles = stylex.create({
   },
   cell: {
     alignItems: 'center',
+    backgroundColor: colorVars['--color-background-muted'],
     bottom: 0,
     display: 'flex',
     overflow: 'hidden',
@@ -47,10 +53,9 @@ const styles = stylex.create({
  * this re-renders each column's totals cell (via the same `renderCell`
  * `columnsWithTotalsRow` already special-cases for `__isTotalsRow`) inside
  * an independent `position: fixed` bar, positioned per-column using the
- * real header `<th>`'s measured `left`/`width` — same DOM-measurement
- * technique `TableHeaderGroupBar` uses for its spanning group label,
- * proven there to track column resize/reorder/visibility changes and (as
- * of the 2026-09-12 sticky-header fix) scroll.
+ * real header `<th>`'s measured `left`/`width`, tracking column
+ * resize/reorder/visibility and scroll. TanStack's grouped headers expose
+ * data-column-key only on leaf cells so each total is measured once.
  *
  * Multiple `totalsRows` entries (one per currency) stack as separate rows
  * within the one fixed wrapper — cheaper than computing a `bottom` offset
@@ -62,20 +67,30 @@ const styles = stylex.create({
  *   totalsRows: Record<string, unknown>[],
  * }} props
  */
-export function TableStickyTotalsBar({ containerRef, tableColumns, totalsRows }) {
+export function TableStickyTotalsBar({
+  containerRef,
+  tableColumns,
+  totalsRows,
+}) {
   const [columnRects, setColumnRects] = useState(
-    /** @type {{ key: string, left: number, width: number, align: string | undefined }[]} */ (
-      []
-    ),
+    /** @type {{ key: string, left: number, width: number, align: string | undefined, pinned: boolean }[]} */ ([]),
   );
   const [isContainerVisible, setIsContainerVisible] = useState(false);
+  const [clip, setClip] = useState({ left: 0, right: 0 });
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return undefined;
 
     const measure = () => {
-      const cells = Array.from(container.querySelectorAll('th[data-column-key]'));
+      const bounds = container.getBoundingClientRect();
+      setClip({
+        left: Math.max(0, bounds.left),
+        right: Math.max(0, window.innerWidth - bounds.right),
+      });
+      const cells = Array.from(
+        container.querySelectorAll('th[data-column-key]'),
+      );
       setColumnRects(
         cells.map((cell) => {
           const rect = cell.getBoundingClientRect();
@@ -83,7 +98,8 @@ export function TableStickyTotalsBar({ containerRef, tableColumns, totalsRows })
             key: /** @type {string} */ (cell.getAttribute('data-column-key')),
             left: rect.left,
             width: rect.width,
-            align: /** @type {HTMLElement} */ (cell).style.textAlign || undefined,
+            align: getComputedStyle(cell).textAlign,
+            pinned: getComputedStyle(cell).position === 'sticky',
           };
         }),
       );
@@ -100,7 +116,10 @@ export function TableStickyTotalsBar({ containerRef, tableColumns, totalsRows })
       attributeFilter: ['style', 'class'],
     });
     window.addEventListener('resize', measure);
-    window.addEventListener('scroll', measure, { passive: true, capture: true });
+    window.addEventListener('scroll', measure, {
+      passive: true,
+      capture: true,
+    });
 
     const intersectionObserver = new IntersectionObserver(
       ([entry]) => setIsContainerVisible(entry.isIntersecting),
@@ -120,14 +139,23 @@ export function TableStickyTotalsBar({ containerRef, tableColumns, totalsRows })
     };
   }, [containerRef, tableColumns]);
 
-  if (!isContainerVisible || columnRects.length === 0 || totalsRows.length === 0) {
+  if (
+    !isContainerVisible ||
+    columnRects.length === 0 ||
+    totalsRows.length === 0
+  ) {
     return null;
   }
 
-  const columnsByKey = new Map(tableColumns.map((column) => [column.key, column]));
+  const columnsByKey = new Map(
+    tableColumns.map((column) => [column.key, column]),
+  );
 
   return (
-    <div aria-hidden="true" {...stylex.props(styles.wrapper)}>
+    <div
+      aria-hidden="true"
+      {...stylex.props(styles.wrapper, styles.clip(clip.left, clip.right))}
+    >
       {totalsRows.map((totalsRow, rowIndex) => (
         <div
           key={rowIndex}
@@ -144,6 +172,7 @@ export function TableStickyTotalsBar({ containerRef, tableColumns, totalsRows })
                 style={{
                   left: columnRect.left,
                   width: columnRect.width,
+                  zIndex: columnRect.pinned ? 1 : 0,
                   justifyContent:
                     columnRect.align === 'end' ? 'flex-end' : 'flex-start',
                 }}

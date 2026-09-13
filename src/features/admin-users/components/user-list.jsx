@@ -3,7 +3,7 @@
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { HStack } from '@astryxdesign/core/HStack';
-import { pixel, proportional, useTableRowExpansion } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useMemo, useState } from 'react';
@@ -12,7 +12,6 @@ import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
-import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
 
 import {
   useCompaniesQuery,
@@ -217,41 +216,29 @@ export function UserList() {
     },
   ];
 
-  const expandedKeys = useMemo(
+  const expandedIds = useMemo(
     () => new Set(expandedUserId ? [expandedUserId] : []),
     [expandedUserId],
   );
-  const expansionPlugin =
-    /** @type {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').UserListItem & Record<string, unknown>>} */ (
-      useTableRowExpansion({
-        expandedKeys,
-        onToggle: (userId) =>
-          setExpandedUserId((current) => (current === userId ? null : userId)),
-        getRowKey: (user) => user.id,
-        getIsItemExpandable: (user) => !user.id.startsWith('skeleton-'),
-        renderExpanded: (user) => (
-          <UserExpandedDetails
-            user={user}
-            onEdit={setEditingUser}
-            onResetPassword={setResettingPasswordUser}
-            companyNameById={companyNameById}
-            departmentNameById={departmentNameById}
-            positionNameById={positionNameById}
-          />
-        ),
-      })
-    );
-  const rowInteractionPlugin = useMemo(
-    /** @returns {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').UserListItem & Record<string, unknown>>} */
-    () =>
-      createRowExpansionInteractionPlugin({
-        expandedId: expandedUserId,
-        onToggle: (userId) =>
-          setExpandedUserId((current) => (current === userId ? null : userId)),
-        isExpandable: (user) => !user.id.startsWith('skeleton-'),
-      }),
-    [expandedUserId],
-  );
+  const rowExpansion = {
+    expandedIds,
+    onToggle: (/** @type {string} */ userId) =>
+      setExpandedUserId((current) => (current === userId ? null : userId)),
+    getRowKey: (/** @type {import('../types/index.js').UserListItem} */ user) =>
+      user.id,
+    isExpandable: (/** @type {import('../types/index.js').UserListItem} */ user) =>
+      !user.id.startsWith('skeleton-'),
+    renderExpanded: (/** @type {import('../types/index.js').UserListItem} */ user) => (
+      <UserExpandedDetails
+        user={user}
+        onEdit={setEditingUser}
+        onResetPassword={setResettingPasswordUser}
+        companyNameById={companyNameById}
+        departmentNameById={departmentNameById}
+        positionNameById={positionNameById}
+      />
+    ),
+  };
 
   // Search filters the page currently on screen, not the whole table: the
   // endpoint is paginated server-side and has no search parameter yet.
@@ -294,10 +281,7 @@ export function UserList() {
         idKey="id"
         isLoading={usersQuery.isLoading}
         skeletonRows={skeletonRows}
-        extraPlugins={{
-          expansion: expansionPlugin,
-          rowInteraction: rowInteractionPlugin,
-        }}
+        rowExpansion={rowExpansion}
         primaryAction={{
           label: 'Thêm',
           onClick: () => {
