@@ -11,7 +11,7 @@ import {
   TableHeaderCell,
   TableRow,
 } from '@astryxdesign/core/Table';
-import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
+import { borderVars, colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VisuallyHidden } from '@astryxdesign/core/VisuallyHidden';
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -36,14 +36,31 @@ const styles = stylex.create({
     width,
   }),
   header: { position: 'sticky', top: 0, zIndex: 3 },
-  headerCell: { position: 'relative', top: 'auto', zIndex: 0 },
+  // Column-separator border between header cells (both the group row and
+  // the leaf row) — the header previously only had the bottom divider
+  // separating it from the body, with no vertical rule between columns.
+  headerCell: {
+    borderInlineEndColor: colorVars['--color-border'],
+    borderInlineEndStyle: 'solid',
+    borderInlineEndWidth: borderVars['--border-width'],
+    position: 'relative',
+    top: 'auto',
+    zIndex: 0,
+  },
   align: (align) => ({ textAlign: align }),
   pinned: (left, right) => ({ left, position: 'sticky', right, zIndex: 1 }),
-  row: {
-    backgroundColor: {
-      default: colorVars['--color-background-card'],
-      ':hover': `color-mix(in srgb, ${colorVars['--color-overlay-hover']}, ${colorVars['--color-background-card']})`,
-    },
+  // Row hover is driven by React state (`hoveredRowId`), not a CSS `:hover`
+  // pseudo-class: a pinned cell's `background-color: inherit` (below)
+  // failed to repaint reliably when only the ancestor row's *pseudo-class*
+  // changed — `position: sticky` promotes the cell to its own compositing
+  // layer, and Chromium doesn't always invalidate that layer's cached
+  // background on a pure `:hover` toggle, so moving the pointer from a
+  // plain cell onto the pinned cell could show a stale color for a frame
+  // (reported 2026-09-14). Toggling a real class via React forces a normal
+  // style recalc instead, which sticky layers do pick up reliably.
+  row: { backgroundColor: colorVars['--color-background-card'] },
+  rowHovered: {
+    backgroundColor: `color-mix(in srgb, ${colorVars['--color-overlay-hover']}, ${colorVars['--color-background-card']})`,
   },
   bodyPin: {
     backgroundColor: 'inherit',
@@ -108,6 +125,9 @@ export function TanStackDataTable({
   'use no memo';
   const wrapperRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [availableWidth, setAvailableWidth] = useState(0);
+  const [hoveredRowId, setHoveredRowId] = useState(
+    /** @type {string | null} */ (null),
+  );
   useEffect(() => {
     const element = wrapperRef.current;
     if (!element) return;
@@ -268,7 +288,6 @@ export function TanStackDataTable({
       <Table
         density={density}
         dividers={dividers}
-        hasHover
         xstyle={styles.table(table.getTotalSize())}
         aria-label="Danh sách hợp đồng"
         data-table-engine="tanstack"
@@ -368,6 +387,7 @@ export function TanStackDataTable({
                 expansionKey &&
                 rowExpansion.expandedIds.has(expansionKey),
             );
+            const isRowHovered = hoveredRowId === row.id;
             return (
               <Fragment key={row.id}>
                 <TableRow
@@ -377,10 +397,16 @@ export function TanStackDataTable({
                       : undefined
                   }
                   xstyle={[
-                    styles.row,
+                    isRowHovered ? styles.rowHovered : styles.row,
                     isExpandable && expandableRowStyles.clickableRow,
                     isExpanded && expandableRowStyles.expandedRow,
                   ]}
+                  onMouseEnter={() => setHoveredRowId(row.id)}
+                  onMouseLeave={() =>
+                    setHoveredRowId((current) =>
+                      current === row.id ? null : current,
+                    )
+                  }
                   {...(rowExpansion && isExpandable && expansionKey
                     ? {
                         'aria-expanded': isExpanded,

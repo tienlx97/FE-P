@@ -207,20 +207,20 @@ export function useCreateUserForm({ onSuccess } = {}) {
       bankAccountRows.rows,
     );
 
-    // The Admin must hand both of these to the new employee to log in. The
-    // employee code is still visible later via the edit form, but the
-    // password is not — the server never returns it, so this banner is the
-    // only place it will ever be visible again.
-    const employeeCodeNote = createResult.employeeCode
-      ? ` Mã nhân viên để đăng nhập: ${createResult.employeeCode}.`
-      : '';
+    // The Admin must hand both of these to the new employee to log in —
+    // login is by CCCD + password (`use-login-form.js`), not employee code,
+    // so this banner shows the CCCD actually used to log in. It's still
+    // visible later via the edit form, but the password is not — the server
+    // never returns it, so this banner is the only place it will ever be
+    // visible again.
+    const nationalIdNote = ` Số CCCD để đăng nhập: ${result.data.nationalId}.`;
     const passwordNote = ` Mật khẩu: ${result.data.password}.`;
 
     setSubmitSuccess(
       (bankAccountFailures.length === 0
         ? 'Đã tạo người dùng thành công.'
         : `Đã tạo người dùng thành công, nhưng ${bankAccountFailures.length} tài khoản ngân hàng lưu thất bại: ${bankAccountFailures.join('; ')}`) +
-        employeeCodeNote +
+        nationalIdNote +
         passwordNote,
     );
     setValues(EMPTY_VALUES);

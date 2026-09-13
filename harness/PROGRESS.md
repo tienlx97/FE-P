@@ -1,5 +1,90 @@
 # Progress Log
 
+## 2026-09-14 — Six UI fixes: footer removal, header column borders, sticky-hover repaint bug, contracts fullscreen button, create-user success message
+
+**Context:** User batch of 7 requests (effort raised to `high` for this
+session). Items 1/2/3/5/6 below are concrete fixes; item 4 ("optimize the
+table filter") is intentionally left open pending a clarifying answer —
+"optimize" could mean several different, mutually exclusive things
+(performance, fewer overlapping filter UIs, accent-insensitive search),
+and picking wrong would mean redoing real UX work. Item 7 (a MISA
+screenshot: grouped headers, column borders, per-group subtotal rows,
+compact icon toolbar) was used as a design reference for item 2's borders;
+its other ideas (nested collapsible group rows with "Cộng" subtotals) are
+a materially bigger feature, not implemented — noted to the user rather
+than built speculatively.
+
+1. **Removed the site footer** ("© 2026 Đại Nghĩa Group") from every page
+   under `ProtectedAppShell` — `footer.jsx` itself is untouched (a
+   structural test, `docs-shell-contract.test.js`, locks its exact CSS
+   patterns as part of the `react-dev-docs-shell` contract per AGENTS.md's
+   scoped exception), only its one call site and the now-dead `year` prop
+   plumbing were removed.
+2. **Header column borders**: `TanStackDataTable`'s header cells
+   (`styles.headerCell`) gained a `border-inline-end` divider — previously
+   only the header-to-body divider existed, no vertical rule between
+   columns. Scoped to the header only (body dividers stay whatever each
+   list's own `dividers` prop already says) per the literal request;
+   `dividers="grid"` project-wide would additionally border every body
+   cell too, not done since it wasn't asked for.
+3. **Fixed a real bug**: hovering a row and then moving the pointer onto
+   a *pinned* column could show a stale/mismatched background for a
+   moment. Root cause: the pinned cell's `background-color: inherit`
+   depended on the row's CSS `:hover` pseudo-class recomputing, but
+   `position: sticky` promotes the cell to its own compositing layer that
+   Chromium doesn't always repaint on a pure `:hover` toggle. Fixed by
+   tracking the hovered row in React state (`hoveredRowId`,
+   onMouseEnter/onMouseLeave) and swapping a real class instead of relying
+   on `:hover` — forces a normal style recalc, which sticky layers do pick
+   up. Removed the now-redundant Astryx `hasHover` prop (StyleX already
+   guaranteed our own row style won for `backgroundColor`, so no visual
+   change from removing it, but two independent hover mechanisms next to
+   each other invited exactly this kind of subtle bug).
+4. **Deferred, needs a decision** — see below.
+5. **Removed contracts' "Phóng to" (maximize) button and its
+   `useFullscreenToggle()` call** (`contracts-list.jsx`), and unwrapped
+   the now-pointless `<FullscreenPanel>` from
+   `app/(protected)/logistics/contracts/page.jsx`. Left the shared
+   `fullscreen-panel.jsx`/`#fullscreen-portal-root` infrastructure in
+   `protected-app-shell.jsx` alone — it's documented as intentionally
+   reusable ("not tied to any one feature"), not contracts-specific, and
+   has its own non-trivial bug-fix history; deleting a shared primitive
+   wasn't what was asked, so flagging rather than unilaterally removing
+   it. It is currently unused project-wide as a result.
+6. **Fixed a real bug**: the "user created successfully" banner
+   (`use-create-user-form.js`) showed *"Mã nhân viên để đăng nhập: X"*
+   (employee code), but login (`use-login-form.js`/`login.js`) is by CCCD
+   + password, not employee code — an admin copying the wrong value would
+   send a new hire a code they can't actually log in with. Now shows
+   *"Số CCCD để đăng nhập: X"* using the submitted `nationalId`. Employee
+   code was already redundant here anyway (visible later via the edit
+   form); only the password is truly one-time-visible.
+
+**Verified:** `./harness/verify.sh` full green. Live browser check: no
+footer anywhere; header borders visible on both plain and grouped
+(GIÁ TRỊ colspan) headers; no "Phóng to" button on Hợp đồng; created a
+real test user (`Kiểm Thử Fix Bug`, CCCD `079095012345`) through the full
+form end-to-end and confirmed the exact banner text now reads "Số CCCD để
+đăng nhập: 079095012345. Mật khẩu: ...". The hover fix was verified by
+code/architecture review (state-driven class swap, no `:hover`/`inherit`
+dependency) rather than a visual screenshot — the hover tint is a ~2%
+opacity color-mix, too subtle for a compressed screenshot to prove either
+way, and this automation harness's virtual cursor doesn't reliably persist
+`:hover` state across separate tool calls to check it directly.
+
+**Item 4 (bộ lọc), not started — needs the user to pick a direction:**
+current filtering has three coexisting, overlapping surfaces (free-text
+quick search + advanced-search popover, per-column header filters, and
+the funnel-button `AdvancedFilterBuilder` for server-side conditions).
+"Optimize" could mean: (a) add debounce / reduce re-renders — not
+actually a measured problem today (page sizes are small, `applyFilters`
+is a cheap synchronous scan); (b) consolidate the three filter surfaces
+into fewer, clearer entry points (a real UX redesign); (c) make search
+accent-insensitive for Vietnamese text (Astryx's own `applyFilters` does
+`.toLowerCase()` only, no diacritic stripping — a real, common complaint
+for Vietnamese users typing without dấu). These aren't compatible
+default guesses, so this is still open.
+
 ## 2026-09-14 — Fix: read-only background inconsistency (Selector/DateInput/CheckboxList vs TextInput)
 
 **Context:** User audit: "TextInput, Combobox, Calendar... khi isReadOnly:

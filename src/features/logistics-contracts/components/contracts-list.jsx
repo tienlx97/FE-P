@@ -3,8 +3,6 @@
 import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
-import { Icon } from '@astryxdesign/core/Icon';
-import { IconButton } from '@astryxdesign/core/IconButton';
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -13,14 +11,12 @@ import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { Maximize2, Minimize2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
-import { useFullscreenToggle } from '@/shared/components/fullscreen-panel.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
@@ -148,7 +144,6 @@ const styles = stylex.create({
 /** Contract workspace and related editors are siblings of the table so
  * Selector portals remain inside their dialog layers (ADR-0004). */
 export function ContractsList() {
-  const { isFullscreen, toggle: toggleFullscreen } = useFullscreenToggle();
   // `sessionKey` identifies one open workspace session — assigned once per
   // open action (row Xem/Sửa, "Tạo hợp đồng") and never touched again for
   // that session, including across a successful create (`contract` moves
@@ -659,19 +654,6 @@ export function ContractsList() {
           <Heading level={1}>Hợp đồng</Heading>
         </VStack>
         <HStack gap={2}>
-          <IconButton
-            label={
-              isFullscreen
-                ? 'Thu nhỏ danh sách hợp đồng'
-                : 'Phóng to danh sách hợp đồng'
-            }
-            tooltip={isFullscreen ? 'Thu nhỏ' : 'Phóng to'}
-            icon={
-              <Icon icon={isFullscreen ? Minimize2 : Maximize2} size="sm" />
-            }
-            variant="secondary"
-            onClick={toggleFullscreen}
-          />
           <Button
             label="Tạo hợp đồng"
             variant="primary"

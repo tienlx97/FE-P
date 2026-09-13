@@ -15,7 +15,6 @@ import { useEffect, useRef, useState } from 'react';
 import { useLayoutPreferences } from '@/shared/hooks/use-layout-preferences.js';
 
 import { isNavLinkActive } from '../api/nav.js';
-import { Footer } from './footer.jsx';
 import { Header } from './header.jsx';
 import { AppSideNav } from './side-nav.jsx';
 
@@ -159,7 +158,6 @@ export const appShellContentStyle = styles.content;
  *   navLinks: NavLink[],
  *   sideNavRouteTrees: import('../types/index.js').SidebarRouteTree[],
  *   site: { name: string },
- *   year: number,
  * }} props
  */
 export function ProtectedAppShell({
@@ -168,7 +166,6 @@ export function ProtectedAppShell({
   navLinks,
   sideNavRouteTrees,
   site,
-  year,
 }) {
   const pathname = usePathname();
   const [openMobileNavPathname, setOpenMobileNavPathname] = useState(
@@ -330,7 +327,6 @@ export function ProtectedAppShell({
           {...stylex.props(styles.main, !hasSelfManagedPadding && styles.paddedMain)}
         >
           {children}
-          <Footer siteName={site.name} year={year} />
         </main>
       </div>
 

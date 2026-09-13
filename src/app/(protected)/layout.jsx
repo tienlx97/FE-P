@@ -28,7 +28,7 @@ import sidebarTutorial from '../../sidebarTutorial.json';
  * logged-out visitor's protected page content is never generated at all,
  * not just hidden after the fact (verified with `curl`, no JS).
  *
- * The app shell (top nav / side nav / footer) also lives here rather than
+ * The app shell (top nav / side nav) also lives here rather than
  * the root layout, so `/login` renders on a bare page with no chrome —
  * the shell is part of what "being logged in" means, not site-wide chrome.
  * @param {{ children: import('react').ReactNode }} props
@@ -65,7 +65,6 @@ export default async function ProtectedLayout({ children }) {
         },
       ]}
       site={site}
-      year={new Date().getFullYear()}
     >
       {children}
     </ProtectedAppShell>
