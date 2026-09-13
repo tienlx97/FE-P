@@ -29,6 +29,7 @@ import {
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import { searchCommissions } from '../api/commissions.js';
 import {
   COLUMN_OPTIONS,
   DEFAULT_COLUMN_KEYS,
@@ -192,17 +193,32 @@ export function CommissionsList() {
     [customersQuery.data],
   );
 
-  const searchableCommissions = commissions.map((commission) => {
-    const contract = contractsById.get(commission.contractId);
-    return {
-      ...commission,
-      contractNumber: contract?.contractNumber ?? '',
-      projectName: contract?.projectName ?? '',
-      currency: contract?.currency ?? '',
-      partyCustomerName:
-        customersById.get(commission.partyCustomerId)?.companyName ?? '',
-    };
-  });
+  /** @param {import('../types/index.js').Commission[]} rawCommissions */
+  function enrichCommissions(rawCommissions) {
+    return rawCommissions.map((commission) => {
+      const contract = contractsById.get(commission.contractId);
+      return {
+        ...commission,
+        contractNumber: contract?.contractNumber ?? '',
+        projectName: contract?.projectName ?? '',
+        currency: contract?.currency ?? '',
+        partyCustomerName:
+          customersById.get(commission.partyCustomerId)?.companyName ?? '',
+      };
+    });
+  }
+
+  const searchableCommissions = enrichCommissions(commissions);
+
+  // "Xuất toàn bộ dữ liệu" in AdvanceTable's export dropdown.
+  async function fetchAllCommissions() {
+    const result = await searchCommissions({
+      page: 1,
+      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      conditions: filterConditions,
+    });
+    return result.success ? enrichCommissions(result.commissions) : [];
+  }
 
   /**
    * Shared by the "Mã" cell (design.md section 4: "Mã bản ghi mở Xem") and
@@ -369,6 +385,7 @@ export function CommissionsList() {
         isLoading={commissionsQuery.isLoading}
         skeletonRows={skeletonRows}
         fixedEndColumnKeys={['actions']}
+        fetchAllRows={fetchAllCommissions}
         onRefresh={() => commissionsQuery.refetch()}
         isRefreshing={commissionsQuery.isFetching}
         pagination={{

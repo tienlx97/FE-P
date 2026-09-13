@@ -29,6 +29,7 @@ import {
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
 
+import { searchAllShipments } from '../api/shipments.js';
 import { formatMoney } from '../config/currencies.js';
 import {
   isContractEligibleForShipment,
@@ -178,16 +179,31 @@ export function ShipmentsList() {
     [customersQuery.data],
   );
 
-  const searchableShipments = shipments.map((shipment) => {
-    const contract = contractsById.get(shipment.contractId);
-    return {
-      ...shipment,
-      contractNumber: contract?.contractNumber ?? '',
-      projectName: contract?.projectName ?? '',
-      supplierName:
-        customersById.get(shipment.supplierCustomerId)?.companyName ?? '',
-    };
-  });
+  /** @param {import('../types/index.js').Shipment[]} rawShipments */
+  function enrichShipments(rawShipments) {
+    return rawShipments.map((shipment) => {
+      const contract = contractsById.get(shipment.contractId);
+      return {
+        ...shipment,
+        contractNumber: contract?.contractNumber ?? '',
+        projectName: contract?.projectName ?? '',
+        supplierName:
+          customersById.get(shipment.supplierCustomerId)?.companyName ?? '',
+      };
+    });
+  }
+
+  const searchableShipments = enrichShipments(shipments);
+
+  // "Xuất toàn bộ dữ liệu" in AdvanceTable's export dropdown.
+  async function fetchAllShipments() {
+    const result = await searchAllShipments({
+      page: 1,
+      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      conditions: filterConditions,
+    });
+    return result.success ? enrichShipments(result.shipments) : [];
+  }
 
   /**
    * Shared by the "Mã" cell (design.md section 4: "Mã bản ghi mở Xem") and
@@ -394,6 +410,7 @@ export function ShipmentsList() {
         isLoading={shipmentsQuery.isLoading}
         skeletonRows={skeletonRows}
         fixedEndColumnKeys={['actions']}
+        fetchAllRows={fetchAllShipments}
         onRefresh={() => shipmentsQuery.refetch()}
         isRefreshing={shipmentsQuery.isFetching}
         pagination={{

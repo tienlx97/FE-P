@@ -1,13 +1,18 @@
 'use client';
 
+import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import {
   colorVars,
   fontWeightVars,
   spacingVars,
 } from '@astryxdesign/core/theme/tokens.stylex';
 import * as stylex from '@stylexjs/stylex';
+import { Minimize2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+
+import { useLayoutPreferences } from '@/shared/hooks/use-layout-preferences.js';
 
 import { isNavLinkActive } from '../api/nav.js';
 import { Footer } from './footer.jsx';
@@ -130,6 +135,15 @@ const styles = stylex.create({
     position: 'fixed',
     zIndex: 30,
   },
+  // Focus mode hides the header entirely, so this is the only way back —
+  // same z-index convention as `FullscreenPanel`'s overlay, comfortably
+  // above ordinary page content.
+  exitFocusModeButton: {
+    insetBlockStart: spacingVars['--spacing-3'],
+    insetInlineEnd: spacingVars['--spacing-3'],
+    position: 'fixed',
+    zIndex: 500,
+  },
 });
 
 export const appShellContentStyle = styles.content;
@@ -166,9 +180,11 @@ export function ProtectedAppShell({
   const mobileOverlayRef = useRef(/** @type {HTMLElement | null} */ (null));
   const wasMobileNavOpenRef = useRef(false);
   const isMobileNavOpen = openMobileNavPathname === pathname;
-  const hasSideNav = SIDE_NAV_ROUTES.some((href) =>
-    isNavLinkActive(pathname, href),
-  );
+  const { hideSideNav, focusMode, setFocusMode } = useLayoutPreferences();
+  const hasSideNav =
+    SIDE_NAV_ROUTES.some((href) => isNavLinkActive(pathname, href)) &&
+    !hideSideNav &&
+    !focusMode;
   const hasMdxLayout =
     pathname === '/docs' ||
     pathname.startsWith('/docs/') ||
@@ -194,6 +210,17 @@ export function ProtectedAppShell({
   // its own.
   const hasSideNavLayout = hasSideNav || hasMdxLayout;
   const closeMobileNav = () => setOpenMobileNavPathname(null);
+
+  useEffect(() => {
+    if (!focusMode) return undefined;
+
+    /** @param {KeyboardEvent} event */
+    const exitOnEscape = (event) => {
+      if (event.key === 'Escape') setFocusMode(false);
+    };
+    document.addEventListener('keydown', exitOnEscape);
+    return () => document.removeEventListener('keydown', exitOnEscape);
+  }, [focusMode, setFocusMode]);
 
   useEffect(() => {
     const media = window.matchMedia('(max-width: 1023px)');
@@ -256,20 +283,32 @@ export function ProtectedAppShell({
         )
       }
     >
-      <header {...stylex.props(styles.topNav)}>
-        <Header
-          siteName={site.name}
-          navLinks={navLinks}
-          endContent={endContent}
-          isMobileNavOpen={isMobileNavOpen}
-          mobileToggleRef={mobileToggleRef}
-          onMobileNavToggle={() =>
-            setOpenMobileNavPathname((openPathname) =>
-              openPathname === pathname ? null : pathname,
-            )
-          }
+      {focusMode ? (
+        <IconButton
+          label="Thoát chế độ tập trung"
+          tooltip="Thoát chế độ tập trung (Esc)"
+          icon={<Icon icon={Minimize2} size="sm" />}
+          variant="secondary"
+          size="sm"
+          xstyle={styles.exitFocusModeButton}
+          onClick={() => setFocusMode(false)}
         />
-      </header>
+      ) : (
+        <header {...stylex.props(styles.topNav)}>
+          <Header
+            siteName={site.name}
+            navLinks={navLinks}
+            endContent={endContent}
+            isMobileNavOpen={isMobileNavOpen}
+            mobileToggleRef={mobileToggleRef}
+            onMobileNavToggle={() =>
+              setOpenMobileNavPathname((openPathname) =>
+                openPathname === pathname ? null : pathname,
+              )
+            }
+          />
+        </header>
+      )}
 
       <div {...stylex.props(styles.layout, hasSideNavLayout && styles.docsLayout)}>
         {hasSideNav ? (

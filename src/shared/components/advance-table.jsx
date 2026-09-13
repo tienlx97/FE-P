@@ -1,6 +1,7 @@
 'use client';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -25,8 +26,9 @@ import { colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { Download } from 'lucide-react';
+import { Download, FileSpreadsheet, Printer } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
+import * as XLSX from 'xlsx';
 
 import { IconRefresh } from '@/shared/components/icon/icon-refresh.jsx';
 import { TableStickyTotalsBar } from '@/shared/components/table-sticky-totals-bar.jsx';
@@ -40,10 +42,10 @@ import { AdvanceTableSearchDialog } from './advance-table-search-dialog.jsx';
 import { TanStackDataTable } from './tanstack-data-table.jsx';
 
 /**
- * `TableColumn` plus an optional CSV-export override — see
- * `exportVisibleRowsToCsv`'s doc comment below for when a column needs
- * one (enum codes, nested objects, combined display fields) versus
- * falling back to the raw `row[key]` dump.
+ * `TableColumn` plus an optional export override — see
+ * `buildExportTable`'s doc comment below for when a column needs one
+ * (enum codes, nested objects, combined display fields) versus falling
+ * back to the raw `row[key]` dump. Used by Excel, CSV and print export.
  * @template {Record<string, unknown>} T
  * @typedef {import('@astryxdesign/core/Table').TableColumn<T> & {
  *   exportValue?: (row: T) => string | number | null | undefined,
@@ -195,6 +197,7 @@ const styles = stylex.create({
  *     isExpandable?: (row: T) => boolean,
  *     renderExpanded: (row: T) => import('react').ReactNode,
  *   },
+ *   fetchAllRows?: () => Promise<T[]>,
  *   primaryAction?: { label: string, onClick: () => void },
  *   onRefresh?: () => void,
  *   isRefreshing?: boolean,
@@ -237,6 +240,7 @@ export function AdvanceTable({
   isLoading = false,
   skeletonRows,
   rowExpansion,
+  fetchAllRows,
   primaryAction,
   onRefresh,
   isRefreshing = false,
@@ -508,19 +512,20 @@ export function AdvanceTable({
         )
       : filteredData;
 
+  const [isExportingAll, setIsExportingAll] = useState(false);
+
   /**
-   * Current page only — `data` is whatever the caller already fetched
-   * (server-paginated everywhere `AdvanceTable` is used), so exporting
-   * "everything" would need a separate unpaginated request per list.
-   * Exports exactly what's currently on screen: the same visible/ordered
-   * columns (respecting the View options picker), minus `fixedEndColumnKeys`
-   * (the actions column has nothing to export) and any totals row. A
-   * column's optional `exportValue(row)` overrides the plain `row[key]`
-   * dump for cases where the rendered cell isn't the raw field (enum
-   * codes, nested objects, combined fields) — falls back to the raw value
-   * when absent.
+   * Shared by every export/print format: the same visible/ordered columns
+   * (respecting the View options picker), minus `fixedEndColumnKeys` (the
+   * actions column has nothing to export) and any totals row. A column's
+   * optional `exportValue(row)` overrides the plain `row[key]` dump for
+   * cases where the rendered cell isn't the raw field (enum codes, nested
+   * objects, combined fields) — falls back to the raw value when absent.
+   * Values are left as their raw type (number/string/null) — CSV/print
+   * stringify them, Excel keeps numbers numeric.
+   * @param {T[]} rows
    */
-  function exportVisibleRowsToCsv() {
+  function buildExportTable(rows) {
     const exportColumnKeys = columnSettingsState.activeColumnKeys.filter(
       (key) => !fixedEndColumnKeys.includes(key),
     );
@@ -530,19 +535,28 @@ export function AdvanceTable({
     const headerRow = exportColumnKeys.map(
       (key) => columnOptions.find((column) => column.key === key)?.label ?? key,
     );
-    const dataRows = filteredData
+    const dataRows = rows
       .filter((row) => !(/** @type {any} */ (row).__isTotalsRow))
       .map((row) =>
         exportColumnKeys.map((key) => {
           const column = /** @type {any} */ (columnsByKey.get(key));
-          const value = column?.exportValue
+          return column?.exportValue
             ? column.exportValue(row)
             : /** @type {any} */ (row)[key];
-          return value == null ? '' : String(value);
         }),
       );
+    return { headerRow, dataRows };
+  }
+
+  /** @param {T[]} rows */
+  function exportCsv(rows) {
+    const { headerRow, dataRows } = buildExportTable(rows);
     const csv = [headerRow, ...dataRows]
-      .map((cells) => cells.map(escapeCsvCell).join(','))
+      .map((cells) =>
+        cells
+          .map((value) => escapeCsvCell(value == null ? '' : String(value)))
+          .join(','),
+      )
       .join('\r\n');
     // Leading BOM so Excel opens the file as UTF-8 instead of guessing
     // Windows-1252 and mangling every Vietnamese diacritic.
@@ -553,6 +567,77 @@ export function AdvanceTable({
     link.download = `${entityLabel}-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  /** @param {T[]} rows */
+  function exportExcel(rows) {
+    const { headerRow, dataRows } = buildExportTable(rows);
+    const worksheet = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
+    XLSX.writeFile(
+      workbook,
+      `${entityLabel}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+    );
+  }
+
+  /** @param {T[]} rows */
+  function printRows(rows) {
+    const { headerRow, dataRows } = buildExportTable(rows);
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    const escapeHtml = (/** @type {unknown} */ value) =>
+      String(value ?? '').replace(
+        /[&<>]/g,
+        (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[char] ?? char,
+      );
+    printWindow.document.write(`<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><title>${escapeHtml(entityLabel)}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; }
+  h1 { font-size: 16px; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid darkgray; padding: 4px 8px; text-align: left; }
+  th { background: whitesmoke; }
+</style></head><body>
+<h1>${escapeHtml(entityLabel)}</h1>
+<table><thead><tr>${headerRow.map((cell) => `<th>${escapeHtml(cell)}</th>`).join('')}</tr></thead>
+<tbody>${dataRows
+      .map(
+        (row) =>
+          `<tr>${row.map((cell) => `<td>${escapeHtml(cell)}</td>`).join('')}</tr>`,
+      )
+      .join('')}</tbody></table>
+</body></html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.onload = () => printWindow.print();
+  }
+
+  /** @param {'excel' | 'csv'} format */
+  async function exportAllRows(format) {
+    if (!fetchAllRows) return;
+    setIsExportingAll(true);
+    try {
+      const allRows = await fetchAllRows();
+      const filteredAllRows = /** @type {T[]} */ (
+        /** @type {any} */ (
+          applyFilters(
+            [
+              ...searchFilters,
+              .../** @type {any} */ (
+                toSearchFilters(headerFilters, tableColumns, searchConfig)
+              ),
+            ],
+            /** @type {any} */ (allRows),
+          )
+        )
+      );
+      if (format === 'excel') exportExcel(filteredAllRows);
+      else exportCsv(filteredAllRows);
+    } finally {
+      setIsExportingAll(false);
+    }
   }
 
   const columnSettingsState = useTableColumnSettingsState({
@@ -701,14 +786,69 @@ export function AdvanceTable({
                   setStickyEnd(/** @type {'none' | 'one' | 'two'} */ (value))
                 }
               />
-              <IconButton
-                label="Xuất CSV (trang hiện tại)"
-                tooltip="Xuất CSV (trang hiện tại)"
-                icon={<Icon icon={Download} size="sm" />}
-                variant="ghost"
-                size="sm"
-                isDisabled={isLoading || filteredData.length === 0}
-                onClick={exportVisibleRowsToCsv}
+              <DropdownMenu
+                button={{
+                  label: 'Xuất',
+                  tooltip: 'Xuất dữ liệu',
+                  variant: 'ghost',
+                  size: 'sm',
+                  icon: <Icon icon={Download} size="sm" />,
+                  isDisabled: isLoading || filteredData.length === 0,
+                }}
+                items={[
+                  {
+                    type: 'section',
+                    title: 'Trang hiện tại',
+                    items: [
+                      {
+                        id: 'excel-page',
+                        label: 'Xuất Excel',
+                        icon: <Icon icon={FileSpreadsheet} size="sm" />,
+                        onClick: () => exportExcel(filteredData),
+                      },
+                      {
+                        id: 'csv-page',
+                        label: 'Xuất CSV',
+                        icon: <Icon icon={Download} size="sm" />,
+                        onClick: () => exportCsv(filteredData),
+                      },
+                      {
+                        id: 'print-page',
+                        label: 'In',
+                        icon: <Icon icon={Printer} size="sm" />,
+                        onClick: () => printRows(filteredData),
+                      },
+                    ],
+                  },
+                  ...(fetchAllRows
+                    ? [
+                        {
+                          type: /** @type {const} */ ('section'),
+                          title: 'Toàn bộ dữ liệu (đã lọc)',
+                          items: [
+                            {
+                              id: 'excel-all',
+                              label: isExportingAll
+                                ? 'Đang xuất...'
+                                : 'Xuất Excel',
+                              icon: <Icon icon={FileSpreadsheet} size="sm" />,
+                              isDisabled: isExportingAll,
+                              onClick: () => exportAllRows('excel'),
+                            },
+                            {
+                              id: 'csv-all',
+                              label: isExportingAll
+                                ? 'Đang xuất...'
+                                : 'Xuất CSV',
+                              icon: <Icon icon={Download} size="sm" />,
+                              isDisabled: isExportingAll,
+                              onClick: () => exportAllRows('csv'),
+                            },
+                          ],
+                        },
+                      ]
+                    : [])
+                ]}
               />
               {onRefresh ? (
                 <IconButton

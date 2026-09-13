@@ -20,6 +20,7 @@ import {
   UnderlinedMetadataListItem as MetadataListItem,
 } from '@/shared/components/expandable-row-styles.jsx';
 
+import { searchCustomers } from '../api/customers.js';
 import {
   COLUMN_OPTIONS,
   DEFAULT_PAGE_SIZE,
@@ -154,12 +155,27 @@ export function CustomersList() {
     listResult?.success ? listResult.totalPages : 1,
   );
 
-  const searchableCustomers = customers.map((customer) => ({
-    ...customer,
-    representativeName: customer.representativeName ?? '',
-    representativeTitle: customer.representativeTitle ?? '',
-    address: customer.address ?? '',
-  }));
+  /** @param {import('../types/index.js').Customer[]} rawCustomers */
+  function enrichCustomers(rawCustomers) {
+    return rawCustomers.map((customer) => ({
+      ...customer,
+      representativeName: customer.representativeName ?? '',
+      representativeTitle: customer.representativeTitle ?? '',
+      address: customer.address ?? '',
+    }));
+  }
+
+  const searchableCustomers = enrichCustomers(customers);
+
+  // "Xuất toàn bộ dữ liệu" in AdvanceTable's export dropdown.
+  async function fetchAllCustomers() {
+    const result = await searchCustomers({
+      page: 1,
+      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      conditions: filterConditions,
+    });
+    return result.success ? enrichCustomers(result.customers) : [];
+  }
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Customer & Record<string, unknown>>[]} */
   const columns = [
@@ -260,6 +276,7 @@ export function CustomersList() {
         isLoading={customersQuery.isLoading}
         skeletonRows={skeletonRows}
         rowExpansion={rowExpansion}
+        fetchAllRows={fetchAllCustomers}
         onRefresh={() => customersQuery.refetch()}
         isRefreshing={customersQuery.isFetching}
         defaultStickyEnd="none"

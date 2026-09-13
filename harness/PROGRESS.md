@@ -1,5 +1,63 @@
 # Progress Log
 
+## 2026-09-13 — Table export dropdown + app-wide layout settings
+
+**Context:** User request: turn the CSV export button into a proper "Xuất"
+dropdown that can export real Excel, plus check what else the dropdown
+should offer; move the existing per-list "Phóng to" maximize toggle and a
+new "hide side nav" feature into one settings entry with persisted
+configuration. See `openspec/changes/table-export-and-layout-settings/`.
+
+**What changed:**
+- `AdvanceTable`'s export icon button became a "Xuất" `DropdownMenu`:
+  "Trang hiện tại" section (Xuất Excel / Xuất CSV / In), plus a "Toàn bộ
+  dữ liệu (đã lọc)" section (Xuất Excel / Xuất CSV) wherever the caller
+  passes a new `fetchAllRows` prop. New `xlsx` (SheetJS) dependency for
+  real `.xlsx` output — confirmed via magic bytes (`PK..` zip/OOXML), not
+  a renamed CSV. Print opens a new window with a minimal HTML table and
+  calls `window.print()`.
+- `fetchAllRows` wired into the 6 server-paginated `AdvanceTable`
+  consumers (contracts, shipments, commissions, contract-private-infos,
+  customers, users) — one extra unpaginated request scoped to whatever
+  filter conditions the list already sends the server, re-running the
+  exact same client-side search/header-filter pipeline `AdvanceTable`
+  already applies to the current page. The 3 lists with no server
+  pagination (countries, places, backups) don't need it — their one
+  request already is "toàn bộ dữ liệu".
+- New "Cài đặt giao diện" popover in the header (gear icon, next to the
+  user menu, `layout-settings-menu.jsx`): "Ẩn thanh điều hướng" and "Chế
+  độ tập trung" (hides side nav + header both; Esc or a floating button to
+  exit — never strands the user). Both persist via a new
+  `use-layout-preferences.js` — a module-level external store (not React
+  Context/per-component state), since the popover trigger (header
+  `endContent`) and `ProtectedAppShell` (which actually hides the aside/
+  header) are several component layers apart with no prop path between
+  them. `ProtectedAppShell` reads it and applies both.
+- Deliberately did NOT touch contracts' existing `FullscreenPanel`/
+  `useFullscreenToggle` "Phóng to" — different, already-hardened
+  mechanism (ephemeral, portal-based, one table) with its own bug-fix
+  history (see `fullscreen-panel.jsx`'s doc comment). Told the user this
+  explicitly rather than risk regressing it by merging two different
+  toggle mechanisms.
+- `.pnpm-store/` (129MB local pnpm package cache, was untracked with no
+  ignore rule) added to `.gitignore`.
+
+**Verified:** `./harness/verify.sh` full green (lint, typecheck, structure,
+harness-tests, unit-tests, build, quality-thresholds). Live browser check
+against the running dev stack: countries list (Xuất dropdown renders,
+current-page Excel export downloads a valid `.xlsx`), contracts list
+("Toàn bộ dữ liệu" Excel export downloads a valid `.xlsx`, no console
+errors; Print opens a new tab with the right document title), Settings
+popover (both switches render and toggle instantly), hide-side-nav
+(content reflows to full width immediately, survives a hard reload),
+focus mode (hides header + side nav, floating exit button restores the
+header). Reset both toggles back to off after testing.
+
+**Harness gaps / follow-ups (not done this session):** no automated
+browser-check script for this feature (all verification above was
+interactive); mobile hamburger nav toggle still renders when the side nav
+is hidden via settings, even though it has nothing to open in that state.
+
 ## 2026-09-13 — TanStack table system rollout (Golden Rule #13)
 
 **Context:** User set a system-wide golden rule after the contracts-only

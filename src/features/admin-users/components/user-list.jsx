@@ -13,6 +13,7 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 
+import { listUsers } from '../api/users.js';
 import {
   useCompaniesQuery,
   useDepartmentsQuery,
@@ -242,11 +243,28 @@ export function UserList() {
 
   // Search filters the page currently on screen, not the whole table: the
   // endpoint is paginated server-side and has no search parameter yet.
-  const searchableUsers = users.map((user) => ({
-    ...user,
-    fullName: `${user.firstName} ${user.lastName}`,
-    phone: user.phone ?? '',
-  }));
+  /** @param {import('../types/index.js').UserListItem[]} rawUsers */
+  function enrichUsers(rawUsers) {
+    return rawUsers.map((user) => ({
+      ...user,
+      fullName: `${user.firstName} ${user.lastName}`,
+      phone: user.phone ?? '',
+    }));
+  }
+
+  const searchableUsers = enrichUsers(users);
+
+  // "Xuất toàn bộ dữ liệu" in AdvanceTable's export dropdown — the search
+  // box above only filters the loaded page (no server-side query param
+  // yet), but AdvanceTable re-applies that same client-side search over
+  // whatever `fetchAllRows` returns, so exporting "all" still respects it.
+  async function fetchAllUsers() {
+    const result = await listUsers({
+      page: 1,
+      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+    });
+    return result.success ? enrichUsers(result.users) : [];
+  }
 
   const totalUsers = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
@@ -289,6 +307,7 @@ export function UserList() {
             setIsCreateOpen(true);
           },
         }}
+        fetchAllRows={fetchAllUsers}
         onRefresh={() => usersQuery.refetch()}
         isRefreshing={usersQuery.isFetching}
         pagination={{

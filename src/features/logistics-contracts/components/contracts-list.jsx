@@ -25,6 +25,7 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
 
+import { searchContracts } from '../api/contracts.js';
 import {
   badgeVariantForContractStatus,
   contractStatusOptions,
@@ -258,6 +259,17 @@ export function ContractsList() {
     () => (listResult?.success ? listResult.contracts : []),
     [listResult],
   );
+  // "Xuất toàn bộ dữ liệu" in AdvanceTable's export dropdown — one extra
+  // unpaginated request scoped to the currently active filters, not the
+  // synthetic totals rows (those are computed separately, see below).
+  async function fetchAllContracts() {
+    const result = await searchContracts({
+      page: 1,
+      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      conditions: filterConditions,
+    });
+    return result.success ? result.contracts : [];
+  }
   // Sum of contractValue/settlementValue/paidValue/unpaidValue across every
   // contract matching the current filters (not just this page — the
   // backend computes it pre-paging, see `searchContracts`'s doc comment),
@@ -714,6 +726,7 @@ export function ContractsList() {
         idKey="id"
         isLoading={isLoadingContracts}
         skeletonRows={skeletonRows}
+        fetchAllRows={fetchAllContracts}
         onRefresh={() => contractsQuery.refetch()}
         isRefreshing={contractsQuery.isFetching}
         pagination={{

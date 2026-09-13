@@ -12,6 +12,7 @@ import {
 } from '@/shared/components/advance-table.jsx';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
+import { searchContractPrivateInfos } from '../api/contract-private-info.js';
 import {
   COLUMN_OPTIONS,
   DEFAULT_COLUMN_KEYS,
@@ -99,6 +100,16 @@ export function ContractPrivateInfosList() {
   });
   const listResult = privateInfosQuery.data;
   const items = listResult?.success ? listResult.items : [];
+
+  // "Xuất toàn bộ dữ liệu" in AdvanceTable's export dropdown.
+  async function fetchAllPrivateInfos() {
+    const result = await searchContractPrivateInfos({
+      page: 1,
+      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      conditions: filterConditions,
+    });
+    return result.success ? result.items : [];
+  }
 
   // Sum of containerCount/logisticsTotal/profit across every contract
   // matching the current filters (not just this page — the backend
@@ -256,6 +267,7 @@ export function ContractPrivateInfosList() {
         isLoading={privateInfosQuery.isLoading}
         skeletonRows={skeletonRows}
         fixedEndColumnKeys={['actions']}
+        fetchAllRows={fetchAllPrivateInfos}
         onRefresh={() => privateInfosQuery.refetch()}
         isRefreshing={privateInfosQuery.isFetching}
         pagination={{

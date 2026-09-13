@@ -1,3 +1,4 @@
+import { HStack } from '@astryxdesign/core/HStack';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -7,6 +8,7 @@ import {
   filterNavLinksByPermissions,
   filterSidebarRoutesByPermissions,
 } from '../../shared/api/nav.js';
+import { LayoutSettingsMenu } from '../../shared/components/layout-settings-menu.jsx';
 import { ProtectedAppShell } from '../../shared/components/protected-app-shell.jsx';
 import {
   ACCESS_TOKEN_KEY,
@@ -43,7 +45,12 @@ export default async function ProtectedLayout({ children }) {
 
   return (
     <ProtectedAppShell
-      endContent={<UserMenu />}
+      endContent={
+        <HStack gap={2} vAlign="center">
+          <LayoutSettingsMenu />
+          <UserMenu />
+        </HStack>
+      }
       navLinks={filterNavLinksByPermissions(topNavLinks, permissions)}
       sideNavRouteTrees={[
         sidebarTutorial,
