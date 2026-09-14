@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { DEFAULT_CURRENCY } from '../config/currencies.js';
 import { shipmentSchema } from '../config/shipment-schema.js';
 import { SHIPMENT_STATUSES } from '../config/shipment-status.js';
 import { useShipmentCostLineRows } from './use-shipment-cost-line-rows.js';
@@ -36,9 +37,9 @@ function emptyValues(contract = null) {
     name: '',
     paymentCondition: '',
     invoiceValue: undefined,
-    invoiceCurrency: '',
+    invoiceCurrency: DEFAULT_CURRENCY,
     declarationValue: undefined,
-    declarationCurrency: '',
+    declarationCurrency: DEFAULT_CURRENCY,
     declarationExchangeRate: undefined,
     quantityAmount: undefined,
     declarationWeightKg: undefined,

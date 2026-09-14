@@ -17,6 +17,7 @@ import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
+import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 
 import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
 import {
@@ -74,6 +75,25 @@ export function ShipmentVgmSection({
 
   const vgmsQuery = useShipmentVgmsQuery(contractId, shipmentId);
   const vgms = vgmsQuery.data?.success ? vgmsQuery.data.vgms : [];
+
+  // Synthetic last row, same "totals row" idea as every other list in the
+  // app (Contracts/Shipments/Commissions/BOQ) — a `__isTotalsRow` marker
+  // every renderCell below checks, since this table is Astryx's plain
+  // `Table`, not `AdvanceTable`'s TanStack-backed totals-row machinery.
+  const totalsRow =
+    vgms.length > 0
+      ? {
+          id: '__totals__',
+          __isTotalsRow: true,
+          maxGross: vgms.reduce((sum, vgm) => sum + vgm.maxGross, 0),
+          tare: vgms.reduce((sum, vgm) => sum + vgm.tare, 0),
+          grossWeight: vgms.reduce((sum, vgm) => sum + vgm.grossWeight, 0),
+          vgm: vgms.reduce((sum, vgm) => sum + vgm.vgm, 0),
+        }
+      : null;
+  const tableData = /** @type {import('../types/index.js').ShipmentVgm[]} */ (
+    /** @type {any} */ (totalsRow ? [...vgms, totalsRow] : vgms)
+  );
 
   const deleteMutation = useDeleteShipmentVgmMutation(contractId, shipmentId);
 
@@ -173,6 +193,34 @@ export function ShipmentVgmSection({
     ),
   });
 
+  // "Nhà vận chuyển" is always the actual leftmost column here (this small
+  // table has no column-visibility/reorder feature, unlike `AdvanceTable`'s
+  // lists — see `withTotalsRowCells`'s own doc comment), so the "Tổng cộng"
+  // label is hardcoded onto it rather than computed.
+  const vgmColumnsWithTotalsRow = withTotalsRowCells(vgmColumns, {
+    carrierCustomerId: () => <Text weight="semibold">Tổng cộng</Text>,
+    maxGross: (row) => (
+      <Text weight="semibold" hasTabularNumbers>
+        {row.maxGross.toFixed(2)}
+      </Text>
+    ),
+    tare: (row) => (
+      <Text weight="semibold" hasTabularNumbers>
+        {row.tare.toFixed(2)}
+      </Text>
+    ),
+    grossWeight: (row) => (
+      <Text weight="semibold" hasTabularNumbers>
+        {row.grossWeight.toFixed(2)}
+      </Text>
+    ),
+    vgm: (row) => (
+      <Text weight="semibold" hasTabularNumbers>
+        {row.vgm.toFixed(2)}
+      </Text>
+    ),
+  });
+
   const vgmStickyColumns =
     /** @type {import('@astryxdesign/core/Table').TablePlugin<import('../types/index.js').ShipmentVgm & Record<string, unknown>>} */ (
       useTableStickyColumns({ endKeys: ['actions'] })
@@ -196,8 +244,8 @@ export function ShipmentVgmSection({
         <Text color="secondary">Chưa có bản ghi VGM</Text>
       ) : (
         <Table
-          columns={vgmColumns}
-          data={vgms}
+          columns={vgmColumnsWithTotalsRow}
+          data={tableData}
           idKey="id"
           dividers="rows"
           density="compact"

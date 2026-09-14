@@ -10095,3 +10095,93 @@ ward reference data (free-text inputs, matching the backend).
 - Full `./harness/verify.sh` PASSED: `harness/runs/20260914-112726-14131/`.
 - Marked task 2 done in `openspec/changes/split-customers-suppliers-ui/
   tasks.md`. Nothing outstanding from this round.
+
+## 2026-09-14 (continued) — three small UX fixes from user feedback
+
+- User reported four issues in one message; three fixed this round (the
+  fourth — Tab-key focus order — is a real finding but needs a decision
+  before touching anything, see below).
+
+1. **"Giá trị invoice / Giá trị tờ khai trong shipment mặc định là USD"** —
+   `use-shipment-form.js`'s `emptyValues()` left `invoiceCurrency`/
+   `declarationCurrency` as `''` for a brand-new shipment (the Selector
+   just showed no default). Now defaults both to the already-existing
+   `DEFAULT_CURRENCY` (`config/currencies.js`, `'USD'`) — the exact same
+   constant `use-contract-form.js` already uses for its own `currency`
+   field, not a new value invented here. Live-verified: "Thêm Shipment" →
+   both fields show "USD" immediately, editing an existing shipment is
+   unaffected (untouched `valuesFromShipment` path).
+
+2. **"VGM chưa có cột Tổng cộng"** — `shipment-vgm-section.jsx`'s VGM
+   table (Astryx's plain `Table`, not `AdvanceTable`) had no totals row
+   for Max gross/Tare/G.W/VGM. Reused `withTotalsRowCells`
+   (`@/shared/config/totals-row.js`) — already written generically enough
+   to not require `AdvanceTable` — wrapping the existing column
+   `renderCell`s and appending one synthetic `__isTotalsRow` row to the
+   table's `data` (cast through `any`, matching how `contracts-list.jsx`/
+   `shipments-list.jsx` do the same cast for their own totals rows).
+   "Tổng cộng" label hardcoded onto the actual leftmost column
+   ("Nhà vận chuyển") since this small table has no column-visibility/
+   reorder feature (unlike `AdvanceTable`'s lists, where the label's
+   column is computed). Live-verified: added a real VGM row to
+   `26DN-SAMPLE01/LOT-01` (Max gross 30,000 / Tare 2,200 / G.W 20,000 /
+   VGM 22,200 kg) — totals row appeared with matching sums, no console
+   errors — then deleted the test row to leave the sample shipment clean.
+
+3. **"Search số hợp đồng ở thanh search Hợp đồng không được"** — traced,
+   not guessed: `AdvanceTable`'s quick-search box only ever filters `data`
+   client-side (`applyFiltersDiacriticInsensitive` over whatever page is
+   already loaded) — it never reaches the server. Every list has this
+   same characteristic, but it's only *visible* on Contracts today since
+   every other catalog's dev data fits on one page; confirmed both exact
+   and partial/case-insensitive quick search already worked correctly
+   against the current single seeded contract, which is precisely why a
+   real reproduction needs more rows than fit on page 1 (25) to fail —
+   this is a real backend-search gap for anyone with more than a page of
+   contracts, not a broken predicate. Added `onContentSearchChange`, a new
+   *optional* `AdvanceTable` prop (every other caller unaffected — no
+   other list passes it) fired 300ms-debounced from the existing
+   `handleQuickSearchChange`, alongside its already-instant client-side
+   filtering (so typing itself never feels laggy while the debounced
+   network request is in flight). `contracts-list.jsx` wires it to a new
+   `upsertContainsFilterCondition` (`@/shared/config/upsert-filter-
+   condition.js`, sibling to the existing `upsertEqualsFilterCondition`
+   the status quick-filter already uses) writing a real `Contains`
+   condition into the same server-side `filterConditions` state
+   `useContractsQuery` reads — `'Contains'` confirmed against
+   `FilterOperator` (BE-kt-xnk) and against the funnel dialog's own
+   already-working operator strings before use, not guessed. Live-
+   verified: typing in the search box now fires a real `POST
+   /api/v1/contracts/search` (confirmed via network tab) in addition to
+   the instant local filter, filter-chip count went 1→3 (default
+   `contractType` + the new server condition + the pre-existing local
+   one), correct row still returned, no console errors.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260914-120749-14460/`.
+
+4. **"Khi tôi bấm nút tab để chuyển đổi qua lại các Input / combobox /
+   ... chưa thực sự mượt mà"** — reproduced concretely via
+   `document.activeElement` inspection while tabbing through the "Tạo hợp
+   đồng" dialog rather than guessing from a screenshot: every `DateInput`
+   field (Astryx `@astryxdesign/core/DateInput`) is actually **two**
+   native tab stops, not one — a `<button>` (the calendar-icon toggle,
+   `aria-label="Mở lịch"`) rendered immediately **before** the real
+   `<input>` in the DOM (confirmed reading the library's own
+   `DateInput.tsx` — no `tabIndex`/hide-the-icon prop exists in
+   `DateInputProps` to opt out). A contract form alone has 2 dates;
+   Shipment/VGM forms (ETD/ETA, CO dates, customs date, packing
+   date/lịch đóng hàng dự kiến/thực tế/thời gian xe vào nhà máy) have far
+   more — each one silently doubling the number of Tab presses needed and
+   putting a mouse-only icon ahead of the field itself, which plausibly
+   is exactly what reads as "not smooth" on a form-heavy page. This is
+   upstream `@astryxdesign/core` behavior, not application code — no app
+   file imports or wraps `DateInput` (grepped: 14 files import it
+   directly from the package), so there's no single call site to patch.
+   Two real options, not attempted without a decision: (a) `pnpm patch
+   @astryxdesign/core` to add `tabIndex={-1}` to that one `<button>` (a
+   real, committed, reversible fix — but modifies a vendored dependency
+   used by essentially every form in the app, so it needs conscious
+   sign-off, not a silent edit); (b) leave Astryx's behavior alone and
+   report it upstream instead. Asked the user which they want rather than
+   picking either unilaterally, given the blast radius. Nothing else
+   found that would explain "not smooth" — `Selector`/`TextInput`/
+   `NumberInput` each took exactly one tab stop in the same walk-through.

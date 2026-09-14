@@ -33,7 +33,7 @@ import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Download, FileSpreadsheet, Printer } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 
 import { IconRefresh } from '@/shared/components/icon/icon-refresh.jsx';
@@ -240,6 +240,7 @@ const styles = stylex.create({
  *   entityLabel: string,
  *   contentSearchFieldKey: string,
  *   searchPlaceholder: string,
+ *   onContentSearchChange?: (value: string) => void,
  *   advancedSearchFields?: ReadonlyArray<AdvanceTableAdvancedSearchField>,
  *   filterFieldDefs?: ReadonlyArray<import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterFieldDef>,
  *   advancedFilterConditions?: ReadonlyArray<import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition>,
@@ -290,6 +291,7 @@ export function AdvanceTable({
   entityLabel,
   contentSearchFieldKey,
   searchPlaceholder,
+  onContentSearchChange,
   advancedSearchFields,
   filterFieldDefs,
   advancedFilterConditions,
@@ -413,6 +415,25 @@ export function AdvanceTable({
     return active ? String(/** @type {any} */ (active.value).value) : '';
   })();
 
+  // `onContentSearchChange` lets a caller (e.g. `contracts-list.jsx`) also
+  // run the same text through its own server-side search — this component
+  // only ever filters `data`, i.e. whatever page the caller already
+  // fetched, so a caller with more rows than fit on one page needs this to
+  // find a match outside it. Debounced so typing doesn't fire a request
+  // per keystroke; the client-side filter below still updates immediately,
+  // so typing itself never feels laggy.
+  const contentSearchDebounceRef = useRef(
+    /** @type {ReturnType<typeof setTimeout> | null} */ (null),
+  );
+  useEffect(
+    () => () => {
+      if (contentSearchDebounceRef.current) {
+        clearTimeout(contentSearchDebounceRef.current);
+      }
+    },
+    [],
+  );
+
   /** @param {string} value */
   function handleQuickSearchChange(value) {
     setSearchFilters((current) => {
@@ -431,6 +452,16 @@ export function AdvanceTable({
           ];
     });
     resetPageIndex();
+
+    if (onContentSearchChange) {
+      if (contentSearchDebounceRef.current) {
+        clearTimeout(contentSearchDebounceRef.current);
+      }
+      contentSearchDebounceRef.current = setTimeout(
+        () => onContentSearchChange(value),
+        300,
+      );
+    }
   }
 
   // When `filterFieldDefs` is given, the funnel button/dialog run the

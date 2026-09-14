@@ -21,7 +21,10 @@ import {
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
-import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
+import {
+  upsertContainsFilterCondition,
+  upsertEqualsFilterCondition,
+} from '@/shared/config/upsert-filter-condition.js';
 
 import { searchContracts } from '../api/contracts.js';
 import {
@@ -202,6 +205,19 @@ export function ContractsList() {
         'status',
         nextValue === 'all' ? null : nextValue,
       ),
+    );
+    setPageIndex(1);
+  }
+
+  // "Số hợp đồng" quick-search box — same server-side idea as the status
+  // quick filter above, but `Contains` instead of `Equals` since it's free
+  // text. Without this, `AdvanceTable`'s own quick search only filters
+  // whatever page is already loaded (`data`), so searching for a contract
+  // number outside the current page silently finds nothing.
+  /** @param {string} value */
+  function handleContractNumberSearchChange(value) {
+    setFilterConditions((current) =>
+      upsertContainsFilterCondition(current, 'contractNumber', value),
     );
     setPageIndex(1);
   }
@@ -689,6 +705,7 @@ export function ContractsList() {
           searchFieldDefs={searchFieldDefsWithCustomers}
           entityLabel="Hợp đồng"
           contentSearchFieldKey="contractNumber"
+          onContentSearchChange={handleContractNumberSearchChange}
           searchPlaceholder="Tìm số HĐ, dự án..."
           filterFieldDefs={filterFieldDefsWithCustomers}
           advancedFilterConditions={filterConditions}
