@@ -10199,3 +10199,55 @@ ward reference data (free-text inputs, matching the backend).
   `openspec/changes/` — there is nothing left to do in this repo unless
   a future Astryx release fixes it or the user later asks for the patch
   after all.
+
+## 2026-09-14 (continued) — Shipments list default columns: Mã, Số hợp đồng, Số cont, Tình trạng (badge), Chi phí Logistics, VGM
+
+- User request 2 of a feedback batch. Default columns were `shipmentCode,
+  contractNumber, name, type, status, invoiceValue, actions` — changed to
+  `shipmentCode, contractNumber, quantity, status, logisticsCost, vgm,
+  actions` per the exact list given ("Mã, Số hợp đồng, Số cont, Tình
+  trạng (badge), Logistics cost, VGM"). "Số cont" maps to the existing
+  `quantity` column (already switches label between "Kiện"/"Cont" by
+  shipment type via `labelForShipmentQuantityUnit` — not renamed, since
+  relabeling the header to "Số cont" would misdescribe LCL rows that show
+  "Kiện"). `actions` kept in the default set even though not in the
+  user's list — `isAlwaysVisible: true` already on that column, matching
+  how it was already included in the previous default list.
+- "Tình trạng" was plain text (`labelForShipmentStatus(row.status)`) —
+  now a `<Badge>`, mirroring `contracts-list.jsx`'s exact
+  `badgeVariantForContractStatus` pattern: added
+  `badgeVariantForShipmentStatus` to `shipment-status.js`, 3 buckets
+  across the 8 linear stages (`Booked` → neutral, `Completed` → green,
+  every in-between stage → blue) rather than 8 unique colors, which would
+  be visual noise for a linear progression.
+- "Chi phí Logistics" and "VGM" didn't exist as columns at all.
+  `ShipmentResponse` already carried `costTotalsByCategory` (an owned
+  collection on the `Shipment` aggregate, computed at read time) — no BE
+  change needed there, just `row.costTotalsByCategory.reduce((sum, t) =>
+  sum + t.totalAmount, 0)` formatted with the same "đ" suffix convention
+  `shipment-cost-lines-fields.jsx`'s own "Tổng chi phí" line already uses
+  (no per-line currency on logistics costs). VGM had no such field
+  anywhere on `Shipment` — BE-kt-xnk's `add-shipment-vgm-count` (this
+  session, see that repo's own PROGRESS.md) added
+  `ShipmentResponse.VgmCount`, wired straight through here as
+  `row.vgmCount` (no FE mapping needed, `searchAllShipments` already
+  passes the raw API response through unmodified).
+- Added `vgmCount: 0` to `shipments-table.js`'s `skeletonRows` (loading
+  placeholder shape) — missing it would have rendered "undefined" in the
+  new VGM column while a page is loading.
+- New columns are automatically safe for the synthetic "Tổng cộng" row
+  (`withTotalsRowCells`) without extra work — a column absent from that
+  helper's `cellRenderers` map already renders `null` for `__isTotalsRow`
+  rows by design, so `logisticsCost`/`vgm` correctly show blank there
+  instead of crashing on a totals-row object that has neither field.
+- Live-verified against the freshly-rebuilt dev BE (same rebuild as
+  `add-shipment-vgm-count`): all 6 default columns render with real data
+  — "Đã book" shown as a neutral pill, "Đã hoàn thành" as a green pill,
+  "Chi phí Logistics" showing "4,700,000.00 đ" for the one seeded shipment
+  with cost lines and "0.00 đ" for the rest, "VGM" showing "0" for all
+  four (none have VGM records in dev yet). No console errors.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260914-124856-15094/`.
+- Nothing outstanding from this round. Item 3 of the same feedback batch
+  (proposing a UX redesign for the "Chi phí Logistics" cost-lines editor)
+  is a design question, not implemented — see the conversation itself for
+  the recommendation given; nothing changed in this repo for it yet.

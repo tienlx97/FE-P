@@ -43,3 +43,15 @@ export function labelForShipmentStatus(status) {
     status
   );
 }
+
+/**
+ * Badge color for the "Tình trạng" column — 3 buckets across the 8 linear
+ * stages (mirrors `badgeVariantForContractStatus`'s own bucketing, not one
+ * unique color per status): not yet started, actively moving, done.
+ * @param {import('../types/index.js').ShipmentStatus | string} status
+ */
+export function badgeVariantForShipmentStatus(status) {
+  if (status === 'Completed') return 'green';
+  if (status === 'Booked') return 'neutral';
+  return 'blue';
+}

@@ -10,6 +10,7 @@
  *   supplierName: string,
  * }} ShipmentListRow
  */
+import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -39,6 +40,7 @@ import {
 } from '../config/shipment-contract-eligibility.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import {
+  badgeVariantForShipmentStatus,
   labelForShipmentStatus,
   shipmentStatusOptions,
 } from '../config/shipment-status.js';
@@ -285,7 +287,12 @@ export function ShipmentsList() {
       header: 'Tình trạng',
       width: pixel(150),
       filter: 'status',
-      renderCell: (row) => labelForShipmentStatus(row.status),
+      renderCell: (row) => (
+        <Badge
+          label={labelForShipmentStatus(row.status)}
+          variant={badgeVariantForShipmentStatus(row.status)}
+        />
+      ),
       exportValue: (row) => labelForShipmentStatus(row.status),
     },
     {
@@ -316,6 +323,24 @@ export function ShipmentsList() {
       header: 'Giá trị invoice',
       width: pixel(200),
       renderCell: (row) => formatMoney(row.invoiceValue, row.invoiceCurrency),
+    },
+    {
+      key: 'logisticsCost',
+      header: 'Chi phí Logistics',
+      width: pixel(180),
+      // VND only, no per-line currency — same "đ" suffix convention as
+      // `shipment-cost-lines-fields.jsx`'s own "Tổng chi phí" line.
+      renderCell: (row) =>
+        `${formatMoney(row.costTotalsByCategory.reduce((sum, total) => sum + total.totalAmount, 0))} đ`,
+      exportValue: (row) =>
+        row.costTotalsByCategory.reduce((sum, total) => sum + total.totalAmount, 0),
+    },
+    {
+      key: 'vgm',
+      header: 'VGM',
+      width: pixel(90),
+      align: 'end',
+      renderCell: (row) => row.vgmCount,
     },
     {
       key: 'actions',

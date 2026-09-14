@@ -33,18 +33,23 @@ export const COLUMN_OPTIONS = [
   { key: 'bookingNumber', label: 'Booking' },
   { key: 'supplier', label: 'Forwarder' },
   { key: 'invoiceValue', label: 'Giá trị invoice' },
+  { key: 'logisticsCost', label: 'Chi phí Logistics' },
+  { key: 'vgm', label: 'VGM' },
   { key: 'actions', label: 'Chức năng', isAlwaysVisible: true },
 ];
 
 // Narrow default, same "start narrow, opt in via Tuỳ chọn hiển thị"
-// convention as `contracts-list.jsx`'s `DEFAULT_COLUMN_KEYS`.
+// convention as `contracts-list.jsx`'s `DEFAULT_COLUMN_KEYS` — per user
+// request (2026-09-14): Mã, Số hợp đồng, Số cont (`quantity` — same
+// column FCL/LCL always used, just the one most shipments here care
+// about at a glance), Tình trạng, Chi phí Logistics, VGM.
 export const DEFAULT_COLUMN_KEYS = [
   'shipmentCode',
   'contractNumber',
-  'name',
-  'type',
+  'quantity',
   'status',
-  'invoiceValue',
+  'logisticsCost',
+  'vgm',
   'actions',
 ];
 
@@ -128,6 +133,7 @@ export const skeletonRows = Array.from(
     costs: [],
     costTotalsByCategory: [],
     status: 'Booked',
+    vgmCount: 0,
     contractNumber: '',
     projectName: '',
     supplierName: '',

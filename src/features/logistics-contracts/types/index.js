@@ -692,6 +692,7 @@ export {};
  * @property {ShipmentCostLine[]} costs
  * @property {ShipmentCostTotal[]} costTotalsByCategory - computed at read time, never stored
  * @property {ShipmentStatus} status
+ * @property {number} vgmCount - number of `ShipmentVgm` records, computed at read time, never stored (BE-kt-xnk `add-shipment-vgm-count`)
  */
 
 /**
