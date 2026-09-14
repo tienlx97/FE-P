@@ -1,5 +1,31 @@
 # Progress Log
 
+## 2026-09-14 — VGM and Shipment list columns
+
+**What changed:** The inline VGM table now begins with “Số thứ tự”, backed
+by the server-assigned immutable `sequenceNumber`. The system-wide Shipment
+table now shows “Số thứ tự” (`shipmentNumber`), “Ngày khai Hải quan”
+(`customsDeclarationDate`), and “Giá trị tờ khai” (`declarationValue` plus
+`declarationCurrency`). All three Shipment columns are part of the default
+view and the column-visibility menu; the date and money values use the
+project's shared formatters. Synthetic totals rows intentionally leave the
+new sequence/date/declaration cells blank because the Shipment search API
+only supplies aggregate invoice totals.
+
+**Verified:** `./harness/verify.sh` full green using a temporary WSL-to-Windows
+Node/pnpm shim (the checkout's shell scripts had CRLF and WSL itself has no
+Node). Evidence: `harness/runs/20260914-152136-9666/`. Browser verification
+against the production build confirmed Shipment row `12`, `12/09/2026`, and
+`250,000,000.00 VND`, plus VGM sequence `7`; screenshots are
+`shipment-new-columns.png` and `vgm-sequence-number.png` in that run.
+
+**Discovered / harness gap:**
+`harness/checks/stable-dialog-layout-browser.mjs` still mocks
+`POST /shipments/search` with a flat paging envelope, but the current API
+adapter expects `{ page: {...}, totals: [...] }`. Its Shipment scenario now
+times out with zero rows until that fixture is updated. Fixing this unrelated
+pre-existing browser-check drift is outside this column-only task.
+
 ## 2026-09-14 — Item 4 resolved: diacritic-insensitive table search
 
 **Context:** Continuation of the same-day batch above. User said "oke làm"

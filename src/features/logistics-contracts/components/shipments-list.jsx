@@ -29,6 +29,7 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
 
@@ -236,6 +237,12 @@ export function ShipmentsList() {
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<ShipmentListRow>[]} */
   const columns = [
     {
+      key: 'shipmentNumber',
+      header: 'Số thứ tự',
+      width: pixel(100),
+      renderCell: (row) => row.shipmentNumber,
+    },
+    {
       key: 'shipmentCode',
       header: 'Mã',
       width: pixel(200),
@@ -312,6 +319,13 @@ export function ShipmentsList() {
       renderCell: (row) => row.bookingNumber,
     },
     {
+      key: 'customsDeclarationDate',
+      header: 'Ngày khai Hải quan',
+      width: pixel(170),
+      filter: 'customsDeclarationDate',
+      renderCell: (row) => formatDisplayDate(row.customsDeclarationDate),
+    },
+    {
       key: 'supplier',
       header: 'Forwarder',
       width: proportional(1),
@@ -323,6 +337,14 @@ export function ShipmentsList() {
       header: 'Giá trị invoice',
       width: pixel(200),
       renderCell: (row) => formatMoney(row.invoiceValue, row.invoiceCurrency),
+    },
+    {
+      key: 'declarationValue',
+      header: 'Giá trị tờ khai',
+      width: pixel(200),
+      filter: 'declarationValue',
+      renderCell: (row) =>
+        formatMoney(row.declarationValue, row.declarationCurrency),
     },
     {
       key: 'logisticsCost',

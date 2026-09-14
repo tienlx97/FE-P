@@ -29,3 +29,7 @@
       "Chưa có bản ghi VGM"). (d) confirmed — editing pre-filled every
       field including the container-type `Selector` and reproduced the
       same live preview values.
+- [x] 1.10 Show the backend-assigned `sequenceNumber` in the VGM table as
+      “Số thứ tự”; add Shipment table columns for `shipmentNumber`,
+      `customsDeclarationDate`, and `declarationValue`; verify the full
+      harness and live UI.

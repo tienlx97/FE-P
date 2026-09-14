@@ -109,6 +109,12 @@ export function ShipmentVgmSection({
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ShipmentVgm & Record<string, unknown>>[]} */
   const vgmColumns = [
     {
+      key: 'sequenceNumber',
+      header: 'Số thứ tự',
+      width: pixel(100),
+      renderCell: (vgm) => vgm.sequenceNumber,
+    },
+    {
       key: 'carrierCustomerId',
       header: 'Nhà vận chuyển',
       width: proportional(1, { minWidth: 160 }),
@@ -193,10 +199,10 @@ export function ShipmentVgmSection({
     ),
   });
 
-  // "Nhà vận chuyển" is always the actual leftmost column here (this small
-  // table has no column-visibility/reorder feature, unlike `AdvanceTable`'s
-  // lists — see `withTotalsRowCells`'s own doc comment), so the "Tổng cộng"
-  // label is hardcoded onto it rather than computed.
+  // This small table has no column-visibility/reorder feature, unlike
+  // `AdvanceTable`'s lists. Keep the sequence-number total cell blank and put
+  // the "Tổng cộng" label under "Nhà vận chuyển", the first descriptive
+  // column (see `withTotalsRowCells`'s own doc comment).
   const vgmColumnsWithTotalsRow = withTotalsRowCells(vgmColumns, {
     carrierCustomerId: () => <Text weight="semibold">Tổng cộng</Text>,
     maxGross: (row) => (

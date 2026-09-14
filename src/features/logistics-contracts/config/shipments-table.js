@@ -23,6 +23,7 @@ export const SEARCH_FIELD_DEFS = [
 ];
 
 export const COLUMN_OPTIONS = [
+  { key: 'shipmentNumber', label: 'Số thứ tự' },
   { key: 'shipmentCode', label: 'Mã', isAlwaysVisible: true },
   { key: 'contractNumber', label: 'Số hợp đồng' },
   { key: 'projectName', label: 'Dự án' },
@@ -31,8 +32,10 @@ export const COLUMN_OPTIONS = [
   { key: 'status', label: 'Tình trạng' },
   { key: 'quantity', label: 'Số lượng' },
   { key: 'bookingNumber', label: 'Booking' },
+  { key: 'customsDeclarationDate', label: 'Ngày khai Hải quan' },
   { key: 'supplier', label: 'Forwarder' },
   { key: 'invoiceValue', label: 'Giá trị invoice' },
+  { key: 'declarationValue', label: 'Giá trị tờ khai' },
   { key: 'logisticsCost', label: 'Chi phí Logistics' },
   { key: 'vgm', label: 'VGM' },
   { key: 'actions', label: 'Chức năng', isAlwaysVisible: true },
@@ -40,14 +43,18 @@ export const COLUMN_OPTIONS = [
 
 // Narrow default, same "start narrow, opt in via Tuỳ chọn hiển thị"
 // convention as `contracts-list.jsx`'s `DEFAULT_COLUMN_KEYS` — per user
-// request (2026-09-14): Mã, Số hợp đồng, Số cont (`quantity` — same
-// column FCL/LCL always used, just the one most shipments here care
-// about at a glance), Tình trạng, Chi phí Logistics, VGM.
+// request (2026-09-14): Số thứ tự, Mã, Số hợp đồng, Số cont (`quantity` —
+// same column FCL/LCL always used, just the one most shipments here care
+// about at a glance), Tình trạng, Ngày khai Hải quan, Giá trị tờ khai,
+// Chi phí Logistics, VGM.
 export const DEFAULT_COLUMN_KEYS = [
+  'shipmentNumber',
   'shipmentCode',
   'contractNumber',
   'quantity',
   'status',
+  'customsDeclarationDate',
+  'declarationValue',
   'logisticsCost',
   'vgm',
   'actions',
@@ -77,6 +84,7 @@ export const FILTER_FIELD_DEFS = [
   { key: 'bookingNumber', label: 'Booking', type: 'string' },
   { key: 'supplierName', label: 'Forwarder', type: 'string' },
   { key: 'invoiceValue', label: 'Giá trị invoice', type: 'number' },
+  { key: 'declarationValue', label: 'Giá trị tờ khai', type: 'number' },
   { key: 'etd', label: 'ETD', type: 'date' },
   { key: 'eta', label: 'ETA', type: 'date' },
   // Resolves against any cost line's invoice number, not a field on the
@@ -86,7 +94,11 @@ export const FILTER_FIELD_DEFS = [
   { key: 'coNumber', label: 'Số C/O', type: 'string' },
   { key: 'coIssuedDate', label: 'Ngày có C/O', type: 'date' },
   { key: 'customsDeclarationNumber', label: 'Số tờ khai', type: 'string' },
-  { key: 'customsDeclarationDate', label: 'Ngày Khai', type: 'date' },
+  {
+    key: 'customsDeclarationDate',
+    label: 'Ngày khai Hải quan',
+    type: 'date',
+  },
 ];
 
 export const SKELETON_ROW_COUNT = 6;
