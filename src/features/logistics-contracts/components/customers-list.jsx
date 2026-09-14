@@ -209,7 +209,6 @@ export function CustomersList() {
   function enrichCustomers(rawCustomers) {
     return rawCustomers.map((customer) => ({
       ...customer,
-      code: customer.profile?.code ?? '',
       taxCode: customer.profile?.taxCode ?? '',
       phone: customer.profile?.phone ?? '',
       representativeName: customer.representativeName ?? '',
@@ -234,13 +233,6 @@ export function CustomersList() {
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Customer & Record<string, unknown>>[]} */
   const columns = [
-    {
-      key: 'code',
-      header: 'Mã khách hàng',
-      width: proportional(0.8),
-      filter: 'code',
-      renderCell: (customer) => String(customer.code || '—'),
-    },
     {
       key: 'companyName',
       header: 'Tên công ty',

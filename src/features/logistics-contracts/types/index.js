@@ -571,6 +571,11 @@ export {};
  */
 
 /**
+ * @typedef {Object} PartyGroupFormValues
+ * @property {string} name
+ */
+
+/**
  * Autocomplete-suggestion catalog for `ShipmentCostLine.name` — lookup only,
  * does NOT constrain the free-text `name` on an actual cost line.
  * `costCategoryId` is the suggested default group for the suggestion.

@@ -4,6 +4,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
@@ -15,8 +16,10 @@ import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
+import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 
 import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
+import { QuickCreatePartyGroupDialog } from './quick-create-party-group-dialog.jsx';
 
 const TABS = [
   ['contact', 'Thông tin liên hệ'], ['payment', 'Điều khoản thanh toán'],
@@ -31,6 +34,7 @@ const input = (label, field, values, setField, statuses, options = {}) => (
 /** @param {{kind: 'customer' | 'supplier', form: any, compact?: boolean}} props */
 export function PartyFormFields({ kind, form, compact = false }) {
   const [activeTab, setActiveTab] = useState('contact');
+  const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const noun = kind === 'customer' ? 'khách hàng' : 'nhà cung cấp';
   const { values, setField, fieldStatuses } = form;
   if (compact) {
@@ -49,7 +53,6 @@ export function PartyFormFields({ kind, form, compact = false }) {
       <FormGrid>
         <StackItem size="fill">{input('Mã số thuế/CCCD chủ hộ', 'taxCode', values, setField, fieldStatuses)}</StackItem>
         <StackItem size="fill">{input('Mã số ĐVQHNS', 'budgetUnitCode', values, setField, fieldStatuses)}</StackItem>
-        <StackItem size="fill">{input(`Mã ${noun}`, 'code', values, setField, fieldStatuses, { isRequired: true })}</StackItem>
       </FormGrid>
       <FormGrid>
         <StackItem size="fill">
@@ -61,9 +64,28 @@ export function PartyFormFields({ kind, form, compact = false }) {
       <FormGrid>
         <StackItem size="fill">{input(`Tên ${noun}`, 'companyName', values, setField, fieldStatuses, { isRequired: true })}</StackItem>
         <StackItem size="fill">
-          <Selector label={`Nhóm ${noun}`} hasSearch hasClear value={values.groupId || null} onChange={(value) => setField('groupId', value ?? '')} options={form.lookups.groups.map((/** @type {any} */ item) => ({ value: item.id, label: item.name }))} width="100%" />
+          <HStack gap={2} vAlign="end">
+            <StackItem size="fill">
+              <Selector label={`Nhóm ${noun}`} hasSearch hasClear value={values.groupId || null} onChange={(value) => setField('groupId', value ?? '')} options={form.lookups.groups.map((/** @type {any} */ item) => ({ value: item.id, label: item.name }))} width="100%" />
+            </StackItem>
+            <IconButton
+              label={`Thêm nhóm ${noun}`}
+              tooltip={`Thêm nhóm ${noun}`}
+              icon={<Icon icon={IconPlus} size="sm" />}
+              type="button"
+              variant="secondary"
+              onClick={() => setIsGroupDialogOpen(true)}
+            />
+          </HStack>
         </StackItem>
       </FormGrid>
+
+      <QuickCreatePartyGroupDialog
+        kind={kind}
+        isOpen={isGroupDialogOpen}
+        onOpenChange={setIsGroupDialogOpen}
+        onCreated={(group) => setField('groupId', group.id)}
+      />
       <TextArea label="Địa chỉ" value={values.address} onChange={(value) => setField('address', value)} />
       <CheckboxInput label="Là đối tượng nội bộ" value={values.isInternal} onChange={(value) => setField('isInternal', value)} />
 

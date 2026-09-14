@@ -209,7 +209,6 @@ export function SuppliersList() {
   function enrichSuppliers(rawSuppliers) {
     return rawSuppliers.map((supplier) => ({
       ...supplier,
-      code: supplier.profile?.code ?? '',
       taxCode: supplier.profile?.taxCode ?? '',
       phone: supplier.profile?.phone ?? '',
       representativeName: supplier.representativeName ?? '',
@@ -234,13 +233,6 @@ export function SuppliersList() {
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Supplier & Record<string, unknown>>[]} */
   const columns = [
-    {
-      key: 'code',
-      header: 'Mã nhà cung cấp',
-      width: proportional(0.8),
-      filter: 'code',
-      renderCell: (supplier) => String(supplier.code || '—'),
-    },
     {
       key: 'companyName',
       header: 'Tên công ty',

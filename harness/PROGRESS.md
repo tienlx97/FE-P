@@ -9990,3 +9990,66 @@ ward reference data (free-text inputs, matching the backend).
   `harness/runs/20260914-100426-13054/`.
 - Marked `openspec/changes/split-customers-suppliers-ui/tasks.md` task 1
   done. Nothing outstanding from this round.
+
+## 2026-09-14 (continued) — `split-customers-suppliers-ui`: group quick-create + hide the auto-generated code
+
+- User review of the just-finished task 1 caught two real gaps:
+  1. "chưa có tạo nhóm nhà cung cấp/khách hàng ở FE" — the BE already
+     exposes `POST /api/v1/customer-groups` and `POST
+     /api/v1/supplier-groups` (both `{Name}` → `{Id, Name}`, `logistics:
+     contracts:manage`, 409 on duplicate name — confirmed by reading
+     `CreateCustomerGroupCommandValidator`/`CreateSupplierGroupCommand
+     Validator`/the two controllers directly), but the FE only ever
+     *listed* groups for the "Nhóm khách hàng"/"Nhóm nhà cung cấp"
+     Selector (`use-party-lookups-query.js`) — there was no way to create
+     one without going around the API by hand.
+  2. "Mã nhà cung cấp / khách hàng: không cần thể hiện trên UI của FE" —
+     the auto-generated `code` (`KH-`/`NCC-${Date.now()}`, unique-checked
+     by the backend) was both a required, editable field in the full
+     profile dialog and a table column on both catalogs. Confirmed the
+     backend still requires `Profile.Code` non-empty
+     (`PartyProfileInputValidator`) but never requires the *user* to be
+     the one supplying it — nothing forced this to be user-facing.
+- Added generic (kind-parameterized, reusing the existing `usePartyForm`-
+  style pattern rather than writing separate Customer/Supplier copies):
+  `api/party-lookups.js` (`createPartyGroup`, `partyGroupRoute` shared by
+  both the query and create paths), `hooks/use-party-lookups-query.js`
+  (`useCreatePartyGroupMutation`, invalidates the exact group-list query
+  key on success), `config/party-group-schema.js` (name, 1-200 chars,
+  mirrors the BE validator), `hooks/use-party-group-form.js`, and
+  `components/quick-create-party-group-dialog.jsx` (mirrors the existing
+  `QuickCreateShipmentCostCategoryDialog` name-only pattern exactly).
+- `party-form-fields.jsx`: added an `IconButton` "+" next to the "Nhóm
+  khách hàng"/"Nhóm nhà cung cấp" `Selector` (same `IconButton`+`IconPlus`
+  pattern as the Forwarder "+" in `shipment-booking-fields.jsx`) that
+  opens the new dialog and auto-selects the created group via
+  `setField('groupId', group.id)` — same UX as the existing quick-create-
+  supplier-from-Shipment flow.
+- Removed the "Mã nhà cung cấp"/"Mã khách hàng" `code` field from
+  `party-form-fields.jsx`'s full profile form (the value is still
+  generated in `use-party-form.js`'s `emptyValues()`/preserved from
+  `valuesFromParty()` on edit, and still sent in `buildPartyBody` — only
+  the visible input was removed, not the underlying auto-generated
+  value the backend requires) and the `code` column from both
+  `customers-table.js`/`suppliers-table.js` (`COLUMN_OPTIONS`,
+  `SEARCH_FIELD_DEFS`, `FILTER_FIELD_DEFS`, `skeletonRows`) and
+  `customers-list.jsx`/`suppliers-list.jsx` (the `columns` array entry and
+  the now-unused `code` line in `enrichCustomers`/`enrichSuppliers`).
+  Grepped the whole feature afterward for any other `code`/"Mã khách
+  hàng"/"Mã nhà cung cấp" reference before calling this done — the only
+  remaining `.code` hits are Commission's own unrelated user-entered
+  `code` field (e.g. "26CM01").
+- Live-verified both catalogs in Chrome (same dev stack from the earlier
+  session, already rebuilt): "Thêm nhà cung cấp"/"Thêm khách hàng" dialogs
+  no longer show a Mã field; the Suppliers/Customers list tables no longer
+  show a Mã column; clicking "+" next to "Nhóm nhà cung cấp" opened
+  "Thêm nhóm nhà cung cấp", created "Forwarder quốc tế", and it was
+  auto-selected into the Selector immediately; same for "+" next to
+  "Nhóm khách hàng" → "Thêm nhóm khách hàng" → created "Khách hàng VIP",
+  auto-selected. No console errors either time. Both test groups remain
+  in the dev DB afterward (harmless sample data, same precedent as
+  earlier manual dev-DB checks in this file) — the two supplier/customer
+  dialogs themselves were cancelled ("Hủy") without saving, so no
+  supplier/customer records were created by this check.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260914-102312-13294/`.
+- Nothing outstanding from this round.
