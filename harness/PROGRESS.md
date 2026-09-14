@@ -10185,3 +10185,17 @@ ward reference data (free-text inputs, matching the backend).
    picking either unilaterally, given the blast radius. Nothing else
    found that would explain "not smooth" — `Selector`/`TextInput`/
    `NumberInput` each took exactly one tab stop in the same walk-through.
+
+## 2026-09-14 (continued) — Tab-order finding: decision recorded, not patched
+
+- User's call on the `DateInput` double-tab-stop finding above: leave the
+  vendored `@astryxdesign/core` component alone (no `pnpm patch`) and
+  report the behavior upstream instead of patching it in this repo.
+  Nothing changed in this codebase for it — logged here so a future
+  session doesn't need to re-discover/re-diagnose the same thing: the
+  calendar-icon `<button>` inside every `DateInput` sits before the real
+  `<input>` in tab order with no prop to opt out (see the finding above
+  for the exact repro and file). Not tracked as an open task in any
+  `openspec/changes/` — there is nothing left to do in this repo unless
+  a future Astryx release fixes it or the user later asks for the patch
+  after all.
