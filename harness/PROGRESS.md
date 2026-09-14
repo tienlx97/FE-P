@@ -10251,3 +10251,50 @@ ward reference data (free-text inputs, matching the backend).
   (proposing a UX redesign for the "Chi phí Logistics" cost-lines editor)
   is a design question, not implemented — see the conversation itself for
   the recommendation given; nothing changed in this repo for it yet.
+
+## 2026-09-14 (continued) — "Chi phí Logistics" redesigned: rows grouped by category, not a flat table + separate breakdown
+
+- Item 3 of the same feedback batch. User proposed tabs-per-category;
+  asked me to propose something better if I had one. Presented both
+  live via `AskUserQuestion` (tabs-per-category vs. grouped rows in one
+  table) with the real tradeoffs — categories are user-created/unbounded
+  (a long tab strip), a tab needs a defined home for a not-yet-categorized
+  row, and the grand total needs its own place outside the tabs. User
+  picked grouped-rows-in-one-table.
+- `shipment-cost-lines-fields.jsx`: rows are now grouped by
+  `costCategoryId` and rendered with a synthetic header row per group
+  (category name + that group's subtotal) inserted before its rows,
+  sorted by category name (`localeCompare('vi')`) with an always-present
+  "Chưa phân loại" group sorted last for rows with no category yet — not
+  hidden/blocked, just visually last so a freshly-added blank row doesn't
+  jump to the top. The per-row "Nhóm chi phí" `Selector` stays on every
+  real row (unchanged) — it's still the only way to set/reassign a line's
+  category, so a group is a live, derived view of `rows`, not a separate
+  data structure; changing a row's category re-groups it immediately.
+  Header-row cells use the same "wrap every column's `renderCell`, check
+  a marker flag" idea as `@/shared/config/totals-row.js`'s
+  `withTotalsRowCells`, written locally (`groupedColumns`) rather than
+  reusing that helper — these rows are interspersed per-category, not one
+  trailing `AdvanceTable` `totalsRows` summary, and that helper's own doc
+  comment ties it specifically to that prop.
+- Removed the old separate "Tổng theo nhóm chi phí" `MetadataList` section
+  below the table — its exact information (category → subtotal) is now
+  the group headers themselves; keeping both would have shown the same
+  numbers twice. The always-visible "Tổng chi phí" grand total above the
+  table is unchanged.
+- Live-verified against a real shipment with existing cost lines
+  (`26DN-SAMPLE01/LOT-01`, "Port/Terminal" 3,200,000 đ + "Trucking"
+  1,500,000 đ): group headers render with correct subtotals, grand total
+  still correct, no console errors. Added a blank row via "Thêm chi phí"
+  — landed under "Chưa phân loại" (0.00 đ) as expected; assigning it a
+  category re-grouped it immediately. Noted one real, inherent UX
+  consequence of live grouping (not a bug): a row visually moves to a
+  different position the instant its category changes, since sorting is
+  by category — clicking "amount" at the row's old on-screen position
+  right after picking a new category can land on a different row that
+  shifted into that spot (confirmed by tripping over this myself during
+  testing: typing into the wrong row after a re-sort). Discarded that
+  test edit via "Hủy" → "Bỏ thay đổi" before it could corrupt real dev
+  data — nothing saved.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260914-130415-15253/`.
+- Nothing outstanding from this round.

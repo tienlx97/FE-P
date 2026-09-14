@@ -6,7 +6,6 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { overlayPaddingReset } from '@astryxdesign/core/Layout';
-import { MetadataList } from '@astryxdesign/core/MetadataList';
 import { Selector } from '@astryxdesign/core/Selector';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -16,7 +15,6 @@ import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 
-import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
@@ -76,25 +74,48 @@ export function ShipmentCostLinesFields({
 
   const total = rows.reduce((sum, row) => sum + (row.amount ?? 0), 0);
 
-  // Live "Tổng theo nhóm chi phí" breakdown — computed from the rows
-  // currently being edited (not `shipment.costTotalsByCategory`, a
-  // server-computed snapshot), so it stays correct while editing and shown
-  // in both modes (per user request 2026-09-06, mirrors Commission's
-  // Phụ lục/Tổng cộng).
-  const totalsByCategory = Array.from(
-    rows.reduce((totals, row) => {
-      if (!row.costCategoryId) return totals;
-      totals.set(
-        row.costCategoryId,
-        (totals.get(row.costCategoryId) ?? 0) + (row.amount ?? 0),
-      );
-      return totals;
-    }, new Map()),
-  ).map(([costCategoryId, totalAmount]) => ({
-    costCategoryId,
-    costCategoryName: costCategoriesById.get(costCategoryId)?.name ?? '—',
-    totalAmount,
-  }));
+  // Rows visually grouped by cost category (per user request 2026-09-14:
+  // was one flat table with a category picker per row, easy to lose track
+  // of "how much did Trucking/O·F/Customs cost" without cross-referencing
+  // the separate breakdown below it). A row with no category yet (a
+  // freshly-added blank row) falls into "Chưa phân loại", sorted last so
+  // it doesn't visually dominate the top of an otherwise-categorized list.
+  // Groups are ordered by category name — stable regardless of the order
+  // rows were added in, unlike grouping by first-appearance.
+  // Kept as a live computation over `rows` (the in-progress edit, not
+  // `shipment.costTotalsByCategory`, a server-computed snapshot) so it
+  // stays correct while editing, same reasoning the previous "Tổng theo
+  // nhóm chi phí" breakdown (now folded into these group headers instead
+  // of a separate section) already had.
+  const UNCATEGORIZED_KEY = '__uncategorized__';
+  const rowsByCategory = rows.reduce((groups, row) => {
+    const key = row.costCategoryId || UNCATEGORIZED_KEY;
+    const existing = groups.get(key) ?? [];
+    existing.push(row);
+    groups.set(key, existing);
+    return groups;
+  }, /** @type {Map<string, import('../types/index.js').ShipmentCostLineRow[]>} */ (new Map()));
+
+  const groupedTableRows = Array.from(rowsByCategory.entries())
+    .sort(([keyA], [keyB]) => {
+      if (keyA === UNCATEGORIZED_KEY) return 1;
+      if (keyB === UNCATEGORIZED_KEY) return -1;
+      const nameA = costCategoriesById.get(keyA)?.name ?? '';
+      const nameB = costCategoriesById.get(keyB)?.name ?? '';
+      return nameA.localeCompare(nameB, 'vi');
+    })
+    .flatMap(([key, groupRows]) => [
+      {
+        rowKey: `group-${key}`,
+        __isGroupHeader: true,
+        categoryLabel:
+          key === UNCATEGORIZED_KEY
+            ? 'Chưa phân loại'
+            : (costCategoriesById.get(key)?.name ?? '—'),
+        subtotal: groupRows.reduce((sum, row) => sum + (row.amount ?? 0), 0),
+      },
+      ...groupRows,
+    ]);
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ShipmentCostLineRow & Record<string, unknown>>[]} */
   const columns = [
@@ -243,6 +264,32 @@ export function ShipmentCostLinesFields({
     ),
   });
 
+  // Group-header rows carry no real cost-line fields (`categoryLabel`/
+  // `subtotal` only) — every column's `renderCell` is swapped for one of
+  // these two on that row instead of running the real editable-field
+  // logic above against fields that don't exist on it.
+  const groupedColumns = columns.map((column) => ({
+    ...column,
+    renderCell: (/** @type {any} */ row) => {
+      if (!row.__isGroupHeader) return column.renderCell?.(row);
+      if (column.key === 'costCategoryId') {
+        return (
+          <Text weight="semibold" color="secondary">
+            {row.categoryLabel}
+          </Text>
+        );
+      }
+      if (column.key === 'amount') {
+        return (
+          <Text weight="semibold" hasTabularNumbers>
+            {formatMoney(row.subtotal)} đ
+          </Text>
+        );
+      }
+      return null;
+    },
+  }));
+
   return (
     <VStack
       gap={2}
@@ -266,32 +313,13 @@ export function ShipmentCostLinesFields({
       {rows.length === 0 ? (
         <Text color="secondary">Chưa có khoản chi phí nào</Text>
       ) : (
-        <>
-          <Table
-            data={rows}
-            columns={columns}
-            idKey="rowKey"
-            density="compact"
-            dividers="grid"
-          />
-
-          {totalsByCategory.length > 0 ? (
-            <MetadataList
-              title={<Text weight="semibold">Tổng theo nhóm chi phí</Text>}
-              columns={2}
-              label={{ position: 'top' }}
-            >
-              {totalsByCategory.map((categoryTotal) => (
-                <MetadataListItem
-                  key={categoryTotal.costCategoryId}
-                  label={categoryTotal.costCategoryName}
-                >
-                  {formatMoney(categoryTotal.totalAmount)} đ
-                </MetadataListItem>
-              ))}
-            </MetadataList>
-          ) : null}
-        </>
+        <Table
+          data={groupedTableRows}
+          columns={groupedColumns}
+          idKey="rowKey"
+          density="compact"
+          dividers="grid"
+        />
       )}
 
       {status ? (
