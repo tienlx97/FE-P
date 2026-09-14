@@ -67,6 +67,12 @@ for (const width of [1440, 390]) {
     const scroller = table.parentElement;
     const group = [...table.querySelectorAll('th')].find(e => e.textContent === 'GIÁ TRỊ');
     if (!group || group.colSpan !== 4) throw Error('Financial header must span four columns');
+    const leafHeaders = [...table.querySelectorAll('th[data-column-key]')];
+    if (leafHeaders[0]?.dataset.columnKey !== 'rowNumber') throw Error('Financial view must begin with row number');
+    if (!leafHeaders.some(e => e.dataset.columnKey === 'createdDate')) throw Error('Financial view must include signing date');
+    const firstRow = table.tBodies[0].rows[0];
+    if (firstRow.querySelector('td[data-column-key="rowNumber"]')?.textContent.trim() !== '1') throw Error('Row number rendered incorrectly');
+    if (firstRow.querySelector('td[data-column-key="createdDate"]')?.textContent.trim() !== '06/09/2026') throw Error('Signing date rendered incorrectly');
     if (Math.abs(table.tHead.getBoundingClientRect().top - window.__headerTop) > 2) throw Error('Header moved on vertical scroll');
     const cells = [...table.tBodies[0].rows[0].cells];
     const pins = cells.filter(e => getComputedStyle(e).position === 'sticky');

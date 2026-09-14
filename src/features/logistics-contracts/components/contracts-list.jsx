@@ -291,7 +291,12 @@ export function ContractsList() {
         : pageSize,
       conditions: filterConditions,
     });
-    return result.success ? result.contracts : [];
+    return result.success
+      ? result.contracts.map((contract, index) => ({
+          ...contract,
+          rowNumber: index + 1,
+        }))
+      : [];
   }
   // Sum of contractValue/settlementValue/paidValue/unpaidValue across every
   // contract matching the current filters (not just this page — the
@@ -427,6 +432,12 @@ export function ContractsList() {
 
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<import('../types/index.js').Contract & Record<string, unknown>>[]} */
   const columns = [
+    {
+      key: 'rowNumber',
+      header: 'Số thứ tự',
+      width: pixel(100),
+      renderCell: (contract) => Number(contract.rowNumber),
+    },
     {
       key: 'contractNumber',
       header: 'Số hợp đồng',
@@ -639,8 +650,9 @@ export function ContractsList() {
     TOTALS_ROW_CELL_RENDERERS,
   );
 
-  const searchableContracts = contracts.map((contract) => ({
+  const searchableContracts = contracts.map((contract, index) => ({
     ...contract,
+    rowNumber: (pageIndex - 1) * pageSize + index + 1,
     buyerCompanyName: contract.buyer.companyName,
     countryName: countriesById.get(contract.countryId)?.name ?? '',
     bankNames: contract.bankIds

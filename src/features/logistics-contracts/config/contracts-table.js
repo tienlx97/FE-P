@@ -98,6 +98,7 @@ export const FILTER_FIELD_DEFS = [
 ];
 
 export const COLUMN_OPTIONS = [
+  { key: 'rowNumber', label: 'Số thứ tự' },
   { key: 'contractNumber', label: 'Số hợp đồng', isAlwaysVisible: true },
   { key: 'contractType', label: 'Loại hợp đồng' },
   { key: 'status', label: 'Trạng thái' },
@@ -142,6 +143,8 @@ export const DEFAULT_COLUMN_KEYS = [
 // "Tài chính" segment, design.md section 4's "Nhóm tài chính chi tiết
 // thành chế độ xem riêng".
 export const FINANCIAL_COLUMN_KEYS = [
+  'rowNumber',
+  'createdDate',
   'contractNumber',
   'buyer',
   'status',

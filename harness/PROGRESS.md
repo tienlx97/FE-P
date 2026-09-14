@@ -1,5 +1,29 @@
 # Progress Log
 
+## 2026-09-14 — Hợp đồng “Tài chính” sequence and signing date columns
+
+**What changed:** The Hợp đồng table's “Tài chính” preset now starts with
+“Số thứ tự”, followed by “Ngày ký” and “Số hợp đồng”. Contract responses do
+not expose a stable sequence field, so the displayed ordinal is calculated
+from server pagination (`(page - 1) * pageSize + row index + 1`); full-list
+exports receive their own 1-based sequence. “Ngày ký” reuses the existing
+`createdDate` column and shared Vietnamese date formatter. The totals row
+leaves both non-aggregate cells blank.
+
+**Verified:** `./harness/verify.sh` full green. The contracts browser check
+was extended to assert that “Số thứ tự” is the first financial leaf column,
+that “Ngày ký” exists, and that its first fixture row renders `1` and
+`06/09/2026`; those assertions passed at 1440px and 390px. Targeted DOM
+evidence and `financial-new-columns.png` are under
+`harness/runs/2026-09-14T08-44-20-668Z-tanstack-contracts/`.
+
+**Discovered / harness gap:** The same browser script later timed out in its
+pre-existing CSV quick-search step: the network mock always returns all 20
+contracts for `POST /contracts/search`, while the current search is
+server-side and the script expects one matching record plus the totals row.
+This occurs after the new financial-column assertions and is unrelated to
+this task; the targeted result was rechecked directly after the timeout.
+
 ## 2026-09-14 — VGM and Shipment list columns
 
 **What changed:** The inline VGM table now begins with “Số thứ tự”, backed
