@@ -9640,3 +9640,221 @@ ward reference data (free-text inputs, matching the backend).
   changes, so this isn't only caught when a human happens to paste a CI
   log. Not fixed in this session — flagging per AGENTS.md's failure
   protocol rather than expanding scope further.
+
+## 2026-09-13 (continued) — spurious horizontal scrollbar whenever the vertical one appears
+
+- User reported: "hợp đồng có vài column mà vẫn bị [scroll] show" — a
+  scrollbar showing on the contracts table even with only a few columns
+  active, when there's a lot of data (many rows). Asked to seed sample
+  data and investigate rather than take the report at face value.
+- Reproduced without touching the real DB: monkey-patched `window.fetch`
+  in the live browser session (Chrome extension) to intercept
+  `POST .../contracts/search` and return 20–60 synthetic contract rows,
+  keeping the default (few) columns active — same technique as prior
+  sessions' live verification, chosen over creating real API records so
+  no test data lands in the shared local dev DB.
+- Root cause, confirmed by direct DOM measurement (`clientWidth`/
+  `scrollWidth` before/after): `tanstack-data-table.jsx`'s `availableWidth`
+  (feeds `resolveTableSizes`, which sizes every column to exactly fill the
+  container) was measured via a `ResizeObserver` on `wrapperRef` — the
+  OUTER div `TanStackDataTable` renders around Astryx's `<Table>`. But the
+  element that actually scrolls (and grows a vertical scrollbar once
+  content height exceeds `theme.js`'s intentional `maxHeight: 65vh` on
+  `table-scroll-wrapper`, added 2026-09-12 for sticky headers) is a
+  *descendant* — Astryx's own internal `TableScrollWrapper` — not
+  `wrapperRef` itself. A vertical scrollbar shrinks that descendant's own
+  `clientWidth` by its own width (~15px), but never changes `wrapperRef`'s
+  box (an ancestor's size doesn't depend on a child's overflow), so the
+  `ResizeObserver` never re-fired and `availableWidth` stayed at the
+  pre-scrollbar figure. The table was then sized 15px too wide for the
+  now-narrower visible area, forcing a horizontal scrollbar too — on a
+  table with only 6–7 columns that fit the viewport with no real
+  horizontal overflow. Verified: with ≤~15 fake rows (fits under 65vh, no
+  vertical scrollbar) there was no mismatch; the instant rows pushed
+  height past 65vh, `scrollWrapperClientWidth` dropped by exactly the
+  scrollbar's width while `tableScrollWidth` didn't follow, reproducing
+  the bug on demand.
+- Fix (`tanstack-data-table.jsx`): measure the real scroll container
+  instead of its ancestor. Astryx's `BaseTable` already exposes exactly
+  this via the `transformScrollWrapper` plugin hook — the same one
+  `@astryxdesign/core`'s own `useTableStickyColumns` plugin uses internally
+  for its scroll-shadow ref (confirmed by reading
+  `node_modules/@astryxdesign/core/src/Table/plugins/stickyColumns/useTableStickyColumns.tsx`,
+  which measures `el.clientWidth` off the identical node). Added a small
+  local plugin (`measureScrollWidthPlugin`, passed via `<Table
+  plugins={{measureScrollWidth: ...}}>`) that attaches a callback ref to
+  the actual `TableScrollWrapper` node (composing with any existing ref,
+  matching the composition pattern the sticky-columns plugin itself uses)
+  and runs the `ResizeObserver` on that node instead of `wrapperRef`.
+  Removed the now-unaffected `wrapperRef`/its `useRef` entirely — nothing
+  else read it.
+- Live-verified via the same fetch-patch harness: with the fix, 20 and 60
+  synthetic rows (few columns, real overflow disabled) both show the
+  vertical scrollbar (still correct/intentional per the 65vh sticky-header
+  design) with **no** horizontal scrollbar — `tableScrollWidth` now tracks
+  `scrollWrapperClientWidth` exactly (2129px both) instead of staying
+  stuck at the pre-scrollbar 2144px. Then switched on every column via
+  "Tuỳ chọn hiển thị" → "Chọn tất cả" to confirm genuine horizontal
+  overflow (821px, real column-width demand) still correctly shows a
+  horizontal scrollbar alongside the vertical one — the fix only removes
+  the spurious ~15px phantom overflow, not real horizontal scrolling.
+  Spot-checked `/logistics/customers` (small table, no scrollbars needed)
+  for a plain regression check — renders fine, no console errors.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260913-233452-11660/`.
+- Nothing outstanding from this round. The 65vh internal-scroll design
+  itself (rather than letting the whole page scroll) is unchanged —
+  flagged as intentional per the 2026-09-12 sticky-header decision, not
+  revisited here since the user's concrete complaint (the extra
+  scrollbar despite few columns) was the horizontal one, now fixed.
+
+## 2026-09-14 — full-height list layout, real sticky totals row, sticky pagination (MISA parity)
+
+- User linked MISA's own report grid
+  (RPDynamicViewer/JCIncomeSummaryByProjectWork) and asked for the same
+  behavior: table fills the remaining viewport height (not a fixed
+  fraction), "Tổng cộng" (totals) pinned at the bottom, and "Tổng số"
+  (pagination/status bar) also pinned at the bottom. Confirmed live
+  against the real MISA page (logged into the user's own account via the
+  existing browser session) by increasing its row count to 100 and
+  scrolling: the report's own header stayed pinned to the actual top,
+  "Tổng cộng" stayed pinned to the actual bottom while rows scrolled
+  underneath, and a separate pagination bar sat pinned right below that —
+  confirming this is a real full-height panel (header/footer regions
+  outside the scroll, body region the only thing that scrolls), not a
+  scaled-up version of the existing 65vh-capped design.
+- Scope and approach confirmed with the user via AskUserQuestion up
+  front, given the size of the change: (1) apply to the shared
+  AdvanceTable — affects every list page (Hợp đồng, Shipment, Commission,
+  BOQ, Khách hàng, Quốc gia, Cảng/Nơi, and /admin/users, /admin/backups,
+  all of which render it) rather than just Hợp đồng, and (2) do the real
+  Astryx Layout (header/content/footer regions) refactor rather than a
+  lighter patch that kept stacking hacks. Both confirmed.
+- Researched Astryx's own guidance before writing anything (astryx docs
+  layout, astryx component Layout/LayoutHeader/LayoutContent/
+  LayoutFooter/TableFooter) per docs/astryx-workflow.md — Layout with
+  height="fill" is exactly the "pin header/footer, scroll body" primitive
+  (LayoutFooter's own doc line: "Bottom bar for action bars, pagination,
+  and status bars"), and TableFooter (<tfoot>, "Holds summary or total
+  rows beneath the body") was already themed in theme.js ('table-footer'
+  override) but never once used anywhere in src/ — confirmed via grep
+  before relying on it.
+- tanstack-data-table.jsx: totals row(s) (__isTotalsRow) now render in a
+  real TableFooter (<tfoot>) with position: sticky; bottom: 0 — the exact
+  mirror of the existing sticky <thead> (position: sticky; top: 0),
+  instead of being mixed into <tbody> behind a separate position: fixed
+  viewport-overlay duplicate (TableStickyTotalsBar, now deleted). Rows
+  are split via table.getRowModel().rows.filter(...) into
+  bodyRows/footerRows rather than filtering data upstream, so
+  AdvanceTable's existing contract (append totalsRows into the same data
+  array) needed no change. Reused the identical per-cell rendering (pin
+  styling, hover background, flexRender) for the footer rows — same
+  code, different DOM location — so every column's existing renderCell
+  (already __isTotalsRow-aware via withTotalsRowCells) worked unchanged.
+  Also gave the wrapper height: '100%' so it can fill a real ancestor
+  height instead of shrinking to content.
+  - Caught by testing, not by reasoning about it correctly the first
+    time: Astryx's TableRow does rowStyles.push(...xstyle) internally —
+    xstyle on TableRow (unlike on TableHeader/TableFooter) MUST be an
+    array, never a bare style object. Passing a bare object threw
+    "Spread syntax requires ...iterable[Symbol.iterator] to be a
+    function" — a real runtime crash caught immediately by live-loading
+    the page, not just by lint/typecheck (which don't check this).
+- theme.js: table-scroll-wrapper's maxHeight: '65vh' (a fixed fraction
+  guess, added 2026-09-12 purely so the wrapper had some bounded height
+  for sticky positioning to work against) replaced with height: '100%'
+  — it now fills whatever real height its ancestor chain provides,
+  instead of always stopping at 65% of the viewport regardless of how
+  much space is actually free.
+- advance-table.jsx: restructured from one flat VStack gap={0} (toolbar
+  → quick filters → active-filter banner → table → sticky totals bar →
+  summary → pagination, all in normal page flow, whole page scrolling)
+  into <Layout height="fill" header={...} content={...} footer={...} />
+  — header = toolbar + quick filters + active-filter banner (LayoutHeader
+  padding={0}), content = TanStackDataTable wrapped in LayoutContent
+  padding={0} isScrollable={false} (the table's own scroll wrapper does
+  the scrolling, not LayoutContent — isScrollable={false} turns off
+  LayoutContent's own overflow: auto so there's exactly one real
+  scrollbox, keeping the header/footer sticky math simple and
+  already-proven), footer = summary + pagination (LayoutFooter
+  padding={0}) — a genuine pinned region via Layout's own flex math, not
+  another positioning hack. Deleted the tableWrapperRef/
+  TableStickyTotalsBar wiring entirely.
+  - Mid-edit slip, caught immediately by lint + a runtime error on first
+    load ("ContractsList ... Spread syntax..." from an unrelated-looking
+    stack, chased down to Astryx's TableRow.js per above): a large Edit's
+    old_string was too short, so the rest of the original return
+    statement (the whole toolbar JSX, quick filters, etc.) was left
+    behind as orphaned dead code after the new }, while the new header
+    slot referenced an undefined {toolbar}. Fixed by sed-deleting the
+    exact orphaned line range (found via grep -n "^export
+    function\|^}\|return (") and reconstructing the toolbar JSX as its
+    own const toolbar = (...) above return. Lesson: when a single Edit
+    needs to replace "from here to the end of a large JSX tree," either
+    give old_string the FULL original span (not just its opening lines)
+    or extract the untouched middle into a named variable first — a
+    short anchor plus a long new_string will silently duplicate/orphan
+    whatever came after the anchor rather than erroring.
+- page-content-shell.jsx: new opt-in fillHeight prop — height: 'calc(100vh
+  - 64px)' (the same header height protected-app-shell.jsx already
+  hardcodes three times; duplicated, not shared, since none of those
+  three were extracted either), overflow: 'hidden', and zeroes the
+  outer's own paddingBlockEnd (a fill-height page's last visible thing is
+  the list's own pinned footer, which already carries padding — the page
+  gutter's bottom padding would just be dead space pushed below the
+  fold). Opt-in and additive: every page that doesn't pass it keeps
+  today's natural-scroll behavior unchanged.
+- Every page rendering a list via AdvanceTable (9 total — grepped for
+  <AdvanceTable usage first to get the exact set, not assumed):
+  logistics/{contracts,shipments,commissions,boq,customers,countries,
+  places}/page.jsx and admin/{users,backups}/page.jsx. Each now passes
+  fillHeight to PageContentShell, gives its own VStack height="100%", and
+  wraps <XList/> in <StackItem size="fill"> (Astryx's
+  flex-grow-and-reset-min-height primitive — no hand-rolled flex CSS).
+- The 9 feature list components themselves (contracts-list.jsx,
+  shipments-list.jsx, commissions-list.jsx,
+  contract-private-infos-list.jsx, customers-list.jsx, places-list.jsx,
+  countries-list.jsx, admin-users/user-list.jsx,
+  admin-backups/backup-list.jsx) — a gap only found by measuring the live
+  DOM height chain (getComputedStyle at every ancestor level from <table>
+  up), not by re-reading the code: each of these wraps its own
+  page-specific header (a <Heading>, a status filter, an error banner)
+  AROUND <AdvanceTable> inside its OWN internal VStack — a level the
+  page.jsx StackItem(fill) fix doesn't reach into. Live DOM inspection
+  showed StackItem correctly resolving to a real height (e.g. 1197px)
+  while its child — this inner per-feature VStack — stayed shrunk to its
+  own content height (e.g. 309px), because it had no height="100%" of
+  its own. Same fix, one level deeper: height="100%" on each feature's
+  own outer VStack, <AdvanceTable> wrapped in <StackItem size="fill">.
+  Every one of these 9 files follows the identical VStack > [header
+  stuff] > AdvanceTable > [dialogs] shape, confirmed by grepping the
+  return statement of each before editing — genuinely mechanical once
+  the pattern was nailed down on contracts-list.jsx first.
+- Deleted table-sticky-totals-bar.jsx outright (confirmed zero remaining
+  references, including tests, before removing) rather than leaving it
+  as dead code — its entire reason to exist (no <tfoot> option,
+  position: sticky unreliable on a bare <tr>) is gone now that the
+  totals row lives in a real <tfoot>.
+- Live-verified end to end with the same fetch-patch harness from the
+  horizontal-scrollbar fix earlier this session (60 synthetic contract
+  rows, no real DB writes): full height confirmed (empty space between
+  the last real row and the pinned footer on a short result set, table
+  filling the whole remaining viewport on a tall one); "Tổng cộng" stays
+  pinned to the bottom of the scrolling table, in perfect horizontal
+  sync with the columns above it even after scrolling both directions at
+  once (screenshotted: "HỢP ĐỒNG"/"QUYẾT TOÁN"/etc. column headers lined
+  up exactly with their totals cells) — no remeasure-on-scroll needed
+  since it's the same scroll box now, not a JS-synced duplicate; "Tổng
+  số" pagination bar pinned separately at the true viewport bottom via
+  LayoutFooter; row hover and pinned-column background still correct on
+  both real and totals rows; row expansion (/logistics/customers) still
+  works; horizontal-scroll-only-when-genuinely-needed (from the earlier
+  fix this session) re-verified unaffected — enabling every column still
+  shows a real, correctly-sized horizontal scrollbar alongside the
+  vertical one. Spot-checked all 9 list pages with real data
+  (/logistics/{contracts,shipments,commissions,boq,customers,countries,
+  places}, /admin/{users,backups}) — all render correctly,
+  pagination/count pinned at the bottom, no console errors on any of
+  them.
+- Full ./harness/verify.sh PASSED (including the production build step,
+  which exercises every changed file): harness/runs/20260914-070934-12014/.
+- Nothing outstanding from this round.

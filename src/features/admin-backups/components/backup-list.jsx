@@ -5,6 +5,7 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -151,7 +152,7 @@ export function BackupList() {
   ];
 
   return (
-    <VStack gap={4} hAlign="stretch">
+    <VStack gap={4} hAlign="stretch" height="100%">
       <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
         <VStack gap={1}>
           <Heading level={1}>Sao lưu &amp; khôi phục dữ liệu</Heading>
@@ -196,23 +197,25 @@ export function BackupList() {
         />
       ) : null}
 
-      <AdvanceTable
-        toolbarLabel="Thao tác danh sách bản sao lưu"
-        searchFieldDefs={SEARCH_FIELD_DEFS}
-        entityLabel="Bản sao lưu"
-        contentSearchFieldKey="fileName"
-        searchPlaceholder="Tìm theo tên file..."
-        columnOptions={COLUMN_OPTIONS}
-        initialColumnKeys={ALL_COLUMN_KEYS}
-        defaultColumnKeys={ALL_COLUMN_KEYS}
-        tableColumns={columns}
-        data={rows}
-        idKey="fileName"
-        isLoading={backupsQuery.isLoading}
-        skeletonRows={skeletonRows}
-        onRefresh={() => backupsQuery.refetch()}
-        isRefreshing={backupsQuery.isFetching}
-      />
+      <StackItem size="fill">
+        <AdvanceTable
+          toolbarLabel="Thao tác danh sách bản sao lưu"
+          searchFieldDefs={SEARCH_FIELD_DEFS}
+          entityLabel="Bản sao lưu"
+          contentSearchFieldKey="fileName"
+          searchPlaceholder="Tìm theo tên file..."
+          columnOptions={COLUMN_OPTIONS}
+          initialColumnKeys={ALL_COLUMN_KEYS}
+          defaultColumnKeys={ALL_COLUMN_KEYS}
+          tableColumns={columns}
+          data={rows}
+          idKey="fileName"
+          isLoading={backupsQuery.isLoading}
+          skeletonRows={skeletonRows}
+          onRefresh={() => backupsQuery.refetch()}
+          isRefreshing={backupsQuery.isFetching}
+        />
+      </StackItem>
 
       {restoringBackup ? (
         <RestoreBackupDialog

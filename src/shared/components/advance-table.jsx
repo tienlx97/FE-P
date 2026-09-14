@@ -6,6 +6,12 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { InputGroup } from '@astryxdesign/core/InputGroup';
+import {
+  Layout,
+  LayoutContent,
+  LayoutFooter,
+  LayoutHeader,
+} from '@astryxdesign/core/Layout';
 import { usePowerSearchConfig } from '@astryxdesign/core/PowerSearch';
 import {
   SegmentedControl,
@@ -27,11 +33,10 @@ import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Download, FileSpreadsheet, Printer } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import * as XLSX from 'xlsx';
 
 import { IconRefresh } from '@/shared/components/icon/icon-refresh.jsx';
-import { TableStickyTotalsBar } from '@/shared/components/table-sticky-totals-bar.jsx';
 import {
   stickyColumnKeys,
   TableViewOptionsPopover,
@@ -114,7 +119,8 @@ function applyFiltersDiacriticInsensitive(applyFiltersFn, filters, rows) {
   const normalizedRows = rows.map((row, index) => {
     const normalized = /** @type {any} */ ({ __rowIndex: index });
     for (const [key, value] of Object.entries(row)) {
-      normalized[key] = typeof value === 'string' ? normalizeForSearch(value) : value;
+      normalized[key] =
+        typeof value === 'string' ? normalizeForSearch(value) : value;
     }
     return normalized;
   });
@@ -313,10 +319,6 @@ export function AdvanceTable({
   dividers = 'rows',
   pagination,
 }) {
-  // Measured by `TableStickyTotalsBar` (real header `<th>` positions) to
-  // pin `totalsRows` to the viewport bottom — see that component's doc
-  // comment for why a `<tr>` itself can't just be made sticky.
-  const tableWrapperRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [searchFilters, setSearchFilters] = useState(
     /** @type {import('@astryxdesign/core/PowerSearch').PowerSearchFilter[]} */ ([]),
   );
@@ -700,7 +702,8 @@ export function AdvanceTable({
           /** @type {any} */ (allRows),
         )
       );
-      if (format === 'excel') exportExcel(filteredAllRows, { allColumns: true });
+      if (format === 'excel')
+        exportExcel(filteredAllRows, { allColumns: true });
       else exportCsv(filteredAllRows, { allColumns: true });
     } finally {
       setIsExportingAll(false);
@@ -725,7 +728,11 @@ export function AdvanceTable({
   ).filter((key) => !fixedEndColumnKeys.includes(key));
   const tableEndKeys = [
     ...new Set([
-      ...stickyColumnKeys(stickyEnd, columnSettingsState.activeColumnKeys, true),
+      ...stickyColumnKeys(
+        stickyEnd,
+        columnSettingsState.activeColumnKeys,
+        true,
+      ),
       ...fixedEndColumnKeys,
     ]),
   ];
@@ -756,307 +763,315 @@ export function AdvanceTable({
     renderCell: () => <Skeleton height={16} width="70%" index={columnIndex} />,
   }));
 
-  return (
-    <VStack gap={0} hAlign="stretch">
-      <Toolbar
-        label={toolbarLabel}
-        size="sm"
-        startContent={
-          // Everything lives in the one slot: Toolbar only stretches a
-          // slot to fill the row when it's the sole slot present, so the
-          // search bar's "fill the row" behavior depends on `endContent`
-          // being unset and this StackItem doing the actual growing.
-          <HStack
-            gap={3}
-            vAlign="center"
-            wrap="wrap"
-            xstyle={styles.toolbarPrimary}
-          >
-            <StackItem size="fill" xstyle={styles.searchSlot}>
-              <InputGroup
+  const toolbar = (
+    <Toolbar
+      label={toolbarLabel}
+      size="sm"
+      startContent={
+        // Everything lives in the one slot: Toolbar only stretches a
+        // slot to fill the row when it's the sole slot present, so the
+        // search bar's "fill the row" behavior depends on `endContent`
+        // being unset and this StackItem doing the actual growing.
+        <HStack
+          gap={3}
+          vAlign="center"
+          wrap="wrap"
+          xstyle={styles.toolbarPrimary}
+        >
+          <StackItem size="fill" xstyle={styles.searchSlot}>
+            <InputGroup
+              label={searchPlaceholder}
+              isLabelHidden
+              size="sm"
+              xstyle={[styles.search, styles.searchInputGroup]}
+            >
+              <TextInput
                 label={searchPlaceholder}
                 isLabelHidden
-                size="sm"
-                xstyle={[styles.search, styles.searchInputGroup]}
-              >
-                <TextInput
-                  label={searchPlaceholder}
-                  isLabelHidden
-                  placeholder={searchPlaceholder}
-                  startIcon="search"
-                  hasClear
-                  value={quickSearchValue}
-                  onChange={handleQuickSearchChange}
-                  xstyle={styles.searchInput}
+                placeholder={searchPlaceholder}
+                startIcon="search"
+                hasClear
+                value={quickSearchValue}
+                onChange={handleQuickSearchChange}
+                xstyle={styles.searchInput}
+              />
+              {isServerFilterMode || advancedSearchFieldsResolved.length > 0 ? (
+                <IconButton
+                  label="Bộ lọc nâng cao"
+                  tooltip="Bộ lọc nâng cao"
+                  icon={<Icon icon="funnel" size="sm" />}
+                  variant="ghost"
+                  onClick={() => handleAdvancedSearchOpenChange(true)}
                 />
-                {isServerFilterMode ||
-                advancedSearchFieldsResolved.length > 0 ? (
-                  <IconButton
-                    label="Bộ lọc nâng cao"
-                    tooltip="Bộ lọc nâng cao"
-                    icon={<Icon icon="funnel" size="sm" />}
-                    variant="ghost"
-                    onClick={() => handleAdvancedSearchOpenChange(true)}
-                  />
-                ) : null}
-              </InputGroup>
-              <AdvanceTableSearchDialog
-                isServerFilterMode={isServerFilterMode}
-                isAdvancedSearchOpen={isAdvancedSearchOpen}
-                handleAdvancedSearchOpenChange={handleAdvancedSearchOpenChange}
-                filterFieldDefs={filterFieldDefs}
-                advancedFilterDraft={advancedFilterDraft}
-                setAdvancedFilterDraft={setAdvancedFilterDraft}
-                handleAdvancedFilterClear={handleAdvancedFilterClear}
-                handleAdvancedFilterSubmit={handleAdvancedFilterSubmit}
-                advancedSearchFieldsResolved={advancedSearchFieldsResolved}
-                advancedSearchDraft={advancedSearchDraft}
-                setAdvancedSearchDraft={setAdvancedSearchDraft}
-                handleAdvancedSearchSubmit={handleAdvancedSearchSubmit}
-              />
-            </StackItem>
-            <HStack
-              gap={2}
-              vAlign="center"
-              wrap="wrap"
-              xstyle={styles.toolbarEnd}
-            >
-              {viewPresets && viewPresets.length > 0 ? (
-                <SegmentedControl
-                  label="Chế độ xem cột"
-                  size="sm"
-                  value={activePresetKey}
-                  onChange={(key) => {
-                    setActivePresetKey(key);
-                    const preset = viewPresets.find(
-                      (candidate) => candidate.key === key,
-                    );
-                    if (preset) setActiveColumnKeys([...preset.columnKeys]);
-                  }}
-                >
-                  {viewPresets.map((preset) => (
-                    <SegmentedControlItem
-                      key={preset.key}
-                      value={preset.key}
-                      label={preset.label}
-                    />
-                  ))}
-                </SegmentedControl>
               ) : null}
-              <TableViewOptionsPopover
-                fixedEndLabel={fixedEndColumnKeys
-                  .map(
-                    (key) =>
-                      columnOptions.find((column) => column.key === key)
-                        ?.label ?? key,
-                  )
-                  .join(', ')}
-                columns={columnOptions}
-                activeColumnKeys={[...columnSettingsState.activeColumnKeys]}
-                onChangeActiveColumnKeys={
-                  columnSettingsState.setActiveColumnKeys
-                }
-                defaultColumnKeys={defaultColumnKeys}
-                density={density}
-                onChangeDensity={(value) =>
-                  setDensity(
-                    /** @type {import('@astryxdesign/core/Table').TableDensity} */ (
-                      value
-                    ),
-                  )
-                }
-                stickyStart={stickyStart}
-                onChangeStickyStart={(value) =>
-                  setStickyStart(/** @type {'none' | 'one' | 'two'} */ (value))
-                }
-                stickyEnd={stickyEnd}
-                onChangeStickyEnd={(value) =>
-                  setStickyEnd(/** @type {'none' | 'one' | 'two'} */ (value))
-                }
-              />
+            </InputGroup>
+            <AdvanceTableSearchDialog
+              isServerFilterMode={isServerFilterMode}
+              isAdvancedSearchOpen={isAdvancedSearchOpen}
+              handleAdvancedSearchOpenChange={handleAdvancedSearchOpenChange}
+              filterFieldDefs={filterFieldDefs}
+              advancedFilterDraft={advancedFilterDraft}
+              setAdvancedFilterDraft={setAdvancedFilterDraft}
+              handleAdvancedFilterClear={handleAdvancedFilterClear}
+              handleAdvancedFilterSubmit={handleAdvancedFilterSubmit}
+              advancedSearchFieldsResolved={advancedSearchFieldsResolved}
+              advancedSearchDraft={advancedSearchDraft}
+              setAdvancedSearchDraft={setAdvancedSearchDraft}
+              handleAdvancedSearchSubmit={handleAdvancedSearchSubmit}
+            />
+          </StackItem>
+          <HStack
+            gap={2}
+            vAlign="center"
+            wrap="wrap"
+            xstyle={styles.toolbarEnd}
+          >
+            {viewPresets && viewPresets.length > 0 ? (
+              <SegmentedControl
+                label="Chế độ xem cột"
+                size="sm"
+                value={activePresetKey}
+                onChange={(key) => {
+                  setActivePresetKey(key);
+                  const preset = viewPresets.find(
+                    (candidate) => candidate.key === key,
+                  );
+                  if (preset) setActiveColumnKeys([...preset.columnKeys]);
+                }}
+              >
+                {viewPresets.map((preset) => (
+                  <SegmentedControlItem
+                    key={preset.key}
+                    value={preset.key}
+                    label={preset.label}
+                  />
+                ))}
+              </SegmentedControl>
+            ) : null}
+            <TableViewOptionsPopover
+              fixedEndLabel={fixedEndColumnKeys
+                .map(
+                  (key) =>
+                    columnOptions.find((column) => column.key === key)?.label ??
+                    key,
+                )
+                .join(', ')}
+              columns={columnOptions}
+              activeColumnKeys={[...columnSettingsState.activeColumnKeys]}
+              onChangeActiveColumnKeys={columnSettingsState.setActiveColumnKeys}
+              defaultColumnKeys={defaultColumnKeys}
+              density={density}
+              onChangeDensity={(value) =>
+                setDensity(
+                  /** @type {import('@astryxdesign/core/Table').TableDensity} */ (
+                    value
+                  ),
+                )
+              }
+              stickyStart={stickyStart}
+              onChangeStickyStart={(value) =>
+                setStickyStart(/** @type {'none' | 'one' | 'two'} */ (value))
+              }
+              stickyEnd={stickyEnd}
+              onChangeStickyEnd={(value) =>
+                setStickyEnd(/** @type {'none' | 'one' | 'two'} */ (value))
+              }
+            />
+            <IconButton
+              label="In"
+              tooltip="In (trang hiện tại)"
+              icon={<Icon icon={Printer} size="sm" />}
+              variant="ghost"
+              size="sm"
+              isDisabled={isLoading || filteredData.length === 0}
+              onClick={() => printRows(filteredData)}
+            />
+            <DropdownMenu
+              button={{
+                label: 'Xuất',
+                tooltip: 'Xuất dữ liệu',
+                variant: 'ghost',
+                size: 'sm',
+                icon: <Icon icon={Download} size="sm" />,
+                isDisabled: isLoading || filteredData.length === 0,
+              }}
+              items={[
+                {
+                  type: 'section',
+                  title: 'Trang hiện tại',
+                  items: [
+                    {
+                      id: 'excel-page',
+                      label: 'Xuất Excel (trang hiện tại)',
+                      icon: <Icon icon={FileSpreadsheet} size="sm" />,
+                      onClick: () => exportExcel(filteredData),
+                    },
+                    {
+                      id: 'csv-page',
+                      label: 'Xuất CSV (trang hiện tại)',
+                      icon: <Icon icon={Download} size="sm" />,
+                      onClick: () => exportCsv(filteredData),
+                    },
+                  ],
+                },
+                ...(fetchAllRows
+                  ? [
+                      {
+                        type: /** @type {const} */ ('section'),
+                        title: 'Toàn bộ dữ liệu (đã lọc)',
+                        items: [
+                          {
+                            id: 'excel-all',
+                            label: isExportingAll
+                              ? 'Đang xuất...'
+                              : 'Xuất Excel (toàn bộ dữ liệu)',
+                            icon: <Icon icon={FileSpreadsheet} size="sm" />,
+                            isDisabled: isExportingAll,
+                            onClick: () => exportAllRows('excel'),
+                          },
+                          {
+                            id: 'csv-all',
+                            label: isExportingAll
+                              ? 'Đang xuất...'
+                              : 'Xuất CSV (toàn bộ dữ liệu)',
+                            icon: <Icon icon={Download} size="sm" />,
+                            isDisabled: isExportingAll,
+                            onClick: () => exportAllRows('csv'),
+                          },
+                        ],
+                      },
+                    ]
+                  : []),
+              ]}
+            />
+            {onRefresh ? (
               <IconButton
-                label="In"
-                tooltip="In (trang hiện tại)"
-                icon={<Icon icon={Printer} size="sm" />}
+                label="Tải lại danh sách"
+                tooltip="Tải lại"
+                icon={<Icon icon={IconRefresh} size="sm" />}
                 variant="ghost"
                 size="sm"
-                isDisabled={isLoading || filteredData.length === 0}
-                onClick={() => printRows(filteredData)}
+                isLoading={isRefreshing}
+                onClick={onRefresh}
               />
-              <DropdownMenu
-                button={{
-                  label: 'Xuất',
-                  tooltip: 'Xuất dữ liệu',
-                  variant: 'ghost',
-                  size: 'sm',
-                  icon: <Icon icon={Download} size="sm" />,
-                  isDisabled: isLoading || filteredData.length === 0,
-                }}
-                items={[
-                  {
-                    type: 'section',
-                    title: 'Trang hiện tại',
-                    items: [
-                      {
-                        id: 'excel-page',
-                        label: 'Xuất Excel (trang hiện tại)',
-                        icon: <Icon icon={FileSpreadsheet} size="sm" />,
-                        onClick: () => exportExcel(filteredData),
-                      },
-                      {
-                        id: 'csv-page',
-                        label: 'Xuất CSV (trang hiện tại)',
-                        icon: <Icon icon={Download} size="sm" />,
-                        onClick: () => exportCsv(filteredData),
-                      },
-                    ],
-                  },
-                  ...(fetchAllRows
-                    ? [
-                        {
-                          type: /** @type {const} */ ('section'),
-                          title: 'Toàn bộ dữ liệu (đã lọc)',
-                          items: [
-                            {
-                              id: 'excel-all',
-                              label: isExportingAll
-                                ? 'Đang xuất...'
-                                : 'Xuất Excel (toàn bộ dữ liệu)',
-                              icon: <Icon icon={FileSpreadsheet} size="sm" />,
-                              isDisabled: isExportingAll,
-                              onClick: () => exportAllRows('excel'),
-                            },
-                            {
-                              id: 'csv-all',
-                              label: isExportingAll
-                                ? 'Đang xuất...'
-                                : 'Xuất CSV (toàn bộ dữ liệu)',
-                              icon: <Icon icon={Download} size="sm" />,
-                              isDisabled: isExportingAll,
-                              onClick: () => exportAllRows('csv'),
-                            },
-                          ],
-                        },
-                      ]
-                    : [])
-                ]}
+            ) : null}
+            {primaryAction ? (
+              <Button
+                label={primaryAction.label}
+                variant="primary"
+                onClick={primaryAction.onClick}
               />
-              {onRefresh ? (
-                <IconButton
-                  label="Tải lại danh sách"
-                  tooltip="Tải lại"
-                  icon={<Icon icon={IconRefresh} size="sm" />}
+            ) : null}
+          </HStack>
+        </HStack>
+      }
+    />
+  );
+
+  return (
+    <Layout
+      height="fill"
+      header={
+        <LayoutHeader padding={0}>
+          <VStack gap={0} hAlign="stretch">
+            {toolbar}
+            {quickFilters && quickFilters.length > 0 ? (
+              <HStack
+                gap={2}
+                vAlign="center"
+                wrap="wrap"
+                xstyle={styles.filterRow}
+              >
+                {quickFilters.map((quickFilter) => (
+                  <Selector
+                    key={quickFilter.field}
+                    label={quickFilter.label}
+                    isLabelHidden
+                    placeholder={quickFilter.placeholder}
+                    size="sm"
+                    hasClear
+                    hasSearch={quickFilter.hasSearch}
+                    options={[...quickFilter.options]}
+                    value={getQuickFilterValue(quickFilter.field)}
+                    renderValue={quickFilter.renderValue}
+                    xstyle={
+                      getQuickFilterValue(quickFilter.field)
+                        ? styles.filterFill
+                        : undefined
+                    }
+                    onChange={(next) => setQuickFilter(quickFilter.field, next)}
+                  />
+                ))}
+              </HStack>
+            ) : null}
+            {activeFilterCount > 0 ? (
+              <HStack gap={2} wrap="wrap" vAlign="center">
+                <Text type="supporting" color="secondary">
+                  Đang áp dụng {activeFilterCount} điều kiện lọc
+                </Text>
+                <Button
+                  label="Xóa tất cả bộ lọc"
                   variant="ghost"
                   size="sm"
-                  isLoading={isRefreshing}
-                  onClick={onRefresh}
+                  onClick={clearAllFilters}
                 />
-              ) : null}
-              {primaryAction ? (
-                <Button
-                  label={primaryAction.label}
-                  variant="primary"
-                  onClick={primaryAction.onClick}
-                />
-              ) : null}
-            </HStack>
-          </HStack>
-        }
-      />
-
-      {quickFilters && quickFilters.length > 0 ? (
-        <HStack gap={2} vAlign="center" wrap="wrap" xstyle={styles.filterRow}>
-          {quickFilters.map((quickFilter) => (
-            <Selector
-              key={quickFilter.field}
-              label={quickFilter.label}
-              isLabelHidden
-              placeholder={quickFilter.placeholder}
-              size="sm"
-              hasClear
-              hasSearch={quickFilter.hasSearch}
-              options={[...quickFilter.options]}
-              value={getQuickFilterValue(quickFilter.field)}
-              renderValue={quickFilter.renderValue}
-              xstyle={
-                getQuickFilterValue(quickFilter.field)
-                  ? styles.filterFill
-                  : undefined
-              }
-              onChange={(next) => setQuickFilter(quickFilter.field, next)}
-            />
-          ))}
-        </HStack>
-      ) : null}
-
-      {activeFilterCount > 0 ? (
-        <HStack gap={2} wrap="wrap" vAlign="center">
-          <Text type="supporting" color="secondary">
-            Đang áp dụng {activeFilterCount} điều kiện lọc
-          </Text>
-          <Button
-            label="Xóa tất cả bộ lọc"
-            variant="ghost"
-            size="sm"
-            onClick={clearAllFilters}
+              </HStack>
+            ) : null}
+          </VStack>
+        </LayoutHeader>
+      }
+      content={
+        <LayoutContent padding={0} isScrollable={false}>
+          <TanStackDataTable
+            headerGroups={headerGroups}
+            activeColumnKeys={columnSettingsState.activeColumnKeys}
+            startKeys={tableStartKeys}
+            endKeys={tableEndKeys}
+            filterPlugin={filterPlugin}
+            rowExpansion={rowExpansion}
+            emptyState={
+              isLoading ? (
+                false
+              ) : (
+                <VStack gap={2} hAlign="center" paddingBlock={6}>
+                  <Text weight="semibold">
+                    {activeFilterCount > 0
+                      ? 'Không tìm thấy kết quả phù hợp'
+                      : 'Chưa có dữ liệu'}
+                  </Text>
+                  <Text type="supporting" color="secondary">
+                    {activeFilterCount > 0
+                      ? 'Thử từ khóa khác hoặc xóa bộ lọc để xem lại danh sách.'
+                      : 'Dữ liệu sẽ xuất hiện tại đây sau khi được thêm.'}
+                  </Text>
+                </VStack>
+              )
+            }
+            data={isLoading ? (skeletonRows ?? []) : renderedData}
+            columns={isLoading ? skeletonColumns : renderedTableColumns}
+            idKey={idKey}
+            density={density}
+            dividers={dividers}
           />
-        </HStack>
-      ) : null}
-
-      <div ref={tableWrapperRef}>
-        <TanStackDataTable
-          headerGroups={headerGroups}
-          activeColumnKeys={columnSettingsState.activeColumnKeys}
-          startKeys={tableStartKeys}
-          endKeys={tableEndKeys}
-          filterPlugin={filterPlugin}
-          rowExpansion={rowExpansion}
-          emptyState={
-            isLoading ? (
-              false
-            ) : (
-              <VStack gap={2} hAlign="center" paddingBlock={6}>
-                <Text weight="semibold">
-                  {activeFilterCount > 0
-                    ? 'Không tìm thấy kết quả phù hợp'
-                    : 'Chưa có dữ liệu'}
-                </Text>
-                <Text type="supporting" color="secondary">
-                  {activeFilterCount > 0
-                    ? 'Thử từ khóa khác hoặc xóa bộ lọc để xem lại danh sách.'
-                    : 'Dữ liệu sẽ xuất hiện tại đây sau khi được thêm.'}
-                </Text>
-              </VStack>
-            )
-          }
-          data={isLoading ? (skeletonRows ?? []) : renderedData}
-          columns={isLoading ? skeletonColumns : renderedTableColumns}
-          idKey={idKey}
-          density={density}
-          dividers={dividers}
-        />
-      </div>
-
-      {totalsRows && totalsRows.length > 0 && !isLoading ? (
-        <TableStickyTotalsBar
-          containerRef={tableWrapperRef}
-          tableColumns={renderedTableColumns}
-          totalsRows={totalsRows}
-        />
-      ) : null}
-
-      {summary && !isLoading ? (
-        <HStack hAlign="end" xstyle={styles.summary}>
-          {summary}
-        </HStack>
-      ) : null}
-
-      <AdvanceTablePagination
-        pagination={pagination}
-        visibleCount={filteredData.length}
-        isLoading={isLoading}
-      />
-    </VStack>
+        </LayoutContent>
+      }
+      footer={
+        <LayoutFooter padding={0}>
+          <VStack gap={0} hAlign="stretch">
+            {summary && !isLoading ? (
+              <HStack hAlign="end" xstyle={styles.summary}>
+                {summary}
+              </HStack>
+            ) : null}
+            <AdvanceTablePagination
+              pagination={pagination}
+              visibleCount={filteredData.length}
+              isLoading={isLoading}
+            />
+          </VStack>
+        </LayoutFooter>
+      }
+    />
   );
 }
 

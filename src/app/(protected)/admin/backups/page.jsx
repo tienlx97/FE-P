@@ -1,4 +1,5 @@
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { BackupList } from '@/features/admin-backups/index.js';
@@ -15,14 +16,16 @@ export const metadata = {
  */
 export default function BackupsPage() {
   return (
-    <PageContentShell>
-      <VStack gap={4} hAlign="stretch">
+    <PageContentShell fillHeight>
+      <VStack gap={4} hAlign="stretch" height="100%">
         <Breadcrumbs>
           <BreadcrumbItem href="/admin">Quản trị</BreadcrumbItem>
           <BreadcrumbItem isCurrent>Sao lưu &amp; khôi phục</BreadcrumbItem>
         </Breadcrumbs>
 
-        <BackupList />
+        <StackItem size="fill">
+          <BackupList />
+        </StackItem>
       </VStack>
     </PageContentShell>
   );

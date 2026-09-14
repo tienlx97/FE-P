@@ -37,21 +37,51 @@ export const pageContentShellStyles = stylex.create({
   innerFullWidth: {
     maxWidth: 'none',
   },
+  // A page that wants its list to fill the remaining viewport height
+  // (`AdvanceTable`'s `Layout height="fill"`, 2026-09-14 — matching MISA's
+  // report grid: rows fill the screen, header/totals/pagination pinned)
+  // needs a real, bounded height somewhere in its ancestor chain — `100%`
+  // of an auto-height box is a no-op. `64px` is the same header height
+  // `protected-app-shell.jsx` already reserves in three places
+  // (`.layout`/`.desktopSideNavInner`'s `calc(100vh - 64px)`); duplicated
+  // here rather than shared since none of those were extracted to a
+  // constant either. Drops `outer`'s own bottom padding — a fill-height
+  // page's last visible thing is the list's own pinned footer, which
+  // already carries its own padding, so the outer gutter would just be
+  // dead space pushed below the fold instead of trailing whitespace.
+  fillHeightOuter: {
+    height: 'calc(100vh - 64px)',
+    overflow: 'hidden',
+    paddingBlockEnd: 0,
+  },
+  fillHeightInner: {
+    height: '100%',
+  },
 });
 
 /**
  * Convenience wrapper for non-MDX pages that want the same padding/width
  * contract as `/docs` (see `pageContentShellStyles` above) — `/admin/*`'s
  * standard page shell.
- * @param {{ children: import('react').ReactNode, isFullWidth?: boolean }} props
+ * @param {{ children: import('react').ReactNode, isFullWidth?: boolean, fillHeight?: boolean }} props
  */
-export function PageContentShell({ children, isFullWidth = false }) {
+export function PageContentShell({
+  children,
+  isFullWidth = false,
+  fillHeight = false,
+}) {
   return (
-    <div {...stylex.props(pageContentShellStyles.outer)}>
+    <div
+      {...stylex.props(
+        pageContentShellStyles.outer,
+        fillHeight && pageContentShellStyles.fillHeightOuter,
+      )}
+    >
       <div
         {...stylex.props(
           pageContentShellStyles.inner,
           isFullWidth && pageContentShellStyles.innerFullWidth,
+          fillHeight && pageContentShellStyles.fillHeightInner,
         )}
       >
         {children}

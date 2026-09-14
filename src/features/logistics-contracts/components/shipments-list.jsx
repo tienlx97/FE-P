@@ -16,6 +16,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -111,8 +112,8 @@ export function ShipmentsList() {
   // `quickFilters` prop, client-side-only). `null` clears the pill back to
   // "no filter" rather than a specific status.
   const statusQuickFilterValue =
-    filterConditions.find((condition) => condition.field === 'status')
-      ?.value ?? null;
+    filterConditions.find((condition) => condition.field === 'status')?.value ??
+    null;
   /** @param {string | null} nextValue */
   function handleStatusQuickFilterChange(nextValue) {
     setFilterConditions((current) =>
@@ -207,7 +208,9 @@ export function ShipmentsList() {
   async function fetchAllShipments() {
     const result = await searchAllShipments({
       page: 1,
-      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      pageSize: listResult?.success
+        ? Math.max(1, listResult.totalCount)
+        : pageSize,
       conditions: filterConditions,
     });
     return result.success ? enrichShipments(result.shipments) : [];
@@ -360,7 +363,7 @@ export function ShipmentsList() {
     shipmentDialog?.shipment;
 
   return (
-    <VStack gap={4} hAlign="stretch">
+    <VStack gap={4} hAlign="stretch" height="100%">
       <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
         <Heading level={1}>Shipment</Heading>
         <Button
@@ -387,39 +390,41 @@ export function ShipmentsList() {
         width={280}
       />
 
-      <AdvanceTable
-        toolbarLabel="Thao tác danh sách Shipment"
-        searchFieldDefs={SEARCH_FIELD_DEFS}
-        entityLabel="Shipment"
-        contentSearchFieldKey="shipmentCode"
-        searchPlaceholder="Tìm mã, tên lô hàng, số hợp đồng..."
-        filterFieldDefs={FILTER_FIELD_DEFS}
-        advancedFilterConditions={filterConditions}
-        onAdvancedFilterChange={setFilterConditions}
-        columnOptions={COLUMN_OPTIONS}
-        initialColumnKeys={DEFAULT_COLUMN_KEYS}
-        defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-        tableColumns={columnsWithTotalsRow}
-        data={searchableShipments}
-        totalsRows={totalsRows}
-        totalsRowLabel={totalsRowLabel}
-        idKey="id"
-        isLoading={shipmentsQuery.isLoading}
-        skeletonRows={skeletonRows}
-        fixedEndColumnKeys={['actions']}
-        fetchAllRows={fetchAllShipments}
-        onRefresh={() => shipmentsQuery.refetch()}
-        isRefreshing={shipmentsQuery.isFetching}
-        pagination={{
-          pageIndex,
-          pageSize,
-          totalCount: totalShipments,
-          totalPages,
-          onPageIndexChange: setPageIndex,
-          onPageSizeChange: setPageSize,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
-        }}
-      />
+      <StackItem size="fill">
+        <AdvanceTable
+          toolbarLabel="Thao tác danh sách Shipment"
+          searchFieldDefs={SEARCH_FIELD_DEFS}
+          entityLabel="Shipment"
+          contentSearchFieldKey="shipmentCode"
+          searchPlaceholder="Tìm mã, tên lô hàng, số hợp đồng..."
+          filterFieldDefs={FILTER_FIELD_DEFS}
+          advancedFilterConditions={filterConditions}
+          onAdvancedFilterChange={setFilterConditions}
+          columnOptions={COLUMN_OPTIONS}
+          initialColumnKeys={DEFAULT_COLUMN_KEYS}
+          defaultColumnKeys={DEFAULT_COLUMN_KEYS}
+          tableColumns={columnsWithTotalsRow}
+          data={searchableShipments}
+          totalsRows={totalsRows}
+          totalsRowLabel={totalsRowLabel}
+          idKey="id"
+          isLoading={shipmentsQuery.isLoading}
+          skeletonRows={skeletonRows}
+          fixedEndColumnKeys={['actions']}
+          fetchAllRows={fetchAllShipments}
+          onRefresh={() => shipmentsQuery.refetch()}
+          isRefreshing={shipmentsQuery.isFetching}
+          pagination={{
+            pageIndex,
+            pageSize,
+            totalCount: totalShipments,
+            totalPages,
+            onPageIndexChange: setPageIndex,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: PAGE_SIZE_OPTIONS,
+          }}
+        />
+      </StackItem>
 
       {isPickingContract ? (
         <CommonDialog
@@ -461,8 +466,8 @@ export function ShipmentsList() {
                   width="100%"
                 />
                 <Text color="secondary">
-                  Chỉ hợp đồng Chính thức, đã ký bởi cả hai bên và chưa huỷ
-                  mới có thể tạo Shipment mới.
+                  Chỉ hợp đồng Chính thức, đã ký bởi cả hai bên và chưa huỷ mới
+                  có thể tạo Shipment mới.
                 </Text>
               </LayoutContent>
             }

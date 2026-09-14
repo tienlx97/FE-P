@@ -1,4 +1,5 @@
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { PlacesList } from '@/features/logistics-contracts/index.js';
@@ -14,14 +15,16 @@ export const metadata = {
  */
 export default function LogisticsPlacesPage() {
   return (
-    <PageContentShell isFullWidth>
-      <VStack gap={4} hAlign="stretch">
+    <PageContentShell isFullWidth fillHeight>
+      <VStack gap={4} hAlign="stretch" height="100%">
         <Breadcrumbs>
           <BreadcrumbItem href="/logistics">Logistics</BreadcrumbItem>
           <BreadcrumbItem isCurrent>Cảng / Nơi</BreadcrumbItem>
         </Breadcrumbs>
 
-        <PlacesList />
+        <StackItem size="fill">
+          <PlacesList />
+        </StackItem>
       </VStack>
     </PageContentShell>
   );

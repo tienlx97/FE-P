@@ -162,8 +162,20 @@ export const ktxnkTheme = defineTheme({
     // scrolling box sticky needs — the table now scrolls internally,
     // independent of the page, with its own header staying pinned to the
     // top of that scroll box.
+    //
+    // `height: '100%'` (was a flat `maxHeight: '65vh'` guess) so the table
+    // fills whatever real height its ancestor chain gives it —
+    // `AdvanceTable`'s `Layout height="fill"` / `LayoutContent`, itself
+    // filling the page down to the viewport bottom — instead of always
+    // stopping at a fixed fraction of the viewport regardless of how much
+    // room is actually free below it (reported 2026-09-14, referencing
+    // MISA's own report grid: table fills the remaining height, with its
+    // header, totals row, and pagination all pinned). Requires every
+    // ancestor up to that `Layout` to resolve to a real height too — see
+    // `tanstack-data-table.jsx`'s `styles.wrapper` and
+    // `page-content-shell.jsx`'s `fillHeight` prop.
     'table-scroll-wrapper': {
-      base: { maxHeight: '65vh' },
+      base: { height: '100%' },
     },
     // Paint cells as well as the section so pinned headers stay opaque.
     // `position: sticky` goes on the header *cells* (`<th>`), not the

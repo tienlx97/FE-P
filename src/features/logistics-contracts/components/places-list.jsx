@@ -3,6 +3,7 @@
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { proportional } from '@astryxdesign/core/Table';
 import { Heading } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -80,7 +81,7 @@ export function PlacesList() {
   ];
 
   return (
-    <VStack gap={4} hAlign="stretch">
+    <VStack gap={4} hAlign="stretch" height="100%">
       <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
         <Heading level={1}>Cảng / Nơi</Heading>
         <Button
@@ -111,22 +112,24 @@ export function PlacesList() {
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
-      <AdvanceTable
-        toolbarLabel="Thao tác danh sách cảng"
-        searchFieldDefs={SEARCH_FIELD_DEFS}
-        entityLabel="Cảng / Nơi"
-        contentSearchFieldKey="name"
-        searchPlaceholder="Tìm tên cảng..."
-        columnOptions={COLUMN_OPTIONS}
-        tableColumns={columns}
-        data={searchablePlaces}
-        idKey="id"
-        isLoading={placesQuery.isLoading}
-        skeletonRows={skeletonRows}
-        onRefresh={() => placesQuery.refetch()}
-        isRefreshing={placesQuery.isFetching}
-        defaultStickyEnd="none"
-      />
+      <StackItem size="fill">
+        <AdvanceTable
+          toolbarLabel="Thao tác danh sách cảng"
+          searchFieldDefs={SEARCH_FIELD_DEFS}
+          entityLabel="Cảng / Nơi"
+          contentSearchFieldKey="name"
+          searchPlaceholder="Tìm tên cảng..."
+          columnOptions={COLUMN_OPTIONS}
+          tableColumns={columns}
+          data={searchablePlaces}
+          idKey="id"
+          isLoading={placesQuery.isLoading}
+          skeletonRows={skeletonRows}
+          onRefresh={() => placesQuery.refetch()}
+          isRefreshing={placesQuery.isFetching}
+          defaultStickyEnd="none"
+        />
+      </StackItem>
 
       {hasOpenedCreate ? (
         <PlaceFormDialog

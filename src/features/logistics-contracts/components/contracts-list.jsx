@@ -7,6 +7,7 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from '@astryxdesign/core/SegmentedControl';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -268,7 +269,9 @@ export function ContractsList() {
   async function fetchAllContracts() {
     const result = await searchContracts({
       page: 1,
-      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      pageSize: listResult?.success
+        ? Math.max(1, listResult.totalCount)
+        : pageSize,
       conditions: filterConditions,
     });
     return result.success ? result.contracts : [];
@@ -645,7 +648,7 @@ export function ContractsList() {
   const isLoadingContracts = contractsQuery.isLoading;
 
   return (
-    <VStack gap={4} hAlign="stretch">
+    <VStack gap={4} hAlign="stretch" height="100%">
       <HStack hAlign="between" vAlign="start" wrap="wrap" gap={3}>
         <VStack gap={1}>
           <Heading level={1}>Hợp đồng</Heading>
@@ -683,42 +686,44 @@ export function ContractsList() {
         ))}
       </SegmentedControl>
 
-      <AdvanceTable
-        headerGroups={CONTRACT_HEADER_GROUPS}
-        toolbarLabel="Thao tác danh sách hợp đồng"
-        searchFieldDefs={searchFieldDefsWithCustomers}
-        entityLabel="Hợp đồng"
-        contentSearchFieldKey="contractNumber"
-        searchPlaceholder="Tìm số HĐ, dự án..."
-        filterFieldDefs={filterFieldDefsWithCustomers}
-        advancedFilterConditions={filterConditions}
-        onAdvancedFilterChange={setFilterConditions}
-        dividers="grid"
-        columnOptions={COLUMN_OPTIONS}
-        initialColumnKeys={DEFAULT_COLUMN_KEYS}
-        defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-        viewPresets={VIEW_PRESETS}
-        fixedEndColumnKeys={['actions']}
-        tableColumns={columnsWithTotalsRow}
-        data={searchableContracts}
-        totalsRows={totalsRows}
-        totalsRowLabel={totalsRowLabel}
-        idKey="id"
-        isLoading={isLoadingContracts}
-        skeletonRows={skeletonRows}
-        fetchAllRows={fetchAllContracts}
-        onRefresh={() => contractsQuery.refetch()}
-        isRefreshing={contractsQuery.isFetching}
-        pagination={{
-          pageIndex,
-          pageSize,
-          totalCount: totalContracts,
-          totalPages,
-          onPageIndexChange: setPageIndex,
-          onPageSizeChange: setPageSize,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
-        }}
-      />
+      <StackItem size="fill">
+        <AdvanceTable
+          headerGroups={CONTRACT_HEADER_GROUPS}
+          toolbarLabel="Thao tác danh sách hợp đồng"
+          searchFieldDefs={searchFieldDefsWithCustomers}
+          entityLabel="Hợp đồng"
+          contentSearchFieldKey="contractNumber"
+          searchPlaceholder="Tìm số HĐ, dự án..."
+          filterFieldDefs={filterFieldDefsWithCustomers}
+          advancedFilterConditions={filterConditions}
+          onAdvancedFilterChange={setFilterConditions}
+          dividers="grid"
+          columnOptions={COLUMN_OPTIONS}
+          initialColumnKeys={DEFAULT_COLUMN_KEYS}
+          defaultColumnKeys={DEFAULT_COLUMN_KEYS}
+          viewPresets={VIEW_PRESETS}
+          fixedEndColumnKeys={['actions']}
+          tableColumns={columnsWithTotalsRow}
+          data={searchableContracts}
+          totalsRows={totalsRows}
+          totalsRowLabel={totalsRowLabel}
+          idKey="id"
+          isLoading={isLoadingContracts}
+          skeletonRows={skeletonRows}
+          fetchAllRows={fetchAllContracts}
+          onRefresh={() => contractsQuery.refetch()}
+          isRefreshing={contractsQuery.isFetching}
+          pagination={{
+            pageIndex,
+            pageSize,
+            totalCount: totalContracts,
+            totalPages,
+            onPageIndexChange: setPageIndex,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: PAGE_SIZE_OPTIONS,
+          }}
+        />
+      </StackItem>
 
       {workspace ? (
         <ContractFormDialog

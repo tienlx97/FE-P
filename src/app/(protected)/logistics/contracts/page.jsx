@@ -1,4 +1,5 @@
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { ContractsList } from '@/features/logistics-contracts/index.js';
@@ -15,14 +16,16 @@ export const metadata = {
  */
 export default function LogisticsContractsPage() {
   return (
-    <PageContentShell isFullWidth>
-      <VStack gap={4} hAlign="stretch">
+    <PageContentShell isFullWidth fillHeight>
+      <VStack gap={4} hAlign="stretch" height="100%">
         <Breadcrumbs>
           <BreadcrumbItem href="/logistics">Logistics</BreadcrumbItem>
           <BreadcrumbItem isCurrent>Hợp đồng</BreadcrumbItem>
         </Breadcrumbs>
 
-        <ContractsList />
+        <StackItem size="fill">
+          <ContractsList />
+        </StackItem>
       </VStack>
     </PageContentShell>
   );

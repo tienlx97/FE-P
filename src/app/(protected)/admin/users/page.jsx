@@ -1,4 +1,5 @@
-import { BreadcrumbItem,Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { UserList } from '@/features/admin-users/index.js';
@@ -15,14 +16,16 @@ export const metadata = {
  */
 export default function UsersListPage() {
   return (
-    <PageContentShell>
-      <VStack gap={4} hAlign="stretch">
+    <PageContentShell fillHeight>
+      <VStack gap={4} hAlign="stretch" height="100%">
         <Breadcrumbs>
           <BreadcrumbItem href="/admin">Quản trị</BreadcrumbItem>
           <BreadcrumbItem isCurrent>Người dùng</BreadcrumbItem>
         </Breadcrumbs>
 
-        <UserList />
+        <StackItem size="fill">
+          <UserList />
+        </StackItem>
       </VStack>
     </PageContentShell>
   );

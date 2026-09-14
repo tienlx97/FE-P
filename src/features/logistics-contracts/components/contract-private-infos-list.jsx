@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -113,7 +114,9 @@ export function ContractPrivateInfosList() {
   async function fetchAllPrivateInfos() {
     const result = await searchContractPrivateInfos({
       page: 1,
-      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      pageSize: listResult?.success
+        ? Math.max(1, listResult.totalCount)
+        : pageSize,
       conditions: filterConditions,
     });
     return result.success ? result.items : [];
@@ -217,61 +220,66 @@ export function ContractPrivateInfosList() {
   );
 
   const totalItems = listResult?.success ? listResult.totalCount : 0;
-  const totalPages = Math.max(1, listResult?.success ? listResult.totalPages : 1);
+  const totalPages = Math.max(
+    1,
+    listResult?.success ? listResult.totalPages : 1,
+  );
 
   if (!hasLogisticsSecret) {
     return (
       <VStack gap={4} hAlign="stretch">
         <Heading level={1}>BOQ</Heading>
         <Text color="secondary">
-          Bạn không có quyền xem BOQ (cần quyền logistics:secret, cấp riêng
-          cho từng người).
+          Bạn không có quyền xem BOQ (cần quyền logistics:secret, cấp riêng cho
+          từng người).
         </Text>
       </VStack>
     );
   }
 
   return (
-    <VStack gap={4} hAlign="stretch">
+    <VStack gap={4} hAlign="stretch" height="100%">
       <Heading level={1}>BOQ</Heading>
 
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
-      <AdvanceTable
-        toolbarLabel="Thao tác danh sách BOQ"
-        searchFieldDefs={SEARCH_FIELD_DEFS}
-        entityLabel="BOQ"
-        contentSearchFieldKey="contractNumber"
-        searchPlaceholder="Tìm số hợp đồng, dự án..."
-        filterFieldDefs={FILTER_FIELD_DEFS}
-        advancedFilterConditions={filterConditions}
-        onAdvancedFilterChange={setFilterConditions}
-        columnOptions={COLUMN_OPTIONS}
-        initialColumnKeys={DEFAULT_COLUMN_KEYS}
-        defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-        tableColumns={columnsWithTotalsRow}
-        data={items}
-        totalsRows={totalsRows}
-        totalsRowLabel={totalsRowLabel}
-        idKey="contractId"
-        isLoading={privateInfosQuery.isLoading}
-        skeletonRows={skeletonRows}
-        fixedEndColumnKeys={['actions']}
-        fetchAllRows={fetchAllPrivateInfos}
-        onRefresh={() => privateInfosQuery.refetch()}
-        isRefreshing={privateInfosQuery.isFetching}
-        pagination={{
-          pageIndex,
-          pageSize,
-          totalCount: totalItems,
-          totalPages,
-          onPageIndexChange: setPageIndex,
-          onPageSizeChange: setPageSize,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
-        }}
-      />
+      <StackItem size="fill">
+        <AdvanceTable
+          toolbarLabel="Thao tác danh sách BOQ"
+          searchFieldDefs={SEARCH_FIELD_DEFS}
+          entityLabel="BOQ"
+          contentSearchFieldKey="contractNumber"
+          searchPlaceholder="Tìm số hợp đồng, dự án..."
+          filterFieldDefs={FILTER_FIELD_DEFS}
+          advancedFilterConditions={filterConditions}
+          onAdvancedFilterChange={setFilterConditions}
+          columnOptions={COLUMN_OPTIONS}
+          initialColumnKeys={DEFAULT_COLUMN_KEYS}
+          defaultColumnKeys={DEFAULT_COLUMN_KEYS}
+          tableColumns={columnsWithTotalsRow}
+          data={items}
+          totalsRows={totalsRows}
+          totalsRowLabel={totalsRowLabel}
+          idKey="contractId"
+          isLoading={privateInfosQuery.isLoading}
+          skeletonRows={skeletonRows}
+          fixedEndColumnKeys={['actions']}
+          fetchAllRows={fetchAllPrivateInfos}
+          onRefresh={() => privateInfosQuery.refetch()}
+          isRefreshing={privateInfosQuery.isFetching}
+          pagination={{
+            pageIndex,
+            pageSize,
+            totalCount: totalItems,
+            totalPages,
+            onPageIndexChange: setPageIndex,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: PAGE_SIZE_OPTIONS,
+          }}
+        />
+      </StackItem>
 
       {detailDialog ? (
         <ContractPrivateInfoDetailDialog

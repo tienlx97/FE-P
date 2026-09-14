@@ -7,6 +7,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHeader,
   TableHeaderCell,
   TableRow,
@@ -19,7 +20,7 @@ import {
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 import { expandableRowStyles } from '@/shared/components/expandable-row-styles.jsx';
 import { resolveTableSizes } from '@/shared/config/tanstack-table-columns.js';
@@ -38,7 +39,14 @@ const TOTALS_BG = colorVars['--color-background-muted'];
 const TOTALS_HOVER_BG = `color-mix(in srgb, ${colorVars['--color-overlay-hover']}, ${TOTALS_BG})`;
 
 const styles = stylex.create({
-  wrapper: { minWidth: 0 },
+  // `height: '100%'` is what lets this wrapper — and through it, `Table`'s
+  // own internal scroll container (`table-scroll-wrapper`, `theme.js`) —
+  // fill a real, ancestor-provided height (`AdvanceTable`'s `Layout
+  // height="fill"` / `LayoutContent`) instead of the table growing to its
+  // full natural content height and leaving the *page* to scroll. Requires
+  // every ancestor up to that `Layout` to also resolve to a real height —
+  // `100%` of an auto-height ancestor is a no-op.
+  wrapper: { height: '100%', minWidth: 0 },
   // `minWidth` is the real sum of column widths (`resolveTableSizes`,
   // keyed off `availableWidth` — 0 until the wrapper's `ResizeObserver`
   // fires its first callback post-mount), so a table with more columns
@@ -57,6 +65,24 @@ const styles = stylex.create({
     width: '100%',
   }),
   header: { position: 'sticky', top: 0, zIndex: 3 },
+  // Mirrors `header` above (same mechanism, opposite edge): totals row(s)
+  // live in a real `<tfoot>` — not mixed into `<tbody>` behind a fixed-
+  // position overlay duplicate, the earlier approach — because `position:
+  // sticky` on a table section works exactly the same at the bottom as it
+  // does at the top, once the table actually has a `<tfoot>` to put it on
+  // (previously it didn't; see the removed `TableStickyTotalsBar`, whose
+  // own doc comment explains why that workaround existed). This also keeps
+  // the totals row scrolling horizontally in lockstep with the body — the
+  // fixed-position overlay had to remeasure and reposition itself on every
+  // scroll/resize to fake that.
+  footer: {
+    borderBlockStartColor: colorVars['--color-border'],
+    borderBlockStartStyle: 'solid',
+    borderBlockStartWidth: borderVars['--border-width'],
+    bottom: 0,
+    position: 'sticky',
+    zIndex: 3,
+  },
   // Column-separator border between header cells (both the group row and
   // the leaf row) — the header previously only had the bottom divider
   // separating it from the body, with no vertical rule between columns.
@@ -140,20 +166,55 @@ export function TanStackDataTable({
   emptyState,
 }) {
   'use no memo';
-  const wrapperRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const [availableWidth, setAvailableWidth] = useState(0);
   const [hoveredRowId, setHoveredRowId] = useState(
     /** @type {string | null} */ (null),
   );
+  // Measured off the real scrolling element (the `<Table>`'s own internal
+  // overflow wrapper, reached via `transformScrollWrapper` — the same hook
+  // `useTableStickyColumns` uses for its scroll-shadow ref), not an
+  // ancestor of it. An ancestor's own box never shrinks when ITS
+  // *descendant* grows a scrollbar — only the scrolling element's own
+  // content box does — so measuring one level too high missed the ~15px a
+  // vertical scrollbar carves out of the horizontal space once a tall
+  // result set (many rows, filling the full height `theme.js`'s
+  // `table-scroll-wrapper` now gives this wrapper) triggers one. That
+  // stale-too-wide
+  // `availableWidth` then forced a spurious *horizontal* scrollbar too,
+  // even on a narrow-column table with no real horizontal overflow
+  // (reported 2026-09-13: "hợp đồng có vài column mà vẫn bị [scroll] show").
+  const [scrollElement, setScrollElement] = useState(
+    /** @type {HTMLDivElement | null} */ (null),
+  );
+  const measureScrollWidthPlugin = useMemo(
+    () => ({
+      transformScrollWrapper(
+        /** @type {import('@astryxdesign/core/Table').ScrollWrapperRenderProps} */ props,
+      ) {
+        const existingRef = props.htmlProps.ref;
+        return {
+          ...props,
+          htmlProps: {
+            ...props.htmlProps,
+            ref: (/** @type {HTMLDivElement | null} */ node) => {
+              setScrollElement(node);
+              if (typeof existingRef === 'function') existingRef(node);
+              else if (existingRef) existingRef.current = node;
+            },
+          },
+        };
+      },
+    }),
+    [],
+  );
   useEffect(() => {
-    const element = wrapperRef.current;
-    if (!element) return;
+    if (!scrollElement) return;
     const observer = new ResizeObserver(([entry]) =>
       setAvailableWidth(entry.contentRect.width),
     );
-    observer.observe(element);
+    observer.observe(scrollElement);
     return () => observer.disconnect();
-  }, []);
+  }, [scrollElement]);
   // The expansion chevron is a synthetic leading column, not part of the
   // caller's own column list, so it's always visible and pinned first.
   const expansionColumn = rowExpansion
@@ -300,14 +361,25 @@ export function TanStackDataTable({
       ...(table.getRightHeaderGroups()[index]?.headers ?? []),
     ],
   }));
+  // Totals row(s) render in a real `<tfoot>` (below), not here — split them
+  // out of TanStack's row model rather than filtering `data` upstream, so
+  // every existing caller (which appends `totalsRows` into the same `data`
+  // array `AdvanceTable` passes down) keeps working unchanged.
+  const bodyRows = table
+    .getRowModel()
+    .rows.filter((row) => !(/** @type {any} */ (row.original).__isTotalsRow));
+  const footerRows = table
+    .getRowModel()
+    .rows.filter((row) => /** @type {any} */ (row.original).__isTotalsRow);
   const content = (
-    <div ref={wrapperRef} {...stylex.props(styles.wrapper)}>
+    <div {...stylex.props(styles.wrapper)}>
       <Table
         density={density}
         dividers={dividers}
         xstyle={styles.table(table.getTotalSize())}
         aria-label="Danh sách hợp đồng"
         data-table-engine="tanstack"
+        plugins={{ measureScrollWidth: measureScrollWidthPlugin }}
       >
         <colgroup>
           {table.getVisibleLeafColumns().map((column) => (
@@ -388,12 +460,12 @@ export function TanStackDataTable({
           ))}
         </TableHeader>
         <TableBody>
-          {table.getRowModel().rows.map((row) => {
+          {bodyRows.map((row) => {
             const isExpandable = Boolean(
               rowExpansion &&
-                (rowExpansion.isExpandable
-                  ? rowExpansion.isExpandable(row.original)
-                  : true),
+              (rowExpansion.isExpandable
+                ? rowExpansion.isExpandable(row.original)
+                : true),
             );
             const expansionKey =
               rowExpansion && isExpandable
@@ -401,32 +473,16 @@ export function TanStackDataTable({
                 : undefined;
             const isExpanded = Boolean(
               rowExpansion &&
-                expansionKey &&
-                rowExpansion.expandedIds.has(expansionKey),
+              expansionKey &&
+              rowExpansion.expandedIds.has(expansionKey),
             );
             const isRowHovered = hoveredRowId === row.id;
-            const isTotalsRow = Boolean(
-              /** @type {any} */ (row.original).__isTotalsRow,
-            );
-            const rowBg = isTotalsRow
-              ? isRowHovered
-                ? TOTALS_HOVER_BG
-                : TOTALS_BG
-              : isRowHovered
-                ? CARD_HOVER_BG
-                : CARD_BG;
+            const rowBg = isRowHovered ? CARD_HOVER_BG : CARD_BG;
             return (
               <Fragment key={row.id}>
                 <TableRow
-                  data-is-totals-row={isTotalsRow ? 'true' : undefined}
                   xstyle={[
-                    isTotalsRow
-                      ? isRowHovered
-                        ? styles.totalsRowHovered
-                        : styles.totalsRow
-                      : isRowHovered
-                        ? styles.rowHovered
-                        : styles.row,
+                    isRowHovered ? styles.rowHovered : styles.row,
                     isExpandable && expandableRowStyles.clickableRow,
                     isExpanded && expandableRowStyles.expandedRow,
                   ]}
@@ -501,7 +557,7 @@ export function TanStackDataTable({
               </Fragment>
             );
           })}
-          {!data.some((row) => !row.__isTotalsRow) && emptyState ? (
+          {bodyRows.length === 0 && emptyState ? (
             <TableRow>
               <TableCell colSpan={table.getVisibleLeafColumns().length}>
                 {emptyState}
@@ -509,6 +565,56 @@ export function TanStackDataTable({
             </TableRow>
           ) : null}
         </TableBody>
+        {footerRows.length > 0 ? (
+          <TableFooter xstyle={styles.footer}>
+            {footerRows.map((row) => {
+              const isRowHovered = hoveredRowId === row.id;
+              const rowBg = isRowHovered ? TOTALS_HOVER_BG : TOTALS_BG;
+              return (
+                <TableRow
+                  key={row.id}
+                  data-is-totals-row="true"
+                  xstyle={[
+                    isRowHovered ? styles.totalsRowHovered : styles.totalsRow,
+                  ]}
+                  onMouseEnter={() => setHoveredRowId(row.id)}
+                  onMouseLeave={() =>
+                    setHoveredRowId((current) =>
+                      current === row.id ? null : current,
+                    )
+                  }
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const source =
+                      /** @type {{source: import('./advance-table.jsx').AdvanceTableColumn<T>}} */ (
+                        cell.column.columnDef.meta
+                      ).source;
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        data-column-key={cell.column.id}
+                        xstyle={[
+                          styles.align(source.align ?? 'start'),
+                          pinStyle(cell.column),
+                        ]}
+                        style={
+                          cell.column.getIsPinned()
+                            ? { backgroundColor: rowBg }
+                            : undefined
+                        }
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              );
+            })}
+          </TableFooter>
+        ) : null}
       </Table>
     </div>
   );

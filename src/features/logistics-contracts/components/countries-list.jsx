@@ -2,6 +2,7 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { proportional } from '@astryxdesign/core/Table';
 import { Heading } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -49,7 +50,7 @@ export function CountriesList() {
   ];
 
   return (
-    <VStack gap={4} hAlign="stretch">
+    <VStack gap={4} hAlign="stretch" height="100%">
       <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
         <Heading level={1}>Nước xuất khẩu</Heading>
         <Button
@@ -66,22 +67,24 @@ export function CountriesList() {
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
-      <AdvanceTable
-        toolbarLabel="Thao tác danh sách nước"
-        searchFieldDefs={SEARCH_FIELD_DEFS}
-        entityLabel="Nước"
-        contentSearchFieldKey="name"
-        searchPlaceholder="Tìm tên nước..."
-        columnOptions={COLUMN_OPTIONS}
-        tableColumns={columns}
-        data={countries}
-        idKey="id"
-        isLoading={countriesQuery.isLoading}
-        skeletonRows={skeletonRows}
-        onRefresh={() => countriesQuery.refetch()}
-        isRefreshing={countriesQuery.isFetching}
-        defaultStickyEnd="none"
-      />
+      <StackItem size="fill">
+        <AdvanceTable
+          toolbarLabel="Thao tác danh sách nước"
+          searchFieldDefs={SEARCH_FIELD_DEFS}
+          entityLabel="Nước"
+          contentSearchFieldKey="name"
+          searchPlaceholder="Tìm tên nước..."
+          columnOptions={COLUMN_OPTIONS}
+          tableColumns={columns}
+          data={countries}
+          idKey="id"
+          isLoading={countriesQuery.isLoading}
+          skeletonRows={skeletonRows}
+          onRefresh={() => countriesQuery.refetch()}
+          isRefreshing={countriesQuery.isFetching}
+          defaultStickyEnd="none"
+        />
+      </StackItem>
 
       {hasOpenedCreate ? (
         <CountryFormDialog

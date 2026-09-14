@@ -16,6 +16,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -223,7 +224,9 @@ export function CommissionsList() {
   async function fetchAllCommissions() {
     const result = await searchCommissions({
       page: 1,
-      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      pageSize: listResult?.success
+        ? Math.max(1, listResult.totalCount)
+        : pageSize,
       conditions: filterConditions,
     });
     return result.success ? enrichCommissions(result.commissions) : [];
@@ -348,7 +351,7 @@ export function CommissionsList() {
     editingCommissionRow;
 
   return (
-    <VStack gap={4} hAlign="stretch">
+    <VStack gap={4} hAlign="stretch" height="100%">
       <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
         <Heading level={1}>Commission</Heading>
         <Button
@@ -363,39 +366,41 @@ export function CommissionsList() {
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
-      <AdvanceTable
-        toolbarLabel="Thao tác danh sách Commission"
-        searchFieldDefs={SEARCH_FIELD_DEFS}
-        entityLabel="Commission"
-        contentSearchFieldKey="code"
-        searchPlaceholder="Tìm mã, số hợp đồng..."
-        filterFieldDefs={FILTER_FIELD_DEFS}
-        advancedFilterConditions={filterConditions}
-        onAdvancedFilterChange={setFilterConditions}
-        columnOptions={COLUMN_OPTIONS}
-        initialColumnKeys={DEFAULT_COLUMN_KEYS}
-        defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-        tableColumns={columnsWithTotalsRow}
-        data={searchableCommissions}
-        totalsRows={totalsRows}
-        totalsRowLabel={totalsRowLabel}
-        idKey="id"
-        isLoading={commissionsQuery.isLoading}
-        skeletonRows={skeletonRows}
-        fixedEndColumnKeys={['actions']}
-        fetchAllRows={fetchAllCommissions}
-        onRefresh={() => commissionsQuery.refetch()}
-        isRefreshing={commissionsQuery.isFetching}
-        pagination={{
-          pageIndex,
-          pageSize,
-          totalCount: totalCommissions,
-          totalPages,
-          onPageIndexChange: setPageIndex,
-          onPageSizeChange: setPageSize,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
-        }}
-      />
+      <StackItem size="fill">
+        <AdvanceTable
+          toolbarLabel="Thao tác danh sách Commission"
+          searchFieldDefs={SEARCH_FIELD_DEFS}
+          entityLabel="Commission"
+          contentSearchFieldKey="code"
+          searchPlaceholder="Tìm mã, số hợp đồng..."
+          filterFieldDefs={FILTER_FIELD_DEFS}
+          advancedFilterConditions={filterConditions}
+          onAdvancedFilterChange={setFilterConditions}
+          columnOptions={COLUMN_OPTIONS}
+          initialColumnKeys={DEFAULT_COLUMN_KEYS}
+          defaultColumnKeys={DEFAULT_COLUMN_KEYS}
+          tableColumns={columnsWithTotalsRow}
+          data={searchableCommissions}
+          totalsRows={totalsRows}
+          totalsRowLabel={totalsRowLabel}
+          idKey="id"
+          isLoading={commissionsQuery.isLoading}
+          skeletonRows={skeletonRows}
+          fixedEndColumnKeys={['actions']}
+          fetchAllRows={fetchAllCommissions}
+          onRefresh={() => commissionsQuery.refetch()}
+          isRefreshing={commissionsQuery.isFetching}
+          pagination={{
+            pageIndex,
+            pageSize,
+            totalCount: totalCommissions,
+            totalPages,
+            onPageIndexChange: setPageIndex,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: PAGE_SIZE_OPTIONS,
+          }}
+        />
+      </StackItem>
 
       {/* Keep record and related dialogs outside the table DOM (ADR-0004). */}
 

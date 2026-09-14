@@ -3,6 +3,7 @@
 import { Avatar } from '@astryxdesign/core/Avatar';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { HStack } from '@astryxdesign/core/HStack';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -117,9 +118,10 @@ export function UserList() {
     value: company.id,
     label: company.name,
   }));
-  const departmentOptions = (departmentsQuery.data ?? []).map(
-    (department) => ({ value: department.id, label: department.name }),
-  );
+  const departmentOptions = (departmentsQuery.data ?? []).map((department) => ({
+    value: department.id,
+    label: department.name,
+  }));
   const companyNameById = toNameById(companiesQuery.data ?? []);
   const departmentNameById = toNameById(departmentsQuery.data ?? []);
   const positionNameById = toNameById(positionsQuery.data ?? []);
@@ -227,9 +229,12 @@ export function UserList() {
       setExpandedUserId((current) => (current === userId ? null : userId)),
     getRowKey: (/** @type {import('../types/index.js').UserListItem} */ user) =>
       user.id,
-    isExpandable: (/** @type {import('../types/index.js').UserListItem} */ user) =>
-      !user.id.startsWith('skeleton-'),
-    renderExpanded: (/** @type {import('../types/index.js').UserListItem} */ user) => (
+    isExpandable: (
+      /** @type {import('../types/index.js').UserListItem} */ user,
+    ) => !user.id.startsWith('skeleton-'),
+    renderExpanded: (
+      /** @type {import('../types/index.js').UserListItem} */ user,
+    ) => (
       <UserExpandedDetails
         user={user}
         onEdit={setEditingUser}
@@ -261,7 +266,9 @@ export function UserList() {
   async function fetchAllUsers() {
     const result = await listUsers({
       page: 1,
-      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      pageSize: listResult?.success
+        ? Math.max(1, listResult.totalCount)
+        : pageSize,
     });
     return result.success ? enrichUsers(result.users) : [];
   }
@@ -273,7 +280,7 @@ export function UserList() {
   );
 
   return (
-    <VStack gap={4} hAlign="stretch">
+    <VStack gap={4} hAlign="stretch" height="100%">
       <VStack gap={1}>
         <Heading level={1}>Người dùng</Heading>
         <Text color="secondary">
@@ -285,41 +292,43 @@ export function UserList() {
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
-      <AdvanceTable
-        toolbarLabel="Thao tác danh sách người dùng"
-        searchFieldDefs={searchFieldDefs}
-        entityLabel="Người dùng"
-        contentSearchFieldKey="fullName"
-        searchPlaceholder="Tìm tên, CCCD..."
-        columnOptions={COLUMN_OPTIONS}
-        initialColumnKeys={ALL_COLUMN_KEYS}
-        defaultColumnKeys={ALL_COLUMN_KEYS}
-        tableColumns={columns}
-        data={searchableUsers}
-        idKey="id"
-        isLoading={usersQuery.isLoading}
-        skeletonRows={skeletonRows}
-        rowExpansion={rowExpansion}
-        primaryAction={{
-          label: 'Thêm',
-          onClick: () => {
-            setHasOpenedCreate(true);
-            setIsCreateOpen(true);
-          },
-        }}
-        fetchAllRows={fetchAllUsers}
-        onRefresh={() => usersQuery.refetch()}
-        isRefreshing={usersQuery.isFetching}
-        pagination={{
-          pageIndex,
-          pageSize,
-          totalCount: totalUsers,
-          totalPages,
-          onPageIndexChange: setPageIndex,
-          onPageSizeChange: setPageSize,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
-        }}
-      />
+      <StackItem size="fill">
+        <AdvanceTable
+          toolbarLabel="Thao tác danh sách người dùng"
+          searchFieldDefs={searchFieldDefs}
+          entityLabel="Người dùng"
+          contentSearchFieldKey="fullName"
+          searchPlaceholder="Tìm tên, CCCD..."
+          columnOptions={COLUMN_OPTIONS}
+          initialColumnKeys={ALL_COLUMN_KEYS}
+          defaultColumnKeys={ALL_COLUMN_KEYS}
+          tableColumns={columns}
+          data={searchableUsers}
+          idKey="id"
+          isLoading={usersQuery.isLoading}
+          skeletonRows={skeletonRows}
+          rowExpansion={rowExpansion}
+          primaryAction={{
+            label: 'Thêm',
+            onClick: () => {
+              setHasOpenedCreate(true);
+              setIsCreateOpen(true);
+            },
+          }}
+          fetchAllRows={fetchAllUsers}
+          onRefresh={() => usersQuery.refetch()}
+          isRefreshing={usersQuery.isFetching}
+          pagination={{
+            pageIndex,
+            pageSize,
+            totalCount: totalUsers,
+            totalPages,
+            onPageIndexChange: setPageIndex,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: PAGE_SIZE_OPTIONS,
+          }}
+        />
+      </StackItem>
 
       {hasOpenedCreate ? (
         // No `onSuccess` here (unlike the edit dialog below): closing

@@ -4,6 +4,7 @@ import { Divider } from '@astryxdesign/core/Divider';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { MetadataList } from '@astryxdesign/core/MetadataList';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -67,7 +68,8 @@ function printCustomer(customer) {
     ['Chức vụ', orDash(customer.representativeTitle)],
     ['Địa chỉ', orDash(customer.address)],
     ...customer.extraFields.map(
-      (field) => /** @type {[string, string]} */ ([field.key, orDash(field.value)]),
+      (field) =>
+        /** @type {[string, string]} */ ([field.key, orDash(field.value)]),
     ),
   ];
   printWindow.document.write(`<!doctype html>
@@ -219,7 +221,9 @@ export function CustomersList() {
   async function fetchAllCustomers() {
     const result = await searchCustomers({
       page: 1,
-      pageSize: listResult?.success ? Math.max(1, listResult.totalCount) : pageSize,
+      pageSize: listResult?.success
+        ? Math.max(1, listResult.totalCount)
+        : pageSize,
       conditions: filterConditions,
     });
     return result.success ? enrichCustomers(result.customers) : [];
@@ -280,9 +284,12 @@ export function CustomersList() {
       ),
     getRowKey: (/** @type {import('../types/index.js').Customer} */ customer) =>
       customer.id,
-    isExpandable: (/** @type {import('../types/index.js').Customer} */ customer) =>
-      !customer.id.startsWith('skeleton-'),
-    renderExpanded: (/** @type {import('../types/index.js').Customer} */ customer) => (
+    isExpandable: (
+      /** @type {import('../types/index.js').Customer} */ customer,
+    ) => !customer.id.startsWith('skeleton-'),
+    renderExpanded: (
+      /** @type {import('../types/index.js').Customer} */ customer,
+    ) => (
       <CustomerExpandedDetails
         customer={customer}
         onEdit={() => setEditingCustomer(customer)}
@@ -291,7 +298,7 @@ export function CustomersList() {
   };
 
   return (
-    <VStack gap={4} hAlign="stretch">
+    <VStack gap={4} hAlign="stretch" height="100%">
       <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
         <Heading level={1}>Khách hàng</Heading>
         <Button
@@ -308,36 +315,38 @@ export function CustomersList() {
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
-      <AdvanceTable
-        toolbarLabel="Thao tác danh sách khách hàng"
-        searchFieldDefs={SEARCH_FIELD_DEFS}
-        entityLabel="Khách hàng"
-        contentSearchFieldKey="companyName"
-        searchPlaceholder="Tìm công ty, địa chỉ..."
-        filterFieldDefs={FILTER_FIELD_DEFS}
-        advancedFilterConditions={filterConditions}
-        onAdvancedFilterChange={setFilterConditions}
-        columnOptions={COLUMN_OPTIONS}
-        tableColumns={columns}
-        data={searchableCustomers}
-        idKey="id"
-        isLoading={customersQuery.isLoading}
-        skeletonRows={skeletonRows}
-        rowExpansion={rowExpansion}
-        fetchAllRows={fetchAllCustomers}
-        onRefresh={() => customersQuery.refetch()}
-        isRefreshing={customersQuery.isFetching}
-        defaultStickyEnd="none"
-        pagination={{
-          pageIndex,
-          pageSize,
-          totalCount: totalCustomers,
-          totalPages,
-          onPageIndexChange: setPageIndex,
-          onPageSizeChange: setPageSize,
-          pageSizeOptions: PAGE_SIZE_OPTIONS,
-        }}
-      />
+      <StackItem size="fill">
+        <AdvanceTable
+          toolbarLabel="Thao tác danh sách khách hàng"
+          searchFieldDefs={SEARCH_FIELD_DEFS}
+          entityLabel="Khách hàng"
+          contentSearchFieldKey="companyName"
+          searchPlaceholder="Tìm công ty, địa chỉ..."
+          filterFieldDefs={FILTER_FIELD_DEFS}
+          advancedFilterConditions={filterConditions}
+          onAdvancedFilterChange={setFilterConditions}
+          columnOptions={COLUMN_OPTIONS}
+          tableColumns={columns}
+          data={searchableCustomers}
+          idKey="id"
+          isLoading={customersQuery.isLoading}
+          skeletonRows={skeletonRows}
+          rowExpansion={rowExpansion}
+          fetchAllRows={fetchAllCustomers}
+          onRefresh={() => customersQuery.refetch()}
+          isRefreshing={customersQuery.isFetching}
+          defaultStickyEnd="none"
+          pagination={{
+            pageIndex,
+            pageSize,
+            totalCount: totalCustomers,
+            totalPages,
+            onPageIndexChange: setPageIndex,
+            onPageSizeChange: setPageSize,
+            pageSizeOptions: PAGE_SIZE_OPTIONS,
+          }}
+        />
+      </StackItem>
 
       {hasOpenedCreate ? (
         <CustomerFormDialog
