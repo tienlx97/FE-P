@@ -10,6 +10,7 @@
  *   supplierName: string,
  * }} ShipmentListRow
  */
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
@@ -32,6 +33,7 @@ import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { searchAllShipments } from '../api/shipments.js';
 import { formatMoney } from '../config/currencies.js';
@@ -57,6 +59,7 @@ import {
 } from '../config/shipments-table.js';
 import { useContractsQuery } from '../hooks/use-contracts-query.js';
 import { useShipmentsListQuery } from '../hooks/use-shipments-list-query.js';
+import { useDeleteShipmentMutation } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
@@ -138,6 +141,13 @@ export function ShipmentsList() {
       null
     ),
   );
+  const [deletingShipment, setDeletingShipment] = useState(
+    /** @type {ShipmentListRow | null} */ (null),
+  );
+  const toast = useAppToast();
+  const deleteMutation = useDeleteShipmentMutation(
+    deletingShipment?.contractId ?? '',
+  );
   const shipmentsQuery = useShipmentsListQuery({
     page: pageIndex,
     pageSize,
@@ -185,7 +195,10 @@ export function ShipmentsList() {
     () =>
       new Map(
         (customersQuery.data?.success ? customersQuery.data.suppliers : []).map(
-          (/** @type {import('../types/index.js').Supplier} */ customer) => [customer.id, customer],
+          (/** @type {import('../types/index.js').Supplier} */ customer) => [
+            customer.id,
+            customer,
+          ],
         ),
       ),
     [customersQuery.data],
@@ -232,6 +245,25 @@ export function ShipmentsList() {
       contract: contractsById.get(row.contractId),
       shipment: row,
     });
+  }
+
+  async function handleConfirmDelete() {
+    if (!deletingShipment) return;
+    const shipment = deletingShipment;
+    const result = await deleteMutation.mutateAsync(shipment.id);
+    setDeletingShipment(null);
+
+    if (result.success) {
+      setShipmentDialog((current) =>
+        current?.shipment?.id === shipment.id ? null : current,
+      );
+      if (shipments.length === 1 && pageIndex > 1) {
+        setPageIndex((current) => current - 1);
+      }
+      toast({ body: `Đã xoá Shipment "${shipment.shipmentCode}".` });
+    } else {
+      toast({ body: result.message, type: 'error' });
+    }
   }
 
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<ShipmentListRow>[]} */
@@ -355,7 +387,10 @@ export function ShipmentsList() {
       renderCell: (row) =>
         `${formatMoney(row.costTotalsByCategory.reduce((sum, total) => sum + total.totalAmount, 0))} đ`,
       exportValue: (row) =>
-        row.costTotalsByCategory.reduce((sum, total) => sum + total.totalAmount, 0),
+        row.costTotalsByCategory.reduce(
+          (sum, total) => sum + total.totalAmount,
+          0,
+        ),
     },
     {
       key: 'vgm',
@@ -373,6 +408,7 @@ export function ShipmentsList() {
         <RecordActionsMenu
           onView={() => openShipment(row, 'view')}
           onEdit={() => openShipment(row, 'edit')}
+          onDelete={() => setDeletingShipment(row)}
         />
       ),
     },
@@ -558,6 +594,18 @@ export function ShipmentsList() {
           }
         />
       ) : null}
+
+      <AlertDialog
+        isOpen={deletingShipment != null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setDeletingShipment(null);
+        }}
+        title={`Xoá Shipment "${deletingShipment?.shipmentCode ?? ''}"?`}
+        description="Toàn bộ chi phí Logistics và bản ghi VGM thuộc Shipment cũng sẽ bị xoá. Hành động này không thể hoàn tác."
+        actionLabel="Xoá"
+        isActionLoading={deleteMutation.isPending}
+        onAction={handleConfirmDelete}
+      />
     </VStack>
   );
 }

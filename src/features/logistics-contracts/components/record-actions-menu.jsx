@@ -1,6 +1,9 @@
 'use client';
 
-import { DropdownMenu, DropdownMenuItem } from '@astryxdesign/core/DropdownMenu';
+import {
+  DropdownMenu,
+  DropdownMenuItem,
+} from '@astryxdesign/core/DropdownMenu';
 import { HStack } from '@astryxdesign/core/HStack';
 import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import * as stylex from '@stylexjs/stylex';
@@ -25,8 +28,8 @@ const styles = stylex.create({
   },
 });
 
-/** @param {{ onView: () => void, onEdit: () => void }} props */
-export function RecordActionsMenu({ onView, onEdit }) {
+/** @param {{ onView: () => void, onEdit: () => void, onDelete?: () => void }} props */
+export function RecordActionsMenu({ onView, onEdit, onDelete }) {
   return (
     <HStack
       width="100%"
@@ -43,8 +46,23 @@ export function RecordActionsMenu({ onView, onEdit }) {
         }}
         alignment="end"
       >
-        <DropdownMenuItem label="Xem" onClick={onView} xstyle={styles.greenHover} />
-        <DropdownMenuItem label="Sửa" onClick={onEdit} xstyle={styles.greenHover} />
+        <DropdownMenuItem
+          label="Xem"
+          onClick={onView}
+          xstyle={styles.greenHover}
+        />
+        <DropdownMenuItem
+          label="Sửa"
+          onClick={onEdit}
+          xstyle={styles.greenHover}
+        />
+        {onDelete ? (
+          <DropdownMenuItem
+            label="Xoá"
+            onClick={onDelete}
+            xstyle={styles.greenHover}
+          />
+        ) : null}
       </DropdownMenu>
     </HStack>
   );

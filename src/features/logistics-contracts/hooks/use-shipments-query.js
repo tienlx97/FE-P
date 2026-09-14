@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   createShipment,
+  deleteShipment,
   listShipments,
   updateShipment,
 } from '../api/shipments.js';
@@ -68,6 +69,34 @@ export function useUpdateShipmentMutation(contractId) {
     ) => updateShipment(contractId, shipmentId, values, costLines, version),
     onSuccess: (result) => {
       if (result.success || result.conflict) {
+        return Promise.all([
+          queryClient.invalidateQueries({ queryKey: queryKey(contractId) }),
+          queryClient.invalidateQueries({
+            queryKey: ['logistics-contracts', 'shipments-list'],
+          }),
+        ]);
+      }
+    },
+  });
+}
+
+/** @param {string} contractId */
+export function useDeleteShipmentMutation(contractId) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (/** @type {string} */ shipmentId) =>
+      deleteShipment(contractId, shipmentId),
+    onSuccess: (result, shipmentId) => {
+      if (result.success) {
+        queryClient.removeQueries({
+          queryKey: [
+            'logistics-contracts',
+            'shipment-vgms',
+            contractId,
+            shipmentId,
+          ],
+        });
         return Promise.all([
           queryClient.invalidateQueries({ queryKey: queryKey(contractId) }),
           queryClient.invalidateQueries({

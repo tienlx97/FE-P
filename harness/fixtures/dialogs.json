@@ -66,6 +66,8 @@
     "quantityUnit": "Package",
     "declarationWeightKg": 100,
     "costs": [],
+    "costTotalsByCategory": [],
+    "vgmCount": 1,
     "vgms": [
       {
         "id": "vgm-1",

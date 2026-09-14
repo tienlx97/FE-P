@@ -10386,4 +10386,77 @@ ward reference data (free-text inputs, matching the backend).
   Selector, in place, subtotal unaffected — no reposition, no console
   errors. Discarded the test edit via "Hủy" → "Bỏ thay đổi".
 - Full `./harness/verify.sh` PASSED: `harness/runs/20260914-132832-15436/`.
+
+## 2026-09-14 (continued) — `add-delete-shipment`: task 1 done
+
+- Continuation of a Codex session that hit its usage limit mid-debug. By
+  the time I picked this up, the implementation itself was already
+  complete and correct: `deleteShipment()` API adapter
+  (`api/shipments.js`), `useDeleteShipmentMutation` (invalidates both the
+  per-contract and system-wide shipments-list caches, removes the
+  shipment's own VGM query), `RecordActionsMenu`'s new optional `onDelete`
+  prop, and `ShipmentsList`'s `AlertDialog` confirmation + success/error
+  toast — all matched what `shipments-list.jsx`'s existing patterns already
+  did elsewhere. `shipments.test.js` (unit, DELETE URL/method) already
+  existed and passed. Codex was stuck specifically on the new
+  `harness/checks/shipment-delete-browser.mjs` visual check, which kept
+  timing out waiting for the "Xoá" confirmation dialog to open.
+- **Root cause (not a UI bug — the check script's `evaluate()` helper was
+  broken):** every other `*-browser.mjs` check's `evaluate(code)` wraps
+  `code` as a bare statement block, `` `{ ${code} }` ``, which
+  `agent-browser eval` runs via CDP `Runtime.evaluate` and returns the
+  block's completion value (same semantics as pasting code into the
+  DevTools console). `shipment-delete-browser.mjs` instead wrapped code as
+  `` `(${code})` `` with call sites written as arrow-function expressions
+  (`` `()=>{...; return true}` ``, one `async`) — that just *references* the
+  function without invoking it, so every `evaluate()` call in the file —
+  installing the `window.fetch` delete-mock, clicking "Xoá" in the row
+  menu, clicking "Xoá" in the confirmation dialog — was a silent no-op.
+  Confirmed by reproducing outside the script: the same code wrapped as an
+  IIFE (`...})()`) worked every time; wrapped as a bare `(fn)` it always
+  returned `{}` (a function object has no own enumerable properties) and
+  never ran. Codex's mid-session fix attempt (dispatching synthetic
+  `pointerdown/mousedown/pointerup/mouseup/click` instead of `.click()`)
+  was chasing a symptom of a different, unrelated hypothesis — the real
+  bug meant no click of any kind was ever reaching the page.
+  - Fixed by switching the helper to the same `` `{ ${code} }` `` block
+    convention as every other check in `harness/checks/*-browser.mjs`, and
+    rewriting all five call sites as plain statement sequences (dropping
+    the arrow-function wrapper, `async`, and the synthetic pointer-event
+    dispatch — a plain `.click()` was always fine once actually invoked).
+  - `logistics-actions-browser.mjs`'s own `menu()` helper had already been
+    correctly reworked in the same in-progress session (this file already
+    used the right `{ ${code} }` convention) to click by direct DOM query
+    instead of the old `data-menu-click` attribute-and-separate-click
+    round-trip, and to accept an `expectedLabels` param so it can assert
+    `Xem,Sửa,Xoá` — needed once "Xoá" became a third row-menu action.
+- `shipment-delete-browser.mjs` PASSES end-to-end after the fix: opens the
+  row menu (asserts exactly Xem/Sửa/Xoá), clicks "Xoá", asserts the
+  confirmation dialog's dependent-data warning text, screenshots it
+  (`harness/runs/shipment-delete-browser/shipment-delete-confirmation.png`),
+  confirms the click sends exactly one contract-scoped `DELETE`, the dialog
+  closes, the row disappears from the table, and the
+  `Đã xoá Shipment "LCL-001".` toast appears.
+- `logistics-actions-browser.mjs`'s own appended Xoá section (menu assert,
+  confirmation text, geometry, DELETE via its `window.auditWrites`
+  instrumentation) verified correct in isolation (a trimmed scratch replica
+  of just that section, same helpers, passed cleanly). Did **not** get the
+  complete file to a clean end-to-end run — it hits two failures earlier in
+  its Shipment-view flow that are both pre-existing and unrelated to this
+  change (neither touches any file this session modified):
+  (1) the Shipment view dialog's date-input comboboxes (`Ngày booking` and
+  the four other `Chọn ngày` fields, including `CustomsDeclarationDate`
+  added 2026-09-12) aren't marked read-only/disabled in view mode, tripping
+  the `'Shipment view exposes no editable parent fields'` assertion;
+  (2) the VGM-tab flow (`browser('focus', '[role=tab]...'); browser('press',
+  'Enter')` then an unsaved-changes dialog close) timed out waiting for the
+  dialog to close. Neither investigated further — out of scope for this
+  change; flagging here rather than leaving a silent gap.
+- `pnpm lint`/`typecheck`/`structure`/`test` (144 tests) all clean. This
+  repo's `verify.sh` doesn't run browser checks automatically (no `e2e`
+  step wired in) — they're run manually, as done here.
+- Marked task 1 done in this change's `tasks.md` (and both tasks in the BE
+  repo's own `add-delete-shipment/tasks.md` — see its `harness/PROGRESS.md`
+  for the BE-side entry). No commit made in either repo — user has not
+  asked for one yet.
 - Nothing outstanding from this round.

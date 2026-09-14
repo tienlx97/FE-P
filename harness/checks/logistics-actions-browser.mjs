@@ -2,6 +2,7 @@
 // API calls are all mocked; this suite never writes a real business record.
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 const session = 'logistics-actions';
 const origin = process.env.DIALOG_TEST_ORIGIN || 'http://localhost:3000';
@@ -14,8 +15,15 @@ const { contract, shipment, user, customer } = JSON.parse(
 );
 const log = [];
 function browser(...args) {
+  const executable =
+    process.platform === 'win32'
+      ? join(
+          process.env.APPDATA ?? '',
+          'npm/node_modules/agent-browser/bin/agent-browser-win32-x64.exe',
+        )
+      : 'agent-browser';
   const output = execFileSync(
-    'agent-browser',
+    executable,
     ['--session', session, ...args],
     { encoding: 'utf8', timeout: 35000 },
   );
@@ -106,24 +114,27 @@ const page = (record) => ({
   page: 1,
   pageSize: 25,
 });
-function menu(label) {
-  button('Chức năng');
-  wait('document.querySelectorAll("[role=menuitem]").length===2');
+function menu(label, expectedLabels = ['Xem', 'Sửa']) {
+  evaluate(
+    `const trigger=[...document.querySelectorAll('button')].find(e=>e.checkVisibility()&&e.textContent.trim()==='Chức năng');if(!trigger)throw Error('Missing Chức năng button');trigger.click()`,
+  );
+  wait(
+    `[...document.querySelectorAll("[role=menuitem]")].filter(e=>e.checkVisibility()).length===${expectedLabels.length}`,
+  );
   check(
-    '[...document.querySelectorAll("[role=menuitem]")].map(e=>e.textContent).join(",")==="Xem,Sửa"',
-    'Menu contains exactly Xem and Sửa',
+    `[...document.querySelectorAll("[role=menuitem]")].filter(e=>e.checkVisibility()).map(e=>e.textContent).join(",")===${JSON.stringify(expectedLabels.join(','))}`,
+    `Menu contains exactly ${expectedLabels.join(', ')}`,
   );
   evaluate(
-    `document.querySelectorAll('[data-menu-click]').forEach(e=>e.removeAttribute('data-menu-click'));[...document.querySelectorAll('[role=menuitem]')].find(e=>e.textContent===${JSON.stringify(label)}).setAttribute('data-menu-click','true')`,
+    `const item=[...document.querySelectorAll('[role=menuitem]')].find(e=>e.checkVisibility()&&e.textContent===${JSON.stringify(label)});if(!item)throw Error('Missing menu item');item.click()`,
   );
-  browser('click', '[data-menu-click]');
 }
 function closed() {
   wait('document.querySelectorAll("dialog[open]").length===0');
 }
 function instrument() {
   evaluate(
-    `window.auditWrites=[];window.auditShipment=${JSON.stringify(shipment)};window.auditCommission=${JSON.stringify(commission)};const originalFetch=window.fetch;window.fetch=async(url,options)=>{const path=String(url);if(path.endsWith('/shipments/search'))return Response.json({items:[window.auditShipment],totalCount:1,totalPages:1});if(path.endsWith('/commissions/search'))return Response.json({items:[window.auditCommission],totalCount:1,totalPages:1});if(options?.method && options.method!=='GET' && !path.endsWith('/search')){const body=JSON.parse(options.body||'{}');window.auditWrites.push({url:path,method:options.method,body});if(options.method==='PUT'){if(path.includes('/shipments/')){window.auditShipment={...window.auditShipment,bookingNumber:body.BookingNumber};return Response.json(window.auditShipment);}window.auditCommission={...window.auditCommission,paymentHistory:body.PaymentHistory.map((p,i)=>({id:'payment-'+i,paymentDate:p.PaymentDate,amount:p.Amount,note:p.Note}))};return Response.json(window.auditCommission);}}return originalFetch(url,options);};`,
+    `window.auditWrites=[];window.auditShipment=${JSON.stringify(shipment)};window.auditCommission=${JSON.stringify(commission)};const originalFetch=window.fetch;window.fetch=async(url,options)=>{const path=String(url);if(path.endsWith('/shipments/search')){const items=window.auditShipment?[window.auditShipment]:[];return Response.json({page:{items,totalCount:items.length,totalPages:items.length,page:1,pageSize:25},totals:[]});}if(path.endsWith('/commissions/search'))return Response.json({items:[window.auditCommission],totalCount:1,totalPages:1});if(options?.method && options.method!=='GET' && !path.endsWith('/search')){const body=JSON.parse(options.body||'{}');window.auditWrites.push({url:path,method:options.method,body});if(options.method==='DELETE'&&path.includes('/shipments/')){window.auditShipment=null;return new Response(null,{status:204});}if(options.method==='PUT'){if(path.includes('/shipments/')){window.auditShipment={...window.auditShipment,bookingNumber:body.BookingNumber};return Response.json(window.auditShipment);}window.auditCommission={...window.auditCommission,paymentHistory:body.PaymentHistory.map((p,i)=>({id:'payment-'+i,paymentDate:p.PaymentDate,amount:p.Amount,note:p.Note}))};return Response.json(window.auditCommission);}}return originalFetch(url,options);};`,
   );
 }
 function pinned(label) {
@@ -157,7 +168,7 @@ browser(
 browser('network', 'unroute');
 route('contracts/search', page(contract));
 route('contracts?*', page(contract));
-route('shipments/search', page(shipment));
+route('shipments/search', { page: page(shipment), totals: [] });
 route('commissions/search', page(commission));
 route('commissions?*', page(commission));
 route(`contracts/${contract.id}/shipments`, [shipment]);
@@ -174,7 +185,7 @@ wait(
 );
 instrument();
 pinned('Shipment');
-menu('Xem');
+menu('Xem', ['Xem', 'Sửa', 'Xoá']);
 opened('Shipment · ' + shipment.shipmentCode);
 check(
   '[...document.querySelectorAll("dialog[open] input:not([type=hidden]), dialog[open] textarea")].filter(e=>e.checkVisibility()).every(e=>e.readOnly||e.disabled||e.closest("[aria-disabled=true]")) && !document.querySelector("dialog[open] button[type=submit]")',
@@ -204,7 +215,7 @@ button('Hủy');
 opened('Bỏ thay đổi chưa lưu?');
 button('Bỏ thay đổi');
 closed();
-menu('Sửa');
+menu('Sửa', ['Xem', 'Sửa', 'Xoá']);
 opened('Shipment · ' + shipment.shipmentCode);
 field('Số booking', 'BOOK-SAVED');
 browser('click', 'dialog[open] button[type=submit]');
@@ -215,13 +226,31 @@ check(
 );
 browser('set', 'viewport', '390', '844');
 pinned('Shipment mobile');
-menu('Xem');
+menu('Xem', ['Xem', 'Sửa', 'Xoá']);
 opened('Shipment · ' + shipment.shipmentCode);
 geometry('shipment-view-mobile');
 button('Đóng');
 closed();
 
 browser('set', 'viewport', '1440', '900');
+menu('Xoá', ['Xem', 'Sửa', 'Xoá']);
+opened('Xoá Shipment "' + shipment.shipmentCode + '"?');
+check(
+  'document.querySelector("dialog[open]")?.textContent.includes("chi phí Logistics") && document.querySelector("dialog[open]")?.textContent.includes("VGM")',
+  'Shipment delete confirmation explains dependent data removal',
+);
+geometry('shipment-delete-confirmation');
+button('Xoá');
+closed();
+check(
+  'window.auditWrites.some(write=>write.method==="DELETE"&&write.url.endsWith("/contracts/'+
+    contract.id +
+    '/shipments/'+
+    shipment.id +
+    '"))',
+  'Shipment delete sends exactly the contract-scoped DELETE request',
+);
+
 navigate('/logistics/commission');
 wait('location.pathname==="/logistics/commissions"');
 wait('document.querySelector("tbody")?.textContent.includes("COM-TEST-001")');

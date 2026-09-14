@@ -4,6 +4,7 @@ const GENERIC_LIST_ERROR = 'Không thể tải danh sách lần xuất hàng';
 const GENERIC_LIST_ALL_ERROR = 'Không thể tải danh sách Shipment';
 const GENERIC_CREATE_ERROR = 'Không thể thêm lần xuất hàng';
 const GENERIC_UPDATE_ERROR = 'Không thể cập nhật lần xuất hàng';
+const GENERIC_DELETE_ERROR = 'Không thể xoá Shipment';
 
 /**
  * Backend `detail` strings (English, BE-kt-xnk's `CreateShipmentCommandHandler`)
@@ -127,7 +128,11 @@ export async function listShipments(contractId) {
   });
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return { success: true, shipments: result.data ?? [] };
@@ -150,7 +155,11 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
   );
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return {
@@ -176,7 +185,11 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
  * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number }[] } | { success: false, message: string, conflict: boolean }>}
  */
-export async function searchAllShipments({ page = 1, pageSize = 25, conditions = [] } = {}) {
+export async function searchAllShipments({
+  page = 1,
+  pageSize = 25,
+  conditions = [],
+} = {}) {
   const result = await apiRequest('/api/v1/shipments/search', {
     method: 'POST',
     errorMessage: GENERIC_LIST_ALL_ERROR,
@@ -194,7 +207,11 @@ export async function searchAllShipments({ page = 1, pageSize = 25, conditions =
   });
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return {
@@ -251,7 +268,13 @@ export async function createShipment(contractId, values, costLines = []) {
  * @param {number} [version]
  * @returns {Promise<{ success: true, shipment: import('../types/index.js').Shipment } | { success: false, message: string, conflict: boolean }>}
  */
-export async function updateShipment(contractId, shipmentId, values, costLines = [], version) {
+export async function updateShipment(
+  contractId,
+  shipmentId,
+  values,
+  costLines = [],
+  version,
+) {
   const result = await apiRequest(
     `/api/v1/contracts/${contractId}/shipments/${shipmentId}`,
     {
@@ -262,8 +285,34 @@ export async function updateShipment(contractId, shipmentId, values, costLines =
   );
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return { success: true, shipment: result.data };
+}
+
+/**
+ * Hard-deletes one Shipment together with its logistics cost lines and VGM
+ * records. Requires `logistics:contracts:manage`, scoped through the parent
+ * contract's company.
+ * @param {string} contractId
+ * @param {string} shipmentId
+ * @returns {Promise<{ success: true } | { success: false, message: string }>}
+ */
+export async function deleteShipment(contractId, shipmentId) {
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/shipments/${shipmentId}`,
+    {
+      method: 'DELETE',
+      errorMessage: GENERIC_DELETE_ERROR,
+    },
+  );
+
+  return result.success
+    ? { success: true }
+    : { success: false, message: result.message };
 }
