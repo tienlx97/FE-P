@@ -51,7 +51,49 @@ export {};
  * @property {string | null} representativeName
  * @property {string | null} representativeTitle
  * @property {string | null} address
+ * @property {PartyProfile} [profile]
+ * @property {PartyBankAccount[]} [bankAccounts]
+ * @property {PartyDeliveryAddress[]} [deliveryAddresses]
  * @property {ExtraField[]} extraFields
+ */
+
+/** @typedef {{id: string, name: string}} PartyLookup */
+/** @typedef {{accountNumber: string, bankName: string, branch: string, province: string}} PartyBankAccount */
+/** @typedef {{address: string}} PartyDeliveryAddress */
+/**
+ * @typedef {Object} PartyProfile
+ * @property {string} code
+ * @property {boolean} isOrganization
+ * @property {string | null} taxCode
+ * @property {string | null} budgetUnitCode
+ * @property {string | null} phone
+ * @property {string | null} website
+ * @property {string | null} groupId
+ * @property {string | null} employeeId
+ * @property {boolean} isInternal
+ * @property {string | null} contactSalutation
+ * @property {string | null} contactName
+ * @property {string | null} contactEmail
+ * @property {string | null} contactPhone
+ * @property {string | null} invoiceRecipientName
+ * @property {string | null} invoiceRecipientEmails
+ * @property {string | null} invoiceRecipientPhone
+ * @property {string | null} paymentTermId
+ * @property {number | null} dueDays
+ * @property {number | null} creditLimit
+ * @property {string | null} debtAccount
+ * @property {string | null} country
+ * @property {string | null} province
+ * @property {string | null} district
+ * @property {string | null} ward
+ * @property {boolean} deliveryAddressSameAsMain
+ * @property {string | null} notes
+ */
+
+/**
+ * Independent supplier catalog entry. Profile/bank/delivery shapes mirror
+ * Customer but never share state or identifiers semantically.
+ * @typedef {Customer} Supplier
  */
 
 /**
@@ -374,6 +416,41 @@ export {};
  */
 
 /**
+ * @typedef {Object} PartyFormValues
+ * @property {string} companyName
+ * @property {string} code
+ * @property {boolean} isOrganization
+ * @property {string} taxCode
+ * @property {string} budgetUnitCode
+ * @property {string} phone
+ * @property {string} website
+ * @property {string} groupId
+ * @property {string} employeeId
+ * @property {boolean} isInternal
+ * @property {string} representativeName
+ * @property {string} representativeTitle
+ * @property {string} address
+ * @property {string} contactSalutation
+ * @property {string} contactName
+ * @property {string} contactEmail
+ * @property {string} contactPhone
+ * @property {string} invoiceRecipientName
+ * @property {string} invoiceRecipientEmails
+ * @property {string} invoiceRecipientPhone
+ * @property {string} paymentTermId
+ * @property {number | undefined} dueDays
+ * @property {number | undefined} creditLimit
+ * @property {string} debtAccount
+ * @property {string} country
+ * @property {string} province
+ * @property {string} district
+ * @property {string} ward
+ * @property {boolean} deliveryAddressSameAsMain
+ * @property {string} notes
+ */
+
+/**
+ * The small inline buyer snapshot used by contract forms.
  * @typedef {Object} CustomerFormValues
  * @property {string} companyName
  * @property {string} representativeName

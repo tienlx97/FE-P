@@ -53,8 +53,8 @@ import {
   skeletonRows,
 } from '../config/shipments-table.js';
 import { useContractsQuery } from '../hooks/use-contracts-query.js';
-import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { useShipmentsListQuery } from '../hooks/use-shipments-list-query.js';
+import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 
@@ -177,12 +177,12 @@ export function ShipmentsList() {
     [contracts],
   );
 
-  const customersQuery = useCustomersQuery();
+  const customersQuery = useSuppliersQuery();
   const customersById = useMemo(
     () =>
       new Map(
-        (customersQuery.data?.success ? customersQuery.data.customers : []).map(
-          (customer) => [customer.id, customer],
+        (customersQuery.data?.success ? customersQuery.data.suppliers : []).map(
+          (/** @type {import('../types/index.js').Supplier} */ customer) => [customer.id, customer],
         ),
       ),
     [customersQuery.data],

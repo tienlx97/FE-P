@@ -9858,3 +9858,135 @@ ward reference data (free-text inputs, matching the backend).
 - Full ./harness/verify.sh PASSED (including the production build step,
   which exercises every changed file): harness/runs/20260914-070934-12014/.
 - Nothing outstanding from this round.
+
+## 2026-09-14 (continued) — quick-add company button missing from Shipment's "Thông tin Book"
+
+- User: "Thiếu nút thêm nhanh công ty ở 'Thông tin book'" — the Forwarder
+  Selector in the Shipment form's "Thông tin Book" section
+  (shipment-booking-fields.jsx) had no inline "add a new company" button,
+  unlike the equivalent Buyer/Seller pickers elsewhere in the app
+  (buyer-fields.jsx, seller-picker-fields.jsx), which both let the user
+  create a new catalog record on the spot instead of leaving the form to
+  go add it in Khách hàng first.
+- Fix: added the same IconButton + QuickCreateCustomerDialog pattern
+  buyer-fields.jsx already uses — Forwarder sources from the same
+  `Customer` catalog (`customers` prop, `supplierCustomerId` field), so
+  no new dialog/mutation was needed, just wiring the existing
+  QuickCreateCustomerDialog in. `onCreated` calls
+  `setField('supplierCustomerId', customer.id)` directly, auto-selecting
+  the new company — the underlying `useCreateCustomerMutation` already
+  invalidates the shared `['logistics-contracts', 'customers']` query
+  key, so the new forwarder also appears correctly in the Selector's
+  option list once the shared `customers` query refetches (same
+  mechanism buyer-fields.jsx already relies on, confirmed by reading
+  use-customers-query.js before wiring this).
+- Live-verified: opened a Shipment's "Sửa" dialog, clicked the new "+"
+  next to "Forwarder", filled "Tên công ty", submitted — dialog closed,
+  the new company was auto-selected into the Forwarder field
+  immediately, no console errors. Closed the Shipment edit dialog via
+  "Hủy" → "Bỏ thay đổi" so the shipment record itself wasn't touched;
+  the test company created by this check remains in the local dev DB
+  (harmless sample data, consistent with other manual dev-DB checks
+  logged earlier in this file).
+- Full ./harness/verify.sh PASSED: harness/runs/20260914-082053-12198/.
+- Nothing outstanding from this round.
+
+## 2026-09-14 (continued) — `split-customers-suppliers-ui`: task 1 complete (Claude Code, continuing an in-progress Codex session)
+
+- Picked up a large uncommitted working tree left mid-task (no PROGRESS.md
+  entry existed for it yet — 21 modified files, 11 new untracked files, one
+  openspec change with a single unchecked task): the FE half of the BE's
+  already-committed `split-customers-suppliers` work (independent Customer
+  and Supplier catalogs with the full MISA-parity profile). Confirmed scope
+  against `openspec/changes/split-customers-suppliers-ui/{proposal,tasks,
+  specs/party-catalogs/spec.md}` before touching anything.
+- Read every changed/new file against the proposal and cross-checked the
+  API wiring line-by-line against the BE contracts (`CreateSupplierRequest`,
+  `PartyProfileDto`, `PartyBankAccountDto`, `PartyDeliveryAddressDto`,
+  `SuppliersController` routes) — field names, casing, and nesting all
+  matched exactly. `Supplier` is deliberately `@typedef {Customer} Supplier`
+  (structurally identical), and shipment/commission/VGM FK field names
+  (`supplierCustomerId`, `providerCustomerId`, `carrierCustomerId`,
+  `partyCustomerId`) intentionally keep their pre-split names on the BE
+  (confirmed in `Shipment.cs`/`ShipmentResponse.cs`/the
+  `SplitCustomersAndSuppliers` migration) even though they now target the
+  Supplier table — so the FE keeping a `customers` prop name for data that
+  is actually suppliers (`use-shipment-form.js`, `use-commission-form.js`,
+  `use-shipment-vgm-form.js`) mirrors the BE's own naming choice, not a bug.
+- Fixed real defects found while verifying, in order found:
+  1. `pnpm lint` had 10 unsorted-import errors across the new files — ran
+     `eslint --fix`.
+  2. `pnpm typecheck` failed: `use-party-form.js`'s inline
+     `/** @type {Record<string,string>} */ const errors = {}` JSDoc
+     annotation wasn't binding (declaration shared a line with the `if`
+     that opens the block) — switched to the `const errors = /** @type
+     {...} */ ({})` cast form, which does bind. Typecheck now clean.
+  3. `contracts-list.jsx` still computed a `customersById` Map (`useMemo`
+     over `useCustomersQuery`) that nothing read anymore — the one caller
+     (`ContractExpandedDetails`'s commission-recipient name resolution) was
+     switched to `suppliersById` when the commission recipient moved to the
+     Supplier catalog, but the dead customer-side computation was never
+     deleted. Removed it (lint's own `unused-imports/no-unused-vars`
+     warning caught it, not typecheck).
+  4. `src/app/(protected)/logistics/suppliers/page.jsx` (new) was missing
+     the `fillHeight`/`StackItem(fill)` pattern every other list page got
+     in this morning's "full-height list layout" change (`ae74008`) —
+     it still used the old fixed-VStack shape. Brought it in line with
+     `customers/page.jsx` exactly (`PageContentShell fillHeight`,
+     `<StackItem size="fill"><SuppliersList /></StackItem>`).
+  5. Live-browser check of the Suppliers dialog (see below) surfaced a
+     real layout bug not caught by lint/typecheck: `party-form-fields.jsx`'s
+     two "Thêm dòng" (add-row) buttons — bank accounts and delivery
+     addresses tabs — rendered full dialog-width instead of sized-to-content,
+     unlike the established pattern (`extra-fields-editor.jsx`'s "Thêm
+     trường" button, wrapped in its own `<HStack gap={2}>` with `size="sm"`).
+     Wrapped both in the same `HStack`+`size="sm"` shape.
+- **Environment gap, not a code bug, but the one that actually blocked
+  verification:** live-loading `/logistics/suppliers` showed "Không thể
+  tải danh sách nhà cung cấp" — `POST /api/backend/api/v1/suppliers/search`
+  came back 404. Traced to the dev BE Docker container
+  (`companymanagement-dev-api`, BE-kt-xnk) still running an image built
+  ~42 hours before the BE's `SplitCustomersAndSuppliers` commit — the
+  container simply predated the new `SuppliersController`/migration.
+  `docker compose -f docker-compose.dev.yml up -d --build api`
+  rebuilt+restarted it; the `20260914013924_SplitCustomersAndSuppliers`
+  migration auto-applied on startup (`Database.MigrateAsync()` in
+  `Program.cs`) with no errors, and `/api/v1/suppliers/search` then
+  returned 401 (auth-only, as expected) instead of 404. Harness gap per
+  `AGENTS.md`'s failure protocol: neither repo's harness checks that the
+  *other* repo's dev stack is running code from after the last commit that
+  changed its API surface — worth a `docs/architecture.md` or onboarding
+  note for cross-repo dev sessions, not fixed here (out of scope for this
+  FE-only task).
+- Live-verified end to end in Chrome against the freshly-rebuilt dev stack
+  (logged in as the seeded Admin, `NationalId 000000000000` /
+  `Admin@123456`, per `db/sample-data.sql`'s own header comment):
+  - `/logistics/suppliers` loads real seeded rows (4 suppliers, including
+    one — "Test Forwarder QuickAdd Co" — carried over from an earlier
+    session's manual check, confirming the BE migration's backfill moved
+    pre-split Shipment-forwarder Customers into the new Supplier table).
+  - Row expansion, "Sửa nhà cung cấp" full tabbed dialog (Thông tin liên
+    hệ/Điều khoản thanh toán/Tài khoản ngân hàng/Địa chỉ khác/Ghi
+    chú/Thông tin bổ sung) all render and initialize from the record.
+  - Added a bank account row, saved, reopened the dialog — the row
+    persisted correctly (real round-trip through `PUT
+    /api/v1/suppliers/{id}`); removed it again afterward to leave the
+    seeded record clean.
+  - Shipment "Thông tin Book" Forwarder selector now lists Suppliers only
+    (verified the dropdown against the same 4 supplier names, not
+    Customers); the "+" button's `QuickCreateSupplierDialog` created a new
+    Supplier ("QuickAdd Supplier Test Co") and auto-selected it into the
+    Forwarder field immediately, no console errors. Discarded the dirty
+    Shipment edit via "Hủy" → "Bỏ thay đổi" so the shipment itself wasn't
+    touched; the new supplier remains in the dev DB (harmless sample data,
+    same precedent as the earlier "Test Forwarder QuickAdd Co" check).
+  - Confirmed Contract's Buyer field (`26DN-SAMPLE01`) still resolves
+    against the Customer catalog ("ABC Trading Pty Ltd", a Customer) and
+    was unaffected by the split, per the proposal's explicit "Keep contract
+    Buyer on Customers" requirement.
+  - No console errors observed across any of the above.
+- Full `./harness/verify.sh` PASSED twice (once before the live-browser fix,
+  once after): `harness/runs/20260914-094938-12850/` and
+  `harness/runs/20260914-100426-13054/`.
+- Marked `openspec/changes/split-customers-suppliers-ui/tasks.md` task 1
+  done. Nothing outstanding from this round.

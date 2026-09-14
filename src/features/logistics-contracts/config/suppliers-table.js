@@ -4,13 +4,13 @@ export const SEARCH_FIELD_DEFS = [
   { key: 'representativeName', type: 'string', label: 'Người đại diện' },
   { key: 'representativeTitle', type: 'string', label: 'Chức vụ' },
   { key: 'address', type: 'string', label: 'Địa chỉ' },
-  { key: 'code', type: 'string', label: 'Mã khách hàng' },
+  { key: 'code', type: 'string', label: 'Mã nhà cung cấp' },
   { key: 'taxCode', type: 'string', label: 'Mã số thuế/CCCD' },
   { key: 'phone', type: 'string', label: 'Điện thoại' },
 ];
 
 export const COLUMN_OPTIONS = [
-  { key: 'code', label: 'Mã khách hàng' },
+  { key: 'code', label: 'Mã nhà cung cấp' },
   { key: 'companyName', label: 'Tên công ty', isAlwaysVisible: true },
   { key: 'representativeName', label: 'Người đại diện' },
   { key: 'representativeTitle', label: 'Chức vụ' },
@@ -24,7 +24,7 @@ export const FILTER_FIELD_DEFS = [
   { key: 'representativeName', label: 'Người đại diện', type: 'string' },
   { key: 'representativeTitle', label: 'Chức vụ', type: 'string' },
   { key: 'address', label: 'Địa chỉ', type: 'string' },
-  { key: 'code', label: 'Mã khách hàng', type: 'string' },
+  { key: 'code', label: 'Mã nhà cung cấp', type: 'string' },
   { key: 'taxCode', label: 'Mã số thuế/CCCD', type: 'string' },
   { key: 'phone', label: 'Điện thoại', type: 'string' },
 ];

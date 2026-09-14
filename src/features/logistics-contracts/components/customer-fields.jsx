@@ -30,7 +30,7 @@ const styles = stylex.create({
  * embedded in the Contract form.
  * @param {{
  *   values: import('../types/index.js').CustomerFormValues,
- *   setField: (field: keyof import('../types/index.js').CustomerFormValues, value: string) => void,
+ *   setField: (field: 'companyName' | 'representativeName' | 'representativeTitle' | 'address', value: string) => void,
  *   fieldStatuses: Record<string, { type: 'error', message: string } | undefined>,
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   showCompanyName?: boolean,

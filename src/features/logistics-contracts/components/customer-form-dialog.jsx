@@ -3,7 +3,7 @@
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { useCustomerForm } from '../hooks/use-customer-form.js';
-import { CustomerFields } from './customer-fields.jsx';
+import { PartyFormFields } from './party-form-fields.jsx';
 
 /**
  * Create/edit dialog for the Customers page (`customers-list.jsx`) — same
@@ -43,19 +43,14 @@ export function CustomerFormDialog({
       onOpenChange={handleOpenChange}
       title={customer ? 'Sửa khách hàng' : 'Thêm khách hàng'}
       submitLabel={customer ? 'Lưu thay đổi' : 'Thêm'}
-      width={600}
-      draft={{ values: form.values, extraFieldRows: form.extraFieldRows.rows }}
+      width={1040}
+      draft={{ values: form.values, extraFieldRows: form.extraFieldRows.rows, bankAccounts: form.bankAccounts, deliveryAddresses: form.deliveryAddresses }}
       isSubmitting={form.isSubmitting}
       submitError={form.submitError}
       fieldStatuses={form.fieldStatuses}
       onSubmit={form.handleSubmit}
     >
-      <CustomerFields
-        values={form.values}
-        setField={form.setField}
-        fieldStatuses={form.fieldStatuses}
-        extraFieldRows={form.extraFieldRows}
-      />
+      <PartyFormFields kind="customer" form={form} />
     </FormDialog>
   );
 }

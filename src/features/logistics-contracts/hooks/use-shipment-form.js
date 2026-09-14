@@ -4,12 +4,12 @@ import { useState } from 'react';
 
 import { shipmentSchema } from '../config/shipment-schema.js';
 import { SHIPMENT_STATUSES } from '../config/shipment-status.js';
-import { useCustomersQuery } from './use-customers-query.js';
 import { useShipmentCostLineRows } from './use-shipment-cost-line-rows.js';
 import {
   useCreateShipmentMutation,
   useUpdateShipmentMutation,
 } from './use-shipments-query.js';
+import { useSuppliersQuery } from './use-suppliers-query.js';
 
 /**
  * `placeOfLoading`/`placeOfDischarge` default from the parent Contract's
@@ -117,7 +117,7 @@ export function useShipmentForm({
   );
   const [submitError, setSubmitError] = useState('');
 
-  const customersQuery = useCustomersQuery();
+  const suppliersQuery = useSuppliersQuery();
   const createMutation = useCreateShipmentMutation(contractId);
   const updateMutation = useUpdateShipmentMutation(contractId);
 
@@ -233,8 +233,8 @@ export function useShipmentForm({
         fieldStatus(message),
       ]),
     ),
-    customers: customersQuery.data?.success
-      ? customersQuery.data.customers
+    customers: suppliersQuery.data?.success
+      ? suppliersQuery.data.suppliers
       : [],
     costLineRows,
     submitError,

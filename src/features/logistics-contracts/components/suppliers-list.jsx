@@ -21,7 +21,7 @@ import {
   UnderlinedMetadataListItem as MetadataListItem,
 } from '@/shared/components/expandable-row-styles.jsx';
 
-import { searchCustomers } from '../api/customers.js';
+import { searchSuppliers } from '../api/suppliers.js';
 import {
   COLUMN_OPTIONS,
   DEFAULT_PAGE_SIZE,
@@ -29,9 +29,9 @@ import {
   PAGE_SIZE_OPTIONS,
   SEARCH_FIELD_DEFS,
   skeletonRows,
-} from '../config/customers-table.js';
-import { useSearchCustomersQuery } from '../hooks/use-customers-query.js';
-import { CustomerFormDialog } from './customer-form-dialog.jsx';
+} from '../config/suppliers-table.js';
+import { useSearchSuppliersQuery } from '../hooks/use-suppliers-query.js';
+import { SupplierFormDialog } from './supplier-form-dialog.jsx';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -53,27 +53,27 @@ function escapeHtml(value) {
 }
 
 /**
- * Opens a print-ready window for one customer's profile — same
+ * Opens a print-ready window for one supplier's profile — same
  * new-window + `window.print()` approach as `AdvanceTable`'s table-level
  * print export (`buildExportTable`'s doc comment), just for a single
  * record's fields instead of a table of rows.
- * @param {import('../types/index.js').Customer} customer
+ * @param {import('../types/index.js').Supplier} supplier
  */
-function printCustomer(customer) {
+function printSupplier(supplier) {
   const printWindow = window.open('', '_blank');
   if (!printWindow) return;
   const fields = [
-    ['Tên công ty', customer.companyName],
-    ['Người đại diện', orDash(customer.representativeName)],
-    ['Chức vụ', orDash(customer.representativeTitle)],
-    ['Địa chỉ', orDash(customer.address)],
-    ...customer.extraFields.map(
+    ['Tên công ty', supplier.companyName],
+    ['Người đại diện', orDash(supplier.representativeName)],
+    ['Chức vụ', orDash(supplier.representativeTitle)],
+    ['Địa chỉ', orDash(supplier.address)],
+    ...supplier.extraFields.map(
       (field) =>
         /** @type {[string, string]} */ ([field.key, orDash(field.value)]),
     ),
   ];
   printWindow.document.write(`<!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><title>${escapeHtml(customer.companyName)}</title>
+<html lang="vi"><head><meta charset="utf-8"><title>${escapeHtml(supplier.companyName)}</title>
 <style>
   body { font-family: Arial, sans-serif; font-size: 13px; }
   h1 { font-size: 18px; margin-bottom: 24px; }
@@ -81,7 +81,7 @@ function printCustomer(customer) {
   dt { font-weight: bold; color: dimgray; }
   dd { margin: 0; }
 </style></head><body>
-<h1>${escapeHtml(customer.companyName)}</h1>
+<h1>${escapeHtml(supplier.companyName)}</h1>
 <dl>${fields
     .map(
       ([label, value]) =>
@@ -96,10 +96,10 @@ function printCustomer(customer) {
 
 /**
  * @param {object} props
- * @param {import('../types/index.js').Customer} props.customer
+ * @param {import('../types/index.js').Supplier} props.supplier
  * @param {() => void} props.onEdit
  */
-function CustomerExpandedDetails({ customer, onEdit }) {
+function SupplierExpandedDetails({ supplier, onEdit }) {
   return (
     <VStack gap={4} hAlign="stretch" xstyle={expandableRowStyles.expandedPanel}>
       <HStack gap={3} vAlign="center">
@@ -112,13 +112,13 @@ function CustomerExpandedDetails({ customer, onEdit }) {
         </HStack>
         <VStack gap={1}>
           <Heading level={3} xstyle={styles.companyNameHeading}>
-            {customer.companyName}
+            {supplier.companyName}
           </Heading>
-          {customer.representativeName ? (
+          {supplier.representativeName ? (
             <Text color="secondary">
-              {customer.representativeName}
-              {customer.representativeTitle
-                ? ` · ${customer.representativeTitle}`
+              {supplier.representativeName}
+              {supplier.representativeTitle
+                ? ` · ${supplier.representativeTitle}`
                 : ''}
             </Text>
           ) : null}
@@ -127,18 +127,18 @@ function CustomerExpandedDetails({ customer, onEdit }) {
 
       <MetadataList columns={4} label={{ position: 'top' }}>
         <MetadataListItem label="Tên công ty">
-          {customer.companyName}
+          {supplier.companyName}
         </MetadataListItem>
         <MetadataListItem label="Người đại diện">
-          {orDash(customer.representativeName)}
+          {orDash(supplier.representativeName)}
         </MetadataListItem>
         <MetadataListItem label="Chức vụ">
-          {orDash(customer.representativeTitle)}
+          {orDash(supplier.representativeTitle)}
         </MetadataListItem>
         <MetadataListItem label="Địa chỉ">
-          {orDash(customer.address)}
+          {orDash(supplier.address)}
         </MetadataListItem>
-        {customer.extraFields.map((field) => (
+        {supplier.extraFields.map((field) => (
           <MetadataListItem key={field.key} label={field.key}>
             {orDash(field.value)}
           </MetadataListItem>
@@ -162,10 +162,10 @@ function CustomerExpandedDetails({ customer, onEdit }) {
             variant="secondary"
             size="sm"
             icon={<Icon icon={Printer} />}
-            onClick={() => printCustomer(customer)}
+            onClick={() => printSupplier(supplier)}
           />
           <Button
-            label="Sửa khách hàng"
+            label="Sửa nhà cung cấp"
             variant="primary"
             size="sm"
             icon={<Icon icon={Pencil} />}
@@ -177,13 +177,13 @@ function CustomerExpandedDetails({ customer, onEdit }) {
   );
 }
 
-export function CustomersList() {
+export function SuppliersList() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [hasOpenedCreate, setHasOpenedCreate] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState(
-    /** @type {import('../types/index.js').Customer | null} */ (null),
+  const [editingSupplier, setEditingSupplier] = useState(
+    /** @type {import('../types/index.js').Supplier | null} */ (null),
   );
-  const [expandedCustomerId, setExpandedCustomerId] = useState(
+  const [expandedSupplierId, setExpandedSupplierId] = useState(
     /** @type {string | null} */ (null),
   );
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
@@ -192,90 +192,90 @@ export function CustomersList() {
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
 
-  const customersQuery = useSearchCustomersQuery({
+  const suppliersQuery = useSearchSuppliersQuery({
     page: pageIndex,
     pageSize,
     conditions: filterConditions,
   });
-  const listResult = customersQuery.data;
-  const customers = listResult?.success ? listResult.customers : [];
-  const totalCustomers = listResult?.success ? listResult.totalCount : 0;
+  const listResult = suppliersQuery.data;
+  const suppliers = listResult?.success ? listResult.suppliers : [];
+  const totalSuppliers = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
     1,
     listResult?.success ? listResult.totalPages : 1,
   );
 
-  /** @param {import('../types/index.js').Customer[]} rawCustomers */
-  function enrichCustomers(rawCustomers) {
-    return rawCustomers.map((customer) => ({
-      ...customer,
-      code: customer.profile?.code ?? '',
-      taxCode: customer.profile?.taxCode ?? '',
-      phone: customer.profile?.phone ?? '',
-      representativeName: customer.representativeName ?? '',
-      representativeTitle: customer.representativeTitle ?? '',
-      address: customer.address ?? '',
+  /** @param {import('../types/index.js').Supplier[]} rawSuppliers */
+  function enrichSuppliers(rawSuppliers) {
+    return rawSuppliers.map((supplier) => ({
+      ...supplier,
+      code: supplier.profile?.code ?? '',
+      taxCode: supplier.profile?.taxCode ?? '',
+      phone: supplier.profile?.phone ?? '',
+      representativeName: supplier.representativeName ?? '',
+      representativeTitle: supplier.representativeTitle ?? '',
+      address: supplier.address ?? '',
     }));
   }
 
-  const searchableCustomers = enrichCustomers(customers);
+  const searchableSuppliers = enrichSuppliers(suppliers);
 
   // "Xuất toàn bộ dữ liệu" in AdvanceTable's export dropdown.
-  async function fetchAllCustomers() {
-    const result = await searchCustomers({
+  async function fetchAllSuppliers() {
+    const result = await searchSuppliers({
       page: 1,
       pageSize: listResult?.success
         ? Math.max(1, listResult.totalCount)
         : pageSize,
       conditions: filterConditions,
     });
-    return result.success ? enrichCustomers(result.customers) : [];
+    return result.success ? enrichSuppliers(result.suppliers) : [];
   }
 
-  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Customer & Record<string, unknown>>[]} */
+  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Supplier & Record<string, unknown>>[]} */
   const columns = [
     {
       key: 'code',
-      header: 'Mã khách hàng',
+      header: 'Mã nhà cung cấp',
       width: proportional(0.8),
       filter: 'code',
-      renderCell: (customer) => String(customer.code || '—'),
+      renderCell: (supplier) => String(supplier.code || '—'),
     },
     {
       key: 'companyName',
       header: 'Tên công ty',
       width: proportional(1.4),
       filter: 'companyName',
-      renderCell: (customer) => customer.companyName,
+      renderCell: (supplier) => supplier.companyName,
     },
     {
       key: 'representativeName',
       header: 'Người đại diện',
       width: proportional(1),
       filter: 'representativeName',
-      renderCell: (customer) => customer.representativeName || '—',
+      renderCell: (supplier) => supplier.representativeName || '—',
     },
     {
       key: 'representativeTitle',
       header: 'Chức vụ',
       width: proportional(0.8),
       filter: 'representativeTitle',
-      renderCell: (customer) => customer.representativeTitle || '—',
+      renderCell: (supplier) => supplier.representativeTitle || '—',
     },
     {
       key: 'address',
       header: 'Địa chỉ',
       width: proportional(1.4),
       filter: 'address',
-      renderCell: (customer) => customer.address || '—',
+      renderCell: (supplier) => supplier.address || '—',
     },
     {
       key: 'extraFields',
       header: 'Trường tùy ý',
       width: proportional(1),
-      renderCell: (customer) =>
-        customer.extraFields.length > 0
-          ? customer.extraFields
+      renderCell: (supplier) =>
+        supplier.extraFields.length > 0
+          ? supplier.extraFields
               .map((field) => `${field.key}: ${field.value}`)
               .join(', ')
           : '—',
@@ -283,26 +283,26 @@ export function CustomersList() {
   ];
 
   const expandedIds = useMemo(
-    () => new Set(expandedCustomerId ? [expandedCustomerId] : []),
-    [expandedCustomerId],
+    () => new Set(expandedSupplierId ? [expandedSupplierId] : []),
+    [expandedSupplierId],
   );
   const rowExpansion = {
     expandedIds,
-    onToggle: (/** @type {string} */ customerId) =>
-      setExpandedCustomerId((current) =>
-        current === customerId ? null : customerId,
+    onToggle: (/** @type {string} */ supplierId) =>
+      setExpandedSupplierId((current) =>
+        current === supplierId ? null : supplierId,
       ),
-    getRowKey: (/** @type {import('../types/index.js').Customer} */ customer) =>
-      customer.id,
+    getRowKey: (/** @type {import('../types/index.js').Supplier} */ supplier) =>
+      supplier.id,
     isExpandable: (
-      /** @type {import('../types/index.js').Customer} */ customer,
-    ) => !customer.id.startsWith('skeleton-'),
+      /** @type {import('../types/index.js').Supplier} */ supplier,
+    ) => !supplier.id.startsWith('skeleton-'),
     renderExpanded: (
-      /** @type {import('../types/index.js').Customer} */ customer,
+      /** @type {import('../types/index.js').Supplier} */ supplier,
     ) => (
-      <CustomerExpandedDetails
-        customer={customer}
-        onEdit={() => setEditingCustomer(customer)}
+      <SupplierExpandedDetails
+        supplier={supplier}
+        onEdit={() => setEditingSupplier(supplier)}
       />
     ),
   };
@@ -310,9 +310,9 @@ export function CustomersList() {
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
       <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
-        <Heading level={1}>Khách hàng</Heading>
+        <Heading level={1}>Nhà cung cấp</Heading>
         <Button
-          label="Thêm khách hàng"
+          label="Thêm nhà cung cấp"
           variant="primary"
           onClick={() => {
             setHasOpenedCreate(true);
@@ -322,14 +322,14 @@ export function CustomersList() {
       </HStack>
 
       {listResult && !listResult.success ? (
-        <AdvanceTableErrorBanner message={listResult.message} />
+        <AdvanceTableErrorBanner message={listResult.message ?? 'Không thể tải danh sách nhà cung cấp'} />
       ) : null}
 
       <StackItem size="fill">
         <AdvanceTable
-          toolbarLabel="Thao tác danh sách khách hàng"
+          toolbarLabel="Thao tác danh sách nhà cung cấp"
           searchFieldDefs={SEARCH_FIELD_DEFS}
-          entityLabel="Khách hàng"
+          entityLabel="Nhà cung cấp"
           contentSearchFieldKey="companyName"
           searchPlaceholder="Tìm công ty, địa chỉ..."
           filterFieldDefs={FILTER_FIELD_DEFS}
@@ -337,19 +337,19 @@ export function CustomersList() {
           onAdvancedFilterChange={setFilterConditions}
           columnOptions={COLUMN_OPTIONS}
           tableColumns={columns}
-          data={searchableCustomers}
+          data={searchableSuppliers}
           idKey="id"
-          isLoading={customersQuery.isLoading}
+          isLoading={suppliersQuery.isLoading}
           skeletonRows={skeletonRows}
           rowExpansion={rowExpansion}
-          fetchAllRows={fetchAllCustomers}
-          onRefresh={() => customersQuery.refetch()}
-          isRefreshing={customersQuery.isFetching}
+          fetchAllRows={fetchAllSuppliers}
+          onRefresh={() => suppliersQuery.refetch()}
+          isRefreshing={suppliersQuery.isFetching}
           defaultStickyEnd="none"
           pagination={{
             pageIndex,
             pageSize,
-            totalCount: totalCustomers,
+            totalCount: totalSuppliers,
             totalPages,
             onPageIndexChange: setPageIndex,
             onPageSizeChange: setPageSize,
@@ -359,24 +359,25 @@ export function CustomersList() {
       </StackItem>
 
       {hasOpenedCreate ? (
-        <CustomerFormDialog
+        <SupplierFormDialog
           isOpen={isCreateOpen}
           onOpenChange={setIsCreateOpen}
           onSuccess={() => setIsCreateOpen(false)}
         />
       ) : null}
 
-      {editingCustomer ? (
-        <CustomerFormDialog
-          key={editingCustomer.id}
+      {editingSupplier ? (
+        <SupplierFormDialog
+          key={editingSupplier.id}
           isOpen
           onOpenChange={(isOpen) => {
-            if (!isOpen) setEditingCustomer(null);
+            if (!isOpen) setEditingSupplier(null);
           }}
-          customer={editingCustomer}
-          onSuccess={() => setEditingCustomer(null)}
+          supplier={editingSupplier}
+          onSuccess={() => setEditingSupplier(null)}
         />
       ) : null}
     </VStack>
   );
 }
+

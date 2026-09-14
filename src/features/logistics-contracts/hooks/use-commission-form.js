@@ -8,9 +8,9 @@ import {
   useCreateCommissionMutation,
   useUpdateCommissionMutation,
 } from './use-commission-query.js';
-import { useCustomersQuery } from './use-customers-query.js';
 import { usePaymentHistoryRows } from './use-payment-history-rows.js';
 import { usePaymentTermRows } from './use-payment-term-rows.js';
+import { useSuppliersQuery } from './use-suppliers-query.js';
 
 const TODAY_ISO = new Date().toISOString().slice(0, 10);
 
@@ -69,7 +69,7 @@ export function useCommissionForm({
   );
   const [submitError, setSubmitError] = useState('');
 
-  const customersQuery = useCustomersQuery();
+  const suppliersQuery = useSuppliersQuery();
 
   const paymentTermRows = usePaymentTermRows(
     commission
@@ -230,8 +230,8 @@ export function useCommissionForm({
       code: baseFieldStatuses.code ?? codeDuplicateStatus,
     },
     isCheckingCode: commissionCodeExistsQuery.isChecking,
-    customers: customersQuery.data?.success
-      ? customersQuery.data.customers
+    customers: suppliersQuery.data?.success
+      ? suppliersQuery.data.suppliers
       : [],
     paymentTermRows,
     paymentHistoryRows,

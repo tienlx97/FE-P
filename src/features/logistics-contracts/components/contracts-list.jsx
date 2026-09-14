@@ -46,6 +46,7 @@ import { useContractsQuery } from '../hooks/use-contracts-query.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
+import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
 import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
@@ -336,19 +337,14 @@ export function ContractsList() {
     [countriesQuery.data],
   );
 
-  // `Commission.partyCustomerId` is a live FK into the Customer
-  // catalog (`docs/api/Commissions.md`, BE-kt-xnk) — same
-  // client-side name resolution as `commissions-list.jsx`'s
-  // `customersById`.
+  // `Commission.partyCustomerId` now targets the Supplier catalog
+  // (contract commission recipient is a Supplier post-split, see
+  // `split-customers-suppliers-ui`) — resolved below via `suppliersById`.
   const customersQuery = useCustomersQuery();
-  const customersById = useMemo(
-    () =>
-      new Map(
-        (customersQuery.data?.success ? customersQuery.data.customers : []).map(
-          (customer) => [customer.id, customer],
-        ),
-      ),
-    [customersQuery.data],
+  const suppliersQuery = useSuppliersQuery();
+  const suppliersById = useMemo(
+    () => new Map((suppliersQuery.data?.success ? suppliersQuery.data.suppliers : []).map((/** @type {import('../types/index.js').Supplier} */ supplier) => [supplier.id, supplier])),
+    [suppliersQuery.data],
   );
 
   // "Khách hàng" search/filter is matched against the denormalized
@@ -757,7 +753,7 @@ export function ContractsList() {
           {contract ? (
             <ContractExpandedDetails
               contract={contract}
-              customersById={customersById}
+              customersById={suppliersById}
               costCategoriesById={costCategoriesById}
               activeTab={expandedTab}
               onAddAnnex={() => setAnnexDialog({ contractId: contract.id })}

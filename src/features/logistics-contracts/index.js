@@ -5,3 +5,4 @@ export { CountriesList } from './components/countries-list.jsx';
 export { CustomersList } from './components/customers-list.jsx';
 export { PlacesList } from './components/places-list.jsx';
 export { ShipmentsList } from './components/shipments-list.jsx';
+export { SuppliersList } from './components/suppliers-list.jsx';

@@ -3,11 +3,11 @@
 import { useState } from 'react';
 
 import { shipmentVgmSchema } from '../config/shipment-vgm-schema.js';
-import { useCustomersQuery } from './use-customers-query.js';
 import {
   useCreateShipmentVgmMutation,
   useUpdateShipmentVgmMutation,
 } from './use-shipment-vgms-query.js';
+import { useSuppliersQuery } from './use-suppliers-query.js';
 
 /** @returns {import('../types/index.js').ShipmentVgmFormValues} */
 function emptyValues() {
@@ -76,7 +76,7 @@ export function useShipmentVgmForm({ contractId, shipmentId, vgm = null, onSucce
   );
   const [submitError, setSubmitError] = useState('');
 
-  const customersQuery = useCustomersQuery();
+  const suppliersQuery = useSuppliersQuery();
   const createMutation = useCreateShipmentVgmMutation(contractId, shipmentId);
   const updateMutation = useUpdateShipmentVgmMutation(contractId, shipmentId);
 
@@ -135,8 +135,8 @@ export function useShipmentVgmForm({ contractId, shipmentId, vgm = null, onSucce
         fieldStatus(message),
       ]),
     ),
-    customers: customersQuery.data?.success
-      ? customersQuery.data.customers
+    customers: suppliersQuery.data?.success
+      ? suppliersQuery.data.suppliers
       : [],
     submitError,
     isSubmitting: createMutation.isPending || updateMutation.isPending,

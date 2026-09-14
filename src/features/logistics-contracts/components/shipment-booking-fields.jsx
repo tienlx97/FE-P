@@ -2,15 +2,22 @@
 
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateInput } from '@astryxdesign/core/DateInput';
+import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { TextInput } from '@astryxdesign/core/TextInput';
+import { useState } from 'react';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
+import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
+
+import { QuickCreateSupplierDialog } from './quick-create-supplier-dialog.jsx';
 
 /** @param {{
  * values: import('../types/index.js').ShipmentFormValues,
@@ -26,25 +33,46 @@ export function ShipmentBookingFields({
   customers,
   isReadOnly = false,
 }) {
+  const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+
   return (
     <FormSection value="book" title="Thông tin Book">
-      <ReadOnlyLock isActive={isReadOnly}>
-        <Selector
-          label="Forwarder"
-          hasSearch
-          placeholder={isReadOnly ? '—' : 'Chọn forwarder'}
-          value={values.supplierCustomerId}
-          onChange={(value) => setField('supplierCustomerId', value ?? '')}
-          options={customers.map((customer) => ({
-            value: customer.id,
-            label: customer.companyName,
-          }))}
-          isRequired
-          status={fieldStatuses.supplierCustomerId}
-          statusVariant="tooltip"
-          width="100%"
+      <HStack gap={2} vAlign="end">
+        <StackItem size="fill">
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Forwarder"
+              hasSearch
+              placeholder={isReadOnly ? '—' : 'Chọn forwarder'}
+              value={values.supplierCustomerId}
+              onChange={(value) => setField('supplierCustomerId', value ?? '')}
+              options={customers.map((customer) => ({
+                value: customer.id,
+                label: customer.companyName,
+              }))}
+              isRequired
+              status={fieldStatuses.supplierCustomerId}
+              statusVariant="tooltip"
+              width="100%"
+            />
+          </ReadOnlyLock>
+        </StackItem>
+        <IconButton
+          isDisabled={isReadOnly}
+          label="Thêm nhà cung cấp"
+          tooltip="Thêm nhà cung cấp"
+          icon={<Icon icon={IconPlus} size="sm" />}
+          type="button"
+          variant="secondary"
+          onClick={() => setIsQuickCreateOpen(true)}
         />
-      </ReadOnlyLock>
+      </HStack>
+
+      <QuickCreateSupplierDialog
+        isOpen={isQuickCreateOpen}
+        onOpenChange={setIsQuickCreateOpen}
+        onCreated={(supplier) => setField('supplierCustomerId', supplier.id)}
+      />
 
       <FormGrid>
         <StackItem size="fill">
@@ -233,7 +261,9 @@ export function ShipmentBookingFields({
                   values.customsDeclarationDate || null
                 )
               }
-              onChange={(value) => setField('customsDeclarationDate', value ?? '')}
+              onChange={(value) =>
+                setField('customsDeclarationDate', value ?? '')
+              }
               format={formatDateInputValue}
               isOptional
               status={fieldStatuses.customsDeclarationDate}

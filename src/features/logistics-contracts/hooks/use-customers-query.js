@@ -38,11 +38,13 @@ export function useCreateCustomerMutation() {
 
   return useMutation({
     mutationFn: (
-      /** @type {{ values: import('../types/index.js').CustomerFormValues, extraFieldRows: import('../types/index.js').ExtraFieldRow[] }} */ {
+      /** @type {any} */ {
         values,
         extraFieldRows,
+        bankAccounts,
+        deliveryAddresses,
       },
-    ) => createCustomer(values, extraFieldRows),
+    ) => createCustomer(values, extraFieldRows, bankAccounts, deliveryAddresses),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -57,12 +59,14 @@ export function useUpdateCustomerMutation() {
 
   return useMutation({
     mutationFn: (
-      /** @type {{ customerId: string, values: import('../types/index.js').CustomerFormValues, extraFieldRows: import('../types/index.js').ExtraFieldRow[] }} */ {
+      /** @type {any} */ {
         customerId,
         values,
         extraFieldRows,
+        bankAccounts,
+        deliveryAddresses,
       },
-    ) => updateCustomer(customerId, values, extraFieldRows),
+    ) => updateCustomer(customerId, values, extraFieldRows, bankAccounts, deliveryAddresses),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });

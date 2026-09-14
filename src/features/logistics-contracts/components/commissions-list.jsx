@@ -44,7 +44,7 @@ import {
 import { formatMoney } from '../config/currencies.js';
 import { useCommissionsQuery } from '../hooks/use-commissions-query.js';
 import { useContractsQuery } from '../hooks/use-contracts-query.js';
-import { useCustomersQuery } from '../hooks/use-customers-query.js';
+import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
 import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
@@ -192,12 +192,12 @@ export function CommissionsList() {
     [contracts, contractIdsWithCommission],
   );
 
-  const customersQuery = useCustomersQuery();
+  const customersQuery = useSuppliersQuery();
   const customersById = useMemo(
     () =>
       new Map(
-        (customersQuery.data?.success ? customersQuery.data.customers : []).map(
-          (customer) => [customer.id, customer],
+        (customersQuery.data?.success ? customersQuery.data.suppliers : []).map(
+          (/** @type {import('../types/index.js').Supplier} */ customer) => [customer.id, customer],
         ),
       ),
     [customersQuery.data],

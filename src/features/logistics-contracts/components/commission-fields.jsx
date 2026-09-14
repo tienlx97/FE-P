@@ -180,7 +180,7 @@ export function CommissionFields({
           <Selector
             label="Bên nhận hoa hồng"
             hasSearch
-            placeholder={isReadOnly ? '—' : 'Chọn khách hàng'}
+            placeholder={isReadOnly ? '—' : 'Chọn nhà cung cấp'}
             value={values.partyCustomerId}
             onChange={(value) => setField('partyCustomerId', value ?? '')}
             options={customers.map((customer) => ({

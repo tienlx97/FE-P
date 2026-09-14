@@ -36,6 +36,11 @@
       "allowedPermissions": ["logistics:contracts:view"]
     },
     {
+      "title": "Nhà cung cấp",
+      "path": "/logistics/suppliers",
+      "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
       "title": "Quốc gia",
       "path": "/logistics/countries",
       "allowedPermissions": ["logistics:contracts:view"]
