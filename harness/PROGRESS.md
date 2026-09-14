@@ -10053,3 +10053,45 @@ ward reference data (free-text inputs, matching the backend).
   supplier/customer records were created by this check.
 - Full `./harness/verify.sh` PASSED: `harness/runs/20260914-102312-13294/`.
 - Nothing outstanding from this round.
+
+## 2026-09-14 (continued) — `split-customers-suppliers-ui` task 2: wire Supplier delete
+
+- User asked to build the delete-supplier feature. The Suppliers list's
+  "Xoá" button (`SupplierExpandedDetails`) had been a disabled placeholder
+  since task 1 ("Chưa hỗ trợ") — no BE endpoint existed. BE-kt-xnk added
+  `DELETE /api/v1/suppliers/{supplierId}` in this same session
+  (`add-delete-supplier`, mirrors `DeleteSeller`'s hard-delete shape; the
+  DB's existing `ON DELETE RESTRICT` FKs from Shipments/ShipmentCosts/
+  ShipmentVgms/Commissions protect a Supplier still in use, so the delete
+  fails there rather than silently orphaning shipment/commission data).
+- Added `deleteSupplier` to `api/suppliers.js` and
+  `useDeleteSupplierMutation` to `use-suppliers-query.js` (same
+  `useSupplierMutation` wrapper the create/update mutations already share,
+  so it invalidates both the plain list and search query keys on success).
+- Wired the actual delete flow in `suppliers-list.jsx` rather than in
+  `SupplierExpandedDetails` itself, mirroring how `editingSupplier`/
+  `SupplierFormDialog` are already centralized in the parent: a
+  `deletingSupplier` state holds the row pending confirmation,
+  `SupplierExpandedDetails` gained an `onDeleteRequest` prop replacing the
+  disabled Button, and an `AlertDialog` (same component/props shape as
+  `seller-picker-fields.jsx`'s existing delete-seller confirmation) handles
+  the actual `mutateAsync` call — success collapses the row (if it was the
+  one expanded) and toasts confirmation via `useAppToast`; failure toasts
+  `result.message` (the API's error, or the generic "Không thể xoá nhà
+  cung cấp" fallback from `api-client.js` when the backend's ProblemDetails
+  carries no usable `detail` — which is exactly what a raw FK-constraint
+  500 looks like, confirmed live below).
+- Live-verified both paths against the freshly-rebuilt dev BE (`docker
+  compose -f docker-compose.dev.yml up -d --build api`, confirming `DELETE
+  /api/v1/suppliers/<random-guid>` returned 401 instead of 404 first):
+  deleted the unreferenced "QuickAdd Supplier Test Co" (created in an
+  earlier session's check) — confirm dialog showed, row disappeared,
+  count dropped 5→4, no console errors; then attempted to delete "Công ty
+  CP Giao Nhận Vận Tải Sao Việt" (still referenced as a real Shipment's
+  forwarder) — confirm dialog showed the same warning text, but submitting
+  surfaced a red "Không thể xoá nhà cung cấp" toast and the row stayed in
+  the list untouched, exactly the FK-protected behavior BE-kt-xnk's
+  `docs/api/Suppliers.md` documents. No console errors on either path.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260914-112726-14131/`.
+- Marked task 2 done in `openspec/changes/split-customers-suppliers-ui/
+  tasks.md`. Nothing outstanding from this round.

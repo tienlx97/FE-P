@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createSupplier, listSuppliers, searchSuppliers, updateSupplier } from '../api/suppliers.js';
+import { createSupplier, deleteSupplier, listSuppliers, searchSuppliers, updateSupplier } from '../api/suppliers.js';
 
 const QUERY_KEY = ['logistics-contracts', 'suppliers'];
 const SEARCH_KEY = ['logistics-contracts', 'suppliers-search'];
@@ -46,4 +46,8 @@ export function useUpdateSupplierMutation() {
   /** @param {any} payload */
   const mutation = (payload) => updateSupplier(payload.supplierId, payload.values, payload.extraFieldRows, payload.bankAccounts, payload.deliveryAddresses);
   return useSupplierMutation(mutation);
+}
+
+export function useDeleteSupplierMutation() {
+  return useSupplierMutation((/** @type {string} */ supplierId) => deleteSupplier(supplierId));
 }

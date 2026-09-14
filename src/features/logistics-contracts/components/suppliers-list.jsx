@@ -1,4 +1,5 @@
 'use client';
+import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Button } from '@astryxdesign/core/Button';
 import { Divider } from '@astryxdesign/core/Divider';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -20,6 +21,7 @@ import {
   expandableRowStyles,
   UnderlinedMetadataListItem as MetadataListItem,
 } from '@/shared/components/expandable-row-styles.jsx';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { searchSuppliers } from '../api/suppliers.js';
 import {
@@ -30,7 +32,10 @@ import {
   SEARCH_FIELD_DEFS,
   skeletonRows,
 } from '../config/suppliers-table.js';
-import { useSearchSuppliersQuery } from '../hooks/use-suppliers-query.js';
+import {
+  useDeleteSupplierMutation,
+  useSearchSuppliersQuery,
+} from '../hooks/use-suppliers-query.js';
 import { SupplierFormDialog } from './supplier-form-dialog.jsx';
 
 /** @param {string | null | undefined} value */
@@ -98,8 +103,9 @@ function printSupplier(supplier) {
  * @param {object} props
  * @param {import('../types/index.js').Supplier} props.supplier
  * @param {() => void} props.onEdit
+ * @param {() => void} props.onDeleteRequest
  */
-function SupplierExpandedDetails({ supplier, onEdit }) {
+function SupplierExpandedDetails({ supplier, onEdit, onDeleteRequest }) {
   return (
     <VStack gap={4} hAlign="stretch" xstyle={expandableRowStyles.expandedPanel}>
       <HStack gap={3} vAlign="center">
@@ -153,8 +159,7 @@ function SupplierExpandedDetails({ supplier, onEdit }) {
           variant="ghost"
           size="sm"
           icon={<Icon icon={Trash2} />}
-          isDisabled
-          tooltip="Chưa hỗ trợ"
+          onClick={onDeleteRequest}
         />
         <HStack gap={2}>
           <Button
@@ -186,11 +191,36 @@ export function SuppliersList() {
   const [expandedSupplierId, setExpandedSupplierId] = useState(
     /** @type {string | null} */ (null),
   );
+  const [deletingSupplier, setDeletingSupplier] = useState(
+    /** @type {import('../types/index.js').Supplier | null} */ (null),
+  );
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
+
+  const toast = useAppToast();
+  const deleteMutation = useDeleteSupplierMutation();
+
+  // Hard-deletes the catalog entry (BE-kt-xnk `DeleteSupplierCommand`) — the
+  // backend itself rejects (foreign-key constraint, surfaced as a generic
+  // error here) if the supplier is still referenced by any Shipment/
+  // ShipmentCost/ShipmentVgm/Commission, so this never silently orphans
+  // that data.
+  async function handleConfirmDelete() {
+    if (!deletingSupplier) return;
+    const result = await deleteMutation.mutateAsync(deletingSupplier.id);
+    setDeletingSupplier(null);
+    if (result.success) {
+      setExpandedSupplierId((current) =>
+        current === deletingSupplier.id ? null : current,
+      );
+      toast({ body: `Đã xoá nhà cung cấp "${deletingSupplier.companyName}".` });
+    } else {
+      toast({ body: result.message, type: 'error' });
+    }
+  }
 
   const suppliersQuery = useSearchSuppliersQuery({
     page: pageIndex,
@@ -295,6 +325,7 @@ export function SuppliersList() {
       <SupplierExpandedDetails
         supplier={supplier}
         onEdit={() => setEditingSupplier(supplier)}
+        onDeleteRequest={() => setDeletingSupplier(supplier)}
       />
     ),
   };
@@ -369,6 +400,18 @@ export function SuppliersList() {
           onSuccess={() => setEditingSupplier(null)}
         />
       ) : null}
+
+      <AlertDialog
+        isOpen={deletingSupplier != null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setDeletingSupplier(null);
+        }}
+        title={`Xoá "${deletingSupplier?.companyName ?? ''}" khỏi danh mục nhà cung cấp?`}
+        description="Nhà cung cấp đang được dùng làm forwarder, đơn vị chi phí, hãng vận chuyển VGM hoặc bên nhận hoa hồng sẽ không xoá được. Hành động này không thể hoàn tác."
+        actionLabel="Xoá"
+        isActionLoading={deleteMutation.isPending}
+        onAction={handleConfirmDelete}
+      />
     </VStack>
   );
 }

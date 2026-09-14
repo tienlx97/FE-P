@@ -62,6 +62,25 @@ export async function updateSupplier(supplierId, values, extraFieldRows, bankAcc
     : { success: false, message: result.message };
 }
 
+/**
+ * Requires `logistics:contracts:manage`. Hard-deletes the supplier from the
+ * catalog. Unlike Sellers, Suppliers are referenced live — a shipment's
+ * forwarder/cost provider, a VGM carrier or a commission recipient — so
+ * this fails if the supplier is still in use anywhere (see
+ * `docs/api/Suppliers.md`, BE-kt-xnk).
+ * @param {string} supplierId
+ * @returns {Promise<{ success: true } | { success: false, message: string }>}
+ */
+export async function deleteSupplier(supplierId) {
+  const result = await apiRequest(`/api/v1/suppliers/${supplierId}`, {
+    method: 'DELETE',
+    errorMessage: 'Không thể xoá nhà cung cấp',
+  });
+  return result.success
+    ? { success: true }
+    : { success: false, message: result.message };
+}
+
 /** @param {any} values @param {any[]} [extraFieldRows] @param {any[]} [bankAccounts] @param {any[]} [deliveryAddresses] */
 export function buildPartyBody(values, extraFieldRows = [], bankAccounts = [], deliveryAddresses = []) {
   return {
