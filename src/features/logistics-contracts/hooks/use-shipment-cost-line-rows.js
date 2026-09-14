@@ -4,11 +4,11 @@ import { useState } from 'react';
 
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 
-/** @returns {import('../types/index.js').ShipmentCostLineRow} */
-function emptyRow() {
+/** @param {string} [costCategoryId] @returns {import('../types/index.js').ShipmentCostLineRow} */
+function emptyRow(costCategoryId = '') {
   return {
     rowKey: generateRowKey(),
-    costCategoryId: '',
+    costCategoryId,
     name: '',
     amount: undefined,
     note: '',
@@ -26,8 +26,15 @@ function emptyRow() {
 export function useShipmentCostLineRows(initialRows = []) {
   const [rows, setRows] = useState(initialRows);
 
-  function addRow() {
-    setRows((current) => [...current, emptyRow()]);
+  /**
+   * @param {string} [costCategoryId] Pre-fills the new row's category —
+   * used by a group header's own "+" (added in place, never needs to
+   * re-sort into a different group) as opposed to the generic "+ Thêm chi
+   * phí" button (an uncategorized row, sorted last until the user picks
+   * one via the row's own Selector).
+   */
+  function addRow(costCategoryId) {
+    setRows((current) => [...current, emptyRow(costCategoryId)]);
   }
 
   /** @param {string} rowKey */

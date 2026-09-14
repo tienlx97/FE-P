@@ -10298,3 +10298,42 @@ ward reference data (free-text inputs, matching the backend).
   data — nothing saved.
 - Full `./harness/verify.sh` PASSED: `harness/runs/20260914-130415-15253/`.
 - Nothing outstanding from this round.
+
+## 2026-09-14 (continued) — Fixed the jump-on-category-select in grouped "Chi phí Logistics"
+
+- User reported exactly the UX consequence flagged during the previous
+  round's own testing: adding a new cost line, then picking its category,
+  visually moves the row (since grouping/sorting is live) — disorienting
+  right after clicking into that same row. Asked for a better UI/UX,
+  not just a patch.
+- Root cause vs. fix: the jump happens because a brand-new row starts in
+  "Chưa phân loại" and only lands in its real group once a category is
+  picked. Rather than fighting the live-grouping (deferring re-sort,
+  animating the transition — both more complex and still surprising),
+  removed the reason to jump in the *common* case: each group header now
+  has its own small "+" (`onAddRow(costCategoryId)`) that adds a row
+  **already inside that group** — no category to pick afterward, so
+  nothing moves. The top "+ Thêm chi phí" button stays for a line with no
+  category decided yet (still lands in "Chưa phân loại", still moves once
+  categorized — that path is now the rare one, not the default one every
+  add went through).
+- `use-shipment-cost-line-rows.js`: `addRow()` → `addRow(costCategoryId)`,
+  pre-fills the new row instead of always starting blank. Callers that
+  still call it with no argument (`onClick={() => onAddRow()}`) are
+  unaffected — optional param, default empty string via `emptyRow`'s own
+  default.
+- `shipment-cost-lines-fields.jsx`: group header rows carry their own
+  `groupCostCategoryId` (the real id, or `''` for "Chưa phân loại") so
+  their new `IconButton` can call `onAddRow(row.groupCostCategoryId)`
+  directly. Caught by `tsc`, not by eye: the top button's old
+  `onClick={onAddRow}` was passing the click's `MouseEvent` as
+  `costCategoryId` (silently harmless before today since `addRow` ignored
+  all arguments) — now a real type mismatch once `onAddRow` takes a
+  meaningful optional string, fixed to `onClick={() => onAddRow()}`.
+- Live-verified on `26DN-SAMPLE01/LOT-01` (Port/Terminal + Trucking
+  groups already present): clicking "+" next to "Trucking" added a new
+  row already showing "Trucking (Vận chuyển nội địa)" in its own
+  Selector, in place, subtotal unaffected — no reposition, no console
+  errors. Discarded the test edit via "Hủy" → "Bỏ thay đổi".
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260914-132832-15436/`.
+- Nothing outstanding from this round.

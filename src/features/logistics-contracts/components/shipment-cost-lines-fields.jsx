@@ -46,7 +46,7 @@ const ADD_COST_CATEGORY_OPTION_VALUE = '__add_cost_category__';
  *   customers: import('../types/index.js').Customer[],
  *   status?: { type: 'error' | 'success', message: string },
  *   isReadOnly?: boolean,
- *   onAddRow: () => void,
+ *   onAddRow: (costCategoryId?: string) => void,
  *   onRemoveRow: (rowKey: string) => void,
  *   onUpdateRowField: (rowKey: string, field: 'costCategoryId' | 'name' | 'amount' | 'note' | 'providerCustomerId' | 'invoiceNumber', value: number | string | undefined) => void,
  * }} props
@@ -108,6 +108,10 @@ export function ShipmentCostLinesFields({
       {
         rowKey: `group-${key}`,
         __isGroupHeader: true,
+        // '' (not the sentinel) for "Chưa phân loại" — passed straight to
+        // `onAddRow` so its own "+" adds another uncategorized row, same
+        // as the generic "+ Thêm chi phí" button above the table.
+        groupCostCategoryId: key === UNCATEGORIZED_KEY ? '' : key,
         categoryLabel:
           key === UNCATEGORIZED_KEY
             ? 'Chưa phân loại'
@@ -274,9 +278,21 @@ export function ShipmentCostLinesFields({
       if (!row.__isGroupHeader) return column.renderCell?.(row);
       if (column.key === 'costCategoryId') {
         return (
-          <Text weight="semibold" color="secondary">
-            {row.categoryLabel}
-          </Text>
+          <HStack gap={1} vAlign="center">
+            <Text weight="semibold" color="secondary">
+              {row.categoryLabel}
+            </Text>
+            <IconButton
+              isDisabled={isReadOnly}
+              label={`Thêm chi phí vào ${row.categoryLabel}`}
+              tooltip="Thêm dòng vào nhóm này"
+              icon={<Icon icon={IconPlus} size="sm" />}
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => onAddRow(row.groupCostCategoryId)}
+            />
+          </HStack>
         );
       }
       if (column.key === 'amount') {
@@ -303,7 +319,7 @@ export function ShipmentCostLinesFields({
           type="button"
           variant="secondary"
           size="sm"
-          onClick={onAddRow}
+          onClick={() => onAddRow()}
         />
         {rows.length > 0 ? (
           <Text weight="semibold">Tổng chi phí: {formatMoney(total)} đ</Text>
