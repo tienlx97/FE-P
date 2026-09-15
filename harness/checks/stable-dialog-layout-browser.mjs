@@ -126,6 +126,12 @@ function json(code) {
   const value = JSON.parse(evaluate(code));
   return typeof value === 'string' ? JSON.parse(value) : value;
 }
+function jsonBase64(code) {
+  const value = JSON.parse(
+    browser('eval', '-b', Buffer.from(code).toString('base64')),
+  );
+  return typeof value === 'string' ? JSON.parse(value) : value;
+}
 function sleepSync(ms) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 }
@@ -174,10 +180,9 @@ const page = (record) => ({
   page: 1,
   pageSize: 25,
 });
-// `searchContracts` (`api/contracts.js`) is the one search endpoint that
-// nests its paging envelope under `page` alongside sibling `valueTotals`/
-// `settlements` — every other list's `search` endpoint (shipments,
-// commissions) returns the flat shape `page()` above already matches.
+// Contract and Shipment search nest their paging envelope under `page`
+// alongside endpoint-specific aggregate data. Keep these fixtures aligned
+// with the real wire shapes so this dialog check also exercises list loading.
 const contractsSearchPage = (record) => ({
   page: page(record),
   valueTotals: [{ currency: record.currency, total: record.contractValue }],
@@ -201,7 +206,21 @@ browser(
 browser('network', 'unroute');
 route('contracts/search', contractsSearchPage(contract));
 route('contracts?*', page(contract));
-route('shipments/search', page(shipment));
+route('shipments/search', {
+  page: page(shipment),
+  totals: [
+    {
+      currency: shipment.invoiceCurrency,
+      invoiceValue: shipment.invoiceValue,
+      declarationValue: shipment.declarationValue,
+    },
+  ],
+  logisticsCostTotal: 1234,
+  quantityTotals: [
+    { unit: shipment.quantityUnit, amount: shipment.quantityAmount },
+  ],
+  vgmCountTotal: shipment.vgmCount,
+});
 route('commissions/search', page(commission));
 route(`contracts/${contract.id}/shipments`, [shipment]);
 route(`contracts/${contract.id}/commission`, commission);
@@ -552,6 +571,64 @@ function keyboardScenarios() {
   wait(`!document.querySelector('dialog[open] button[type=submit]')`);
   if (!json(`Boolean(document.querySelector('dialog[open]'))`))
     throw Error('Escape discard closed the whole dialog instead of returning to Xem in place');
+}
+
+// The Shipment totals response has independently-shaped values:
+// invoice/declaration totals are per currency, while logistics cost is one
+// flat VNĐ total. Verify all three reach their corresponding visible cells;
+// typechecking the adapter alone cannot prove the table renderers are wired.
+function shipmentTotalsScenario() {
+  browser('open', origin + '/logistics/shipments');
+  browser('wait', 'tfoot tr[data-is-totals-row="true"]');
+  const values = jsonBase64(`JSON.stringify((function () {
+    const table = document.querySelector('[data-table-engine="tanstack"]');
+    const headers = Array.from(table.querySelectorAll('thead th')).map(function (cell) { return cell.textContent.trim(); });
+    const row = table.querySelector('tfoot tr[data-is-totals-row="true"]');
+    const cells = Array.from(row.cells).map(function (cell) { return cell.textContent.trim(); });
+    function valueFor(header) { return cells[headers.indexOf(header)]; }
+    return {
+      declaration: valueFor('Giá trị tờ khai'),
+      logistics: valueFor('Chi phí Logistics'),
+      quantity: valueFor('Số lượng'),
+      vgm: valueFor('VGM'),
+    };
+  })())`);
+  if (!values.declaration.includes('1,000.00') || !values.declaration.includes('USD'))
+    throw Error('Shipment declaration total missing/wrong: ' + values.declaration);
+  if (!values.logistics.includes('1,234.00') || !values.logistics.includes('đ'))
+    throw Error('Shipment logistics total missing/wrong: ' + values.logistics);
+  if (values.quantity !== '10 Kiện')
+    throw Error('Shipment quantity total missing/wrong: ' + values.quantity);
+  if (values.vgm !== '1')
+    throw Error('Shipment VGM total missing/wrong: ' + values.vgm);
+
+  const filterButtonCount = json(
+    `document.querySelectorAll('thead button[aria-label^="Lọc "]').length`,
+  );
+  if (filterButtonCount !== 8)
+    throw Error('Every Shipment data header must expose a usable filter; got ' + filterButtonCount);
+  browser('click', 'button[aria-label="Lọc Giá trị tờ khai"]');
+  browser('find', 'label', 'Lọc Giá trị tờ khai', 'fill', '999999');
+  button('Áp dụng');
+  wait(`document.querySelector('tbody')?.textContent.includes('Không tìm thấy kết quả phù hợp')`);
+  button('Xóa tất cả bộ lọc');
+  wait(`document.querySelector('tbody')?.textContent.includes(${JSON.stringify(shipment.shipmentCode)})`);
+  browser('screenshot', `${run}/shipment-totals.png`);
+  writeFileSync(
+    `${run}/shipment-totals.json`,
+    JSON.stringify(values, null, 2),
+  );
+  return { ...values, filterButtonCount };
+}
+
+const shipmentTotals = shipmentTotalsScenario();
+// Lets this focused assertion run independently from the much larger dialog
+// geometry matrix. Useful when diagnosing an unrelated dialog-menu failure
+// without weakening or skipping the totals evidence itself.
+if (process.env.SHIPMENT_TOTALS_ONLY === '1') {
+  browser('close');
+  console.log(JSON.stringify({ run, shipmentTotals }));
+  process.exit(0);
 }
 
 // design.md's acceptance evidence bullet and workspace.md's "Acceptance

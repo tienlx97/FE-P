@@ -119,7 +119,9 @@ export function CommissionsList() {
     /** @type {string | null} */ (null),
   );
   const [creatingCommission, setCreatingCommission] = useState(
-    /** @type {{ contractId: string, currency: string } | null} */ (null),
+    /** @type {{ contractId: string, contractNumber: string, projectName: string, currency: string } | null} */ (
+      null
+    ),
   );
 
   const commissionsQuery = useCommissionsQuery({
@@ -341,6 +343,8 @@ export function CommissionsList() {
     setIsPickingContract(false);
     setCreatingCommission({
       contractId: pickedContractId,
+      contractNumber: contract?.contractNumber ?? '',
+      projectName: contract?.projectName ?? '',
       currency: contract?.currency ?? '',
     });
     setPickedContractId(null);
@@ -476,6 +480,8 @@ export function CommissionsList() {
             if (!isOpen) setCreatingCommission(null);
           }}
           contractId={creatingCommission.contractId}
+          contractNumber={creatingCommission.contractNumber}
+          projectName={creatingCommission.projectName}
           currency={creatingCommission.currency}
           onSuccess={() => setCreatingCommission(null)}
         />
@@ -489,6 +495,8 @@ export function CommissionsList() {
             if (!isOpen) setEditingCommissionRow(null);
           }}
           contractId={editingCommissionRow.contractId}
+          contractNumber={editingCommissionRow.contractNumber}
+          projectName={editingCommissionRow.projectName}
           currency={editingCommissionRow.currency}
           commission={selectedCommission}
           initialMode={dialogMode}

@@ -32,6 +32,7 @@ const styles = stylex.create({
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   showCompanyName?: boolean,
  *   isCollapsible?: boolean,
+ *   isExpandDisabled?: boolean,
  *   isReadOnly?: boolean,
  * }} props
  */
@@ -42,13 +43,21 @@ export function SellerFields({
   extraFieldRows,
   showCompanyName = true,
   isCollapsible = false,
+  isExpandDisabled = false,
   isReadOnly = false,
 }) {
   const detailsId = useId();
   const disclosure = useCollapsible({
     isCollapsible: isCollapsible ? { defaultIsOpen: false } : false,
   });
-  const areDetailsShown = !isCollapsible || disclosure.isOpen;
+  // There is nothing to show/hide yet before a seller is picked (or typed
+  // inline) — `SellerPickerFields` passes `isExpandDisabled` in that case,
+  // so the toggle stays disabled and the section stays collapsed instead
+  // of expanding onto a card with no company selected ("'Xem thêm thông
+  // tin chi tiết' phải bị disable khi chưa có thông tin", reported
+  // 2026-09-15).
+  const areDetailsShown =
+    !isCollapsible || (disclosure.isOpen && !isExpandDisabled);
 
   const detailFields = (
     <VStack gap={3} hAlign="stretch" id={isCollapsible ? detailsId : undefined}>
@@ -105,21 +114,28 @@ export function SellerFields({
       {isCollapsible ? (
         <Button
           label={
-            disclosure.isOpen
+            disclosure.isOpen && !isExpandDisabled
               ? 'Ẩn bớt thông tin chi tiết'
               : 'Xem thêm thông tin chi tiết'
           }
           type="button"
           variant="ghost"
           size="sm"
+          isDisabled={isExpandDisabled}
+          tooltip={
+            isExpandDisabled ? 'Chọn bên bán trước khi xem chi tiết' : undefined
+          }
           aria-controls={detailsId}
-          aria-expanded={disclosure.isOpen}
+          aria-expanded={disclosure.isOpen && !isExpandDisabled}
           onClick={disclosure.toggle}
           endContent={
             <Icon
               icon="chevronDown"
               size="sm"
-              xstyle={[styles.chevron, disclosure.isOpen && styles.chevronOpen]}
+              xstyle={[
+                styles.chevron,
+                disclosure.isOpen && !isExpandDisabled && styles.chevronOpen,
+              ]}
             />
           }
         />

@@ -680,6 +680,7 @@ export {};
  * @property {number} declarationValue
  * @property {string} declarationCurrency - 3-letter uppercase ISO 4217 code
  * @property {number} declarationExchangeRate
+ * @property {number} declarationValueVnd - `declarationValue * declarationExchangeRate`, computed at read time, never stored
  * @property {number} quantityAmount
  * @property {ShipmentQuantityUnit} quantityUnit
  * @property {number} declarationWeightKg

@@ -1,8 +1,7 @@
 'use client';
 /** @typedef {'profile' | 'annexes' | 'payments' | 'related' | 'fullView'} ExpandedTab */
 import { Badge } from '@astryxdesign/core/Badge';
-import { Button } from '@astryxdesign/core/Button';
-import { HStack } from '@astryxdesign/core/HStack';
+import { Link } from '@astryxdesign/core/Link';
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -10,6 +9,7 @@ import {
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useMemo, useState } from 'react';
@@ -87,6 +87,9 @@ function formatPaymentTerms(terms) {
  *   settlementValue: number,
  *   paidValue: number,
  *   unpaidValue: number,
+ *   exportedValue: number,
+ *   exportedValueVnd: number,
+ *   unexportedValue: number,
  *   isMultiCurrency: boolean,
  * }} ContractTotalsRow
  */
@@ -132,15 +135,34 @@ const TOTALS_ROW_CELL_RENDERERS = {
       {formatMoney(row.unpaidValue, row.currency)}
     </Text>
   ),
+  exportedValue: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.exportedValue, row.currency)}
+    </Text>
+  ),
+  exportedValueVnd: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.exportedValueVnd)} đ
+    </Text>
+  ),
+  unexportedValue: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.unexportedValue, row.currency)}
+    </Text>
+  ),
 };
 
 const SETTLEMENT_GROUP_KEY = 'settlement-value-group';
 const SETTLEMENT_GROUP_COLUMN_KEYS = [
   'contractValue',
   'settlementValue',
-  'paidValue',
-  'unpaidValue',
+  'exportedValue',
+  'exportedValueVnd',
+  'unexportedValue',
 ];
+
+const PAYMENT_GROUP_KEY = 'payment-status-group';
+const PAYMENT_GROUP_COLUMN_KEYS = ['paidValue', 'unpaidValue'];
 
 const CONTRACT_HEADER_GROUPS = [
   {
@@ -148,10 +170,23 @@ const CONTRACT_HEADER_GROUPS = [
     label: 'GIÁ TRỊ',
     columnKeys: SETTLEMENT_GROUP_COLUMN_KEYS,
   },
+  {
+    id: PAYMENT_GROUP_KEY,
+    label: 'THANH TOÁN',
+    columnKeys: PAYMENT_GROUP_COLUMN_KEYS,
+  },
 ];
 
 const styles = stylex.create({
   statusFilter: { maxWidth: '100%', overflowX: 'auto' },
+  // Vivid blue link style requested for "Số hợp đồng" (matches a
+  // reference report where record codes render as blue link text) —
+  // `Link`'s own `color` prop only offers the theme's accent color (this
+  // app's brand green). `--color-text-blue` is tuned as a muted/darker
+  // body-text blue for contrast, not the vivid hyperlink shade the
+  // reference calls for, so `--color-icon-blue` (the same vivid blue as
+  // the un-themed base accent) is applied via `xstyle` instead.
+  contractNumberLink: { color: colorVars['--color-icon-blue'] },
 });
 
 /** Contract workspace and related editors are siblings of the table so
@@ -232,7 +267,7 @@ export function ContractsList() {
   // stacked fullscreen dialogs, this workspace's own `ContractFormDialog`
   // stays open underneath).
   const [relatedCommissionDialog, setRelatedCommissionDialog] = useState(
-    /** @type {{ contractId: string, currency: string, commission: import('../types/index.js').Commission | null } | null} */ (
+    /** @type {{ contractId: string, contractNumber: string, projectName: string, currency: string, commission: import('../types/index.js').Commission | null } | null} */ (
       null
     ),
   );
@@ -291,18 +326,14 @@ export function ContractsList() {
         : pageSize,
       conditions: filterConditions,
     });
-    return result.success
-      ? result.contracts.map((contract, index) => ({
-          ...contract,
-          rowNumber: index + 1,
-        }))
-      : [];
+    return result.success ? result.contracts : [];
   }
-  // Sum of contractValue/settlementValue/paidValue/unpaidValue across every
-  // contract matching the current filters (not just this page — the
-  // backend computes it pre-paging, see `searchContracts`'s doc comment),
-  // grouped by currency since contracts can be denominated in more than
-  // one. Rendered as a synthetic last row per currency (see
+  // Sum of contractValue/settlementValue/paidValue/unpaidValue/
+  // exportedValue/exportedValueVnd/unexportedValue across every contract
+  // matching the current filters (not just this page — the backend
+  // computes it pre-paging, see `searchContracts`'s doc comment), grouped
+  // by currency since contracts can be denominated in more than one.
+  // Rendered as a synthetic last row per currency (see
   // `TOTALS_ROW_LABEL_COLUMN_KEY`/`isTotalsRow` below) rather than a
   // separate summary line, so each sum lines up under its own column.
   const totalsRows = useMemo(() => {
@@ -316,6 +347,9 @@ export function ContractsList() {
       settlementValue: total.settlementValue,
       paidValue: total.paidValue,
       unpaidValue: total.unpaidValue,
+      exportedValue: total.exportedValue,
+      exportedValueVnd: total.exportedValueVnd,
+      unexportedValue: total.unexportedValue,
       isMultiCurrency: totals.length > 1,
     }));
   }, [listResult]);
@@ -364,7 +398,15 @@ export function ContractsList() {
   const customersQuery = useCustomersQuery();
   const suppliersQuery = useSuppliersQuery();
   const suppliersById = useMemo(
-    () => new Map((suppliersQuery.data?.success ? suppliersQuery.data.suppliers : []).map((/** @type {import('../types/index.js').Supplier} */ supplier) => [supplier.id, supplier])),
+    () =>
+      new Map(
+        (suppliersQuery.data?.success ? suppliersQuery.data.suppliers : []).map(
+          (/** @type {import('../types/index.js').Supplier} */ supplier) => [
+            supplier.id,
+            supplier,
+          ],
+        ),
+      ),
     [suppliersQuery.data],
   );
 
@@ -433,26 +475,20 @@ export function ContractsList() {
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<import('../types/index.js').Contract & Record<string, unknown>>[]} */
   const columns = [
     {
-      key: 'rowNumber',
-      header: 'Số thứ tự',
-      width: pixel(100),
-      renderCell: (contract) => Number(contract.rowNumber),
-    },
-    {
       key: 'contractNumber',
       header: 'Số hợp đồng',
       width: pixel(180),
       filter: 'contractNumber',
       renderCell: (contract) => (
-        <Button
-          label={contract.contractNumber}
-          variant="ghost"
-          size="sm"
+        <Link
+          xstyle={styles.contractNumberLink}
           onClick={(event) => {
             event.stopPropagation();
             openContract(contract, 'view');
           }}
-        />
+        >
+          {contract.contractNumber}
+        </Link>
       ),
     },
     {
@@ -505,46 +541,73 @@ export function ContractsList() {
     },
     {
       key: 'settlementValue',
-      // No matching backend filter field — these three are computed
-      // (contract value + annex adjustments, and the payment position off
-      // it), not stored columns `ContractFilterFields` (BE-kt-xnk) knows
-      // how to filter on.
+      // No matching backend filter field — these are all computed (contract
+      // value + annex adjustments, the shipment declaration sums, and the
+      // payment position off them), not stored columns `ContractFilterFields`
+      // (BE-kt-xnk) knows how to filter on.
       header: 'QUYẾT TOÁN',
       width: proportional(1, { minWidth: 180 }),
       align: 'end',
+      filter: 'settlementValue',
       renderCell: (contract) =>
-        formatMoney(
-          settlementsByContractId.get(contract.id)?.settlementValue,
-          contract.currency,
-        ),
-      exportValue: (contract) =>
-        settlementsByContractId.get(contract.id)?.settlementValue ?? '',
+        formatMoney(Number(contract.settlementValue), contract.currency),
+      exportValue: (contract) => Number(contract.settlementValue),
+    },
+    {
+      key: 'exportedValue',
+      // Sum of every Shipment's `declarationValue` ("Giá trị tờ khai")
+      // recorded against this contract (BE `ContractSettlement.ExportedValue`).
+      header: 'ĐÃ XUẤT',
+      width: proportional(1, { minWidth: 180 }),
+      align: 'end',
+      filter: 'exportedValue',
+      renderCell: (contract) =>
+        formatMoney(Number(contract.exportedValue), contract.currency),
+      exportValue: (contract) => Number(contract.exportedValue),
+    },
+    {
+      key: 'exportedValueVnd',
+      // Always VNĐ (`declarationValue * declarationExchangeRate` summed
+      // across the contract's Shipments) — no `contract.currency` suffix,
+      // same "đ" convention `logisticsCost` uses on the Shipment list.
+      header: 'ĐÃ XUẤT (VNĐ)',
+      width: proportional(1, { minWidth: 180 }),
+      align: 'end',
+      filter: 'exportedValueVnd',
+      renderCell: (contract) =>
+        `${formatMoney(Number(contract.exportedValueVnd))} đ`,
+      exportValue: (contract) => Number(contract.exportedValueVnd),
+    },
+    {
+      key: 'unexportedValue',
+      // `settlementValue - exportedValue` (BE `ContractSettlement.UnexportedValue`).
+      header: 'CHƯA XUẤT',
+      width: proportional(1, { minWidth: 180 }),
+      align: 'end',
+      filter: 'unexportedValue',
+      renderCell: (contract) =>
+        formatMoney(Number(contract.unexportedValue), contract.currency),
+      exportValue: (contract) => Number(contract.unexportedValue),
     },
     {
       key: 'paidValue',
       header: 'ĐÃ THANH TOÁN',
       width: proportional(1, { minWidth: 180 }),
       align: 'end',
+      filter: 'paidValue',
       renderCell: (contract) =>
-        formatMoney(
-          settlementsByContractId.get(contract.id)?.paidValue,
-          contract.currency,
-        ),
-      exportValue: (contract) =>
-        settlementsByContractId.get(contract.id)?.paidValue ?? '',
+        formatMoney(Number(contract.paidValue), contract.currency),
+      exportValue: (contract) => Number(contract.paidValue),
     },
     {
       key: 'unpaidValue',
       header: 'CHƯA THANH TOÁN',
       width: proportional(1, { minWidth: 200 }),
       align: 'end',
+      filter: 'unpaidValue',
       renderCell: (contract) =>
-        formatMoney(
-          settlementsByContractId.get(contract.id)?.unpaidValue,
-          contract.currency,
-        ),
-      exportValue: (contract) =>
-        settlementsByContractId.get(contract.id)?.unpaidValue ?? '',
+        formatMoney(Number(contract.unpaidValue), contract.currency),
+      exportValue: (contract) => Number(contract.unpaidValue),
     },
     {
       key: 'incoterm',
@@ -561,6 +624,7 @@ export function ContractsList() {
       key: 'createdDate',
       header: 'Ngày ký',
       width: pixel(150),
+      filter: 'createdDate',
       renderCell: (contract) => formatDisplayDate(contract.createdDate),
     },
     {
@@ -643,16 +707,25 @@ export function ContractsList() {
   // Every column's `renderCell` runs against the synthetic totals row(s)
   // too — `Table` has no footer concept in data-driven mode, so
   // `advance-table.jsx`'s `totalsRows` prop just appends them as ordinary
-  // rows (see `totalsRows` above). Most columns render blank for it; these
-  // four render the pre-summed amount, and the leftmost column names the row.
+  // rows (see `totalsRows` above). Most columns render blank for it; the
+  // seven `TOTALS_ROW_CELL_RENDERERS` keys render the pre-summed amount,
+  // and the leftmost column names the row.
   const columnsWithTotalsRow = withTotalsRowCells(
     columns,
     TOTALS_ROW_CELL_RENDERERS,
   );
 
-  const searchableContracts = contracts.map((contract, index) => ({
+  const searchableContracts = contracts.map((contract) => ({
     ...contract,
-    rowNumber: (pageIndex - 1) * pageSize + index + 1,
+    settlementValue:
+      settlementsByContractId.get(contract.id)?.settlementValue ?? 0,
+    paidValue: settlementsByContractId.get(contract.id)?.paidValue ?? 0,
+    unpaidValue: settlementsByContractId.get(contract.id)?.unpaidValue ?? 0,
+    exportedValue: settlementsByContractId.get(contract.id)?.exportedValue ?? 0,
+    exportedValueVnd:
+      settlementsByContractId.get(contract.id)?.exportedValueVnd ?? 0,
+    unexportedValue:
+      settlementsByContractId.get(contract.id)?.unexportedValue ?? 0,
     buyerCompanyName: contract.buyer.companyName,
     countryName: countriesById.get(contract.countryId)?.name ?? '',
     bankNames: contract.bankIds
@@ -673,22 +746,6 @@ export function ContractsList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
-      <HStack hAlign="between" vAlign="start" wrap="wrap" gap={3}>
-        <VStack gap={1}>
-          <Heading level={1}>Hợp đồng</Heading>
-        </VStack>
-        <HStack gap={2}>
-          <Button
-            label="Tạo hợp đồng"
-            variant="primary"
-            onClick={() => {
-              setExpandedTab('profile');
-              setWorkspace({ contract: null, sessionKey: generateRowKey() });
-            }}
-          />
-        </HStack>
-      </HStack>
-
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
@@ -712,6 +769,7 @@ export function ContractsList() {
 
       <StackItem size="fill">
         <AdvanceTable
+          title={<Heading level={1}>Hợp đồng</Heading>}
           headerGroups={CONTRACT_HEADER_GROUPS}
           toolbarLabel="Thao tác danh sách hợp đồng"
           searchFieldDefs={searchFieldDefsWithCustomers}
@@ -738,6 +796,13 @@ export function ContractsList() {
           fetchAllRows={fetchAllContracts}
           onRefresh={() => contractsQuery.refetch()}
           isRefreshing={contractsQuery.isFetching}
+          primaryAction={{
+            label: 'Tạo hợp đồng',
+            onClick: () => {
+              setExpandedTab('profile');
+              setWorkspace({ contract: null, sessionKey: generateRowKey() });
+            },
+          }}
           pagination={{
             pageIndex,
             pageSize,
@@ -810,6 +875,8 @@ export function ContractsList() {
               onOpenCommission={(commission) =>
                 setRelatedCommissionDialog({
                   contractId: contract.id,
+                  contractNumber: contract.contractNumber,
+                  projectName: contract.projectName,
                   currency: contract.currency,
                   commission,
                 })
@@ -834,6 +901,8 @@ export function ContractsList() {
             if (!isOpen) setRelatedCommissionDialog(null);
           }}
           contractId={relatedCommissionDialog.contractId}
+          contractNumber={relatedCommissionDialog.contractNumber}
+          projectName={relatedCommissionDialog.projectName}
           currency={relatedCommissionDialog.currency}
           commission={relatedCommissionDialog.commission}
           closeLabel="Quay lại Contract"

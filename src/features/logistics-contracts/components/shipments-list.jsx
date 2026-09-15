@@ -8,6 +8,7 @@
  *   contractNumber: string,
  *   projectName: string,
  *   supplierName: string,
+ *   logisticsCost: number,
  * }} ShipmentListRow
  */
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
@@ -31,6 +32,7 @@ import {
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
+import { numberValueToInput } from '@/shared/config/formatted-number-input.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
@@ -70,11 +72,22 @@ function orDash(value) {
 }
 
 /**
+ * One row per currency seen in either `invoiceValue` or `declarationValue`
+ * (see `searchAllShipments`'s doc comment) — a row missing one side has 0
+ * there, not a gap. `logisticsCost` is only set on the first row: it's a
+ * single flat VNĐ figure (no currency of its own to key rows by), so
+ * repeating it on every currency row would misleadingly suggest it's
+ * per-currency too.
  * @typedef {{
  *   id: string,
  *   __isTotalsRow: true,
  *   currency: string,
  *   invoiceValue: number,
+ *   declarationValue: number,
+ *   declarationValueVnd: number | null,
+ *   logisticsCost: number | null,
+ *   quantity: string | null,
+ *   vgmCount: number | null,
  *   isMultiCurrency: boolean,
  * }} ShipmentTotalsRow
  */
@@ -105,6 +118,35 @@ const TOTALS_ROW_CELL_RENDERERS = {
       {formatMoney(row.invoiceValue, row.currency)}
     </Text>
   ),
+  declarationValue: (row) => (
+    <Text weight="semibold" hasTabularNumbers>
+      {formatMoney(row.declarationValue, row.currency)}
+    </Text>
+  ),
+  declarationValueVnd: (row) =>
+    row.declarationValueVnd == null ? null : (
+      <Text weight="semibold" hasTabularNumbers>
+        {formatMoney(row.declarationValueVnd)} đ
+      </Text>
+    ),
+  logisticsCost: (row) =>
+    row.logisticsCost == null ? null : (
+      <Text weight="semibold" hasTabularNumbers>
+        {formatMoney(row.logisticsCost)} đ
+      </Text>
+    ),
+  quantity: (row) =>
+    row.quantity == null ? null : (
+      <Text weight="semibold" hasTabularNumbers>
+        {row.quantity}
+      </Text>
+    ),
+  vgm: (row) =>
+    row.vgmCount == null ? null : (
+      <Text weight="semibold" hasTabularNumbers>
+        {row.vgmCount}
+      </Text>
+    ),
 };
 
 export function ShipmentsList() {
@@ -156,19 +198,32 @@ export function ShipmentsList() {
   const listResult = shipmentsQuery.data;
   const shipments = listResult?.success ? listResult.shipments : [];
 
-  // Sum of invoiceValue across every shipment matching the current filters
-  // (not just this page — the backend computes it pre-paging, see
-  // `searchAllShipments`'s doc comment), grouped by currency since
-  // shipments can be invoiced in more than one. Rendered as a synthetic
-  // last row per currency, same pattern as `contracts-list.jsx`.
+  // Full-filtered-set totals (not just this page — the backend computes
+  // them pre-paging, see `searchAllShipments`'s doc comment). Invoice and
+  // declaration values share one row per currency; the flat VNĐ logistics
+  // total appears once, on the first row, rather than repeating per currency.
   const totalsRows = useMemo(() => {
     if (!listResult?.success) return [];
     const totals = listResult.totals;
-    return totals.map((total) => ({
+    return totals.map((total, index) => ({
       id: `totals-${total.currency}`,
       __isTotalsRow: true,
       currency: total.currency,
       invoiceValue: total.invoiceValue,
+      declarationValue: total.declarationValue,
+      declarationValueVnd:
+        index === 0 ? listResult.declarationValueVndTotal : null,
+      logisticsCost: index === 0 ? listResult.logisticsCostTotal : null,
+      quantity:
+        index === 0
+          ? listResult.quantityTotals
+              .map(
+                (quantityTotal) =>
+                  `${numberValueToInput(quantityTotal.amount)} ${labelForShipmentQuantityUnit(quantityTotal.unit)}`,
+              )
+              .join(' + ')
+          : null,
+      vgmCount: index === 0 ? listResult.vgmCountTotal : null,
       isMultiCurrency: totals.length > 1,
     }));
   }, [listResult]);
@@ -214,6 +269,10 @@ export function ShipmentsList() {
         projectName: contract?.projectName ?? '',
         supplierName:
           customersById.get(shipment.supplierCustomerId)?.companyName ?? '',
+        logisticsCost: shipment.costTotalsByCategory.reduce(
+          (sum, total) => sum + total.totalAmount,
+          0,
+        ),
       };
     });
   }
@@ -269,10 +328,11 @@ export function ShipmentsList() {
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<ShipmentListRow>[]} */
   const columns = [
     {
-      key: 'shipmentNumber',
-      header: 'Số thứ tự',
-      width: pixel(100),
-      renderCell: (row) => row.shipmentNumber,
+      key: 'customsDeclarationDate',
+      header: 'Ngày khai Hải quan',
+      width: pixel(170),
+      filter: 'customsDeclarationDate',
+      renderCell: (row) => formatDisplayDate(row.customsDeclarationDate),
     },
     {
       key: 'shipmentCode',
@@ -338,6 +398,7 @@ export function ShipmentsList() {
       key: 'quantity',
       header: 'Số lượng',
       width: pixel(110),
+      filter: 'quantityAmount',
       renderCell: (row) =>
         `${row.quantityAmount} ${labelForShipmentQuantityUnit(row.quantityUnit)}`,
       exportValue: (row) =>
@@ -350,13 +411,7 @@ export function ShipmentsList() {
       filter: 'bookingNumber',
       renderCell: (row) => row.bookingNumber,
     },
-    {
-      key: 'customsDeclarationDate',
-      header: 'Ngày khai Hải quan',
-      width: pixel(170),
-      filter: 'customsDeclarationDate',
-      renderCell: (row) => formatDisplayDate(row.customsDeclarationDate),
-    },
+
     {
       key: 'supplier',
       header: 'Forwarder',
@@ -379,24 +434,30 @@ export function ShipmentsList() {
         formatMoney(row.declarationValue, row.declarationCurrency),
     },
     {
+      key: 'declarationValueVnd',
+      header: 'Giá trị tờ khai (VNĐ)',
+      width: pixel(200),
+      // No `filter` key — BE has no matching search field for this
+      // computed value (declarationValue * declarationExchangeRate).
+      renderCell: (row) => `${formatMoney(row.declarationValueVnd)} đ`,
+      exportValue: (row) => row.declarationValueVnd,
+    },
+    {
       key: 'logisticsCost',
       header: 'Chi phí Logistics',
       width: pixel(180),
+      filter: 'logisticsCost',
       // VND only, no per-line currency — same "đ" suffix convention as
       // `shipment-cost-lines-fields.jsx`'s own "Tổng chi phí" line.
-      renderCell: (row) =>
-        `${formatMoney(row.costTotalsByCategory.reduce((sum, total) => sum + total.totalAmount, 0))} đ`,
-      exportValue: (row) =>
-        row.costTotalsByCategory.reduce(
-          (sum, total) => sum + total.totalAmount,
-          0,
-        ),
+      renderCell: (row) => `${formatMoney(row.logisticsCost)} đ`,
+      exportValue: (row) => row.logisticsCost,
     },
     {
       key: 'vgm',
       header: 'VGM',
       width: pixel(90),
       align: 'end',
+      filter: 'vgmCount',
       renderCell: (row) => row.vgmCount,
     },
     {
@@ -447,16 +508,6 @@ export function ShipmentsList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
-      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
-        <Heading level={1}>Shipment</Heading>
-        <Button
-          label="Thêm Shipment"
-          variant="primary"
-          icon={<Icon icon={Plus} />}
-          onClick={() => setIsPickingContract(true)}
-        />
-      </HStack>
-
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
@@ -475,6 +526,7 @@ export function ShipmentsList() {
 
       <StackItem size="fill">
         <AdvanceTable
+          title={<Heading level={1}>Shipment</Heading>}
           toolbarLabel="Thao tác danh sách Shipment"
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Shipment"
@@ -497,6 +549,11 @@ export function ShipmentsList() {
           fetchAllRows={fetchAllShipments}
           onRefresh={() => shipmentsQuery.refetch()}
           isRefreshing={shipmentsQuery.isFetching}
+          primaryAction={{
+            label: 'Thêm Shipment',
+            icon: <Icon icon={Plus} />,
+            onClick: () => setIsPickingContract(true),
+          }}
           pagination={{
             pageIndex,
             pageSize,
@@ -542,15 +599,17 @@ export function ShipmentsList() {
                     return {
                       value: contract.id,
                       label: `${contract.contractNumber} · ${contract.projectName}`,
-                      description: ineligibleReason ?? undefined,
+                      description: `${contract.incoterm} ${contract.incotermYear}${
+                        ineligibleReason ? ` · ${ineligibleReason}` : ''
+                      }`,
                       disabled: ineligibleReason != null,
                     };
                   })}
                   width="100%"
                 />
                 <Text color="secondary">
-                  Chỉ hợp đồng Chính thức, đã ký bởi cả hai bên và chưa huỷ mới
-                  có thể tạo Shipment mới.
+                  Chỉ hợp đồng Chính thức, đã ký bởi cả hai bên và đang ở trạng
+                  thái Đang thực hiện mới có thể tạo Shipment mới.
                 </Text>
               </LayoutContent>
             }

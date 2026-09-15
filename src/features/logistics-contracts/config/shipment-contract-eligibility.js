@@ -1,10 +1,11 @@
 /**
  * A `Contract` may only have a new `Shipment` created against it when it
- * is Chính thức (Official), signed by both parties, and not Đã huỷ
- * (Cancelled) — mirrors the backend's `CreateShipmentCommandHandler`
- * business rule (BE-kt-xnk, 2026-09-12). Editing an existing shipment is
- * not subject to this rule — only used to gate contract *selection* when
- * creating a new one.
+ * is Chính thức (Official), signed by both parties, and Đang thực hiện
+ * (InProgress) — mirrors the backend's `CreateShipmentCommandHandler`
+ * business rule (BE-kt-xnk, 2026-09-15: tightened from "not Cancelled" to
+ * "must be InProgress", so NotStarted/Completed are now also ineligible,
+ * not just Cancelled). Editing an existing shipment is not subject to this
+ * rule — only used to gate contract *selection* when creating a new one.
  * @param {import('../types/index.js').Contract} contract
  */
 export function isContractEligibleForShipment(contract) {
@@ -12,7 +13,7 @@ export function isContractEligibleForShipment(contract) {
     contract.contractType === 'Official' &&
     contract.sellerSigned &&
     contract.buyerSigned &&
-    contract.status !== 'Cancelled'
+    contract.status === 'InProgress'
   );
 }
 
@@ -30,8 +31,8 @@ export function reasonContractIneligibleForShipment(contract) {
   if (!contract.sellerSigned || !contract.buyerSigned) {
     return 'Hợp đồng phải được ký bởi cả hai bên';
   }
-  if (contract.status === 'Cancelled') {
-    return 'Hợp đồng đã huỷ, không thể tạo lần xuất hàng mới';
+  if (contract.status !== 'InProgress') {
+    return 'Hợp đồng phải ở trạng thái Đang thực hiện mới tạo được lần xuất hàng mới';
   }
   return null;
 }

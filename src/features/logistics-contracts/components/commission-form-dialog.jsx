@@ -22,10 +22,10 @@ import { CommissionFields } from './commission-fields.jsx';
  *   initialMode?: 'view' | 'edit',
  *   onOpenChange: (isOpen: boolean) => void,
  *   contractId: string,
+ *   contractNumber?: string,
+ *   projectName?: string,
  *   currency: string,
- *   commission?: (import('../types/index.js').Commission & {
- *     contractNumber?: string, projectName?: string,
- *   }) | null,
+ *   commission?: import('../types/index.js').Commission | null,
  *   onSuccess?: (commission: import('../types/index.js').Commission) => void,
  *   onAddAnnex?: () => void,
  *   onEditAnnex?: (annex: import('../types/index.js').CommissionAnnex) => void,
@@ -38,6 +38,8 @@ export function CommissionFormDialog({
   initialMode = 'edit',
   onOpenChange,
   contractId,
+  contractNumber = '',
+  projectName = '',
   currency,
   commission = null,
   onSuccess,
@@ -100,6 +102,8 @@ export function CommissionFormDialog({
     >
       <CommissionFields
         commission={commission}
+        contractNumber={contractNumber}
+        projectName={projectName}
         isReadOnly={isViewing}
         values={form.values}
         setField={form.setField}

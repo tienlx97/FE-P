@@ -42,6 +42,16 @@ export const SEARCH_FIELD_DEFS = [
     label: 'Trạng thái',
     enumValues: contractStatusOptions,
   },
+  { key: 'settlementValue', type: 'number', label: 'Giá trị quyết toán' },
+  { key: 'exportedValue', type: 'number', label: 'Giá trị đã xuất' },
+  {
+    key: 'exportedValueVnd',
+    type: 'number',
+    label: 'Giá trị đã xuất (VNĐ)',
+  },
+  { key: 'unexportedValue', type: 'number', label: 'Giá trị chưa xuất' },
+  { key: 'paidValue', type: 'number', label: 'Giá trị đã thanh toán' },
+  { key: 'unpaidValue', type: 'number', label: 'Giá trị chưa thanh toán' },
 ];
 
 // The static, single-value-per-field advanced search this list used to have
@@ -98,7 +108,6 @@ export const FILTER_FIELD_DEFS = [
 ];
 
 export const COLUMN_OPTIONS = [
-  { key: 'rowNumber', label: 'Số thứ tự' },
   { key: 'contractNumber', label: 'Số hợp đồng', isAlwaysVisible: true },
   { key: 'contractType', label: 'Loại hợp đồng' },
   { key: 'status', label: 'Trạng thái' },
@@ -106,6 +115,9 @@ export const COLUMN_OPTIONS = [
   { key: 'buyer', label: 'Khách hàng' },
   { key: 'contractValue', label: 'Giá trị hợp đồng' },
   { key: 'settlementValue', label: 'Giá trị quyết toán' },
+  { key: 'exportedValue', label: 'Giá trị đã xuất' },
+  { key: 'exportedValueVnd', label: 'Giá trị đã xuất (VNĐ)' },
+  { key: 'unexportedValue', label: 'Giá trị chưa xuất' },
   { key: 'paidValue', label: 'Giá trị đã thanh toán' },
   { key: 'unpaidValue', label: 'Giá trị chưa thanh toán' },
   { key: 'incoterm', label: 'Incoterm' },
@@ -137,19 +149,21 @@ export const DEFAULT_COLUMN_KEYS = [
   'actions',
 ];
 
-// The settlement group (`SETTLEMENT_GROUP_COLUMN_KEYS` in
+// The GIÁ TRỊ and THANH TOÁN header groups (`CONTRACT_HEADER_GROUPS` in
 // `contracts-list.jsx`) plus enough identifying context (code/khách hàng/
 // trạng thái) to still place each row — switched to via `VIEW_PRESETS`'
 // "Tài chính" segment, design.md section 4's "Nhóm tài chính chi tiết
 // thành chế độ xem riêng".
 export const FINANCIAL_COLUMN_KEYS = [
-  'rowNumber',
   'createdDate',
   'contractNumber',
   'buyer',
   'status',
   'contractValue',
   'settlementValue',
+  'exportedValue',
+  'exportedValueVnd',
+  'unexportedValue',
   'paidValue',
   'unpaidValue',
   'actions',

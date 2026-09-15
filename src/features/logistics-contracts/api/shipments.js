@@ -178,12 +178,23 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
  * identically to `listAllShipments` — filtering happens server-side (`POST
  * /api/v1/shipments/search`, BE-kt-xnk).
  *
- * Unlike `listAllShipments`, the response is `{ page: {...}, totals: [...] }`
- * rather than the flat paging envelope — `totals` sums `invoiceValue` per
- * currency (`invoiceCurrency`) across every matching shipment (not just
- * this page), backing the list's per-column totals row.
+ * Unlike `listAllShipments`, the response is
+ * `{ page: {...}, totals: [...], logisticsCostTotal, quantityTotals,
+ * vgmCountTotal }` rather than the flat
+ * paging envelope. `totals` sums `invoiceValue` (grouped by
+ * `invoiceCurrency`) and `declarationValue` (grouped by
+ * `declarationCurrency`) independently, unioned onto one row per currency
+ * seen in either field — a shipment can invoice and declare in different
+ * currencies, so a row missing one side is 0 there, not a computation gap
+ * (see `ShipmentTotal`'s doc comment, BE-kt-xnk). `logisticsCostTotal` and
+ * `declarationValueVndTotal` are both flat sums across every matching
+ * shipment — always VNĐ, no currency grouping (`ShipmentCost.Amount` has no
+ * currency field, and `declarationValueVndTotal` is `declarationValue *
+ * declarationExchangeRate` summed, mirroring each row's own
+ * `declarationValueVnd`). All cover every matching shipment (not just this
+ * page), backing the list's per-column totals row.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
- * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number }[] } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number, declarationValue: number }[], logisticsCostTotal: number, declarationValueVndTotal: number, quantityTotals: { unit: import('../types/index.js').ShipmentQuantityUnit, amount: number }[], vgmCountTotal: number } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchAllShipments({
   page = 1,
@@ -222,6 +233,10 @@ export async function searchAllShipments({
     totalCount: result.data?.page?.totalCount ?? 0,
     totalPages: result.data?.page?.totalPages ?? 0,
     totals: result.data?.totals ?? [],
+    logisticsCostTotal: result.data?.logisticsCostTotal ?? 0,
+    declarationValueVndTotal: result.data?.declarationValueVndTotal ?? 0,
+    quantityTotals: result.data?.quantityTotals ?? [],
+    vgmCountTotal: result.data?.vgmCountTotal ?? 0,
   };
 }
 

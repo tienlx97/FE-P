@@ -86,9 +86,9 @@ function Section({ title, children }) {
  * independent of this form, so they render in both modes whenever
  * `commission` exists.
  * @param {{
- *   commission?: (import('../types/index.js').Commission & {
- *     code?: string, contractNumber?: string, projectName?: string,
- *   }) | null,
+ *   commission?: (import('../types/index.js').Commission & { code?: string }) | null,
+ *   contractNumber?: string,
+ *   projectName?: string,
  *   isReadOnly?: boolean,
  *   values: import('../types/index.js').CommissionFormValues,
  *   setField: <K extends keyof import('../types/index.js').CommissionFormValues>(field: K, value: import('../types/index.js').CommissionFormValues[K]) => void,
@@ -105,6 +105,8 @@ function Section({ title, children }) {
  */
 export function CommissionFields({
   commission = null,
+  contractNumber = '',
+  projectName = '',
   isReadOnly = false,
   values,
   setField,
@@ -140,10 +142,10 @@ export function CommissionFields({
     <VStack gap={5} hAlign="stretch">
       <MetadataList columns={isNarrow ? 2 : 3} label={{ position: 'top' }}>
         <MetadataListItem label="Số hợp đồng">
-          {orDash(commission?.contractNumber)}
+          {orDash(contractNumber)}
         </MetadataListItem>
         <MetadataListItem label="Dự án">
-          {orDash(commission?.projectName)}
+          {orDash(projectName)}
         </MetadataListItem>
       </MetadataList>
 

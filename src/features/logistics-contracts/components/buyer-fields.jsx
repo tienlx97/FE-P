@@ -121,6 +121,7 @@ export function BuyerFields({
         extraFieldRows={extraFieldRows}
         showCompanyName={false}
         isCollapsible
+        isExpandDisabled={!selectedCustomer && !inlineValues.companyName}
         isReadOnly={isReadOnly}
       />
 

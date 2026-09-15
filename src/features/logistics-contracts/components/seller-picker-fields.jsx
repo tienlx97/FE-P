@@ -148,6 +148,7 @@ export function SellerPickerFields({
         extraFieldRows={extraFieldRows}
         showCompanyName={false}
         isCollapsible
+        isExpandDisabled={!selectedSeller && !inlineValues.companyName}
         isReadOnly={isReadOnly}
       />
 

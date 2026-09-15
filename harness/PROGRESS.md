@@ -1,5 +1,321 @@
 # Progress Log
 
+## 2026-09-15 (continued) — `logistics-cost-lines-ux`: task 3 — add STT column
+
+- User asked (Vietnamese) to add a "1 2 3 4 5..." column to the "Chi phí
+  Logistics" grid.
+- Added a leading `STT` column (`pixel(48)`, centered) to `columns` in
+  `ShipmentCostLinesFields`. Numbers only actual cost-line rows, not group
+  header rows — computed via a `sttByRowKey` map built by filtering
+  `groupedTableRows` down to non-header rows and using each one's position
+  in that filtered list (`index + 1`), so it stays a single continuous
+  "1, 2, 3, ..." sequence across category groups rather than resetting
+  per group. Built as a plain map lookup (not a mutated counter inside
+  `renderCell`) because the React Compiler's `react-hooks/immutability`
+  rule flags reassigning a `let` from inside a callback invoked during
+  render.
+- `groupedColumns`'s existing per-header-row `renderCell` override (only
+  `costCategoryId`/`amount` get special content on a header row, every
+  other column already returned `null`) needed no change — `stt` falls
+  into that same default `null` case automatically, so header rows show a
+  blank STT cell.
+- `pnpm lint`/`typecheck`/`structure`/`test` (145 pass) all green; full
+  `./harness/verify.sh` PASSED: `harness/runs/20260915-133807-4948/`.
+  Manual browser check (claude-in-chrome) against the same real Shipment:
+  view mode shows STT `1`/`2` on the two existing cost lines, blank on
+  group header rows; entering edit mode and adding a new row shows it
+  getting `3`. No console errors. Discarded the test edit before closing.
+
+## 2026-09-15 (continued) — `logistics-cost-lines-ux`: live-as-you-type attempt investigated and abandoned; click-triggered `DropdownMenu` kept and re-verified
+
+- After confirming task 1's `DropdownMenu`+`Sparkles`-button suggestion
+  picker worked (previous entry below), user asked for more: "lúc chọn phí
+  có sẵn, tôi chỉ cần ghi ở Textinput sẽ recommend" — type directly in the
+  `TextInput` and have suggestions appear live, no separate click needed.
+- Investigated every Astryx piece that could do this. Ruled out, each
+  confirmed by reading source, not just docs: `Selector` (`value` must be
+  one of `options`); `Typeahead`/`BaseTypeahead` (own internal
+  uncontrolled `query` state, reset to `''` on every selection, no prop to
+  seed an existing value); the `Popover` *component* and `DropdownMenu`
+  driven by an external focus event (both are button-trigger-coupled —
+  confirmed by testing, not just reading, that opening either one this way
+  still yanks DOM focus onto their own trigger button on every keystroke).
+- Attempted building a combobox directly on `usePopover` (the lower-level
+  hook those components use internally, with no button requirement) —
+  `hasAutoFocus: false` + `show({ skipAutoFocus: true })` from the
+  `TextInput`'s `onFocus`. Every individual piece verified working in
+  isolation via manual DOM calls (correct anchor positioning via CSS
+  anchor positioning, correct filtered/grouped content, focus staying in
+  the `TextInput` — `usePopover`'s own focus trap explicitly documents not
+  redirecting focus for "a listbox popup anchored to its own input", and
+  that held up under test) — but the React-triggered `popover.show()` call
+  itself never actually opened the popover in this specific
+  Dialog→Table→grouped-row→cell nesting, across a full hard reload and
+  multiple different timing fixes (`requestAnimationFrame`, gating
+  `render()` differently). No console errors at any point. Root cause not
+  found — most likely `popoverRef`/`isCurrentContextPopover` inside
+  `usePopover` never resolving to the mounted element for this deeply
+  nested portal target, but not confirmed with deeper instrumentation.
+- Decision: abandoned the `usePopover` live-typing attempt as not
+  reliably implementable with the currently-installed
+  `@astryxdesign/core@0.5.0` in this table-cell context within reasonable
+  effort. Reverted `shipment-cost-lines-fields.jsx` back to the
+  known-working `DropdownMenu`+`Sparkles`-button design from task 1
+  (`ShipmentCostNameCell` now: `HStack` of a plain `TextInput` +
+  `StackItem(fill)`, and a `DropdownMenu` beside it — `suggestionMenuSections`
+  unchanged, still filters by category and by whatever's already typed, so
+  opening the menu after typing partial text still narrows it). Rewrote
+  both doc comments to record the `usePopover` attempt and why it doesn't
+  work, so a future session doesn't repeat the same investigation from
+  scratch.
+- `pnpm lint`/`typecheck`/`structure`/`test` (145 pass) all green; full
+  `./harness/verify.sh` PASSED: `harness/runs/20260915-130446-4778/`.
+  Manual browser re-check (claude-in-chrome) against the same real
+  Shipment used for task 1's original verification: view mode correctly
+  hides the sparkle button (`isReadOnly`); edit mode shows it on every
+  row; clicking it on the existing "Phí THC" row narrowed to that one
+  match (name-text filtering confirmed live, just not without the click);
+  a fresh "Chưa phân loại" row's menu showed every category as sections;
+  picking "Dịch vụ hải quan" set the name and moved the row live into a
+  new "Customs" group by backfilling its category — same behavior as
+  task 1's original verification. No console errors. Discarded the test
+  edit before closing.
+- User-facing outcome to communicate: true type-and-see-recommendations
+  without any click could not be reliably built within the Astryx design
+  system's currently available components/hooks for this nested-table-cell
+  case. What shipped instead (and was re-verified working) is the task 1
+  click-triggered picker, still filtered by category and by whatever's
+  already typed — a smaller win than the original ask, not the full one.
+
+## 2026-09-15 (continued) — `logistics-cost-lines-ux`: task 1 done
+
+- User asked (Vietnamese) to optimize the "Thêm chi phí logistics" UX and
+  specifically wanted a preset list of common cost-item names available
+  instead of pure free typing every time.
+- Investigated why this wasn't already there: `ShipmentCostLinesFields`'s
+  own doc comment already recorded the reason — no Astryx component does
+  "free text plus suggestions while preserving an unmatched typed value".
+  Re-checked both candidate components against the currently-installed
+  `@astryxdesign/core@0.5.0` (reading `Selector`/`Typeahead`'s actual
+  source, not just the CLI docs) to confirm nothing changed: `Selector`'s
+  `value` must be one of its `options`, and `Typeahead`'s `onChange` only
+  ever fires with a real selected item or `null` — neither retains
+  arbitrary typed text as the field's value. So `Name` stays a plain
+  `TextInput`, unchanged.
+- Added a suggestion `DropdownMenu` (icon-only, `Sparkles` from
+  `lucide-react`) beside it instead — reads
+  `useShipmentCostItemTemplatesQuery()` once for the whole grid (mirrors
+  how `costCategoriesQuery` is already fetched once, not per row). A new
+  `suggestionMenuSections(row)` helper: if the row already has a
+  `costCategoryId`, shows only that category's templates; otherwise groups
+  every template into `DropdownMenu` sections by category name (sorted
+  'vi'), same section-grouping pattern `advance-table.jsx`'s "Xuất" export
+  menu already uses. Picking an item always sets `name`; it also backfills
+  `costCategoryId` when empty, never overwriting one already chosen — this
+  is what makes a "Chưa phân loại" row jump straight into the right group
+  instead of a second manual step.
+- Discovered `DropdownMenu` isn't a documented `InputGroup` child (only
+  `TextInput`/`NumberInput`/`TimeInput`/`DateInput`/`Typeahead`/`Selector`/
+  `MultiSelector` are) before wiring it in, so used a plain `HStack` +
+  `StackItem(fill)`-wrapped `TextInput` instead of `InputGroup` for the
+  row — avoids relying on undocumented addon-slot behavior for a
+  component the design system doesn't list as compatible.
+- BE seed data for the 13 requested names (Vận chuyển nội địa/quốc tế,
+  Seal, Chứng từ, Telex, CSHT, Dịch vụ C/O, Khai C/O, Dịch vụ hải quan,
+  Khai hải quan, Kit đóng hàng, Điện L/C, Bảo hiểm) is `BE-kt-xnk`'s own
+  `add-common-shipment-cost-item-templates` change, done in the same
+  session — required a Docker rebuild was **not** needed this time since
+  it's pure seed data (`db/sample-data.sql` re-imported directly into the
+  running `companymanagement-dev-mysql` container, no API code changed).
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260915-114342-4088/`.
+  Manual browser check (claude-in-chrome) against a real Shipment's "Chi
+  phí Logistics" tab: an existing Port/Terminal row's suggestion menu
+  showed only that category's 4 seeded templates (CSHT, Phí D/O, Phí THC,
+  Seal); picking "Seal" replaced the row's name; a fresh uncategorized row
+  showed every category as sections (confirmed Customs' 7 items and
+  Incurred's "Điện L/C" render correctly); picking "Dịch vụ hải quan" set
+  the name and moved the row live into a new "Customs" group by
+  backfilling its category. Discarded the test edits (didn't save) before
+  closing the dialog.
+
+## 2026-09-15 (continued) — `logistics-list-ux-polish`: task 2 — toolbar row moves up to Title
+
+- Follow-up refinement on item 3 of the feedback batch below: user clarified
+  they want Print/Xuất/primary-action level with the page **Title**
+  ("Hợp đồng"/"Shipment"), not just with each other in the search toolbar
+  row (which is what `primaryAction` already gave them, one entry down).
+- Added `AdvanceTable` a new optional `title` prop (`ReactNode`). When
+  given, it renders a dedicated header row (`title` on the left,
+  Print/Xuất/`primaryAction` on the right) above the existing search
+  toolbar — extracted `printButton`/`exportMenu`/`primaryActionButton` into
+  local variables so the title row and the (now-conditional) search-toolbar
+  copy render the *same* elements, never two separate implementations.
+  Refresh, `ViewPresets`, and "Tuỳ chọn hiển thị" deliberately stay in the
+  toolbar row — the user asked about the 3 action buttons specifically, not
+  these. Omitting `title` (every consumer but Contracts/Shipments) leaves
+  layout byte-for-byte unchanged — a purely additive, opt-in prop on a
+  component 12 screens depend on.
+  `ContractsList`/`ShipmentsList` now pass
+  `title={<Heading level={1}>…</Heading>}` to `AdvanceTable` instead of
+  rendering that `Heading` themselves in a row above it.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260915-112556-3785/`.
+  Manual browser check (claude-in-chrome) on both lists confirms the Title
+  row now carries In/Xuất/"Tạo hợp đồng"("Thêm Shipment"), with the search
+  toolbar row unchanged otherwise.
+
+## 2026-09-15 (continued) — user feedback batch: totals, InProgress-only shipment creation, toolbar layout, link styling
+
+- Follow-up feedback (Vietnamese), same session as
+  `add-contract-export-value-columns` above:
+  1. **Every summable column shows a total.** Wired BE's new
+     `SearchShipmentsResponse.DeclarationValueVndTotal` into
+     `shipments-list.jsx`'s totals row (`declarationValueVnd` cell renderer,
+     `totalsRows` memo) and `api/shipments.js` (JSDoc + destructuring +
+     `shipments.test.js`). Contract-side totals already covered from the
+     earlier task in this session.
+  2. **Restrict Shipment creation to In-Progress contracts** (BE-kt-xnk
+     tightened `CreateShipmentCommandHandler` the same way). Updated
+     `shipment-contract-eligibility.js`'s `isContractEligibleForShipment`/
+     `reasonContractIneligibleForShipment` — **and a browser check caught a
+     third place** the old rule was hardcoded: a static Vietnamese help
+     string in `shipments-list.jsx`'s contract-picker dialog ("Chỉ hợp đồng
+     Chính thức, đã ký bởi cả hai bên và chưa huỷ...") that neither of the
+     two helper functions covers, since it's plain copy, not derived from
+     `reasonContractIneligibleForShipment`. Manually verified in-browser:
+     both an unsigned/wrong-type contract and a Cancelled one show correctly
+     as disabled with the right per-reason description text in the picker.
+  3. **Print/Export inline with the primary action button.** Both were
+     previously in `AdvanceTable`'s own internal toolbar row, while
+     "Tạo hợp đồng"/"Thêm Shipment" lived in a separate page-header row
+     above it. `AdvanceTable` already had a `primaryAction` prop that
+     renders in the *same* toolbar row as Print/Xuất/Refresh — so instead
+     of restructuring the shared table component (used by 12 list
+     screens), `ContractsList`/`ShipmentsList` now pass their create-button
+     through `primaryAction` and no longer render their own header-row
+     button. Extended `primaryAction`'s type with an optional `icon` field
+     (backward compatible) so Shipment's "+" icon survives the move.
+  4. **"Số hợp đồng" as a vivid blue link, not a ghost Button** — per a
+     reference screenshot of an unrelated internal report where record
+     codes render as blue link text. Used Astryx's `Link` component (its
+     sanctioned rich-table-cell pattern — `astryx template
+     TableRichCellTable` — already uses `Link` exactly this way, with no
+     `href` so it renders as a button styled like a link). `Link`'s own
+     `color` prop only offers this theme's accent color, which is the
+     brand's green, not blue — so `xstyle` overrides it to
+     `--color-icon-blue` (`#0064E0`), the same vivid blue as the
+     unthemed base accent; `--color-text-blue` (the "-text-" suffixed
+     token) was tried first but is deliberately muted/darker for body-text
+     contrast and didn't match the reference. Removed the now-unused
+     `Button`/`HStack` imports this left behind in `contracts-list.jsx`.
+- Full `./harness/verify.sh` PASSED: `harness/runs/20260915-102807-3371/`,
+  `harness/runs/20260915-103952-3551/` (second run after the contract-picker
+  help-text fix). Manual browser verification (claude-in-chrome) confirmed
+  all four items against the running app, including a Docker rebuild of
+  `companymanagement-dev-api` for the BE half of items 1/2 (same gotcha as
+  the previous entry — the container was still serving the pre-change
+  image).
+
+## 2026-09-15 (continued) — `add-contract-export-value-columns`: task 1 done
+
+- User asked (Vietnamese) for two table additions, matching a BE change
+  (`BE-kt-xnk`'s `add-contract-export-value-columns`, done first in the same
+  session) that added the backing fields: Shipment list gets "Giá trị Tờ
+  khai (VNĐ)"; Contract list's GIÁ TRỊ group gets "ĐÃ XUẤT"/"ĐÃ XUẤT
+  (VNĐ)"/"CHƯA XUẤT", reorganized alongside a new THANH TOÁN group holding
+  the existing "ĐÃ THANH TOÁN"/"CHƯA THANH TOÁN" columns.
+- `shipments-table.js`/`shipments-list.jsx`: added `declarationValueVnd`
+  column right after "Giá trị tờ khai" (renders with a plain "đ" suffix,
+  same convention `logisticsCost` already uses — always VNĐ, no per-row
+  currency to interpolate). Added to `DEFAULT_COLUMN_KEYS`. No BE filter
+  field for this computed value, so no `filter` key and not added to
+  `FILTER_FIELD_DEFS`/`SEARCH_FIELD_DEFS`. `types/index.js`'s `Shipment`
+  typedef updated (not `ShipmentFormValues` — read-only, computed field).
+- `contracts-table.js`/`contracts-list.jsx`: `CONTRACT_HEADER_GROUPS` split
+  from one group into two — "GIÁ TRỊ" (`SETTLEMENT_GROUP_COLUMN_KEYS`, now
+  `contractValue`/`settlementValue`/`exportedValue`/`exportedValueVnd`/
+  `unexportedValue`) and a new "THANH TOÁN" (`PAYMENT_GROUP_COLUMN_KEYS`:
+  `paidValue`/`unpaidValue`), matching the exact layout given in the
+  request. New `exportedValue`/`unexportedValue` columns follow
+  `settlementValue`'s existing pattern (currency-suffixed, `filter` key
+  wired to `SEARCH_FIELD_DEFS`'s client-side quick-search, no BE
+  advanced-filter support so excluded from `FILTER_FIELD_DEFS`).
+  `exportedValueVnd` renders with a plain "đ" suffix like
+  `declarationValueVnd` above. `FINANCIAL_COLUMN_KEYS`/`COLUMN_OPTIONS`
+  extended to match. `searchableContracts`/`totalsRows`/
+  `TOTALS_ROW_CELL_RENDERERS` all extended with the three new fields,
+  sourced from `settlementsByContractId`/`listResult.totals` exactly like
+  the existing settlement figures.
+- Full `./harness/verify.sh` PASSED (lint/typecheck/structure/harness-
+  tests/unit-tests/build/quality-thresholds): `harness/runs/20260915-
+  093632-2585/`. No commit made in either repo — user has not asked for
+  one yet.
+- **Manual browser verification (claude-in-chrome), against the already-
+  running dev app on `:3000`** (a pre-existing `next dev` process for this
+  directory — `pnpm dev -- -p 3001` refused to start alongside it, Next's
+  dev lock is per-directory not per-port, so testing used the existing
+  instance directly rather than force a second one). Contract list's "Tài
+  chính" preset renders the exact two-group header layout requested (GIÁ
+  TRỊ: Hợp đồng/Quyết toán/Đã xuất/Đã xuất (VNĐ)/Chưa xuất; THANH TOÁN: Đã
+  thanh toán/Chưa thanh toán); Shipment list's column picker + default view
+  both show "Giá trị tờ khai (VNĐ)" right after "Giá trị tờ khai". Verified
+  the numbers themselves, not just that cells render: fetched
+  `/api/v1/contracts/search` directly and cross-checked `exportedValue`/
+  `exportedValueVnd`/`unexportedValue` against the Shipment list's own
+  declaration-value rows for the same contract — sums matched exactly.
+- **Caught and fixed along the way**: the BE dev stack's `companymanagement-
+  dev-api` Docker container (`docker-compose.dev.yml`, BE-kt-xnk) was still
+  running the image built before that repo's `add-contract-export-value-
+  columns` change — a `docker compose build api && docker compose up -d
+  api` was needed before the new response fields actually appeared; the
+  first browser pass showed `0` for `exportedValue`/`unexportedValue`
+  because of this, not a code bug (confirmed by reading the raw search
+  response before and after the rebuild). Not a harness gap — rebuilding a
+  Docker image after backend code changes is expected, just easy to miss
+  when the container had been up for hours already.
+
+## 2026-09-15 — Contract/Shipment lists, filters, totals, and create context
+
+- Removed the “Số thứ tự” column and column-picker entry from both Hợp đồng
+  and Shipment. The Hợp đồng financial preset now begins with “Ngày ký”.
+- Fixed shared header-filter discovery: fields defined only in the server-side
+  advanced-filter catalog are now merged into Astryx PowerSearch metadata, so
+  their typed header controls render and apply correctly. Added local numeric
+  filters for Shipment quantity/logistics/VGM and Contract settlement values.
+- Shipment's totals footer now covers invoice/declaration money, logistics
+  cost, quantities separated as Cont/Kiện, and VGM count. The API adapter has
+  direct parsing coverage for the expanded response.
+- Shipment selection now shows Incoterm in each contract option; the create
+  dialog title identifies the contract number and its context line shows the
+  project plus Incoterm/year.
+- Agent Browser PASS: all 8 default Shipment business-data headers expose a
+  usable filter; applying “Giá trị tờ khai” hides the nonmatching row and
+  clearing restores it. Totals rendered `1,000.00 USD`, `1,234.00 đ`,
+  `10 Kiện`, and VGM `1`. Evidence:
+  `harness/runs/20260914-stable-dialog-layout/shipment-totals.png` and
+  `harness/runs/20260915-contract-shipment-list/create-shipment-context.png`.
+- The Hợp đồng browser matrix passed the new removal/signing-date assertions at
+  1440px and 390px before reaching its already-documented stale quick-search
+  fixture (the mock always returns 20 rows). Full FE `./harness/verify.sh` PASS
+  with 145 unit tests, evidence `harness/runs/20260915-002620-1893/`. No commit
+  made.
+
+## 2026-09-14 — Shipment declaration and logistics totals
+
+- Continued Claude's interrupted work after the API adapter/type comment was
+  started. The Shipment totals row now renders `declarationValue` on each
+  matching currency row and the flat VNĐ `logisticsCostTotal` exactly once
+  (on the first currency row), avoiding the false impression that logistics
+  cost is currency-specific or repeated per currency.
+- Repaired `stable-dialog-layout-browser.mjs`'s stale flat Shipment-search
+  fixture to use the real `{ page, totals, logisticsCostTotal }` envelope and
+  added a focused `SHIPMENT_TOTALS_ONLY=1` path. It asserts the actual `<tfoot>`
+  cells and uses base64-safe multiline evaluation on Windows. Browser evidence:
+  `harness/runs/20260914-stable-dialog-layout/shipment-totals.png` and
+  `shipment-totals.json` (`1,000.00 USD`, `1,234.00 đ`).
+- Full `./harness/verify.sh` PASS (lint, typecheck, structure, harness tests,
+  144 unit tests, build, quality thresholds), evidence
+  `harness/runs/20260914-235256-13721/`. No commit made.
+
 ## 2026-09-14 — Hợp đồng “Tài chính” sequence and signing date columns
 
 **What changed:** The Hợp đồng table's “Tài chính” preset now starts with
@@ -10459,4 +10775,473 @@ ward reference data (free-text inputs, matching the backend).
   repo's own `add-delete-shipment/tasks.md` — see its `harness/PROGRESS.md`
   for the BE-side entry). No commit made in either repo — user has not
   asked for one yet.
+- Nothing outstanding from this round.
+
+## 2026-09-15 — Claude Code (`fix-boq-commission-header-ux`: 4 UI-feedback items)
+
+**Context:** User handed four short bug reports in Vietnamese, no
+`openspec/changes/` entry existed yet: (1) BOQ list has no "Thêm" button,
+(2) table headers have no visible border, (3) the "Thêm Commission" dialog
+doesn't show which contract/project it's for, (4) Seller/Buyer's "Xem thêm
+thông tin chi tiết" toggle should stay disabled until a company is picked.
+Opened `openspec/changes/fix-boq-commission-header-ux/` to track all four
+under one change (proposal.md has the full "why" per item and a decision
+log for the two non-obvious calls below).
+
+- **BOQ "Thêm" (1):** `ContractPrivateInfosList` had no create affordance,
+  unlike Contracts/Shipments/Commissions. Confirmed via
+  `ContractPrivateInfoListItem`'s own doc comment that a BOQ row *is* a
+  Contract row (1:1, nullable BOQ fields) — there's no "doesn't have one
+  yet" state, so unlike Commission's picker (which excludes contracts that
+  already have one), BOQ's picker lists every contract. Added the same
+  "Thêm" button → `CommonDialog` contract-`Selector` → "Tiếp tục" pattern
+  `CommissionsList` already uses, opening the existing
+  `ContractPrivateInfoDetailDialog` in edit mode for the picked contract
+  (`initialEditing: true`, minimal `{contractId, contractNumber}` row —
+  the dialog only ever reads those two fields off `detailDialog.row`).
+- **Header borders (2):** Diagnosed with an agent-browser session against
+  the real dev-mode server (`localhost:3000`, synthetic
+  `kt-xnk-access-token`/`kt-xnk-session-permissions` cookies + mocked
+  `**/api/backend/**` routes — same technique
+  `harness/checks/*-browser.mjs` already use, not a new pattern) rather
+  than guessing from CSS alone: `TableHeaderCell`'s own bottom divider and
+  `tanstack-data-table.jsx`'s local `headerCell` column-divider both used
+  `--color-border` (`rgb(231,236,235)`), computed and confirmed nearly
+  identical in luminance to the header's own mint background
+  (`rgb(220,238,232)`, `refresh-workspace-colors`) — the border rendered
+  with the CSS property present but visually gone (screenshotted a bare
+  `<thead>` to confirm: zero visible column rules). Switched both border
+  colors in `tanstack-data-table.jsx`'s `headerCell` style to
+  `--color-border-emphasized` (`theme.js` already reserves this token for
+  exactly this — "boundaries that need to stay visible against a colored
+  surface"). One shared component, so this fixes every list's header, not
+  just one screen. Re-screenshotted the same bare `<thead>` post-fix to
+  confirm visible column rules.
+- **Commission create dialog missing contract context (3):** `commission`
+  is `null` while creating (per `CommissionFormDialog`'s own doc comment),
+  so `CommissionFields`' `MetadataList` reading
+  `commission?.contractNumber`/`commission?.projectName` always showed "—"
+  on create, even though the contract was already picked one step earlier.
+  Added dedicated `contractNumber`/`projectName` props to
+  `CommissionFields`/`CommissionFormDialog` (independent of `commission`),
+  threaded from all three call sites: `CommissionsList`'s
+  `creatingCommission`/`editingCommissionRow` state (already had both
+  fields via `contractsById`/`enrichCommissions`) and `ContractsList`'s
+  `relatedCommissionDialog` (added `contractNumber`/`projectName` to that
+  state, sourced from the already-in-scope `contract`).
+- **Seller/Buyer detail toggle (4):** `SellerPickerFields`/`BuyerFields`
+  passed `isCollapsible` unconditionally to `SellerFields`/`CustomerFields`,
+  so "Xem thêm thông tin chi tiết" was clickable (and would expand onto an
+  empty detail card) before any company was chosen. Added
+  `isExpandDisabled` to both field-sets — disables the `Button`
+  (`isDisabled` + explanatory `tooltip`) and forces the section collapsed
+  regardless of prior disclosure state — wired from
+  `SellerPickerFields`/`BuyerFields` as
+  `!selectedSeller/Customer && !inlineValues.companyName` (the inline-name
+  fallback covers a contract editing an old Seller/Buyer saved without a
+  catalog link, per those components' own existing doc comments).
+- **Verification:** all four fixed items confirmed with agent-browser
+  against the mocked dev server (see above) — BOQ "Thêm" → picker → BOQ
+  detail dialog opens editable for the picked contract; header `<thead>`
+  screenshot shows visible column/bottom dividers on the Contracts list
+  (shared component, so every list); "Tạo Commission" dialog shows
+  "HD-777"/"Dự án Test Commission" after picking that contract; Contract
+  create dialog's Seller toggle is `aria-disabled="true"` before picking a
+  seller and `aria-disabled` absent immediately after. Full
+  `./harness/verify.sh` PASSED (lint, typecheck, structure, 145 unit
+  tests, build, quality-thresholds) — `harness/runs/20260915-084750-2132/`.
+- No commit made — user has not asked for one yet. Two other uncommitted
+  changes already sat in the working tree at session start
+  (`extend-shipment-search-totals`, `fix-contract-shipment-list-ux`, both
+  marked done in their own `openspec/changes/`) — untouched this session,
+  left for the user to review/commit separately.
+- Nothing outstanding from this round.
+
+## 2026-09-15 — Codex: redesign-shipment-logistics-costs
+
+- Redesigned Shipment cost tab as a compact ledger using the shared
+  TanStackDataTable: name/category together, amount aligned with subtotals,
+  supplier/invoice summary, and expandable supplier/invoice/note fields.
+  Total and line count lead the tab; suggestions now have a visible Gợi ý label.
+  Existing category grouping, numbering, suggestions and parent save flow remain.
+- Browser evidence: harness/runs/20260915-cost-ledger/{desktop-view,desktop-edit,mobile-edit}.png.
+  At 1024px viewport, table is 992px wide. At 390px, body stays 390px wide;
+  ledger scrolls internally. Invoice HD-2026-001 and edited note survived collapse/
+  reopen. Existing amount changed to 2,500,000; adding 500,000 produced 3,000,000;
+  deleting that draft restored 2,500,000. Checks used mocked API data on the
+  already-running localhost:3000 dev server; no real records were saved.
+- Full verification passed: harness/runs/20260915-140604-1841/.
+  init.sh passed using E:/apps/core/Git/bin/bash.exe after local LF normalization.
+  Starting dev on 3001 was refused because the workspace already had next dev
+  running on 3000; reused that process without stopping it.
+- Harness gaps: row expansion click bubbling caused the new details button to
+  toggle twice. Fixed by stopping cell clicks before they reach the expandable
+  row; manually checked open/collapse and amount inputs. Add shared interactive-
+  cell expansion regression coverage in a follow-up. Browser element references
+  can become stale after draft rerenders; amount assertions were repeated using
+  data-column-key selectors and actual rendered totals.
+- Working tree already contained overlapping, uncommitted cost-tab work plus
+  unrelated changes. Left changes uncommitted to avoid bundling prior work.
+
+## 2026-09-15 (continued) — Claude Code: `shipment-cost-ledger-row-density`
+
+- User's ask was open-ended ("redesign UI tab Chi phí Logistics ... UI/UX
+  chưa tối ưu trải nghiệm người dùng", no specifics). Rather than guess,
+  audited the tab live: wrote a throwaway `agent-browser` script (same
+  cookies/`network route` mocking pattern every `harness/checks/*-browser.mjs`
+  already uses) against a mocked Shipment with 7 cost lines across 3
+  categories — richer than `harness/fixtures/dialogs.json`'s empty
+  `shipment.costs`, needed to see the ledger under realistic volume instead
+  of the 1-row screenshots `redesign-shipment-logistics-costs` shipped with.
+  That surfaced two concrete, evidence-backed problems in the current
+  (uncommitted, from an earlier session today) compact-ledger design:
+  1. Every row stacked a full-width Name field over a full-width category
+     `Selector` — two lines per row despite rows already being grouped
+     under a category header. 7 rows already needed scrolling in a
+     900px-tall dialog, with the sticky footer visually cutting into the
+     last row instead of a clean scroll boundary.
+  2. At 390px (phone), the ledger rendered 836px wide — Amount and
+     "Chứng từ & ghi chú" sat off-screen with no scrollbar/hint, hiding the
+     one number the tab exists to show.
+- Fixed both in `shipment-cost-lines-fields.jsx`: `ShipmentCostNameCell` →
+  `ShipmentCostLineCell`, now rendering name + suggestion menu + category
+  in one `HStack wrap="wrap"` (one line per row on desktop, wraps only when
+  genuinely too narrow — no manual breakpoint). Dropped the separate
+  "Chứng từ & ghi chú" summary column entirely — it repeated a "Chưa có nhà
+  cung cấp" filler on every empty row and duplicated the expansion chevron
+  `TanStackDataTable` already renders for free. Replaced it with one
+  compact paperclip `IconButton` in the actions cell that toggles the same
+  panel and switches `variant` to `"secondary"` (filled) when the row
+  already has a supplier/invoice/note — same glanceable signal, a fraction
+  of the width. Column widths (STT 36px, Amount 140px, Actions 64px,
+  Name/Category `minWidth` 150px) were tuned empirically against real
+  renders at 1440px and 390px, not guessed — iterated three times against
+  live `scrollWidth` vs `clientWidth` measurements until Amount was fully
+  legible on mobile without scrolling.
+- Verified with the same mocked `agent-browser` session: 1440px now fits
+  all 7 rows with no scroll; 390px now shows every row's Amount fully
+  ("4,200,000 đ" etc., not clipped) with no horizontal scroll needed —
+  only the compact actions cell (paperclip + delete, 64px) still needs a
+  small scroll on the narrowest phones, an accepted trade-off since the row
+  stays reachable via the always-visible leading chevron either way.
+  Confirmed the paperclip toggle opens the identical supplier/invoice/note
+  panel as the chevron (same `toggleDetails` state) and view mode still
+  renders every field read-only with delete `aria-disabled`. Console clean
+  after a fresh reload (one transient "[Fast Refresh] ... unrecoverable
+  error" during live mid-edit hot-reloading, gone after the edits settled —
+  not a real bug). Screenshots (before/after, desktop/mobile, edit/view,
+  expanded panel) in `harness/runs/20260915-ux-audit/`.
+- Full `./harness/verify.sh` PASSED (lint, typecheck, structure, harness
+  tests, unit tests, build, quality-thresholds) —
+  `harness/runs/20260915-142512-2039/`.
+- Opened `openspec/changes/shipment-cost-ledger-row-density/` (proposal +
+  tasks, task 1 marked done) since this is materially different scope from
+  the already-done, still-uncommitted `redesign-shipment-logistics-costs`
+  and `logistics-cost-lines-ux` changes sitting in the same working tree —
+  kept as its own change rather than reopening either of those.
+- No commit made — user has not asked for one yet. The working tree still
+  has the same other uncommitted, unrelated changes noted in the previous
+  entry; untouched this session.
+- Nothing outstanding from this round.
+
+## 2026-09-15 (continued, again) — visual polish follow-up
+
+- Same session, immediate follow-up: user came back with "Redesign Tab chi
+  phí logistics. Giao diện hiện tại quá xấu" — the density fix above solved
+  the scrolling/mobile-overflow problem but hadn't touched the *look*: every
+  row was still a line of identically-boxed controls, and the new
+  details-toggle icon (task 1, this same change) used a filled `secondary`
+  (this theme's red) `IconButton` sitting right next to the delete button —
+  in hindsight reads as a per-row warning, not a "has data" indicator.
+- Fixed in `shipment-cost-lines-fields.jsx` without touching row height or
+  column widths again: category `Selector` → `variant="ghost"` (Astryx's
+  own docs recommend ghost for a selector beside ghost buttons — still one
+  click to reassign, no longer a second boxed field competing with `Name`
+  or the group header that already states the category once per group);
+  details-toggle `IconButton` → always `variant="ghost"`, with `hasDetails`
+  now only tinting the `Paperclip` icon's own `color` (accent vs secondary)
+  instead of filling the button red; `STT` header shortened to `#` (also
+  fixed a header-clipping regression left over from the first pass's
+  tightened column width); category group-header rows now get a
+  `--color-background-muted` tint spanning every column (the same token
+  `tanstack-data-table.jsx`'s own totals-row footer already uses) so a
+  group reads as one continuous divider band instead of just bold text
+  blending into the data rows.
+- Verified with a second mocked `agent-browser` session (same 7-row/
+  3-category fixture as the density fix) at 1440px and 390px, edit and view
+  mode — screenshots in `harness/runs/20260915-ux-audit/polish-*.png`.
+  Also got an incidental real-world confirmation: a `claude-in-chrome` tab
+  already open in the same Chrome profile turned out to be pointed at a
+  live/seeded dev session with real-looking data and its own unsaved
+  changes (not one I opened for this — `tabs_context_mcp` had reported it
+  as a blank "New Tab" moments earlier). Used it for two passive, read-only
+  `screenshot`/`zoom` calls only, confirmed the group-header tint renders
+  cleanly there too, then deliberately stopped touching that tab rather
+  than risk its unsaved state.
+- Full `./harness/verify.sh` PASSED again (lint, typecheck, structure,
+  harness tests, unit tests, build, quality-thresholds) —
+  `harness/runs/20260915-143612-1748/`.
+- Logged as task 2 under the same
+  `openspec/changes/shipment-cost-ledger-row-density/` change (proposal.md
+  has a new "Follow-up: visual polish" section) rather than opening a
+  second change — same file, same day, same user request thread.
+- No commit made — user has not asked for one yet.
+- Nothing outstanding from this round.
+
+## 2026-09-15 (continued, third time) — "hãy làm kiểu table"
+
+- Same session, third round of feedback on the same tab: "Giao diện tab chi
+  phí logisitics vẫn quá xấu, hãy làm kiểu table" (still ugly, make it
+  table-style). Switched `shipment-cost-lines-fields.jsx`'s
+  `TanStackDataTable` from `dividers="rows"` to `dividers="grid"` — verified
+  in-browser that this alone changed **nothing visible**: a cropped
+  screenshot of just the `<table>` element showed no vertical lines at all.
+- Root-caused it in the shared `src/shared/components/tanstack-data-table.jsx`
+  instead of assuming the prop itself was broken: computed style on a body
+  `<td>` showed the vertical divider rule genuinely present
+  (`border-right: 1px solid rgb(231, 236, 235)`) but that color is close
+  enough in luminance to the white row background to be effectively
+  invisible — the exact same root cause as the "table headers missing
+  border width" bug already fixed earlier today
+  (`fix-boq-commission-header-ux`), except that fix only ever touched
+  `TableHeaderCell`'s own xstyle, never the body/footer `TableCell`s.
+  `dividers="grid"`/`"columns"` was already in active use elsewhere
+  (`contracts-list.jsx`, `payment-history-fields.jsx`,
+  `payment-terms-fields.jsx`, `extra-fields-editor.jsx`,
+  `permission-catalog.jsx`, `bank-accounts-fields.jsx`) — this was a
+  pre-existing, previously-undiscovered bug affecting all of them, not
+  something newly introduced.
+- Fix: added a `cellDivider` style (mirrors the existing `headerCell`
+  override, same `--color-border-emphasized` token) applied to body and
+  footer `TableCell`s only when the caller's `dividers` prop is `"grid"` or
+  `"columns"` — every other consumer (mostly plain `"rows"`) renders
+  byte-for-byte unchanged, so this is additive/corrective only, not a
+  behavior change for the majority of list screens. First attempt used a
+  StyleX dynamic-style function returning two differently-shaped objects
+  (`{...3 props}` vs `{}`) and failed `@stylexjs/valid-styles` lint
+  ("Styles must be represented as JavaScript objects, not
+  ArrowFunctionExpression") — StyleX needs a static object; fixed by making
+  `cellDivider` a plain style object and moving the `dividers === 'grid' ||
+  dividers === 'columns'` condition to the call site's `xstyle` array
+  (`cond && styles.cellDivider`, the same short-circuit pattern this file
+  already uses for `isExpandable && expandableRowStyles.clickableRow`).
+- Verified with a mocked `agent-browser` session (`--session
+  ux-audit-costs3`, same 7-row/3-category fixture): a cropped `<table>`
+  screenshot now shows real vertical + horizontal grid lines across every
+  column, including through the tinted category group-header rows.
+  Re-checked desktop full view, mobile (390px, Amount still fully visible,
+  no new horizontal-scroll regression), and view mode — all clean. Then,
+  since this touches a shared component used by ~12 list screens, spot-
+  checked `contracts-list.jsx` (an existing `dividers="grid"` consumer) with
+  a separate mocked session: it now also shows visible grid lines with no
+  layout regression — screenshot in
+  `harness/runs/20260915-ux-audit/contracts-list-grid-check.png`.
+- Full `./harness/verify.sh` PASSED (lint, typecheck, structure, harness
+  tests, unit tests, build, quality-thresholds) —
+  `harness/runs/20260915-144654-662/`.
+- Logged as task 3 under the same
+  `openspec/changes/shipment-cost-ledger-row-density/` change (proposal.md
+  gained a "Follow-up 2: actual table grid" section).
+- **Harness gap, logged not fixed (out of scope for this change):** no
+  automated visual-regression check would have caught a border color that's
+  technically present but perceptually invisible — every `harness/checks/
+  *-browser.mjs` check so far asserts DOM/text/geometry, never rendered
+  contrast. Worth a follow-up harness check (e.g. compute border-color
+  luminance delta against the adjacent background for header/body cells)
+  if this class of bug recurs a third time.
+- No commit made — user has not asked for one yet.
+- Nothing outstanding from this round.
+
+## 2026-09-15 (continued, fourth time) — "Dùng cách tiếp cận khác đi"
+
+- Fourth round of feedback on the same tab: "Dùng cách tiếp cận khác đi"
+  (use a different approach) — three rounds of polish on the `Table`-based
+  ledger (density, ghost styling, grid lines) still hadn't landed. Rather
+  than guess a fourth direction unprompted, asked the user to pick between
+  concrete alternatives (`AskUserQuestion`): switch to Astryx `List`/`Item`
+  (the pattern `docs/astryx-workflow.md` already names as sanctioned for
+  dense data), a view-first-ledger-with-edit-dialog approach, or keep
+  `Table` but hide everything except Name/Amount behind the expand panel.
+  User picked `List`/`Item`.
+- Rebuilt `shipment-cost-lines-fields.jsx` from scratch on `List`/`ListItem`
+  — no `Table`/`TanStackDataTable` import left in the file at all. One
+  `<List>` per cost category (section header = category name + subtotal +
+  "+" add button, tinted background, replacing the previous synthetic
+  group-header table rows). Each cost line renders as a plain, read-only
+  `ListItem` — name, amount (bold, tabular, right-aligned), a short
+  supplier/invoice/note summary line when any are set, a trailing chevron —
+  until clicked.
+- The actual root cause of "wall of boxes" across all three earlier
+  attempts, in hindsight: every row showed input controls *simultaneously*,
+  no matter how compact or how ghosted. Fixed by making editing per-row and
+  on-demand: clicking a `ListItem` swaps it in place for
+  `ShipmentCostLineEditor`, a fully visibly-labeled form (name + suggestion
+  `DropdownMenu`, category `Selector`, amount, supplier, invoice number,
+  note, a "Xong"/"Thu gọn" collapse button, delete) — so normally at most
+  one or two rows show any input at all, not all of them.
+- `ListItem`'s own docs explicitly warn against nesting interactive
+  controls inside an already-interactive item, and its slot API (`label`/
+  `description`/`start`/`endContent`) has no room for a full form regardless
+  — so the editor is never rendered *inside* a `ListItem`. Wrote
+  `splitByExpanded()`: splits each category's rows into alternating runs of
+  collapsed rows (rendered as their own `<List>` of pure `ListItem`
+  children — valid `<ul>`/`<li>` structure, matching `List`'s own "children
+  should be `ListItem`s" guidance) and open rows (rendered as a standalone
+  `ShipmentCostLineEditor` block between/around those `<List>` runs).
+  Handles any number of simultaneously-open rows in one category, not just
+  one.
+- A newly added row (via the top "+" or a category section's own "+") now
+  auto-opens into its editor instead of appearing as an easy-to-miss blank
+  collapsed row: a `useEffect` diffs `rows` by `rowKey` against a ref of
+  previously-seen keys (assigned by `generateRowKey()` in the owning hook)
+  and adds any genuinely new key to `expandedIds` — fires only on a real
+  addition, never on an in-place field edit or a removal.
+- Verified with a fresh mocked `agent-browser` session (6 cost lines across
+  3 categories): desktop (1440px) shows clean category sections with
+  subtotals and no scrolling; clicking a row opens the labeled form in
+  place, other rows in the same category stay collapsed above/below it
+  correctly (confirms `splitByExpanded` renders the right run boundaries);
+  mobile (390px) has **zero** horizontal overflow in both collapsed and
+  open states (`document.body.scrollWidth === document.body.clientWidth`,
+  390===390) — a stronger, simpler result than the three rounds of
+  per-column pixel budgeting the `Table` version needed, since plain text
+  rows just reflow at any width instead of needing columns sized for it.
+  Also verified: view mode still shows every field read-only via the same
+  editor (label reads "Thu gọn" instead of "Xong", delete button hidden);
+  adding a row auto-expands it under the right category; deleting a row
+  works cleanly with zero console errors afterward.
+- Full `./harness/verify.sh` PASSED (lint, typecheck, structure, harness
+  tests, unit tests, build, quality-thresholds) —
+  `harness/runs/20260915-150311-167/`.
+- Logged as task 4 under the same
+  `openspec/changes/shipment-cost-ledger-row-density/` change — proposal.md
+  gained a "Follow-up 3: List/Item rewrite, supersedes the Table approach"
+  section, and its stale `Table`-era "Scope and behavior"/"Out of scope"
+  sections were updated to match (the task-3 `tanstack-data-table.jsx`
+  border fix is still live for that shared component's other ~12
+  consumers, just no longer exercised by this tab).
+- No commit made — user has not asked for one yet.
+- Nothing outstanding from this round.
+
+## 2026-09-15 (continued, fifth time) — revert to the pre-session UI
+
+- User: "Hãy revert lại UI của Chi phí Logisitics: quay lại 4 5 phiên bản
+  trước (phiên bản có số thứ tự). Lưu ý chỉ UI của chi phí logistics nhé.
+  Trước tiên commit code đã" — revert the tab's UI back ~4-5 versions, to
+  the one with the STT column; scoped to *only* the Chi phí Logistics UI;
+  commit the current code first.
+- Committed first, as asked: `shipment-cost-lines-fields.jsx` (the
+  `List`/`ListItem` redesign) + `tanstack-data-table.jsx` (the divider-
+  color fix) + the new `openspec/changes/shipment-cost-ledger-row-density/`
+  docs, as one commit (`505f9dc`) — deliberately excluding
+  `harness/PROGRESS.md` and every other already-modified file in the
+  working tree (dozens of files from unrelated earlier-in-the-day sessions,
+  all still uncommitted — see the git-status snapshot at the top of this
+  session). Bundling those in wasn't asked for and would repeat exactly the
+  "avoid bundling prior work" mistake earlier entries in this file already
+  called out. **Process note for next time:** I initially reverted the file
+  *before* committing, backwards from the user's stated order — caught it
+  before running any git command, reconstructed the pre-revert `List`/
+  `ListItem` content from this session's own conversation history (the
+  exact text of my own most recent `Write` call plus every `Edit` applied
+  after it), re-verified it with a clean `pnpm exec eslint`/`pnpm run
+  typecheck` before trusting it enough to commit. Worth being more careful
+  about instruction ordering on multi-step requests like this one.
+- Reverted `shipment-cost-lines-fields.jsx` to its exact pre-session
+  content — reconstructed from this conversation's own first `Read` of the
+  file at session start (Codex's `redesign-shipment-logistics-costs` +
+  `logistics-cost-lines-ux` ledger: `TanStackDataTable`, STT column,
+  two-line name/category cells, "Chứng từ & ghi chú" details column,
+  `dividers="rows"`). Confirmed the revert is byte-symmetric with the
+  commit (`git diff --stat`: 383 insertions/400 deletions reverting
+  the 400 insertions/383 deletions the List/Item rewrite made — off-by-
+  nothing, just the two diffs mirrored) and clean under lint/typecheck.
+  Did **not** revert `tanstack-data-table.jsx` — the user's own "chỉ UI của
+  chi phí logistics" scoped this to the tab's UI, and that file's fix
+  benefits ~12 other list screens, not just this one.
+- Verified with a fresh mocked `agent-browser` session that the restored
+  tab renders correctly (STT column, grouped table, "Chi tiết" per row) —
+  screenshot `harness/runs/20260915-ux-audit/reverted-stt-version.png`.
+- Updated `openspec/changes/shipment-cost-ledger-row-density/`: added a
+  "Status: reverted" banner at the top of `proposal.md` and a task 5 in
+  `tasks.md` recording what was reverted and why, so a future session
+  doesn't mistake the elaborate `List`/`ListItem` proposal for what's
+  actually in the code, and doesn't re-attempt tasks 1–4's approaches
+  without knowing they already didn't land with this user.
+- The revert itself is **not committed** — only asked to commit "trước
+  tiên" (first, i.e. the pre-revert state), not the revert. Left for the
+  user to review/commit, consistent with this repo's established practice
+  of not auto-committing without being asked.
+- Nothing outstanding from this round.
+
+## 2026-09-15 (continued, sixth time) — even further back, to the last git commit
+
+- User, immediately after the previous revert: "Back lại phiên cũ hơn,
+  Phiên bản vẫn còn dùng table" (go back to an even older version — the
+  one that still uses table). The version I'd just restored (previous
+  entry) turned out to still carry today's uncommitted
+  `logistics-cost-lines-ux`/`redesign-shipment-logistics-costs` work (STT
+  column, suggestion `DropdownMenu`) — not actually an old, settled state,
+  just the last thing before *my own session's* edits started.
+- Checked `git log --format="%h %ad %s" --date=short -8` for this file:
+  the true last **committed** version is `e0a2351` (2026-09-14, "add a
+  cost row directly into its group, no reposition") — everything after it
+  (STT, suggestions, all four of today's redesigns) was uncommitted
+  working-tree state the whole time, going back to before this session
+  even started. Confirmed by diffing `e0a2351` against what I'd just
+  restored: 475 lines different, not the same file.
+- Restored via `git checkout e0a2351 --
+  src/features/logistics-contracts/components/shipment-cost-lines-fields.jsx`
+  — an exact byte-for-byte restore from git history this time, not a
+  memory-reconstructed rewrite (the safer, more reliable option now that
+  an actual commit exists to check out, unlike the previous revert where
+  no committed version of "the STT version" existed anywhere). That
+  version: plain `Table` (not `TanStackDataTable`), grouped by category, 6
+  columns (Nhóm chi phí, Tên khoản chi phí, Số tiền, Ghi chú, Nhà cung
+  cấp, Số hoá đơn) with visible headers, no STT, no suggestion menu.
+- Verified clean under `pnpm exec eslint`/`pnpm run typecheck` (this
+  2026-09-14 code needed to still compile against 2026-09-15's hooks/types
+  — it did, nothing broke) and confirmed by screenshot that it renders
+  correctly against a mocked Shipment — "Tổng chi phí: 6,700,000.00 đ",
+  grouped rows, all 6 columns visible and editable.
+- Full `./harness/verify.sh` PASSED (lint, typecheck, structure, harness
+  tests, unit tests, build, quality-thresholds) —
+  `harness/runs/20260915-152920-579/`.
+- Updated `openspec/changes/shipment-cost-ledger-row-density/proposal.md`'s
+  status banner and added task 6 to `tasks.md` recording this second
+  revert and exactly which commit the working tree now matches, so a
+  future session can tell at a glance which of the many versions tried
+  today is actually live.
+- Still not committed — same reasoning as the previous revert; left for
+  the user.
+- Nothing outstanding from this round.
+
+## 2026-09-15 (continued, seventh time) — commit the revert, restore STT
+
+- User: "ok. commit code, sau đó thêm cột số thứ tự" (commit the code,
+  then add the STT/sequence-number column).
+- Committed the `e0a2351` revert as asked — `shipment-cost-lines-fields.jsx`
+  plus the two updated `openspec/changes/shipment-cost-ledger-row-density/`
+  docs (proposal status banner, task 6) — as commit `b9dcc4b`. Same scoping
+  as the earlier checkpoint commit: `harness/PROGRESS.md` and every other
+  unrelated already-modified file left out.
+- Added the STT column back on top of that baseline: a new leading `stt`
+  column in the plain `Table` (numbers cost-line rows 1, 2, 3, ...
+  continuously across category groups via a `sttByRowKey` Map built from
+  `groupedTableRows`, same pattern every earlier STT implementation today
+  used; blank on group-header rows falls out of the existing
+  `groupedColumns` default-null fallback for unhandled column keys — no
+  extra group-header special-case needed). Verified clean under lint/
+  typecheck and confirmed by screenshot: STT 1/2/3 numbered correctly
+  across 2 category groups, blank on both group headers.
+- Full `./harness/verify.sh` PASSED (lint, typecheck, structure, harness
+  tests, unit tests, build, quality-thresholds) —
+  `harness/runs/20260915-153739-1439/`.
+- Opened a new, small `openspec/changes/restore-shipment-cost-stt-column/`
+  for this — the old `shipment-cost-ledger-row-density` change is now
+  purely a historical record of an abandoned redesign (see its own
+  "Status: reverted" banner) and its story doesn't fit "add STT to the
+  e0a2351 baseline" cleanly.
+- STT change itself not yet committed — user hasn't asked for that commit
+  yet, only the revert.
 - Nothing outstanding from this round.

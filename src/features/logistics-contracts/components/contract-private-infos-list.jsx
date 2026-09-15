@@ -1,16 +1,23 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
+import { DialogHeader } from '@astryxdesign/core/Dialog';
+import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
+import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
+import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
@@ -25,6 +32,7 @@ import {
   skeletonRows,
 } from '../config/contract-private-infos-table.js';
 import { useContractPrivateInfosListQuery } from '../hooks/use-contract-private-infos-list-query.js';
+import { useContractsQuery } from '../hooks/use-contracts-query.js';
 import { ContractPrivateInfoDetailDialog } from './contract-private-info-detail-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 
@@ -94,9 +102,13 @@ export function ContractPrivateInfosList() {
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
   const [detailDialog, setDetailDialog] = useState(
-    /** @type {{ row: import('../types/index.js').ContractPrivateInfoListItem, initialEditing: boolean } | null} */ (
+    /** @type {{ row: Pick<import('../types/index.js').ContractPrivateInfoListItem, 'contractId' | 'contractNumber'>, initialEditing: boolean } | null} */ (
       null
     ),
+  );
+  const [isPickingContract, setIsPickingContract] = useState(false);
+  const [pickedContractId, setPickedContractId] = useState(
+    /** @type {string | null} */ (null),
   );
 
   const privateInfosQuery = useContractPrivateInfosListQuery({
@@ -109,6 +121,36 @@ export function ContractPrivateInfosList() {
   });
   const listResult = privateInfosQuery.data;
   const items = listResult?.success ? listResult.items : [];
+
+  // Backs the "Thêm" contract picker below — every contract can have BOQ
+  // info added/edited (a BOQ row *is* a Contract enriched with nullable
+  // private-info fields, see `ContractPrivateInfoListItem`'s doc comment;
+  // there's no separate "doesn't have one yet" state to filter out, unlike
+  // Commission's own contract picker in `commissions-list.jsx`). `pageSize:
+  // 100` is that same list's own effective ceiling convention.
+  const contractsQuery = useContractsQuery({ page: 1, pageSize: 100 });
+  const contracts = useMemo(
+    () => (contractsQuery.data?.success ? contractsQuery.data.contracts : []),
+    [contractsQuery.data],
+  );
+  const contractsById = useMemo(
+    () => new Map(contracts.map((contract) => [contract.id, contract])),
+    [contracts],
+  );
+
+  function handleContinuePickingContract() {
+    if (!pickedContractId) return;
+    const contract = contractsById.get(pickedContractId);
+    setIsPickingContract(false);
+    setPickedContractId(null);
+    setDetailDialog({
+      row: {
+        contractId: pickedContractId,
+        contractNumber: contract?.contractNumber ?? '',
+      },
+      initialEditing: true,
+    });
+  }
 
   // "Xuất toàn bộ dữ liệu" in AdvanceTable's export dropdown.
   async function fetchAllPrivateInfos() {
@@ -239,7 +281,15 @@ export function ContractPrivateInfosList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
-      <Heading level={1}>BOQ</Heading>
+      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
+        <Heading level={1}>BOQ</Heading>
+        <Button
+          label="Thêm"
+          variant="primary"
+          icon={<Icon icon={Plus} />}
+          onClick={() => setIsPickingContract(true)}
+        />
+      </HStack>
 
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
@@ -280,6 +330,65 @@ export function ContractPrivateInfosList() {
           }}
         />
       </StackItem>
+
+      {isPickingContract ? (
+        <CommonDialog
+          isOpen={isPickingContract}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) {
+              setIsPickingContract(false);
+              setPickedContractId(null);
+            }
+          }}
+          width={480}
+        >
+          <Layout
+            header={
+              <DialogHeader
+                title="Chọn hợp đồng"
+                onOpenChange={() => setIsPickingContract(false)}
+              />
+            }
+            content={
+              <LayoutContent padding={6}>
+                <Selector
+                  label="Hợp đồng"
+                  hasSearch
+                  hasClear
+                  placeholder="Chọn hợp đồng cần nhập BOQ"
+                  value={pickedContractId}
+                  onChange={setPickedContractId}
+                  options={contracts.map((contract) => ({
+                    value: contract.id,
+                    label: `${contract.contractNumber} · ${contract.projectName}`,
+                  }))}
+                  width="100%"
+                />
+              </LayoutContent>
+            }
+            footer={
+              <LayoutFooter>
+                <HStack hAlign="end" gap={2}>
+                  <Button
+                    label="Hủy"
+                    variant="secondary"
+                    onClick={() => {
+                      setIsPickingContract(false);
+                      setPickedContractId(null);
+                    }}
+                  />
+                  <Button
+                    label="Tiếp tục"
+                    variant="primary"
+                    isDisabled={!pickedContractId}
+                    onClick={handleContinuePickingContract}
+                  />
+                </HStack>
+              </LayoutFooter>
+            }
+          />
+        </CommonDialog>
+      ) : null}
 
       {detailDialog ? (
         <ContractPrivateInfoDetailDialog

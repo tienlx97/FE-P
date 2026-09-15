@@ -20,10 +20,12 @@ export const SEARCH_FIELD_DEFS = [
   { key: 'contractNumber', type: 'string', label: 'Số hợp đồng' },
   { key: 'projectName', type: 'string', label: 'Dự án' },
   { key: 'bookingNumber', type: 'string', label: 'Booking' },
+  { key: 'quantityAmount', type: 'number', label: 'Số lượng' },
+  { key: 'logisticsCost', type: 'number', label: 'Chi phí Logistics' },
+  { key: 'vgmCount', type: 'number', label: 'VGM' },
 ];
 
 export const COLUMN_OPTIONS = [
-  { key: 'shipmentNumber', label: 'Số thứ tự' },
   { key: 'shipmentCode', label: 'Mã', isAlwaysVisible: true },
   { key: 'contractNumber', label: 'Số hợp đồng' },
   { key: 'projectName', label: 'Dự án' },
@@ -36,6 +38,7 @@ export const COLUMN_OPTIONS = [
   { key: 'supplier', label: 'Forwarder' },
   { key: 'invoiceValue', label: 'Giá trị invoice' },
   { key: 'declarationValue', label: 'Giá trị tờ khai' },
+  { key: 'declarationValueVnd', label: 'Giá trị tờ khai (VNĐ)' },
   { key: 'logisticsCost', label: 'Chi phí Logistics' },
   { key: 'vgm', label: 'VGM' },
   { key: 'actions', label: 'Chức năng', isAlwaysVisible: true },
@@ -43,18 +46,18 @@ export const COLUMN_OPTIONS = [
 
 // Narrow default, same "start narrow, opt in via Tuỳ chọn hiển thị"
 // convention as `contracts-list.jsx`'s `DEFAULT_COLUMN_KEYS` — per user
-// request (2026-09-14): Số thứ tự, Mã, Số hợp đồng, Số cont (`quantity` —
-// same column FCL/LCL always used, just the one most shipments here care
-// about at a glance), Tình trạng, Ngày khai Hải quan, Giá trị tờ khai,
+// request (2026-09-14): Mã, Số hợp đồng, Số cont (`quantity` — same column
+// FCL/LCL always used, just the one most shipments here care about at a
+// glance), Tình trạng, Ngày khai Hải quan, Giá trị tờ khai,
 // Chi phí Logistics, VGM.
 export const DEFAULT_COLUMN_KEYS = [
-  'shipmentNumber',
+  'customsDeclarationDate',
   'shipmentCode',
   'contractNumber',
   'quantity',
   'status',
-  'customsDeclarationDate',
   'declarationValue',
+  'declarationValueVnd',
   'logisticsCost',
   'vgm',
   'actions',
@@ -133,6 +136,7 @@ export const skeletonRows = Array.from(
     declarationValue: 0,
     declarationCurrency: '',
     declarationExchangeRate: 0,
+    declarationValueVnd: 0,
     quantityAmount: 0,
     quantityUnit: 'Kien',
     declarationWeightKg: 0,
@@ -149,5 +153,6 @@ export const skeletonRows = Array.from(
     contractNumber: '',
     projectName: '',
     supplierName: '',
+    logisticsCost: 0,
   }),
 );

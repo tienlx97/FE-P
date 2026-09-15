@@ -1,7 +1,39 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { deleteShipment } from './shipments.js';
+import { deleteShipment, searchAllShipments } from './shipments.js';
+
+test('parses full-set Shipment money, quantity, cost, and VGM totals', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    Response.json({
+      page: { items: [], page: 1, pageSize: 25, totalCount: 0, totalPages: 0 },
+      totals: [{ currency: 'USD', invoiceValue: 10, declarationValue: 20 }],
+      logisticsCostTotal: 30,
+      declarationValueVndTotal: 40,
+      quantityTotals: [
+        { unit: 'Cont', amount: 2 },
+        { unit: 'Kien', amount: 5 },
+      ],
+      vgmCountTotal: 4,
+    });
+
+  try {
+    const result = await searchAllShipments();
+
+    assert.equal(result.success, true);
+    if (!result.success) return;
+    assert.deepEqual(result.quantityTotals, [
+      { unit: 'Cont', amount: 2 },
+      { unit: 'Kien', amount: 5 },
+    ]);
+    assert.equal(result.logisticsCostTotal, 30);
+    assert.equal(result.declarationValueVndTotal, 40);
+    assert.equal(result.vgmCountTotal, 4);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 test('deletes a Shipment through its contract-scoped endpoint', async () => {
   const originalFetch = globalThis.fetch;

@@ -101,7 +101,13 @@ export function ShipmentFormDialog({
       onOpenChange={handleOpenChange}
       closeLabel={closeLabel}
       variant="fullscreen"
-      title={shipment ? `Shipment · ${shipment.shipmentCode}` : 'Thêm Shipment'}
+      title={
+        shipment
+          ? `Shipment · ${shipment.shipmentCode}`
+          : contract
+            ? `Thêm Shipment · ${contract.contractNumber}`
+            : 'Thêm Shipment'
+      }
       submitLabel={shipment ? 'Lưu thay đổi' : 'Tạo Shipment'}
       draft={{ values: form.values, costs: form.costLineRows.rows }}
       isSubmitting={form.isSubmitting}
@@ -140,6 +146,12 @@ export function ShipmentFormDialog({
         </TabList>
       }
     >
+      {contract ? (
+        <Text type="supporting" color="secondary">
+          Dự án: {contract.projectName} · Incoterm: {contract.incoterm}{' '}
+          {contract.incotermYear}
+        </Text>
+      ) : null}
       <Text color="secondary">
         VGM và Chi phí Logistics được quản lý sau khi lưu Shipment.
       </Text>

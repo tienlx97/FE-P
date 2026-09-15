@@ -195,6 +195,12 @@ const styles = stylex.create({
   filterRow: {
     rowGap: 6,
   },
+  // Matches the search toolbar's own block/inline padding below it (see
+  // Toolbar's `size="sm"` defaults) so the two rows line up edge-to-edge.
+  titleRow: {
+    paddingBlock: spacingVars['--spacing-2'],
+    paddingInline: spacingVars['--spacing-4'],
+  },
   // Fills the trigger once a quick filter is set, the same wash Selector's
   // own pressed/active state uses, so a set chip reads as "on" at a glance.
   filterFill: {
@@ -233,8 +239,16 @@ const styles = stylex.create({
  * handful of callbacks that are genuinely page-specific (row expansion,
  * primary action, refresh, pagination).
  *
+ * `title` is optional and opt-in: when given, it renders in its own row
+ * above the search toolbar, alongside `primaryAction` and the In (print) /
+ * Xuất (export) controls — per-page request to keep those three level with
+ * the page heading instead of the search toolbar row. Omitting `title`
+ * keeps the original layout (all three inline with search/view-options),
+ * unchanged for every other caller.
+ *
  * @template {Record<string, unknown>} T
  * @param {{
+ *   title?: import('react').ReactNode,
  *   toolbarLabel: string,
  *   searchFieldDefs: ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>,
  *   entityLabel: string,
@@ -265,7 +279,7 @@ const styles = stylex.create({
  *     renderExpanded: (row: T) => import('react').ReactNode,
  *   },
  *   fetchAllRows?: () => Promise<T[]>,
- *   primaryAction?: { label: string, onClick: () => void },
+ *   primaryAction?: { label: string, onClick: () => void, icon?: import('react').ReactNode },
  *   onRefresh?: () => void,
  *   isRefreshing?: boolean,
  *   defaultStickyStart?: 'none' | 'one' | 'two',
@@ -286,6 +300,7 @@ const styles = stylex.create({
  * }} props
  */
 export function AdvanceTable({
+  title,
   toolbarLabel,
   searchFieldDefs,
   entityLabel,
@@ -340,8 +355,32 @@ export function AdvanceTable({
   const [stickyStart, setStickyStart] = useState(defaultStickyStart);
   const [stickyEnd, setStickyEnd] = useState(defaultStickyEnd);
 
+  // Header filters may target fields that intentionally do not belong in
+  // the free-text PowerSearch menu (dates/numbers are the common case).
+  // `useTableFiltering` still resolves its field references through the
+  // PowerSearch config, so merge the server-filter definitions into that
+  // config instead of silently rendering a dead/missing header control.
+  const resolvedSearchFieldDefs = useMemo(() => {
+    const knownKeys = new Set(searchFieldDefs.map((field) => field.key));
+    const headerOnlyFields = (filterFieldDefs ?? [])
+      .filter((field) => !knownKeys.has(field.key))
+      .map((field) => ({
+        key: field.key,
+        type: field.type,
+        label: field.label,
+        ...(field.type === 'enum'
+          ? {
+              enumValues: (field.options ?? []).map((option) => ({
+                value: option.value,
+                label: option.label ?? option.value,
+              })),
+            }
+          : {}),
+      }));
+    return [...searchFieldDefs, ...headerOnlyFields];
+  }, [searchFieldDefs, filterFieldDefs]);
   const { config: baseSearchConfig, applyFilters } = usePowerSearchConfig(
-    searchFieldDefs,
+    resolvedSearchFieldDefs,
     entityLabel,
   );
   const searchConfig = useMemo(
@@ -794,6 +833,109 @@ export function AdvanceTable({
     renderCell: () => <Skeleton height={16} width="70%" index={columnIndex} />,
   }));
 
+  // Extracted so `title`'s header row and the search toolbar's end cluster
+  // can share the exact same elements — only one of the two renders them,
+  // decided by whether `title` was given (see this component's doc comment).
+  const printButton = (
+    <IconButton
+      label="In"
+      tooltip="In (trang hiện tại)"
+      icon={<Icon icon={Printer} size="sm" />}
+      variant="ghost"
+      size="sm"
+      isDisabled={isLoading || filteredData.length === 0}
+      onClick={() => printRows(filteredData)}
+    />
+  );
+
+  const exportMenu = (
+    <DropdownMenu
+      button={{
+        label: 'Xuất',
+        tooltip: 'Xuất dữ liệu',
+        variant: 'ghost',
+        size: 'sm',
+        icon: <Icon icon={Download} size="sm" />,
+        isDisabled: isLoading || filteredData.length === 0,
+      }}
+      items={[
+        {
+          type: 'section',
+          title: 'Trang hiện tại',
+          items: [
+            {
+              id: 'excel-page',
+              label: 'Xuất Excel (trang hiện tại)',
+              icon: <Icon icon={FileSpreadsheet} size="sm" />,
+              onClick: () => exportExcel(filteredData),
+            },
+            {
+              id: 'csv-page',
+              label: 'Xuất CSV (trang hiện tại)',
+              icon: <Icon icon={Download} size="sm" />,
+              onClick: () => exportCsv(filteredData),
+            },
+          ],
+        },
+        ...(fetchAllRows
+          ? [
+              {
+                type: /** @type {const} */ ('section'),
+                title: 'Toàn bộ dữ liệu (đã lọc)',
+                items: [
+                  {
+                    id: 'excel-all',
+                    label: isExportingAll
+                      ? 'Đang xuất...'
+                      : 'Xuất Excel (toàn bộ dữ liệu)',
+                    icon: <Icon icon={FileSpreadsheet} size="sm" />,
+                    isDisabled: isExportingAll,
+                    onClick: () => exportAllRows('excel'),
+                  },
+                  {
+                    id: 'csv-all',
+                    label: isExportingAll
+                      ? 'Đang xuất...'
+                      : 'Xuất CSV (toàn bộ dữ liệu)',
+                    icon: <Icon icon={Download} size="sm" />,
+                    isDisabled: isExportingAll,
+                    onClick: () => exportAllRows('csv'),
+                  },
+                ],
+              },
+            ]
+          : []),
+      ]}
+    />
+  );
+
+  const primaryActionButton = primaryAction ? (
+    <Button
+      label={primaryAction.label}
+      variant="primary"
+      icon={primaryAction.icon}
+      onClick={primaryAction.onClick}
+    />
+  ) : null;
+
+  const titleRow =
+    title != null ? (
+      <HStack
+        hAlign="between"
+        vAlign="center"
+        wrap="wrap"
+        gap={3}
+        xstyle={styles.titleRow}
+      >
+        {title}
+        <HStack gap={2} vAlign="center" wrap="wrap">
+          {printButton}
+          {exportMenu}
+          {primaryActionButton}
+        </HStack>
+      </HStack>
+    ) : null;
+
   const toolbar = (
     <Toolbar
       label={toolbarLabel}
@@ -908,73 +1050,8 @@ export function AdvanceTable({
                 setStickyEnd(/** @type {'none' | 'one' | 'two'} */ (value))
               }
             />
-            <IconButton
-              label="In"
-              tooltip="In (trang hiện tại)"
-              icon={<Icon icon={Printer} size="sm" />}
-              variant="ghost"
-              size="sm"
-              isDisabled={isLoading || filteredData.length === 0}
-              onClick={() => printRows(filteredData)}
-            />
-            <DropdownMenu
-              button={{
-                label: 'Xuất',
-                tooltip: 'Xuất dữ liệu',
-                variant: 'ghost',
-                size: 'sm',
-                icon: <Icon icon={Download} size="sm" />,
-                isDisabled: isLoading || filteredData.length === 0,
-              }}
-              items={[
-                {
-                  type: 'section',
-                  title: 'Trang hiện tại',
-                  items: [
-                    {
-                      id: 'excel-page',
-                      label: 'Xuất Excel (trang hiện tại)',
-                      icon: <Icon icon={FileSpreadsheet} size="sm" />,
-                      onClick: () => exportExcel(filteredData),
-                    },
-                    {
-                      id: 'csv-page',
-                      label: 'Xuất CSV (trang hiện tại)',
-                      icon: <Icon icon={Download} size="sm" />,
-                      onClick: () => exportCsv(filteredData),
-                    },
-                  ],
-                },
-                ...(fetchAllRows
-                  ? [
-                      {
-                        type: /** @type {const} */ ('section'),
-                        title: 'Toàn bộ dữ liệu (đã lọc)',
-                        items: [
-                          {
-                            id: 'excel-all',
-                            label: isExportingAll
-                              ? 'Đang xuất...'
-                              : 'Xuất Excel (toàn bộ dữ liệu)',
-                            icon: <Icon icon={FileSpreadsheet} size="sm" />,
-                            isDisabled: isExportingAll,
-                            onClick: () => exportAllRows('excel'),
-                          },
-                          {
-                            id: 'csv-all',
-                            label: isExportingAll
-                              ? 'Đang xuất...'
-                              : 'Xuất CSV (toàn bộ dữ liệu)',
-                            icon: <Icon icon={Download} size="sm" />,
-                            isDisabled: isExportingAll,
-                            onClick: () => exportAllRows('csv'),
-                          },
-                        ],
-                      },
-                    ]
-                  : []),
-              ]}
-            />
+            {title == null ? printButton : null}
+            {title == null ? exportMenu : null}
             {onRefresh ? (
               <IconButton
                 label="Tải lại danh sách"
@@ -986,13 +1063,7 @@ export function AdvanceTable({
                 onClick={onRefresh}
               />
             ) : null}
-            {primaryAction ? (
-              <Button
-                label={primaryAction.label}
-                variant="primary"
-                onClick={primaryAction.onClick}
-              />
-            ) : null}
+            {title == null ? primaryActionButton : null}
           </HStack>
         </HStack>
       }
@@ -1005,6 +1076,7 @@ export function AdvanceTable({
       header={
         <LayoutHeader padding={0}>
           <VStack gap={0} hAlign="stretch">
+            {titleRow}
             {toolbar}
             {quickFilters && quickFilters.length > 0 ? (
               <HStack

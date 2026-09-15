@@ -63,7 +63,7 @@
     "declarationCurrency": "USD",
     "declarationExchangeRate": 25000,
     "quantityAmount": 10,
-    "quantityUnit": "Package",
+    "quantityUnit": "Kien",
     "declarationWeightKg": 100,
     "costs": [],
     "costTotalsByCategory": [],
