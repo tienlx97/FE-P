@@ -86,13 +86,43 @@ const styles = stylex.create({
   // Column-separator border between header cells (both the group row and
   // the leaf row) — the header previously only had the bottom divider
   // separating it from the body, with no vertical rule between columns.
+  // Both borders use `--color-border-emphasized` (not the plain
+  // `--color-border` hairline `TableHeaderCell` defaults to for its own
+  // bottom divider) — the header sits on the tinted mint background
+  // (`refresh-workspace-colors`), where `--color-border` (~rgb(231,236,235))
+  // is nearly the same luminance as that background (~rgb(220,238,232)) and
+  // reads as no border at all ("table headers missing border width",
+  // reported 2026-09-15). `--color-border-emphasized` is the token
+  // `theme.js` already reserves for boundaries that need to stay visible
+  // against a colored surface (form-control outlines), so it carries
+  // through here for the same reason.
   headerCell: {
-    borderInlineEndColor: colorVars['--color-border'],
+    borderBlockEndColor: colorVars['--color-border-emphasized'],
+    borderBlockEndStyle: 'solid',
+    borderBlockEndWidth: borderVars['--border-width'],
+    borderInlineEndColor: colorVars['--color-border-emphasized'],
     borderInlineEndStyle: 'solid',
     borderInlineEndWidth: borderVars['--border-width'],
     position: 'relative',
     top: 'auto',
     zIndex: 0,
+  },
+  // Body/footer counterpart to `headerCell`'s override above: Astryx's own
+  // `Table` renders a `dividers="grid"`/`"columns"` cell's vertical rule in
+  // the plain `--color-border` token, which (same root cause as the header
+  // bug this file already fixed) is close enough in luminance to this
+  // theme's white row background to read as no divider at all — confirmed
+  // 2026-09-15 on the Shipment cost ledger (`shipment-cost-lines-fields.jsx`,
+  // "làm kiểu table"): computed style showed the border rule present
+  // (`1px solid rgb(231, 236, 235)`) but zero visible vertical lines in a
+  // cropped screenshot of the rendered table. `--color-border-emphasized`
+  // only overrides the inline-end (vertical) rule, and only when the
+  // caller actually asked for vertical dividers — a horizontal-only
+  // `dividers="rows"` table (most existing callers) is unaffected.
+  cellDivider: {
+    borderInlineEndColor: colorVars['--color-border-emphasized'],
+    borderInlineEndStyle: 'solid',
+    borderInlineEndWidth: borderVars['--border-width'],
   },
   align: (align) => ({ textAlign: align }),
   pinned: (left, right) => ({ left, position: 'sticky', right, zIndex: 1 }),
@@ -521,6 +551,8 @@ export function TanStackDataTable({
                         xstyle={[
                           styles.align(source.align ?? 'start'),
                           pinStyle(cell.column),
+                          (dividers === 'grid' || dividers === 'columns') &&
+                            styles.cellDivider,
                         ]}
                         // Plain inline `style`, not `xstyle` — StyleX only
                         // takes background-color from its fixed token/
@@ -596,6 +628,8 @@ export function TanStackDataTable({
                         xstyle={[
                           styles.align(source.align ?? 'start'),
                           pinStyle(cell.column),
+                          (dividers === 'grid' || dividers === 'columns') &&
+                            styles.cellDivider,
                         ]}
                         style={
                           cell.column.getIsPinned()
