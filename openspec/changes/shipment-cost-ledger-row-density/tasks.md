@@ -67,3 +67,48 @@ Evidence: `harness/runs/20260915-ux-audit/grid2-*.png`,
 
 Evidence: `harness/runs/20260915-ux-audit/listitem-*.png`,
 `harness/runs/20260915-150311-167/` (full verification passed).
+
+- [x] 5. User reverted this change (same day): "Hãy revert lại UI của Chi
+  phí Logistics: quay lại 4 5 phiên bản trước (phiên bản có số thứ tự)"
+  (revert the Chi phí Logistics UI back ~4-5 versions, to the version that
+  had the STT column) — explicitly scoped to "chỉ UI của chi phí logistics"
+  (only the Chi phí Logistics UI). Committed tasks 1–4's end state first
+  (`505f9dc`) so the `List`/`ListItem` work stays recoverable in history,
+  then restored `shipment-cost-lines-fields.jsx` byte-for-byte to its
+  state from before this change started (Codex's `TanStackDataTable`
+  ledger with the STT column, two-line name/category cells, and the
+  "Chứng từ & ghi chú" details column — see
+  `redesign-shipment-logistics-costs`/`logistics-cost-lines-ux`, both still
+  uncommitted from earlier the same day). `tanstack-data-table.jsx`'s
+  divider-color fix (task 3) was left as-is, not reverted — it's a shared
+  component fix benefiting ~12 other list screens, outside "chỉ UI của chi
+  phí logistics". Verified with lint/typecheck (clean) and a browser
+  screenshot confirming the restored tab matches the pre-change version.
+  **This whole change (tasks 1–4) is effectively undone in the working
+  tree as of this task** — kept in this file and in git history
+  (`505f9dc`) as a record of what was tried and why it didn't land, per
+  `AGENTS.md`'s "every agent mistake/dead-end is a harness gap or a record
+  worth keeping" spirit. A future redesign of this tab should read this
+  file first before re-attempting any of tasks 1–4's approaches.
+
+- [x] 6. Immediate follow-up (same day): "Back lại phiên cũ hơn, Phiên bản
+  vẫn còn dùng table" (go back to an even older version — the one that
+  still uses table). Task 5's restored version turned out to still carry
+  today's uncommitted `logistics-cost-lines-ux`/`redesign-shipment-
+  logistics-costs` work (STT column, suggestion `DropdownMenu`, the
+  polished ledger header copy) — not actually an old, settled state. Went
+  one step further back to the last **git-committed** version of this
+  file, `e0a2351` (2026-09-14, "add a cost row directly into its group, no
+  reposition") — restored via `git checkout e0a2351 --
+  shipment-cost-lines-fields.jsx` (byte-exact from git history, not a
+  reconstruction from memory this time) rather than another manual
+  rewrite. That version: plain `Table` (not `TanStackDataTable`), grouped
+  by category, 6 columns (Nhóm chi phí, Tên khoản chi phí, Số tiền, Ghi
+  chú, Nhà cung cấp, Số hoá đơn), no STT, no suggestion menu — genuinely
+  predates every uncommitted redesign from today. Verified clean under
+  lint/typecheck and confirmed with a browser screenshot that it renders
+  correctly against current supporting files (hooks/types have moved on
+  since 2026-09-14; nothing broke).
+
+Evidence: `harness/runs/20260915-ux-audit/debug-older-state.png`,
+`harness/runs/20260915-152920-579/` (full verification passed).

@@ -1,5 +1,14 @@
 # Shipment cost ledger: one line per row, no hidden amount on mobile
 
+> **Status: reverted 2026-09-15 (same day), twice.** The user asked to
+> revert this tab's UI after tasks 1–4 below (task 5), then asked to go
+> back further still (task 6). `shipment-cost-lines-fields.jsx` is now the
+> last **git-committed** version, `e0a2351` (2026-09-14) — plain `Table`,
+> grouped by category, no STT, no suggestion menu. It no longer matches
+> anything in this proposal — see task 6 in `tasks.md` for what's actually
+> live. Kept as a record of what was tried; tasks 1–4's `List`/`ListItem`
+> end state is still recoverable at commit `505f9dc`.
+
 ## Why
 User report (Vietnamese, 2026-09-15): "Chi phí Logisitcs" tab UI/UX chưa tối
 ưu trải nghiệm người dùng — the previous ledger (`redesign-shipment-logistics-
