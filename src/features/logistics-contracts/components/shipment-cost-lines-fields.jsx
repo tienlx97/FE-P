@@ -121,8 +121,28 @@ export function ShipmentCostLinesFields({
       ...groupRows,
     ]);
 
+  // STT (số thứ tự) numbers actual cost lines only, in table display order
+  // — group header rows aren't counted, so it stays "1, 2, 3, ..." across
+  // the whole grid rather than resetting per category group.
+  const sttByRowKey = new Map(
+    groupedTableRows
+      .filter((row) => !(/** @type {any} */ (row).__isGroupHeader))
+      .map((row, index) => [row.rowKey, index + 1]),
+  );
+
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ShipmentCostLineRow & Record<string, unknown>>[]} */
   const columns = [
+    {
+      key: 'stt',
+      header: 'STT',
+      width: pixel(48),
+      align: 'center',
+      renderCell: (row) => (
+        <Text color="secondary" hasTabularNumbers>
+          {sttByRowKey.get(row.rowKey)}
+        </Text>
+      ),
+    },
     {
       key: 'costCategoryId',
       header: 'Nhóm chi phí',
