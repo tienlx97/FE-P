@@ -11961,34 +11961,3 @@ launch).
   (fixing it means either sending more fields to the server per-page, or
   swapping the formula and showing page-size instead of true total in the
   common unfiltered case — a per-page product decision).
-- Committed as `ba206ab` — "feat(advance-table): render real PowerSearch,
-  fix filter/result-count bugs it exposed" (this entry plus the two
-  before it, i.e. the whole PowerSearch swap through the resultCount fix).
-
-## 2026-09-17 — Fix: clicking "Bộ lọc nâng cao" also opened PowerSearch's own menu
-
-- **Bug report (user):** clicking the funnel ("Bộ lọc nâng cao") button
-  also popped PowerSearch's own field menu open underneath the
-  advanced-filter dialog.
-- **Root cause:** the funnel `IconButton` lives inside PowerSearch's own
-  `endContent` slot (added when PowerSearch was first wired in) — which
-  renders it as a DOM descendant of `.astryx-power-search`'s own
-  clickable/focusable container. A press there reaches whatever internal
-  handler opens PowerSearch's field menu on focus/press before the
-  button's own `onClick` (a separate, later event) opens the
-  `AdvanceTableSearchDialog` — so both popovers opened at once.
-  Reproduced live via `getBoundingClientRect()` + `.click()` on the real
-  button (had to switch off `computer` tool pixel coordinates for this
-  whole session — the CDP screenshot coordinate space and the page's
-  actual CSS pixel space were off by roughly 1.4x on this machine, which
-  explains most of this session's earlier click-flakiness too; JS-level
-  element lookup + `.click()` sidesteps it entirely and should be the
-  default for popup/dropdown interactions going forward).
-- **Fix:** `onPointerDownCapture`/`onMouseDownCapture` with
-  `stopPropagation()` on the funnel button (`advance-table.jsx`) — stops
-  the press before it bubbles into PowerSearch's container, while the
-  button's own `onClick` still fires locally and opens the dialog alone.
-- Verified live: funnel click now opens only "Bộ lọc nâng cao", no
-  PowerSearch menu behind it. `./harness/verify.sh` full green —
-  `harness/runs/20260917-001947-1255/`.
-- Not committed yet.
