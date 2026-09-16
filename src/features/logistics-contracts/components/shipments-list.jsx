@@ -405,15 +405,15 @@ export function ShipmentsList() {
       // "Mã bản ghi mở Xem" (design.md section 4) — same handler
       // `RecordActionsMenu`'s "Xem" below uses.
       renderCell: (row) => (
-        <Button
-          label={row.shipmentCode}
-          variant="ghost"
-          size="sm"
+        <Link
+          xstyle={recordLinkStyles.link}
           onClick={(event) => {
             event.stopPropagation();
             openShipment(row, 'view');
           }}
-        />
+        >
+          {orDash(row.shipmentCode)}
+        </Link>
       ),
     },
     {
@@ -473,7 +473,7 @@ export function ShipmentsList() {
     {
       key: 'quantity',
       header: 'Số lượng',
-      width: pixel(110),
+      width: pixel(160),
       filter: 'quantityAmount',
       renderCell: (row) =>
         `${row.quantityAmount} ${labelForShipmentQuantityUnit(row.quantityUnit)}`,

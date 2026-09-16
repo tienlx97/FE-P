@@ -5,6 +5,7 @@ import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import { Link } from '@astryxdesign/core/Link';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
@@ -211,16 +212,15 @@ export function ContractPrivateInfosList() {
       // `RecordActionsMenu`'s "Xem" below uses. BOQ rows are 1:1 with a
       // Contract, so its number is this row's own identifier.
       renderCell: (row) => (
-        <Button
-          label={row.contractNumber}
-          variant="ghost"
-          size="sm"
+        <Link
           xstyle={recordLinkStyles.link}
           onClick={(event) => {
             event.stopPropagation();
             setDetailDialog({ row, initialEditing: false });
           }}
-        />
+        >
+          {row.contractNumber}
+        </Link>
       ),
     },
     {

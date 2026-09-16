@@ -11716,3 +11716,28 @@ launch).
     dev server on :3000 instead.
 - Not committed — user has not asked for one yet.
 - Nothing else outstanding from this round.
+
+## 2026-09-16 (continued) — commit + push, plus finishing a leftover WIP diff
+
+- User: "commit all code then push" for the three fixes above, then a
+  follow-up "commit luôn giúp tôi" (commit that too) once told about two
+  unrelated modified files sitting in the working tree.
+- Committed the three fixes as `d775a5a` (excluding the two unrelated
+  files) and pushed to `origin/main` — GitHub reported the remote moved to
+  `https://github.com/tienlx97/FE-P.git`; push still succeeded via
+  redirect, `git remote set-url` not updated yet (flagged to the user).
+- The two excluded files (`shipments-list.jsx`,
+  `contract-private-infos-list.jsx`) turned out to be an in-progress,
+  unauthored-by-this-session `Button` → `Link` swap for the "Mã"/"Số hợp
+  đồng" record-open cells (same `recordLinkStyles` pattern
+  `contracts-list.jsx`'s Buyer column already uses) — self-contained
+  (every import/helper it needs was already present) but left the old
+  `Button` block behind as a comment in both files, violating
+  `harness/GOLDEN_RULES.md` rule #4 ("no dead or commented-out code").
+  Stripped the dead comment blocks (no other changes) in both files, fixed
+  one resulting `simple-import-sort/imports` lint error via `eslint --fix`
+  (contract-private-infos-list.jsx's new `Link` import wasn't sorted),
+  full `./harness/verify.sh` PASSED — `harness/runs/20260916-161039-821/`
+  — then committed and pushed (scope was cleanup of an existing diff only,
+  not a new feature — no new `openspec/changes/` entry).
+- Nothing outstanding from this round.
