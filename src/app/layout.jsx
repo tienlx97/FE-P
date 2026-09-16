@@ -2,6 +2,7 @@ import './globals.css';
 
 import { QueryProvider } from '../shared/components/query-provider.jsx';
 import { ThemeProvider } from '../shared/components/theme-provider.jsx';
+import { jetbrainsMono, montserrat } from '../shared/config/fonts.js';
 import { site } from '../shared/config/site.js';
 
 export const metadata = {
@@ -14,7 +15,7 @@ export const metadata = {
  */
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi">
+    <html lang="vi" className={`${montserrat.variable} ${jetbrainsMono.variable}`}>
       <body>
         <QueryProvider>
           <ThemeProvider>{children}</ThemeProvider>

@@ -84,22 +84,37 @@ build with messages that explain the fix.
   (runs automatically before `dev`/`build`/`verify`) compiles it via
   `astryx theme build` into gitignored, do-not-edit artifacts
   (`src/shared/components/kt-xnk.js`, `src/shared/components/kt-xnk.d.ts`,
+  `src/shared/components/kt-xnk.variants.d.ts`,
   `src/shared/components/theme.built.css`) for static, non-runtime-injected
-  CSS — see `theme-provider.js` for how they're wired into `<Theme>`.
-  The palette follows the method react.dev uses
-  (github.com/reactjs/react.dev → `colors.js`), on three rules:
-  (1) the brand token IS the logo color, not a darkened variant — teal
-  `#247768` (accent) and red `#c2252a` (secondary button) are sampled from
-  `public/images/logo-dn-group.png`; (2) every neutral shares the brand hue
-  (178.4) with chroma shaped by tone — near-zero light, peaking mid, easing
-  off dark — so surfaces, text, and borders belong to one ramp instead of
-  drifting apart; (3) the page background uses a pale teal canvas, with white data/card
-  surfaces and mint table headers (refresh-workspace-colors). Status hues (green/amber/red) stay conventional
-  rather than rebranded, retinted into the same soft band (chroma ~6, tone
-  ~95). Every value is contrast-checked with Astryx's own `contrastRatio`
-  before it lands (AA 4.5:1 for text, 3:1 for non-text boundaries per WCAG
-  1.4.11); adding a new hue means updating
-  `src/shared/components/theme.js`, not inlining one
+  CSS — see `theme-provider.jsx` for how they're wired into `<Theme>`.
+  The theme is `extends: stoneTheme` from the installed
+  `@astryxdesign/theme-stone` package (redesign-theme-stone), not a
+  from-scratch `defineTheme` — Stone's own aesthetic (pill radius,
+  Montserrat headings, categorical colors, badge/banner/switch/progressbar/
+  field-status/input-status component coverage) passes through untouched;
+  `theme.js` only layers the DN Group brand and a handful of app-specific
+  functional fixes on top:
+  (1) the accent token family (`--color-accent`, `--color-accent-muted`,
+  `--color-text-accent`, `--color-icon-accent`, `--color-on-accent`) is the
+  logo teal `#247768`, not a darkened variant, sampled from
+  `public/images/logo-dn-group.png`; (2) `button['variant:destructive']`
+  (Xóa and other dangerous actions) is the logo red `#c2252a`, solid, not
+  Stone's default soft red-tint pill — `variant:secondary` (Cancel/Hủy,
+  used app-wide) is left as Stone's own neutral outline, since it's a
+  de-emphasized action, not a second brand color; (3) `--font-family-body`
+  stays `Optimistic Text Vietnamese` rather than Stone's Figtree, which
+  ships no Vietnamese subset (would reintroduce the mixed-font bug
+  `vietnamese-font-coverage` fixed); `--font-family-heading`/
+  `--font-family-code` point at Montserrat/JetBrains Mono (both do carry a
+  Vietnamese subset) self-hosted via `next/font/google`
+  (`src/shared/config/fonts.js`, applied in `layout.jsx`) since next/font
+  never exposes a literal family name a CSS-var token override can key off;
+  (4) a few table/toast/tab overrides fix real bugs unrelated to branding
+  (sticky header/columns, internal scroll height, an unthemed success
+  toast) and are unaffected by which base theme is in use. Status hues
+  (green/amber/red) stay Stone's own conventional tokens. Adding a new hue
+  or component override means updating `src/shared/components/theme.js`,
+  not inlining one.
 - Every convention here must map to a lint/structural rule. A convention that
   cannot be checked mechanically goes to `harness/GOLDEN_RULES.md` with a plan
   to make it checkable.

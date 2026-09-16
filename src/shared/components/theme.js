@@ -1,95 +1,54 @@
 import { defineTheme } from '@astryxdesign/core/theme';
+import { stoneTheme } from '@astryxdesign/theme-stone';
 
-// Light-only DN Group palette: logo teal anchors actions, mint identifies
-// table headings and selection, and pale teal surfaces frame white data.
-// Keep business statuses on their conventional green/amber/red hues.
+// Astryx's shipped Stone theme (earthy neutral, pill radius, Montserrat
+// headings, rich component coverage) as the base, with the DN Group brand
+// layered on top: logo teal for the accent family, logo red for dangerous
+// actions. Both sampled from public/images/logo-dn-group.png, same as
+// before this migrated off a from-scratch defineTheme (redesign-theme-stone).
 export const ktxnkTheme = defineTheme({
   name: 'kt-xnk',
-  // Astryx's neutral default (14px base / 1.2 ratio) is the site-wide
-  // scale — normal UI density for nav chrome, forms, buttons, etc. The
-  // larger react.dev-matched scale (body 17px) that used to live here is
-  // now scoped to just `/` and `/docs*` via
-  // `protected-app-shell.jsx`'s `largeTypography` style (that reading
-  // density makes sense for long-form doc content, not for a page like
-  // `/admin`'s create-user form) — see the comment there for the ported
-  // react.dev values.
-  typography: {
-    body: {
-      family: 'Optimistic Text Vietnamese',
-      fallbacks:
-        '"Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    },
-    heading: {
-      family: 'Optimistic Display Vietnamese',
-      fallbacks:
-        '"Optimistic Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    },
-    code: {
-      family: 'Source Code Pro',
-      fallbacks:
-        '"SF Mono", Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-    },
-  },
+  extends: stoneTheme,
   tokens: {
-    // Brand teal, exactly as it appears in the logo — drives primary buttons,
-    // focus rings, links, and accent-colored icons.
+    // Brand teal, exactly as it appears in the logo — drives primary
+    // buttons, focus rings, links, and accent-colored icons. Stone's own
+    // accent-family tokens are literal hex, not var(--color-accent)
+    // references, so each one needs its own override here (defineTheme's
+    // documented caveat: overriding --color-accent alone does not re-point
+    // these siblings, least of all --color-on-accent).
     '--color-accent': '#247768',
-    // Shared selection/callout tint, deliberately softer than table headers.
     '--color-accent-muted': '#e5f3ed',
-    '--color-on-accent': '#ffffff',
     '--color-text-accent': '#247768',
     '--color-icon-accent': '#247768',
+    '--color-on-accent': '#ffffff',
 
-    // Per user request (2026-09-12): plain white canvas instead of the
-    // teal-tinted one; elevated cards, inputs and data stay white too.
-    '--color-background-body': '#ffffff',
-    '--color-background-surface': '#ffffff',
-    '--color-background-muted': '#edf5f1',
-    '--color-background-card': '#ffffff',
-    '--color-background-popover': '#ffffff',
-
-    // Text & icons — same ramp, mid/dark end.
-    '--color-text-primary': '#1e2a27', // tone 16, chroma 6
-    '--color-text-secondary': '#354b46', // tone 30, chroma 10
-    '--color-icon-primary': '#1e2a27',
-    '--color-icon-secondary': '#354b46',
-
-    // Borders — same ramp. The hairline was previously tone 80 (a visibly
-    // heavy gray-teal rule); react.dev's equivalent sits at tone 93.
-    '--color-border': '#e7eceb', // tone 93, chroma 2 — decorative hairline
-    '--color-border-emphasized': '#6a8a83', // tone 55, chroma 13 — form-control outlines, 3.77:1 on body (WCAG 1.4.11 needs 3:1)
-
-    // Status colors — conventional hues, react.dev's soft tint band.
-    // The muted values are what Banner paints as its header background.
-    '--color-error': '#b4271f', // 5.68:1 on its own tint
-    '--color-on-error': '#ffffff',
-    '--color-error-muted': '#fdedea', // tone 95, chroma 6
-    '--color-success-muted': '#eaf3e9', // tone 95, chroma 6 — pairs with the default #0d8626 at 4.15:1
-    // Astryx's default --color-warning (#e9af08) is tone 74.8: only 1.75:1
-    // against its own tint, failing WCAG 1.4.11 for non-text. Dropped to tone
-    // 48 — the same move react.dev makes (their yellow solid is #B65700,
-    // tone 48) — which lifts it to 4.23:1.
-    '--color-warning': '#956b00',
-    '--color-on-warning': '#ffffff', // 4.79:1; dark text on the new tone would be 3.09, failing AA
-    '--color-warning-muted': '#f7f0e5', // tone 95, chroma 6
-
-    // Deliberately left at Astryx/theme-neutral defaults: --color-success
-    // (the solid green already passes on the new tint), the categorical tag
-    // colors (--color-*-blue/cyan/gray/green/orange/pink/purple/red/teal/
-    // yellow), and structural tokens (--color-neutral, --color-overlay*,
-    // --color-skeleton, --color-track, --color-shadow, --color-tint-hover) —
-    // these aren't brand identity, changing them would just be surprising.
+    // Vietnamese-first body text: Stone's default body face (Figtree) ships
+    // no Vietnamese subset, so it would silently mix with a fallback system
+    // font on every diacritic — the exact bug vietnamese-font-coverage fixed
+    // for Optimistic. Keep the existing complete-coverage family here.
+    '--font-family-body':
+      '"Optimistic Text Vietnamese", "Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    // Stone's own heading/code faces (Montserrat, JetBrains Mono — both do
+    // carry a Vietnamese subset), self-hosted via next/font
+    // (`src/shared/config/fonts.js`, applied on <html> in `layout.jsx`).
+    // next/font never exposes a literal "Montserrat" family name, so these
+    // reference its generated CSS vars instead, keeping Stone's own
+    // fallback tail behind them.
+    '--font-family-heading':
+      'var(--font-montserrat), "Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    '--font-family-code':
+      'var(--font-jetbrains-mono), "SF Mono", Monaco, Consolas, monospace',
   },
   components: {
-    // Astryx's Button `variant` prop is an emphasis level, not a brand hue —
-    // `variant="primary"` already resolves to --color-accent above, but
-    // `variant="secondary"` defaults to a neutral gray (--color-neutral), not
-    // our brand red. Point it at the logo red instead, so the two brand
-    // colors carry equal visual weight where they meet. Red only surfaces
-    // here (far less often than primary), so this doesn't make red the
-    // dominant surface color.
+    // Astryx's Button `variant` prop is an emphasis level, not a brand hue.
+    // `variant="secondary"` is Cancel/Hủy across ~46 files app-wide — Stone's
+    // own neutral outline treatment for it (inherited, no override here) is
+    // the semantically correct choice, not a second brand color. The logo
+    // red belongs on `variant="destructive"` instead (Xóa and other
+    // dangerous actions), replacing Stone's default soft red-tint pill with
+    // a solid fill so it carries real visual weight.
     button: {
-      'variant:secondary': {
+      'variant:destructive': {
         backgroundColor: '#c2252a', // logo red, 5.85:1 against the white label
         color: '#ffffff',
         // Astryx's built-in variants derive :hover/:active automatically via
@@ -121,11 +80,6 @@ export const ktxnkTheme = defineTheme({
     // 2026-09-16). `readonly-input-style.jsx`'s doc comment has the full
     // mechanism; the same background value and "no borderColor override"
     // reasoning (InputGroup's shared border seam) still applies there.
-    // astryx's Toast only ships `type: 'info' | 'error'` — every save
-    // confirmation in this app fires an unthemed 'success' type (see
-    // `useAppToast`), which without this override renders identical to
-    // 'info' (same dark inverted surface). Per user request (2026-09-08),
-    // give it the conventional green instead.
     // astryx's Toast only ships `type: 'info' | 'error'` — every save
     // confirmation in this app fires an unthemed 'success' type (see
     // `useAppToast`), which without this override renders identical to

@@ -11741,3 +11741,114 @@ launch).
   — then committed and pushed (scope was cleanup of an existing diff only,
   not a new feature — no new `openspec/changes/` entry).
 - Nothing outstanding from this round.
+
+## 2026-09-16 — Redesign theme on Astryx Stone (`redesign-theme-stone`)
+
+- **Context:** user asked to stop maintaining a from-scratch `defineTheme`
+  and rebuild the app's theme on a shipped Astryx theme, keeping the DN
+  Group brand (logo teal/red). Asked for Matcha first; after previewing
+  Matcha's aesthetic (Playwrite US Trad/DM Sans, pill radius) via `astryx
+  theme add matcha` into a scratch dir, asked to use Stone instead — same
+  preview process, then confirmed "toàn bộ thẩm mỹ Stone" (full aesthetic,
+  not colors-only) once told what that meant concretely (Montserrat/
+  Figtree, pill buttons/cards, its own component overrides). Given this is
+  a big, blast-radius-wide change, started a new branch
+  (`redesign-theme-stone`, off `main`) and an `openspec/changes/
+  redesign-theme-stone/` change (proposal/specs/tasks) rather than editing
+  in place — see that folder for the full decision log.
+- **Unrelated in-progress work parked:** `main` had uncommitted
+  `add-supplier-shipment-history` work (not this session's) sitting dirty
+  when this started. Stashed it (`git stash push -u`), created this branch
+  from a clean `main`, then popped the stash back onto `main` only (working
+  tree is shared across branches — switching branches does NOT carry a
+  stash pop with it, learned by getting this wrong once and re-stashing).
+  That work is committed nowhere; whoever resumes it pops the stash on
+  `main`.
+- **What changed** (full detail in `openspec/changes/redesign-theme-stone/
+  proposal.md` and `tasks.md`):
+  - Installed `@astryxdesign/theme-stone@0.5.0`; `src/shared/components/
+    theme.js` is now `extends: stoneTheme` instead of a from-scratch
+    `defineTheme` — Stone's radius/typography-scale/categorical-colors/
+    component-overrides (badge, banner, switch, progressbar, field-status,
+    per-input status borders) all pass through untouched.
+  - Brand layered on top: accent token family (`--color-accent` +
+    `-muted`/`-text-accent`/`-icon-accent`/`-on-accent`) → logo teal
+    `#247768`. `button['variant:destructive']` (Xóa, dangerous actions) →
+    solid logo red `#c2252a` with hover/active color-mix steps — this is
+    the new home for the second brand color. `button['variant:secondary']`
+    (Cancel/Hủy, ~46 files app-wide) is now Stone's own neutral outline,
+    NOT brand-colored — it was never a second-brand CTA, just every
+    dialog's de-emphasized close action; user confirmed this after the
+    semantic mismatch was pointed out.
+  - Fonts: kept `--font-family-body` on `Optimistic Text Vietnamese`
+    (Stone's Figtree has no Vietnamese subset — verified via Google Fonts
+    metadata API — using it would reintroduce the exact mixed-font bug
+    `vietnamese-font-coverage` fixed for Optimistic). `--font-family-
+    heading`/`--font-family-code` now point at Montserrat/JetBrains Mono
+    (Stone's own choices, both do carry a Vietnamese subset) — self-hosted
+    via `next/font/google` (new `src/shared/config/fonts.js`, applied on
+    `<html>` in `layout.jsx`), NOT the literal family-name string
+    `theme.js` uses for every other font: next/font never exposes a
+    literal "Montserrat", so the theme tokens reference its generated
+    `var(--font-montserrat)`/`var(--font-jetbrains-mono)` CSS vars instead.
+    Deleted the now-dead self-hosted Source Code Pro `@font-face` rules and
+    `.woff2` files (only reachable via the token that no longer points at
+    them).
+  - Kept the app-specific, non-brand component overrides verbatim
+    regardless of base theme: `table-scroll-wrapper` sticky-height fix,
+    `table-header`/`table-header-cell` mint background + sticky z-index,
+    `table-body`/`table-footer` surface, `tab` selected accent, `toast
+    type:success` color.
+  - `globals.css`: dropped the now-redundant `@astryxdesign/theme-neutral/
+    theme.css` import (`extends` makes `theme.built.css` self-contained —
+    confirmed by a full `next build` still passing with it gone) and
+    removed `@astryxdesign/theme-neutral` from `package.json`/`pnpm-
+    workspace.yaml` (was dead weight, nothing else referenced it). Removed
+    the `.astryx-button.secondary { color: #fff }` cascade-layer escape
+    hatch (secondary isn't forced white-on-red anymore) and — since a live
+    check on the new destructive override wasn't reachable this session —
+    preventatively ported the identical hack to `.astryx-button.destructive`
+    (same known root cause: `defineTheme` component overrides compile into
+    `@layer astryx-theme`, which loses to literally any unlayered rule for
+    the same property regardless of specificity). Safe if turns out unneeded.
+  - `eslint.config.mjs`: added the new `astryx theme build` output file
+    `kt-xnk.variants.d.ts` (TS augmentations for Stone's custom variants) to
+    both the lint-ignore list and `.gitignore`, matching the existing
+    `kt-xnk.js`/`kt-xnk.d.ts` pattern — build now emits 4 type
+    augmentations it didn't before.
+  - `openspec/project.md`'s Color convention paragraph rewritten to
+    describe the `extends: stoneTheme` structure instead of the old
+    from-scratch one.
+- **Verification:** `./harness/verify.sh` full green —
+  `harness/runs/20260916-221532-629/` (lint, typecheck, structure, harness
+  tests, unit tests, build, quality thresholds all pass).
+- **Visual check — incomplete, flagged for next session:** the
+  unauthenticated `/login` screen confirms the primary button renders logo
+  teal and the error Banner renders Stone's soft-red status style
+  correctly (both via live `next dev` HMR against an already-running dev
+  server on :3000 — did not touch or restart that process, and my own
+  attempt to run a second instance on :3001 hit Next's same-directory dev
+  lock and was abandoned rather than forced). Every other screen sits
+  behind the `(protected)` route group (including `/docs` and
+  `/design-system`, which would have been enough to check typography/
+  component coverage without real data) and no working dev-DB login was
+  found this session: the credentials in this file's own 2026-08-xx
+  login-feature history (`admin`/`password123`, `testuser`/`testpass1`,
+  `000000000000`/`Admin@123456`) are all stale against the current dev DB,
+  and `BE-kt-xnk/requests/Authentication/Login.http`'s own example
+  (`100000000001`/`Sample@123`) was also rejected as invalid credentials.
+  User said to proceed without blocking on this. **Destructive/secondary
+  button styling, sticky table header/columns, selected tab, success
+  toast, and Vietnamese body-text rendering are unverified beyond code
+  review + a passing build** — next session should get working dev-DB
+  credentials (ask the user, or reseed `BE-kt-xnk/db/sample-data.sql`) and
+  finish `redesign-theme-stone`'s task 3.2 before calling this done.
+- **Harness gaps:**
+  - No documented, current dev-DB login credentials anywhere a session can
+    reliably find them — this cost real time across two sessions now (this
+    one, and the login-feature history entries above chasing the same
+    problem with different stale values). Worth a single source of truth,
+    e.g. a `docs/dev-login.md` (gitignored if the credentials shouldn't be
+    committed) pointing at whatever `BE-kt-xnk` currently seeds, kept in
+    sync when that changes — out of scope to fix here.
+- Not committed yet — about to commit this change on `redesign-theme-stone`.

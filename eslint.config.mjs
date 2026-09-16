@@ -128,6 +128,7 @@ const config = [
       // artifacts reports problems nobody can fix at the source.
       'src/shared/components/kt-xnk.js',
       'src/shared/components/kt-xnk.d.ts',
+      'src/shared/components/kt-xnk.variants.d.ts',
     ],
   },
 ];

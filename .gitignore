@@ -13,6 +13,7 @@ build/
 # see `pnpm theme:build` (runs automatically before dev/build/verify)
 src/shared/components/kt-xnk.js
 src/shared/components/kt-xnk.d.ts
+src/shared/components/kt-xnk.variants.d.ts
 src/shared/components/theme.built.css
 
 # Verification evidence (per-run logs/screenshots) — keep out of git

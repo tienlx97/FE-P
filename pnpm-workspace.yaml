@@ -9,5 +9,4 @@ allowBuilds:
 
 minimumReleaseAgeExclude:
   - '@astryxdesign/core@0.3.0'
-  - '@astryxdesign/theme-neutral@0.3.0'
   - '@astryxdesign/cli@0.3.0'

@@ -11,7 +11,7 @@ importers:
       '@astryxdesign/core':
         specifier: 0.5.0
         version: 0.5.0(@stylexjs/stylex@0.15.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@astryxdesign/theme-neutral':
+      '@astryxdesign/theme-stone':
         specifier: 0.5.0
         version: 0.5.0(@astryxdesign/core@0.5.0(@stylexjs/stylex@0.15.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)
       '@codemirror/lang-css':
@@ -194,6 +194,12 @@ packages:
 
   '@astryxdesign/theme-neutral@0.5.0':
     resolution: {integrity: sha512-7EVMNJ3BCzq4lVyRzDQ9SLt0v03atQCpkXiE2BvdmH3B/nRVQvd+qfMBoUhL6EGsVTqnS3b+PSVU6unNcqulgQ==}
+    peerDependencies:
+      '@astryxdesign/core': 0.5.0
+      react: '>=19'
+
+  '@astryxdesign/theme-stone@0.5.0':
+    resolution: {integrity: sha512-CGUU5WFguA4KXQS2ub2Zj9RJfXDM4eLB368HbWznL9BeIWFLKrKLF6yv0sQjOciCu7DQzdGJJHAS1GrUxZrs4A==}
     peerDependencies:
       '@astryxdesign/core': 0.5.0
       react: '>=19'
@@ -3411,6 +3417,13 @@ snapshots:
       react-dom: 19.2.8(react@19.2.8)
 
   '@astryxdesign/theme-neutral@0.5.0(@astryxdesign/core@0.5.0(@stylexjs/stylex@0.15.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@astryxdesign/core': 0.5.0(@stylexjs/stylex@0.15.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      lucide-react: 1.28.0(react@19.2.8)
+      react: 19.2.8
+    optional: true
+
+  '@astryxdesign/theme-stone@0.5.0(@astryxdesign/core@0.5.0(@stylexjs/stylex@0.15.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@astryxdesign/core': 0.5.0(@stylexjs/stylex@0.15.4)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       lucide-react: 1.28.0(react@19.2.8)
