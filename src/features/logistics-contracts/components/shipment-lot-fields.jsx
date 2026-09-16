@@ -2,12 +2,12 @@
 
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { currencyOptions } from '../config/currencies.js';
 import { paymentTypeOptions } from '../config/payment-schedule-types.js';

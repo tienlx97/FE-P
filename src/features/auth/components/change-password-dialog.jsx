@@ -4,12 +4,12 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { useState } from 'react';
 
 import { generateRandomPassword } from '@/features/admin-users/config/generate-password.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { IconShuffle } from '@/shared/components/icon/icon-shuffle.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { useChangePasswordMutation } from '../hooks/use-change-password-mutation.js';
 

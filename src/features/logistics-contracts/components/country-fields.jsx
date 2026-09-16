@@ -1,6 +1,6 @@
 'use client';
 
-import { TextInput } from '@astryxdesign/core/TextInput';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 /**
  * `Country` catalog field-set (contract country) — just a `Name`, mirrors

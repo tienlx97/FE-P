@@ -1,8 +1,7 @@
 'use client';
 
-import { TextInput } from '@astryxdesign/core/TextInput';
-
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { usePartyGroupForm } from '../hooks/use-party-group-form.js';
 

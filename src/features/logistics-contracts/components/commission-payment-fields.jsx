@@ -1,10 +1,10 @@
 'use client';
 
 import { DateInput } from '@astryxdesign/core/DateInput';
-import { TextArea } from '@astryxdesign/core/TextArea';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { TextArea } from '@/shared/components/text-area.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 /**

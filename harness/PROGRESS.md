@@ -1,5 +1,93 @@
 # Progress Log
 
+## 2026-09-16 (continued) — production-only readonly TextInput/NumberInput/Textarea white background: fixed
+
+- User gave an already-detailed 8-step plan (reproduce against a local
+  production build, move the readonly tint to StyleX, clean up the
+  now-redundant `theme.js` rule, test every state in dev+prod+Chrome/Edge,
+  add a regression test, gate on lint/typecheck/test/build) — executed
+  it, but the *root cause* found while reproducing (step 1) was more
+  precise than the plan's working theory, which shaped how step 2 was
+  implemented.
+- **Repro**: `pnpm build` + `next start -p 3002` in the separate
+  `D:\PROD-P\FE-P` worktree (a linked worktree of this same repo, pinned
+  to a detached commit — `git worktree list` from here shows it
+  alongside this one). Pointed its `.env.local` (gitignored, deleted
+  again after) at the local BE dev stack instead of the real production
+  LAN backend, so the CSS bug could be reproduced without touching real
+  production credentials — this repo's own dev-mode session was already
+  authenticated against that same backend. Confirmed via a computed-style
+  probe (not just eyeballing a screenshot — JPEG screenshots are too lossy
+  to trust for a ~10-unit RGB difference) that every readonly TextInput/
+  NumberInput/Textarea in the Contract "Xem" view rendered `rgb(255, 255,
+  255)` instead of `rgb(237, 245, 241)`.
+- **Root cause** (more precise than "theme.js loses to StyleX" — actually
+  traced which CSS rule wins): both `theme.js`'s compiled override and
+  Astryx's own component base styles compile into real CSS `@layer`s in
+  the production bundle (confirmed by fetching the actual served CSS
+  chunks and finding `@layer astryx-theme`/`@layer astryx-base` wrapping
+  each). Cascade layers resolve purely by *layer declaration order* —
+  selector specificity is irrelevant once two conflicting declarations
+  are in different layers. The explicit `@layer reset, astryx-theme,
+  priority1, priority2, priority3, priority4, priority5;` order statement
+  never mentions `astryx-base` (the 152KB chunk holding Astryx's own
+  component styles), so it gets appended wherever its own chunk happens
+  to load first in a given production build — ending up *after*
+  `astryx-theme`, so its plain white background always won regardless of
+  `.astryx-text-input.readonly`'s higher selector specificity. Dev mode's
+  CSS delivery doesn't chunk-split the same way, so this never surfaced
+  there. Confirmed the fix direction empirically before writing any code:
+  `read-only-lock.jsx`'s existing app-level-StyleX tint (used for
+  Selector/DateInput/CheckboxList) already rendered correctly
+  (`rgb(237, 245, 241)`) in this exact same production build.
+- **Fix**: new `readonly-input-style.jsx` (shared StyleX style, doc
+  comment carries the full root-cause writeup so it isn't lost) +
+  `text-input.jsx`/`number-input.jsx`/`text-area.jsx` (thin Astryx
+  passthroughs that merge the tint into `xstyle` when `isReadOnly`).
+  Mechanically swapped the import in all 40 files that imported
+  `TextInput`/`NumberInput`/`TextArea` straight from
+  `@astryxdesign/core/*` (`sed` + `eslint --fix` for import-order,
+  `prettier --write` for the handful of files that needed reflow) —
+  every call site's JSX is unchanged, only the import line. Refactored
+  `read-only-lock.jsx` to import the same shared style instead of its own
+  copy. Removed the now-dead `'text-input'/'number-input'/'textarea':
+  { readonly: {...} }` overrides from `theme.js` (confirmed nothing else
+  in the repo referenced them first) and rebuilt `theme.built.css`
+  (8 component overrides now, down from 11).
+- **Regression test**: `readonly-input-wrappers.test.js` — this repo's
+  `node --test` runner has no JSX/Babel transform at all (`node-alias-
+  loader.mjs` only resolves the `@/*` alias), so no test here renders a
+  component; followed the same precedent as `docs-shell-contract.test.js`
+  (source-text assertions, e.g. its `assert.doesNotMatch(source,
+  /@astryxdesign\/core/)` for the MDX tree) instead of introducing new
+  test infra. Recursively scans all 213 `.jsx` files under `src/` (not a
+  hardcoded list of the 40 known call sites) and asserts none import
+  `TextInput`/`NumberInput`/`TextArea` straight from Astryx anymore, plus
+  that the 3 wrappers and `read-only-lock.jsx` all reference the one
+  shared style.
+- **Verification**: copied the changeset into the `PROD-P/FE-P` worktree
+  (file copy, not a commit — user hadn't asked for a commit yet),
+  rebuilt, restarted — every readonly field now measures `rgb(237, 245,
+  241)`; spot-checked edit mode (fields correctly white/editable again,
+  ReadOnlyLock'd Selectors still tinted) and dev mode (still correct, no
+  regression). Could not test Edge specifically (no Edge browser
+  automation available here) — flagged to the user; low risk since this
+  is standard CSS Cascade Layers behavior, not a Chromium/Blink quirk,
+  and Edge shares that engine with Chrome. Reverted `PROD-P/FE-P` back to
+  a clean working tree at its pinned commit afterward (`git checkout --
+  .` + `git clean -fd -- src`, plus deleting the temporary `.env.local`)
+  so it's ready for a real promotion later, not left with ad hoc state.
+- `eslint .`, `tsc --noEmit`, `prettier --check` (on every touched file),
+  and `node --test` (154 pass: 151 existing + 3 new) all clean. One
+  touched file (`party-form-fields.jsx`) got a large diff purely from
+  `prettier --write` reformatting code that predates this app's Prettier
+  adoption — verified with `git diff --ignore-all-space` that every
+  changed line is whitespace-only, no logic difference.
+- Committed as part of this same round (user: "commit and push") —
+  bundled with `harness/PROGRESS.md`. Nothing outstanding from this
+  round; DevOps/actual deploy was explicitly out of scope (the user's own
+  plan stopped at "local production build gate").
+
 ## 2026-09-16 (continued) — 3 ad hoc user-reported fixes (Logistics lists)
 
 - User (Vietnamese, 3 items, no specific change named — picked up directly

@@ -8,7 +8,6 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { TextArea } from '@astryxdesign/core/TextArea';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 
@@ -16,6 +15,7 @@ import { FormattedNumberTextInput } from '@/shared/components/formatted-number-t
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
+import { TextArea } from '@/shared/components/text-area.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';

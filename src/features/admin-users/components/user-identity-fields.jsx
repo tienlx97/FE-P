@@ -6,11 +6,11 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { IconShuffle } from '@/shared/components/icon/icon-shuffle.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { generateRandomPassword } from '../config/generate-password.js';
 

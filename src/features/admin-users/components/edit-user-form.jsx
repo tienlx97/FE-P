@@ -7,15 +7,15 @@ import { Dialog, DialogHeader } from '@astryxdesign/core/Dialog';
 import { Divider } from '@astryxdesign/core/Divider';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
+import { NumberInput } from '@/shared/components/number-input.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { useEditUserForm } from '../hooks/use-edit-user-form.js';

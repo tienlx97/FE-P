@@ -4,10 +4,11 @@ import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
+
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { AdvancedFilterBuilder } from './advanced-filter-builder.jsx';
 import { CommonDialog } from './common-dialog.jsx';

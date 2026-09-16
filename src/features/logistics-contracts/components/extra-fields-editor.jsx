@@ -6,10 +6,10 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 /**
  * Generic "trường tùy ý" (Key/Value) repeatable-rows editor — the EAV

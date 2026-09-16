@@ -6,9 +6,10 @@ import {
   SegmentedControlItem,
 } from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
+
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 const OLD_ADDRESS_FIELDS = [
   'oldProvince',

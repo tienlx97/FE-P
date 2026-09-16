@@ -106,33 +106,21 @@ export const ktxnkTheme = defineTheme({
         },
       },
     },
-    // Astryx ships a `disabled` state (dimmed/reduced-opacity) for every
-    // text-like input, but no default visual at all for `readonly` — a
-    // read-only TextInput renders pixel-identical to an empty editable one.
-    // Once view-mode forms (Commission/Shipment/Contract) started reusing
-    // native `isReadOnly` side-by-side with real `isDisabled` fields (e.g. a
-    // locked "Loại hình" Selector next to a read-only "Số booking"
-    // TextInput), the two states read as the same thing — per user request
-    // (2026-09-07), give `readonly` its own tinted-but-not-dimmed
-    // background so it reads as "has a value, just not this field" instead
-    // of either plain-editable or grayed-out-disabled.
-    //
-    // Background only, no borderColor override: inside an InputGroup (e.g.
-    // FormattedNumberTextInput's currency suffix), Astryx fakes one
-    // continuous border across every segment by overlapping each segment's
-    // own left border onto the previous segment's right edge
-    // (`margin-inline-start: calc(-1 * var(--border-width))`) — clearing
-    // this field's border here would erase that shared seam and leave the
-    // adjacent unit box looking borderless on its left edge (2026-09-07).
-    'text-input': {
-      readonly: { backgroundColor: 'var(--color-background-muted)' },
-    },
-    'number-input': {
-      readonly: { backgroundColor: 'var(--color-background-muted)' },
-    },
-    textarea: {
-      readonly: { backgroundColor: 'var(--color-background-muted)' },
-    },
+    // A `text-input`/`number-input`/`textarea` `readonly` background used
+    // to live here (added 2026-09-07 so a read-only TextInput doesn't
+    // render pixel-identical to an empty editable one, or read as
+    // `isDisabled` — see git history for the original comment). Moved to
+    // app-level StyleX instead (`readonly-input-style.jsx`, applied by
+    // `text-input.jsx`/`number-input.jsx`/`text-area.jsx`) — this compiled
+    // override renders as plain white in a production build: both this and
+    // Astryx's own component base styles compile into real CSS `@layer`s,
+    // and cascade layers resolve purely by layer order, not selector
+    // specificity, so this override lost to Astryx's base styles whenever
+    // a production chunk split happened to register their layer after this
+    // one (confirmed against a local `next build` + `next start`,
+    // 2026-09-16). `readonly-input-style.jsx`'s doc comment has the full
+    // mechanism; the same background value and "no borderColor override"
+    // reasoning (InputGroup's shared border seam) still applies there.
     // astryx's Toast only ships `type: 'info' | 'error'` — every save
     // confirmation in this app fires an unthemed 'success' type (see
     // `useAppToast`), which without this override renders identical to

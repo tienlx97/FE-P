@@ -1,20 +1,18 @@
 'use client';
 
-import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
-import * as stylex from '@stylexjs/stylex';
 import { cloneElement, isValidElement } from 'react';
 
-const styles = stylex.create({
-  // Matches the tint `theme.js` gives native `isReadOnly` TextInput/
-  // NumberInput/Textarea — those get it for free from Astryx's `readonly`
-  // theme state, but Selector/DateInput/CheckboxList have no such state to
-  // hook (no native `isReadOnly`), so a read-only Selector used to render
-  // with a plain white background right next to a tinted read-only
-  // TextInput in the same field grid. Background only, same reasoning as
-  // theme.js's text-input/number-input/textarea overrides: clearing a
-  // border here could erase a shared InputGroup seam.
-  tinted: { backgroundColor: colorVars['--color-background-muted'] },
-});
+import { readonlyInputStyle } from './readonly-input-style.jsx';
+
+// Selector/DateInput/CheckboxList have no native `isReadOnly` state to hook
+// a background off of, so a read-only Selector used to render with a plain
+// white background right next to a tinted read-only TextInput in the same
+// field grid — `readonlyInputStyle` is the same shared tint `text-input.jsx`/
+// `number-input.jsx`/`text-area.jsx` apply directly for that native case
+// (see that module's doc comment for why this is app-level StyleX, not a
+// `theme.js` override). Background only, same reasoning as those wrappers:
+// clearing a border here could erase a shared InputGroup seam.
+const styles = readonlyInputStyle;
 
 /**
  * @param {import('react').KeyboardEvent} event

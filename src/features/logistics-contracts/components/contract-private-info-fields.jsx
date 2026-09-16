@@ -5,12 +5,12 @@ import { DateInput } from '@astryxdesign/core/DateInput';
 import { Grid } from '@astryxdesign/core/Grid';
 import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { overlayPaddingReset } from '@astryxdesign/core/Layout';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { NumberInput } from '@/shared/components/number-input.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 

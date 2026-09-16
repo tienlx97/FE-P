@@ -8,13 +8,13 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { useState } from 'react';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { QuickCreateSupplierDialog } from './quick-create-supplier-dialog.jsx';

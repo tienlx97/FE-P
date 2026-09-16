@@ -8,13 +8,13 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { StatusDot } from '@astryxdesign/core/StatusDot';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { formatMoney } from '../config/currencies.js';
 

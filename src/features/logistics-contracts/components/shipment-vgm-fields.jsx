@@ -5,13 +5,13 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { TextArea } from '@astryxdesign/core/TextArea';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { TextArea } from '@/shared/components/text-area.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { shipmentContainerTypeOptions } from '../config/shipment-container-types.js';

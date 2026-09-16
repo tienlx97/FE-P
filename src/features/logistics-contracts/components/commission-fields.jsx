@@ -14,7 +14,6 @@ import { List, ListItem } from '@astryxdesign/core/List';
 import { MetadataList } from '@astryxdesign/core/MetadataList';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Pencil, Plus } from 'lucide-react';
@@ -22,6 +21,7 @@ import { Pencil, Plus } from 'lucide-react';
 import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { labelForCommissionAnnexType } from '../config/commission-annex-types.js';
@@ -144,9 +144,7 @@ export function CommissionFields({
         <MetadataListItem label="Số hợp đồng">
           {orDash(contractNumber)}
         </MetadataListItem>
-        <MetadataListItem label="Dự án">
-          {orDash(projectName)}
-        </MetadataListItem>
+        <MetadataListItem label="Dự án">{orDash(projectName)}</MetadataListItem>
       </MetadataList>
 
       <Grid columns={isNarrow ? 1 : 2} gap={3}>

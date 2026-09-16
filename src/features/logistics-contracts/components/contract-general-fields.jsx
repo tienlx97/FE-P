@@ -6,12 +6,9 @@ import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Stack, StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { TextArea } from '@astryxdesign/core/TextArea';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
@@ -19,10 +16,11 @@ import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { NumberInput } from '@/shared/components/number-input.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
-import {
-  formatDateInputValue,
-} from '@/shared/config/date-input-format.js';
+import { TextArea } from '@/shared/components/text-area.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { contractStatusOptions } from '../config/contract-status.js';
 import { contractTypeOptions } from '../config/contract-types.js';
@@ -432,7 +430,9 @@ export function ContractGeneralFields({ form, isReadOnly = false }) {
         <Selector
           isDisabled={!isReadOnly && isCompanyFixed}
           disabledMessage={
-            isCompanyFixed ? 'Không thể thay đổi công ty sau khi tạo' : undefined
+            isCompanyFixed
+              ? 'Không thể thay đổi công ty sau khi tạo'
+              : undefined
           }
           label="Công ty"
           hasSearch
@@ -524,7 +524,6 @@ export function ContractGeneralFields({ form, isReadOnly = false }) {
         extraFieldRows={buyerExtraFieldRows}
         isReadOnly={isReadOnly}
       />
-
     </FormSection>
   );
 }

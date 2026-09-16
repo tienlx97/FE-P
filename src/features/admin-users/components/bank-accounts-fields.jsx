@@ -8,7 +8,6 @@ import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Selector } from '@astryxdesign/core/Selector';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import {
   colorVars,
   radiusVars,
@@ -19,6 +18,7 @@ import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 // `Table` always bleeds edge-to-edge against `--container-padding-block-start`
 // when it's the first child of its parent (see Table's scroll-wrapper

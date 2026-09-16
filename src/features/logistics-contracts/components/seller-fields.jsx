@@ -5,10 +5,11 @@ import { useCollapsible } from '@astryxdesign/core/Collapsible';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useId } from 'react';
+
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
 

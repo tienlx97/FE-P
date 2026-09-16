@@ -27,7 +27,6 @@ import {
   useTableFilterState,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -41,6 +40,7 @@ import {
   stickyColumnKeys,
   TableViewOptionsPopover,
 } from '@/shared/components/table-view-options-popover.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { AdvanceTablePagination } from './advance-table-pagination.jsx';
 import { AdvanceTableSearchDialog } from './advance-table-search-dialog.jsx';

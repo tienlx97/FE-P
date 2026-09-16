@@ -1,9 +1,9 @@
 'use client';
 
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { useState } from 'react';
 
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 /**
  * Generic "add a new X" dialog reused by all four org-directory Selectors in

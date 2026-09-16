@@ -2,14 +2,14 @@
 
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { Divider } from '@astryxdesign/core/Divider';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
+import { NumberInput } from '@/shared/components/number-input.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { UserAddressFields } from './user-address-fields.jsx';

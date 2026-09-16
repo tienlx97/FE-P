@@ -1,8 +1,9 @@
 'use client';
 
 import { Selector } from '@astryxdesign/core/Selector';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
+
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 /**
  * `Place` catalog field-set — `Name` + a `CountryId` Selector reusing the

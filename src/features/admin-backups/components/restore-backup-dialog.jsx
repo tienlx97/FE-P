@@ -1,11 +1,11 @@
 'use client';
 
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useRef, useState } from 'react';
 
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { useRestoreBackupMutation } from '../hooks/use-restore-backup-mutation.js';
 
@@ -119,15 +119,15 @@ export function RestoreBackupDialog({ isOpen, onOpenChange, backup }) {
       {!didSucceed ? (
         <VStack gap={3} hAlign="stretch">
           <Text color="secondary">
-            Toàn bộ dữ liệu hiện tại sẽ bị <strong>ghi đè</strong> bằng dữ
-            liệu trong bản sao lưu này. Thao tác không thể hoàn tác. Hệ thống
-            sẽ tự tạo một bản sao lưu của dữ liệu hiện tại trước khi ghi đè,
-            phòng trường hợp cần quay lại.
+            Toàn bộ dữ liệu hiện tại sẽ bị <strong>ghi đè</strong> bằng dữ liệu
+            trong bản sao lưu này. Thao tác không thể hoàn tác. Hệ thống sẽ tự
+            tạo một bản sao lưu của dữ liệu hiện tại trước khi ghi đè, phòng
+            trường hợp cần quay lại.
           </Text>
           <Text color="secondary">
             Có thể mất khoảng 1 phút — quá trình không bị ngắt giữa chừng dù
-            trang có báo &quot;quá thời gian&quot;, trang sẽ tự kiểm tra lại
-            cho tới khi xong.
+            trang có báo &quot;quá thời gian&quot;, trang sẽ tự kiểm tra lại cho
+            tới khi xong.
           </Text>
           <TextInput
             label={`Gõ "${CONFIRM_DATABASE_NAME}" để xác nhận`}

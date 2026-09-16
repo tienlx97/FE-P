@@ -4,12 +4,12 @@ import { Button } from '@astryxdesign/core/Button';
 import { useCollapsible } from '@astryxdesign/core/Collapsible';
 import { Icon } from '@astryxdesign/core/Icon';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useId } from 'react';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
 

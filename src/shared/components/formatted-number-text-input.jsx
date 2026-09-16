@@ -1,10 +1,10 @@
 'use client';
 
 import { InputGroup, InputGroupText } from '@astryxdesign/core/InputGroup';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 
+import { TextInput } from '@/shared/components/text-input.jsx';
 import {
   formatNumberInput,
   numberValueToInput,

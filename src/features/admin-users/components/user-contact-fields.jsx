@@ -2,8 +2,9 @@
 
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
+
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 /**
  * "Thông tin liên hệ" tab content: phone + address — mirrors the reference

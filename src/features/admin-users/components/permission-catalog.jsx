@@ -8,9 +8,10 @@ import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
+
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import {
   labelForPermission,
@@ -77,7 +78,10 @@ export function PermissionCatalog() {
       header: 'Mô tả',
       width: proportional(2),
       renderCell: (row) => {
-        const { description: shown } = labelForPermission(row.key, row.description);
+        const { description: shown } = labelForPermission(
+          row.key,
+          row.description,
+        );
         return <Text color="secondary">{shown ?? '—'}</Text>;
       },
     },
@@ -110,7 +114,12 @@ export function PermissionCatalog() {
           ))}
         </VStack>
       ) : permissions.length > 0 ? (
-        <Table data={permissions} columns={columns} idKey="key" dividers="grid" />
+        <Table
+          data={permissions}
+          columns={columns}
+          idKey="key"
+          dividers="grid"
+        />
       ) : (
         <Text color="secondary">Chưa có quyền nào trong danh mục.</Text>
       )}
@@ -119,7 +128,9 @@ export function PermissionCatalog() {
         <VStack gap={3} hAlign="stretch">
           <Heading level={2}>Thêm quyền mới</Heading>
 
-          {error ? <Banner status="error" title={error} container="card" /> : null}
+          {error ? (
+            <Banner status="error" title={error} container="card" />
+          ) : null}
           {success ? (
             <Banner status="success" title={success} container="card" />
           ) : null}

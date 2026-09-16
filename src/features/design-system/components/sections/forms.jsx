@@ -8,15 +8,16 @@ import {
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { Grid } from '@astryxdesign/core/Grid';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
-import { NumberInput } from '@astryxdesign/core/NumberInput';
 import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Slider } from '@astryxdesign/core/Slider';
 import { Switch } from '@astryxdesign/core/Switch';
-import { TextArea } from '@astryxdesign/core/TextArea';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
+
+import { NumberInput } from '@/shared/components/number-input.jsx';
+import { TextArea } from '@/shared/components/text-area.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { ShowcaseSection } from '../showcase-section.jsx';
 

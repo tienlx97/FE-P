@@ -10,12 +10,12 @@ import { InputGroup } from '@astryxdesign/core/InputGroup';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useMemo, useState } from 'react';
 
 import { AdvancedFilterBuilder } from '@/shared/components/advanced-filter-builder.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import { labelForShipmentStatus } from '../config/shipment-status.js';
@@ -85,7 +85,10 @@ function buildSearchHaystack(shipment, supplierName, vgms, customersById) {
       customersById.get(vgm.carrierCustomerId)?.companyName,
     ]),
   ];
-  return parts.filter((part) => part != null).join(' | ').toLowerCase();
+  return parts
+    .filter((part) => part != null)
+    .join(' | ')
+    .toLowerCase();
 }
 
 /**
@@ -125,7 +128,9 @@ function fieldValues(shipment, vgms, customersById, fieldKey) {
     case 'placeOfDischarge':
       return [shipment.placeOfDischarge ?? ''];
     case 'supplierName':
-      return [customersById.get(shipment.supplierCustomerId)?.companyName ?? ''];
+      return [
+        customersById.get(shipment.supplierCustomerId)?.companyName ?? '',
+      ];
     case 'coNumber':
       return [shipment.coNumber ?? ''];
     case 'customsDeclarationNumber':
@@ -153,9 +158,12 @@ function fieldValues(shipment, vgms, customersById, fieldKey) {
  * @param {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition} condition
  */
 function matchesCondition(shipment, vgms, customersById, condition) {
-  const values = fieldValues(shipment, vgms, customersById, condition.field).map(
-    (value) => (value ?? '').toLowerCase(),
-  );
+  const values = fieldValues(
+    shipment,
+    vgms,
+    customersById,
+    condition.field,
+  ).map((value) => (value ?? '').toLowerCase());
   const needle = condition.value.trim().toLowerCase();
   switch (condition.operator) {
     case 'IsEmpty':
@@ -187,14 +195,11 @@ function matchesCondition(shipment, vgms, customersById, condition) {
  */
 function matchesAllConditions(shipment, vgms, customersById, conditions) {
   if (conditions.length === 0) return true;
-  return conditions.reduce(
-    (acc, condition, index) => {
-      const result = matchesCondition(shipment, vgms, customersById, condition);
-      if (index === 0) return result;
-      return condition.connector === 'Or' ? acc || result : acc && result;
-    },
-    /** @type {boolean} */ (true),
-  );
+  return conditions.reduce((acc, condition, index) => {
+    const result = matchesCondition(shipment, vgms, customersById, condition);
+    if (index === 0) return result;
+    return condition.connector === 'Or' ? acc || result : acc && result;
+  }, /** @type {boolean} */ (true));
 }
 
 /**
@@ -237,15 +242,11 @@ export function ContractFullViewPanel({
 }) {
   const [query, setQuery] = useState('');
   const [appliedConditions, setAppliedConditions] = useState(
-    /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ (
-      []
-    ),
+    /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [advancedDraft, setAdvancedDraft] = useState(
-    /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ (
-      []
-    ),
+    /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
   const [selectedShipmentId, setSelectedShipmentId] = useState(
     /** @type {string | null} */ (null),

@@ -1,8 +1,7 @@
 'use client';
 
-import { TextInput } from '@astryxdesign/core/TextInput';
-
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { useShipmentCostCategoryForm } from '../hooks/use-shipment-cost-category-form.js';
 

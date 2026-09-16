@@ -1,10 +1,10 @@
 'use client';
 
 import { StackItem } from '@astryxdesign/core/Stack';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
 
@@ -19,7 +19,12 @@ import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
  * }} props
  */
-export function BankFields({ values, setField, fieldStatuses, extraFieldRows }) {
+export function BankFields({
+  values,
+  setField,
+  fieldStatuses,
+  extraFieldRows,
+}) {
   return (
     <VStack gap={3} hAlign="stretch">
       <TextInput

@@ -6,8 +6,9 @@ import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { Heading } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
+
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { useLoginForm } from '../hooks/use-login-form.js';
 

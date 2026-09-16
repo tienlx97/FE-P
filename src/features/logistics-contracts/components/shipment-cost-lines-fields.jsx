@@ -9,8 +9,6 @@ import { overlayPaddingReset } from '@astryxdesign/core/Layout';
 import { Selector } from '@astryxdesign/core/Selector';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { TextArea } from '@astryxdesign/core/TextArea';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
@@ -19,6 +17,8 @@ import { FormattedNumberTextInput } from '@/shared/components/formatted-number-t
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
+import { TextArea } from '@/shared/components/text-area.jsx';
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { formatMoney } from '../config/currencies.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
@@ -262,7 +262,9 @@ export function ShipmentCostLinesFields({
           label="Số hoá đơn"
           isLabelHidden
           value={row.invoiceNumber}
-          onChange={(value) => onUpdateRowField(row.rowKey, 'invoiceNumber', value)}
+          onChange={(value) =>
+            onUpdateRowField(row.rowKey, 'invoiceNumber', value)
+          }
           placeholder={isReadOnly ? '—' : 'Không bắt buộc'}
           isReadOnly={isReadOnly}
         />

@@ -4,10 +4,10 @@ import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Selector } from '@astryxdesign/core/Selector';
-import { TextArea } from '@astryxdesign/core/TextArea';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { TextArea } from '@/shared/components/text-area.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { contractAnnexTypeOptions } from '../config/contract-annex-types.js';
