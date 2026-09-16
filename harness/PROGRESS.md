@@ -11901,3 +11901,32 @@ launch).
   in future sessions on this machine rather than pixel coordinates.
 - Not committed yet — the two revert commits above are already made;
   nothing else pending from this round.
+
+## 2026-09-17 — Re-applied the two bug fixes standalone, without PowerSearch
+
+- User asked to fix the two bugs the (now-reverted) PowerSearch work found,
+  independent of PowerSearch itself. Re-applied both fixes directly to
+  `advance-table.jsx`/`advance-table-pagination.jsx` (same logic as the
+  reverted `ba206ab`, comments reworded to drop the PowerSearch framing):
+  `applyFiltersDiacriticInsensitive` now only normalizes a row field when
+  an active *string*-type filter targets it (was unconditional, breaking
+  enum "is" filters); the pagination footer's "Tổng số" label now reads a
+  `resultCount` that falls back to the client-filtered row count when a
+  client-only filter narrows the table below the server's total, instead
+  of always trusting `pagination.totalCount`.
+- **Reachability note for whoever next touches this:** on `contracts-list.jsx`
+  specifically, both bugs stay effectively dormant — contracts runs in
+  server-filter mode (`filterFieldDefs` set), so its own advanced-filter
+  dialog is `AdvancedFilterBuilder` (routes straight to the server via
+  `onAdvancedFilterChange`, never touches `searchFilters`/
+  `applyFiltersDiacriticInsensitive` at all) and its status quick-filter
+  pills are also server-routed (`filterConditions`, same server path) —
+  so `filteredData.length` and `data.length` stay equal there in practice.
+  Both fixes are real and reachable on any `AdvanceTable` caller running in
+  *client-only* advanced-search mode (no `filterFieldDefs`, so the funnel
+  dialog falls back to its own per-field `TextInput`/`Selector` form
+  writing into `searchFilters` directly) — that's the scenario to
+  live-verify against if this needs re-confirming visually later.
+- `./harness/verify.sh` full green — `harness/runs/20260917-003300-1948/`.
+  Visually spot-checked `/logistics/contracts` renders unchanged (plain
+  TextInput search bar, correct "Tổng số: 34").

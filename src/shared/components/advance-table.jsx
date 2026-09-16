@@ -115,6 +115,20 @@ function normalizeForSearch(value) {
  */
 function applyFiltersDiacriticInsensitive(applyFiltersFn, filters, rows) {
   if (filters.length === 0) return [...rows];
+  // Only fields targeted by a *string*-type filter get normalized on the
+  // row clone below — an enum/entity/number/date filter's value is left
+  // exact (not normalized, see the ternary below), so normalizing every
+  // string field unconditionally made an enum "is" filter (e.g. "Khách
+  // hàng") compare its exact-case value against a lowercased,
+  // diacritic-stripped row field and never match (caught 2026-09-16,
+  // via a client-only advanced-search enum field).
+  const stringFilterFields = new Set(
+    filters
+      .filter(
+        (filter) => /** @type {any} */ (filter)?.value?.type === 'string',
+      )
+      .map((filter) => /** @type {any} */ (filter).field),
+  );
   const normalizedFilters = filters.map((filter) => {
     const value = /** @type {any} */ (filter)?.value;
     return value?.type === 'string' && typeof value.value === 'string'
@@ -128,7 +142,9 @@ function applyFiltersDiacriticInsensitive(applyFiltersFn, filters, rows) {
     const normalized = /** @type {any} */ ({ __rowIndex: index });
     for (const [key, value] of Object.entries(row)) {
       normalized[key] =
-        typeof value === 'string' ? normalizeForSearch(value) : value;
+        stringFilterFields.has(key) && typeof value === 'string'
+          ? normalizeForSearch(value)
+          : value;
     }
     return normalized;
   });
@@ -661,6 +677,24 @@ export function AdvanceTable({
       /** @type {any} */ (data),
     )
   );
+  // The pagination footer's "Tổng số" label: `pagination.totalCount` (the
+  // server's true across-all-pages count) is right when nothing narrows
+  // beyond what the server already filtered — but `searchFilters`/header
+  // filters only ever run client-side against the already-fetched `data`
+  // (one page), so a filter on a field that isn't also in
+  // `filterFieldDefs` (server-routed) can narrow `filteredData` below
+  // `data.length` without the server ever finding out. Comparing the two
+  // lengths — rather than inspecting `filterFieldDefs` — catches that case
+  // exactly: no additional client-side narrowing means
+  // `filteredData.length === data.length`, so trust the server total (or
+  // the plain filtered count when there's no `pagination` at all); a
+  // shorter `filteredData` means show what's actually on screen instead of
+  // a stale, too-large number.
+  const resultCount =
+    filteredData.length === data.length
+      ? (pagination?.totalCount ?? filteredData.length)
+      : filteredData.length;
+
   // Appended after filtering, never before — a totals row's cells (labels,
   // pre-summed amounts) aren't real per-contract field values, so running
   // them through the quick-search/header-filter engine above would either
@@ -1206,7 +1240,7 @@ export function AdvanceTable({
             ) : null}
             <AdvanceTablePagination
               pagination={pagination}
-              visibleCount={filteredData.length}
+              visibleCount={resultCount}
               isLoading={isLoading}
             />
           </VStack>
