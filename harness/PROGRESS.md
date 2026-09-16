@@ -11930,3 +11930,52 @@ launch).
 - `./harness/verify.sh` full green — `harness/runs/20260917-003300-1948/`.
   Visually spot-checked `/logistics/contracts` renders unchanged (plain
   TextInput search bar, correct "Tổng số: 34").
+
+## 2026-09-17 — Regression tests for the two bugs; remove status quick-filter; grid dividers everywhere
+
+Three separate user requests handled together:
+
+- **0. "Kiểm tra kỹ hơn, tôi không muốn lỗi đó xuất hiện" (want real
+  confidence the two bugs stay fixed).** Extracted both fixes out of
+  `advance-table.jsx` into small, pure, colocated-testable modules — the
+  pattern `table-pagination.js`/`table-pagination.test.js` already
+  established, rather than leaving pure logic buried inside a huge 'use
+  client' component file nothing else in the repo unit-tests that way:
+  - `normalizeForSearch`/`applyFiltersDiacriticInsensitive` moved to new
+    `src/shared/config/diacritic-insensitive-filters.js` (+ `.test.js`,
+    6 cases — diacritic stripping, the original diacritic-search fix,
+    the 2026-09-16 enum-exact-match regression by name, a combined
+    string+enum-filter case, non-string fields passing through).
+  - The `resultCount` ternary became `resolveResultCount()` in
+    `table-pagination.js` (natural home, same file already owns
+    pagination-label math) + 3 new cases in its `.test.js`, including the
+    2026-09-17 regression by name.
+  - All 12 new/added test cases pass (`node --test` on both files
+    directly, plus the full suite via `./harness/verify.sh`).
+  - Both bugs stay dormant on `contracts-list.jsx` itself for the same
+    reason noted yesterday (server-filter mode) — the tests cover the
+    logic directly rather than depending on finding a page that exercises
+    it through the UI, which is a stronger guarantee than a one-off
+    manual click-through would have been anyway.
+- **1. Removed the "Chưa thực hiện/Đang thực hiện/Đã hoàn thành/Đã huỷ"
+  `SegmentedControl` quick-filter entirely from `contracts-list.jsx`**
+  (component, its `statusQuickFilterValue`/`handleStatusQuickFilterChange`
+  state, `styles.statusFilter`, and now-dead imports —
+  `SegmentedControl`/`SegmentedControlItem`, `contractStatusOptions`,
+  `upsertEqualsFilterCondition`). Status filtering by "Trạng thái" is
+  still reachable via "Bộ lọc nâng cao" (`FILTER_FIELD_DEFS` already has a
+  `status` field def) — only the standalone top-of-page quick tabs are
+  gone, not the filtering capability itself.
+- **2. `dividers="grid"` (row + column border rules) is now `AdvanceTable`'s
+  default**, not just `contracts-list.jsx`'s own override. A quick audit
+  (10 `<AdvanceTable>` callers total) found `contracts-list.jsx` was the
+  *only* one passing `dividers="grid"` — the other 9 (commissions,
+  contract-private-infos/BOQ, shipments, customers, suppliers, places,
+  countries, admin-users, admin-backups) all rendered on the component's
+  old `'rows'`-only default, which is why only the Hợp đồng table looked
+  different. Flipped the default to `'grid'` (a caller can still opt out
+  with `dividers="rows"`) and dropped the now-redundant explicit prop from
+  `contracts-list.jsx`. Live-verified `/logistics/shipments` now shows the
+  same column-divider look with zero changes to that page's own file.
+- `./harness/verify.sh` full green — `harness/runs/20260917-004406-704/`.
+  Not committed yet.

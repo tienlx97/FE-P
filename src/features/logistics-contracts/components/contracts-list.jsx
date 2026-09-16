@@ -2,10 +2,6 @@
 /** @typedef {'profile' | 'annexes' | 'payments' | 'related' | 'fullView'} ExpandedTab */
 import { Badge } from '@astryxdesign/core/Badge';
 import { Link } from '@astryxdesign/core/Link';
-import {
-  SegmentedControl,
-  SegmentedControlItem,
-} from '@astryxdesign/core/SegmentedControl';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
@@ -21,15 +17,11 @@ import {
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
-import {
-  upsertContainsFilterCondition,
-  upsertEqualsFilterCondition,
-} from '@/shared/config/upsert-filter-condition.js';
+import { upsertContainsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
 
 import { searchContracts } from '../api/contracts.js';
 import {
   badgeVariantForContractStatus,
-  contractStatusOptions,
   labelForContractStatus,
 } from '../config/contract-status.js';
 import { labelForContractType } from '../config/contract-types.js';
@@ -193,14 +185,6 @@ const SORTABLE_COLUMN_KEYS = [
 ];
 
 const styles = stylex.create({
-  // `SegmentedControl`'s own base styles default to `overflow: auto` on
-  // BOTH axes (so a long row of items can scroll horizontally on narrow
-  // screens); this row is always exactly one line, but a 1px
-  // scrollHeight/clientHeight rounding mismatch on the Y axis still trips
-  // `overflow-y: auto` into showing a permanent, empty vertical scrollbar
-  // next to the items. `overflowX` alone (without pinning `overflowY`)
-  // leaves the inherited Y-axis auto in place — must set both explicitly.
-  statusFilter: { maxWidth: '100%', overflowX: 'auto', overflowY: 'hidden' },
   // Vivid blue link style requested for "Số hợp đồng" (matches a
   // reference report where record codes render as blue link text) —
   // `Link`'s own `color` prop only offers the theme's accent color (this
@@ -259,31 +243,11 @@ export function ContractsList() {
       ]
     ),
   );
-  // Quick-filter pills for "Trạng thái" — server-side (writes into the same
-  // `filterConditions` the funnel dialog edits, unlike `AdvanceTable`'s own
-  // `quickFilters` prop, which only filters the already-fetched page
-  // client-side). "Tất cả" means no status condition at all, not a
-  // specific value.
-  const statusQuickFilterValue =
-    filterConditions.find((condition) => condition.field === 'status')?.value ??
-    'all';
-  /** @param {string} nextValue */
-  function handleStatusQuickFilterChange(nextValue) {
-    setFilterConditions((current) =>
-      upsertEqualsFilterCondition(
-        current,
-        'status',
-        nextValue === 'all' ? null : nextValue,
-      ),
-    );
-    setPageIndex(1);
-  }
-
-  // "Số hợp đồng" quick-search box — same server-side idea as the status
-  // quick filter above, but `Contains` instead of `Equals` since it's free
-  // text. Without this, `AdvanceTable`'s own quick search only filters
-  // whatever page is already loaded (`data`), so searching for a contract
-  // number outside the current page silently finds nothing.
+  // "Số hợp đồng" quick-search box — writes into the same server-side
+  // `filterConditions` the funnel dialog edits (`Contains`, since it's
+  // free text). Without this, `AdvanceTable`'s own quick search only
+  // filters whatever page is already loaded (`data`), so searching for a
+  // contract number outside the current page silently finds nothing.
   /** @param {string} value */
   function handleContractNumberSearchChange(value) {
     setFilterConditions((current) =>
@@ -840,22 +804,6 @@ export function ContractsList() {
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
-      <SegmentedControl
-        label="Lọc theo trạng thái"
-        xstyle={styles.statusFilter}
-        size="sm"
-        value={statusQuickFilterValue}
-        onChange={handleStatusQuickFilterChange}
-      >
-        {contractStatusOptions.map((option) => (
-          <SegmentedControlItem
-            key={option.value}
-            value={option.value}
-            label={option.label}
-          />
-        ))}
-      </SegmentedControl>
-
       <StackItem size="fill">
         <AdvanceTable
           title={<Heading level={1}>Hợp đồng</Heading>}
@@ -869,7 +817,6 @@ export function ContractsList() {
           filterFieldDefs={filterFieldDefsWithCustomers}
           advancedFilterConditions={filterConditions}
           onAdvancedFilterChange={setFilterConditions}
-          dividers="grid"
           columnOptions={COLUMN_OPTIONS}
           initialColumnKeys={DEFAULT_COLUMN_KEYS}
           defaultColumnKeys={DEFAULT_COLUMN_KEYS}

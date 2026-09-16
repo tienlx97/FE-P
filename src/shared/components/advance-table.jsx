@@ -41,6 +41,8 @@ import {
   TableViewOptionsPopover,
 } from '@/shared/components/table-view-options-popover.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
+import { applyFiltersDiacriticInsensitive } from '@/shared/config/diacritic-insensitive-filters.js';
+import { resolveResultCount } from '@/shared/config/table-pagination.js';
 import { usePersistedTableViewOptions } from '@/shared/hooks/use-persisted-table-view-options.js';
 
 import { AdvanceTablePagination } from './advance-table-pagination.jsx';
@@ -76,83 +78,6 @@ function escapeCsvCell(value) {
   const needsQuoting = /[",\n\r]/.test(value);
   const escaped = value.replace(/"/g, '""');
   return needsQuoting ? `"${escaped}"` : escaped;
-}
-
-/**
- * Strips Vietnamese diacritics and lowercases, so search matches
- * regardless of whether the user types with or without dấu — a common
- * complaint (2026-09-14) since Astryx's own `applyFilters`
- * (`usePowerSearchConfig.js`) only lowercases, never normalizes. NFD
- * decomposition strips combining marks (á, à, ả, ã, ạ, ...); `đ`/`Đ`
- * aren't decomposable that way (they're distinct base letters, not a
- * letter+diacritic), so they need an explicit replace.
- * @param {string} value
- */
-function normalizeForSearch(value) {
-  return value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/đ/g, 'd');
-}
-
-/**
- * Wraps PowerSearch's `applyFilters` (from `usePowerSearchConfig`) with
- * diacritic-insensitive matching for string filters. Astryx's own
- * `matchesFilter` does a plain `s.toLowerCase().includes(t.toLowerCase())`
- * with no normalization, so it never matched "khach hang" typed without
- * dấu against "Khách hàng" data. Runs the real filter against a
- * same-shape clone with every string field (and every string filter
- * value) normalized, then maps matches back to the original row objects
- * by array position — a plain diacritic-preserving clone would come back
- * from `.filter()` by reference, so position-mapping (not re-deriving
- * fields) is what keeps the returned rows byte-identical to the input.
- * @template {Record<string, unknown>} T
- * @param {(filters: readonly unknown[], rows: T[]) => T[]} applyFiltersFn
- * @param {readonly unknown[]} filters
- * @param {T[]} rows
- * @returns {T[]}
- */
-function applyFiltersDiacriticInsensitive(applyFiltersFn, filters, rows) {
-  if (filters.length === 0) return [...rows];
-  // Only fields targeted by a *string*-type filter get normalized on the
-  // row clone below — an enum/entity/number/date filter's value is left
-  // exact (not normalized, see the ternary below), so normalizing every
-  // string field unconditionally made an enum "is" filter (e.g. "Khách
-  // hàng") compare its exact-case value against a lowercased,
-  // diacritic-stripped row field and never match (caught 2026-09-16,
-  // via a client-only advanced-search enum field).
-  const stringFilterFields = new Set(
-    filters
-      .filter(
-        (filter) => /** @type {any} */ (filter)?.value?.type === 'string',
-      )
-      .map((filter) => /** @type {any} */ (filter).field),
-  );
-  const normalizedFilters = filters.map((filter) => {
-    const value = /** @type {any} */ (filter)?.value;
-    return value?.type === 'string' && typeof value.value === 'string'
-      ? {
-          .../** @type {any} */ (filter),
-          value: { ...value, value: normalizeForSearch(value.value) },
-        }
-      : filter;
-  });
-  const normalizedRows = rows.map((row, index) => {
-    const normalized = /** @type {any} */ ({ __rowIndex: index });
-    for (const [key, value] of Object.entries(row)) {
-      normalized[key] =
-        stringFilterFields.has(key) && typeof value === 'string'
-          ? normalizeForSearch(value)
-          : value;
-    }
-    return normalized;
-  });
-  const matched = applyFiltersFn(
-    /** @type {any} */ (normalizedFilters),
-    normalizedRows,
-  );
-  return matched.map((row) => rows[/** @type {any} */ (row).__rowIndex]);
 }
 
 /**
@@ -360,7 +285,12 @@ export function AdvanceTable({
   totalsRows,
   totalsRowLabel,
   summary,
-  dividers = 'rows',
+  // 'grid' (row + column rules) is the default so every list screen reads
+  // consistently — was 'rows'-only until 2026-09-17, when contracts-list.jsx
+  // turned out to be the sole caller overriding it to 'grid'; every other
+  // caller relied on this default and looked inconsistent as a result. A
+  // caller can still opt out with an explicit `dividers="rows"`.
+  dividers = 'grid',
   pagination,
   sort = null,
   onSortChange,
@@ -677,23 +607,11 @@ export function AdvanceTable({
       /** @type {any} */ (data),
     )
   );
-  // The pagination footer's "Tổng số" label: `pagination.totalCount` (the
-  // server's true across-all-pages count) is right when nothing narrows
-  // beyond what the server already filtered — but `searchFilters`/header
-  // filters only ever run client-side against the already-fetched `data`
-  // (one page), so a filter on a field that isn't also in
-  // `filterFieldDefs` (server-routed) can narrow `filteredData` below
-  // `data.length` without the server ever finding out. Comparing the two
-  // lengths — rather than inspecting `filterFieldDefs` — catches that case
-  // exactly: no additional client-side narrowing means
-  // `filteredData.length === data.length`, so trust the server total (or
-  // the plain filtered count when there's no `pagination` at all); a
-  // shorter `filteredData` means show what's actually on screen instead of
-  // a stale, too-large number.
-  const resultCount =
-    filteredData.length === data.length
-      ? (pagination?.totalCount ?? filteredData.length)
-      : filteredData.length;
+  const resultCount = resolveResultCount({
+    pagination,
+    filteredCount: filteredData.length,
+    unfilteredCount: data.length,
+  });
 
   // Appended after filtering, never before — a totals row's cells (labels,
   // pre-summed amounts) aren't real per-contract field values, so running
