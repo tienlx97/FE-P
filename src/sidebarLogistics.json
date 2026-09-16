@@ -28,7 +28,7 @@
     },
     {
       "hasSectionHeader": true,
-      "sectionHeader": "DANH MỤC"
+      "sectionHeader": "ĐỐI TÁC"
     },
     {
       "title": "Khách hàng",
@@ -39,6 +39,10 @@
       "title": "Nhà cung cấp",
       "path": "/logistics/suppliers",
       "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
+      "hasSectionHeader": true,
+      "sectionHeader": "DANH MỤC"
     },
     {
       "title": "Quốc gia",
