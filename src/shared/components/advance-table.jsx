@@ -1011,6 +1011,17 @@ export function AdvanceTable({
                     tooltip="Bộ lọc nâng cao"
                     icon={<Icon icon="funnel" size="sm" />}
                     variant="ghost"
+                    // `endContent` renders inside PowerSearch's own
+                    // clickable/focusable container, so a bare press here
+                    // also reaches whatever internal handler opens
+                    // PowerSearch's own field menu on focus/press — both
+                    // popovers opened at once (caught 2026-09-17). Stopping
+                    // the press at capture time, before it can bubble into
+                    // that handler, leaves this button's own onClick (a
+                    // separate, later event) to open the advanced-filter
+                    // dialog alone.
+                    onPointerDownCapture={(event) => event.stopPropagation()}
+                    onMouseDownCapture={(event) => event.stopPropagation()}
                     onClick={() => handleAdvancedSearchOpenChange(true)}
                   />
                 ) : null
