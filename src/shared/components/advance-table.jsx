@@ -54,8 +54,15 @@ import { TanStackDataTable } from './tanstack-data-table.jsx';
  * @template {Record<string, unknown>} T
  * @typedef {import('@astryxdesign/core/Table').TableColumn<T> & {
  *   exportValue?: (row: T) => string | number | null | undefined,
+ *   sortField?: string,
  * }} AdvanceTableColumn
  */
+
+// `sortField` above: the backend's wire field name for this column's `sort`
+// (BE-kt-xnk's `SortRequest`) — only needed when it differs from both `key`
+// and `filter` (e.g. `key: 'buyer'`/`filter: 'buyerCompanyName'` both name
+// the same BE field, so neither needs it); `TanStackDataTable` falls back
+// to `filter`, then `key`, when `sortField` is omitted.
 
 // So Excel opens an exported CSV as UTF-8 instead of guessing
 // Windows-1252 and mangling every Vietnamese diacritic. Written as the
@@ -297,6 +304,9 @@ const styles = stylex.create({
  *     onPageSizeChange: (pageSize: number) => void,
  *     pageSizeOptions?: string[],
  *   },
+ *   sort?: {field: string, direction: 'Ascending' | 'Descending'} | null,
+ *   onSortChange?: (field: string | null, direction: 'Ascending' | 'Descending') => void,
+ *   sortableColumnKeys?: readonly string[],
  * }} props
  */
 export function AdvanceTable({
@@ -335,6 +345,9 @@ export function AdvanceTable({
   summary,
   dividers = 'rows',
   pagination,
+  sort = null,
+  onSortChange,
+  sortableColumnKeys = [],
 }) {
   const [searchFilters, setSearchFilters] = useState(
     /** @type {import('@astryxdesign/core/PowerSearch').PowerSearchFilter[]} */ ([]),
@@ -1155,6 +1168,9 @@ export function AdvanceTable({
             idKey={idKey}
             density={density}
             dividers={dividers}
+            sort={sort}
+            onSortChange={onSortChange}
+            sortableColumnKeys={sortableColumnKeys}
           />
         </LayoutContent>
       }

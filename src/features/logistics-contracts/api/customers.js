@@ -29,10 +29,10 @@ export async function listCustomers() {
  * is the only Customer endpoint with pagination; `listCustomers`/`GET
  * /api/v1/customers` stays unpaged for its existing callers (name-lookup
  * maps in other lists).
- * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
+ * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
  * @returns {Promise<{ success: true, customers: import('../types/index.js').Customer[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string }>}
  */
-export async function searchCustomers({ page = 1, pageSize = 25, conditions = [] } = {}) {
+export async function searchCustomers({ page = 1, pageSize = 25, conditions = [], sort = null } = {}) {
   const result = await apiRequest('/api/v1/customers/search', {
     method: 'POST',
     errorMessage: GENERIC_LIST_ERROR,
@@ -46,6 +46,7 @@ export async function searchCustomers({ page = 1, pageSize = 25, conditions = []
         ValueTo: condition.valueTo || null,
         Connector: condition.connector,
       })),
+      Sort: sort ? { Field: sort.field, Direction: sort.direction } : null,
     },
   });
 

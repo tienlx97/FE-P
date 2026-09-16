@@ -1,5 +1,54 @@
 # Progress Log
 
+## 2026-09-16 (continued) — `add-sortable-table-headers`: task 1 done — multi-repo request complete
+
+- Final step of the multi-repo user request: "Filter các column table
+  header bạn hãy cho sort tăng hoặc giảm". Backend's `add-search-sort`
+  (server-side `sort` on all 5 business search endpoints) already
+  shipped in BE-kt-xnk — this wires it into the shared FE table engine.
+- `TanStackDataTable` (`tanstack-data-table.jsx`) declared
+  `manualSorting: true` but never had a `sorting` state, handler, or
+  clickable header — sorting was entirely dead across every list in the
+  app. Added `sort`/`onSortChange`/`sortableColumnKeys` props; a sortable
+  column's header is now clickable (mouse + keyboard) with an arrow
+  indicator, cycling asc → desc → unsorted (`enableMultiSort: false` —
+  the backend only ever sorts by one field).
+- Non-obvious wrinkle: a column's **wire** sort field name isn't always
+  its table `key` (e.g. `contracts-list.jsx`'s Khách hàng column is keyed
+  `buyer` but sorts on `buyerCompanyName`) — added an optional
+  `sortField` to `AdvanceTableColumn`, falling back to `filter` (already
+  the wire name for header filters) then `key`. Only
+  `shipments-list.jsx`'s `supplier` column needed an explicit
+  `sortField: 'supplierName'`; every other sortable column across all 5
+  lists already resolved correctly via `filter`/`key`.
+- `AdvanceTable` passes the three props straight through.
+  `searchContracts`/`searchCustomers`/`searchAllShipments`/
+  `searchCommissions`/`searchContractPrivateInfos` (api) and their
+  `use*Query` hooks all gained a `sort` passthrough (mirroring what the
+  completion-date task already added to `searchContracts` alone). Each of
+  the 5 list components got its own `sort` state, a `handleSortChange`
+  that also resets to page 1, and a `SORTABLE_COLUMN_KEYS` list matching
+  that entity's BE `<Entity>SortFields` allow-list — restricted to fields
+  that actually have a column in that table (BOQ reuses Contract's sort
+  fields but only has 2 of them as columns).
+- Verification: full `./harness/verify.sh` PASSED (lint, typecheck,
+  `next build`, unit tests) — `harness/runs/20260916-092328-1698/`.
+  Browser/e2e visual verification **not** performed — same
+  Claude-in-Chrome `localhost:3001` permission gap noted in earlier
+  tasks this session. This one touches the shared table engine every
+  list depends on, so it carries more risk than the earlier tasks despite
+  the green gate — **a human should click a few column headers on at
+  least one list (e.g. Hợp đồng by Giá trị, or Khách hàng by Tên công
+  ty) before trusting this without a screenshot.** No existing test file
+  covers `TanStackDataTable`/`AdvanceTable` directly (checked — none
+  exists), so this is unusually reliant on that manual check compared to
+  the rest of this session's work.
+- This closes out the multi-repo user request that began with
+  BE-kt-xnk's `add-contract-project-completion-date`: project completion
+  date + customer link, customer contract-history table + export,
+  shipment/commission→contract cross-links, and now sortable headers —
+  6 changes total across both repos, all verified and committed.
+
 ## 2026-09-16 (continued) — `add-shipment-commission-contract-links`: task 1 done
 
 - Continues the same multi-repo request: "Số hợp đồng cũng là thẻ link

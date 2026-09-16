@@ -193,13 +193,14 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
  * declarationExchangeRate` summed, mirroring each row's own
  * `declarationValueVnd`). All cover every matching shipment (not just this
  * page), backing the list's per-column totals row.
- * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
+ * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
  * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number, declarationValue: number }[], logisticsCostTotal: number, declarationValueVndTotal: number, quantityTotals: { unit: import('../types/index.js').ShipmentQuantityUnit, amount: number }[], vgmCountTotal: number } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchAllShipments({
   page = 1,
   pageSize = 25,
   conditions = [],
+  sort = null,
 } = {}) {
   const result = await apiRequest('/api/v1/shipments/search', {
     method: 'POST',
@@ -214,6 +215,7 @@ export async function searchAllShipments({
         ValueTo: condition.valueTo || null,
         Connector: condition.connector,
       })),
+      Sort: sort ? { Field: sort.field, Direction: sort.direction } : null,
     },
   });
 

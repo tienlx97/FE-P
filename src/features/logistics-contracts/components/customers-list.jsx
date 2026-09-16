@@ -38,6 +38,11 @@ function orDash(value) {
   return value == null || value === '' ? '—' : value;
 }
 
+// Matches BE-kt-xnk's `CustomerSortFields` allow-list, restricted to keys
+// this table actually has a column for (`code`/`taxCode`/`phone` are
+// BE-sortable but have no column here).
+const SORTABLE_COLUMN_KEYS = ['companyName', 'representativeName'];
+
 const styles = stylex.create({
   companyNameHeading: {
     textTransform: 'uppercase',
@@ -191,11 +196,22 @@ export function CustomersList() {
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
+  const [sort, setSort] = useState(
+    /** @type {{ field: string, direction: 'Ascending' | 'Descending' } | null} */ (
+      null
+    ),
+  );
+  /** @param {string | null} field @param {'Ascending' | 'Descending'} direction */
+  function handleSortChange(field, direction) {
+    setSort(field ? { field, direction } : null);
+    setPageIndex(1);
+  }
 
   const customersQuery = useSearchCustomersQuery({
     page: pageIndex,
     pageSize,
     conditions: filterConditions,
+    sort,
   });
   const listResult = customersQuery.data;
   const customers = listResult?.success ? listResult.customers : [];
@@ -347,6 +363,9 @@ export function CustomersList() {
             onPageSizeChange: setPageSize,
             pageSizeOptions: PAGE_SIZE_OPTIONS,
           }}
+          sort={sort}
+          onSortChange={handleSortChange}
+          sortableColumnKeys={SORTABLE_COLUMN_KEYS}
         />
       </StackItem>
 

@@ -24,12 +24,12 @@ export function useCustomersQuery() {
  * list page's own table (which needs paging, unlike every other caller of
  * `useCustomersQuery` — cross-reference name-lookup maps elsewhere always
  * want the full unpaged directory).
- * @param {{ page: number, pageSize: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} params
+ * @param {{ page: number, pageSize: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} params
  */
-export function useSearchCustomersQuery({ page, pageSize, conditions = [] }) {
+export function useSearchCustomersQuery({ page, pageSize, conditions = [], sort = null }) {
   return useQuery({
-    queryKey: [...SEARCH_QUERY_KEY, page, pageSize, conditions],
-    queryFn: () => searchCustomers({ page, pageSize, conditions }),
+    queryKey: [...SEARCH_QUERY_KEY, page, pageSize, conditions, sort],
+    queryFn: () => searchCustomers({ page, pageSize, conditions, sort }),
   });
 }
 

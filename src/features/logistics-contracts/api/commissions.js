@@ -46,10 +46,10 @@ export async function listCommissions({ page = 1, pageSize = 25 } = {}) {
  * (the parent contract's, since a Commission carries none of its own)
  * across every matching commission (not just this page), backing the
  * list's per-column totals row.
- * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
+ * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
  * @returns {Promise<{ success: true, commissions: import('../types/index.js').Commission[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, value: number }[] } | { success: false, message: string }>}
  */
-export async function searchCommissions({ page = 1, pageSize = 25, conditions = [] } = {}) {
+export async function searchCommissions({ page = 1, pageSize = 25, conditions = [], sort = null } = {}) {
   const result = await apiRequest('/api/v1/commissions/search', {
     method: 'POST',
     errorMessage: GENERIC_LIST_ERROR,
@@ -63,6 +63,7 @@ export async function searchCommissions({ page = 1, pageSize = 25, conditions = 
         ValueTo: condition.valueTo || null,
         Connector: condition.connector,
       })),
+      Sort: sort ? { Field: sort.field, Direction: sort.direction } : null,
     },
   });
 

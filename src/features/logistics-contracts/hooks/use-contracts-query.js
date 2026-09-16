@@ -11,12 +11,12 @@ const QUERY_KEY = ['logistics-contracts', 'contracts'];
  * the unfiltered list (`searchContracts`'s own doc comment) — so every
  * existing caller (e.g. `shipments-list.jsx`'s cross-reference fetch) keeps
  * working unchanged.
- * @param {{ page: number, pageSize: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} params
+ * @param {{ page: number, pageSize: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} params
  */
-export function useContractsQuery({ page, pageSize, conditions = [] }) {
+export function useContractsQuery({ page, pageSize, conditions = [], sort = null }) {
   return useQuery({
-    queryKey: [...QUERY_KEY, page, pageSize, conditions],
-    queryFn: () => searchContracts({ page, pageSize, conditions }),
+    queryKey: [...QUERY_KEY, page, pageSize, conditions, sort],
+    queryFn: () => searchContracts({ page, pageSize, conditions, sort }),
   });
 }
 

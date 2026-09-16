@@ -46,13 +46,14 @@ export async function listContractPrivateInfos({ page = 1, pageSize = 25 } = {})
  * matching contract (not just this page), backing the list's per-column
  * totals row. Always VNĐ, no currency grouping (unlike the other lists'
  * `totals`, this is a single object, not an array).
- * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[] }} [options]
+ * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
  * @returns {Promise<{ success: true, items: import('../types/index.js').ContractPrivateInfoListItem[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { containerCount: number, logisticsTotal: number, profit: number } } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchContractPrivateInfos({
   page = 1,
   pageSize = 25,
   conditions = [],
+  sort = null,
 } = {}) {
   const result = await apiRequest('/api/v1/contracts/private-info/search', {
     method: 'POST',
@@ -67,6 +68,7 @@ export async function searchContractPrivateInfos({
         ValueTo: condition.valueTo || null,
         Connector: condition.connector,
       })),
+      Sort: sort ? { Field: sort.field, Direction: sort.direction } : null,
     },
   });
 

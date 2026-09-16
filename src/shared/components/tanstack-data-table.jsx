@@ -161,6 +161,16 @@ const styles = stylex.create({
     transitionDuration: '150ms',
     transitionProperty: 'transform',
   },
+  sortableHeader: {
+    cursor: 'pointer',
+    userSelect: 'none',
+  },
+  // Dimmed until this column is the active sort — an always-full-opacity
+  // icon on every sortable header would read as "already sorted"
+  // everywhere at once.
+  sortIconInactive: {
+    opacity: 0.4,
+  },
 });
 
 /** TanStack owns rows/columns; Astryx children primitives retain the app theme.
@@ -179,7 +189,11 @@ const styles = stylex.create({
  *   isExpandable?: (row: T) => boolean,
  *   renderExpanded: (row: T) => import('react').ReactNode,
  * },
- * emptyState: import('react').ReactNode}} props
+ * emptyState: import('react').ReactNode,
+ * sort?: {field: string, direction: 'Ascending' | 'Descending'} | null,
+ * onSortChange?: (field: string | null, direction: 'Ascending' | 'Descending') => void,
+ * sortableColumnKeys?: readonly string[],
+ * }} props
  */
 export function TanStackDataTable({
   data,
@@ -194,6 +208,9 @@ export function TanStackDataTable({
   headerGroups = [],
   rowExpansion,
   emptyState,
+  sort = null,
+  onSortChange,
+  sortableColumnKeys = [],
 }) {
   'use no memo';
   const [availableWidth, setAvailableWidth] = useState(0);
@@ -310,6 +327,7 @@ export function TanStackDataTable({
           ? column.renderCell(row.original)
           : /** @type {import('react').ReactNode} */ (row.original[column.key]);
       },
+      enableSorting: sortableColumnKeys.includes(column.key),
       meta: { source: column },
     }));
     const grouped = new Set(headerGroups.flatMap((group) => group.columnKeys));
@@ -323,7 +341,41 @@ export function TanStackDataTable({
         ),
       })),
     ];
-  }, [effectiveColumns, headerGroups, rowExpansion]);
+  }, [effectiveColumns, headerGroups, rowExpansion, sortableColumnKeys]);
+  // `sort`/`onSortChange` speak the backend's wire field name (`sortField`
+  // — falls back to `filter`, then `key`; see `AdvanceTableColumn`'s doc
+  // comment), but TanStack's own `sorting` state addresses columns by their
+  // `id` (== `key`) — translated at this boundary so callers never need to
+  // know a column's key differs from its wire name (only `buyer`/
+  // `buyerCompanyName` does today).
+  const sortFieldByColumnKey = useMemo(
+    () =>
+      new Map(
+        effectiveColumns.map((column) => [
+          column.key,
+          column.sortField ??
+            (typeof column.filter === 'string' ? column.filter : column.key),
+        ]),
+      ),
+    [effectiveColumns],
+  );
+  const columnKeyBySortField = useMemo(() => {
+    const map = new Map();
+    for (const [key, field] of sortFieldByColumnKey) map.set(field, key);
+    return map;
+  }, [sortFieldByColumnKey]);
+  // The backend only ever sorts by one field at a time (`SortRequest`,
+  // BE-kt-xnk) — TanStack's own `sorting` state is still an array (its
+  // multi-sort shape), so it's translated to/from this single-entry form
+  // at the boundary rather than exposed to callers.
+  const sortingState = sort
+    ? [
+        {
+          id: columnKeyBySortField.get(sort.field) ?? sort.field,
+          desc: sort.direction === 'Descending',
+        },
+      ]
+    : [];
   // This v8 instance is intentionally outside React Compiler memoization.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
@@ -334,8 +386,25 @@ export function TanStackDataTable({
     manualPagination: true,
     manualFiltering: true,
     manualSorting: true,
+    enableSorting: sortableColumnKeys.length > 0,
+    enableMultiSort: false,
     autoResetAll: false,
+    onSortingChange: (updater) => {
+      if (!onSortChange) return;
+      const next =
+        typeof updater === 'function' ? updater(sortingState) : updater;
+      const first = next[0];
+      if (!first) {
+        onSortChange(null, 'Ascending');
+        return;
+      }
+      onSortChange(
+        sortFieldByColumnKey.get(first.id) ?? first.id,
+        first.desc ? 'Descending' : 'Ascending',
+      );
+    },
     state: {
+      sorting: sortingState,
       columnOrder: [...effectiveActiveColumnKeys],
       columnVisibility: Object.fromEntries(
         effectiveColumns.map((column) => [
@@ -473,13 +542,47 @@ export function TanStackDataTable({
                               ? 'start'
                               : 'center'
                         }
-                        xstyle={styles.headerContent}
+                        xstyle={[
+                          styles.headerContent,
+                          header.column.getCanSort() && styles.sortableHeader,
+                        ]}
+                        {...(header.column.getCanSort()
+                          ? {
+                              role: 'button',
+                              tabIndex: 0,
+                              onClick: header.column.getToggleSortingHandler(),
+                              onKeyDown: (event) => {
+                                if (event.key === 'Enter' || event.key === ' ') {
+                                  event.preventDefault();
+                                  header.column.getToggleSortingHandler()?.(
+                                    event,
+                                  );
+                                }
+                              },
+                            }
+                          : {})}
                       >
                         {slots?.content ??
                           flexRender(
                             header.column.columnDef.header,
                             header.getContext(),
                           )}
+                        {header.column.getCanSort() ? (
+                          <Icon
+                            icon={
+                              header.column.getIsSorted() === 'asc'
+                                ? 'arrowUp'
+                                : header.column.getIsSorted() === 'desc'
+                                  ? 'arrowDown'
+                                  : 'arrowsUpDown'
+                            }
+                            size="xsm"
+                            xstyle={
+                              !header.column.getIsSorted() &&
+                              styles.sortIconInactive
+                            }
+                          />
+                        ) : null}
                         {slots?.after}
                       </HStack>
                     }

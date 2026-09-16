@@ -38,6 +38,11 @@ import { RecordActionsMenu } from './record-actions-menu.jsx';
 
 const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 
+// BOQ's search reuses BE-kt-xnk's Contract search/sort (a BOQ row is 1:1
+// with its Contract) — restricted to the two BE-sortable Contract fields
+// this table actually has a column for.
+const SORTABLE_COLUMN_KEYS = ['contractNumber', 'projectName'];
+
 /** @param {number | null | undefined} value @param {string} [suffix] */
 function orDashNumber(value, suffix = '') {
   if (value == null) return '—';
@@ -101,6 +106,16 @@ export function ContractPrivateInfosList() {
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
+  const [sort, setSort] = useState(
+    /** @type {{ field: string, direction: 'Ascending' | 'Descending' } | null} */ (
+      null
+    ),
+  );
+  /** @param {string | null} field @param {'Ascending' | 'Descending'} direction */
+  function handleSortChange(field, direction) {
+    setSort(field ? { field, direction } : null);
+    setPageIndex(1);
+  }
   const [detailDialog, setDetailDialog] = useState(
     /** @type {{ row: Pick<import('../types/index.js').ContractPrivateInfoListItem, 'contractId' | 'contractNumber'>, initialEditing: boolean } | null} */ (
       null
@@ -115,6 +130,7 @@ export function ContractPrivateInfosList() {
     page: pageIndex,
     pageSize,
     conditions: filterConditions,
+    sort,
     // Skipped entirely for a caller who can't see the tab either — a 403
     // here would just be a confusing error banner on page load.
     enabled: hasLogisticsSecret,
@@ -328,6 +344,9 @@ export function ContractPrivateInfosList() {
             onPageSizeChange: setPageSize,
             pageSizeOptions: PAGE_SIZE_OPTIONS,
           }}
+          sort={sort}
+          onSortChange={handleSortChange}
+          sortableColumnKeys={SORTABLE_COLUMN_KEYS}
         />
       </StackItem>
 

@@ -56,6 +56,16 @@ function orDash(value) {
   return value == null || value === '' ? '—' : value;
 }
 
+// Matches BE-kt-xnk's `CommissionSortFields` allow-list — every field there
+// already has a same-named column in this table.
+const SORTABLE_COLUMN_KEYS = [
+  'code',
+  'contractNumber',
+  'partyCustomerName',
+  'value',
+  'signedDate',
+];
+
 /**
  * @typedef {{
  *   id: string,
@@ -101,6 +111,16 @@ export function CommissionsList() {
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
+  const [sort, setSort] = useState(
+    /** @type {{ field: string, direction: 'Ascending' | 'Descending' } | null} */ (
+      null
+    ),
+  );
+  /** @param {string | null} field @param {'Ascending' | 'Descending'} direction */
+  function handleSortChange(field, direction) {
+    setSort(field ? { field, direction } : null);
+    setPageIndex(1);
+  }
   const [dialogMode, setDialogMode] = useState(
     /** @type {'view' | 'edit'} */ ('view'),
   );
@@ -139,6 +159,7 @@ export function CommissionsList() {
     page: pageIndex,
     pageSize,
     conditions: filterConditions,
+    sort,
   });
   const listResult = commissionsQuery.data;
   const commissions = listResult?.success ? listResult.commissions : [];
@@ -435,6 +456,9 @@ export function CommissionsList() {
             onPageSizeChange: setPageSize,
             pageSizeOptions: PAGE_SIZE_OPTIONS,
           }}
+          sort={sort}
+          onSortChange={handleSortChange}
+          sortableColumnKeys={SORTABLE_COLUMN_KEYS}
         />
       </StackItem>
 

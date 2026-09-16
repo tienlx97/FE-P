@@ -150,12 +150,35 @@ const TOTALS_ROW_CELL_RENDERERS = {
     ),
 };
 
+// Matches BE-kt-xnk's `ShipmentSortFields` allow-list, restricted to keys
+// this table actually has a column for (`etd`/`eta` are BE-sortable but
+// have no column here).
+const SORTABLE_COLUMN_KEYS = [
+  'contractNumber',
+  'name',
+  'bookingNumber',
+  'supplier',
+  'type',
+  'status',
+  'invoiceValue',
+];
+
 export function ShipmentsList() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
+  const [sort, setSort] = useState(
+    /** @type {{ field: string, direction: 'Ascending' | 'Descending' } | null} */ (
+      null
+    ),
+  );
+  /** @param {string | null} field @param {'Ascending' | 'Descending'} direction */
+  function handleSortChange(field, direction) {
+    setSort(field ? { field, direction } : null);
+    setPageIndex(1);
+  }
   // Server-side quick filter for "Tình trạng" — writes into the same
   // `filterConditions` the funnel dialog edits (unlike `AdvanceTable`'s own
   // `quickFilters` prop, client-side-only). `null` clears the pill back to
@@ -205,6 +228,7 @@ export function ShipmentsList() {
     page: pageIndex,
     pageSize,
     conditions: filterConditions,
+    sort,
   });
   const listResult = shipmentsQuery.data;
   const shipments = listResult?.success ? listResult.shipments : [];
@@ -448,6 +472,10 @@ export function ShipmentsList() {
       key: 'supplier',
       header: 'Forwarder',
       width: proportional(1),
+      // No `filter` on this column (not part of the header-filter set), so
+      // the BE-kt-xnk wire sort field (`supplierName`) needs stating
+      // explicitly — it doesn't match this column's own `key`.
+      sortField: 'supplierName',
       renderCell: (row) => orDash(row.supplierName),
       exportValue: (row) => row.supplierName,
     },
@@ -595,6 +623,9 @@ export function ShipmentsList() {
             onPageSizeChange: setPageSize,
             pageSizeOptions: PAGE_SIZE_OPTIONS,
           }}
+          sort={sort}
+          onSortChange={handleSortChange}
+          sortableColumnKeys={SORTABLE_COLUMN_KEYS}
         />
       </StackItem>
 

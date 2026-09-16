@@ -178,6 +178,19 @@ const CONTRACT_HEADER_GROUPS = [
   },
 ];
 
+// Matches BE-kt-xnk's `ContractSortFields` allow-list, restricted to keys
+// this table actually has a column for (`sellerCompanyName` and
+// `projectCompletionDate` are BE-sortable but have no column here).
+const SORTABLE_COLUMN_KEYS = [
+  'contractNumber',
+  'projectName',
+  'buyer',
+  'contractValue',
+  'createdDate',
+  'quotationDate',
+  'status',
+];
+
 const styles = stylex.create({
   statusFilter: { maxWidth: '100%', overflowX: 'auto' },
   // Vivid blue link style requested for "Số hợp đồng" (matches a
@@ -210,6 +223,16 @@ export function ContractsList() {
   );
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
+  const [sort, setSort] = useState(
+    /** @type {{ field: string, direction: 'Ascending' | 'Descending' } | null} */ (
+      null
+    ),
+  );
+  /** @param {string | null} field @param {'Ascending' | 'Descending'} direction */
+  function handleSortChange(field, direction) {
+    setSort(field ? { field, direction } : null);
+    setPageIndex(1);
+  }
   // Defaults to "Loại hợp đồng: Chính thức" per user request (2026-09-12) —
   // Draft contracts are working copies, not the operational default this
   // list should open on. Still just the ordinary advanced-filter condition
@@ -316,6 +339,7 @@ export function ContractsList() {
     page: pageIndex,
     pageSize,
     conditions: filterConditions,
+    sort,
   });
   const listResult = contractsQuery.data;
   const contracts = useMemo(
@@ -837,6 +861,9 @@ export function ContractsList() {
             onPageSizeChange: setPageSize,
             pageSizeOptions: PAGE_SIZE_OPTIONS,
           }}
+          sort={sort}
+          onSortChange={handleSortChange}
+          sortableColumnKeys={SORTABLE_COLUMN_KEYS}
         />
       </StackItem>
 
