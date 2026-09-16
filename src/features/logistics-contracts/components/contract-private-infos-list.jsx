@@ -299,22 +299,18 @@ export function ContractPrivateInfosList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
-      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
-        <Heading level={1}>BOQ</Heading>
-        <Button
-          label="Thêm"
-          variant="primary"
-          icon={<Icon icon={Plus} />}
-          onClick={() => setIsPickingContract(true)}
-        />
-      </HStack>
-
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
       <StackItem size="fill">
         <AdvanceTable
+          title={<Heading level={1}>BOQ</Heading>}
+          primaryAction={{
+            label: 'Thêm',
+            icon: <Icon icon={Plus} />,
+            onClick: () => setIsPickingContract(true),
+          }}
           toolbarLabel="Thao tác danh sách BOQ"
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="BOQ"

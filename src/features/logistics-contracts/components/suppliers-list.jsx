@@ -332,24 +332,20 @@ export function SuppliersList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
-      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
-        <Heading level={1}>Nhà cung cấp</Heading>
-        <Button
-          label="Thêm nhà cung cấp"
-          variant="primary"
-          onClick={() => {
-            setHasOpenedCreate(true);
-            setIsCreateOpen(true);
-          }}
-        />
-      </HStack>
-
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message ?? 'Không thể tải danh sách nhà cung cấp'} />
       ) : null}
 
       <StackItem size="fill">
         <AdvanceTable
+          title={<Heading level={1}>Nhà cung cấp</Heading>}
+          primaryAction={{
+            label: 'Thêm nhà cung cấp',
+            onClick: () => {
+              setHasOpenedCreate(true);
+              setIsCreateOpen(true);
+            },
+          }}
           toolbarLabel="Thao tác danh sách nhà cung cấp"
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Nhà cung cấp"

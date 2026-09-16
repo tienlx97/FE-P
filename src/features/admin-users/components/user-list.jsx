@@ -281,19 +281,20 @@ export function UserList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
-      <VStack gap={1}>
-        <Heading level={1}>Người dùng</Heading>
-        <Text color="secondary">
-          Danh sách toàn bộ người dùng trong hệ thống.
-        </Text>
-      </VStack>
-
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
       <StackItem size="fill">
         <AdvanceTable
+          title={
+            <VStack gap={1}>
+              <Heading level={1}>Người dùng</Heading>
+              <Text color="secondary">
+                Danh sách toàn bộ người dùng trong hệ thống.
+              </Text>
+            </VStack>
+          }
           toolbarLabel="Thao tác danh sách người dùng"
           searchFieldDefs={searchFieldDefs}
           entityLabel="Người dùng"

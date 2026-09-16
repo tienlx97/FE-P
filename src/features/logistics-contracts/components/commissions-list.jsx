@@ -411,22 +411,18 @@ export function CommissionsList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
-      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
-        <Heading level={1}>Commission</Heading>
-        <Button
-          label="Tạo Commission"
-          variant="primary"
-          icon={<Icon icon={Plus} />}
-          onClick={() => setIsPickingContract(true)}
-        />
-      </HStack>
-
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
       <StackItem size="fill">
         <AdvanceTable
+          title={<Heading level={1}>Commission</Heading>}
+          primaryAction={{
+            label: 'Tạo Commission',
+            icon: <Icon icon={Plus} />,
+            onClick: () => setIsPickingContract(true),
+          }}
           toolbarLabel="Thao tác danh sách Commission"
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Commission"

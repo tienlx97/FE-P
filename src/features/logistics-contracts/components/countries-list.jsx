@@ -1,7 +1,5 @@
 'use client';
 
-import { Button } from '@astryxdesign/core/Button';
-import { HStack } from '@astryxdesign/core/HStack';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { proportional } from '@astryxdesign/core/Table';
 import { Heading } from '@astryxdesign/core/Text';
@@ -51,24 +49,20 @@ export function CountriesList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
-      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
-        <Heading level={1}>Nước xuất khẩu</Heading>
-        <Button
-          label="Thêm nước"
-          variant="primary"
-          onClick={() => {
-            setHasOpenedCreate(true);
-            setIsCreateOpen(true);
-          }}
-        />
-      </HStack>
-
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
       <StackItem size="fill">
         <AdvanceTable
+          title={<Heading level={1}>Nước xuất khẩu</Heading>}
+          primaryAction={{
+            label: 'Thêm nước',
+            onClick: () => {
+              setHasOpenedCreate(true);
+              setIsCreateOpen(true);
+            },
+          }}
           toolbarLabel="Thao tác danh sách nước"
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Nước"

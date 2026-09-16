@@ -325,24 +325,20 @@ export function CustomersList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
-      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
-        <Heading level={1}>Khách hàng</Heading>
-        <Button
-          label="Thêm khách hàng"
-          variant="primary"
-          onClick={() => {
-            setHasOpenedCreate(true);
-            setIsCreateOpen(true);
-          }}
-        />
-      </HStack>
-
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
       <StackItem size="fill">
         <AdvanceTable
+          title={<Heading level={1}>Khách hàng</Heading>}
+          primaryAction={{
+            label: 'Thêm khách hàng',
+            onClick: () => {
+              setHasOpenedCreate(true);
+              setIsCreateOpen(true);
+            },
+          }}
           toolbarLabel="Thao tác danh sách khách hàng"
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Khách hàng"

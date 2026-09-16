@@ -11978,4 +11978,50 @@ Three separate user requests handled together:
   `contracts-list.jsx`. Live-verified `/logistics/shipments` now shows the
   same column-divider look with zero changes to that page's own file.
 - `./harness/verify.sh` full green — `harness/runs/20260917-004406-704/`.
-  Not committed yet.
+  Committed as `eb8627d`.
+
+## 2026-09-17 — Move page title + create-button next to Xuất/In, on 7 more list pages
+
+- **User's observation:** only `contracts-list.jsx`/`shipments-list.jsx` put
+  Xuất/In next to the primary "create new" button (via `AdvanceTable`'s
+  `title`/`primaryAction` props); every other list page hand-rolled its own
+  `<Heading>` + "Thêm..." `<Button>` in a separate `HStack` ABOVE
+  `AdvanceTable` entirely, so Xuất/In there landed in the toolbar row
+  instead — user pointed out that using the next-to-primaryAction layout
+  anywhere requires it consistently everywhere.
+- **Audited all 10 `AdvanceTable` callers** (fork) for `title`/
+  `primaryAction`/`viewPresets`: only contracts, shipments (both) and
+  `user-list.jsx` (primaryAction only, no title — so it fell into the
+  wrong slot) had either prop wired; the other 7 pages had a hand-rolled
+  heading+button doing exactly what those props already provide.
+- **Asked the user** how far to take it (fix only `user-list.jsx`'s
+  misplaced button vs. give all 8 pages a real title-row vs. leave the
+  inconsistency) — chose "add title to all 8, keep the create-new flow
+  wherever it already lives."
+- **Migrated 7 of 8** (`commissions-list.jsx`, `contract-private-infos-list.jsx`
+  [BOQ], `customers-list.jsx`, `suppliers-list.jsx`, `places-list.jsx`,
+  `countries-list.jsx`, `user-list.jsx`): moved each page's own
+  `<Heading>`(+ subtitle `<Text>` where present, e.g. `user-list.jsx`) into
+  `AdvanceTable`'s `title` prop, and each page's existing "Thêm..." button
+  (same label/icon/onClick, untouched) into `primaryAction` — removing the
+  now-redundant hand-rolled `HStack`. Cleaned up now-unused `Button`/
+  `HStack` imports where nothing else in the file needed them
+  (`countries-list.jsx`, `places-list.jsx`).
+- **`backup-list.jsx` is a genuine exception, deliberately NOT migrated:**
+  its header has *two* buttons ("Tải lên bản sao lưu" secondary + "Tạo bản
+  sao lưu mới" primary, the latter with `isLoading={createBackupMutation
+  .isPending}` disabling it during the mutation) plus a subtitle.
+  `AdvanceTable`'s `primaryAction` prop only supports one button and has
+  no `isLoading`/disable-while-pending concept — forcing this through
+  would either silently drop the upload button or the double-submit guard
+  on create. Flagged back to the user rather than guessing; needs its own
+  decision (extend `primaryAction`'s shape, or accept it stays visually
+  different) before touching it.
+- **Also found, left untouched:** `src/sidebarLogistics.json` had an
+  unrelated on-disk change (nav section header split into "ĐỐI TÁC"
+  Khách hàng/Nhà cung cấp vs. "DANH MỤC" Quốc gia/Cảng-Nơi) that nobody in
+  this session made — visible live during a screenshot check. Not part of
+  this commit; flagged to the user rather than bundled in or reverted.
+- `./harness/verify.sh` full green — `harness/runs/20260917-010228-2039/`.
+  Live-verified `/logistics/customers` and `/admin/users` — title, print,
+  export, and the create button all render correctly on the same row.
