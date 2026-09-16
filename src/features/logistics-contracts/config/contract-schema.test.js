@@ -90,6 +90,7 @@ test('accepts an empty, an equal, or a later project completion date', () => {
 
   const equalDates = contractSchema.safeParse({
     ...baseCandidate(),
+    status: 'Completed',
     createdDate: '2026-01-10',
     projectCompletionDate: '2026-01-10',
   });
@@ -97,6 +98,7 @@ test('accepts an empty, an equal, or a later project completion date', () => {
 
   const laterDate = contractSchema.safeParse({
     ...baseCandidate(),
+    status: 'Completed',
     createdDate: '2026-01-10',
     projectCompletionDate: '2026-06-30',
   });
@@ -106,6 +108,7 @@ test('accepts an empty, an equal, or a later project completion date', () => {
 test('rejects a project completion date before the contract date', () => {
   const result = contractSchema.safeParse({
     ...baseCandidate(),
+    status: 'Completed',
     createdDate: '2026-01-10',
     projectCompletionDate: '2026-01-05',
   });
@@ -121,6 +124,36 @@ test('rejects a project completion date before the contract date', () => {
       'Ngày hoàn thành dự án phải sau hoặc bằng ngày tạo hợp đồng',
     );
   }
+});
+
+test('rejects a project completion date when status is not Completed', () => {
+  const result = contractSchema.safeParse({
+    ...baseCandidate(),
+    status: 'InProgress',
+    createdDate: '2026-01-10',
+    projectCompletionDate: '2026-06-30',
+  });
+
+  assert.equal(result.success, false);
+  if (!result.success) {
+    const issue = result.error.issues.find(
+      (candidate) => candidate.path.join('.') === 'projectCompletionDate',
+    );
+    assert.ok(issue, 'expected an issue on projectCompletionDate');
+    assert.equal(
+      issue?.message,
+      'Chỉ có thể nhập ngày hoàn thành khi trạng thái là "Đã hoàn thành"',
+    );
+  }
+});
+
+test('accepts an empty project completion date regardless of status', () => {
+  const result = contractSchema.safeParse({
+    ...baseCandidate(),
+    status: 'NotStarted',
+    projectCompletionDate: '',
+  });
+  assert.equal(result.success, true);
 });
 
 test('requires a valid contractType', () => {

@@ -31,6 +31,7 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { recordLinkStyles } from '@/shared/components/record-link-style.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { numberValueToInput } from '@/shared/config/formatted-number-input.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
@@ -407,6 +408,7 @@ export function ShipmentsList() {
             label={orDash(row.contractNumber)}
             variant="ghost"
             size="sm"
+            xstyle={recordLinkStyles.link}
             onClick={(event) => {
               event.stopPropagation();
               openContractFromShipment(row);

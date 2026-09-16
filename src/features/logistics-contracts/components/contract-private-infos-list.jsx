@@ -18,6 +18,7 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { recordLinkStyles } from '@/shared/components/record-link-style.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
@@ -214,6 +215,7 @@ export function ContractPrivateInfosList() {
           label={row.contractNumber}
           variant="ghost"
           size="sm"
+          xstyle={recordLinkStyles.link}
           onClick={(event) => {
             event.stopPropagation();
             setDetailDialog({ row, initialEditing: false });

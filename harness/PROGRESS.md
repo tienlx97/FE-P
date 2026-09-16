@@ -1,5 +1,55 @@
 # Progress Log
 
+## 2026-09-16 (continued) — `polish-customer-dialog-and-cross-links`: task 1 done
+
+- User feedback (Vietnamese) after reviewing the 3 prior changes live in
+  the browser at `localhost:3000` (a `next start` instance running
+  alongside the `pnpm dev -p 3001` one, per this file's own map —
+  confirmed it picks up new `next build` output without a restart, so
+  browser verification against it stayed fast this round). 5 items:
+  1. Enlarge `CustomerDetailDialog` (720 → 1080).
+  2. `ProjectCompletionDate` should only be fillable once Status is/becomes
+     "Đã hoàn thành" — added as a **UI-only** rule: `contract-schema.js`
+     refine, `use-contract-form.js`'s `setField` clears the value the
+     moment status moves away from `Completed` (mirrors the existing
+     `placeOfDischarge` clear-on-Incoterm convention), and
+     `contract-general-fields.jsx` disables the `DateInput` otherwise
+     with a `disabledMessage`. Backend unchanged (still accepts the field
+     independent of Status — not asked for, would be its own scoped
+     change if wanted).
+  3. Turn off the per-column funnel-icon filter popover app-wide (it
+     predates this session's own sort work but was flagged as clutter now
+     that both live in the header) — `AdvanceTable` stopped passing that
+     plugin into `TanStackDataTable`; the underlying `useTableFiltering`
+     call is kept (renamed `_filterPlugin`, satisfies
+     `unused-imports/no-unused-vars`'s `^_` allowance) rather than torn
+     out, so re-enabling it later is a one-line revert instead of
+     reconstructing the wiring.
+  4. BOQ's contract-number link (and the ones added last task in
+     Shipments/Commissions) needed the same bold/highlighted styling
+     `contracts-list.jsx` already used for its own — extracted into a new
+     shared `record-link-style.js` (`recordLinkStyles.link`) instead of
+     copy-pasting the same `stylex.create` block a 4th time.
+  5. `customers-list.jsx`'s own inline row-expansion panel
+     (`CustomerExpandedDetails`) never got the contract-history table —
+     last task only wired it into the new standalone `CustomerDetailDialog`
+     reachable from a Contract's Buyer link, missing the Customers page's
+     own view of the same customer. Extracted the "Hợp đồng đã làm" table +
+     export + its own `ContractFormDialog` instance out of
+     `CustomerDetailDialog` into a new shared `customer-contract-history.jsx`,
+     now rendered by both surfaces so they can't drift apart — a real fix,
+     not just a copy-paste, since fixing this bug from now on happens once.
+- Verification: full `./harness/verify.sh` PASSED (lint, typecheck,
+  `next build`, unit tests + 2 new/updated `contract-schema.test.js`
+  cases for the status-gating refine). Manually re-verified all 5 items
+  live at `localhost:3000` this time (Claude-in-Chrome's site permission
+  gap from the last 2 tasks turned out to already be resolved) — enlarged
+  dialog, disabled/re-enabled completion date on a real status change
+  (discarded, didn't save over the sample contract), no funnel icons on
+  any list's headers, bold links in BOQ/Shipments/Commissions, and the
+  Customers list's own expanded row now shows the same contract-history
+  table as the dialog.
+
 ## 2026-09-16 (continued) — `add-sortable-table-headers`: task 1 done — multi-repo request complete
 
 - Final step of the multi-repo user request: "Filter các column table

@@ -31,6 +31,7 @@ import {
   skeletonRows,
 } from '../config/customers-table.js';
 import { useSearchCustomersQuery } from '../hooks/use-customers-query.js';
+import { CustomerContractHistory } from './customer-contract-history.jsx';
 import { CustomerFormDialog } from './customer-form-dialog.jsx';
 
 /** @param {string | null | undefined} value */
@@ -149,6 +150,13 @@ function CustomerExpandedDetails({ customer, onEdit }) {
           </MetadataListItem>
         ))}
       </MetadataList>
+
+      <Divider />
+
+      <CustomerContractHistory
+        customerId={customer.id}
+        customerName={customer.companyName}
+      />
 
       <Divider />
 

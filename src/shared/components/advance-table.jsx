@@ -622,7 +622,11 @@ export function AdvanceTable({
     onAdvancedFilterChange?.([]);
     resetPageIndex();
   }
-  const filterPlugin =
+  // Kept computed but unreferenced — the per-column funnel trigger it backs
+  // is turned off (see the comment on `TanStackDataTable` below); prefixed
+  // `_` so this is a one-line revert (drop the prefix, pass it back in)
+  // instead of reconstructing the whole plugin wiring later.
+  const _filterPlugin =
     /** @type {import('@astryxdesign/core/Table').TablePlugin<T>} */ (
       useTableFiltering({
         filters: headerFilters,
@@ -1143,7 +1147,12 @@ export function AdvanceTable({
             activeColumnKeys={columnSettingsState.activeColumnKeys}
             startKeys={tableStartKeys}
             endKeys={tableEndKeys}
-            filterPlugin={filterPlugin}
+            // Per-column header filter (funnel icon popover) turned off app-
+            // wide per user request (2026-09-16) — redundant with the search
+            // bar's "Bộ lọc nâng cao" and now crowded the header next to the
+            // new sort indicator. `filterPlugin` (below) is left computed but
+            // unused rather than torn out, so this is a one-line revert if
+            // wanted back.
             rowExpansion={rowExpansion}
             emptyState={
               isLoading ? (

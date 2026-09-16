@@ -278,6 +278,13 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
       ) {
         next.placeOfDischarge = '';
       }
+      // "Ngày hoàn thành dự án" only applies once the contract is actually
+      // marked "Đã hoàn thành" — clear it whenever status moves away from
+      // that, so a stale value from an earlier Completed state can't slip
+      // through (same convention as placeOfDischarge above).
+      if (field === 'status' && value !== 'Completed') {
+        next.projectCompletionDate = '';
+      }
       return next;
     });
   }

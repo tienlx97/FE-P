@@ -228,6 +228,15 @@ export function ContractGeneralFields({ form, isReadOnly = false }) {
                   }
                   format={formatDateInputValue}
                   isOptional
+                  // Only fillable once the contract is actually marked "Đã
+                  // hoàn thành" (per user request) — `setField` clears any
+                  // stale value the moment status moves away from that.
+                  isDisabled={!isReadOnly && values.status !== 'Completed'}
+                  disabledMessage={
+                    values.status !== 'Completed'
+                      ? 'Chỉ nhập được khi trạng thái là "Đã hoàn thành"'
+                      : undefined
+                  }
                   status={fieldStatuses.projectCompletionDate}
                   statusVariant="tooltip"
                 />

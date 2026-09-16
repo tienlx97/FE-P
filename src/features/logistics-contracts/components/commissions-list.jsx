@@ -28,6 +28,7 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { recordLinkStyles } from '@/shared/components/record-link-style.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 
@@ -315,6 +316,7 @@ export function CommissionsList() {
             label={orDash(row.contractNumber)}
             variant="ghost"
             size="sm"
+            xstyle={recordLinkStyles.link}
             onClick={(event) => {
               event.stopPropagation();
               openContractFromCommission(row);
