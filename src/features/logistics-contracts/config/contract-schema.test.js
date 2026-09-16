@@ -10,6 +10,7 @@ function baseCandidate() {
     contractType: 'Draft',
     createdDate: '2026-01-10',
     quotationDate: '2026-01-05',
+    projectCompletionDate: '',
     projectName: 'Dự án A',
     category: 'Máy móc',
     countryId: 'country-1',
@@ -75,6 +76,49 @@ test('rejects a quotation date after the contract date', () => {
     assert.equal(
       issue?.message,
       'Ngày báo giá phải trước hoặc bằng ngày tạo hợp đồng',
+    );
+  }
+});
+
+test('accepts an empty, an equal, or a later project completion date', () => {
+  const empty = contractSchema.safeParse({
+    ...baseCandidate(),
+    createdDate: '2026-01-10',
+    projectCompletionDate: '',
+  });
+  assert.equal(empty.success, true);
+
+  const equalDates = contractSchema.safeParse({
+    ...baseCandidate(),
+    createdDate: '2026-01-10',
+    projectCompletionDate: '2026-01-10',
+  });
+  assert.equal(equalDates.success, true);
+
+  const laterDate = contractSchema.safeParse({
+    ...baseCandidate(),
+    createdDate: '2026-01-10',
+    projectCompletionDate: '2026-06-30',
+  });
+  assert.equal(laterDate.success, true);
+});
+
+test('rejects a project completion date before the contract date', () => {
+  const result = contractSchema.safeParse({
+    ...baseCandidate(),
+    createdDate: '2026-01-10',
+    projectCompletionDate: '2026-01-05',
+  });
+
+  assert.equal(result.success, false);
+  if (!result.success) {
+    const issue = result.error.issues.find(
+      (candidate) => candidate.path.join('.') === 'projectCompletionDate',
+    );
+    assert.ok(issue, 'expected an issue on projectCompletionDate');
+    assert.equal(
+      issue?.message,
+      'Ngày hoàn thành dự án phải sau hoặc bằng ngày tạo hợp đồng',
     );
   }
 });

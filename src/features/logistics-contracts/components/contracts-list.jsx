@@ -57,6 +57,7 @@ import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractExpandedDetails } from './contract-expanded-details.jsx';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
 import { ContractPrivateInfoDetailDialog } from './contract-private-info-detail-dialog.jsx';
+import { CustomerDetailDialog } from './customer-detail-dialog.jsx';
 import { PaymentScheduleFormDialog } from './payment-schedule-form-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
@@ -186,7 +187,10 @@ const styles = stylex.create({
   // body-text blue for contrast, not the vivid hyperlink shade the
   // reference calls for, so `--color-icon-blue` (the same vivid blue as
   // the un-themed base accent) is applied via `xstyle` instead.
-  contractNumberLink: { color: colorVars['--color-icon-blue'] },
+  contractNumberLink: {
+    color: colorVars['--color-icon-blue'],
+    fontWeight: 'bold',
+  },
 });
 
 /** Contract workspace and related editors are siblings of the table so
@@ -273,6 +277,9 @@ export function ContractsList() {
   );
   const [relatedBoqDialog, setRelatedBoqDialog] = useState(
     /** @type {{ contractId: string, contractNumber: string } | null} */ (null),
+  );
+  const [customerDetailDialog, setCustomerDetailDialog] = useState(
+    /** @type {{ customerId: string } | null} */ (null),
   );
   const [shipmentDialog, setShipmentDialog] = useState(
     /** @type {{ contractId: string, contract: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
@@ -524,7 +531,25 @@ export function ContractsList() {
       header: 'Khách hàng',
       width: proportional(1),
       filter: 'buyerCompanyName',
-      renderCell: (contract) => contract.buyer.companyName,
+      // Only linkable when the Buyer is actually catalog-linked
+      // (sourceCustomerId) — an inline, one-off Buyer has no customer
+      // record to open.
+      renderCell: (contract) => {
+        const customerId = contract.buyer.sourceCustomerId;
+        return customerId ? (
+          <Link
+            xstyle={styles.contractNumberLink}
+            onClick={(event) => {
+              event.stopPropagation();
+              setCustomerDetailDialog({ customerId });
+            }}
+          >
+            {contract.buyer.companyName}
+          </Link>
+        ) : (
+          contract.buyer.companyName
+        );
+      },
       exportValue: (contract) => contract.buyer.companyName,
     },
     {
@@ -941,6 +966,16 @@ export function ContractsList() {
           closeLabel="Quay lại Contract"
           onOpenChange={(isOpen) => {
             if (!isOpen) setRelatedBoqDialog(null);
+          }}
+        />
+      ) : null}
+
+      {customerDetailDialog ? (
+        <CustomerDetailDialog
+          key={customerDetailDialog.customerId}
+          customerId={customerDetailDialog.customerId}
+          onOpenChange={(isOpen) => {
+            if (!isOpen) setCustomerDetailDialog(null);
           }}
         />
       ) : null}

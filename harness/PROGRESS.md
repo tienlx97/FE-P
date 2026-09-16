@@ -1,5 +1,54 @@
 # Progress Log
 
+## 2026-09-16 — `add-contract-completion-date-and-customer-history`: task 1 done
+
+- Frontend half of a multi-repo user request (Vietnamese), continuing
+  BE-kt-xnk's `add-contract-project-completion-date` (new
+  `ProjectCompletionDate` field + `buyerSourceCustomerId` search filter)
+  and `add-search-sort` (server-side `sort` on all 5 business search
+  endpoints) — both already shipped there. This session covers: Contract
+  completion-date field + Customer link, and a new customer
+  "contracts done" history table with export.
+- `contractSchema`/`useContractForm`/`ContractGeneralFields` gained
+  `projectCompletionDate` (optional `DateInput`, `>= createdDate` refine
+  mirroring the backend's own rule); `buildContractBody` sends it as
+  `ProjectCompletionDate`.
+- New `CustomerDetailDialog` (`customer-detail-dialog.jsx`) — opened by
+  customer id from Contract's Buyer column in `contracts-list.jsx` (only
+  when catalog-linked via `sourceCustomerId`; an inline one-off Buyer has
+  nothing to link to). Shows profile info plus "Hợp đồng đã làm"
+  (contract number/value/sign date/completion date), backed by a new
+  `useCustomerContractsQuery` hook hitting the BE's `buyerSourceCustomerId`
+  search filter, sorted `createdDate` descending via the BE's new `sort`
+  param. Số hợp đồng opens its own independent `ContractFormDialog`
+  instance — same "one dialog, multiple entrypoints" convention already
+  used for Commission/BOQ elsewhere in this feature.
+  `customers-list.jsx`'s own inline row-expansion panel is unchanged; this
+  dialog is a separate, independently-reachable surface, not a
+  replacement.
+- `searchContracts` (api) gained an optional `sort` passthrough
+  (`{ field, direction }` → wire `Sort: { Field, Direction }`) — the same
+  plumbing the later sortable-headers change will reuse for every list.
+- Discovered two skeleton-row fixtures (`contracts-table.js`'s
+  `skeletonRows`) needed `projectCompletionDate: null` added — caught by
+  `typecheck`, not by `lint` or `build` (Turbopack's `build` doesn't run
+  full `tsc`), so this would NOT have been caught without running the
+  full `./harness/verify.sh` gate.
+- Verification: 25 unit tests passing (`contract-schema.test.js` +2,
+  `contracts.test.js` +2), full `./harness/verify.sh` PASSED —
+  `harness/runs/20260916-090643-1251/`. Browser/e2e visual verification
+  was **not** performed — the Claude-in-Chrome extension has no
+  site permission granted for `localhost:3001` in this environment
+  (`Permission denied for this action on this domain`), which only a
+  human can grant via the extension's own UI. Static verification (build,
+  typecheck, lint, unit tests) is strong for this change, but a human
+  should click through the "Khách hàng" link on a contract and the new
+  contract-history table/export button at least once before relying on
+  this without a screenshot.
+- Next in this multi-repo plan: shipment↔contract/commission/BOQ
+  cross-links, then sortable column headers on the shared
+  `TanStackDataTable`/`AdvanceTable` engine.
+
 ## 2026-09-15 (continued) — `logistics-cost-lines-ux`: task 3 — add STT column
 
 - User asked (Vietnamese) to add a "1 2 3 4 5..." column to the "Chi phí

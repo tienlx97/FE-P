@@ -39,6 +39,8 @@ export const contractSchema = z
     }),
     createdDate: z.string().min(1, 'Vui lòng chọn ngày tạo hợp đồng'),
     quotationDate: z.string().min(1, 'Vui lòng chọn ngày báo giá'),
+    // Optional — a contract may not be completed yet.
+    projectCompletionDate: z.string(),
     projectName: z.string().trim().min(1, 'Vui lòng nhập tên dự án'),
     category: z.string().trim().min(1, 'Vui lòng nhập hạng mục'),
     countryId: z.string().trim().min(1, 'Vui lòng chọn nước xuất khẩu'),
@@ -119,6 +121,18 @@ export const contractSchema = z
       // `docs/api/Contracts.md`, BE-kt-xnk).
       message: 'Ngày báo giá phải trước hoặc bằng ngày tạo hợp đồng',
       path: ['quotationDate'],
+    },
+  )
+  .refine(
+    (values) =>
+      !values.projectCompletionDate ||
+      !values.createdDate ||
+      values.projectCompletionDate >= values.createdDate,
+    {
+      // Mirrors the backend's `ProjectCompletionDate >= CreatedDate` rule
+      // (see `docs/api/Contracts.md`, BE-kt-xnk).
+      message: 'Ngày hoàn thành dự án phải sau hoặc bằng ngày tạo hợp đồng',
+      path: ['projectCompletionDate'],
     },
   )
   .refine(

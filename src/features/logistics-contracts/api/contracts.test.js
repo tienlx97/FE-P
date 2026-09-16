@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { checkContractNumberExists, createContract } from './contracts.js';
+import {
+  checkContractNumberExists,
+  createContract,
+  searchContracts,
+} from './contracts.js';
 
 /** @type {import('../types/index.js').ContractFormValues} */
 const BASE_VALUES = {
@@ -227,6 +231,61 @@ test('sends SellerSigned and BuyerSigned', async () => {
     const body = JSON.parse(String(captured.init?.body));
     assert.equal(body.SellerSigned, true);
     assert.equal(body.BuyerSigned, false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('sends ProjectCompletionDate, or null when empty', async () => {
+  const originalFetch = globalThis.fetch;
+  /** @type {{ init?: RequestInit }} */
+  const captured = {};
+  globalThis.fetch = async (_input, init) => {
+    captured.init = init;
+    return Response.json({ id: 'contract-1' });
+  };
+
+  try {
+    await createContract(
+      { ...BASE_VALUES, projectCompletionDate: '2026-06-30' },
+      { paymentTerms: [{ paymentRatioPercent: 100, paymentCondition: 'T/T' }] },
+    );
+    const body = JSON.parse(String(captured.init?.body));
+    assert.equal(body.ProjectCompletionDate, '2026-06-30');
+
+    await createContract(
+      { ...BASE_VALUES, projectCompletionDate: '' },
+      { paymentTerms: [{ paymentRatioPercent: 100, paymentCondition: 'T/T' }] },
+    );
+    const emptyBody = JSON.parse(String(captured.init?.body));
+    assert.equal(emptyBody.ProjectCompletionDate, null);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('searchContracts sends Sort, or null when omitted', async () => {
+  const originalFetch = globalThis.fetch;
+  /** @type {{ init?: RequestInit }} */
+  const captured = {};
+  globalThis.fetch = async (_input, init) => {
+    captured.init = init;
+    return Response.json({ page: { items: [] } });
+  };
+
+  try {
+    await searchContracts({
+      sort: { field: 'contractValue', direction: 'Descending' },
+    });
+    const body = JSON.parse(String(captured.init?.body));
+    assert.deepEqual(body.Sort, {
+      Field: 'contractValue',
+      Direction: 'Descending',
+    });
+
+    await searchContracts({});
+    const noSortBody = JSON.parse(String(captured.init?.body));
+    assert.equal(noSortBody.Sort, null);
   } finally {
     globalThis.fetch = originalFetch;
   }

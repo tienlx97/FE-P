@@ -224,6 +224,7 @@ export const skeletonRows = Array.from(
     bankIds: [],
     sellerSigned: false,
     buyerSigned: false,
+    projectCompletionDate: null,
     status: 'InProgress',
   }),
 );

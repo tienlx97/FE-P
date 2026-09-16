@@ -197,6 +197,7 @@ export {};
  * @property {string[]} bankIds
  * @property {boolean} sellerSigned - "Bên bán ký"
  * @property {boolean} buyerSigned - "Bên mua ký"
+ * @property {string | null} projectCompletionDate - ISO date (YYYY-MM-DD), "ngày hoàn thành dự án" — `null` while the project isn't finished yet
  * @property {ContractStatus} status
  */
 
@@ -493,6 +494,7 @@ export {};
  * @property {ContractType | ''} contractType
  * @property {string} createdDate - ISO date (YYYY-MM-DD)
  * @property {string} quotationDate - ISO date (YYYY-MM-DD)
+ * @property {string} projectCompletionDate - ISO date (YYYY-MM-DD), or '' while not yet completed
  * @property {string} projectName
  * @property {string} category
  * @property {string} countryId - FK into the {@link Country} catalog (was the free-text `exportCountry`)

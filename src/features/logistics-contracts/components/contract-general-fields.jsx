@@ -215,6 +215,23 @@ export function ContractGeneralFields({ form, isReadOnly = false }) {
                   statusVariant="tooltip"
                 />
               </ReadOnlyLock>
+              <ReadOnlyLock isActive={isReadOnly}>
+                <DateInput
+                  label="Ngày hoàn thành dự án"
+                  value={
+                    /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                      values.projectCompletionDate || null
+                    )
+                  }
+                  onChange={(value) =>
+                    setField('projectCompletionDate', value ?? '')
+                  }
+                  format={formatDateInputValue}
+                  isOptional
+                  status={fieldStatuses.projectCompletionDate}
+                  statusVariant="tooltip"
+                />
+              </ReadOnlyLock>
             </>
           </VStack>
         </StackItem>

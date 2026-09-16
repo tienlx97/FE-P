@@ -20,6 +20,38 @@ export function useContractsQuery({ page, pageSize, conditions = [] }) {
   });
 }
 
+/**
+ * Every contract for one customer (Buyer), newest-signed first — backs
+ * `CustomerDetailDialog`'s "Hợp đồng đã làm" table. Filters on
+ * `buyerSourceCustomerId` (BE-kt-xnk's `add-contract-project-completion-date`),
+ * which only matches contracts where this customer was linked as Buyer via
+ * the catalog (`sourceCustomerId`) — an inline, not-catalog-linked Buyer
+ * with the same company name has no such link and won't appear here.
+ * @param {string | null | undefined} customerId
+ */
+export function useCustomerContractsQuery(customerId) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, 'by-customer', customerId],
+    queryFn: () =>
+      searchContracts({
+        page: 1,
+        pageSize: 100,
+        conditions: [
+          {
+            id: 'buyerSourceCustomerId',
+            field: 'buyerSourceCustomerId',
+            operator: 'Equals',
+            // `enabled` below only runs this queryFn once customerId is set.
+            value: /** @type {string} */ (customerId),
+            connector: 'And',
+          },
+        ],
+        sort: { field: 'createdDate', direction: 'Descending' },
+      }),
+    enabled: Boolean(customerId),
+  });
+}
+
 export function useCreateContractMutation() {
   const queryClient = useQueryClient();
 
