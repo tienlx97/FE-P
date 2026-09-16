@@ -15,6 +15,7 @@ import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import { Link } from '@astryxdesign/core/Link';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel } from '@astryxdesign/core/Table';
@@ -312,16 +313,15 @@ export function CommissionsList() {
       filter: 'contractNumber',
       renderCell: (row) =>
         contractsById.has(row.contractId) ? (
-          <Button
-            label={orDash(row.contractNumber)}
-            variant="ghost"
-            size="sm"
+          <Link
             xstyle={recordLinkStyles.link}
             onClick={(event) => {
               event.stopPropagation();
               openContractFromCommission(row);
             }}
-          />
+          >
+            {orDash(row.contractNumber)}
+          </Link>
         ) : (
           orDash(row.contractNumber)
         ),
