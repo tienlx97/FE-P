@@ -5,14 +5,13 @@ import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { InputGroup } from '@astryxdesign/core/InputGroup';
 import {
   Layout,
   LayoutContent,
   LayoutFooter,
   LayoutHeader,
 } from '@astryxdesign/core/Layout';
-import { usePowerSearchConfig } from '@astryxdesign/core/PowerSearch';
+import { PowerSearch, usePowerSearchConfig } from '@astryxdesign/core/PowerSearch';
 import {
   SegmentedControl,
   SegmentedControlItem,
@@ -40,7 +39,6 @@ import {
   stickyColumnKeys,
   TableViewOptionsPopover,
 } from '@/shared/components/table-view-options-popover.jsx';
-import { TextInput } from '@/shared/components/text-input.jsx';
 import { usePersistedTableViewOptions } from '@/shared/hooks/use-persisted-table-view-options.js';
 
 import { AdvanceTablePagination } from './advance-table-pagination.jsx';
@@ -115,6 +113,21 @@ function normalizeForSearch(value) {
  */
 function applyFiltersDiacriticInsensitive(applyFiltersFn, filters, rows) {
   if (filters.length === 0) return [...rows];
+  // Only fields targeted by a *string*-type filter get normalized on the
+  // row clone below — an enum/entity/number/date filter's value is left
+  // exact (not normalized, see the ternary below), so normalizing every
+  // string field unconditionally made an enum "is" filter (e.g. "Khách
+  // hàng") compare its exact-case value against a lowercased,
+  // diacritic-stripped row field and never match (caught 2026-09-16,
+  // once PowerSearch's field menu made enum fields reachable directly
+  // instead of only through the advanced-filter dialog's own form).
+  const stringFilterFields = new Set(
+    filters
+      .filter(
+        (filter) => /** @type {any} */ (filter)?.value?.type === 'string',
+      )
+      .map((filter) => /** @type {any} */ (filter).field),
+  );
   const normalizedFilters = filters.map((filter) => {
     const value = /** @type {any} */ (filter)?.value;
     return value?.type === 'string' && typeof value.value === 'string'
@@ -128,7 +141,9 @@ function applyFiltersDiacriticInsensitive(applyFiltersFn, filters, rows) {
     const normalized = /** @type {any} */ ({ __rowIndex: index });
     for (const [key, value] of Object.entries(row)) {
       normalized[key] =
-        typeof value === 'string' ? normalizeForSearch(value) : value;
+        stringFilterFields.has(key) && typeof value === 'string'
+          ? normalizeForSearch(value)
+          : value;
     }
     return normalized;
   });
@@ -213,12 +228,6 @@ const styles = stylex.create({
   // own pressed/active state uses, so a set chip reads as "on" at a glance.
   filterFill: {
     backgroundColor: colorVars['--color-overlay-pressed'],
-  },
-  searchInputGroup: {
-    width: '100%',
-  },
-  searchInput: {
-    flexGrow: 1,
   },
   // Reads as the table's own footer row (bordered top, like a "Tổng cộng"
   // row) rather than a separate element floating below it — same divider
@@ -420,10 +429,49 @@ export function AdvanceTable({
     pagination?.onPageIndexChange(1);
   }
 
+  // Debounce ref for `onContentSearchChange` (see `handleSearchFiltersChange`
+  // below), which forwards the content-search field's value to the caller's
+  // own server-side search — survives across renders, unlike a plain local
+  // variable, and its cleanup effect cancels any pending call on unmount.
+  const contentSearchDebounceRef = useRef(
+    /** @type {ReturnType<typeof setTimeout> | null} */ (null),
+  );
+  useEffect(
+    () => () => {
+      if (contentSearchDebounceRef.current) {
+        clearTimeout(contentSearchDebounceRef.current);
+      }
+    },
+    [],
+  );
+
   /** @param {ReadonlyArray<import('@astryxdesign/core/PowerSearch').PowerSearchFilter>} filters */
   function handleSearchFiltersChange(filters) {
     setSearchFilters([...filters]);
     resetPageIndex();
+
+    // `onContentSearchChange` lets a caller (e.g. `contracts-list.jsx`) also
+    // run the content-search field's text through its own server-side
+    // search — this component only ever filters `data`, i.e. whatever page
+    // the caller already fetched, so a caller with more rows than fit on
+    // one page needs this to find a match outside it. Debounced so typing
+    // doesn't fire a request per keystroke; the client-side filter still
+    // updates immediately, so typing itself never feels laggy.
+    if (onContentSearchChange) {
+      const active = filters.find(
+        (filter) => filter.field === contentSearchFieldKey,
+      );
+      const value = active
+        ? String(/** @type {any} */ (active.value).value)
+        : '';
+      if (contentSearchDebounceRef.current) {
+        clearTimeout(contentSearchDebounceRef.current);
+      }
+      contentSearchDebounceRef.current = setTimeout(
+        () => onContentSearchChange(value),
+        300,
+      );
+    }
   }
 
   /**
@@ -449,11 +497,11 @@ export function AdvanceTable({
     return active ? String(/** @type {any} */ (active.value).value) : null;
   }
 
-  // Search box: a plain text field bound to `contentSearchFieldKey`, plus a
-  // filter-icon trigger that opens a popover with one input per advanced
-  // field. Both write into the same `searchFilters` array a per-column
-  // header filter reads from — the box just edits a `contains`/`is` clause
-  // for its own field(s) instead of PowerSearch's token UI.
+  // The funnel-icon trigger next to PowerSearch opens a popover with one
+  // input per advanced field — a static form rather than PowerSearch's own
+  // token menu, for fields callers want a dedicated, always-visible control
+  // for. It writes into the same `searchFilters` array PowerSearch and the
+  // per-column header filters all read from.
   const advancedSearchFieldsResolved = useMemo(
     () =>
       advancedSearchFields ??
@@ -470,62 +518,6 @@ export function AdvanceTable({
         })),
     [advancedSearchFields, searchFieldDefs],
   );
-
-  const quickSearchValue = (() => {
-    const active = searchFilters.find(
-      (filter) => filter.field === contentSearchFieldKey,
-    );
-    return active ? String(/** @type {any} */ (active.value).value) : '';
-  })();
-
-  // `onContentSearchChange` lets a caller (e.g. `contracts-list.jsx`) also
-  // run the same text through its own server-side search — this component
-  // only ever filters `data`, i.e. whatever page the caller already
-  // fetched, so a caller with more rows than fit on one page needs this to
-  // find a match outside it. Debounced so typing doesn't fire a request
-  // per keystroke; the client-side filter below still updates immediately,
-  // so typing itself never feels laggy.
-  const contentSearchDebounceRef = useRef(
-    /** @type {ReturnType<typeof setTimeout> | null} */ (null),
-  );
-  useEffect(
-    () => () => {
-      if (contentSearchDebounceRef.current) {
-        clearTimeout(contentSearchDebounceRef.current);
-      }
-    },
-    [],
-  );
-
-  /** @param {string} value */
-  function handleQuickSearchChange(value) {
-    setSearchFilters((current) => {
-      const rest = current.filter(
-        (filter) => filter.field !== contentSearchFieldKey,
-      );
-      return value.trim() === ''
-        ? rest
-        : [
-            ...rest,
-            {
-              field: contentSearchFieldKey,
-              operator: 'contains',
-              value: { type: 'string', value },
-            },
-          ];
-    });
-    resetPageIndex();
-
-    if (onContentSearchChange) {
-      if (contentSearchDebounceRef.current) {
-        clearTimeout(contentSearchDebounceRef.current);
-      }
-      contentSearchDebounceRef.current = setTimeout(
-        () => onContentSearchChange(value),
-        300,
-      );
-    }
-  }
 
   // When `filterFieldDefs` is given, the funnel button/dialog run the
   // server-driven condition builder (`AdvancedFilterBuilder`) instead of the
@@ -661,6 +653,25 @@ export function AdvanceTable({
       /** @type {any} */ (data),
     )
   );
+  // PowerSearch's `resultCount`: `pagination.totalCount` (the server's
+  // true across-all-pages count) is right when nothing narrows beyond
+  // what the server already filtered — but `searchFilters`/header filters
+  // only ever run client-side against the already-fetched `data` (one
+  // page), so a filter on a field that isn't also in `filterFieldDefs`
+  // (server-routed) can narrow `filteredData` below `data.length` without
+  // the server ever finding out. Comparing the two lengths — rather than
+  // inspecting `filterFieldDefs` — catches that case exactly: no
+  // additional client-side narrowing means `filteredData.length ===
+  // data.length`, so trust the server total (or the plain filtered count
+  // when there's no `pagination` at all); a shorter `filteredData` means
+  // show what's actually on screen instead of a stale, too-large number
+  // (caught 2026-09-17: "34 kết quả" while an enum quick-filter left only
+  // 5 rows visible).
+  const resultCount =
+    filteredData.length === data.length
+      ? (pagination?.totalCount ?? filteredData.length)
+      : filteredData.length;
+
   // Appended after filtering, never before — a totals row's cells (labels,
   // pre-summed amounts) aren't real per-contract field values, so running
   // them through the quick-search/header-filter engine above would either
@@ -982,32 +993,30 @@ export function AdvanceTable({
           xstyle={styles.toolbarPrimary}
         >
           <StackItem size="fill" xstyle={styles.searchSlot}>
-            <InputGroup
+            <PowerSearch
               label={searchPlaceholder}
               isLabelHidden
               size="sm"
-              xstyle={[styles.search, styles.searchInputGroup]}
-            >
-              <TextInput
-                label={searchPlaceholder}
-                isLabelHidden
-                placeholder={searchPlaceholder}
-                startIcon="search"
-                hasClear
-                value={quickSearchValue}
-                onChange={handleQuickSearchChange}
-                xstyle={styles.searchInput}
-              />
-              {isServerFilterMode || advancedSearchFieldsResolved.length > 0 ? (
-                <IconButton
-                  label="Bộ lọc nâng cao"
-                  tooltip="Bộ lọc nâng cao"
-                  icon={<Icon icon="funnel" size="sm" />}
-                  variant="ghost"
-                  onClick={() => handleAdvancedSearchOpenChange(true)}
-                />
-              ) : null}
-            </InputGroup>
+              config={searchConfig}
+              filters={searchFilters}
+              onChange={handleSearchFiltersChange}
+              placeholder={searchPlaceholder}
+              resultCount={resultCount}
+              startIcon="search"
+              hasClear
+              endContent={
+                isServerFilterMode || advancedSearchFieldsResolved.length > 0 ? (
+                  <IconButton
+                    label="Bộ lọc nâng cao"
+                    tooltip="Bộ lọc nâng cao"
+                    icon={<Icon icon="funnel" size="sm" />}
+                    variant="ghost"
+                    onClick={() => handleAdvancedSearchOpenChange(true)}
+                  />
+                ) : null
+              }
+              xstyle={styles.search}
+            />
             <AdvanceTableSearchDialog
               isServerFilterMode={isServerFilterMode}
               isAdvancedSearchOpen={isAdvancedSearchOpen}
@@ -1206,7 +1215,7 @@ export function AdvanceTable({
             ) : null}
             <AdvanceTablePagination
               pagination={pagination}
-              visibleCount={filteredData.length}
+              visibleCount={resultCount}
               isLoading={isLoading}
             />
           </VStack>
