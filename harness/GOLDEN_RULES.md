@@ -8,7 +8,7 @@ A rule with enforcement "manual" is a harness gap — plan to automate it.
 Raising the version creates cleanup work: see harness/ENTROPY.md.
 -->
 
-## v4 — 2026-09-13
+## v5 — 2026-09-16
 
 | # | Rule | Enforcement |
 |---|---|---|
@@ -25,9 +25,18 @@ Raising the version creates cleanup work: see harness/ENTROPY.md.
 | 11 | Shared memory must not contain credentials or private keys | `harness/checks/memory-secrets.sh` |
 | 12 | A `*FormDialog` never renders inside a table's `renderExpanded` callback (a `Selector` field inside it would portal underneath the dialog instead of above it — see ADR-0004) | `harness/tests/selector-dialog-stacking.test.cjs` |
 | 13 | Every list/data table in the system renders through TanStack Table v8 (`AdvanceTable` → `TanStackDataTable`, `src/shared/components/tanstack-data-table.jsx`); no feature builds a bespoke table renderer or drops down to Astryx `Table` row/body primitives directly | `harness/checks/tanstack-table-only.sh` |
+| 14 | A field added to a form schema (`config/*-schema.js`) that a user would plausibly want in the matching list view gets BOTH a `COLUMN_OPTIONS` entry (`config/*-table.js`) AND a matching column definition (`renderCell`) in that list's `*-list.jsx` — a `COLUMN_OPTIONS` entry with no column definition silently does nothing when toggled on in "Tuỳ chọn hiển thị" (found live on `note` in `contracts-list.jsx`, 2026-09-16) | manual → TODO: schema/`COLUMN_OPTIONS`/column-def diff script |
 
 ## Changelog
 
+- v5 (2026-09-16): rule #14 — a Contract field (`sellerSigned`,
+  `buyerSigned`, `projectCompletionDate`) shipped in an earlier change
+  without ever reaching the contracts list's "Tuỳ chọn hiển thị" column
+  picker; fixed in `contracts-list.jsx`/`contracts-table.js`, along with a
+  pre-existing instance of the *inverse* drift found in the same pass
+  (`note` had a `COLUMN_OPTIONS` entry but no column definition — toggling
+  it on did nothing). No automated check yet — recorded as a harness gap in
+  `harness/PROGRESS.md`.
 - v4 (2026-09-13): rule #13 — TanStack Table is now the single engine for
   every list in the system (`openspec/changes/tanstack-table-system-rollout/`),
   not just contracts. `AdvanceTable` no longer has a legacy non-TanStack

@@ -179,8 +179,8 @@ const CONTRACT_HEADER_GROUPS = [
 ];
 
 // Matches BE-kt-xnk's `ContractSortFields` allow-list, restricted to keys
-// this table actually has a column for (`sellerCompanyName` and
-// `projectCompletionDate` are BE-sortable but have no column here).
+// this table actually has a column for (`sellerCompanyName` is BE-sortable
+// but has no column here).
 const SORTABLE_COLUMN_KEYS = [
   'contractNumber',
   'projectName',
@@ -188,11 +188,19 @@ const SORTABLE_COLUMN_KEYS = [
   'contractValue',
   'createdDate',
   'quotationDate',
+  'projectCompletionDate',
   'status',
 ];
 
 const styles = stylex.create({
-  statusFilter: { maxWidth: '100%', overflowX: 'auto' },
+  // `SegmentedControl`'s own base styles default to `overflow: auto` on
+  // BOTH axes (so a long row of items can scroll horizontally on narrow
+  // screens); this row is always exactly one line, but a 1px
+  // scrollHeight/clientHeight rounding mismatch on the Y axis still trips
+  // `overflow-y: auto` into showing a permanent, empty vertical scrollbar
+  // next to the items. `overflowX` alone (without pinning `overflowY`)
+  // leaves the inherited Y-axis auto in place — must set both explicitly.
+  statusFilter: { maxWidth: '100%', overflowX: 'auto', overflowY: 'hidden' },
   // Vivid blue link style requested for "Số hợp đồng" (matches a
   // reference report where record codes render as blue link text) —
   // `Link`'s own `color` prop only offers the theme's accent color (this
@@ -687,6 +695,15 @@ export function ContractsList() {
       renderCell: (contract) => formatDisplayDate(contract.quotationDate),
     },
     {
+      key: 'projectCompletionDate',
+      header: 'Ngày hoàn thành dự án',
+      width: pixel(180),
+      // `null` while the project isn't finished yet (only fillable once
+      // `status` is "Đã hoàn thành" — see `contract-general-fields.jsx`).
+      renderCell: (contract) =>
+        formatDisplayDate(contract.projectCompletionDate),
+    },
+    {
       key: 'category',
       header: 'Hạng mục',
       width: pixel(130),
@@ -714,6 +731,16 @@ export function ContractsList() {
       renderCell: (contract) => orDash(contract.placeOfDischarge),
     },
     {
+      // Was already a `COLUMN_OPTIONS` entry with no matching column here —
+      // toggling "Ghi chú" on in the picker silently did nothing. Discovered
+      // while adding the three fields above (2026-09-16); same class of bug.
+      key: 'note',
+      header: 'Ghi chú',
+      width: pixel(200),
+      filter: 'note',
+      renderCell: (contract) => orDash(contract.note),
+    },
+    {
       key: 'paymentTerms',
       header: 'Đợt thanh toán',
       width: pixel(160),
@@ -738,6 +765,20 @@ export function ContractsList() {
           .map((bankId) => banksById.get(bankId)?.bankName)
           .filter(Boolean)
           .join('; '),
+    },
+    {
+      key: 'sellerSigned',
+      header: 'Bên bán đã ký',
+      width: pixel(130),
+      renderCell: (contract) => (contract.sellerSigned ? 'Đã ký' : 'Chưa ký'),
+      exportValue: (contract) => (contract.sellerSigned ? 'Đã ký' : 'Chưa ký'),
+    },
+    {
+      key: 'buyerSigned',
+      header: 'Bên mua đã ký',
+      width: pixel(130),
+      renderCell: (contract) => (contract.buyerSigned ? 'Đã ký' : 'Chưa ký'),
+      exportValue: (contract) => (contract.buyerSigned ? 'Đã ký' : 'Chưa ký'),
     },
     {
       key: 'actions',

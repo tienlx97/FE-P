@@ -11621,3 +11621,98 @@ log for the two non-obvious calls below).
 - STT change itself not yet committed — user hasn't asked for that commit
   yet, only the revert.
 - Nothing outstanding from this round.
+
+## 2026-09-16 — Contract list: quick-filter scrollbar, missing columns, persisted view options
+
+**Request** (Vietnamese, three items): (1) the "Chưa thực hiện / Đang thực
+hiện / Đã hoàn thành / Đã huỷ" status quick filter above the contracts
+list has a scrollbar bug; (2) fields added to `Contract` in earlier
+changes aren't in "Tuỳ chọn hiển thị" — make a golden rule so this stops
+recurring; (3) persist "Tuỳ chọn hiển thị" column add/remove choices to
+`localStorage`. New `openspec/changes/fix-contract-list-view-options/`
+(Status: done) has full detail; summary here.
+
+Session context: this was picked up from BE-kt-xnk (the backend repo) —
+routed to this repo per BE-kt-xnk's own CLAUDE.md ("check `../kt-xnk`
+before assuming no frontend exists"). Dev server: the documented
+`pnpm dev -- -p 3001` in this repo's own `AGENTS.md`/`docs/architecture.md`
+is now **stale** — Next.js 16.2.11's CLI dropped the `-p`/`--port`
+shorthand pass-through via `pnpm dev --` (both fail with "Invalid project
+directory provided: ...\-p" / "...\--port"; confirmed via
+`node_modules/next/dist/bin/next` source, the flags ARE still valid
+commander options, so this is a pnpm-arg-forwarding issue, not a Next.js
+one). Worked around by using the dev server already running on :3000
+(itself a leftover bare `pnpm dev` from an earlier, unrelated session —
+also collides with the "prod uses :3000" assumption those docs make).
+Flagging as a harness gap below rather than fixing the docs blind, since
+the actual working invocation wasn't isolated this session (used the
+pre-existing :3000 instance instead of getting a fresh :3001 one to
+launch).
+
+1. **Scrollbar bug** — root cause: Astryx `SegmentedControl`'s base
+   styles default `overflow: auto` on BOTH axes (so a long single-row
+   list can scroll horizontally on narrow screens); `contracts-list.jsx`'s
+   `statusFilter` xstyle only overrode `overflowX`, leaving the inherited
+   Y-axis `auto` in place. A 1px `scrollHeight`(26)/`clientHeight`(25)
+   rounding mismatch then permanently showed an empty vertical scrollbar
+   next to the filter chips. Fix: also set `overflowY: 'hidden'`.
+   Confirmed via live DOM inspection (Claude-in-Chrome/`javascript_tool`)
+   before and after — computed `overflow` went from `auto/auto` to
+   `auto/hidden`, scrollbar visually gone.
+2. **Missing columns** — `sellerSigned`, `buyerSigned`,
+   `projectCompletionDate` (all shipped in earlier Contract changes) had
+   no `COLUMN_OPTIONS` entry. Added those three (`contracts-table.js`) +
+   matching column definitions (`contracts-list.jsx`, same "Đã ký"/"Chưa
+   ký" pattern `commissions-list.jsx` already uses for its own
+   `sellerSigned`/`partySigned` columns) + `projectCompletionDate` to
+   `SORTABLE_COLUMN_KEYS` (BE already supports sorting on it —
+   `ContractSortFields.cs`). While auditing this, found the *inverse* bug
+   in the same file: `note` already had a `COLUMN_OPTIONS` entry with NO
+   column definition — toggling "Ghi chú" on did nothing. Fixed the same
+   way. New `harness/GOLDEN_RULES.md` rule #14 (v5) documents both
+   directions of this drift for future sessions; enforcement is `manual`
+   (no automated schema-vs-`COLUMN_OPTIONS`-vs-column-def diff script
+   written this pass — see Harness gaps).
+3. **Persistence** — new `src/shared/hooks/use-persisted-table-view-options.js`,
+   wired into `advance-table.jsx` (replacing its 4 local `useState` calls
+   for `activeColumnKeys`/`density`/`stickyStart`/`stickyEnd`), so every
+   `AdvanceTable` consumer (10 lists: contracts, shipments, commissions,
+   customers, suppliers, users, backups, countries, places,
+   contract-private-infos) gets persistence, not just contracts —
+   `entityLabel` (already unique per caller) is the storage key, slugified.
+   Same `useSyncExternalStore` idiom as the existing
+   `useLayoutPreferences` (module-level store, `storage`-event cross-tab
+   sync) — a naive `useEffect`-based localStorage read tripped this
+   repo's `react-hooks/set-state-in-effect` lint rule on first attempt,
+   confirming `useSyncExternalStore` is the correct idiom here, not just a
+   style preference. Stored column keys are intersected against the
+   *current* `columnOptions` on every read (drops stale/renamed keys,
+   always keeps `isAlwaysVisible` ones) so this doesn't fight golden rule
+   #14's failure mode. Verified live: added the 3 new columns, full page
+   reload, selection survived; inspected the `localStorage` entry directly
+   (`kt-xnk.table-view:hop-dong`). Storage-key separator is `:` not a
+   second `.` — a Claude-in-Chrome devtools helper auto-redacted the key
+   as `[BLOCKED: JWT token]` on first attempt (3 dot-separated segments
+   pattern-matches a JWT); switched separators rather than fight the
+   tooling.
+- Full `./harness/verify.sh` PASSED (lint, typecheck, structure, harness
+  tests, unit tests, build, quality-thresholds) —
+  `harness/runs/20260916-154018-1073/`.
+- **Harness gaps:**
+  - Golden rule #14 has no automated enforcement yet (manual only) — a
+    script diffing each `config/*-schema.js`'s field set against its
+    matching `config/*-table.js` `COLUMN_OPTIONS` (both directions) would
+    catch this mechanically; not attempted this pass, scope was the user's
+    specific report.
+  - `docs/architecture.md`'s (and `AGENTS.md`'s) documented dev-server
+    invocation (`pnpm dev -- -p 3001`) no longer works against the
+    Next.js version currently pinned (16.2.11 dropped `-p`/`--port` via
+    pnpm's `--` passthrough — confirmed the flags are still valid next-cli
+    options, so this is a pnpm/Next interaction, not a removed flag).
+    Needs a session to isolate the actual working invocation (e.g.
+    `next dev --port 3001` directly, bypassing the `pnpm run dev` script
+    chain) and update the docs — not done this session, which worked
+    around it by using an already-running (pre-existing, undocumented)
+    dev server on :3000 instead.
+- Not committed — user has not asked for one yet.
+- Nothing else outstanding from this round.

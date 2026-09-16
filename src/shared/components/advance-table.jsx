@@ -41,6 +41,7 @@ import {
   TableViewOptionsPopover,
 } from '@/shared/components/table-view-options-popover.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
+import { usePersistedTableViewOptions } from '@/shared/hooks/use-persisted-table-view-options.js';
 
 import { AdvanceTablePagination } from './advance-table-pagination.jsx';
 import { AdvanceTableSearchDialog } from './advance-table-search-dialog.jsx';
@@ -352,21 +353,31 @@ export function AdvanceTable({
   const [searchFilters, setSearchFilters] = useState(
     /** @type {import('@astryxdesign/core/PowerSearch').PowerSearchFilter[]} */ ([]),
   );
-  const [activeColumnKeys, setActiveColumnKeys] = useState(
-    initialColumnKeys ?? columnOptions.map((column) => column.key),
-  );
   // Which `viewPresets` segment reads as selected — a label only, not a
   // strict mode: manually editing columns via the picker afterward doesn't
   // clear or resync this, same as the picker's own "Khôi phục" button
-  // doesn't track a mode either.
+  // doesn't track a mode either. Not persisted — only the columns/density/
+  // sticky settings it produces are.
   const [activePresetKey, setActivePresetKey] = useState(
     viewPresets?.[0]?.key ?? '',
   );
-  const [density, setDensity] = useState(
-    /** @type {import('@astryxdesign/core/Table').TableDensity} */ ('balanced'),
-  );
-  const [stickyStart, setStickyStart] = useState(defaultStickyStart);
-  const [stickyEnd, setStickyEnd] = useState(defaultStickyEnd);
+  const {
+    activeColumnKeys,
+    setActiveColumnKeys,
+    density,
+    setDensity,
+    stickyStart,
+    setStickyStart,
+    stickyEnd,
+    setStickyEnd,
+  } = usePersistedTableViewOptions({
+    storageKey: entityLabel,
+    columnOptions,
+    initialColumnKeys:
+      initialColumnKeys ?? columnOptions.map((column) => column.key),
+    defaultStickyStart,
+    defaultStickyEnd,
+  });
 
   // Header filters may target fields that intentionally do not belong in
   // the free-text PowerSearch menu (dates/numbers are the common case).

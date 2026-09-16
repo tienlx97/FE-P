@@ -123,6 +123,7 @@ export const COLUMN_OPTIONS = [
   { key: 'incoterm', label: 'Incoterm' },
   { key: 'createdDate', label: 'Ngày ký' },
   { key: 'quotationDate', label: 'Ngày báo giá' },
+  { key: 'projectCompletionDate', label: 'Ngày hoàn thành dự án' },
   { key: 'category', label: 'Hạng mục' },
   { key: 'countryName', label: 'Nước xuất khẩu' },
   { key: 'placeOfLoading', label: 'Nơi xếp hàng' },
@@ -130,6 +131,8 @@ export const COLUMN_OPTIONS = [
   { key: 'note', label: 'Ghi chú' },
   { key: 'paymentTerms', label: 'Đợt thanh toán' },
   { key: 'bankIds', label: 'Ngân hàng thụ hưởng' },
+  { key: 'sellerSigned', label: 'Bên bán đã ký' },
+  { key: 'buyerSigned', label: 'Bên mua đã ký' },
   { key: 'actions', label: 'Chức năng', isAlwaysVisible: true },
 ];
 
