@@ -1,5 +1,32 @@
 # Progress Log
 
+## 2026-09-16 (continued) — `add-shipment-commission-contract-links`: task 1 done
+
+- Continues the same multi-repo request: "Số hợp đồng cũng là thẻ link
+  sang dialog chi tiết hợp đồng. Tương tự cho commission, BOQ...".
+- `shipments-list.jsx` and `commissions-list.jsx` both denormalize
+  `contractNumber` for display but rendered it as plain text — both now
+  link (same `Button variant="ghost"` pattern each file's own
+  `shipmentCode`/`code` column already uses) to a new, independent
+  `ContractFormDialog` instance, reusing each list's existing
+  `contractsById` map (no new data fetch). Guarded by
+  `contractsById.has(row.contractId)`, falling back to plain text
+  otherwise.
+- BOQ's own `contractNumber` column (`contract-private-infos-list.jsx`)
+  already opened its own detail dialog — BOQ rows are 1:1 with Contract,
+  so the number doubles as that row's own record code. No change needed
+  there; confirmed by reading it rather than assumed.
+- Verification: full `./harness/verify.sh` PASSED —
+  `harness/runs/20260916-091057-1423/`. No new unit tests added — this is
+  the same mechanical link-wiring pattern already covered by manual
+  verification convention for `shipmentCode`/BOQ's own equivalent links;
+  browser/e2e visual verification not performed (Claude-in-Chrome has no
+  site permission for `localhost:3001` in this environment — same
+  limitation noted in the previous task).
+- Next in this multi-repo plan: sortable column headers on the shared
+  `TanStackDataTable`/`AdvanceTable` engine, wired into all 5 list hooks
+  using the BE's `sort` param (`add-search-sort`, already shipped).
+
 ## 2026-09-16 — `add-contract-completion-date-and-customer-history`: task 1 done
 
 - Frontend half of a multi-repo user request (Vietnamese), continuing
