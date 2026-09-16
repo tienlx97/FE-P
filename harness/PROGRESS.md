@@ -11852,3 +11852,52 @@ launch).
     committed) pointing at whatever `BE-kt-xnk` currently seeds, kept in
     sync when that changes — out of scope to fix here.
 - Not committed yet — about to commit this change on `redesign-theme-stone`.
+
+## 2026-09-17 — PowerSearch on AdvanceTable: tried, then fully reverted
+
+- **What happened, in order:** swapped `AdvanceTable`'s plain
+  `InputGroup`+`TextInput` search bar for Astryx's real `<PowerSearch>`
+  (commit `ba206ab`) — this also surfaced and fixed two real pre-existing
+  bugs along the way (an enum filter, e.g. "Khách hàng", never matched
+  because `applyFiltersDiacriticInsensitive` normalized every row field
+  but only normalized string-type filter values; and PowerSearch's
+  `resultCount` badge / the pagination footer's "Tổng số" label could
+  disagree with the actual filtered row count for client-only fields).
+  Then fixed a bug the user found — clicking the "Bộ lọc nâng cao" funnel
+  button also popped PowerSearch's own field menu open underneath it,
+  because the button lived in PowerSearch's `endContent` slot, a
+  descendant of PowerSearch's own clickable container — via
+  `stopPropagation` on the button's press (commit `cdc97fa`). User then
+  suggested the simpler fix instead (move the button OUT of PowerSearch
+  entirely, as a sibling) — implementing that broke the toolbar layout
+  (PowerSearch didn't flex-grow correctly against its new sibling; the
+  result-count text and the funnel button both ended up misplaced,
+  visible live before this could be fixed). At that point user asked to
+  revert PowerSearch entirely rather than keep iterating on it.
+- **Reverted:** `git revert --no-edit cdc97fa` then `git revert --no-edit
+  ba206ab` (commits `6106464`, `02f1719`) — clean revert, no conflicts.
+  `AdvanceTable` is back to the plain `InputGroup`+`TextInput` search bar,
+  byte-identical to before this round of work. Confirmed live
+  (`/logistics/contracts`) and via `./harness/verify.sh` full green —
+  `harness/runs/20260917-002712-1153/`.
+- **Net effect:** both real bugs the PowerSearch work found
+  (`applyFiltersDiacriticInsensitive`'s asymmetric normalization; the
+  resultCount/pagination-label mismatch) are reverted along with it —
+  they're back to their original latent state, unreachable through the
+  plain TextInput UI the same way they always were before this round.
+  Not re-applied standalone since the user's revert request was for the
+  PowerSearch change as a whole; flagging here in case a future session
+  wants either bug fixed independently of PowerSearch (both are documented
+  in the reverted commits' messages/diffs, `ba206ab`/`cdc97fa`, recoverable
+  via `git show` if wanted later).
+- **Harness gap worth logging:** this session's `computer`-tool screenshot
+  coordinate space and the page's actual CSS pixel space were off by
+  roughly 1.4x on this machine for an extended stretch, causing a lot of
+  the click flakiness fighting through this whole PowerSearch detour —
+  switching to JS-level element lookup + `.click()` for popup/dropdown
+  interactions (`document.querySelector` + `.click()`, or matching by
+  `getBoundingClientRect()`) sidestepped it reliably every time it was
+  tried. Worth defaulting to that approach for popup-heavy UI verification
+  in future sessions on this machine rather than pixel coordinates.
+- Not committed yet — the two revert commits above are already made;
+  nothing else pending from this round.
