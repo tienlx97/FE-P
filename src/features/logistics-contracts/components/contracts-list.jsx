@@ -806,7 +806,6 @@ export function ContractsList() {
         value={statusQuickFilterValue}
         onChange={handleStatusQuickFilterChange}
       >
-        <SegmentedControlItem value="all" label="Tất cả" />
         {contractStatusOptions.map((option) => (
           <SegmentedControlItem
             key={option.value}

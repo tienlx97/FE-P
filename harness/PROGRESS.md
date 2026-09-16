@@ -1,5 +1,118 @@
 # Progress Log
 
+## 2026-09-16 (continued) — 3 ad hoc user-reported fixes (Logistics lists)
+
+- User (Vietnamese, 3 items, no specific change named — picked up directly
+  since each was small and self-contained):
+  1. Remove the "Tất cả" segment from the Hợp đồng list's status
+     `SegmentedControl`, leaving only the 4 real statuses.
+  2. Shipment list bug: searching "14" doesn't return
+     "25KCT14-PS/LOT-01".
+  3. The "Tổng cộng" totals row in list tables should default to right
+     below the header row (it was at the bottom).
+- **Item 1**: `contracts-list.jsx`'s `SegmentedControl` — deleted the
+  `<SegmentedControlItem value="all" label="Tất cả" />` line, kept
+  `contractStatusOptions.map(...)` (Chưa thực hiện/Đang thực hiện/Đã hoàn
+  thành/Đã huỷ). `statusQuickFilterValue` still defaults to the `'all'`
+  sentinel (no status condition) when nothing is selected — that internal
+  meaning didn't change, only its own visible pill did; the control simply
+  renders with nothing highlighted in that state now.
+- **Item 2** — root cause: `shipments-list.jsx`'s `AdvanceTable` sets
+  `contentSearchFieldKey="shipmentCode"` but never passed
+  `onContentSearchChange`, unlike `contracts-list.jsx`'s
+  `handleContractNumberSearchChange`. Per `advance-table.jsx`'s own doc
+  comment, the quick-search box without that callback only filters
+  whatever page is already loaded client-side — `shipmentCode` has no
+  backend search field at all (computed from the parent contract's number,
+  see `shipments-table.js`), so a match outside the current page (default
+  page size 25) was silently invisible. `25KCT14-PS/LOT-01` sat on page 2
+  of the dev seed data, confirming this exactly. Fix: added
+  `handleContentSearchChange` (mirrors `contracts-list.jsx`'s handler),
+  wired to `onContentSearchChange`, which upserts a server-side
+  `contractNumber` `Contains` condition via the existing
+  `upsertContainsFilterCondition` — `shipmentCode` embeds `ContractNumber`
+  (`{ContractNumber}/LOT-{NN}` or `/LCL-{NN}`), so this covers the reported
+  case; it does not extend server-side reach to matches that live only in
+  `name`/`bookingNumber` (those still only filter the loaded page, same as
+  before — out of scope for this report).
+- **Item 3** — the fix is NOT where it looks: `advance-table.jsx` appends
+  `totalsRows` after `filteredData` before handing `data` down, but that
+  order was already irrelevant to where they render —
+  `tanstack-data-table.jsx` splits totals rows out of TanStack's row model
+  by the `__isTotalsRow` flag regardless of array position, and previously
+  always rendered them in a real `<tfoot>` with `position: sticky; bottom:
+  0` (a deliberate 2026-09-15-or-earlier design, see the removed
+  `styles.footer` comment). Real fix: moved totals-row rendering from the
+  trailing `<TableFooter>` into the same `<TableHeader>` block as the
+  column headers, right after them — no sticky positioning needed on the
+  row itself since the whole `<thead>` already sticks together as one
+  unit (`styles.header`'s `position: sticky; top: 0`), so header + totals
+  now scroll and stick together. Replaced `styles.footer` (top border,
+  bottom-sticky) with `styles.totalsRowDivider` (bottom border only, on
+  the last totals row) — the mirror-image boundary, now separating the
+  totals row from the real data scrolling underneath instead of from the
+  body above. Removed the now-unused `TableFooter` import/block. This is a
+  shared-component change, so all 4 callers (`contracts-list.jsx`,
+  `shipments-list.jsx`, `commissions-list.jsx`,
+  `contract-private-infos-list.jsx`) picked it up with no per-file change.
+- Verified against the already-running dev instance at `localhost:3000`
+  (picked up all 3 edits via Fast Refresh, no restart needed):
+  screenshotted the Hợp đồng list (segmented control has 4 pills, "Tổng
+  cộng" row directly under the header, stays pinned there while scrolling
+  the data beneath it), and drove the actual repro on the Shipment list —
+  typed "14" into the quick search box and confirmed
+  `25KCT14-PS/LOT-01` (previously on page 2 of 47) now appears in the
+  filtered results (10 rows), with the totals row's numbers recomputed for
+  the filtered set.
+- `pnpm exec eslint` and `pnpm exec tsc --noEmit -p jsconfig.json` clean on
+  every touched file; `pnpm exec prettier --check` caught one reflow needed
+  in `tanstack-data-table.jsx` (fixed with `--write`, re-verified clean);
+  full `node --test` suite (151 tests) passed.
+- Not committed — user hasn't asked for that yet. No `openspec/changes/`
+  entry opened; these were 3 independent, already-well-scoped bug reports,
+  not new-scope feature work.
+- Nothing outstanding from this round.
+
+## 2026-09-16 (continued) — double-flicker on search/filter: fixed (`keepPreviousData`)
+
+- User noticed the shipment quick-search box "chớp chớp 2 lần" (flickers
+  twice) while typing — a direct follow-on from the item 2 fix above (that
+  fix made the search box's debounced half actually round-trip to the
+  server, which is what exposed this).
+- Root cause, confirmed by reading `advance-table.jsx`: `data={isLoading ?
+  skeletonRows : renderedData}` — a full skeleton-row swap keyed off
+  `isLoading`, not `isFetching`. None of the 4 list-search hooks
+  (`useContractsQuery`, `useShipmentsListQuery`, `useCommissionsQuery`,
+  `useContractPrivateInfosListQuery`) passed `placeholderData`, so React
+  Query treats every `conditions`/`page`/`sort` change as a from-scratch
+  query — `isLoading` flips `true` with no data, wiping the table to
+  skeleton, then flips back once the response lands. Combined with the
+  quick-search box's own instant client-side pre-filter (on the still-
+  loaded old page), that's the two visible swaps: instant-filter →
+  skeleton → real data.
+- Explained the diagnosis and industry-standard fix (`keepPreviousData`
+  a.k.a. stale-while-revalidate, same idea as SWR) to the user before
+  touching code; user confirmed with "ap dụng" (apply it).
+- Fix: added `placeholderData: keepPreviousData` (from
+  `@tanstack/react-query`, already on v5.101.4 — no dependency change
+  needed) to all 4 hooks. Previous page's rows now stay on screen through
+  a refetch; `isLoading` only goes `true` on first mount, and `isFetching`
+  (already wired to every caller's `isRefreshing` prop, which only spins
+  the toolbar's reload icon — confirmed in `commissions-list.jsx` and
+  `contract-private-infos-list.jsx` too, not just the two touched earlier)
+  is what flips during a background refetch instead.
+- Verified with `pnpm exec eslint`/`pnpm exec prettier --check --write`/
+  `pnpm exec tsc --noEmit`, full `node --test` (151 pass), and an
+  in-browser timing probe against the live dev instance (`localhost:3000`)
+  — typed "1" then "14" into the Shipment quick-search box via a native
+  input-value dispatch, then polled `tbody tr` every 40ms across the
+  debounce+refetch window. Row count went `9 → 10` directly (client
+  pre-filter's instant result straight to the corrected server result);
+  it never dropped to 0 or to a skeleton-row count in between — confirms
+  the flicker is gone, not just "probably fixed."
+- Not committed — same as above, user hasn't asked yet.
+- Nothing outstanding from this round.
+
 ## 2026-09-16 (continued) — `polish-customer-dialog-and-cross-links`: task 1 done
 
 - User feedback (Vietnamese) after reviewing the 3 prior changes live in

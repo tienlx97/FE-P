@@ -654,7 +654,9 @@ export function AdvanceTable({
   // pre-summed amounts) aren't real per-contract field values, so running
   // them through the quick-search/header-filter engine above would either
   // hide the row under an active filter or throw on a filter expecting a
-  // shape the row doesn't have.
+  // shape the row doesn't have. Position within this array doesn't affect
+  // where it renders — `tanstack-data-table.jsx` splits `__isTotalsRow`
+  // rows out by that flag, not by array position (see its own comment).
   const renderedData =
     totalsRows && totalsRows.length > 0
       ? /** @type {T[]} */ (

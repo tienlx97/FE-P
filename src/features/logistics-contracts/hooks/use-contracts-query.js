@@ -1,8 +1,17 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 
-import { createContract, searchContracts, updateContract } from '../api/contracts.js';
+import {
+  createContract,
+  searchContracts,
+  updateContract,
+} from '../api/contracts.js';
 
 const QUERY_KEY = ['logistics-contracts', 'contracts'];
 
@@ -11,12 +20,24 @@ const QUERY_KEY = ['logistics-contracts', 'contracts'];
  * the unfiltered list (`searchContracts`'s own doc comment) — so every
  * existing caller (e.g. `shipments-list.jsx`'s cross-reference fetch) keeps
  * working unchanged.
+ *
+ * `placeholderData: keepPreviousData` avoids the double flicker a
+ * page/conditions/sort change otherwise causes (full skeleton-row swap on
+ * `isLoading`, then swap again for the real data) — see
+ * `use-shipments-list-query.js`'s `useShipmentsListQuery` doc comment for
+ * the detailed mechanism, identical here.
  * @param {{ page: number, pageSize: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} params
  */
-export function useContractsQuery({ page, pageSize, conditions = [], sort = null }) {
+export function useContractsQuery({
+  page,
+  pageSize,
+  conditions = [],
+  sort = null,
+}) {
   return useQuery({
     queryKey: [...QUERY_KEY, page, pageSize, conditions, sort],
     queryFn: () => searchContracts({ page, pageSize, conditions, sort }),
+    placeholderData: keepPreviousData,
   });
 }
 

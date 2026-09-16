@@ -7,7 +7,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableFooter,
   TableHeader,
   TableHeaderCell,
   TableRow,
@@ -65,23 +64,23 @@ const styles = stylex.create({
     width: '100%',
   }),
   header: { position: 'sticky', top: 0, zIndex: 3 },
-  // Mirrors `header` above (same mechanism, opposite edge): totals row(s)
-  // live in a real `<tfoot>` — not mixed into `<tbody>` behind a fixed-
-  // position overlay duplicate, the earlier approach — because `position:
-  // sticky` on a table section works exactly the same at the bottom as it
-  // does at the top, once the table actually has a `<tfoot>` to put it on
-  // (previously it didn't; see the removed `TableStickyTotalsBar`, whose
-  // own doc comment explains why that workaround existed). This also keeps
-  // the totals row scrolling horizontally in lockstep with the body — the
-  // fixed-position overlay had to remeasure and reposition itself on every
-  // scroll/resize to fake that.
-  footer: {
-    borderBlockStartColor: colorVars['--color-border'],
-    borderBlockStartStyle: 'solid',
-    borderBlockStartWidth: borderVars['--border-width'],
-    bottom: 0,
-    position: 'sticky',
-    zIndex: 3,
+  // Totals row(s) render as extra rows inside the same sticky `<thead>` as
+  // the real column headers, directly below them (per user request,
+  // 2026-09-16 — previously a separate bottom-`sticky` `<tfoot>`, mirroring
+  // `header` at the opposite edge; see git history for that approach if it
+  // needs resurrecting). Riding inside `header`'s own `position: sticky`
+  // block means the totals row(s) need no sticky positioning of their own —
+  // the whole `<thead>` (however many rows it now contains) sticks to the
+  // viewport top as one unit — and still scrolls horizontally in lockstep
+  // with the body for the same reason `header` already does. Only a bottom
+  // divider is needed here, separating the totals row from the real data
+  // scrolling underneath it (the mirror-image border of `headerCell`'s own
+  // bottom divider, which now separates the column headers from this row
+  // instead of from the body).
+  totalsRowDivider: {
+    borderBlockEndColor: colorVars['--color-border'],
+    borderBlockEndStyle: 'solid',
+    borderBlockEndWidth: borderVars['--border-width'],
   },
   // Column-separator border between header cells (both the group row and
   // the leaf row) — the header previously only had the bottom divider
@@ -460,10 +459,13 @@ export function TanStackDataTable({
       ...(table.getRightHeaderGroups()[index]?.headers ?? []),
     ],
   }));
-  // Totals row(s) render in a real `<tfoot>` (below), not here — split them
-  // out of TanStack's row model rather than filtering `data` upstream, so
+  // Totals row(s) render inside `<thead>`, directly below the real column
+  // headers (see `styles.totalsRowDivider`'s comment) — split out of
+  // TanStack's row model here rather than filtering `data` upstream, so
   // every existing caller (which appends `totalsRows` into the same `data`
-  // array `AdvanceTable` passes down) keeps working unchanged.
+  // array `AdvanceTable` passes down) keeps working unchanged. The name
+  // `footerRows` is legacy (they no longer render in a `<tfoot>`) — kept to
+  // avoid a pure-rename diff through this whole file.
   const bodyRows = table
     .getRowModel()
     .rows.filter((row) => !(/** @type {any} */ (row.original).__isTotalsRow));
@@ -552,7 +554,10 @@ export function TanStackDataTable({
                               tabIndex: 0,
                               onClick: header.column.getToggleSortingHandler(),
                               onKeyDown: (event) => {
-                                if (event.key === 'Enter' || event.key === ' ') {
+                                if (
+                                  event.key === 'Enter' ||
+                                  event.key === ' '
+                                ) {
                                   event.preventDefault();
                                   header.column.getToggleSortingHandler()?.(
                                     event,
@@ -591,6 +596,56 @@ export function TanStackDataTable({
               })}
             </TableRow>
           ))}
+          {footerRows.map((row, index) => {
+            const isRowHovered = hoveredRowId === row.id;
+            const rowBg = isRowHovered ? TOTALS_HOVER_BG : TOTALS_BG;
+            const isLastTotalsRow = index === footerRows.length - 1;
+            return (
+              <TableRow
+                key={row.id}
+                data-is-totals-row="true"
+                xstyle={[
+                  isRowHovered ? styles.totalsRowHovered : styles.totalsRow,
+                  isLastTotalsRow && styles.totalsRowDivider,
+                ]}
+                onMouseEnter={() => setHoveredRowId(row.id)}
+                onMouseLeave={() =>
+                  setHoveredRowId((current) =>
+                    current === row.id ? null : current,
+                  )
+                }
+              >
+                {row.getVisibleCells().map((cell) => {
+                  const source =
+                    /** @type {{source: import('./advance-table.jsx').AdvanceTableColumn<T>}} */ (
+                      cell.column.columnDef.meta
+                    ).source;
+                  return (
+                    <TableCell
+                      key={cell.id}
+                      data-column-key={cell.column.id}
+                      xstyle={[
+                        styles.align(source.align ?? 'start'),
+                        pinStyle(cell.column),
+                        (dividers === 'grid' || dividers === 'columns') &&
+                          styles.cellDivider,
+                      ]}
+                      style={
+                        cell.column.getIsPinned()
+                          ? { backgroundColor: rowBg }
+                          : undefined
+                      }
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            );
+          })}
         </TableHeader>
         <TableBody>
           {bodyRows.map((row) => {
@@ -700,58 +755,6 @@ export function TanStackDataTable({
             </TableRow>
           ) : null}
         </TableBody>
-        {footerRows.length > 0 ? (
-          <TableFooter xstyle={styles.footer}>
-            {footerRows.map((row) => {
-              const isRowHovered = hoveredRowId === row.id;
-              const rowBg = isRowHovered ? TOTALS_HOVER_BG : TOTALS_BG;
-              return (
-                <TableRow
-                  key={row.id}
-                  data-is-totals-row="true"
-                  xstyle={[
-                    isRowHovered ? styles.totalsRowHovered : styles.totalsRow,
-                  ]}
-                  onMouseEnter={() => setHoveredRowId(row.id)}
-                  onMouseLeave={() =>
-                    setHoveredRowId((current) =>
-                      current === row.id ? null : current,
-                    )
-                  }
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    const source =
-                      /** @type {{source: import('./advance-table.jsx').AdvanceTableColumn<T>}} */ (
-                        cell.column.columnDef.meta
-                      ).source;
-                    return (
-                      <TableCell
-                        key={cell.id}
-                        data-column-key={cell.column.id}
-                        xstyle={[
-                          styles.align(source.align ?? 'start'),
-                          pinStyle(cell.column),
-                          (dividers === 'grid' || dividers === 'columns') &&
-                            styles.cellDivider,
-                        ]}
-                        style={
-                          cell.column.getIsPinned()
-                            ? { backgroundColor: rowBg }
-                            : undefined
-                        }
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    );
-                  })}
-                </TableRow>
-              );
-            })}
-          </TableFooter>
-        ) : null}
       </Table>
     </div>
   );

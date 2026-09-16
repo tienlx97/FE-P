@@ -36,7 +36,10 @@ import { recordLinkStyles } from '@/shared/components/record-link-style.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { numberValueToInput } from '@/shared/config/formatted-number-input.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
-import { upsertEqualsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
+import {
+  upsertContainsFilterCondition,
+  upsertEqualsFilterCondition,
+} from '@/shared/config/upsert-filter-condition.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { searchAllShipments } from '../api/shipments.js';
@@ -192,6 +195,21 @@ export function ShipmentsList() {
   function handleStatusQuickFilterChange(nextValue) {
     setFilterConditions((current) =>
       upsertEqualsFilterCondition(current, 'status', nextValue),
+    );
+    setPageIndex(1);
+  }
+  // "Mã" quick-search box — same server-side idea as `contracts-list.jsx`'s
+  // `handleContractNumberSearchChange`. `shipmentCode` itself has no backend
+  // search field (it's computed from the parent contract's number, not a
+  // stored column — see `shipments-table.js`'s `FILTER_FIELD_DEFS` comment),
+  // so this mirrors the box's `shipmentCode` text against `contractNumber`
+  // instead. Without this, `AdvanceTable`'s own quick search only filters
+  // whatever page is already loaded, so searching for text that matches a
+  // shipment code outside the current page silently finds nothing.
+  /** @param {string} value */
+  function handleContentSearchChange(value) {
+    setFilterConditions((current) =>
+      upsertContainsFilterCondition(current, 'contractNumber', value),
     );
     setPageIndex(1);
   }
@@ -593,6 +611,7 @@ export function ShipmentsList() {
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Shipment"
           contentSearchFieldKey="shipmentCode"
+          onContentSearchChange={handleContentSearchChange}
           searchPlaceholder="Tìm mã, tên lô hàng, số hợp đồng..."
           filterFieldDefs={FILTER_FIELD_DEFS}
           advancedFilterConditions={filterConditions}

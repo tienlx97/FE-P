@@ -64,9 +64,12 @@ export const DEFAULT_COLUMN_KEYS = [
 ];
 
 // `shipmentCode` (computed from the parent contract's number + shipment
-// number) has no backend search field — excluded here, still searchable
-// via the quick-search box above (`SEARCH_FIELD_DEFS`, client-side over
-// the loaded page).
+// number) has no backend search field — excluded here. Still searchable via
+// the quick-search box above (`SEARCH_FIELD_DEFS`, client-side over the
+// loaded page), which also mirrors its text into a server-side
+// `contractNumber` `Contains` filter (`shipments-list.jsx`'s
+// `handleContentSearchChange`) so a match outside the current page is still
+// found — same idea as `contracts-list.jsx`'s own quick-search box.
 /** @satisfies {ReadonlyArray<import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterFieldDef>} */
 export const FILTER_FIELD_DEFS = [
   { key: 'contractNumber', label: 'Số hợp đồng', type: 'string' },
