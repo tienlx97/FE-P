@@ -12165,3 +12165,46 @@ this be added to the AI instructions for future sessions.
 - Verification: `./harness/verify.sh` full green —
   `harness/runs/20260917-102242-1265/`. Live-checked on the user's own
   `localhost:3000` instance.
+
+## 2026-09-17 (continued) — `add-contract-detail-page`: 5-card KPI row redesign
+
+**Request:** user's 2nd UI item — replace the overview tab's 3-card KPI
+row + separate progress bar with a 5-card row per a new mockup: Giá trị
+quyết toán / Đã thanh toán (%, progress bar) / Còn lại (next payment-term
+hint) / Xuất hàng (HQ, FCL/LCL breakdown + remaining) / Incoterm
+(loading→discharge places).
+
+**What changed:** `contract-overview-panel.jsx` rewritten:
+- New shared `InfoCard` (caption/value/note/children) for the 5 cards,
+  laid out in `Grid columns={{minWidth: 220, max: 5}}` (auto-fit,
+  responsive without a manual `isNarrow` branch for this row).
+- "Giá trị quyết toán" replaces "Tổng giá trị hợp đồng" — now
+  `contractValue + annex adjustments`, same sign convention
+  (`AmountIncrease`/`AmountDecrease`/`ValueChange`) as
+  `ContractExpandedDetails`'s own `contractGrandTotal` and
+  `contracts-list.jsx`'s "QUYẾT TOÁN" column, so all 3 surfaces agree.
+  Every downstream card (Đã thanh toán %, Còn lại, Xuất hàng's "còn")
+  is now based on this settlement value, not the raw contract value.
+- "Còn lại" shows the next unpaid payment term inferred positionally
+  (`contract.paymentTerms[paymentSchedules.length]`) — `PaymentTerm` and
+  `PaymentSchedule` have no explicit FK linking them; BE-kt-xnk assigns
+  `paymentNumber` sequentially in creation order, so this is the same
+  implicit assumption the rest of the app relies on, not a new one.
+  Live-verified against a real partially-paid contract (26KCT35, 30%
+  paid) — correctly showed "Đợt 2 (30% · T/T)".
+- "Xuất hàng (HQ)" is new — sums `Shipment.declarationValue`
+  client-side (an approximation noted in a comment: assumes
+  `declarationCurrency` matches `contract.currency`, same assumption the
+  header's CSV export already makes) since `getContract(id)` doesn't
+  return the search-only `ExportedValue`/`SettlementValue` fields
+  `ContractsController.MapToResponse` only computes for
+  `searchContracts`.
+- Removed the now-redundant "Vận chuyển & hàng hoá" card from the
+  second row (Incoterm/places moved into the new top row, shipment
+  count folded into "Ngân hàng & lô hàng") — second row is now 2 cards
+  instead of 3.
+- Verification: `./harness/verify.sh` full green —
+  `harness/runs/20260917-104117-546/`. Live-checked 3 contracts on the
+  running `localhost:3000` instance: fully paid + 1 shipment (26KCT34),
+  zero paid + no shipments (26KCT39), 30%-paid (26KCT35, confirmed the
+  "Đợt 2" hint) — all rendered correctly.
