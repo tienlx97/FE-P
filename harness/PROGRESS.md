@@ -12290,3 +12290,67 @@ specific key.
   Đối tác/Ngân hàng/Điều kiện giao hàng layout, payment timeline showing
   1 paid + 1 pending row with correct computed amount, "Xem tất cả"
   correctly switching to the Phụ lục tab.
+
+## 2026-09-17 (continued) — New: "IBM Plex Corporate" custom component folder (parked, not wired anywhere)
+
+**Request:** user supplied a design-system spec (YAML frontmatter + prose:
+"IBM Plex Corporate" — Material-3-style color roles, IBM Plex Sans
+typography, a 0.25rem-based radius scale, outline-based elevation) and
+asked for "1 folder custom component". Clarified via AskUserQuestion:
+use the given colors + Astryx components, customized to fit (not a
+from-scratch component library, not an Astryx theme used as-is either) —
+and don't wire it into any page yet, just create the folder.
+
+**What shipped:** `src/shared/components/custom/ibm-plex-corporate/`:
+- `theme.js` — a second `defineTheme` source (the app's only other one is
+  `src/shared/components/theme.js`), mapping the spec's M3-style role
+  names onto Astryx's own token vocabulary (`astryx docs tokens`) rather
+  than guessing 1:1 names: `primary` (#0f62fe, the hex the spec's own
+  prose calls "the" primary, not the YAML's separate `primary: #004ccd`,
+  which read as a pressed/on-light variant) → `color.accent`; `tertiary`/
+  `on-tertiary-container` (green, "success states") →
+  `--color-success`/`-success-muted`; `surface`/`on-surface`/`outline(-
+  variant)` → `--color-background-*`/`--color-text-*`/`--color-border(-
+  emphasized)`; `error`/`on-error`/`error-container` → the same-named
+  Astryx tokens. The spec describes only a light scheme, so every
+  explicit override uses one value for both modes rather than inventing
+  an unspecified dark variant. `radius.base: 4` needed no change from
+  Astryx's own default — the spec's `rounded.DEFAULT` (0.25rem) already
+  equals it; only `components.button`/`card` needed explicit overrides
+  (soft 4px button corners instead of Astryx's default pill shape;
+  outline instead of shadow for cards).
+- Built via `astryx theme build` → `ibm-plex-corporate.js`/`.d.ts` +
+  `theme.built.css` (96 token overrides, 4 component overrides,
+  committed rather than gitignored like the app's main theme, since
+  there's no `pnpm theme:build`-equivalent auto-regeneration hook wired
+  up for this parked one — an out-of-the-box `import` would otherwise be
+  broken until someone remembers to build it).
+- `theme-provider.jsx` (`IbmPlexCorporateThemeProvider`) — nests a second
+  `<Theme>` (scopes to whatever subtree wraps it, same pattern the app's
+  own `theme-provider.jsx` uses for portaled dialogs) + a `<link>` loading
+  IBM Plex Sans from Google Fonts (Astryx only sets `--font-family-*`,
+  confirmed by the build's own warning: it never loads the file itself).
+- Thin wrapper components with the spec's own defaults, not from-scratch
+  rebuilds: `IbmPlexButton` (variant defaults to `'primary'`), `IbmPlexCard`
+  (`elevation` defaults to `'none'` — outlines, not shadows), `IbmPlexChip`
+  (wraps `Token` — Astryx has no component literally named "Chip",
+  confirmed via `astryx search Chip`; defaults `color` to `'gray'` per
+  "secondary and neutral tones"), `IbmPlexTextInput` (wraps the app's own
+  `shared/components/text-input.jsx`, not `@astryxdesign/core/TextInput`
+  directly — `readonly-input-wrappers.test.js` enforces that), and
+  `IbmPlexCheckboxInput`/`IbmPlexList`/`IbmPlexListItem` (thin re-exports
+  — nothing to override, the theme's radius/color scale already reaches
+  them).
+- `eslint.config.mjs`: extended the "no hardcoded hex" rule's `ignores`
+  (previously only `src/shared/components/theme.js`) and the generated-
+  build-output `ignores` list to cover this new theme source/output —
+  same reasoning as the existing exemptions, not a new carve-out.
+- Verification: `./harness/verify.sh` full green —
+  `harness/runs/20260917-114228-510/` (lint/typecheck/unit-tests each
+  caught a real issue on the first pass: a literal
+  `@astryxdesign/core/TextInput` substring inside a JSDoc comment tripped
+  `readonly-input-wrappers.test.js`'s naive regex scan even though the
+  actual import already went through the correct wrapper — fixed by
+  rephrasing the comment, not the import). Not rendered/screenshotted
+  anywhere — per the user's own instruction, this folder isn't wired into
+  any page yet.

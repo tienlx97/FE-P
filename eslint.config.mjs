@@ -95,7 +95,13 @@ const config = [
     // accent was teal. TemplateElement is checked alongside Literal because
     // that stale sample lived in a template literal.
     files: ['src/**/*.js', 'src/**/*.jsx'],
-    ignores: ['src/shared/components/theme.js'],
+    ignores: [
+      'src/shared/components/theme.js',
+      // "IBM Plex Corporate" custom theme (user request, 2026-09-17) —
+      // a second, deliberate `defineTheme` source, same exemption reason
+      // as the app's own theme.js above.
+      'src/shared/components/custom/ibm-plex-corporate/theme.js',
+    ],
     rules: {
       'no-restricted-syntax': [
         'error',
@@ -129,6 +135,10 @@ const config = [
       'src/shared/components/kt-xnk.js',
       'src/shared/components/kt-xnk.d.ts',
       'src/shared/components/kt-xnk.variants.d.ts',
+      // Same for the "IBM Plex Corporate" custom theme's own build output.
+      'src/shared/components/custom/ibm-plex-corporate/ibm-plex-corporate.js',
+      'src/shared/components/custom/ibm-plex-corporate/ibm-plex-corporate.d.ts',
+      'src/shared/components/custom/ibm-plex-corporate/theme.built.css',
     ],
   },
 ];
