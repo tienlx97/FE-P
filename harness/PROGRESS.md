@@ -12354,3 +12354,48 @@ and don't wire it into any page yet, just create the folder.
   rephrasing the comment, not the import). Not rendered/screenshotted
   anywhere — per the user's own instruction, this folder isn't wired into
   any page yet.
+
+## 2026-09-17 (continued) — `add-contract-detail-page`: header card redesign v2 (copy button, status dot, action row)
+
+**Request:** user shared a new mockup of the header card (from the same
+LOGIX ERP reference, Astryx-based components customized) and asked for a
+matching redesign.
+
+**What changed:** `contract-detail-workspace.jsx`'s header card:
+- Contract number now has a copy `IconButton` next to it, built on
+  `useClipboard` (`@astryxdesign/core/hooks`) — flips Copy→Check icon and
+  tooltip text off `isCopied`, per that hook's own documented pattern.
+- Status badge now carries a `StatusDot` (new
+  `statusDotVariantForContractStatus` in `contract-status.js` — a
+  narrower success/accent/error/neutral palette than `Badge`'s own
+  blue/green/red/neutral, so `Completed` maps to `accent` not a literal
+  repeat) and shows the raw status enum reformatted in English next to
+  the Vietnamese label ("Đang thực hiện (IN PROGRESS)") — a new
+  `englishLabelForContractStatus` that's a pure regex reformat of the
+  real enum value, not a second translation table.
+- Contract-type badge gained a shield-check icon; kept showing our real
+  `contractType` (Draft/Official) rather than the mockup's own invented
+  "HĐ Ngoại thương xuất khẩu" category text — that's a business
+  classification (import/export type) with no backing field on
+  `Contract`, same "existing fields only" constraint from earlier in
+  this session.
+- Action row reorganized to match the mockup: "Xuất PDF / In" (secondary,
+  triggers `window.print()` — browsers' own print dialog already offers
+  "Save as PDF", so this is an honest implementation of the label, not a
+  promise of real PDF generation this app doesn't have) + "Chỉnh sửa"
+  (secondary, was the old primary "Sửa hợp đồng") + "Thao tác nghiệp vụ"
+  (primary dropdown, renamed from "Thêm mới" — same 3 gated create items
+  as before, plus "Xuất CSV" folded in as a 4th item since the header no
+  longer has a standalone icon-only export button).
+- Meta line gained icons (folder/calendar/hourglass) and a 3rd item,
+  "Ngày hoàn thành dự án" — the mockup's own 3rd item, "Hiệu lực đến", has
+  no backing field on `Contract` (no expiry-date concept exists), so this
+  substitutes the closest real field instead of fabricating one, same
+  pattern as the Incoterm-card/party-country substitutions earlier this
+  session.
+- Verification: `./harness/verify.sh` full green —
+  `harness/runs/20260917-114916-1427/`. Live-checked on `localhost:3000`
+  (26KCT35): copy icon, status badge with dot + English label, type
+  badge with icon, all 3 action buttons, and the "Thao tác nghiệp vụ"
+  dropdown (Shipment disabled + InfoTip reason, Phụ lục/Commission/Xuất
+  CSV enabled) all render and match the mockup's layout.

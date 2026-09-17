@@ -45,3 +45,29 @@ export function badgeVariantForContractStatus(status) {
   if (status === 'Cancelled') return 'red';
   return 'neutral';
 }
+
+/**
+ * `StatusDot` variant for the same status — a narrower palette than
+ * `Badge`'s (`astryx component StatusDot`: only success/warning/error/
+ * accent/neutral), so "Completed" maps to `accent` rather than repeating
+ * `badgeVariantForContractStatus`'s own `'blue'`.
+ * @param {import('../types/index.js').ContractStatus | string} status
+ * @returns {'success' | 'accent' | 'error' | 'neutral'}
+ */
+export function statusDotVariantForContractStatus(status) {
+  if (status === 'Completed') return 'accent';
+  if (status === 'InProgress') return 'success';
+  if (status === 'Cancelled') return 'error';
+  return 'neutral';
+}
+
+/**
+ * The status enum value itself, reformatted for display ("InProgress" →
+ * "IN PROGRESS") — per user request (2026-09-17), the header badge shows
+ * this alongside the Vietnamese label. Purely a formatting transform of
+ * the real enum, not a second translation table to keep in sync.
+ * @param {import('../types/index.js').ContractStatus | string} status
+ */
+export function englishLabelForContractStatus(status) {
+  return status.replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase();
+}

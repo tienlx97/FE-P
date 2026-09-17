@@ -6,33 +6,45 @@ import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
+import { useClipboard } from '@astryxdesign/core/hooks';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Spinner } from '@astryxdesign/core/Spinner';
+import { StatusDot } from '@astryxdesign/core/StatusDot';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { InfoTip } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
 import {
+  CalendarDays,
+  Check,
+  Copy,
   Download,
   FileText,
+  FolderOpen,
+  Hourglass,
   Package,
+  Pencil,
   Percent,
   Plus,
   Printer,
+  ShieldCheck,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId, useMemo, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import {
   badgeVariantForContractStatus,
+  englishLabelForContractStatus,
   labelForContractStatus,
+  statusDotVariantForContractStatus,
 } from '../config/contract-status.js';
 import { labelForContractType } from '../config/contract-types.js';
 import { formatMoney } from '../config/currencies.js';
@@ -260,6 +272,9 @@ function ContractDetailBody({
   } = useContractEditingState({ contract, initialMode, onSuccess: () => {} });
   const { submitLabel, isSubmitting, handleSubmit, isDirty } = form;
   const panelId = useId();
+  const { copy, isCopied } = useClipboard({
+    announce: 'Đã sao chép số hợp đồng',
+  });
 
   // Backs the "Thêm mới" dropdown's 3 quick-create entrypoints — separate,
   // lightweight dialog state from `ContractRelatedEntitiesPanel`'s own
@@ -289,11 +304,28 @@ function ContractDetailBody({
             <HStack hAlign="between" vAlign="center" gap={3}>
               <HStack gap={2} vAlign="center">
                 <Heading level={1}>{contract.contractNumber}</Heading>
+                <IconButton
+                  label="Sao chép số hợp đồng"
+                  tooltip={isCopied ? 'Đã sao chép' : 'Sao chép'}
+                  icon={<Icon icon={isCopied ? Check : Copy} size="sm" />}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => copy(contract.contractNumber)}
+                />
                 <Badge
-                  label={labelForContractStatus(contract.status)}
+                  icon={
+                    <StatusDot
+                      variant={statusDotVariantForContractStatus(
+                        contract.status,
+                      )}
+                      label={labelForContractStatus(contract.status)}
+                    />
+                  }
+                  label={`${labelForContractStatus(contract.status)} (${englishLabelForContractStatus(contract.status)})`}
                   variant={badgeVariantForContractStatus(contract.status)}
                 />
                 <Badge
+                  icon={<Icon icon={ShieldCheck} size="sm" />}
                   label={labelForContractType(contract.contractType)}
                   variant="neutral"
                 />
@@ -320,33 +352,34 @@ function ContractDetailBody({
                   </>
                 ) : (
                   <>
-                    <IconButton
-                      label="In"
-                      tooltip="In hợp đồng"
-                      icon={<Icon icon={Printer} size="sm" />}
-                      variant="ghost"
+                    <Button
+                      label="Xuất PDF / In"
+                      variant="secondary"
                       size="sm"
+                      icon={<Icon icon={Printer} size="sm" />}
                       onClick={() => window.print()}
                     />
-                    <IconButton
-                      label="Xuất"
-                      tooltip="Xuất CSV"
-                      icon={<Icon icon={Download} size="sm" />}
-                      variant="ghost"
+                    <Button
+                      label="Chỉnh sửa"
+                      variant="secondary"
                       size="sm"
-                      onClick={() => exportContractCsv(contract)}
+                      icon={<Icon icon={Pencil} size="sm" />}
+                      onClick={() => {
+                        onActiveTabChange('profile');
+                        setIsEditing(true);
+                      }}
                     />
                     <DropdownMenu
                       button={{
-                        label: 'Thêm mới',
-                        variant: 'secondary',
+                        label: 'Thao tác nghiệp vụ',
+                        variant: 'primary',
                         size: 'sm',
                         icon: <Icon icon={Plus} size="sm" />,
                       }}
                       items={[
                         {
                           id: 'shipment',
-                          label: 'Shipment',
+                          label: 'Thêm Shipment',
                           icon: <Icon icon={Package} size="sm" />,
                           isDisabled: Boolean(shipmentIneligibleReason),
                           endContent: shipmentIneligibleReason ? (
@@ -356,13 +389,13 @@ function ContractDetailBody({
                         },
                         {
                           id: 'annex',
-                          label: 'Phụ lục',
+                          label: 'Thêm Phụ lục',
                           icon: <Icon icon={FileText} size="sm" />,
                           onClick: () => setIsAddingAnnex(true),
                         },
                         {
                           id: 'commission',
-                          label: 'Commission',
+                          label: 'Tạo Commission',
                           icon: <Icon icon={Percent} size="sm" />,
                           isDisabled: hasCommission,
                           endContent: hasCommission ? (
@@ -370,29 +403,54 @@ function ContractDetailBody({
                           ) : undefined,
                           onClick: () => setIsAddingCommission(true),
                         },
+                        {
+                          id: 'export-csv',
+                          label: 'Xuất CSV',
+                          icon: <Icon icon={Download} size="sm" />,
+                          onClick: () => exportContractCsv(contract),
+                        },
                       ]}
-                    />
-                    <Button
-                      width={144}
-                      type="button"
-                      label="Sửa hợp đồng"
-                      variant="primary"
-                      onClick={() => {
-                        onActiveTabChange('profile');
-                        setIsEditing(true);
-                      }}
                     />
                   </>
                 )}
               </HStack>
             </HStack>
-            <Text color="secondary">
-              {isEditing
-                ? isDirty
-                  ? 'Có thay đổi chưa lưu'
-                  : 'Đang chỉnh sửa'
-                : `Dự án: ${contract.projectName}`}
-            </Text>
+            {isEditing ? (
+              <Text color="secondary">
+                {isDirty ? 'Có thay đổi chưa lưu' : 'Đang chỉnh sửa'}
+              </Text>
+            ) : (
+              <HStack gap={3} vAlign="center" wrap="wrap">
+                <HStack gap={1.5} vAlign="center">
+                  <Icon icon={FolderOpen} size="sm" color="secondary" />
+                  <Text color="secondary">
+                    Dự án: <Text weight="semibold">{contract.projectName}</Text>
+                  </Text>
+                </HStack>
+                <Text color="secondary">•</Text>
+                <HStack gap={1.5} vAlign="center">
+                  <Icon icon={CalendarDays} size="sm" color="secondary" />
+                  <Text color="secondary">
+                    Ngày ký:{' '}
+                    <Text weight="semibold">
+                      {formatDisplayDate(contract.createdDate)}
+                    </Text>
+                  </Text>
+                </HStack>
+                <Text color="secondary">•</Text>
+                <HStack gap={1.5} vAlign="center">
+                  <Icon icon={Hourglass} size="sm" color="secondary" />
+                  <Text color="secondary">
+                    Ngày hoàn thành dự án:{' '}
+                    <Text weight="semibold">
+                      {contract.projectCompletionDate
+                        ? formatDisplayDate(contract.projectCompletionDate)
+                        : 'Chưa hoàn thành'}
+                    </Text>
+                  </Text>
+                </HStack>
+              </HStack>
+            )}
           </VStack>
         </Card>
 
