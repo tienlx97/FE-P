@@ -12093,3 +12093,42 @@ scope by explicit user choice).
   trusting this without a screenshot.**
 - Full detail: `openspec/changes/add-contract-detail-page/proposal.md`
   and `tasks.md`.
+
+## 2026-09-17 (continued) — `add-contract-detail-page`: header card redesign + quick actions
+
+**Request:** user provided an ASCII mockup for the Contract detail page's
+header — a `Card` with contract number + status/type badges + project name
+on one row, and an action cluster (In / Xuất / "Thêm mới" dropdown with
+Shipment/Phụ lục/Commission) on the other.
+
+**What changed:** `contract-detail-workspace.jsx`'s header block now wraps
+in `Card` (`elevation="low"`) instead of a bare `HStack`; "Dự án:" label
+prefix added per the mockup. Added 3 real actions, not placeholders:
+- "In" → `window.print()`.
+- "Xuất" → single-row CSV of the contract's summary fields (same BOM/
+  escaping approach as `customer-contract-history.jsx`'s own export).
+- "Thêm mới" `DropdownMenu` → Shipment (gated by
+  `reasonContractIneligibleForShipment`, same rule "Liên quan" already
+  enforces — disabled with a reason `description` when the contract isn't
+  Official/fully-signed/InProgress), Phụ lục (always enabled), Commission
+  (disabled + "Hợp đồng đã có Commission" once `useCommissionQuery` says
+  one exists — a contract has at most one). Each opens the same
+  `ShipmentFormDialog`/`ContractAnnexFormDialog`/`CommissionFormDialog`
+  already used elsewhere, via 3 new small local-only state flags separate
+  from `ContractRelatedEntitiesPanel`'s own (that one backs "Liên quan"'s
+  per-row add/edit, this backs the header's quick-create).
+- The edit-mode header (Hủy/Lưu) is unchanged, just now sits inside the
+  same `Card`.
+
+**Verification:** `./harness/verify.sh` full green —
+`harness/runs/20260917-101719-207/`. Live-checked against the running
+`localhost:3000` instance (user's own dev server, not the harness's
+`:3001` convention) — screenshotted the new header card, opened "Thêm
+mới" and confirmed Shipment shows disabled + reason text while Phụ
+lục/Commission are enabled, clicked "Liên quan"/"Phụ lục" tabs on a
+contract reached via a Shipment cross-link and confirmed they render real
+content (not empty — the original bug 1), and clicked "Sửa hợp đồng" and
+confirmed edit mode. This is real browser verification, not just
+`verify.sh` — Claude-in-Chrome had permission for this instance's
+`localhost:3000`, unlike the `:3001` dev-alongside-prod setup noted in
+earlier sessions.

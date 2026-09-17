@@ -3,14 +3,26 @@ import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
+import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Spinner } from '@astryxdesign/core/Spinner';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
+import {
+  Download,
+  FileText,
+  Package,
+  Percent,
+  Plus,
+  Printer,
+} from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId, useMemo, useState } from 'react';
 
@@ -22,13 +34,19 @@ import {
   labelForContractStatus,
 } from '../config/contract-status.js';
 import { labelForContractType } from '../config/contract-types.js';
+import { formatMoney } from '../config/currencies.js';
+import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
+import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractEditingState } from '../hooks/use-contract-editing-state.js';
 import { useContractQuery } from '../hooks/use-contracts-query.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
+import { CommissionFormDialog } from './commission-form-dialog.jsx';
+import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractOverviewPanel } from './contract-overview-panel.jsx';
 import { ContractProfileFields } from './contract-profile-fields.jsx';
 import { ContractRelatedEntitiesPanel } from './contract-related-entities-panel.jsx';
+import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 
 /** @typedef {'overview' | 'profile' | 'annexes' | 'payments' | 'related' | 'fullView'} DetailTab */
 
@@ -42,6 +60,52 @@ const TAB_LABELS = {
 };
 
 const TAB_VALUES = /** @type {DetailTab[]} */ (Object.keys(TAB_LABELS));
+
+const CSV_BOM = String.fromCharCode(0xfeff);
+
+/** @param {string} value */
+function escapeCsvCell(value) {
+  const needsQuoting = /[",\n\r]/.test(value);
+  const escaped = value.replace(/"/g, '""');
+  return needsQuoting ? `"${escaped}"` : escaped;
+}
+
+/**
+ * "Xuất" for one Contract — a single-row CSV of its summary fields, same
+ * BOM/escaping approach as `customer-contract-history.jsx`'s own export
+ * (no shared helper module exists for this one-off shape yet).
+ * @param {import('../types/index.js').Contract} contract
+ */
+function exportContractCsv(contract) {
+  const headerRow = [
+    'Số hợp đồng',
+    'Dự án',
+    'Trạng thái',
+    'Loại hợp đồng',
+    'Giá trị',
+    'Incoterm',
+  ];
+  const dataRow = [
+    contract.contractNumber,
+    contract.projectName,
+    labelForContractStatus(contract.status),
+    labelForContractType(contract.contractType),
+    formatMoney(contract.contractValue, contract.currency),
+    `${contract.incoterm} ${contract.incotermYear}`,
+  ];
+  const csv = [headerRow, dataRow]
+    .map((cells) =>
+      cells.map((value) => escapeCsvCell(String(value))).join(','),
+    )
+    .join('\r\n');
+  const blob = new Blob([CSV_BOM + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `hop-dong-${contract.contractNumber}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
 
 const styles = stylex.create({
   // The native `hidden` attribute alone does NOT hide a `VStack`/`section`
@@ -196,6 +260,20 @@ function ContractDetailBody({
   const { submitLabel, isSubmitting, handleSubmit, isDirty } = form;
   const panelId = useId();
 
+  // Backs the "Thêm mới" dropdown's 3 quick-create entrypoints — separate,
+  // lightweight dialog state from `ContractRelatedEntitiesPanel`'s own
+  // (which back the "Liên quan" tab's per-row add/edit instead).
+  const [isAddingShipment, setIsAddingShipment] = useState(false);
+  const [isAddingAnnex, setIsAddingAnnex] = useState(false);
+  const [isAddingCommission, setIsAddingCommission] = useState(false);
+
+  const shipmentIneligibleReason =
+    reasonContractIneligibleForShipment(contract);
+  const commissionQuery = useCommissionQuery(contract.id);
+  const hasCommission = Boolean(
+    commissionQuery.data?.success && commissionQuery.data.exists,
+  );
+
   const isRelatedTabActive =
     activeTab === 'annexes' ||
     activeTab === 'payments' ||
@@ -205,61 +283,115 @@ function ContractDetailBody({
   return (
     <>
       <VStack gap={3} hAlign="stretch" height="100%">
-        <HStack hAlign="between" vAlign="start" gap={3}>
-          <VStack gap={1}>
-            <HStack gap={2} vAlign="center">
-              <Heading level={1}>{contract.contractNumber}</Heading>
-              <Badge
-                label={labelForContractStatus(contract.status)}
-                variant={badgeVariantForContractStatus(contract.status)}
-              />
-              <Badge
-                label={labelForContractType(contract.contractType)}
-                variant="neutral"
-              />
+        <Card elevation="low">
+          <VStack gap={2} hAlign="stretch">
+            <HStack hAlign="between" vAlign="center" gap={3}>
+              <HStack gap={2} vAlign="center">
+                <Heading level={1}>{contract.contractNumber}</Heading>
+                <Badge
+                  label={labelForContractStatus(contract.status)}
+                  variant={badgeVariantForContractStatus(contract.status)}
+                />
+                <Badge
+                  label={labelForContractType(contract.contractType)}
+                  variant="neutral"
+                />
+              </HStack>
+              <HStack gap={2}>
+                {isEditing ? (
+                  <>
+                    <Button
+                      width={80}
+                      label="Hủy"
+                      variant="secondary"
+                      isDisabled={isSubmitting}
+                      onClick={() => requestExit('cancel')}
+                    />
+                    <Button
+                      width={144}
+                      label={submitLabel}
+                      type="submit"
+                      form={formId}
+                      variant="primary"
+                      isLoading={isSubmitting}
+                      onClick={() => onActiveTabChange('profile')}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <IconButton
+                      label="In"
+                      tooltip="In hợp đồng"
+                      icon={<Icon icon={Printer} size="sm" />}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.print()}
+                    />
+                    <IconButton
+                      label="Xuất"
+                      tooltip="Xuất CSV"
+                      icon={<Icon icon={Download} size="sm" />}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => exportContractCsv(contract)}
+                    />
+                    <DropdownMenu
+                      button={{
+                        label: 'Thêm mới',
+                        variant: 'secondary',
+                        size: 'sm',
+                        icon: <Icon icon={Plus} size="sm" />,
+                      }}
+                      items={[
+                        {
+                          id: 'shipment',
+                          label: 'Shipment',
+                          icon: <Icon icon={Package} size="sm" />,
+                          isDisabled: Boolean(shipmentIneligibleReason),
+                          description: shipmentIneligibleReason ?? undefined,
+                          onClick: () => setIsAddingShipment(true),
+                        },
+                        {
+                          id: 'annex',
+                          label: 'Phụ lục',
+                          icon: <Icon icon={FileText} size="sm" />,
+                          onClick: () => setIsAddingAnnex(true),
+                        },
+                        {
+                          id: 'commission',
+                          label: 'Commission',
+                          icon: <Icon icon={Percent} size="sm" />,
+                          isDisabled: hasCommission,
+                          description: hasCommission
+                            ? 'Hợp đồng đã có Commission'
+                            : undefined,
+                          onClick: () => setIsAddingCommission(true),
+                        },
+                      ]}
+                    />
+                    <Button
+                      width={144}
+                      type="button"
+                      label="Sửa hợp đồng"
+                      variant="primary"
+                      onClick={() => {
+                        onActiveTabChange('profile');
+                        setIsEditing(true);
+                      }}
+                    />
+                  </>
+                )}
+              </HStack>
             </HStack>
             <Text color="secondary">
               {isEditing
                 ? isDirty
                   ? 'Có thay đổi chưa lưu'
                   : 'Đang chỉnh sửa'
-                : contract.projectName}
+                : `Dự án: ${contract.projectName}`}
             </Text>
           </VStack>
-          <HStack gap={2}>
-            {isEditing ? (
-              <>
-                <Button
-                  width={80}
-                  label="Hủy"
-                  variant="secondary"
-                  isDisabled={isSubmitting}
-                  onClick={() => requestExit('cancel')}
-                />
-                <Button
-                  width={144}
-                  label={submitLabel}
-                  type="submit"
-                  form={formId}
-                  variant="primary"
-                  isLoading={isSubmitting}
-                  onClick={() => onActiveTabChange('profile')}
-                />
-              </>
-            ) : (
-              <Button
-                width={144}
-                type="button"
-                label="Sửa hợp đồng"
-                variant="primary"
-                onClick={() => {
-                  onActiveTabChange('profile');
-                  setIsEditing(true);
-                }}
-              />
-            )}
-          </HStack>
-        </HStack>
+        </Card>
 
         <TabList
           value={activeTab}
@@ -314,6 +446,45 @@ function ContractDetailBody({
           </VStack>
         </section>
       </VStack>
+
+      {isAddingShipment ? (
+        <ShipmentFormDialog
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setIsAddingShipment(false);
+          }}
+          contractId={contract.id}
+          contract={contract}
+          closeLabel="Quay lại Contract"
+          onSuccess={() => setIsAddingShipment(false)}
+        />
+      ) : null}
+
+      {isAddingAnnex ? (
+        <ContractAnnexFormDialog
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setIsAddingAnnex(false);
+          }}
+          contractId={contract.id}
+          onSuccess={() => setIsAddingAnnex(false)}
+        />
+      ) : null}
+
+      {isAddingCommission ? (
+        <CommissionFormDialog
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setIsAddingCommission(false);
+          }}
+          contractId={contract.id}
+          contractNumber={contract.contractNumber}
+          projectName={contract.projectName}
+          currency={contract.currency}
+          closeLabel="Quay lại Contract"
+          onSuccess={() => setIsAddingCommission(false)}
+        />
+      ) : null}
 
       <CommonDialog
         isOpen={discardAction !== null}
