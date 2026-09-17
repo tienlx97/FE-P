@@ -12238,3 +12238,55 @@ override silently lost regardless of prop order.
   working" from a screenshot alone.
 - Verification: `./harness/verify.sh` full green —
   `harness/runs/20260917-105358-1554/`.
+
+## 2026-09-17 (continued) — `add-contract-detail-page`: drop Incoterm card, redesign second row (Đối tác / Ngân hàng & Đợt thanh toán / Điều kiện giao hàng)
+
+**Request:** user's 3rd UI item — remove the Incoterm KPI card (top row
+becomes 4 bigger cards) and rebuild the second row per a detailed mockup:
+"Đối tác" (seller/buyer full profile + consignee/notify party),
+"Ngân hàng & Đợt thanh toán" (bank details, a paid-vs-pending payment
+timeline, a Phụ lục preview), "Điều kiện giao hàng" (Incoterm/places/
+category/shipment mix — absorbs the dropped Incoterm card's fields).
+
+**Adaptations from the mockup (data doesn't exist, flagged rather than
+fabricated):** the mockup showed a country/flag next to "BÊN BÁN"/"BÊN
+MUA" — neither `Buyer` nor `ContractSeller` has a per-party country
+field (only `Contract.countryId`, one contract-level "Nước xuất khẩu"
+which doesn't belong to either party) — substituted the already-available
+"Đã ký"/"Chưa ký" signed-status badge instead. Consignee/Notify Party's
+phone number from the mockup isn't a field on `ContractPartyContact`
+either (only `name`/`address`/`extraFields`) — rendered `extraFields` as
+generic `key: value` lines instead of assuming a phone lives in a
+specific key.
+
+**What changed:** `contract-overview-panel.jsx` rewritten again:
+- Top row: `Grid columns={{minWidth: 240, max: 4}}` (was `max: 5`) — the
+  Incoterm card is gone, so the same "present columns always stretch to
+  fill" behavior makes the remaining 4 visibly bigger with no other
+  change needed.
+- New `PartyBlock` (Bên bán/Bên mua — badge label, signed-status badge,
+  company name, Đại diện/Chức vụ/Địa chỉ) and `PartyContactBlock`
+  (Consignee/Notify Party) helper components.
+- New paid-vs-pending payment timeline: one row per `paymentTerms` entry,
+  "paid" (green check, "Đã nhận {date}Â· {note}") once a `PaymentSchedule`
+  exists at that position, "pending" (outline circle, "Chưa thanh toán",
+  amount computed from `paymentRatioPercent% × settlementValue`)
+  otherwise — same positional-inference convention as the "Còn lại" KPI
+  card already used.
+- "Phụ lục" preview (top 3, `labelForContractAnnexType`) +
+  "Xem tất cả" `Link` — new `onViewAllAnnexes` prop on
+  `ContractOverviewPanel`, wired from `contract-detail-workspace.jsx` as
+  `() => onActiveTabChange('annexes')`. Live-verified clicking it lands
+  on the "Phụ lục" tab.
+- "Điều kiện giao hàng": Incoterm+year badge, `useCountriesQuery`-resolved
+  "Nước xuất khẩu" (new query for this panel, cheap — same cache key
+  `contracts-list.jsx` already warms), places, category, shipment
+  count+mix, project-completion date.
+- Verification: `./harness/verify.sh` full green (2 TS narrowing fixes:
+  `paymentRows.find(...)` called 3x inline → hoisted to one
+  `nextPendingRow` const; `banks.filter(Boolean)` → explicit
+  `(bank) => bank != null`) — `harness/runs/20260917-112350-1469/`.
+  Live-checked on `localhost:3000` (26KCT35): 4-card top row, full
+  Đối tác/Ngân hàng/Điều kiện giao hàng layout, payment timeline showing
+  1 paid + 1 pending row with correct computed amount, "Xem tất cả"
+  correctly switching to the Phụ lục tab.

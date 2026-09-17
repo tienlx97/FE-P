@@ -418,7 +418,10 @@ function ContractDetailBody({
           aria-label={TAB_LABELS[activeTab]}
         >
           {activeTab === 'overview' ? (
-            <ContractOverviewPanel contract={contract} />
+            <ContractOverviewPanel
+              contract={contract}
+              onViewAllAnnexes={() => onActiveTabChange('annexes')}
+            />
           ) : null}
           <ContractProfileFields
             form={form}
