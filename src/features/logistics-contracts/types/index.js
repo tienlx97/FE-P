@@ -171,6 +171,18 @@ export {};
  */
 
 /**
+ * "Bên thông báo"/"Đại lý nhận hàng" contact snapshot — `NotifyParty`/
+ * `Consignee` on the wire (`ContractsController.MapToPartyContactResponse`,
+ * BE-kt-xnk). Read-only in this app; there is no form for creating/editing
+ * one yet.
+ * @typedef {Object} ContractPartyContact
+ * @property {string} name
+ * @property {string | null} address
+ * @property {string | null} sourceContactId
+ * @property {ExtraField[]} extraFields
+ */
+
+/**
  * @typedef {Object} Contract
  * @property {number} version Phiên bản dữ liệu dùng để phát hiện chỉnh sửa đồng thời.
  * @property {string} id
@@ -190,8 +202,8 @@ export {};
  * @property {string} companyId - the company the contract belongs to (permissions are scoped by company, not branch)
  * @property {ContractSeller} seller
  * @property {Buyer} buyer - was `partyA`
- * @property {null} notifyParty - not editable from this app yet
- * @property {null} consignee - not editable from this app yet
+ * @property {ContractPartyContact | null} notifyParty - "Bên thông báo"; not editable from this app yet, but BE-kt-xnk already returns it — read-only display only
+ * @property {ContractPartyContact | null} consignee - "Đại lý nhận hàng"; not editable from this app yet, but BE-kt-xnk already returns it — read-only display only
  * @property {string | null} note
  * @property {PaymentTerm[]} paymentTerms
  * @property {string[]} bankIds

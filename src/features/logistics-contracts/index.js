@@ -1,4 +1,5 @@
 export { CommissionsList } from './components/commissions-list.jsx';
+export { ContractDetailWorkspace } from './components/contract-detail-workspace.jsx';
 export { ContractPrivateInfosList } from './components/contract-private-infos-list.jsx';
 export { ContractsList } from './components/contracts-list.jsx';
 export { CountriesList } from './components/countries-list.jsx';

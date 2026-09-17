@@ -12025,3 +12025,71 @@ Three separate user requests handled together:
 - `./harness/verify.sh` full green — `harness/runs/20260917-010228-2039/`.
   Live-verified `/logistics/customers` and `/admin/users` — title, print,
   export, and the create button all render correctly on the same row.
+
+## 2026-09-17 — `add-contract-detail-page`: Contract detail page + fix cross-link tab bug
+
+**Context:** User reported two bugs in the dialog-based Contract
+workspace: (1) opening a Contract from Shipment/Commission/Customer
+cross-links only ever showed "Hồ sơ" — other tabs clickable but empty;
+(2) no URL to open a specific Contract directly. Root-caused bug 1 by
+reading `shipments-list.jsx`/`commissions-list.jsx`/
+`customer-contract-history.jsx`: all three opened `ContractFormDialog`
+without `children` (`ContractExpandedDetails`), unlike `contracts-list.jsx`'s
+own Xem/Sửa flow. Shared a reference mockup (another product's contract
+screen); user's chosen direction, after discussion, was a real route
+(`/logistics/contract/{id}`) instead of extending the dialog, using only
+fields already in the data model (no bank-guarantee/e-signature/audit-log/
+sailing-% — confirmed those don't exist on `Contract` and were out of
+scope by explicit user choice).
+
+**What shipped (FE-only — see below):**
+- `GET /api/v1/contracts/{id}` already existed on BE-kt-xnk
+  (`ContractsController.GetContract`) — checked before assuming a gap;
+  no backend change was needed. Committed BE-kt-xnk's own pre-existing
+  uncommitted work (`add-shipment-cost-provider-filter` + new
+  `docs/business/*.md` screen specs) to `main` first, per user's explicit
+  instruction, before branching `add-contract-detail-page` there too
+  (unused this session, kept for symmetry/possible future BE work).
+- New route `/logistics/contract/[id]` (`ContractDetailWorkspace`),
+  gated by a new `routeAccessRules` entry (`/logistics/contract`,
+  distinct prefix from the plural `/logistics/contracts` list page).
+- Extracted `useContractEditingState` (isEditing/discard-confirm/
+  finish/requestExit/form) and `ContractProfileFields` (the "Hồ sơ" tab
+  body) out of `ContractFormDialog` — refactor only, `ContractFormDialog`
+  itself is behaviorally unchanged and now only used for the "Tạo hợp
+  đồng" create flow.
+- Extracted `ContractExpandedDetails` + every related-entity dialog it
+  can open (Annex/Payment/Shipment/VGM/Commission/CommissionAnnex/
+  CommissionPayment/BOQ) out of `contracts-list.jsx` into
+  `ContractRelatedEntitiesPanel` — the actual fix for bug 1: cross-links
+  now `Link` to the page instead of opening a half-wired dialog.
+- New `ContractOverviewPanel` ("Tổng quan & Tiến độ", 1st tab) — KPI
+  cards (contract value/paid/remaining from `PaymentSchedule` sums),
+  seller/buyer/consignee snapshot, shipment/incoterm/loading-discharge
+  summary, bank + latest payment + annex count. Discovered
+  `Contract.consignee`/`notifyParty` were typed as always-`null` in the
+  FE (`types/index.js`) despite BE-kt-xnk's `ContractsController` already
+  returning them — added `ContractPartyContact` type, surfaced
+  `consignee` read-only in the overview panel.
+- `contracts-list.jsx`: row Xem/Sửa navigates to the new page instead of
+  opening a dialog (`?mode=edit` for "Sửa"); successful "Tạo hợp đồng"
+  now redirects to the new contract's detail page. Removed the
+  now-dead `expandedTab`/8-related-dialog-state block this displaced —
+  net reduction in that file's complexity despite the new page's own
+  size.
+- `shipments-list.jsx`/`commissions-list.jsx`/`customer-contract-history.jsx`:
+  "Số hợp đồng" cross-links are now plain `Link href="/logistics/contract/{id}"`
+  (Astryx `Link` + `LinkProvider component={NextLink}`, already wired app-wide
+  — confirmed in `theme-provider.jsx` — so this is real client-side nav, not
+  a full reload).
+- Verification: full `./harness/verify.sh` PASSED (lint, typecheck,
+  structure, unit tests, build, quality thresholds) —
+  `harness/runs/20260917-095451-1004/`. Browser/e2e visual verification
+  **not** performed — same Claude-in-Chrome `localhost:3001` permission
+  gap noted repeatedly this week. This touches the Contract
+  view/edit/cross-link path from 4 different list screens — **a human
+  should click through the 6 tabs, "Sửa hợp đồng" edit-in-place, and at
+  least one cross-link (Shipment or Commission → "Số hợp đồng") before
+  trusting this without a screenshot.**
+- Full detail: `openspec/changes/add-contract-detail-page/proposal.md`
+  and `tasks.md`.

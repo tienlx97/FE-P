@@ -1,5 +1,4 @@
 'use client';
-/** @typedef {'profile' | 'annexes' | 'payments' | 'related' | 'fullView'} ExpandedTab */
 import { Badge } from '@astryxdesign/core/Badge';
 import { Link } from '@astryxdesign/core/Link';
 import { StackItem } from '@astryxdesign/core/Stack';
@@ -8,6 +7,7 @@ import { Heading, Text } from '@astryxdesign/core/Text';
 import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import {
@@ -40,20 +40,9 @@ import { useContractBanksQuery } from '../hooks/use-contract-banks-query.js';
 import { useContractsQuery } from '../hooks/use-contracts-query.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
-import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
-import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
-import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
-import { CommissionFormDialog } from './commission-form-dialog.jsx';
-import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
-import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
-import { ContractExpandedDetails } from './contract-expanded-details.jsx';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
-import { ContractPrivateInfoDetailDialog } from './contract-private-info-detail-dialog.jsx';
 import { CustomerDetailDialog } from './customer-detail-dialog.jsx';
-import { PaymentScheduleFormDialog } from './payment-schedule-form-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
-import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
-import { ShipmentVgmFormDialog } from './shipment-vgm-form-dialog.jsx';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -198,20 +187,20 @@ const styles = stylex.create({
   },
 });
 
-/** Contract workspace and related editors are siblings of the table so
- * Selector portals remain inside their dialog layers (ADR-0004). */
+/**
+ * Viewing/editing an existing Contract now happens on its own page
+ * (`/logistics/contract/[id]`, `openspec/changes/add-contract-detail-page/`)
+ * — this list only ever opens `ContractFormDialog` for the "Tạo hợp đồng"
+ * (create) flow, `contract == null`. The Buyer-link `CustomerDetailDialog`
+ * is a sibling of the table so its Selector portals stay inside their own
+ * dialog layer (ADR-0004).
+ */
 export function ContractsList() {
-  // `sessionKey` identifies one open workspace session — assigned once per
-  // open action (row Xem/Sửa, "Tạo hợp đồng") and never touched again for
-  // that session, including across a successful create (`contract` moves
-  // from `null` to the saved record in place). Unlike keying the dialog off
-  // `contract?.id`, this stays stable through that null→id transition, so
-  // saving a brand-new Contract doesn't force a remount either — the one
-  // thing task 1.2 exists to remove ("bỏ remount chỉ để đổi mode").
-  const [workspace, setWorkspace] = useState(
-    /** @type {{ mode?: 'view' | 'edit', contract: import('../types/index.js').Contract | null, sessionKey: string } | null} */ (
-      null
-    ),
+  const router = useRouter();
+  // Regenerated on every open so a previous create draft never bleeds
+  // into the next one.
+  const [createSessionKey, setCreateSessionKey] = useState(
+    /** @type {string | null} */ (null),
   );
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
@@ -256,55 +245,8 @@ export function ContractsList() {
     setPageIndex(1);
   }
 
-  const [expandedTab, setExpandedTab] = useState(
-    /** @type {ExpandedTab} */ ('profile'),
-  );
-  // "Commission"/"BOQ" (private info) no longer embed their editors inside
-  // the Contract dialog (task 3.1) — "Liên quan" shows a summary card for
-  // each and opens the same standalone dialog `commissions-list.jsx`/
-  // `contract-private-infos-list.jsx` use, one at a time (ADR-0004: no
-  // stacked fullscreen dialogs, this workspace's own `ContractFormDialog`
-  // stays open underneath).
-  const [relatedCommissionDialog, setRelatedCommissionDialog] = useState(
-    /** @type {{ contractId: string, contractNumber: string, projectName: string, currency: string, commission: import('../types/index.js').Commission | null } | null} */ (
-      null
-    ),
-  );
-  const [relatedBoqDialog, setRelatedBoqDialog] = useState(
-    /** @type {{ contractId: string, contractNumber: string } | null} */ (null),
-  );
   const [customerDetailDialog, setCustomerDetailDialog] = useState(
     /** @type {{ customerId: string } | null} */ (null),
-  );
-  const [shipmentDialog, setShipmentDialog] = useState(
-    /** @type {{ contractId: string, contract: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
-      null
-    ),
-  );
-  const [annexDialog, setAnnexDialog] = useState(
-    /** @type {{ contractId: string, annex?: import('../types/index.js').ContractAnnex } | null} */ (
-      null
-    ),
-  );
-  const [paymentScheduleDialog, setPaymentScheduleDialog] = useState(
-    /** @type {{ contractId: string, schedule?: import('../types/index.js').PaymentSchedule } | null} */ (
-      null
-    ),
-  );
-  const [commissionAnnexDialog, setCommissionAnnexDialog] = useState(
-    /** @type {{ contractId: string, annex?: import('../types/index.js').CommissionAnnex } | null} */ (
-      null
-    ),
-  );
-  const [commissionPaymentDialog, setCommissionPaymentDialog] = useState(
-    /** @type {{ contractId: string, currency: string, commission: import('../types/index.js').Commission } | null} */ (
-      null
-    ),
-  );
-  const [vgmDialog, setVgmDialog] = useState(
-    /** @type {{ contractId: string, shipmentId: string, vgm?: import('../types/index.js').ShipmentVgm } | null} */ (
-      null
-    ),
   );
 
   const contractsQuery = useContractsQuery({
@@ -395,23 +337,7 @@ export function ContractsList() {
     [countriesQuery.data],
   );
 
-  // `Commission.partyCustomerId` now targets the Supplier catalog
-  // (contract commission recipient is a Supplier post-split, see
-  // `split-customers-suppliers-ui`) — resolved below via `suppliersById`.
   const customersQuery = useCustomersQuery();
-  const suppliersQuery = useSuppliersQuery();
-  const suppliersById = useMemo(
-    () =>
-      new Map(
-        (suppliersQuery.data?.success ? suppliersQuery.data.suppliers : []).map(
-          (/** @type {import('../types/index.js').Supplier} */ supplier) => [
-            supplier.id,
-            supplier,
-          ],
-        ),
-      ),
-    [suppliersQuery.data],
-  );
 
   // "Khách hàng" search/filter is matched against the denormalized
   // `buyerCompanyName` string (see `searchableContracts` below), so the
@@ -447,32 +373,20 @@ export function ContractsList() {
     [customerNameOptions],
   );
 
-  // `Shipment.costs[].costCategoryId` is a live FK into the
-  // `ShipmentCostCategory` catalog — resolved client-side for
-  // `ShipmentExpandedDetails`'s cost-lines table, same pattern as
-  // `customersById` above.
-  const costCategoriesQuery = useShipmentCostCategoriesQuery();
-  const costCategoriesById = useMemo(
-    () =>
-      new Map(
-        (costCategoriesQuery.data?.success
-          ? costCategoriesQuery.data.costCategories
-          : []
-        ).map((costCategory) => [costCategory.id, costCategory]),
-      ),
-    [costCategoriesQuery.data],
-  );
-
   /**
    * Shared by the "Số hợp đồng" cell (design.md section 4: "Mã bản ghi mở
    * Xem") and `RecordActionsMenu`'s own "Xem"/"Sửa" — one place deciding
    * what opening a Contract means, so the two entry points can never drift.
+   * Navigates to the Contract detail page (`/logistics/contract/[id]`)
+   * instead of opening a dialog — "Sửa" jumps straight into edit mode via
+   * `?mode=edit`.
    * @param {import('../types/index.js').Contract} row
    * @param {'view' | 'edit'} mode
    */
   function openContract(row, mode) {
-    setExpandedTab('profile');
-    setWorkspace({ contract: row, sessionKey: generateRowKey(), mode });
+    router.push(
+      `/logistics/contract/${row.id}${mode === 'edit' ? '?mode=edit' : ''}`,
+    );
   }
 
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<import('../types/index.js').Contract & Record<string, unknown>>[]} */
@@ -788,8 +702,6 @@ export function ContractsList() {
       .join(', '),
   }));
 
-  const contract = workspace?.contract;
-
   const totalContracts = listResult?.success ? listResult.totalCount : 0;
   const totalPages = Math.max(
     1,
@@ -834,10 +746,7 @@ export function ContractsList() {
           isRefreshing={contractsQuery.isFetching}
           primaryAction={{
             label: 'Tạo hợp đồng',
-            onClick: () => {
-              setExpandedTab('profile');
-              setWorkspace({ contract: null, sessionKey: generateRowKey() });
-            },
+            onClick: () => setCreateSessionKey(generateRowKey()),
           }}
           pagination={{
             pageIndex,
@@ -854,132 +763,19 @@ export function ContractsList() {
         />
       </StackItem>
 
-      {workspace ? (
+      {createSessionKey ? (
         <ContractFormDialog
-          key={workspace.sessionKey}
-          // Hidden (not unmounted — `CommonDialog`/`Dialog` keep children
-          // mounted regardless of `isOpen`, see `ShipmentFormDialog`'s doc
-          // comment) while a Shipment/Commission/BOQ opened from "Liên
-          // quan" is showing, instead of stacking a second fullscreen
-          // dialog (tasks 3.2/3.3). The short quick-add dialogs (annex/
-          // payment/VGM) still stack on top — those stay "gọn" per
-          // design.md section 3, not full workspaces of their own.
-          isOpen={
-            !shipmentDialog && !relatedCommissionDialog && !relatedBoqDialog
-          }
-          onOpenChange={(open) => {
-            if (!open) setWorkspace(null);
-          }}
-          contract={workspace.contract}
-          initialMode={workspace.mode}
-          activeTab={expandedTab}
-          onActiveTabChange={setExpandedTab}
-          onSuccess={(saved) => {
-            // Stays mounted (same `sessionKey`) — updates the Contract in
-            // place instead of remounting the workspace just to fall back
-            // to Xem; `ContractFormDialog` itself flips out of edit mode.
-            setWorkspace((current) =>
-              current ? { ...current, contract: saved } : current,
-            );
-          }}
-        >
-          {contract ? (
-            <ContractExpandedDetails
-              contract={contract}
-              customersById={suppliersById}
-              costCategoriesById={costCategoriesById}
-              activeTab={expandedTab}
-              onAddAnnex={() => setAnnexDialog({ contractId: contract.id })}
-              onEditAnnex={(annex) =>
-                setAnnexDialog({ contractId: contract.id, annex })
-              }
-              onAddPaymentSchedule={() =>
-                setPaymentScheduleDialog({ contractId: contract.id })
-              }
-              onEditPaymentSchedule={(schedule) =>
-                setPaymentScheduleDialog({ contractId: contract.id, schedule })
-              }
-              onAddShipment={() =>
-                setShipmentDialog({ contractId: contract.id, contract })
-              }
-              onEditShipment={(shipment) =>
-                setShipmentDialog({
-                  contractId: contract.id,
-                  contract,
-                  shipment,
-                })
-              }
-              onAddVgm={(payload) => setVgmDialog(payload)}
-              onEditVgm={(payload) => setVgmDialog(payload)}
-              onOpenCommission={(commission) =>
-                setRelatedCommissionDialog({
-                  contractId: contract.id,
-                  contractNumber: contract.contractNumber,
-                  projectName: contract.projectName,
-                  currency: contract.currency,
-                  commission,
-                })
-              }
-              onOpenBoq={() =>
-                setRelatedBoqDialog({
-                  contractId: contract.id,
-                  contractNumber: contract.contractNumber,
-                })
-              }
-            />
-          ) : null}
-        </ContractFormDialog>
-      ) : null}
-
-      {relatedCommissionDialog ? (
-        <CommissionFormDialog
-          key={relatedCommissionDialog.commission?.id ?? 'create'}
+          key={createSessionKey}
           isOpen
-          initialMode="view"
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setRelatedCommissionDialog(null);
+          onOpenChange={(open) => {
+            if (!open) setCreateSessionKey(null);
           }}
-          contractId={relatedCommissionDialog.contractId}
-          contractNumber={relatedCommissionDialog.contractNumber}
-          projectName={relatedCommissionDialog.projectName}
-          currency={relatedCommissionDialog.currency}
-          commission={relatedCommissionDialog.commission}
-          closeLabel="Quay lại Contract"
-          onSuccess={(saved) =>
-            setRelatedCommissionDialog((current) =>
-              current ? { ...current, commission: saved } : current,
-            )
-          }
-          onAddAnnex={() =>
-            setCommissionAnnexDialog({
-              contractId: relatedCommissionDialog.contractId,
-            })
-          }
-          onEditAnnex={(annex) =>
-            setCommissionAnnexDialog({
-              contractId: relatedCommissionDialog.contractId,
-              annex,
-            })
-          }
-          onAddPayment={() =>
-            relatedCommissionDialog.commission &&
-            setCommissionPaymentDialog({
-              contractId: relatedCommissionDialog.contractId,
-              currency: relatedCommissionDialog.currency,
-              commission: relatedCommissionDialog.commission,
-            })
-          }
-        />
-      ) : null}
-
-      {relatedBoqDialog ? (
-        <ContractPrivateInfoDetailDialog
-          key={relatedBoqDialog.contractId}
-          contractId={relatedBoqDialog.contractId}
-          contractNumber={relatedBoqDialog.contractNumber}
-          closeLabel="Quay lại Contract"
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setRelatedBoqDialog(null);
+          contract={null}
+          activeTab="profile"
+          onActiveTabChange={() => {}}
+          onSuccess={(saved) => {
+            setCreateSessionKey(null);
+            router.push(`/logistics/contract/${saved.id}`);
           }}
         />
       ) : null}
@@ -991,93 +787,6 @@ export function ContractsList() {
           onOpenChange={(isOpen) => {
             if (!isOpen) setCustomerDetailDialog(null);
           }}
-        />
-      ) : null}
-
-      {/* Related editors stay outside tables (ADR-0004). */}
-
-      {shipmentDialog ? (
-        <ShipmentFormDialog
-          key={shipmentDialog.shipment?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setShipmentDialog(null);
-          }}
-          contractId={shipmentDialog.contractId}
-          contract={shipmentDialog.contract}
-          shipment={shipmentDialog.shipment}
-          closeLabel="Quay lại Contract"
-          onSuccess={(saved) =>
-            setShipmentDialog((current) =>
-              current?.shipment ? { ...current, shipment: saved } : null,
-            )
-          }
-        />
-      ) : null}
-
-      {annexDialog ? (
-        <ContractAnnexFormDialog
-          key={annexDialog.annex?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setAnnexDialog(null);
-          }}
-          contractId={annexDialog.contractId}
-          annex={annexDialog.annex}
-          onSuccess={() => setAnnexDialog(null)}
-        />
-      ) : null}
-
-      {paymentScheduleDialog ? (
-        <PaymentScheduleFormDialog
-          key={paymentScheduleDialog.schedule?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setPaymentScheduleDialog(null);
-          }}
-          contractId={paymentScheduleDialog.contractId}
-          schedule={paymentScheduleDialog.schedule}
-          onSuccess={() => setPaymentScheduleDialog(null)}
-        />
-      ) : null}
-
-      {commissionAnnexDialog ? (
-        <CommissionAnnexFormDialog
-          key={commissionAnnexDialog.annex?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setCommissionAnnexDialog(null);
-          }}
-          contractId={commissionAnnexDialog.contractId}
-          annex={commissionAnnexDialog.annex}
-          onSuccess={() => setCommissionAnnexDialog(null)}
-        />
-      ) : null}
-
-      {commissionPaymentDialog ? (
-        <CommissionPaymentQuickAddDialog
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setCommissionPaymentDialog(null);
-          }}
-          contractId={commissionPaymentDialog.contractId}
-          commission={commissionPaymentDialog.commission}
-          currency={commissionPaymentDialog.currency}
-          onSuccess={() => setCommissionPaymentDialog(null)}
-        />
-      ) : null}
-
-      {vgmDialog ? (
-        <ShipmentVgmFormDialog
-          key={vgmDialog.vgm?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setVgmDialog(null);
-          }}
-          contractId={vgmDialog.contractId}
-          shipmentId={vgmDialog.shipmentId}
-          vgm={vgmDialog.vgm}
-          onSuccess={() => setVgmDialog(null)}
         />
       ) : null}
     </VStack>

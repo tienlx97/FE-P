@@ -50,7 +50,6 @@ import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
 import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
-import { ContractFormDialog } from './contract-form-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 
 /** @param {string | null | undefined} value */
@@ -146,16 +145,6 @@ export function CommissionsList() {
       null
     ),
   );
-  const [contractDialog, setContractDialog] = useState(
-    /** @type {{ contract: import('../types/index.js').Contract, sessionKey: string } | null} */ (
-      null
-    ),
-  );
-  const [contractDialogTab, setContractDialogTab] = useState(
-    /** @type {'profile' | 'annexes' | 'payments' | 'related' | 'fullView'} */ (
-      'profile'
-    ),
-  );
 
   const commissionsQuery = useCommissionsQuery({
     page: pageIndex,
@@ -233,7 +222,10 @@ export function CommissionsList() {
     () =>
       new Map(
         (customersQuery.data?.success ? customersQuery.data.suppliers : []).map(
-          (/** @type {import('../types/index.js').Supplier} */ customer) => [customer.id, customer],
+          (/** @type {import('../types/index.js').Supplier} */ customer) => [
+            customer.id,
+            customer,
+          ],
         ),
       ),
     [customersQuery.data],
@@ -279,14 +271,6 @@ export function CommissionsList() {
     setEditingCommissionRow(row);
   }
 
-  /** @param {CommissionListRow} row */
-  function openContractFromCommission(row) {
-    const contract = contractsById.get(row.contractId);
-    if (!contract) return;
-    setContractDialogTab('profile');
-    setContractDialog({ contract, sessionKey: contract.id });
-  }
-
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<CommissionListRow>[]} */
   const columns = [
     {
@@ -314,11 +298,9 @@ export function CommissionsList() {
       renderCell: (row) =>
         contractsById.has(row.contractId) ? (
           <Link
+            href={`/logistics/contract/${row.contractId}`}
             xstyle={recordLinkStyles.link}
-            onClick={(event) => {
-              event.stopPropagation();
-              openContractFromCommission(row);
-            }}
+            onClick={(event) => event.stopPropagation()}
           >
             {orDash(row.contractNumber)}
           </Link>
@@ -573,25 +555,6 @@ export function CommissionsList() {
           // `commission` prop below) — `CommissionFormDialog` itself
           // returns to Xem in place on save, so nothing to close here.
           onSuccess={() => {}}
-        />
-      ) : null}
-
-      {contractDialog ? (
-        <ContractFormDialog
-          key={contractDialog.sessionKey}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setContractDialog(null);
-          }}
-          contract={contractDialog.contract}
-          initialMode="view"
-          activeTab={contractDialogTab}
-          onActiveTabChange={setContractDialogTab}
-          onSuccess={(saved) =>
-            setContractDialog((current) =>
-              current ? { ...current, contract: saved } : current,
-            )
-          }
         />
       ) : null}
 

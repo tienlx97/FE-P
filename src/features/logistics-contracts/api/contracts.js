@@ -1,6 +1,7 @@
 import { apiRequest } from '@/shared/api/api-client.js';
 
 const GENERIC_LIST_ERROR = 'Không thể tải danh sách hợp đồng';
+const GENERIC_GET_ERROR = 'Không thể tải hợp đồng';
 const GENERIC_CREATE_ERROR = 'Không thể tạo hợp đồng';
 const GENERIC_UPDATE_ERROR = 'Không thể cập nhật hợp đồng';
 const GENERIC_EXISTS_ERROR = 'Không thể kiểm tra số hợp đồng';
@@ -16,7 +17,11 @@ export async function listContracts({ page = 1, pageSize = 25 } = {}) {
   );
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return {
@@ -78,14 +83,16 @@ export async function searchContracts({
         ValueTo: condition.valueTo || null,
         Connector: condition.connector,
       })),
-      Sort: sort
-        ? { Field: sort.field, Direction: sort.direction }
-        : null,
+      Sort: sort ? { Field: sort.field, Direction: sort.direction } : null,
     },
   });
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return {
@@ -98,6 +105,29 @@ export async function searchContracts({
     totals: result.data?.totals ?? [],
     settlements: result.data?.settlements ?? [],
   };
+}
+
+/**
+ * One Contract by id — backs `/logistics/contract/[id]`. `GET
+ * /api/v1/contracts/{id}` already exists on BE-kt-xnk
+ * (`ContractsController.GetContract`); this is just the FE wrapper.
+ * @param {string} contractId
+ * @returns {Promise<{ success: true, contract: import('../types/index.js').Contract } | { success: false, message: string, conflict: boolean }>}
+ */
+export async function getContract(contractId) {
+  const result = await apiRequest(`/api/v1/contracts/${contractId}`, {
+    errorMessage: GENERIC_GET_ERROR,
+  });
+
+  if (!result.success) {
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
+  }
+
+  return { success: true, contract: result.data };
 }
 
 /**
@@ -127,7 +157,11 @@ export async function checkContractNumberExists({
   );
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return { success: true, exists: Boolean(result.data?.exists) };
@@ -242,7 +276,11 @@ export async function createContract(values, extra) {
   });
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return { success: true, contract: result.data };
@@ -262,7 +300,11 @@ export async function updateContract(contractId, values, extra) {
   });
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return { success: true, contract: result.data };

@@ -1,7 +1,5 @@
 'use client';
-import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { CollapsibleGroup } from '@astryxdesign/core/Collapsible';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
@@ -10,16 +8,12 @@ import { Text } from '@astryxdesign/core/Text';
 import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { useId, useState } from 'react';
+import { useId } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
-import { FormSection } from '@/shared/components/form-section.jsx';
-import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
-import { useContractForm } from '../hooks/use-contract-form.js';
-import { ContractBanksFields } from './contract-banks-fields.jsx';
-import { ContractGeneralFields } from './contract-general-fields.jsx';
-import { PaymentTermsFields } from './payment-terms-fields.jsx';
+import { useContractEditingState } from '../hooks/use-contract-editing-state.js';
+import { ContractProfileFields } from './contract-profile-fields.jsx';
 
 const styles = stylex.create({
   hint: {
@@ -82,61 +76,23 @@ export function ContractFormDialog({
   onActiveTabChange,
   children,
 }) {
-  const [isEditing, setIsEditing] = useState(
-    !contract || initialMode === 'edit',
-  );
-  const [discardAction, setDiscardAction] = useState(
-    /** @type {'close' | 'cancel' | null} */ (null),
-  );
-  const toast = useAppToast();
-  const form = useContractForm({
-    contract,
-    onSuccess: (saved) => {
-      toast({ body: contract ? 'Đã cập nhật hợp đồng.' : 'Đã tạo hợp đồng.' });
-      // Về Xem tại chỗ: flip out of edit mode here instead of relying on a
-      // remount (the caller no longer changes this dialog's `key` on save —
-      // see `contracts-list.jsx`) so tab/scroll/disclosure state survives.
-      setIsEditing(false);
-      onSuccess(saved);
-    },
-  });
   const {
-    submitLabel,
-    values,
-    setBankIds,
-    fieldStatuses,
-    banks,
-    paymentTermRows,
-    submitError,
-    isSubmitting,
-    handleSubmit,
-    isDirty,
-  } = form;
-  const formId = useId();
+    form,
+    formId,
+    isEditing,
+    setIsEditing,
+    discardAction,
+    setDiscardAction,
+    finish,
+    requestExit,
+  } = useContractEditingState({
+    contract,
+    initialMode,
+    onSuccess,
+    onRequestClose: () => onOpenChange(false),
+  });
+  const { submitLabel, isSubmitting, handleSubmit, isDirty } = form;
   const panelId = useId();
-
-  /** @param {'close' | 'cancel'} action */
-  function finish(action) {
-    if (action === 'close' || !contract) {
-      onOpenChange(false);
-      return;
-    }
-    // Về Xem tại chỗ: discard the draft back to the last-saved baseline
-    // and flip out of edit mode here — same reasoning as the `onSuccess`
-    // path above, nothing remounts this dialog to do it implicitly anymore.
-    form.reset();
-    setIsEditing(false);
-  }
-
-  /** @param {'close' | 'cancel'} action */
-  function requestExit(action) {
-    if (isSubmitting) return;
-    if (isEditing && isDirty) {
-      setDiscardAction(action);
-    } else {
-      finish(action);
-    }
-  }
 
   return (
     <>
@@ -168,7 +124,11 @@ export function ContractFormDialog({
                 role="tablist"
                 hasDivider
               >
-                <Tab value="profile" label={TAB_LABELS.profile} panelId={panelId} />
+                <Tab
+                  value="profile"
+                  label={TAB_LABELS.profile}
+                  panelId={panelId}
+                />
                 <Tab
                   value="annexes"
                   label={TAB_LABELS.annexes}
@@ -215,69 +175,13 @@ export function ContractFormDialog({
                   // per-tab queries and would otherwise refetch/reset scroll
                   // every time the user glanced at "Hồ sơ".
                 }
-                <form
-                  id={formId}
-                  hidden={activeTab !== 'profile'}
-                  onSubmit={(event) => {
-                    if (!isEditing) {
-                      event.preventDefault();
-                      event.stopPropagation();
-                      return;
-                    }
-                    event.currentTarget.scrollIntoView({ block: 'start' });
-                    handleSubmit(event);
-                  }}
-                >
-                  <VStack gap={4} hAlign="stretch">
-                    {submitError ? (
-                      <Banner
-                        status="error"
-                        title={submitError}
-                        container="card"
-                      />
-                    ) : null}
-                    <CollapsibleGroup
-                      type="multiple"
-                      defaultValue={['general', 'paymentTerms', 'banks']}
-                    >
-                      <VStack gap={3} hAlign="stretch">
-                        <ContractGeneralFields form={form} isReadOnly={!isEditing} />
-
-                        <FormSection
-                          value="paymentTerms"
-                          title="Đợt thanh toán"
-                          isDisabled
-                        >
-                          <PaymentTermsFields
-                            rows={paymentTermRows.rows}
-                            totalPercent={paymentTermRows.totalPercent}
-                            status={fieldStatuses.paymentTerms}
-                            contractValue={values.contractValue}
-                            currency={values.currency}
-                            isReadOnly={!isEditing}
-                            onAddRow={paymentTermRows.addRow}
-                            onRemoveRow={paymentTermRows.removeRow}
-                            onUpdateRowField={paymentTermRows.updateRowField}
-                          />
-                        </FormSection>
-
-                        <FormSection
-                          value="banks"
-                          title="Ngân hàng thụ hưởng"
-                          isDisabled
-                        >
-                          <ContractBanksFields
-                            banks={banks}
-                            selectedBankIds={values.bankIds}
-                            onChange={setBankIds}
-                            status={fieldStatuses.bankIds}
-                            isReadOnly={!isEditing}
-                          />
-                        </FormSection>
-                      </VStack>
-                    </CollapsibleGroup>
-                  </VStack>
-                </form>
+                <ContractProfileFields
+                  form={form}
+                  formId={formId}
+                  isEditing={isEditing}
+                  isActive={activeTab === 'profile'}
+                  onSubmit={handleSubmit}
+                />
                 <VStack
                   gap={4}
                   hAlign="stretch"

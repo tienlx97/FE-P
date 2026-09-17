@@ -25,6 +25,13 @@ export const routeAccessRules = [
     allowedPermissions: ['logistics:contracts:view'],
   },
   {
+    // Singular — `/logistics/contract/[id]`, the detail page. Distinct
+    // prefix from the plural list above (`/logistics/contracts`), so it
+    // needs its own rule rather than relying on that one matching.
+    pathPrefix: '/logistics/contract',
+    allowedPermissions: ['logistics:contracts:view'],
+  },
+  {
     pathPrefix: '/logistics/shipments',
     allowedPermissions: ['logistics:contracts:view'],
   },

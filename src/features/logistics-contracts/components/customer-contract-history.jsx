@@ -9,14 +9,12 @@ import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Download } from 'lucide-react';
-import { useState } from 'react';
 
 import { recordLinkStyles } from '@/shared/components/record-link-style.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
 import { useCustomerContractsQuery } from '../hooks/use-contracts-query.js';
-import { ContractFormDialog } from './contract-form-dialog.jsx';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -50,7 +48,9 @@ function exportContractHistoryCsv(customerName, contracts) {
       : '—',
   ]);
   const csv = [headerRow, ...dataRows]
-    .map((cells) => cells.map((value) => escapeCsvCell(String(value))).join(','))
+    .map((cells) =>
+      cells.map((value) => escapeCsvCell(String(value))).join(','),
+    )
     .join('\r\n');
   const blob = new Blob([CSV_BOM + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -66,24 +66,16 @@ function exportContractHistoryCsv(customerName, contracts) {
  * date/completion date) + CSV export, shared by `CustomerDetailDialog`
  * (opened from a Contract's Buyer link) and `customers-list.jsx`'s own
  * inline row-expansion panel, so both surfaces show the exact same data
- * and can never drift apart. Owns its own `ContractFormDialog` instance —
- * same "one dialog, multiple entrypoints" convention used elsewhere in
- * this feature (`shipments-list.jsx`/`commissions-list.jsx`'s own
- * contract-number links).
+ * and can never drift apart. "Số hợp đồng" links to
+ * `/logistics/contract/[id]` (`openspec/changes/add-contract-detail-page/`)
+ * instead of opening its own `ContractFormDialog` — that dialog usage used
+ * to render with dead "Phụ lục"/"Thanh toán"/"Liên quan"/"Xem đầy đủ" tabs
+ * (no `children` wired), the same bug `shipments-list.jsx`/
+ * `commissions-list.jsx`'s own contract-number links had.
  * @param {{ customerId: string, customerName: string }} props
  */
 export function CustomerContractHistory({ customerId, customerName }) {
   const contractsQuery = useCustomerContractsQuery(customerId);
-  const [contractDialog, setContractDialog] = useState(
-    /** @type {{ contract: import('../types/index.js').Contract, sessionKey: string } | null} */ (
-      null
-    ),
-  );
-  const [contractDialogTab, setContractDialogTab] = useState(
-    /** @type {'profile' | 'annexes' | 'payments' | 'related' | 'fullView'} */ (
-      'profile'
-    ),
-  );
 
   const contracts = contractsQuery.data?.success
     ? contractsQuery.data.contracts
@@ -97,11 +89,8 @@ export function CustomerContractHistory({ customerId, customerName }) {
       width: pixel(160),
       renderCell: (contract) => (
         <Link
+          href={`/logistics/contract/${contract.id}`}
           xstyle={recordLinkStyles.link}
-          onClick={() => {
-            setContractDialogTab('profile');
-            setContractDialog({ contract, sessionKey: contract.id });
-          }}
         >
           {contract.contractNumber}
         </Link>
@@ -135,56 +124,35 @@ export function CustomerContractHistory({ customerId, customerName }) {
   ];
 
   return (
-    <>
-      <VStack gap={3} hAlign="stretch">
-        <HStack hAlign="between" vAlign="center">
-          <Text weight="semibold">Hợp đồng đã làm</Text>
-          <Button
-            label="Xuất file"
-            variant="secondary"
-            size="sm"
-            icon={<Icon icon={Download} size="sm" />}
-            isDisabled={contractsQuery.isLoading || contracts.length === 0}
-            onClick={() => exportContractHistoryCsv(customerName, contracts)}
-          />
+    <VStack gap={3} hAlign="stretch">
+      <HStack hAlign="between" vAlign="center">
+        <Text weight="semibold">Hợp đồng đã làm</Text>
+        <Button
+          label="Xuất file"
+          variant="secondary"
+          size="sm"
+          icon={<Icon icon={Download} size="sm" />}
+          isDisabled={contractsQuery.isLoading || contracts.length === 0}
+          onClick={() => exportContractHistoryCsv(customerName, contracts)}
+        />
+      </HStack>
+
+      {contractsQuery.isLoading ? (
+        <HStack hAlign="center" paddingBlock={4}>
+          <Spinner label="Đang tải danh sách hợp đồng" />
         </HStack>
-
-        {contractsQuery.isLoading ? (
-          <HStack hAlign="center" paddingBlock={4}>
-            <Spinner label="Đang tải danh sách hợp đồng" />
-          </HStack>
-        ) : (
-          <Table
-            data={contracts}
-            columns={columns}
-            idKey="id"
-            density="compact"
-            dividers="rows"
-            emptyState={
-              <Text color="secondary">Khách hàng này chưa có hợp đồng nào.</Text>
-            }
-          />
-        )}
-      </VStack>
-
-      {contractDialog ? (
-        <ContractFormDialog
-          key={contractDialog.sessionKey}
-          isOpen
-          onOpenChange={(open) => {
-            if (!open) setContractDialog(null);
-          }}
-          contract={contractDialog.contract}
-          initialMode="view"
-          activeTab={contractDialogTab}
-          onActiveTabChange={setContractDialogTab}
-          onSuccess={(saved) =>
-            setContractDialog((current) =>
-              current ? { ...current, contract: saved } : current,
-            )
+      ) : (
+        <Table
+          data={contracts}
+          columns={columns}
+          idKey="id"
+          density="compact"
+          dividers="rows"
+          emptyState={
+            <Text color="secondary">Khách hàng này chưa có hợp đồng nào.</Text>
           }
         />
-      ) : null}
-    </>
+      )}
+    </VStack>
   );
 }

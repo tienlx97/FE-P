@@ -68,7 +68,6 @@ import { useContractsQuery } from '../hooks/use-contracts-query.js';
 import { useShipmentsListQuery } from '../hooks/use-shipments-list-query.js';
 import { useDeleteShipmentMutation } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
-import { ContractFormDialog } from './contract-form-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 
@@ -227,16 +226,6 @@ export function ShipmentsList() {
       null
     ),
   );
-  const [contractDialog, setContractDialog] = useState(
-    /** @type {{ contract: import('../types/index.js').Contract, sessionKey: string } | null} */ (
-      null
-    ),
-  );
-  const [contractDialogTab, setContractDialogTab] = useState(
-    /** @type {'profile' | 'annexes' | 'payments' | 'related' | 'fullView'} */ (
-      'profile'
-    ),
-  );
   const [deletingShipment, setDeletingShipment] = useState(
     /** @type {ShipmentListRow | null} */ (null),
   );
@@ -361,14 +350,6 @@ export function ShipmentsList() {
     });
   }
 
-  /** @param {ShipmentListRow} row */
-  function openContractFromShipment(row) {
-    const contract = contractsById.get(row.contractId);
-    if (!contract) return;
-    setContractDialogTab('profile');
-    setContractDialog({ contract, sessionKey: contract.id });
-  }
-
   async function handleConfirmDelete() {
     if (!deletingShipment) return;
     const shipment = deletingShipment;
@@ -424,11 +405,9 @@ export function ShipmentsList() {
       renderCell: (row) =>
         contractsById.has(row.contractId) ? (
           <Link
+            href={`/logistics/contract/${row.contractId}`}
             xstyle={recordLinkStyles.link}
-            onClick={(event) => {
-              event.stopPropagation();
-              openContractFromShipment(row);
-            }}
+            onClick={(event) => event.stopPropagation()}
           >
             {orDash(row.contractNumber)}
           </Link>
@@ -734,25 +713,6 @@ export function ShipmentsList() {
           shipment={selectedShipment}
           onSuccess={() =>
             setShipmentDialog((current) => (current?.shipment ? current : null))
-          }
-        />
-      ) : null}
-
-      {contractDialog ? (
-        <ContractFormDialog
-          key={contractDialog.sessionKey}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setContractDialog(null);
-          }}
-          contract={contractDialog.contract}
-          initialMode="view"
-          activeTab={contractDialogTab}
-          onActiveTabChange={setContractDialogTab}
-          onSuccess={(saved) =>
-            setContractDialog((current) =>
-              current ? { ...current, contract: saved } : current,
-            )
           }
         />
       ) : null}

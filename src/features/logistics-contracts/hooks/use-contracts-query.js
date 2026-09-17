@@ -9,11 +9,28 @@ import {
 
 import {
   createContract,
+  getContract,
   searchContracts,
   updateContract,
 } from '../api/contracts.js';
 
 const QUERY_KEY = ['logistics-contracts', 'contracts'];
+
+/**
+ * One Contract by id — backs `/logistics/contract/[id]`. Refetches
+ * automatically after an edit: `useUpdateContractMutation`'s own
+ * `invalidateQueries({ queryKey: QUERY_KEY })` matches this query too
+ * (react-query invalidates by key prefix), so there is no separate
+ * cache-write needed here.
+ * @param {string | null | undefined} contractId
+ */
+export function useContractQuery(contractId) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, 'by-id', contractId],
+    queryFn: () => getContract(/** @type {string} */ (contractId)),
+    enabled: Boolean(contractId),
+  });
+}
 
 /**
  * `conditions` defaults to `[]`, which the backend treats identically to
