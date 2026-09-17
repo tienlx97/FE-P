@@ -1,5 +1,9 @@
 @import '@astryxdesign/core/reset.css';
 @import '@astryxdesign/core/astryx.css';
+/* @astryxdesign/lab (canary-only, no stable release — see CLAUDE.md's
+ * "astryx-lab" note) ships its own pre-extracted stylesheet the same way
+ * core does; components render unstyled without it. */
+@import '@astryxdesign/lab/lab.css';
 
 @font-face {
   font-family: 'Optimistic Display';

@@ -12132,3 +12132,36 @@ confirmed edit mode. This is real browser verification, not just
 `verify.sh` — Claude-in-Chrome had permission for this instance's
 `localhost:3000`, unlike the `:3001` dev-alongside-prod setup noted in
 earlier sessions.
+
+## 2026-09-17 (continued) — `add-contract-detail-page`: InfoTip for the disabled-reason text + astryx-lab now in use
+
+**Request:** user asked the "Thêm mới" dropdown's disabled-Shipment reason
+text ("Hợp đồng phải ở trạng thái Đang thực hiện mới tạo được lần xuất hàng
+mới") use `InfoTip` from `@astryxdesign/lab` (astryx-lab, canary
+components not yet in `@astryxdesign/core`'s 155 — user pointed at
+https://github.com/facebook/astryx/tree/main/packages/lab), and asked
+this be added to the AI instructions for future sessions.
+
+**What changed:**
+- Installed `@astryxdesign/lab@canary` (`pnpm add`) — confirmed via
+  `pnpm view` it is published `@canary`-only, never a stable `latest`.
+  `InfoTip` exists in `dist/InfoTip/`.
+- Added `@import '@astryxdesign/lab/lab.css';` to `src/app/globals.css`
+  alongside core's `reset.css`/`astryx.css` — lab ships its own
+  pre-extracted stylesheet the same way, components render unstyled
+  without it (confirmed by reading `package.json`'s `exports` map).
+- `contract-detail-workspace.jsx`: both disabled dropdown-item reasons
+  (Shipment ineligibility, Commission-already-exists) now use
+  `endContent: <InfoTip content={reason} />` instead of the item's plain
+  `description` text — a small hover/focus "i" icon instead of
+  always-visible gray text. Live-verified: hovering it shows the tooltip
+  with the exact reason string.
+- `CLAUDE.md`: added a permanent note (outside the auto-managed
+  `<!-- ASTRYX:START/END -->` block, which `astryx upgrade` regenerates)
+  that `@astryxdesign/lab` exists, how to install/import it, and that the
+  `astryx` CLI's `search`/`component` commands only know core's 155 —
+  check `node_modules/@astryxdesign/lab/dist/<Name>/*.d.ts` directly for
+  a lab component instead of assuming it doesn't exist.
+- Verification: `./harness/verify.sh` full green —
+  `harness/runs/20260917-102242-1265/`. Live-checked on the user's own
+  `localhost:3000` instance.

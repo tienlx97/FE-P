@@ -14,6 +14,7 @@ import { Spinner } from '@astryxdesign/core/Spinner';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { InfoTip } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
 import {
   Download,
@@ -348,7 +349,9 @@ function ContractDetailBody({
                           label: 'Shipment',
                           icon: <Icon icon={Package} size="sm" />,
                           isDisabled: Boolean(shipmentIneligibleReason),
-                          description: shipmentIneligibleReason ?? undefined,
+                          endContent: shipmentIneligibleReason ? (
+                            <InfoTip content={shipmentIneligibleReason} />
+                          ) : undefined,
                           onClick: () => setIsAddingShipment(true),
                         },
                         {
@@ -362,9 +365,9 @@ function ContractDetailBody({
                           label: 'Commission',
                           icon: <Icon icon={Percent} size="sm" />,
                           isDisabled: hasCommission,
-                          description: hasCommission
-                            ? 'Hợp đồng đã có Commission'
-                            : undefined,
+                          endContent: hasCommission ? (
+                            <InfoTip content="Hợp đồng đã có Commission" />
+                          ) : undefined,
                           onClick: () => setIsAddingCommission(true),
                         },
                       ]}
