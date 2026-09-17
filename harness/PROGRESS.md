@@ -12208,3 +12208,33 @@ hint) / Xuất hàng (HQ, FCL/LCL breakdown + remaining) / Incoterm
   running `localhost:3000` instance: fully paid + 1 shipment (26KCT34),
   zero paid + no shipments (26KCT39), 30%-paid (26KCT35, confirmed the
   "Đợt 2" hint) — all rendered correctly.
+
+## 2026-09-17 (continued) — `add-contract-detail-page`: green/red KPI values (found + worked around a StyleX layers bug)
+
+**Request:** user asked "Giá trị quyết toán" green, "Còn lại" red.
+
+**What happened:** first attempt used `Text`'s `xstyle` prop with a local
+`stylex.create({ color: colorVars['--color-text-green'/'--color-text-red'] })`
+— verified in the running `localhost:3000` instance that it had **no
+effect** (`getComputedStyle` still showed the default "primary" color).
+Root cause, confirmed by reading `postcss.config.js`
+(`useCSSLayers: true`) and `src/app/globals.css`'s existing comment on
+`.astryx-button.destructive`: this is the exact same "layered rule loses
+to a higher-priority `@layer`" bug already documented there —
+`Text`'s own built-in `color` style compiles into a higher-priority
+`@layer` than an ordinary app-level `stylex.create()` call does, so the
+override silently lost regardless of prop order.
+- Fix: same escape hatch as `.astryx-button.destructive` — a plain,
+  unlayered CSS rule always beats any layered rule for the same property.
+  Added `.contract-overview-value-positive`/`-negative` to `globals.css`
+  (`color: var(--color-text-green)`/`var(--color-text-red)`, the same
+  tokens the theme's own success/error Badge variants use), and pass them
+  via `Text`'s plain `className` prop (not `xstyle`) from
+  `contract-overview-panel.jsx`'s new `InfoCard`.
+- Verified via `getComputedStyle` in the live browser this time
+  (`rgb(55, 76, 54)`/`rgb(88, 65, 62)` — matches `#374c36`/`#58413e`) —
+  not just a visual screenshot, since the color difference is subtle
+  (WCAG-tuned muted tones, not vivid) and easy to mistake for "still not
+  working" from a screenshot alone.
+- Verification: `./harness/verify.sh` full green —
+  `harness/runs/20260917-105358-1554/`.

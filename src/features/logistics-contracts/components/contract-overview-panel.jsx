@@ -27,14 +27,25 @@ function orDash(value) {
  * A "KPI card": secondary caption on top, a bold value line, and an
  * optional small note line underneath — the shared shape for all 5 cards
  * in `ContractOverviewPanel`'s top row.
- * @param {{ caption: import('react').ReactNode, value: import('react').ReactNode, note?: import('react').ReactNode, children?: import('react').ReactNode }} props
+ *
+ * `valueClassName` is a plain (non-`xstyle`) class for the green/red
+ * value-color override ("Xanh"/"đỏ" per user request, 2026-09-17) — a
+ * StyleX `xstyle` override loses that fight: `Text`'s own built-in
+ * `color` style compiles into a higher-priority `@layer` than a plain
+ * app-level `stylex.create()` call does (`useCSSLayers: true`,
+ * `postcss.config.js`), so the built-in "primary" color kept winning.
+ * Same escape hatch `src/app/globals.css`'s `.astryx-button.destructive`
+ * rule already documents for the identical class of bug — a plain
+ * unlayered CSS rule always beats ANY layered rule for the same
+ * property, regardless of specificity or layer order.
+ * @param {{ caption: import('react').ReactNode, value: import('react').ReactNode, valueClassName?: string, note?: import('react').ReactNode, children?: import('react').ReactNode }} props
  */
-function InfoCard({ caption, value, note, children }) {
+function InfoCard({ caption, value, valueClassName, note, children }) {
   return (
     <Card>
       <VStack gap={1.5} hAlign="stretch">
         {caption}
-        <Text weight="semibold" size="lg">
+        <Text weight="semibold" size="lg" className={valueClassName}>
           {value}
         </Text>
         {note ? <Text color="secondary">{note}</Text> : null}
@@ -143,6 +154,7 @@ export function ContractOverviewPanel({ contract }) {
         <InfoCard
           caption={<Text color="secondary">GIÁ TRỊ QUYẾT TOÁN</Text>}
           value={formatMoney(settlementValue, contract.currency)}
+          valueClassName="contract-overview-value-positive"
           note={
             annexes.length > 0
               ? `${annexes.length} phụ lục: ${annexesTotal >= 0 ? '+' : '-'}${formatMoney(Math.abs(annexesTotal), contract.currency)}`
@@ -169,6 +181,7 @@ export function ContractOverviewPanel({ contract }) {
         <InfoCard
           caption={<Text color="secondary">CÒN LẠI</Text>}
           value={formatMoney(remainingValue, contract.currency)}
+          valueClassName="contract-overview-value-negative"
           note={
             remainingValue === 0
               ? 'Đã thanh toán đủ'
