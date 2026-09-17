@@ -12399,3 +12399,40 @@ matching redesign.
   badge with icon, all 3 action buttons, and the "Thao tác nghiệp vụ"
   dropdown (Shipment disabled + InfoTip reason, Phụ lục/Commission/Xuất
   CSV enabled) all render and match the mockup's layout.
+
+## 2026-09-17 (continued) — `add-contract-detail-page`: applied "IBM Plex Corporate" theme to the page + colored the type badge
+
+**Context:** user pointed out the header's colors didn't match the
+mockup (blue primary button/badges vs the app's own teal/green Stone
+brand). Asked via `AskUserQuestion` whether to keep the app's real brand,
+scope a blue override to just this page, or reskin the whole app — user
+chose: match the mockup, using the "IBM Plex Corporate" design system
+supplied earlier this session (the parked
+`src/shared/components/custom/ibm-plex-corporate/` folder — this is its
+first real use).
+
+**What changed:**
+- `contract-detail-workspace.jsx`: `ContractDetailWorkspace`'s return now
+  wraps in `<IbmPlexCorporateThemeProvider>` (scoped to
+  `PageContentShell` downward — the outer sidebar/topbar chrome, rendered
+  by `(protected)/layout.jsx`, stays on the app's own Stone theme,
+  confirmed live: brand green sidebar next to a blue-accented page body).
+  This is the theme's intended usage pattern (nested `<Theme>`), no
+  change needed to the theme/provider files themselves.
+- `contract-types.js`: new `badgeVariantForContractType` (`Official` →
+  `'blue'`, `Draft` → `'neutral'`) — the type badge was flat neutral
+  gray regardless of theme; `Badge`'s own guidance says category tags
+  should use a color variant, and the mockup showed it colored too.
+  Wired into the header's type badge (was hardcoded `variant="neutral"`).
+- Added `wrap="wrap"` to the header's 3 `HStack`s (name+badges row,
+  action-button row, and — from the previous redesign — the meta-line
+  row) after noticing button-row overflow on a narrow browser window
+  during live verification; harmless on wide screens, prevents clipping
+  on narrow ones.
+- Verification: `./harness/verify.sh` full green —
+  `harness/runs/20260917-115942-1954/`. Live-checked on `localhost:3000`
+  at normal width (1538px): blue "Thao tác nghiệp vụ" button, blue
+  "Chính thức" type badge, blue active-tab indicator and progress bar,
+  IBM Plex Sans font — all scoped correctly to the page body only, and
+  at a narrower width confirmed the wrap fix prevents the button row
+  from clipping off-screen.

@@ -37,6 +37,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId, useMemo, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import { IbmPlexCorporateThemeProvider } from '@/shared/components/custom/ibm-plex-corporate/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
@@ -46,7 +47,10 @@ import {
   labelForContractStatus,
   statusDotVariantForContractStatus,
 } from '../config/contract-status.js';
-import { labelForContractType } from '../config/contract-types.js';
+import {
+  badgeVariantForContractType,
+  labelForContractType,
+} from '../config/contract-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
@@ -198,42 +202,46 @@ export function ContractDetailWorkspace({ contractId }) {
       : null;
 
   return (
-    <PageContentShell isFullWidth fillHeight>
-      <VStack gap={4} hAlign="stretch" height="100%">
-        <Breadcrumbs>
-          <BreadcrumbItem href="/logistics">Logistics</BreadcrumbItem>
-          <BreadcrumbItem href="/logistics/contracts">Hợp đồng</BreadcrumbItem>
-          <BreadcrumbItem isCurrent>
-            {contract?.contractNumber ?? '…'}
-          </BreadcrumbItem>
-        </Breadcrumbs>
+    <IbmPlexCorporateThemeProvider>
+      <PageContentShell isFullWidth fillHeight>
+        <VStack gap={4} hAlign="stretch" height="100%">
+          <Breadcrumbs>
+            <BreadcrumbItem href="/logistics">Logistics</BreadcrumbItem>
+            <BreadcrumbItem href="/logistics/contracts">
+              Hợp đồng
+            </BreadcrumbItem>
+            <BreadcrumbItem isCurrent>
+              {contract?.contractNumber ?? '…'}
+            </BreadcrumbItem>
+          </Breadcrumbs>
 
-        {contractQuery.isLoading ? (
-          <HStack hAlign="center" paddingBlock={6}>
-            <Spinner label="Đang tải hợp đồng" />
-          </HStack>
-        ) : !contract ? (
-          <Banner
-            status="error"
-            title={
-              contractQuery.data && !contractQuery.data.success
-                ? contractQuery.data.message
-                : 'Không tìm thấy hợp đồng.'
-            }
-            container="card"
-          />
-        ) : (
-          <ContractDetailBody
-            contract={contract}
-            suppliersById={suppliersById}
-            costCategoriesById={costCategoriesById}
-            activeTab={activeTab}
-            onActiveTabChange={setActiveTab}
-            initialMode={initialMode}
-          />
-        )}
-      </VStack>
-    </PageContentShell>
+          {contractQuery.isLoading ? (
+            <HStack hAlign="center" paddingBlock={6}>
+              <Spinner label="Đang tải hợp đồng" />
+            </HStack>
+          ) : !contract ? (
+            <Banner
+              status="error"
+              title={
+                contractQuery.data && !contractQuery.data.success
+                  ? contractQuery.data.message
+                  : 'Không tìm thấy hợp đồng.'
+              }
+              container="card"
+            />
+          ) : (
+            <ContractDetailBody
+              contract={contract}
+              suppliersById={suppliersById}
+              costCategoriesById={costCategoriesById}
+              activeTab={activeTab}
+              onActiveTabChange={setActiveTab}
+              initialMode={initialMode}
+            />
+          )}
+        </VStack>
+      </PageContentShell>
+    </IbmPlexCorporateThemeProvider>
   );
 }
 
@@ -301,8 +309,8 @@ function ContractDetailBody({
       <VStack gap={3} hAlign="stretch" height="100%">
         <Card elevation="low">
           <VStack gap={2} hAlign="stretch">
-            <HStack hAlign="between" vAlign="center" gap={3}>
-              <HStack gap={2} vAlign="center">
+            <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
+              <HStack gap={2} vAlign="center" wrap="wrap">
                 <Heading level={1}>{contract.contractNumber}</Heading>
                 <IconButton
                   label="Sao chép số hợp đồng"
@@ -327,10 +335,10 @@ function ContractDetailBody({
                 <Badge
                   icon={<Icon icon={ShieldCheck} size="sm" />}
                   label={labelForContractType(contract.contractType)}
-                  variant="neutral"
+                  variant={badgeVariantForContractType(contract.contractType)}
                 />
               </HStack>
-              <HStack gap={2}>
+              <HStack gap={2} wrap="wrap">
                 {isEditing ? (
                   <>
                     <Button
