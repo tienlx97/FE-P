@@ -1,0 +1,1242 @@
+<!DOCTYPE html><html lang="vi" style="width: 3630px; height: 1532px; overflow: hidden; position: relative;"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>CT-2024/EXP-088 - Chi Tiết Hợp Đồng Ngoại Thương - Logix Trade &amp; Maritime</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#0f172a",
+            "primary-container": "#1e293b",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#94a3b8",
+            "primary-fixed": "#dae2fd",
+            "primary-fixed-dim": "#bec6e0",
+            "on-primary-fixed": "#0f172a",
+            "on-primary-fixed-variant": "#334155",
+            "secondary": "#0051d5",
+            "secondary-container": "#2563eb",
+            "on-secondary": "#ffffff",
+            "on-secondary-container": "#ffffff",
+            "secondary-fixed": "#dbe1ff",
+            "secondary-fixed-dim": "#b4c5ff",
+            "on-secondary-fixed": "#00174b",
+            "on-secondary-fixed-variant": "#003ea8",
+            "tertiary": "#0f766e",
+            "tertiary-container": "#042f2e",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-container": "#0d9488",
+            "tertiary-fixed": "#ccfbf1",
+            "tertiary-fixed-dim": "#99f6e4",
+            "on-tertiary-fixed": "#134e4a",
+            "on-tertiary-fixed-variant": "#0f766e",
+            "surface": "#f8f9ff",
+            "surface-dim": "#cbdbf5",
+            "surface-bright": "#f8f9ff",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#eff4ff",
+            "surface-container": "#e5eeff",
+            "surface-container-high": "#dce9ff",
+            "surface-container-highest": "#d3e4fe",
+            "surface-variant": "#d3e4fe",
+            "surface-tint": "#0051d5",
+            "on-surface": "#0b1c30",
+            "on-surface-variant": "#475569",
+            "outline": "#64748b",
+            "outline-variant": "#cbd5e1",
+            "background": "#f8f9ff",
+            "on-background": "#0b1c30",
+            "inverse-surface": "#1e293b",
+            "inverse-on-surface": "#f8fafc",
+            "inverse-primary": "#93c5fd",
+            "error": "#b91c1c",
+            "error-container": "#fee2e2",
+            "on-error": "#ffffff",
+            "on-error-container": "#7f1d1d"
+          },
+          borderRadius: {
+            DEFAULT: "4px",
+            sm: "2px",
+            md: "4px",
+            lg: "6px",
+            xl: "8px",
+            full: "9999px"
+          },
+          fontFamily: {
+            sans: ["'Be Vietnam Pro'", "sans-serif"],
+            "headline-lg": ["'Be Vietnam Pro'", "sans-serif"],
+            "headline-md": ["'Be Vietnam Pro'", "sans-serif"],
+            "headline-sm": ["'Be Vietnam Pro'", "sans-serif"],
+            "body-lg": ["'Be Vietnam Pro'", "sans-serif"],
+            "body-md": ["'Be Vietnam Pro'", "sans-serif"],
+            "body-sm": ["'Be Vietnam Pro'", "sans-serif"],
+            "label-md": ["'Be Vietnam Pro'", "sans-serif"],
+            "label-sm": ["'Be Vietnam Pro'", "sans-serif"],
+            "numeric-metric": ["'Be Vietnam Pro'", "sans-serif"],
+            "data-mono": ["'JetBrains Mono'", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    @layer base {
+      html, body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Be Vietnam Pro', sans-serif;
+      }
+      body {
+        overscroll-behavior: none;
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-sans text-[13px] antialiased min-h-screen">
+<!-- SIDEBAR NAVIGATION -->
+<aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest border-r border-outline-variant/50 z-50 flex flex-col justify-between select-none">
+<div class="flex flex-col flex-1 overflow-y-auto">
+<!-- Logo Branding -->
+<div class="h-16 px-5 flex items-center gap-3 border-b border-surface-container-high/60 bg-surface-container-lowest">
+<div class="w-9 h-9 rounded-md bg-secondary flex items-center justify-center text-on-secondary shadow-sm">
+<span class="material-symbols-outlined text-[20px]">anchor</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-bold text-[16px] tracking-tight text-on-surface">LOGIX</span>
+<span class="text-[10px] px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold tracking-wider">ERP</span>
+</div>
+<span class="text-[11px] text-on-surface-variant font-medium">Trade &amp; Maritime v4.2</span>
+</div>
+</div>
+<!-- Current Entity / Branch Select -->
+<div class="px-4 py-3">
+<div class="flex items-center justify-between px-3 py-2 rounded-md bg-surface-container-low border border-surface-container-high/70 hover:border-outline-variant transition-colors cursor-pointer">
+<div class="flex items-center gap-2 overflow-hidden">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0">corporate_fare</span>
+<span class="text-[12px] font-semibold text-on-surface truncate">CN TP. Hồ Chí Minh</span>
+</div>
+<span class="material-symbols-outlined text-outline text-[16px]">unfold_more</span>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 px-3 py-1 flex flex-col gap-1">
+<div class="px-3 pt-2 pb-1 text-[11px] font-bold uppercase tracking-wider text-outline">Tổng Quan</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span class="text-[13px] font-medium flex-1">Tổng quan vận hành</span>
+</a>
+<div class="px-3 pt-4 pb-1 text-[11px] font-bold uppercase tracking-wider text-outline">Nghiệp Vụ Chính</div>
+<a aria-current="page" class="flex items-center gap-3 px-3 py-2 rounded-md transition-all bg-secondary text-on-secondary font-semibold shadow-xs" href="#">
+<span class="material-symbols-outlined text-[18px]">contract</span>
+<span class="text-[13px] flex-1">Hợp đồng ngoại thương</span>
+<span class="font-data-mono text-[11px] px-2 py-0.5 rounded-sm bg-white/20 text-white font-bold">24</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">directions_boat</span>
+<span class="text-[13px] font-medium flex-1">Lô hàng (FCL / LCL)</span>
+<span class="font-data-mono text-[11px] px-1.5 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-semibold">12</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+<span class="text-[13px] font-medium flex-1">Hoa hồng môi giới</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+<span class="text-[13px] font-medium flex-1">Thanh toán &amp; Công nợ</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+<span class="text-[13px] font-medium flex-1">Thông tin nội bộ &amp; BOQ</span>
+<span class="material-symbols-outlined text-[14px] text-outline">verified_user</span>
+</a>
+<div class="px-3 pt-4 pb-1 text-[11px] font-bold uppercase tracking-wider text-outline">Danh Mục &amp; Đối Tác</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">group</span>
+<span class="text-[13px] font-medium flex-1">Khách hàng (Buyer)</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">forklift</span>
+<span class="text-[13px] font-medium flex-1">Nhà cung cấp / Forwarder</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+<span class="text-[13px] font-medium flex-1">Ngân hàng chỉ định LC</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">price_change</span>
+<span class="text-[13px] font-medium flex-1">Danh mục cước &amp; phí</span>
+</a>
+<div class="px-3 pt-4 pb-1 text-[11px] font-bold uppercase tracking-wider text-outline">Hệ Thống</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">monitoring</span>
+<span class="text-[13px] font-medium flex-1">Báo cáo &amp; Phân tích</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+<span class="text-[13px] font-medium flex-1">Phân quyền &amp; Cấu hình</span>
+</a>
+</nav>
+</div>
+<!-- EDI Connection Status Pill -->
+<div class="p-3 bg-surface-container-low border-t border-surface-container-high/60">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-teal-600 animate-pulse"></span>
+<span class="font-data-mono text-[11px] font-semibold text-on-surface-variant">PORT EDI CONNECTED</span>
+</div>
+<span class="text-[11px] font-semibold text-outline">VN-SGN</span>
+</div>
+</div>
+</aside>
+<!-- MAIN WRAPPER -->
+<div class="pl-72">
+<!-- TOP HEADER -->
+<header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest border-b border-surface-container-high/70 z-40 flex items-center justify-between px-6 gap-4">
+<div class="flex items-center gap-3 min-w-0 flex-1">
+<div class="flex flex-col min-w-0">
+<span class="text-[15px] font-bold text-on-surface truncate leading-tight">HỆ THỐNG QUẢN LÝ THƯƠNG MẠI &amp; LOGISTICS</span>
+<span class="text-[11px] text-outline truncate mt-0.5">Công ty Cổ phần Thương mại &amp; Tiếp vận Quốc tế Á Châu - Chi nhánh HCM</span>
+</div>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<!-- Quick Search -->
+<div class="relative hidden xl:flex items-center">
+<div class="relative flex items-center w-72">
+<span class="material-symbols-outlined absolute left-2.5 text-outline text-[18px]">search</span>
+<input class="w-full h-8 pl-8 pr-12 bg-surface-container-low border border-surface-container-high/70 rounded-md text-[12px] text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest focus:border-secondary transition-all" placeholder="Tìm số HĐ, lô hàng, B/L..." type="text">
+<kbd class="absolute right-2 px-1.5 py-0.5 rounded-sm bg-surface-container-high font-data-mono text-[10px] text-on-surface-variant font-medium">Ctrl K</kbd>
+</div>
+</div>
+<!-- Exchange Rate -->
+<div class="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-surface-container-low border border-surface-container-high/60 rounded-md">
+<span class="material-symbols-outlined text-[16px] text-secondary">currency_exchange</span>
+<span class="text-[11px] text-on-surface-variant font-medium">USD/VND:</span>
+<span class="font-data-mono text-[12px] font-bold text-on-surface">25,450</span>
+</div>
+<!-- Icons -->
+<div class="flex items-center gap-1">
+<button class="relative w-8 h-8 flex items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[19px]">notifications</span>
+<span class="absolute top-1 right-1 w-3.5 h-3.5 rounded-full bg-error text-on-error font-data-mono text-[9px] flex items-center justify-center leading-none font-bold">3</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-md text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[19px]">help</span>
+</button>
+</div>
+<div class="h-5 w-px bg-surface-container-high"></div>
+<!-- User Profile -->
+<div class="flex items-center gap-2.5">
+<div class="flex flex-col text-right hidden sm:flex">
+<span class="text-[12px] font-semibold text-on-surface leading-tight">Nguyễn Văn Quân</span>
+<div class="flex items-center justify-end gap-1">
+<span class="text-[10px] text-on-surface-variant">Trưởng phòng XNK</span>
+<span class="text-[9px] px-1 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold">Admin</span>
+</div>
+</div>
+<div class="w-8 h-8 rounded-md bg-primary text-on-primary flex items-center justify-center font-bold text-[13px] shadow-xs">
+<span class="">NQ</span>
+</div>
+</div>
+</div>
+</header>
+<!-- MAIN BODY -->
+<main class="relative pt-16 bg-background min-h-screen">
+<!-- Interactive Toast Notification -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 px-4 py-2.5 bg-primary text-on-primary rounded-md shadow-lg border border-slate-700" id="copyToast">
+<span class="material-symbols-outlined text-teal-400 text-[18px]">check_circle</span>
+<span class="text-[12px] font-medium" id="copyToastMsg">Đã sao chép mã hợp đồng vào bộ nhớ tạm!</span>
+</div>
+<div class="px-6 py-6 flex flex-col gap-5 max-w-[1720px] mx-auto w-full">
+<!-- 1. TOP BREADCRUMB & CONTEXT ROW -->
+<div class="flex flex-wrap items-center justify-between gap-3">
+<div class="flex items-center gap-2">
+<a class="inline-flex items-center gap-1 text-on-surface-variant hover:text-secondary text-[12px] font-medium transition-colors group" href="#">
+<span class="material-symbols-outlined text-[16px] group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+<span class="">Danh sách hợp đồng</span>
+</a>
+<span class="text-outline-variant">/</span>
+<span class="font-data-mono text-[11px] px-2 py-0.5 rounded-sm bg-surface-container-high text-on-surface-variant font-medium">EXP-2024</span>
+<span class="text-outline-variant">/</span>
+<span class="text-[12px] text-on-surface font-semibold">CT-2024/EXP-088</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-teal-600 animate-pulse"></span>
+</div>
+</div>
+<!-- HEADER TITLE & GLOBAL ACTION BAR -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-container-lowest px-5 py-4 rounded-md border border-surface-container-high/80 shadow-xs"><div class="flex flex-col gap-2 min-w-0"><div class="flex flex-wrap items-center gap-2.5"><div class="flex items-center gap-1.5"><h1 class="text-[20px] font-bold text-on-surface tracking-tight font-sans">CT-2024/EXP-088</h1><button class="p-1 text-on-surface-variant hover:text-secondary hover:bg-surface-container rounded-sm transition-colors" onclick="copyContractCode('CT-2024/EXP-088')" title="Sao chép mã hợp đồng"><span class="material-symbols-outlined text-[16px]">content_copy</span></button></div><span class="px-2 py-0.5 rounded-sm bg-blue-50/50 text-secondary border border-blue-200 text-[11px] font-bold tracking-wide uppercase">Chính thức</span><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold uppercase"><span class="w-1.5 h-1.5 rounded-full bg-teal-600 animate-pulse"></span>Đang thực hiện</span></div><div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-on-surface-variant"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[15px]">domain</span><span class="text-on-surface font-semibold">Metro Line 2 (Bến Thành - Tham Lương)</span></div><div class="flex items-center gap-3 font-data-mono text-[11px] text-outline"></div></div><div class="flex flex-wrap items-center gap-2 pt-0.5 text-[11px]"><span class="font-data-mono font-bold px-2 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed border border-blue-200">CIF 2020</span></div></div><div class="flex flex-wrap items-center gap-2 shrink-0"><button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface-container-low hover:bg-surface-container text-on-surface text-[12px] font-medium border border-surface-container-high/80 transition-colors"><span class="material-symbols-outlined text-[16px] text-error">picture_as_pdf</span><span class="">Xuất PDF</span></button><button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface-container-low hover:bg-surface-container text-on-surface text-[12px] font-medium border border-surface-container-high/80 transition-colors"><span class="material-symbols-outlined text-[16px] text-on-surface-variant">edit</span><span class="">Chỉnh sửa</span></button><div class="relative inline-block text-left" id="actionDropdownContainer"><button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-secondary text-on-secondary hover:bg-blue-700 transition-all text-[12px] font-semibold shadow-xs" id="mainActionBtn" onclick="toggleActionMenu()"><span class="material-symbols-outlined text-[16px]">add_task</span><span class="">+ Thao tác</span><span class="material-symbols-outlined text-[16px]">expand_more</span></button><div class="absolute right-0 mt-1.5 w-60 rounded-md bg-surface-container-lowest shadow-lg border border-surface-container-high p-1 z-30 hidden" id="actionMenu"><a class="flex items-center gap-2 px-3 py-2 rounded-sm text-on-surface hover:bg-surface-container-low text-[12px] transition-colors" href="#" onclick="switchTab('shipment'); toggleActionMenu(); return false;"><span class="material-symbols-outlined text-secondary text-[16px]">local_shipping</span><span class="">Tạo phiếu đóng hàng (Packing)</span></a><a class="flex items-center gap-2 px-3 py-2 rounded-sm text-on-surface hover:bg-surface-container-low text-[12px] transition-colors" href="#" onclick="switchTab('payment'); toggleActionMenu(); return false;"><span class="material-symbols-outlined text-teal-600 text-[16px]">price_check</span><span class="">Lập phiếu thu tiền (Receipt)</span></a><a class="flex items-center gap-2 px-3 py-2 rounded-sm text-on-surface hover:bg-surface-container-low text-[12px] transition-colors" href="#" onclick="switchTab('annex'); toggleActionMenu(); return false;"><span class="material-symbols-outlined text-outline text-[16px]">post_add</span><span class="">Thêm phụ lục hợp đồng (Addendum)</span></a><a class="flex items-center gap-2 px-3 py-2 rounded-sm text-error hover:bg-error-container/20 text-[12px] transition-colors" href="#"><span class="material-symbols-outlined text-[16px]">flag</span><span class="">Báo cáo sự cố lô hàng</span></a></div></div></div></div>
+<!-- 3. TAB NAVIGATION (Enterprise Sắc Cạnh ROUND_FOUR) -->
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1 select-none border-b border-surface-container-high"><button class="tab-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low text-[12px] font-medium transition-all shrink-0 cursor-pointer border border-surface-container-high/60" id="tab-btn-overview" onclick="switchTab('overview')"><span class="material-symbols-outlined text-[16px]">dashboard_customize</span><span class="">Tổng quan &amp; Tiến độ</span></button><button class="tab-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low text-[12px] font-medium transition-all shrink-0 cursor-pointer border border-surface-container-high/60" id="tab-btn-payment" onclick="switchTab('payment')"><span class="material-symbols-outlined text-[16px]">account_balance</span><span class="">Tiến độ thanh toán</span><span class="font-data-mono text-[10px] px-1.5 py-0.2 rounded-sm bg-surface-container-high text-on-surface font-semibold">4 đợt</span></button><button class="tab-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low text-[12px] font-medium transition-all shrink-0 cursor-pointer border border-surface-container-high/60" id="tab-btn-shipment" onclick="switchTab('shipment')"><span class="material-symbols-outlined text-[16px]">directions_boat</span><span class="">Lô hàng (Shipment)</span><span class="font-data-mono text-[10px] px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-semibold">3 FCL</span></button><button class="tab-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-secondary text-on-secondary text-[12px] font-semibold transition-all shrink-0 cursor-pointer shadow-xs" id="tab-btn-annex" onclick="switchTab('annex')"><span class="material-symbols-outlined text-[16px]">edit_document</span><span class="">Phụ lục (Annex)</span><span class="font-data-mono text-[10px] px-1.5 py-0.2 rounded-sm bg-surface-container-high text-on-surface font-semibold">2</span></button><button class="tab-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low text-[12px] font-medium transition-all shrink-0 cursor-pointer border border-surface-container-high/60" id="tab-btn-commission" onclick="switchTab('commission')"><span class="material-symbols-outlined text-[16px]">payments</span><span class="">Hoa hồng (Commission)</span><span class="font-data-mono text-[10px] px-1.5 py-0.2 rounded-sm bg-emerald-50 text-emerald-800 font-semibold border border-emerald-200">3%</span></button><button class="tab-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low text-[12px] font-medium transition-all shrink-0 cursor-pointer border border-surface-container-high/60" id="tab-btn-boq" onclick="switchTab('boq')"><span class="material-symbols-outlined text-[16px]">verified_user</span><span class="">BOQ &amp; Nội bộ</span><span class="material-symbols-outlined text-[13px] text-outline">lock</span></button></div>
+<!-- ========================================================================= -->
+<!-- TAB CONTENT PANES -->
+<!-- ========================================================================= -->
+<!-- PANE 1: TỔNG QUAN & TIẾN ĐỘ -->
+<div class="tab-pane flex-col gap-5 hidden" id="tab-pane-overview"><!-- KHကI DANG TIကN & TIကN Đဉ THတC HIကN -->
+<div class="relative bg-surface-container-lowest rounded-md p-5 border border-surface-container-high/80 shadow-xs flex flex-col gap-4">
+<!-- Header bar -->
+<div class="flex items-center justify-between pb-2 border-b border-surface-container-high/60">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[20px]">monetization_on</span>
+<span class="text-[14px] font-bold text-on-surface tracking-tight uppercase">GIÁ TRỊ</span>
+</div>
+
+</div>
+<!-- 4 Khထi sထ liဇu tài chính lမn -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<!-- Card 1: Giá trị quyết toán -->
+<div class="p-4 rounded-md bg-surface-container-lowest border border-surface-container-high/80 shadow-xs flex flex-col justify-between gap-2.5 hover:border-secondary/40 transition-colors">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold uppercase tracking-wider text-outline">GIÁ TRị QUYẾT TOÁN</span>
+<div class="w-7 h-7 rounded-sm bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[16px]">request_quote</span>
+</div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-baseline gap-1.5">
+<span class="text-[24px] font-bold font-data-mono text-on-surface leading-none">$485,000</span>
+<span class="text-[11px] font-semibold text-outline">USD</span>
+</div>
+<div class="flex items-center gap-1 mt-2 text-[11px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[13px] text-outline">receipt_long</span>
+<span class="truncate"><strong class="font-data-mono font-medium">HĐ gốc $450k</strong> + <strong class="font-data-mono font-semibold text-secondary">2 PL (+$35k)</strong></span>
+</div>
+</div>
+</div>
+<!-- Card 2: Giá trị đã xuất -->
+<div class="p-4 rounded-md bg-surface-container-lowest border border-surface-container-high/80 shadow-xs flex flex-col justify-between gap-2.5 hover:border-secondary/40 transition-colors">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold uppercase tracking-wider text-outline">GIÁ TRị ĐÃ XUấT</span>
+<div class="w-7 h-7 rounded-sm bg-teal-100 flex items-center justify-center text-teal-800">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+</div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-baseline gap-1.5">
+<span class="text-[24px] font-bold font-data-mono text-teal-700 leading-none">$350,000</span>
+<span class="text-[11px] font-semibold text-outline">USD</span>
+</div>
+<div class="flex items-center gap-1 mt-2 text-[11px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[13px] text-teal-600">check_circle</span>
+<span class="truncate font-medium text-teal-800">2/3 Container FCL đã thông quan</span>
+</div>
+</div>
+</div>
+<!-- Card 3: Giá trị đã xuất (VNĐ) -->
+<div class="p-4 rounded-md bg-surface-container-lowest border border-surface-container-high/80 shadow-xs flex flex-col justify-between gap-2.5 hover:border-secondary/40 transition-colors">
+<div class="flex items-center justify-between">
+<span class="text-[11px] font-bold uppercase tracking-wider text-outline">ĐÃ XUấT (VNĐ)</span>
+<div class="w-7 h-7 rounded-sm bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[16px]">currency_exchange</span>
+</div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-baseline gap-1">
+<span class="text-[20px] font-bold font-data-mono text-on-surface leading-none tracking-tight">8,907,500,000</span>
+<span class="text-[10px] font-semibold text-outline">VNĐ</span>
+</div>
+<div class="flex items-center gap-1 mt-2 text-[11px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[13px] text-outline">calculate</span>
+<span class="font-data-mono text-[11px]">Tỷ giá: <strong>25,450 VND/USD</strong></span>
+</div>
+</div>
+</div>
+<!-- Card 4: Chưa xuất -->
+<div class="p-4 rounded-md bg-surface-container-lowest border-l-4 border-l-secondary border-y border-r border-surface-container-high/80 shadow-xs flex flex-col justify-between gap-2.5 hover:border-secondary/40 transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="text-[11px] font-bold uppercase tracking-wider text-secondary">CHƯA XUấT</span>
+</div>
+<div class="w-7 h-7 rounded-sm bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[16px]">pending_actions</span>
+</div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-baseline gap-1.5">
+<span class="text-[24px] font-bold font-data-mono text-secondary leading-none">$135,000</span>
+<span class="text-[11px] font-semibold text-outline">USD</span>
+</div>
+<div class="flex items-center gap-1 mt-2 text-[11px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[13px] text-secondary">schedule</span>
+<span class="truncate">Còn lại 1 lô FCL (Dự kiến 12/2024)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Segmented Progress Bar -->
+<div class="flex flex-col gap-2 pt-2 border-t border-surface-container-high/60">
+<div class="flex flex-wrap items-center justify-between gap-2 text-[11px]">
+<div class="flex items-center gap-2">
+<span class="font-bold uppercase tracking-wider text-outline text-[11px]">TIẾN ĐỘ ĐỐI SOÁT THANH TOÁN:</span>
+<span class="px-2 py-0.5 rounded-sm bg-emerald-50 text-emerald-800 font-bold border border-emerald-200">65% ĐÃ THU</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="font-data-mono text-on-surface font-semibold text-[11px]"><strong class="text-teal-700">$315,250</strong> / $485,000 USD</span>
+<button class="inline-flex items-center gap-1 text-[11px] font-semibold text-secondary hover:underline cursor-pointer" onclick="switchTab('payment')">
+<span class="">Chi tiết thanh toán</span>
+<span class="material-symbols-outlined text-[13px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Phân đoạn tiến độ thanh toán -->
+<div class="h-2.5 w-full rounded-sm bg-surface-container-high flex overflow-hidden p-0.5 gap-0.5">
+<div class="h-full bg-teal-600 rounded-sm" style="width: 65%;" title="Đợt 1 đến 6: Đã thu 65% ($315,250 USD)"></div>
+<div class="h-full bg-secondary rounded-sm" style="width: 15%;" title="Đợt 7: Đang chờ L/C 15% ($72,750 USD)"></div>
+<div class="h-full bg-surface-container-high rounded-sm border border-outline-variant/60" style="width: 20%;" title="Đợt 8, 9, 10: 20% Chưa đến hạn ($97,000 USD)"></div>
+</div>
+<!-- Dãy Stepper các đợt cuộn ngang -->
+<div class="relative">
+<div class="flex items-stretch gap-2 overflow-x-auto pb-1.5 pt-0.5 select-none">
+<div class="shrink-0 w-44 p-2 rounded-md bg-teal-50/50 border border-teal-200 flex flex-col justify-between text-[11px]">
+<div class="flex items-center justify-between pb-1 border-b border-teal-200/60">
+<span class="font-data-mono font-bold text-teal-800 text-[11px]">Đợt 01 (10%)</span>
+<span class="material-symbols-outlined text-teal-700 text-[14px]">check_circle</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-bold text-teal-800 text-[12px]">$48,500</span>
+<span class="text-[10px] text-teal-700 font-medium">22/03/24 (T/T)</span>
+</div>
+</div>
+<div class="shrink-0 w-44 p-2 rounded-md bg-teal-50/50 border border-teal-200 flex flex-col justify-between text-[11px]">
+<div class="flex items-center justify-between pb-1 border-b border-teal-200/60">
+<span class="font-data-mono font-bold text-teal-800 text-[11px]">Đợt 02 (10%)</span>
+<span class="material-symbols-outlined text-teal-700 text-[14px]">check_circle</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-bold text-teal-800 text-[12px]">$48,500</span>
+<span class="text-[10px] text-teal-700 font-medium">15/04/24 (T/T)</span>
+</div>
+</div>
+<div class="shrink-0 w-44 p-2 rounded-md bg-teal-50/50 border border-teal-200 flex flex-col justify-between text-[11px]">
+<div class="flex items-center justify-between pb-1 border-b border-teal-200/60">
+<span class="font-data-mono font-bold text-teal-800 text-[11px]">Đợt 03 (15%)</span>
+<span class="material-symbols-outlined text-teal-700 text-[14px]">check_circle</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-bold text-teal-800 text-[12px]">$72,750</span>
+<span class="text-[10px] text-teal-700 font-medium">14/05/24 (B/L)</span>
+</div>
+</div>
+<div class="shrink-0 w-44 p-2 rounded-md bg-teal-50/50 border border-teal-200 flex flex-col justify-between text-[11px]">
+<div class="flex items-center justify-between pb-1 border-b border-teal-200/60">
+<span class="font-data-mono font-bold text-teal-800 text-[11px]">Đợt 04 (10%)</span>
+<span class="material-symbols-outlined text-teal-700 text-[14px]">check_circle</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-bold text-teal-800 text-[12px]">$48,500</span>
+<span class="text-[10px] text-teal-700 font-medium">20/06/24 (B/L)</span>
+</div>
+</div>
+<div class="shrink-0 w-44 p-2 rounded-md bg-teal-50/50 border border-teal-200 flex flex-col justify-between text-[11px]">
+<div class="flex items-center justify-between pb-1 border-b border-teal-200/60">
+<span class="font-data-mono font-bold text-teal-800 text-[11px]">Đợt 05 (10%)</span>
+<span class="material-symbols-outlined text-teal-700 text-[14px]">check_circle</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-bold text-teal-800 text-[12px]">$48,500</span>
+<span class="text-[10px] text-teal-700 font-medium">18/07/24 (B/L)</span>
+</div>
+</div>
+<div class="shrink-0 w-44 p-2 rounded-md bg-teal-50/50 border border-teal-200 flex flex-col justify-between text-[11px]">
+<div class="flex items-center justify-between pb-1 border-b border-teal-200/60">
+<span class="font-data-mono font-bold text-teal-800 text-[11px]">Đợt 06 (10%)</span>
+<span class="material-symbols-outlined text-teal-700 text-[14px]">check_circle</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-bold text-teal-800 text-[12px]">$48,500</span>
+<span class="text-[10px] text-teal-700 font-medium">15/08/24 (B/L)</span>
+</div>
+</div>
+<div class="shrink-0 w-48 p-2 rounded-md bg-blue-50/50 border-2 border-secondary shadow-xs flex flex-col justify-between text-[11px] relative">
+<div class="flex items-center justify-between pb-1 border-b border-blue-200">
+<div class="flex items-center gap-1">
+<span class="font-data-mono font-bold text-secondary text-[11px]">Đợt 07 (15%)</span>
+<span class="px-1.5 py-0.5 rounded-sm bg-secondary text-on-secondary font-bold text-[9px] uppercase tracking-wider leading-none">Đang thu</span>
+</div>
+<span class="material-symbols-outlined text-secondary text-[14px]">hourglass_top</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-bold text-secondary text-[12px]">$72,750</span>
+<span class="text-[10px] font-semibold text-secondary">Hạn: 30/11/24 (L/C)</span>
+</div>
+</div>
+<div class="shrink-0 w-44 p-2 rounded-md bg-surface-container-low/50 border border-surface-container-high flex flex-col justify-between text-[11px]">
+<div class="flex items-center justify-between pb-1 border-b border-surface-container-high/60">
+<span class="font-data-mono font-semibold text-outline text-[11px]">Đợt 08 (10%)</span>
+<span class="material-symbols-outlined text-outline text-[14px]">schedule</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-medium text-on-surface text-[12px]">$48,500</span>
+<span class="text-[10px] text-outline">Hạn: 15/12/24</span>
+</div>
+</div>
+<div class="shrink-0 w-44 p-2 rounded-md bg-surface-container-low/50 border border-surface-container-high flex flex-col justify-between text-[11px]">
+<div class="flex items-center justify-between pb-1 border-b border-surface-container-high/60">
+<span class="font-data-mono font-semibold text-outline text-[11px]">Đợt 09 (5%)</span>
+<span class="material-symbols-outlined text-outline text-[14px]">schedule</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-medium text-on-surface text-[12px]">$24,250</span>
+<span class="text-[10px] text-outline">Hạn: 25/12/24</span>
+</div>
+</div>
+<div class="shrink-0 w-48 p-2 rounded-md bg-surface-container-low/50 border border-surface-container-high flex flex-col justify-between text-[11px]">
+<div class="flex items-center justify-between pb-1 border-b border-surface-container-high/60">
+<span class="font-data-mono font-semibold text-outline text-[11px]">Đợt 10 (5% Q.Toán)</span>
+<span class="material-symbols-outlined text-outline text-[14px]">event</span>
+</div>
+<div class="pt-1 flex items-baseline justify-between">
+<span class="font-data-mono font-medium text-on-surface text-[12px]">$24,250</span>
+<span class="text-[10px] text-outline">Quyết toán cảng (31/12)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- NỘI DUNG 3 CỘT NỀN TẢNG THƯƠNG MẠI -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
+<!-- CỘT 1: THÔNG TIN ĐỐI TÁC -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-sm bg-secondary"></span>
+<span class="text-[12px] uppercase tracking-wider text-on-surface font-bold">1. THÔNG TIN ĐỐI TÁC</span>
+</div>
+</div>
+<!-- BÊN BÁN -->
+<div class="bg-surface-container-lowest rounded-md p-4 border border-surface-container-high/80 shadow-xs flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-[11px] font-bold uppercase tracking-wider text-secondary">Bân Bán (Seller)</span>
+</div>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">VIET NAM</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-[13px] text-on-surface font-bold leading-snug">
+          CÔNG TY CỔ PHẦN THƯƠNG MẠI TIẾP VẬN QUỐC TẾ Á CHÂU
+        </h3>
+</div>
+<div class="flex flex-col gap-1 pt-1.5 text-[12px] bg-surface-container-low/60 p-2.5 rounded-md border border-surface-container-high/50">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Người đại diện:</span>
+<strong class="text-on-surface font-semibold">Ông Trần Đình Long</strong>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Chức vụ:</span>
+<span class="text-on-surface">Tổng Giám Đốc</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Mã số thuế:</span>
+<span class="font-data-mono text-on-surface font-medium">0312345678</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Địachỉ:</span>
+<span class="text-on-surface truncate">Quận 1, TP. Hồ Chí Minh</span>
+</div>
+</div>
+</div>
+<!-- BÊN MUA -->
+<div class="bg-surface-container-lowest rounded-md p-4 border border-surface-container-high/80 shadow-xs flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-[11px] font-bold uppercase tracking-wider text-secondary">Bân Mua (Buyer)</span>
+</div>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold border border-blue-200">UNITED STATES</span>
+</div>
+<div class="flex flex-col">
+<h3 class="text-[14px] text-on-surface font-bold leading-snug">
+          PACIFIC METALS CORPORATION
+        </h3>
+</div>
+<div class="flex flex-col gap-1 pt-1.5 text-[12px] bg-surface-container-low/60 p-2.5 rounded-md border border-surface-container-high/50">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Người đại diện:</span>
+<strong class="text-on-surface font-semibold">Mr. Robert Sterling</strong>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Chức vụ:</span>
+<span class="text-on-surface">Procurement Director</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Mã số thuế:</span>
+<span class="font-data-mono text-secondary font-medium">CUST-USA-9921</span>
+</div>
+<div class="flex items-start justify-between gap-2">
+<span class="text-on-surface-variant shrink-0">Địachỉ:</span>
+<span class="text-on-surface text-right truncate">Long Beach, California, USA</span>
+</div>
+</div>
+</div>
+<!-- CONSIGNEE -->
+<div class="bg-surface-container-low/90 rounded-md p-3.5 border border-surface-container-high/80 flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">rv_hookup</span>
+<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface">Consignee</span>
+</div>
+<p class="text-[13px] text-on-surface font-semibold">Trans-Pacific Forwarding LLC</p>
+<span class="text-[11px] text-on-surface-variant">Terminal 4, Port of Long Beach, CA 90802, USA</span>
+<div class="flex items-center gap-1 mt-1 font-data-mono text-[11px] text-secondary">
+<span class="material-symbols-outlined text-[14px]">call</span>
+<span class="">+1 (562) 899-4400 (Mr. David Vance)</span>
+</div>
+</div>
+<!-- NOTIFY PARTY -->
+<div class="bg-surface-container-low/90 rounded-md p-3.5 border border-surface-container-high/80 flex flex-col gap-1">
+<div class="flex items-center gap-1.5 text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">notifications</span>
+<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface">Notify Party</span>
+</div>
+<p class="text-[13px] text-on-surface font-semibold">Global Logistics &amp; Shipping Co.</p>
+<span class="text-[11px] text-on-surface-variant">Suite 300, 1200 Seaside Ave, Long Beach, CA 90802</span>
+<div class="flex items-center gap-1 mt-1 font-data-mono text-[11px] text-secondary">
+<span class="material-symbols-outlined text-[14px]">call</span>
+<span class="">+1 (562) 555-0199 (Ms. Sarah Connor)</span>
+</div>
+</div>
+</div>
+<!-- CỘT 2: VẬN CHUYỂN & HÀNG HÓA -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-sm bg-secondary"></span>
+<span class="text-[12px] uppercase tracking-wider text-on-surface font-bold">2. VẬN CHUYỂN &amp; HÀNG HÓA</span>
+</div>
+<span class="text-[11px] text-teal-700 font-semibold">100% Đã xuất xưởng</span>
+</div>
+<!-- ROUTE FLOW -->
+<div class="bg-surface-container-lowest rounded-md p-4 border border-surface-container-high/80 shadow-xs flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<span class="text-[11px] uppercase tracking-wider text-outline font-semibold">Vận chuyển &amp; Incoterm</span>
+<span class="font-data-mono text-[11px] px-2 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold border border-blue-200">CIF 2020</span>
+</div>
+<div class="flex flex-col gap-1.5 pt-1 text-[12px]">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Nơi xếp hàng:</span>
+<strong class="text-on-surface font-semibold">Cảng Cát Lái (VN-SGN)</strong>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Nơi dỡ hàng:</span>
+<strong class="text-on-surface font-semibold">Cảng Long Beach (US-LGB)</strong>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Ngày báo giá:</span>
+<span class="font-data-mono text-on-surface">10/03/2024</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Ngày ký:</span>
+<span class="font-data-mono text-on-surface font-semibold">15/03/2024</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Ngày hoàn thành:</span>
+<span class="font-data-mono text-on-surface">31/12/2024</span>
+</div>
+</div>
+<div class="pt-2 border-t border-surface-container-high/60 flex items-center justify-between text-[11px]">
+<span class="text-on-surface-variant">Trạng thái ký:</span>
+<div class="flex items-center gap-1">
+<span class="px-1.5 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">Bân A đã ký</span>
+<span class="px-1.5 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">Bân B đã ký</span>
+</div>
+</div>
+</div>
+<!-- COMMODITY SPEC -->
+<div class="bg-surface-container-lowest rounded-md p-4 border border-surface-container-high/80 shadow-xs flex flex-col gap-3.5 hover:border-secondary/40 transition-colors">
+<div class="flex items-center justify-between pb-2.5 border-b border-surface-container-high/60">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-sm bg-secondary flex items-center justify-center text-on-secondary shadow-xs">
+<span class="material-symbols-outlined text-[16px]">inventory_2</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[12px] uppercase tracking-wider text-on-surface font-bold">Quy cách hàng hóa &amp; Đóng gói</span>
+<span class="text-[11px] text-on-surface-variant">Thép cuộn mạ kẽm kết cấu công trình</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+<div class="p-3 rounded-md bg-surface-container-low/60 border border-surface-container-high/70 flex flex-col justify-between gap-1.5">
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[16px]">scale</span>
+<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface">Khối lượng TỜ KHAI</span>
+</div>
+<div class="flex items-baseline gap-1.5 pt-1">
+<span class="text-[22px] font-bold font-data-mono text-on-surface leading-none">73.5</span>
+<span class="text-[12px] font-semibold text-outline">Tấn</span>
+</div>
+</div>
+<div class="p-3 rounded-md bg-surface-container-low/60 border border-surface-container-high/70 flex flex-col justify-between gap-1.5">
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[16px]">inventory_2</span>
+<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface">Số lượng Cont / Kiện</span>
+</div>
+<div class="flex items-baseline gap-1 pt-1">
+<span class="text-[18px] font-bold font-data-mono text-on-surface leading-none">3 Cont</span>
+<span class="text-[11px] text-on-surface-variant font-medium">(40' HC)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- CỘT 3: NGÂN HÀNG & THANH TOÁN -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between px-1">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-sm bg-secondary"></span>
+<span class="text-[12px] uppercase tracking-wider text-on-surface font-bold">3. NGÂN HÀNG &amp; THANH TOÁN</span>
+</div>
+</div>
+<!-- BENEFICIARY BANK -->
+<div class="bg-surface-container-lowest rounded-md p-4 border border-surface-container-high/80 shadow-xs flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">account_balance</span>
+<span class="text-[11px] font-bold uppercase tracking-wider text-on-surface">Ngân hàng thụ hưởng</span>
+</div>
+</div>
+<div class="flex flex-col bg-surface-container-low/60 p-2.5 rounded-md border border-surface-container-high/50 text-[12px] gap-1">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Ngân hàng:</span>
+<span class="text-on-surface font-semibold">Vietcombank (VCB)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Chi nhánh:</span>
+<span class="text-on-surface font-semibold">Tân Bình, TP.HCM</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Số tài khoản (USD):</span>
+<span class="font-data-mono font-bold text-on-surface">1032407684</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Mã SWIFT:</span>
+<span class="font-data-mono font-bold text-secondary">BFTVVNVX044</span>
+</div>
+</div>
+</div>
+<!-- 3-STEP TIMELINE -->
+<div class="bg-surface-container-lowest rounded-md p-4 border border-surface-container-high/80 shadow-xs flex flex-col gap-3">
+<span class="text-[11px] uppercase tracking-wider text-outline font-semibold">3 mốc điều khoản thanh toán hợp đồng</span>
+<div class="flex flex-col gap-2.5">
+<div class="flex items-start gap-2.5 bg-surface-container-low/50 p-2.5 rounded-md border border-surface-container-high/50">
+<div class="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[14px]">done</span>
+</div>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between">
+<span class="text-[12px] font-bold text-on-surface">Đợt 1 (30% - T/T)</span>
+<span class="font-data-mono text-[12px] font-bold text-teal-700">$135,000 USD</span>
+</div>
+<span class="text-[11px] text-on-surface-variant mt-0.5">Thanh toán cọc trong 03 ngày kể từ ngày ký HĐ.</span>
+</div>
+</div>
+<div class="flex items-start gap-2.5 bg-surface-container-low/50 p-2.5 rounded-md border border-surface-container-high/50">
+<div class="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[14px]">done</span>
+</div>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between">
+<span class="text-[12px] font-bold text-on-surface">Đợt 2 (40% - T/T)</span>
+<span class="font-data-mono text-[12px] font-bold text-teal-700">$180,250 USD</span>
+</div>
+<span class="text-[11px] text-on-surface-variant mt-0.5">Thanh toán khi xuất trình B/L &amp; Tờ khai hải quan thông quan.</span>
+</div>
+</div>
+<div class="flex items-start gap-2.5 bg-blue-50/50 p-2.5 rounded-md border border-blue-200">
+<div class="w-6 h-6 rounded-full bg-secondary text-white flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[14px]">hourglass_top</span>
+</div>
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between">
+<span class="text-[12px] font-bold text-secondary">Đợt 3 (30% - L/C)</span>
+<span class="font-data-mono text-[12px] font-bold text-secondary">$169,750 USD</span>
+</div>
+<span class="text-[11px] text-on-surface-variant mt-0.5">Mở L/C không hủy ngang tại chỗ khi giao bộ chứng từ gốc.</span>
+</div>
+</div>
+</div>
+</div>
+<!-- ACTIVE ADDENDUMS & COMMISSION -->
+<div class="bg-surface-container-lowest rounded-md p-4 border border-surface-container-high/80 shadow-xs flex flex-col gap-2.5">
+<div class="flex items-center justify-between">
+<span class="text-[11px] uppercase tracking-wider text-outline font-semibold">Phụ lục &amp; Hoa hồng</span>
+<button class="text-[11px] text-secondary hover:underline font-semibold cursor-pointer" onclick="switchTab('annex')">Xem phụ lục</button>
+</div>
+<div class="flex flex-col gap-1 text-[12px] bg-surface-container-low/60 p-2.5 rounded-md border border-surface-container-high/50">
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Số lượng phụ lục:</span>
+<span class="font-data-mono font-bold text-on-surface">02 Phụ lục (AN-01, AN-02)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Tỷ lệ hoa hồng (3%):</span>
+<span class="font-data-mono font-bold text-teal-700">$14,550.00 USD</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-on-surface-variant">Đối tác môi giội:</span>
+<span class="font-semibold text-on-surface truncate">Pacific Trade Link Ltd.</span>
+</div>
+</div>
+</div>
+</div>
+</div></div>
+<!-- ========================================================================= -->
+<!-- PANE 2: TIẾN ĐỘ THANH TOÁN -->
+<!-- ========================================================================= -->
+<div class="tab-pane flex-col gap-5 hidden" id="tab-pane-payment">
+<!-- 3 Thẻ KPI lớn -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4"><!-- Thẻ 1: Tổng giá trị quyết toán hợp đồng -->
+<div class="bg-surface-container-lowest p-5 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col justify-between gap-3 hover:border-secondary/40 transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="text-[11px] font-bold uppercase tracking-wider text-outline">Tổng giá trị hợp đồng</span>
+</div>
+<div class="w-8 h-8 rounded-sm bg-primary-fixed flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+</div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-baseline gap-1.5">
+<span class="text-[26px] font-bold text-on-surface font-data-mono leading-none tracking-tight">485,000</span>
+<span class="text-[12px] font-semibold text-outline">USD</span>
+</div>
+<div class="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-surface-container-high/60 text-[11px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[14px] text-outline">description</span>
+<span class="">HĐ gốc: <strong class="font-data-mono text-on-surface">450,000</strong></span>
+<span class="text-outline-variant">•</span>
+<span class="">2 Phụ lục: <strong class="font-data-mono text-secondary font-semibold">+$35,000 USD</strong></span>
+</div>
+</div>
+</div>
+<!-- Thẻ 2: Đã thực thu (65%) -->
+<div class="bg-surface-container-lowest p-5 rounded-md border-l-4 border-l-teal-600 border-y border-r border-surface-container-high/80 shadow-xs flex flex-col justify-between gap-3 hover:border-teal-200 transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-teal-600"></span>
+<span class="text-[11px] font-bold uppercase tracking-wider text-teal-800">Đã thu</span>
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-emerald-50 text-emerald-800 text-[10px] font-bold border border-emerald-200">
+<span class="material-symbols-outlined text-[12px]">check</span>65%&nbsp;</span>
+</div>
+<div class="w-8 h-8 rounded-sm bg-teal-100 flex items-center justify-center text-teal-800">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+</div>
+</div>
+<div class="flex flex-col">
+<div class="flex items-baseline gap-1.5">
+<span class="text-[26px] font-bold text-teal-700 font-data-mono leading-none tracking-tight">315,250</span>
+<span class="text-[12px] font-semibold text-outline">USD</span>
+</div>
+<div class="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-surface-container-high/60 text-[11px] text-teal-800 font-medium">
+<span class="material-symbols-outlined text-[14px] text-teal-700">account_balance</span>
+<span class=""><strong>Đợt 1 . 2</strong>&nbsp;.&nbsp;<span class="" style="--tw-border-spacing-y: 0; --tw-translate-x: 0; --tw-translate-y: 0; --tw-rotate: 0; --tw-skew-x: 0; --tw-skew-y: 0; --tw-scale-x: 1; --tw-scale-y: 1; --tw-pan-x: ; --tw-pan-y: ; --tw-pinch-zoom: ; --tw-scroll-snap-strictness: proximity; --tw-gradient-from-position: ; --tw-gradient-via-position: ; --tw-gradient-to-position: ; --tw-ordinal: ; --tw-slashed-zero: ; --tw-numeric-figure: ; --tw-numeric-spacing: ; --tw-numeric-fraction: ; --tw-ring-inset: ; --tw-ring-offset-width: 0px; --tw-ring-offset-color: #fff; --tw-ring-color: rgb(59 130 246 / 0.5); --tw-ring-offset-shadow: 0 0 #0000; --tw-ring-shadow: 0 0 #0000; --tw-shadow: 0 0 #0000; --tw-shadow-colored: 0 0 #0000; --tw-blur: ; --tw-brightness: ; --tw-contrast: ; --tw-grayscale: ; --tw-hue-rotate: ; --tw-invert: ; --tw-saturate: ; --tw-sepia: ; --tw-drop-shadow: ; --tw-backdrop-blur: ; --tw-backdrop-brightness: ; --tw-backdrop-contrast: ; --tw-backdrop-grayscale: ; --tw-backdrop-hue-rotate: ; --tw-backdrop-invert: ; --tw-backdrop-opacity: ; --tw-backdrop-saturate: ; --tw-backdrop-sepia: ; --tw-contain-size: ; --tw-contain-layout: ; --tw-contain-paint: ; --tw-contain-style: ; font-weight: bolder;">3</span></span>
+</div>
+</div>
+</div>
+<!-- Thẻ 3: Còn phải thu (35%) -->
+<div class="p-4 rounded-md bg-surface-container-lowest border-l-4 border-l-secondary border-y border-r border-surface-container-high/80 shadow-xs flex flex-col justify-between gap-3 hover:border-secondary/40 transition-colors"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="text-[11px] font-bold uppercase tracking-wider text-secondary">Còn thu</span><span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold border border-blue-200"><span class="material-symbols-outlined text-[12px]">hourglass_top</span>35%&nbsp;</span></div><div class="w-8 h-8 rounded-sm bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed"><span class="material-symbols-outlined text-[18px]">pending_actions</span></div></div><div class="flex flex-col"><div class="flex items-baseline gap-1.5"><span class="text-[26px] font-bold text-secondary font-data-mono leading-none tracking-tight">169,750</span><span class="text-[12px] font-semibold text-outline">USD</span></div><div class="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-surface-container-high/60 text-[11px] text-on-surface-variant"><span class="material-symbols-outlined text-[14px] text-secondary">schedule</span><span class=""><span class="text-secondary font-semibold">Đợt 4 . 5&nbsp; . 6</span><strong class="text-secondary font-semibold">&nbsp;</strong></span></div></div></div></div>
+<!-- Performance Bond Banner -->
+<!-- Payment Schedule Table -->
+<div class="bg-surface-container-lowest rounded-md shadow-xs border border-surface-container-high/80 overflow-hidden flex flex-col"><div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-container-high"><div class="flex flex-col"><h3 class="text-[15px] text-on-surface font-bold">Tiến độ thanh toán&nbsp;</h3></div><button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-on-primary hover:bg-slate-800 transition-colors text-[12px] font-medium shadow-xs self-start sm:self-auto"><span class="material-symbols-outlined text-[16px]">add_circle</span><span class="">+ Thêm đợt thanh toán</span></button></div><div class="overflow-x-auto"><table class="w-full text-left border-collapse text-[12px]"><thead><tr class="bg-surface-container-low text-outline font-bold uppercase tracking-wider text-[10px] border-b border-surface-container-high"><th class="py-2.5 px-4">Mã Đợt</th><th class="py-2.5 px-3 text-right">Số tiền (USD)</th><th class="py-2.5 px-3">Hình thức / Điều kiện</th><th class="py-2.5 px-3">Ngày thanh toán</th><th class="py-2.5 px-3">Trạng thái</th><th class="py-2.5 px-3">Ghi chú / Chứng từ</th><th class="py-2.5 px-3 text-center">Thao tác</th></tr></thead><tbody class="divide-y divide-surface-container-high text-on-surface"><tr class="hover:bg-surface-container-low/50 transition-colors"><td class="py-3 px-4 font-data-mono font-bold text-secondary">PR-01</td><td class="py-3 px-3 text-right font-data-mono font-bold text-teal-700">$135,000.00</td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 font-medium text-on-surface"><span class="material-symbols-outlined text-[14px] text-secondary">payments</span>T/T Advance</span></td><td class="py-3 px-3 font-data-mono text-on-surface-variant">22/03/2024</td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-teal-50 text-teal-800 text-[10px] font-bold border border-teal-200"><span class="material-symbols-outlined text-[12px]">check_circle</span>Đã thu</span></td><td class="py-3 px-3 text-on-surface-variant max-w-xs truncate" title="Đặt cọc sau ký HĐ • UNC #90881">Đặt cọc sau ký HĐ • <span class="font-data-mono text-secondary font-medium">UNC #90881</span></td><td class="py-3 px-3 text-center"><div class="inline-flex items-center gap-1"><button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container transition-colors" title="Xem chi tiết"><span class="material-symbols-outlined text-[16px]">visibility</span></button><button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container transition-colors" title="Tải chứng từ UNC"><span class="material-symbols-outlined text-[16px]">download</span></button></div></td></tr><tr class="hover:bg-surface-container-low/50 transition-colors"><td class="py-3 px-4 font-data-mono font-bold text-secondary">PR-02</td><td class="py-3 px-3 text-right font-data-mono font-bold text-teal-700">$180,250.00</td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 font-medium text-on-surface"><span class="material-symbols-outlined text-[14px] text-secondary">receipt_long</span>T/T against B/L</span></td><td class="py-3 px-3 font-data-mono text-on-surface-variant">14/05/2024</td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-teal-50 text-teal-800 text-[10px] font-bold border border-teal-200"><span class="material-symbols-outlined text-[12px]">check_circle</span>Đã thu</span></td><td class="py-3 px-3 text-on-surface-variant max-w-xs truncate" title="Xuất trình B/L &amp; Tờ khai hải quan • UNC #92134">Xuất trình B/L &amp; Tờ khai HQ • <span class="font-data-mono text-secondary font-medium">UNC #92134</span></td><td class="py-3 px-3 text-center"><div class="inline-flex items-center gap-1"><button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container transition-colors" title="Xem chi tiết"><span class="material-symbols-outlined text-[16px]">visibility</span></button><button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container transition-colors" title="Tải chứng từ UNC"><span class="material-symbols-outlined text-[16px]">download</span></button></div></td></tr><tr class="hover:bg-surface-container-low/50 transition-colors"><td class="py-3 px-4 font-data-mono font-bold text-secondary">PR-03</td><td class="py-3 px-3 text-right font-data-mono font-bold text-teal-700">$97,000.00</td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 font-medium text-on-surface"><span class="material-symbols-outlined text-[14px] text-secondary">account_balance</span>Irrevocable L/C at Sight</span></td><td class="py-3 px-3 font-data-mono text-on-surface-variant">30/11/2024</td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-blue-50/50 text-secondary text-[10px] font-bold border border-blue-200"><span class="material-symbols-outlined text-[12px]">pending</span>Đang đối chiếu UNC</span></td><td class="py-3 px-3 text-on-surface-variant max-w-xs truncate" title="Thanh toán qua L/C trước khi giao bộ chứng từ gốc">Thanh toán qua L/C trước khi giao bộ chứng từ gốc</td><td class="py-3 px-3 text-center"><div class="inline-flex items-center gap-1"><button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container transition-colors" title="Xem chi tiết"><span class="material-symbols-outlined text-[16px]">visibility</span></button><button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container transition-colors" title="Tải chứng từ UNC"><span class="material-symbols-outlined text-[16px]">download</span></button></div></td></tr><tr class="hover:bg-surface-container-low/50 transition-colors"><td class="py-3 px-4 font-data-mono font-bold text-secondary">PR-04</td><td class="py-3 px-3 text-right font-data-mono font-bold text-outline">$72,750.00</td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 font-medium text-on-surface"><span class="material-symbols-outlined text-[14px] text-outline">task_alt</span>Final Settlement</span></td><td class="py-3 px-3 font-data-mono text-on-surface-variant">31/12/2024</td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-surface-container-low text-outline text-[10px] font-bold border border-surface-container-high"><span class="material-symbols-outlined text-[12px]">schedule</span>Chưa đến hạn</span></td><td class="py-3 px-3 text-on-surface-variant max-w-xs truncate" title="Nghiệm thu dỡ hàng tại cảng Long Beach">Nghiệm thu dỡ hàng tại cảng Long Beach</td><td class="py-3 px-3 text-center"><div class="inline-flex items-center gap-1"><button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container transition-colors" title="Xem chi tiết"><span class="material-symbols-outlined text-[16px]">visibility</span></button><button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container transition-colors" title="Tải chứng từ UNC"><span class="material-symbols-outlined text-[16px]">download</span></button></div></td></tr></tbody></table></div><div class="p-3 bg-surface-container-low flex flex-wrap items-center justify-between text-[11px] text-on-surface-variant border-t border-surface-container-high"><span class="">Tổng số 4 đợt thanh toán chính</span><div class="flex items-center gap-2"><span class="font-semibold text-on-surface">TỔNG ĐÃ THU:</span><span class="font-data-mono font-bold text-teal-700">$315,250.00 USD</span></div></div></div>
+</div>
+<!-- ========================================================================= -->
+<!-- PANE 3: LÔ HÀNG & VẬN CHUYỂN -->
+<!-- ========================================================================= -->
+<div class="tab-pane flex-col gap-5 hidden" id="tab-pane-shipment">
+<!-- Quick Stat Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="bg-surface-container-lowest p-4 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col">
+<span class="text-[11px] text-outline uppercase font-semibold">Số lượng Cont FCL</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="text-[22px] font-bold text-on-surface font-data-mono">3 Lô FCL</span>
+</div>
+<span class="text-[10px] text-on-surface-variant mt-1">Container 40' High Cube</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col">
+<span class="text-[11px] text-outline uppercase font-semibold">Tổng khối LƯỢNG tỜ KHAI</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="text-[22px] font-bold text-secondary font-data-mono">73.5 Tấn</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col">
+<span class="text-[11px] text-outline uppercase font-semibold">Tình trạng hạ bãi</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="text-[22px] font-bold text-teal-700 font-data-mono">3/3 Cont</span>
+</div>
+<span class="text-[10px] text-teal-800 mt-1 font-medium">✓ Đã cấp seal &amp; hạ bãi Cát Lái</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col">
+<span class="text-[11px] text-outline uppercase font-semibold">Tờ khai Hải Quan</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="text-[22px] font-bold text-teal-700 font-data-mono">100%</span>
+</div>
+<span class="text-[10px] text-teal-800 mt-1 font-medium">✓ Hoàn tất thông quan luồng xanh</span>
+</div>
+</div>
+<!-- Toolbar -->
+<div class="flex items-center justify-between gap-3 py-1"><div class="flex items-center gap-3 flex-wrap"><div class="flex items-center gap-2"><span class="text-[14px] font-bold text-on-surface">Danh sách Lô hàng vận chuyển</span><span class="font-data-mono text-[11px] px-2 py-0.5 rounded-sm bg-surface-container-high text-on-surface-variant font-medium">4 Lô (3 FCL, 1 LCL)</span></div><!-- View Switcher Segmented Control --><div class="inline-flex items-center p-0.5 rounded-md bg-surface-container-low border border-surface-container-high/80 text-[11px] font-medium"><button class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-on-secondary bg-secondary shadow-xs font-semibold transition-all cursor-pointer" id="btn-view-cards" onclick="switchShipmentView('cards')" type="button"><span class="material-symbols-outlined text-[15px]">grid_view</span><span class="">Dạng Thẻ</span></button><button class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all cursor-pointer" id="btn-view-table" onclick="switchShipmentView('table')" type="button"><span class="material-symbols-outlined text-[15px]">table_chart</span><span class="">Dạng Bảng</span></button></div></div><div class="flex items-center gap-2"><button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-surface-container-low hover:bg-surface-container text-on-surface border border-surface-container-high text-[12px] font-medium transition-colors cursor-pointer" type="button"><span class="material-symbols-outlined text-[15px] text-teal-600">file_download</span><span class="hidden sm:inline">Xuất Excel</span></button><button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-secondary text-on-secondary hover:bg-blue-700 transition-colors text-[12px] font-semibold shadow-xs cursor-pointer" type="button"><span class="material-symbols-outlined text-[16px]">add_box</span><span class="">+ Tạo lô hàng mới</span></button></div></div>
+<!-- Shipment Cards List -->
+<div class="flex flex-col gap-3" id="shipment-cards-view">
+<!-- Lô 1 -->
+<div class="bg-surface-container-lowest rounded-md p-4 shadow-xs flex flex-col gap-3 border border-surface-container-high/80 hover:border-secondary/50 transition-all">
+<!-- Responsive Card Header -->
+<div class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-container-high pb-2.5">
+<div class="flex items-center gap-2.5 flex-wrap">
+<div class="w-7 h-7 rounded-sm bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-bold font-data-mono text-[12px]">01</div>
+<span class="text-[14px] text-on-surface font-bold font-data-mono">26KCT14/LOT-01</span>
+<span class="px-1.5 py-0.5 rounded-sm bg-surface-container-high font-data-mono text-[10px] font-semibold text-on-surface">FCL (40' HC)</span>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold border border-blue-200">
+<span class="material-symbols-outlined text-[12px]">sailing</span> Đang trên biển (Shipping)
+      </span>
+</div>
+<div class="flex items-center gap-3 text-[11px] flex-wrap justify-between sm:justify-end flex-1 sm:flex-initial">
+<button class="p-1 text-on-surface-variant hover:text-secondary rounded-sm hover:bg-surface-container transition-colors" title="Thao tác">
+<span class="material-symbols-outlined text-[18px]">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Responsive 5-column Content Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[12px] pt-1"><!-- Col 1: Giá trị & Quy mô --><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60"><div class=""><div class="flex items-center justify-between"><span class="text-outline text-[11px] font-semibold uppercase tracking-wider">Giá trị tờ khai &amp; Quy mô</span><span class="text-[10px] text-outline font-data-mono font-medium">Tỷ giá 25,450</span></div><div class="flex items-baseline gap-2 mt-1 flex-wrap"><div class="font-bold font-data-mono text-on-surface text-[16px]">175,000 <span class="text-[11px] font-semibold text-outline">USD</span></div><div class="font-semibold font-data-mono text-secondary text-[12px]">≈ 4,453,750,000 <span class="text-[10px] font-medium text-outline">VNĐ</span></div></div></div><div class="mt-2 pt-2 border-t border-surface-container-high/60 flex flex-col gap-1"><div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[10px] border border-blue-200">1 Cont 40' HC</span><span class="text-[11px] text-on-surface-variant font-medium">(Số lượng: 1 Cont)</span></div><span class="font-data-mono text-[11px] text-on-surface-variant">24.5 Tấn • VGM: 28,400 kg</span></div></div><!-- Col 2: HÀNH TRÌNH & ETD / ETA (Gộp 3 card thành 1) --><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60"><div><span class="text-outline text-[11px] font-semibold uppercase tracking-wider">HÀNH TRÌNH &amp; LỊCH TRÌNH</span><div class="flex flex-col gap-1 mt-1.5 text-[12px]"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">trip_origin</span><span class="text-on-surface-variant text-[11px] font-medium">Nơi đi:</span><span class="font-bold text-on-surface text-[12px]">Cát Lái (VN)</span></div><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-teal-600">location_on</span><span class="text-on-surface-variant text-[11px] font-medium">Nơi đến:</span><span class="font-bold text-on-surface text-[12px]">Long Beach (US)</span></div></div></div><div class="mt-2 pt-2 border-t border-surface-container-high/60 grid grid-cols-2 gap-2 text-[11px]"><div class="flex flex-col"><span class="text-on-surface-variant font-medium text-[10px]">Khởi hành (ETD):</span><span class="font-data-mono text-on-surface font-semibold text-[12px]">25/03/2024</span></div><div class="flex flex-col"><span class="text-teal-800 font-medium text-[10px]">Dự kiến đến (ETA):</span><span class="font-data-mono text-teal-700 font-bold text-[12px]">12/04/2024</span></div></div></div><!-- Col 3: Chi phí Logistics (VNĐ) --><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60 h-full"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60 shrink-0"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">payments</span><span class="text-outline text-[11px] font-bold uppercase tracking-wider">Chi phí Logistics</span></div><div class="flex items-baseline gap-1"><span class="font-bold font-data-mono text-on-surface text-[14px]">128,500,000</span><span class="text-[10px] font-bold text-outline">VNĐ</span></div></div><div class="overflow-y-auto max-h-[92px] pr-1 pt-2 select-none"><div class="grid grid-cols-2 gap-x-2.5 gap-y-1.5 text-[11px]"><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Cước biển Ocean Freight">O/F :</span><span class="font-data-mono font-bold text-secondary text-[11px]">106.89M</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Vận chuyển bộ Trucking">Trucking:</span><span class="font-data-mono font-bold text-on-surface text-[11px]">18.50M</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Hải quan / Kiểm hoá">Hải quan:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">1,250,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Phí cảng THC / Nâng hạ bãi">Cảng:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">850,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Bảo hiểm hàng hải">Bảo hiểm:</span><span class="font-data-mono font-semibold text-teal-700 text-[11px]">650,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Thuế / Lệ phí bến bãi &amp; C/O">Thuế DDP:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">360,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Phí chứng từ D/O &amp; B/L">Phí D/O:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">450,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Phí niêm phong chì Seal &amp; Vệ sinh Cont">Seal &amp; Vệ sinh:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">400,000</span></div></div></div></div></div><div class="mt-1 pt-3 border-t border-surface-container-high flex flex-col gap-2.5 bg-surface-container-low/40 p-3 rounded-md border border-surface-container-high/60"><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">forklift</span><span class="text-[11px] font-bold uppercase tracking-wider text-on-surface">NHÀ CUNG CẤP &amp; ĐƠN VỊ LIÊN KẾT</span></div><span class="font-data-mono text-[10px] px-2 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">4 Đơn vị vận hành</span></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px] items-stretch"><!-- Card 1: Booking --><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">assignment</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">1. Booking</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">FCL</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Đơn vị đặt chỗ &amp; ủy thác:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="Á Châu Logistics &amp; Trade">Á Châu Logistics &amp; Trade</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Mã Booking:</span><span class="font-bold text-secondary">BKG-MAERSK-9021</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Số Vận đơn:</span><span class="font-bold text-on-surface">MSK-882910</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Hình thức:</span><span class="font-semibold text-teal-700">Direct B/L</span></div></div></div><!-- Card 2: Trucking (Compact & Aligned) --><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-1.5"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">local_shipping</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">2. Trucking</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">10 ĐƠN VỊ (100 CONT)</span></div><div class="flex items-center justify-between text-[10px] text-on-surface-variant"></div><div class="flex flex-col gap-1 pt-0.5"><div class="flex items-center justify-between text-[9px] text-outline font-medium"><span class="uppercase tracking-wider">Phân bổ xe</span><span class="font-data-mono font-bold text-on-surface">100/100 Cont</span></div><div class="h-1.5 w-full rounded-xs bg-surface-container-high flex overflow-hidden gap-0.5"><div class="h-full bg-secondary" style="width: 35%" title="Hưng Phát: 35 Cont"></div><div class="h-full bg-secondary-container" style="width: 30%" title="Toàn Cầu: 30 Cont"></div><div class="h-full bg-teal-600" style="width: 20%" title="Transimex: 20 Cont"></div><div class="h-full bg-surface-variant border border-outline-variant/60" style="width: 15%" title="Vệ tinh khác: 15 Cont"></div></div></div><div class="flex flex-col gap-1 pt-0.5"><div class="flex items-center justify-between text-[10px] px-1.5 py-0.5 rounded bg-surface-container-low/50"><span class="font-medium text-on-surface truncate max-w-[130px]">Vận tải Hưng Phát</span><span class="font-data-mono font-bold text-secondary text-[10px]">35 Cont</span></div><div class="flex items-center justify-between text-[10px] px-1.5 py-0.5 rounded bg-surface-container-low/50"><span class="font-medium text-on-surface truncate max-w-[130px]">Toàn Cầu Express</span><span class="font-data-mono font-bold text-secondary text-[10px]">30 Cont</span></div><div class="flex items-center justify-between text-[10px] px-1.5 py-0.5 rounded bg-surface-container-low/50"><span class="font-medium text-on-surface truncate max-w-[130px]">Transimex Logistics</span><span class="font-data-mono font-bold text-teal-700 text-[10px]">20 Cont</span></div></div></div><div class="pt-1.5 border-t border-surface-container-high/60 flex items-center justify-between text-[10px]"><span class="text-outline font-medium">+7 đơn vị (15 cont)</span></div></div><!-- Card 3: Hải quan --><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">gavel</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">3. Hải quan</span></div><span class="px-1.5 py-0.2 rounded-sm bg-teal-50 text-teal-800 font-bold font-data-mono text-[9px] border border-teal-200">LUỒNG XANH</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Đại lý Khai báo HQ &amp; C/O:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="CTCP Vietrans TP.HCM">CTCP Vietrans TP.HCM</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Số TK HQ:</span><span class="font-semibold text-on-surface">105928172910</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Ngày thông quan:</span><span class="font-medium text-on-surface">24/03/2024</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Số C/O (Form B):</span><span class="font-bold text-secondary">VN-US24/01/0921</span></div></div></div><!-- Card 4: Shipping --><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">directions_boat</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">4. Shipping (Hãng tàu)</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">MAERSK</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Hãng tàu chuyên chở quốc tế:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="Maersk Line Logistics">Maersk Line Logistics</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Tàu vận tải:</span><span class="font-medium text-on-surface">MC-KINNEY</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Chuyến (Voy):</span><span class="font-bold text-secondary">402E</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Hành trình:</span><span class="font-semibold text-teal-700">SGN ➔ LGB</span></div></div></div></div></div>
+</div>
+<!-- Lô 2 -->
+<!-- Lô 3 -->
+<!-- Lô 2 --><div class="bg-surface-container-lowest rounded-md p-4 shadow-xs flex flex-col gap-3 border border-surface-container-high/80 hover:border-secondary/50 transition-all"><div class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-container-high pb-2.5"><div class="flex items-center gap-2.5 flex-wrap"><div class="w-7 h-7 rounded-sm bg-teal-100 flex items-center justify-center text-teal-800 font-bold font-data-mono text-[12px]">02</div><span class="text-[14px] text-on-surface font-bold font-data-mono">26KCT14/LOT-02</span><span class="px-1.5 py-0.5 rounded-sm bg-surface-container-high font-data-mono text-[10px] font-semibold text-on-surface">FCL (40' HC)</span><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-teal-50 text-teal-800 text-[10px] font-bold border border-teal-200"><span class="material-symbols-outlined text-[12px]">anchor</span> Đã cập cảng đích (DeliveredToPort)</span></div><div class="flex items-center gap-3 text-[11px] flex-wrap justify-between sm:justify-end flex-1 sm:flex-initial"><button class="p-1 text-on-surface-variant hover:text-secondary rounded-sm hover:bg-surface-container transition-colors" title="Thao tác"><span class="material-symbols-outlined text-[18px]">more_vert</span></button></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[12px] pt-1"><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60"><div><div class="flex items-center justify-between"><span class="text-outline text-[11px] font-semibold uppercase tracking-wider">Giá trị tờ khai &amp; Quy mô</span><span class="text-[10px] text-outline font-data-mono font-medium">Tỷ giá 25,450</span></div><div class="flex items-baseline gap-2 mt-1 flex-wrap"><div class="font-bold font-data-mono text-on-surface text-[16px]">175,000 <span class="text-[11px] font-semibold text-outline">USD</span></div><div class="font-semibold font-data-mono text-secondary text-[12px]">≈ 4,453,750,000 <span class="text-[10px] font-medium text-outline">VNĐ</span></div></div></div><div class="mt-2 pt-2 border-t border-surface-container-high/60 flex flex-col gap-1"><div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[10px] border border-blue-200">1 Cont 40' HC</span><span class="text-[11px] text-on-surface-variant font-medium">(Số lượng: 1 Cont)</span></div><span class="font-data-mono text-[11px] text-on-surface-variant">24.5 Tấn • VGM: 28,200 kg</span></div></div><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60"><div><span class="text-outline text-[11px] font-semibold uppercase tracking-wider">HÀNH TRÌNH &amp; LỊCH TRÌNH</span><div class="flex flex-col gap-1 mt-1.5 text-[12px]"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">trip_origin</span><span class="text-on-surface-variant text-[11px] font-medium">Nơi đi:</span><span class="font-bold text-on-surface text-[12px]">Cát Lái (VN)</span></div><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-teal-600">location_on</span><span class="text-on-surface-variant text-[11px] font-medium">Nơi đến:</span><span class="font-bold text-on-surface text-[12px]">Long Beach (US)</span></div></div></div><div class="mt-2 pt-2 border-t border-surface-container-high/60 grid grid-cols-2 gap-2 text-[11px]"><div class="flex flex-col"><span class="text-on-surface-variant font-medium text-[10px]">Khởi hành (ETD):</span><span class="font-data-mono text-on-surface font-semibold text-[12px]">18/03/2024</span></div><div class="flex flex-col"><span class="text-teal-800 font-medium text-[10px]">Cập cảng (ETA):</span><span class="font-data-mono text-teal-700 font-bold text-[12px]">05/04/2024</span></div></div></div><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60 h-full"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60 shrink-0"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">payments</span><span class="text-outline text-[11px] font-bold uppercase tracking-wider">Chi phí Logistics</span></div><div class="flex items-baseline gap-1"><span class="font-bold font-data-mono text-on-surface text-[14px]">126,200,000</span><span class="text-[10px] font-bold text-outline">VNĐ</span></div></div><div class="overflow-y-auto max-h-[92px] pr-1 pt-2 select-none"><div class="grid grid-cols-2 gap-x-2.5 gap-y-1.5 text-[11px]"><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Cước biển Ocean Freight">O/F :</span><span class="font-data-mono font-bold text-secondary text-[11px]">104.50M</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Vận chuyển bộ Trucking">Trucking:</span><span class="font-data-mono font-bold text-on-surface text-[11px]">18.50M</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Hải quan / Kiểm hoá">Hải quan:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">1,250,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Phí cảng THC / Nâng hạ bãi">Cảng:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">850,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Bảo hiểm hàng hải">Bảo hiểm:</span><span class="font-data-mono font-semibold text-teal-700 text-[11px]">650,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Thuế / Lệ phí bến bãi &amp; C/O">Thuế DDP:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">450,000</span></div></div></div></div></div><div class="mt-1 pt-3 border-t border-surface-container-high flex flex-col gap-2.5 bg-surface-container-low/40 p-3 rounded-md border border-surface-container-high/60"><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">forklift</span><span class="text-[11px] font-bold uppercase tracking-wider text-on-surface">NHÀ CUNG CẤP &amp; ĐƠN VỊ LIÊN KẾT</span></div><span class="font-data-mono text-[10px] px-2 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">4 Đơn vị vận hành</span></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px] items-stretch"><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">assignment</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">1. Booking</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">FCL</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Đơn vị đặt chỗ &amp; ủy thác:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="Á Châu Logistics &amp; Trade">Á Châu Logistics &amp; Trade</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Mã Booking:</span><span class="font-bold text-secondary">BKG-ONE-8812</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Số Vận đơn:</span><span class="font-bold text-on-surface">ONE-339102</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Hình thức:</span><span class="font-semibold text-teal-700">Direct B/L</span></div></div></div><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-1.5"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">local_shipping</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">2. Trucking</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">ĐÃ HẠ BÃI</span></div><div class="flex items-center justify-between text-[10px] text-on-surface-variant"><span class="text-outline">Đội xe:</span><strong class="text-on-surface font-semibold truncate">Vận tải Hưng Phát</strong></div><div class="flex flex-col gap-1 pt-0.5"><div class="flex items-center justify-between text-[9px] text-outline font-medium"><span class="uppercase tracking-wider">Phân bổ xe</span><span class="font-data-mono font-bold text-on-surface">35/35 Cont</span></div><div class="h-1.5 w-full rounded-xs bg-surface-container-high flex overflow-hidden gap-0.5"><div class="h-full bg-teal-600" style="width: 100%" title="Hưng Phát: 35 Cont đã hạ cảng"></div></div></div></div><div class="pt-1.5 border-t border-surface-container-high/60 flex items-center justify-between text-[10px]"><span class="text-outline font-medium">Luồng điều xe chuẩn</span><span class="text-teal-700 font-semibold">35 Cont</span></div></div><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">gavel</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">3. Hải quan</span></div><span class="px-1.5 py-0.2 rounded-sm bg-teal-50 text-teal-800 font-bold font-data-mono text-[9px] border border-teal-200">LUỒNG XANH</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Đại lý Khai báo HQ &amp; C/O:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="CTCP Vietrans TP.HCM">CTCP Vietrans TP.HCM</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Số TK HQ:</span><span class="font-semibold text-on-surface">105928172911</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Ngày thông quan:</span><span class="font-medium text-on-surface">17/03/2024</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Số C/O (Form B):</span><span class="font-bold text-secondary">VN-US24/01/0922</span></div></div></div><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">directions_boat</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">4. Shipping (Hãng tàu)</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">ONE</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Hãng tàu chuyên chở:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="Ocean Network Express (ONE)">Ocean Network Express (ONE)</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Tàu vận tải:</span><span class="font-medium text-on-surface">ONE APUS</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Chuyến (Voy):</span><span class="font-bold text-secondary">021E</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Hành trình:</span><span class="font-semibold text-teal-700">SGN ➔ LGB</span></div></div></div></div></div></div><!-- Lô 3 --><div class="bg-surface-container-lowest rounded-md p-4 shadow-xs flex flex-col gap-3 border border-surface-container-high/80 hover:border-secondary/50 transition-all"><div class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-container-high pb-2.5"><div class="flex items-center gap-2.5 flex-wrap"><div class="w-7 h-7 rounded-sm bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed font-bold font-data-mono text-[12px]">03</div><span class="text-[14px] text-on-surface font-bold font-data-mono">26KCT14/LOT-03</span><span class="px-1.5 py-0.5 rounded-sm bg-surface-container-high font-data-mono text-[10px] font-semibold text-on-surface">FCL (40' HC)</span><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold border border-blue-200"><span class="material-symbols-outlined text-[12px]">warehouse</span> Chờ hạ bãi xuất khẩu (AtYardAwaitingExport)</span></div><div class="flex items-center gap-3 text-[11px] flex-wrap justify-between sm:justify-end flex-1 sm:flex-initial"><button class="p-1 text-on-surface-variant hover:text-secondary rounded-sm hover:bg-surface-container transition-colors" title="Thao tác"><span class="material-symbols-outlined text-[18px]">more_vert</span></button></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[12px] pt-1"><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60"><div><div class="flex items-center justify-between"><span class="text-outline text-[11px] font-semibold uppercase tracking-wider">Giá trị tờ khai &amp; Quy mô</span><span class="text-[10px] text-outline font-data-mono font-medium">Tỷ giá 25,450</span></div><div class="flex items-baseline gap-2 mt-1 flex-wrap"><div class="font-bold font-data-mono text-on-surface text-[16px]">135,000 <span class="text-[11px] font-semibold text-outline">USD</span></div><div class="font-semibold font-data-mono text-secondary text-[12px]">≈ 3,435,750,000 <span class="text-[10px] font-medium text-outline">VNĐ</span></div></div></div><div class="mt-2 pt-2 border-t border-surface-container-high/60 flex flex-col gap-1"><div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[10px] border border-blue-200">1 Cont 40' HC</span><span class="text-[11px] text-on-surface-variant font-medium">(Số lượng: 1 Cont)</span></div><span class="font-data-mono text-[11px] text-on-surface-variant">24.5 Tấn • VGM: 27,900 kg</span></div></div><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60"><div><span class="text-outline text-[11px] font-semibold uppercase tracking-wider">HÀNH TRÌNH &amp; LỊCH TRÌNH</span><div class="flex flex-col gap-1 mt-1.5 text-[12px]"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">trip_origin</span><span class="text-on-surface-variant text-[11px] font-medium">Nơi đi:</span><span class="font-bold text-on-surface text-[12px]">Cát Lái (VN)</span></div><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-teal-600">location_on</span><span class="text-on-surface-variant text-[11px] font-medium">Nơi đến:</span><span class="font-bold text-on-surface text-[12px]">Long Beach (US)</span></div></div></div><div class="mt-2 pt-2 border-t border-surface-container-high/60 grid grid-cols-2 gap-2 text-[11px]"><div class="flex flex-col"><span class="text-on-surface-variant font-medium text-[10px]">Khởi hành (ETD):</span><span class="font-data-mono text-on-surface font-semibold text-[12px]">02/04/2024</span></div><div class="flex flex-col"><span class="text-teal-800 font-medium text-[10px]">Dự kiến đến (ETA):</span><span class="font-data-mono text-teal-700 font-bold text-[12px]">20/04/2024</span></div></div></div><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60 h-full"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60 shrink-0"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">payments</span><span class="text-outline text-[11px] font-bold uppercase tracking-wider">Chi phí Logistics</span></div><div class="flex items-baseline gap-1"><span class="font-bold font-data-mono text-on-surface text-[14px]">119,800,000</span><span class="text-[10px] font-bold text-outline">VNĐ</span></div></div><div class="overflow-y-auto max-h-[92px] pr-1 pt-2 select-none"><div class="grid grid-cols-2 gap-x-2.5 gap-y-1.5 text-[11px]"><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Cước biển Ocean Freight">O/F :</span><span class="font-data-mono font-bold text-secondary text-[11px]">98.20M</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Vận chuyển bộ Trucking">Trucking:</span><span class="font-data-mono font-bold text-on-surface text-[11px]">18.50M</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Hải quan / Kiểm hoá">Hải quan:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">1,200,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Phí cảng THC / Nâng hạ bãi">Cảng:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">850,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Bảo hiểm hàng hải">Bảo hiểm:</span><span class="font-data-mono font-semibold text-teal-700 text-[11px]">600,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Phí chứng từ D/O &amp; B/L">Phí D/O:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">450,000</span></div></div></div></div></div><div class="mt-1 pt-3 border-t border-surface-container-high flex flex-col gap-2.5 bg-surface-container-low/40 p-3 rounded-md border border-surface-container-high/60"><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">forklift</span><span class="text-[11px] font-bold uppercase tracking-wider text-on-surface">NHÀ CUNG CẤP &amp; ĐƠN VỊ LIÊN KẾT</span></div><span class="font-data-mono text-[10px] px-2 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">4 Đơn vị vận hành</span></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px] items-stretch"><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">assignment</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">1. Booking</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">FCL</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Đơn vị đặt chỗ &amp; ủy thác:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="Á Châu Logistics">Á Châu Logistics</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Mã Booking:</span><span class="font-bold text-secondary">BKG-CMA-4420</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Số Vận đơn:</span><span class="font-bold text-on-surface">CMA-991204</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Hình thức:</span><span class="font-semibold text-teal-700">Direct B/L</span></div></div></div><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-1.5"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">local_shipping</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">2. Trucking</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">30 CONT</span></div><div class="flex items-center justify-between text-[10px] text-on-surface-variant"><span class="text-outline">Đội xe:</span><strong class="text-on-surface font-semibold truncate">Toàn Cầu Express</strong></div><div class="flex flex-col gap-1 pt-0.5"><div class="flex items-center justify-between text-[9px] text-outline font-medium"><span class="uppercase tracking-wider">Phân bổ xe</span><span class="font-data-mono font-bold text-on-surface">30/30 Cont</span></div><div class="h-1.5 w-full rounded-xs bg-surface-container-high flex overflow-hidden gap-0.5"><div class="h-full bg-secondary-container" style="width: 100%" title="Toàn Cầu Express: 30 Cont"></div></div></div></div><div class="pt-1.5 border-t border-surface-container-high/60 flex items-center justify-between text-[10px]"><span class="text-outline font-medium">Tập kết kho</span><span class="text-secondary font-semibold">30 Cont</span></div></div><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">gavel</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">3. Hải quan</span></div><span class="px-1.5 py-0.2 rounded-sm bg-blue-50/50 text-secondary font-bold font-data-mono text-[9px] border border-blue-200">LUỒNG VÀNG</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Đại lý Khai báo HQ:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="CTCP Vietrans TP.HCM">CTCP Vietrans TP.HCM</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Số TK HQ:</span><span class="font-semibold text-on-surface">105928172912</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Trạng thái:</span><span class="font-medium text-secondary">Đang kiểm hóa</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Hình thức:</span><span class="font-semibold text-outline">Tờ khai điện tử</span></div></div></div><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">directions_boat</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">4. Shipping (Hãng tàu)</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">CMA CGM</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Hãng tàu chuyên chở:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="CMA CGM">CMA CGM</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Tàu vận tải:</span><span class="font-medium text-on-surface truncate">CMA CGM JULES VERNE</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Chuyến (Voy):</span><span class="font-bold text-secondary">114E</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Hành trình:</span><span class="font-semibold text-teal-700">SGN ➔ LGB</span></div></div></div></div></div></div><!-- Lô 4 (LCL) --><div class="bg-surface-container-lowest rounded-md p-4 shadow-xs flex flex-col gap-3 border border-surface-container-high/80 hover:border-secondary/50 transition-all"><div class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-container-high pb-2.5"><div class="flex items-center gap-2.5 flex-wrap"><div class="w-7 h-7 rounded-sm bg-primary-fixed flex items-center justify-center text-primary font-bold font-data-mono text-[12px]">04</div><span class="text-[14px] text-on-surface font-bold font-data-mono">26KCT14/LOT-04-LCL</span><span class="px-1.5 py-0.5 rounded-sm bg-primary-fixed text-primary font-data-mono text-[10px] font-semibold">LCL (Hàng lẻ đóng ghép - Kiện rời)</span><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-blue-50/50 text-secondary text-[10px] font-bold border border-blue-200"><span class="material-symbols-outlined text-[12px]">inventory_2</span> Đang đóng hàng kho CFS (Packing / CFS)</span></div><div class="flex items-center gap-3 text-[11px] flex-wrap justify-between sm:justify-end flex-1 sm:flex-initial"><button class="p-1 text-on-surface-variant hover:text-secondary rounded-sm hover:bg-surface-container transition-colors" title="Thao tác"><span class="material-symbols-outlined text-[18px]">more_vert</span></button></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-[12px] pt-1"><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60"><div><div class="flex items-center justify-between"><span class="text-outline text-[11px] font-semibold uppercase tracking-wider">Giá trị tờ khai &amp; Quy mô</span><span class="text-[10px] text-outline font-data-mono font-medium">Tỷ giá 25,450</span></div><div class="flex items-baseline gap-2 mt-1 flex-wrap"><div class="font-bold font-data-mono text-on-surface text-[16px]">25,000 <span class="text-[11px] font-semibold text-outline">USD</span></div><div class="font-semibold font-data-mono text-secondary text-[12px]">≈ 636,250,000 <span class="text-[10px] font-medium text-outline">VNĐ</span></div></div></div><div class="mt-2 pt-2 border-t border-surface-container-high/60 flex flex-col gap-1"><div class="flex items-center gap-1.5 flex-wrap"><span class="px-1.5 py-0.5 rounded-sm bg-surface-container-high text-on-surface font-bold font-data-mono text-[10px]">45 Kiện</span></div><span class="font-data-mono text-[11px] text-on-surface-variant">3.8 CBM • Khối lượng: 2.4 Tấn</span></div></div><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60"><div><span class="text-outline text-[11px] font-semibold uppercase tracking-wider">HÀNH TRÌNH &amp; LỊCH TRÌNH</span><div class="flex flex-col gap-1 mt-1.5 text-[12px]"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">trip_origin</span><span class="text-on-surface-variant text-[11px] font-medium">Nơi đi:</span><span class="font-bold text-on-surface text-[12px]">Kho CFS Cát Lái (VN)</span></div><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-teal-600">location_on</span><span class="text-on-surface-variant text-[11px] font-medium">Nơi đến:</span><span class="font-bold text-on-surface text-[12px]">Long Beach CFS Terminal (US)</span></div></div></div><div class="mt-2 pt-2 border-t border-surface-container-high/60 grid grid-cols-2 gap-2 text-[11px]"><div class="flex flex-col"><span class="text-on-surface-variant font-medium text-[10px]">Khởi hành (ETD):</span><span class="font-data-mono text-on-surface font-semibold text-[12px]">08/04/2024</span></div><div class="flex flex-col"><span class="text-teal-800 font-medium text-[10px]">Dự kiến đến (ETA):</span><span class="font-data-mono text-teal-700 font-bold text-[12px]">28/04/2024</span></div></div></div><div class="flex flex-col justify-between p-2.5 rounded-md bg-surface-container-low/40 border border-surface-container-high/60 h-full"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60 shrink-0"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">payments</span><span class="text-outline text-[11px] font-bold uppercase tracking-wider">Chi phí Logistics</span></div><div class="flex items-baseline gap-1"><span class="font-bold font-data-mono text-on-surface text-[14px]">34,500,000</span><span class="text-[10px] font-bold text-outline">VNĐ</span></div></div><div class="overflow-y-auto max-h-[92px] pr-1 pt-2 select-none"><div class="grid grid-cols-2 gap-x-2.5 gap-y-1.5 text-[11px]"><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Cước ghép cont LCL Ocean Freight">Cước LCL O/F:</span><span class="font-data-mono font-bold text-secondary text-[11px]">22.50M</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Phí kho CFS và xếp dỡ THC">Phí CFS &amp; THC:</span><span class="font-data-mono font-bold text-on-surface text-[11px]">6.80M</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Vận chuyển nội địa xe tải">Trucking nội địa:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">3,200,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Khai báo hải quan hàng lẻ">Hải quan lẻ:</span><span class="font-data-mono font-semibold text-on-surface text-[11px]">1,200,000</span></div><div class="flex items-center justify-between py-0.5 px-1.5 rounded bg-surface-container-lowest border border-surface-container-high/60"><span class="text-on-surface-variant truncate" title="Hun trùng pallet và in tem">Hun trùng &amp; Tem:</span><span class="font-data-mono font-semibold text-teal-700 text-[11px]">800,000</span></div></div></div></div></div><div class="mt-1 pt-3 border-t border-surface-container-high flex flex-col gap-2.5 bg-surface-container-low/40 p-3 rounded-md border border-surface-container-high/60"><div class="flex flex-wrap items-center justify-between gap-2"><div class="flex items-center gap-2"><span class="material-symbols-outlined text-secondary text-[16px]">forklift</span><span class="text-[11px] font-bold uppercase tracking-wider text-on-surface">NHÀ CUNG CẤP &amp; ĐƠN VỊ LIÊN KẾT</span></div><span class="font-data-mono text-[10px] px-2 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">4 Đơn vị vận hành</span></div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px] items-stretch"><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">assignment</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">1. Booking / Consol</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">LCL</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Đơn vị gom hàng:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="Á Châu Consol &amp; Logistics">Á Châu Consol &amp; Logistics</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Mã Booking:</span><span class="font-bold text-secondary">CSL-SGN-5501</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">House B/L:</span><span class="font-bold text-on-surface">ACL-LCL-9081</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Hình thức:</span><span class="font-semibold text-teal-700">CFS / CFS</span></div></div></div><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-1.5"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">local_shipping</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">2. Trucking nội địa</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">XE TẢI THÙNG</span></div><div class="flex items-center justify-between text-[10px] text-on-surface-variant"><span class="text-outline">Đội xe:</span><strong class="text-on-surface font-semibold truncate">Transimex Logistics</strong></div><div class="flex flex-col gap-1 pt-0.5"><div class="flex items-center justify-between text-[9px] text-outline font-medium"><span class="uppercase tracking-wider">Lộ trình vận chuyển</span><span class="font-data-mono font-bold text-on-surface">Xưởng ➔ Kho CFS</span></div><div class="h-1.5 w-full rounded-xs bg-surface-container-high flex overflow-hidden gap-0.5"><div class="h-full bg-teal-600" style="width: 100%" title="Đã giao kho CFS Cát Lái"></div></div></div></div><div class="pt-1.5 border-t border-surface-container-high/60 flex items-center justify-between text-[10px]"><span class="text-outline font-medium">Xe tải thùng chở hàng</span><span class="text-teal-700 font-semibold">45 Kiện</span></div></div><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">gavel</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">3. Hải quan &amp; Kho CFS</span></div><span class="px-1.5 py-0.2 rounded-sm bg-teal-50 text-teal-800 font-bold font-data-mono text-[9px] border border-teal-200">CFS CÁT LÁI</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Đại lý Khai báo HQ Á Châu:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="Đại lý Khai báo HQ Á Châu">Đại lý Khai báo HQ Á Châu</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Số TK HQ:</span><span class="font-semibold text-on-surface">105928172930</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Điểm kiểm hóa:</span><span class="font-medium text-teal-700">CFS Cát Lái</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Chứng nhận:</span><span class="font-bold text-secondary">Fumigation Cert</span></div></div></div><div class="p-3 rounded-md bg-surface-container-lowest border border-surface-container-high/70 flex flex-col justify-between gap-2 shadow-xs"><div class="flex flex-col gap-2"><div class="flex items-center justify-between pb-1.5 border-b border-surface-container-high/60"><div class="flex items-center gap-1.5"><span class="material-symbols-outlined text-secondary text-[16px]">directions_boat</span><span class="text-[10px] font-bold uppercase tracking-wider text-outline">4. Shipping (LCL)</span></div><span class="px-1.5 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-bold font-data-mono text-[9px]">SEALAND</span></div><div class="flex flex-col gap-0.5"><span class="text-[10px] text-outline font-medium">Vận tải ghép lô quốc tế:</span><strong class="text-[13px] text-on-surface font-semibold truncate" title="Sealand / Maersk LCL">Sealand / Maersk LCL</strong></div></div><div class="pt-2 border-t border-surface-container-high/60 flex flex-col gap-1.5 text-[10px] text-on-surface-variant font-data-mono bg-surface-container-low/40 p-2 rounded"><div class="flex items-center justify-between"><span class="text-outline font-sans">Master B/L:</span><span class="font-medium text-on-surface">MSK-LCL-0912</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Dịch vụ:</span><span class="font-bold text-secondary">Consol Direct</span></div><div class="flex items-center justify-between"><span class="text-outline font-sans">Hành trình:</span><span class="font-semibold text-teal-700">SGN ➔ LGB CFS</span></div></div></div></div></div></div></div><div class="hidden flex-col gap-3" id="shipment-table-view"><div class="bg-surface-container-lowest rounded-md border border-surface-container-high/80 shadow-xs overflow-hidden"><div class="p-3 bg-surface-container-low/40 border-b border-surface-container-high/70 flex flex-wrap items-center justify-between gap-3"><div class="flex items-center gap-2 flex-1 min-w-[240px]"><div class="relative flex items-center w-full max-w-xs"><span class="material-symbols-outlined absolute left-2.5 text-outline text-[16px]">search</span><input class="w-full h-8 pl-8 pr-3 bg-surface-container-lowest border border-surface-container-high rounded text-[12px] text-on-surface placeholder:text-outline focus:outline-none focus:border-secondary transition-all" placeholder="Lọc theo mã lô, cont, B/L, cảng..." type="text"></div><div class="flex items-center gap-1 text-[11px]"><span class="px-2 py-1 rounded bg-surface-container text-on-surface font-medium border border-surface-container-high cursor-pointer hover:bg-surface-container-high">Tất cả (4)</span><span class="px-2 py-1 rounded bg-surface-container-lowest text-on-surface-variant font-medium border border-surface-container-high hover:bg-surface-container cursor-pointer">FCL (3)</span><span class="px-2 py-1 rounded bg-surface-container-lowest text-on-surface-variant font-medium border border-surface-container-high hover:bg-surface-container cursor-pointer">LCL (1)</span></div></div><div class="flex items-center gap-2 text-[11px] text-on-surface-variant"><span class="font-medium">Hiển thị 4/4 lô hàng</span><span class="text-outline-variant">•</span><span class="font-data-mono font-semibold text-secondary">Tổng: $510,000 USD</span></div></div><div class="overflow-x-auto"><table class="w-full text-left border-collapse text-[12px]"><thead><tr class="bg-surface-container-low text-outline font-bold uppercase tracking-wider text-[10px] border-b border-surface-container-high"><th class="py-2.5 px-3 text-center w-10">STT</th><th class="py-2.5 px-3">Mã Lô &amp; Quy Cách</th><th class="py-2.5 px-3">Trạng Thái Vận Hành</th><th class="py-2.5 px-3 text-right">Giá Trị Tờ Khai</th><th class="py-2.5 px-3">Hành Trình</th><th class="py-2.5 px-3">Lịch Trình (ETD - ETA)</th><th class="py-2.5 px-3">Đơn Vị &amp; Hãng Tàu</th><th class="py-2.5 px-3 text-right">Phí Logistics</th><th class="py-2.5 px-3 text-center">Thao Tác</th></tr></thead><tbody class="divide-y divide-surface-container-high text-on-surface"><tr class="hover:bg-surface-container-low/50 transition-colors"><td class="py-3 px-3 text-center font-data-mono font-bold text-secondary">01</td><td class="py-3 px-3"><div class="flex flex-col"><div class="flex items-center gap-1.5"><span class="font-data-mono font-bold text-on-surface text-[13px]">26KCT14/LOT-01</span><span class="px-1.5 py-0.2 rounded-sm bg-surface-container-high text-on-surface font-data-mono text-[9px] font-semibold">FCL 40'HC</span></div><span class="text-[11px] text-on-surface-variant font-data-mono mt-0.5">1 Cont • 24.5 Tấn (VGM: 28,400kg)</span></div></td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold border border-blue-200"><span class="material-symbols-outlined text-[12px]">sailing</span>Đang trên biển</span></td><td class="py-3 px-3 text-right"><div class="flex flex-col items-end"><span class="font-data-mono font-bold text-on-surface text-[12px]">$175,000 USD</span><span class="font-data-mono text-[10px] text-secondary">≈ 4,453,750,000 đ</span></div></td><td class="py-3 px-3"><div class="flex flex-col text-[11px]"><span class="font-semibold text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[12px] text-secondary">trip_origin</span> Cát Lái (VN)</span><span class="font-semibold text-on-surface flex items-center gap-1 mt-0.5"><span class="material-symbols-outlined text-[12px] text-teal-600">location_on</span> Long Beach (US)</span></div></td><td class="py-3 px-3 font-data-mono text-[11px]"><div class="flex flex-col"><span class="text-on-surface-variant">ETD: <strong class="text-on-surface font-semibold">25/03/2024</strong></span><span class="text-teal-800">ETA: <strong class="text-teal-700 font-bold">12/04/2024</strong></span></div></td><td class="py-3 px-3"><div class="flex flex-col text-[11px]"><div class="flex items-center gap-1"><span class="font-semibold text-on-surface">Maersk Line</span><span class="text-[9px] px-1 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-data-mono font-bold">402E</span></div><span class="text-[10px] text-on-surface-variant truncate font-data-mono">B/L: MSK-882910</span></div></td><td class="py-3 px-3 text-right"><span class="font-data-mono font-bold text-on-surface text-[12px]">128,500,000 <span class="text-[10px] font-normal text-outline">đ</span></span></td><td class="py-3 px-3 text-center"><div class="inline-flex items-center gap-1"><button class="p-1 rounded text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Xem chi tiết" type="button"><span class="material-symbols-outlined text-[16px]">visibility</span></button><button class="p-1 rounded text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Chỉnh sửa" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button></div></td></tr><tr class="hover:bg-surface-container-low/50 transition-colors"><td class="py-3 px-3 text-center font-data-mono font-bold text-teal-700">02</td><td class="py-3 px-3"><div class="flex flex-col"><div class="flex items-center gap-1.5"><span class="font-data-mono font-bold text-on-surface text-[13px]">26KCT14/LOT-02</span><span class="px-1.5 py-0.2 rounded-sm bg-surface-container-high text-on-surface font-data-mono text-[9px] font-semibold">FCL 40'HC</span></div><span class="text-[11px] text-on-surface-variant font-data-mono mt-0.5">1 Cont • 24.5 Tấn (VGM: 28,200kg)</span></div></td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-teal-50 text-teal-800 text-[10px] font-bold border border-teal-200"><span class="material-symbols-outlined text-[12px]">anchor</span>Đã cập cảng đích</span></td><td class="py-3 px-3 text-right"><div class="flex flex-col items-end"><span class="font-data-mono font-bold text-on-surface text-[12px]">$175,000 USD</span><span class="font-data-mono text-[10px] text-secondary">≈ 4,453,750,000 đ</span></div></td><td class="py-3 px-3"><div class="flex flex-col text-[11px]"><span class="font-semibold text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[12px] text-secondary">trip_origin</span> Cát Lái (VN)</span><span class="font-semibold text-on-surface flex items-center gap-1 mt-0.5"><span class="material-symbols-outlined text-[12px] text-teal-600">location_on</span> Long Beach (US)</span></div></td><td class="py-3 px-3 font-data-mono text-[11px]"><div class="flex flex-col"><span class="text-on-surface-variant">ETD: <strong class="text-on-surface font-semibold">18/03/2024</strong></span><span class="text-teal-800">ETA: <strong class="text-teal-700 font-bold">05/04/2024</strong></span></div></td><td class="py-3 px-3"><div class="flex flex-col text-[11px]"><div class="flex items-center gap-1"><span class="font-semibold text-on-surface">ONE Line</span><span class="text-[9px] px-1 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-data-mono font-bold">021E</span></div><span class="text-[10px] text-on-surface-variant truncate font-data-mono">B/L: ONE-339102</span></div></td><td class="py-3 px-3 text-right"><span class="font-data-mono font-bold text-on-surface text-[12px]">126,200,000 <span class="text-[10px] font-normal text-outline">đ</span></span></td><td class="py-3 px-3 text-center"><div class="inline-flex items-center gap-1"><button class="p-1 rounded text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Xem chi tiết" type="button"><span class="material-symbols-outlined text-[16px]">visibility</span></button><button class="p-1 rounded text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Chỉnh sửa" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button></div></td></tr><tr class="hover:bg-surface-container-low/50 transition-colors"><td class="py-3 px-3 text-center font-data-mono font-bold text-secondary">03</td><td class="py-3 px-3"><div class="flex flex-col"><div class="flex items-center gap-1.5"><span class="font-data-mono font-bold text-on-surface text-[13px]">26KCT14/LOT-03</span><span class="px-1.5 py-0.2 rounded-sm bg-surface-container-high text-on-surface font-data-mono text-[9px] font-semibold">FCL 40'HC</span></div><span class="text-[11px] text-on-surface-variant font-data-mono mt-0.5">1 Cont • 24.5 Tấn (VGM: 27,900kg)</span></div></td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-blue-50/50 text-secondary text-[10px] font-bold border border-blue-200"><span class="material-symbols-outlined text-[12px]">warehouse</span>Chờ hạ bãi XK</span></td><td class="py-3 px-3 text-right"><div class="flex flex-col items-end"><span class="font-data-mono font-bold text-on-surface text-[12px]">$135,000 USD</span><span class="font-data-mono text-[10px] text-secondary">≈ 3,435,750,000 đ</span></div></td><td class="py-3 px-3"><div class="flex flex-col text-[11px]"><span class="font-semibold text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[12px] text-secondary">trip_origin</span> Cát Lái (VN)</span><span class="font-semibold text-on-surface flex items-center gap-1 mt-0.5"><span class="material-symbols-outlined text-[12px] text-teal-600">location_on</span> Long Beach (US)</span></div></td><td class="py-3 px-3 font-data-mono text-[11px]"><div class="flex flex-col"><span class="text-on-surface-variant">ETD: <strong class="text-on-surface font-semibold">02/04/2024</strong></span><span class="text-teal-800">ETA: <strong class="text-teal-700 font-bold">20/04/2024</strong></span></div></td><td class="py-3 px-3"><div class="flex flex-col text-[11px]"><div class="flex items-center gap-1"><span class="font-semibold text-on-surface">CMA CGM</span><span class="text-[9px] px-1 py-0.2 rounded-sm bg-secondary-fixed text-on-secondary-fixed font-data-mono font-bold">114E</span></div><span class="text-[10px] text-on-surface-variant truncate font-data-mono">B/L: CMA-991204</span></div></td><td class="py-3 px-3 text-right"><span class="font-data-mono font-bold text-on-surface text-[12px]">119,800,000 <span class="text-[10px] font-normal text-outline">đ</span></span></td><td class="py-3 px-3 text-center"><div class="inline-flex items-center gap-1"><button class="p-1 rounded text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Xem chi tiết" type="button"><span class="material-symbols-outlined text-[16px]">visibility</span></button><button class="p-1 rounded text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Chỉnh sửa" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button></div></td></tr><tr class="hover:bg-surface-container-low/50 transition-colors"><td class="py-3 px-3 text-center font-data-mono font-bold text-primary">04</td><td class="py-3 px-3"><div class="flex flex-col"><div class="flex items-center gap-1.5"><span class="font-data-mono font-bold text-on-surface text-[13px]">26KCT14/LOT-04-LCL</span><span class="px-1.5 py-0.2 rounded-sm bg-primary-fixed text-primary font-data-mono text-[9px] font-bold">LCL Hàng lẻ</span></div><span class="text-[11px] text-on-surface-variant font-data-mono mt-0.5">45 Kiện • 3.8 CBM (2.4 Tấn)</span></div></td><td class="py-3 px-3"><span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-blue-50/50 text-secondary text-[10px] font-bold border border-blue-200"><span class="material-symbols-outlined text-[12px]">inventory_2</span>Đóng kho CFS</span></td><td class="py-3 px-3 text-right"><div class="flex flex-col items-end"><span class="font-data-mono font-bold text-on-surface text-[12px]">$25,000 USD</span><span class="font-data-mono text-[10px] text-secondary">≈ 636,250,000 đ</span></div></td><td class="py-3 px-3"><div class="flex flex-col text-[11px]"><span class="font-semibold text-on-surface flex items-center gap-1"><span class="material-symbols-outlined text-[12px] text-secondary">trip_origin</span> Kho CFS Cát Lái</span><span class="font-semibold text-on-surface flex items-center gap-1 mt-0.5"><span class="material-symbols-outlined text-[12px] text-teal-600">location_on</span> LGB CFS Terminal</span></div></td><td class="py-3 px-3 font-data-mono text-[11px]"><div class="flex flex-col"><span class="text-on-surface-variant">ETD: <strong class="text-on-surface font-semibold">08/04/2024</strong></span><span class="text-teal-800">ETA: <strong class="text-teal-700 font-bold">28/04/2024</strong></span></div></td><td class="py-3 px-3"><div class="flex flex-col text-[11px]"><div class="flex items-center gap-1"><span class="font-semibold text-on-surface">Sealand / Maersk</span><span class="text-[9px] px-1 py-0.2 rounded-sm bg-primary-fixed text-primary font-data-mono font-bold">CFS</span></div><span class="text-[10px] text-on-surface-variant truncate font-data-mono">B/L: MSK-LCL-0912</span></div></td><td class="py-3 px-3 text-right"><span class="font-data-mono font-bold text-on-surface text-[12px]">34,500,000 <span class="text-[10px] font-normal text-outline">đ</span></span></td><td class="py-3 px-3 text-center"><div class="inline-flex items-center gap-1"><button class="p-1 rounded text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Xem chi tiết" type="button"><span class="material-symbols-outlined text-[16px]">visibility</span></button><button class="p-1 rounded text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Chỉnh sửa" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button></div></td></tr></tbody><tfoot><tr class="bg-surface-container-low font-bold text-on-surface text-[12px] border-t-2 border-surface-container-high"><td class="py-3 px-4 text-outline font-semibold uppercase text-[11px]" colspan="3">Tổng hợp 4 Lô hàng (3 FCL + 1 LCL)</td><td class="py-3 px-3 text-right font-data-mono text-secondary text-[13px]">$510,000 USD</td><td class="py-3 px-3 text-[11px] text-on-surface-variant font-medium" colspan="3">73.5 Tấn FCL + 45 Kiện LCL (3.8 CBM)</td><td class="py-3 px-3 text-right font-data-mono text-secondary text-[13px]">409,000,000 đ</td><td class="py-3 px-3"></td></tr></tfoot></table></div></div></div>
+<!-- Chi phí logistics tóm tắt -->
+<div class="bg-surface-container-low p-4 rounded-md border border-surface-container-high flex flex-col md:flex-row md:items-center justify-between gap-4"><div class="flex items-center gap-3"><div class="w-9 h-9 rounded-md bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shadow-xs"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span></div><div class="flex flex-col"><span class="text-[11px] font-bold uppercase tracking-wider text-outline">Tổng chi phí Logistics</span></div></div><div class="flex items-baseline gap-2"><span class="text-[11px] font-semibold text-outline uppercase tracking-wider">Tổng cộng:</span><span class="font-data-mono font-bold text-[20px] text-secondary tracking-tight">128,500,000</span><span class="font-semibold text-outline text-[12px]">VND</span></div></div>
+</div>
+<!-- ========================================================================= -->
+<!-- PANE 4: PHỤ LỤC HỢP ĐỒNG -->
+<!-- ========================================================================= -->
+<div class="tab-pane flex-col gap-5 flex" id="tab-pane-annex">
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4"><!-- Card 1: GIÁ TRỊ HỢP ĐỒNG -->
+<div class="bg-surface-container-lowest p-4 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col justify-between hover:border-secondary/40 transition-colors">
+  <div class="flex items-center justify-between">
+    <span class="text-[11px] text-outline uppercase font-bold tracking-wider">GIÁ TRỊ HỢP ĐỒNG GỐC</span>
+    <div class="w-7 h-7 rounded-sm bg-primary-fixed flex items-center justify-center text-primary">
+      <span class="material-symbols-outlined text-[16px]">request_quote</span>
+    </div>
+  </div>
+  <div class="flex items-baseline gap-1.5 mt-2">
+    <span class="text-[24px] font-bold text-on-surface font-data-mono">$450,000.00</span>
+    <span class="text-[12px] text-outline font-semibold">USD</span>
+  </div>
+  <span class="text-[11px] text-on-surface-variant mt-1.5 flex items-center gap-1">
+    <span class="material-symbols-outlined text-[13px] text-outline">description</span>
+    <span class="">Giá trị hợp đồng ban đầu (HĐ gốc)</span>
+  </span>
+</div>
+
+<!-- Card 2: PHÁT SINH TĂNG -->
+<div class="bg-surface-container-lowest p-4 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col justify-between hover:border-teal-200 transition-colors">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-teal-600"></span>
+      <span class="text-[11px] text-teal-800 uppercase font-bold tracking-wider">PHÁT SINH TĂNG</span>
+    </div>
+    <div class="w-7 h-7 rounded-sm bg-teal-100 flex items-center justify-center text-teal-800">
+      <span class="material-symbols-outlined text-[16px]">trending_up</span>
+    </div>
+  </div>
+  <div class="flex items-baseline gap-1.5 mt-2">
+    <span class="text-[24px] font-bold text-teal-700 font-data-mono">+$35,000.00</span>
+    <span class="text-[12px] text-outline font-semibold">USD</span>
+  </div>
+  <span class="text-[11px] text-teal-800 font-medium mt-1.5 flex items-center gap-1">
+    <span class="material-symbols-outlined text-[13px] text-teal-600">add_circle</span>
+    <span class="">Tổng giá trị phụ lục tăng (1 phụ lục)</span>
+  </span>
+</div>
+
+<!-- Card 3: PHÁT SINH GIẢM -->
+<div class="bg-surface-container-lowest p-4 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col justify-between hover:border-secondary/40 transition-colors">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full bg-outline"></span>
+      <span class="text-[11px] text-outline uppercase font-bold tracking-wider">PHÁT SINH GIẢM</span>
+    </div>
+    <div class="w-7 h-7 rounded-sm bg-surface-container-high flex items-center justify-center text-outline">
+      <span class="material-symbols-outlined text-[16px]">trending_down</span>
+    </div>
+  </div>
+  <div class="flex items-baseline gap-1.5 mt-2">
+    <span class="text-[24px] font-bold text-outline font-data-mono">$0.00</span>
+    <span class="text-[12px] text-outline font-semibold">USD</span>
+  </div>
+  <span class="text-[11px] text-on-surface-variant mt-1.5 flex items-center gap-1">
+    <span class="material-symbols-outlined text-[13px] text-outline">remove_circle_outline</span>
+    <span class="">Tổng giá trị phụ lục giảm (0 phụ lục)</span>
+  </span>
+</div></div>
+<!-- Addendum Table Box -->
+<div class="bg-surface-container-lowest rounded-md shadow-xs border border-surface-container-high/80 overflow-hidden flex flex-col">
+<div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-container-high">
+<div class="flex flex-col">
+<h3 class="text-[15px] text-on-surface font-bold">Danh sách&nbsp;</h3>
+
+</div>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-on-primary hover:bg-slate-800 transition-colors text-[12px] font-medium shadow-xs self-start sm:self-auto" onclick="showToastMsg('Mở biểu mẫu tạo Phụ lục hợp đồng mới!')">
+<span class="material-symbols-outlined text-[16px]">note_add</span>
+<span class="">+ Thêm phụ lục</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse text-[12px]">
+<thead>
+<tr class="bg-surface-container-low text-outline font-bold uppercase tracking-wider text-[10px] border-b border-surface-container-high">
+<th class="py-2.5 px-4">Mã PL</th>
+<th class="py-2.5 px-3">Số Phụ Lục</th>
+<th class="py-2.5 px-3">Phân loại</th>
+<th class="py-2.5 px-3 text-right">Giá trị điều chỉnh</th>
+<th class="py-2.5 px-3">Ngày ký</th>
+<th class="py-2.5 px-3">Tình trạng chữ ký</th>
+<th class="py-2.5 px-3">Nội dung tóm tắt</th>
+<th class="py-2.5 px-3 text-center">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container-high text-on-surface">
+<!-- Row AN-01 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-3 px-4 font-data-mono font-bold text-secondary">AN-01</td>
+<td class="py-3 px-3 font-data-mono font-semibold">CT-2024/EXP-088/AN-01</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-teal-50 text-teal-800 text-[10px] font-bold border border-teal-200">
+<span class="material-symbols-outlined text-[12px]">trending_up</span> + Tăng giá trị
+                      </span>
+</td>
+<td class="py-3 px-3 text-right font-data-mono font-bold text-teal-700">+$35,000.00 USD</td>
+<td class="py-3 px-3 font-data-mono">25/04/2024</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1 text-[10px]">
+<span class="px-1.5 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">Bên bán [Đã ký]</span>
+<span class="px-1.5 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">Bên mua [Đã ký]</span>
+</div>
+</td>
+<td class="py-3 px-3 text-on-surface-variant max-w-xs truncate" title="Bổ sung 120 bộ linh kiện kẹp ray tàu và đệm cao su chịu lực cho tuyến Metro số 2">___<br></td>
+<td class="py-3 px-3 text-center">
+<div class="inline-flex items-center gap-1">
+<button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Sửa phụ lục"><span class="material-symbols-outlined text-[16px]">edit</span></button>
+<button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="In phụ lục"><span class="material-symbols-outlined text-[16px]">print</span></button>
+</div>
+</td>
+</tr>
+<!-- Row AN-02 -->
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-3 px-4 font-data-mono font-bold text-secondary">AN-02</td>
+<td class="py-3 px-3 font-data-mono font-semibold">CT-2024/EXP-088/AN-02</td>
+<td class="py-3 px-3">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold border border-blue-200">
+<span class="material-symbols-outlined text-[12px]">update</span> Gia hạn tiến độ
+                      </span>
+</td>
+<td class="py-3 px-3 text-right font-data-mono font-semibold text-outline">$0.00 USD</td>
+<td class="py-3 px-3 font-data-mono">10/05/2024</td>
+<td class="py-3 px-3">
+<div class="flex items-center gap-1 text-[10px]">
+<span class="px-1.5 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">Bên bán [Đã ký]</span>
+<span class="px-1.5 py-0.5 rounded-sm bg-teal-50 text-teal-800 font-semibold border border-teal-200">Bên mua [Đã ký]</span>
+</div>
+</td>
+<td class="py-3 px-3 text-on-surface-variant max-w-xs truncate" title="Gia hạn thời điểm giao hàng ETD thêm 10 ngày do hãng tàu tái sắp xếp lịch ghé cảng Cát Lái">
+                      Gia hạn thời điểm giao hàng ETD thêm 10 ngày do hãng tàu tái sắp xếp lịch ghé cảng Cát Lái
+                    </td>
+<td class="py-3 px-3 text-center">
+<div class="inline-flex items-center gap-1">
+<button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="Sửa phụ lục"><span class="material-symbols-outlined text-[16px]">edit</span></button>
+<button class="p-1 rounded-sm text-on-surface-variant hover:text-secondary hover:bg-surface-container" title="In phụ lục"><span class="material-symbols-outlined text-[16px]">print</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div><div class="tab-pane hidden flex-col gap-5" id="tab-pane-commission"><div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div class="bg-surface-container-lowest p-4 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col justify-between"><span class="text-[11px] text-outline uppercase font-semibold">Tỷ lệ hoa hồng môi giới</span><div class="flex items-baseline gap-1 mt-1"><span class="text-[24px] font-bold text-secondary font-data-mono">3.0%</span><span class="text-[12px] text-outline">giá trị HĐ</span></div><span class="text-[10px] text-on-surface-variant mt-1">Áp dụng theo Hợp đồng môi giới số BRK-2024/09</span></div><div class="bg-surface-container-lowest p-4 rounded-md border border-surface-container-high/80 shadow-xs flex flex-col justify-between"><span class="text-[11px] text-outline uppercase font-semibold">Tổng hoa hồng dự kiến</span><div class="flex items-baseline gap-1 mt-1"><span class="text-[24px] font-bold text-on-surface font-data-mono">$14,550.00</span><span class="text-[12px] text-outline font-semibold">USD</span></div><span class="text-[10px] text-teal-800 font-medium mt-1">Tính trên tổng HĐ $485,000 USD</span></div><div class="p-4 rounded-md bg-surface-container-lowest border-l-4 border-l-secondary border-y border-r border-surface-container-high/80 shadow-xs flex flex-col justify-between gap-3 hover:border-secondary/40 transition-colors"><div class="flex items-center justify-between"><div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span><span class="text-[11px] font-bold uppercase tracking-wider text-secondary">Còn phải thu</span><span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-secondary-fixed text-on-secondary-fixed text-[10px] font-bold border border-blue-200"><span class="material-symbols-outlined text-[12px]">hourglass_top</span>35% tồn đọng</span></div><div class="w-8 h-8 rounded-sm bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed"><span class="material-symbols-outlined text-[18px]">pending_actions</span></div></div><div class="flex flex-col"><div class="flex items-baseline gap-1.5"><span class="text-[26px] font-bold text-secondary font-data-mono leading-none tracking-tight">$169,750</span><span class="text-[12px] font-semibold text-outline">USD</span></div><div class="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-surface-container-high/60 text-[11px] text-on-surface-variant"><span class="material-symbols-outlined text-[14px] text-secondary">schedule</span><span class=""><strong>2 đợt còn lại</strong> (Đợt 3 L/C + Đợt 4) • Hạn: <strong class="text-secondary font-semibold">30/11/2024</strong></span></div></div></div></div><div class="bg-surface-container-lowest rounded-md shadow-xs border border-surface-container-high/80 overflow-hidden flex flex-col"><div class="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-container-high"><div class="flex flex-col"><h3 class="text-[15px] text-on-surface font-bold">Hợp đồng &amp; Chi tiết Bên nhận Hoa hồng môi giới</h3><span class="text-[11px] text-on-surface-variant">Đối tác môi giới xúc tiến thương mại cho dự án Metro Line 2</span></div><button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-on-primary hover:bg-slate-800 transition-colors text-[12px] font-medium shadow-xs self-start sm:self-auto"><span class="material-symbols-outlined text-[16px]">add_circle</span><span class="">+ Lập phiếu chi hoa hồng</span></button></div><div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-[12px]"><div class="p-3 rounded-md bg-surface-container-low/60 border border-surface-container-high flex flex-col gap-2"><div class="flex items-center justify-between"><span class="font-bold text-on-surface text-[13px]">Pacific Trade Link Ltd.</span><span class="px-2 py-0.5 rounded-sm bg-emerald-50 text-emerald-800 font-bold text-[10px] border border-emerald-200">ĐÃ PHÊ DUYỆT</span></div><div class="text-[11px] text-on-surface-variant flex flex-col gap-1"><div class="flex justify-between"><span class="">Người đại diện:</span><strong class="text-on-surface">Mr. Kevin Zhao</strong></div><div class="flex justify-between"><span class="">Tài khoản USD:</span><span class="font-data-mono text-on-surface font-bold">8891-2291-001 (HSBC HK)</span></div><div class="flex justify-between"><span class="">Mã số thuế / Tax ID:</span><span class="font-data-mono text-on-surface">HK-8921820</span></div></div></div><div class="p-3 rounded-md bg-surface-container-low/60 border border-surface-container-high flex flex-col gap-2"><span class="font-bold text-on-surface text-[13px]">Điều kiện giải ngân hoa hồng</span><p class="text-[11px] text-on-surface-variant leading-relaxed">Hoa hồng môi giới 3.0% được thanh toán thành từng đợt tương ứng với tỷ lệ tiền cọc và tiền hàng mà bên Mua thực trả về tài khoản VCB của công ty. Đợt 3 &amp; 4 sẽ được giải ngân ngay sau khi đối chiếu LC và quyết toán kết thúc hợp đồng.</p></div></div></div></div>
+<!-- ========================================================================= -->
+<!-- PANE 5: BẢO MẬT & BOQ NỘI BỘ -->
+<!-- ========================================================================= -->
+<div class="tab-pane flex-col gap-5 hidden" id="tab-pane-boq">
+<!-- Confidentiality Banner -->
+<div class="bg-primary text-slate-100 p-4 rounded-md flex items-center justify-between gap-4 border border-slate-700 shadow-xs">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-md bg-secondary flex items-center justify-center text-on-secondary shrink-0">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="text-[14px] text-white font-bold">Phân hệ dữ liệu bảo mật (LogisticsSecret)</span>
+<span class="px-1.5 py-0.2 rounded-sm bg-error text-on-error text-[10px] font-bold uppercase tracking-wider">Mật / Cấp 3</span>
+</div>
+<span class="text-[11px] text-slate-300 mt-0.5">Chỉ cấp quyền hiển thị cho Ban Giám đốc &amp; Trưởng phòng Kế hoạch XNK. Mọi thao tác đều được ghi nhận vào Audit Log.</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-400 text-[24px] hidden md:block">verified_user</span>
+</div>
+<!-- 2 Thẻ tính toán tự động -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface-container-lowest p-5 rounded-md border-l-4 border-l-secondary border-y border-r border-surface-container-high/80 shadow-xs flex items-center justify-between">
+<div class="flex flex-col"><span class="text-[12px] text-on-surface-variant font-medium">Tổng chi phí dự tính (Total Cost)</span><div class="flex items-baseline gap-1.5 mt-1"><span class="text-[24px] font-bold text-on-surface font-data-mono leading-none">$364,720.00</span><span class="text-[12px] text-outline font-semibold">USD</span></div><span class="text-[10px] text-on-surface-variant mt-1">Bao gồm giá vốn hàng hóa và chi phí vận tải</span></div>
+<div class="w-10 h-10 rounded-md bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[22px]">calculate</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-5 rounded-md border-l-4 border-l-teal-600 border-y border-r border-surface-container-high/80 shadow-xs flex items-center justify-between">
+<div class="flex flex-col"><span class="text-[12px] text-on-surface-variant font-medium">Lợi nhuận gộp dự kiến (Gross Margin)</span><div class="flex items-baseline gap-1.5 mt-1"><span class="text-[24px] font-bold text-teal-700 font-data-mono leading-none">+$120,280.00</span><span class="text-[12px] text-outline font-semibold">USD</span></div><span class="text-[10px] text-teal-800 font-medium mt-1">✓ Đạt chỉ tiêu biên lợi nhuận kinh doanh</span></div>
+<div class="w-10 h-10 rounded-md bg-teal-100 flex items-center justify-center text-teal-800">
+<span class="material-symbols-outlined text-[22px]">scale</span>
+</div>
+</div>
+</div>
+<!-- Internal BOQ Cost Breakdown -->
+<div class="bg-surface-container-lowest rounded-md p-5 border border-surface-container-high/80 shadow-xs flex flex-col gap-4">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-surface-container-high pb-3"><div class="flex flex-col"><h3 class="text-[15px] text-on-surface font-bold">Chi tiết Bảng bóc tách định mức &amp; Chi phí nội bộ (BOQ Breakdown)</h3><span class="text-[11px] text-on-surface-variant">Dữ liệu mật phục vụ kiểm soát giá thành thực tế xuất khẩu</span></div><span class="px-2 py-0.5 rounded-sm bg-surface-container-high text-on-surface font-data-mono text-[11px] font-semibold">Phiên bản BOQ: v2.1-FINAL</span></div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 text-[12px]">
+<!-- Cột trái -->
+<div class="flex flex-col gap-2 bg-surface-container-low/50 p-4 rounded-md border border-surface-container-high/60">
+<span class="text-[11px] uppercase tracking-wider text-outline font-bold">1. Định mức cước &amp; nhân công</span>
+<div class="flex items-center justify-between py-1.5 border-b border-surface-container-high">
+<span class="text-on-surface-variant">Giá vốn / container (Forwarder net):</span>
+<span class="font-data-mono font-bold text-on-surface">$3,250.00 USD</span>
+</div>
+<div class="flex items-center justify-between py-1.5 border-b border-surface-container-high">
+<span class="text-on-surface-variant">Giá báo / container (Gross cho Buyer):</span>
+<span class="font-data-mono font-bold text-secondary">$4,200.00 USD</span>
+</div>
+<div class="flex items-center justify-between py-1.5 border-b border-surface-container-high">
+<span class="text-on-surface-variant">Chênh lệch cước logistics:</span>
+<span class="font-data-mono font-bold text-teal-700">+$950.00 USD / cont</span>
+</div>
+<div class="flex items-center justify-between py-1.5">
+<span class="text-on-surface-variant">Đơn giá nhân công bốc dỡ &amp; hạ bãi:</span>
+<span class="font-data-mono font-bold text-on-surface">4,500,000 VNĐ / cont</span>
+</div>
+</div>
+<!-- Cột phải -->
+<div class="flex flex-col gap-2 bg-surface-container-low/50 p-4 rounded-md border border-surface-container-high/60">
+<span class="text-[11px] uppercase tracking-wider text-outline font-bold">2. Định mức vật tư &amp; xử lý gia công</span>
+<div class="flex items-center justify-between py-1.5 border-b border-surface-container-high">
+<span class="text-on-surface-variant">Khối lượng vật tư cấu kiện bán:</span>
+<span class="font-data-mono font-bold text-on-surface">73.5 Tấn (73,500 kg)</span>
+</div>
+<div class="flex items-center justify-between py-1.5 border-b border-surface-container-high">
+<span class="text-on-surface-variant">Đơn giá gia công uốn chấn kết cấu thép:</span>
+<span class="font-data-mono font-bold text-on-surface">3,200 VNĐ / kg</span>
+</div>
+<div class="flex items-center justify-between py-1.5 border-b border-surface-container-high">
+<span class="text-on-surface-variant">Đơn giá phun cát làm sạch SA 2.5:</span>
+<span class="font-data-mono font-bold text-on-surface">85,000 VNĐ / m²</span>
+</div>
+<div class="flex items-center justify-between py-1.5">
+<span class="text-on-surface-variant">Đơn giá sơn Epoxy chống ăn mòn hàng hải:</span>
+<span class="font-data-mono font-bold text-on-surface">140,000 VNĐ / m²</span>
+</div>
+</div>
+</div>
+<!-- Profit margin calculation well -->
+<div class="bg-surface-container-high/50 p-4 rounded-md border border-surface-container-high flex flex-col md:flex-row md:items-center justify-between gap-3 mt-1">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-md bg-surface-container-lowest text-teal-700 flex items-center justify-center font-bold text-[16px] border border-surface-container-high shadow-xs">
+                  %
+                </div>
+<div class="flex flex-col">
+<span class="text-[12px] font-bold text-on-surface">Tỷ suất lợi nhuận gộp mục tiêu của hợp đồng</span>
+<span class="text-[11px] text-on-surface-variant">Sau khi trừ toàn bộ giá vốn hàng bán, chi phí vận tải biển, bảo hiểm và chi phí cảng nội địa</span>
+</div>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="text-[24px] font-bold text-teal-700 font-data-mono">24.8%</span>
+<span class="text-[12px] text-on-surface-variant font-data-mono">(~$120,280 USD)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. BOTTOM COMPLIANCE FOOTER & AUDIT LOG -->
+</div>
+</main>
+</div>
+<script>
+    // Tab Switching Logic
+    const tabs = ['overview', 'payment', 'shipment', 'annex', 'boq'];
+
+    function switchTab(tabKey) {
+      tabs.forEach(key => {
+        const btn = document.getElementById('tab-btn-' + key);
+        const pane = document.getElementById('tab-pane-' + key);
+        if (!btn || !pane) return;
+
+        if (key === tabKey) {
+          // Active styling - Enterprise ROUND_FOUR with maritime token
+          btn.className = 'tab-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-secondary text-on-secondary text-[12px] font-semibold transition-all shrink-0 cursor-pointer shadow-xs';
+          pane.classList.remove('hidden');
+          pane.classList.add('flex');
+        } else {
+          // Inactive styling
+          btn.className = 'tab-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low text-[12px] font-medium transition-all shrink-0 cursor-pointer border border-surface-container-high/60';
+          pane.classList.remove('flex');
+          pane.classList.add('hidden');
+        }
+      });
+    }
+
+    function copyContractCode(code) {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code).then(() => {
+          showToastMsg('Đã sao chép mã hợp đồng vào bộ nhớ tạm!');
+        });
+      } else {
+        showToastMsg('Đã sao chép mã hợp đồng vào bộ nhớ tạm!');
+      }
+    }
+
+    function showToastMsg(msg) {
+      const toast = document.getElementById('copyToast');
+      const msgEl = document.getElementById('copyToastMsg');
+      if (!toast) return;
+      if (msgEl && msg) msgEl.textContent = msg;
+      toast.classList.remove('translate-y-16', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-16', 'opacity-0');
+      }, 2400);
+    }
+
+    function toggleActionMenu() {
+      const menu = document.getElementById('actionMenu');
+      if (menu) {
+        menu.classList.toggle('hidden');
+      }
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const container = document.getElementById('actionDropdownContainer');
+      const menu = document.getElementById('actionMenu');
+      if (container && menu && !container.contains(event.target)) {
+        menu.classList.add('hidden');
+      }
+    });
+  </script>
+
+
+
+
+
+
+</body></html>

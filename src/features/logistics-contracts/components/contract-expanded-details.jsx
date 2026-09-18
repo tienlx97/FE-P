@@ -1,17 +1,21 @@
 'use client';
+import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
+import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { StatusDot } from '@astryxdesign/core/StatusDot';
 import {
   pixel,
   proportional,
   Table,
   useTableRowExpansion,
 } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 import { Pencil, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
@@ -43,6 +47,26 @@ const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 function orDash(value) {
   return value == null || value === '' ? '—' : value;
 }
+
+// No backend `status` field exists yet on `PaymentSchedule` — derived
+// straight from `paymentDate` vs. today, same "đã thu / chưa đến hạn"
+// split the Figma mockup's status column implies.
+/** @param {string} paymentDate ISO date (YYYY-MM-DD) */
+function isPaymentSchedulePaid(paymentDate) {
+  return new Date(paymentDate).getTime() <= Date.now();
+}
+
+const kpiStyles = stylex.create({
+  card: {
+    borderRadius: 'var(--radius-outer)',
+  },
+  valueSuccess: {
+    color: 'var(--color-success)',
+  },
+  valueAccent: {
+    color: 'var(--color-accent)',
+  },
+});
 
 /**
  * Renders the "Phụ lục"/"Thanh toán"/"Liên quan"/"Xem đầy đủ" tab bodies for the
@@ -110,6 +134,11 @@ export function ContractExpandedDetails({
     (total, schedule) => total + schedule.amount,
     0,
   );
+  const paymentSchedulesPaidTotal = paymentSchedules.reduce(
+    (total, schedule) =>
+      isPaymentSchedulePaid(schedule.paymentDate) ? total + schedule.amount : total,
+    0,
+  );
 
   const annexesQuery = useContractAnnexesQuery(contract.id);
   const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
@@ -143,16 +172,42 @@ export function ContractExpandedDetails({
   const paymentScheduleColumns = [
     {
       key: 'paymentCode',
-      header: 'Mã',
+      header: 'Mã đợt',
+      width: pixel(100),
+      renderCell: (schedule) => schedule.paymentCode,
+    },
+    {
+      key: 'amount',
+      header: 'Số tiền',
+      width: pixel(140),
+      renderCell: (schedule) => formatMoney(schedule.amount, contract.currency),
+    },
+    {
+      key: 'type',
+      header: 'Hình thức / Điều kiện',
       width: proportional(1),
-      renderCell: (schedule) =>
-        `${schedule.paymentCode} · ${labelForPaymentType(schedule.type)}`,
+      renderCell: (schedule) => labelForPaymentType(schedule.type),
     },
     {
       key: 'paymentDate',
-      header: 'Ngày',
-      width: pixel(120),
+      header: 'Ngày thanh toán',
+      width: pixel(130),
       renderCell: (schedule) => formatDisplayDate(schedule.paymentDate),
+    },
+    {
+      key: 'status',
+      header: 'Trạng thái',
+      width: pixel(130),
+      renderCell: (schedule) =>
+        isPaymentSchedulePaid(schedule.paymentDate) ? (
+          <Badge
+            icon={<StatusDot variant="success" label="Đã thu" />}
+            label="Đã thu"
+            variant="success"
+          />
+        ) : (
+          <Badge label="Chưa đến hạn" variant="neutral" />
+        ),
     },
     {
       key: 'note',
@@ -161,16 +216,10 @@ export function ContractExpandedDetails({
       renderCell: (schedule) => orDash(schedule.note),
     },
     {
-      key: 'amount',
-      header: 'Số tiền',
-      width: pixel(140),
-      align: 'end',
-      renderCell: (schedule) => formatMoney(schedule.amount, contract.currency),
-    },
-    {
       key: 'actions',
-      header: '',
-      width: pixel(60),
+      header: 'Thao tác',
+      width: pixel(90),
+      align: 'end',
       renderCell: (schedule) => (
         <IconButton
           label={`Sửa ${schedule.paymentCode}`}
@@ -319,12 +368,62 @@ export function ContractExpandedDetails({
 
       {activeTab === 'payments' && (
         <VStack gap={4} hAlign="stretch">
+          {/* 3 KPI cards (Figma "3 Thẻ KPI lớn") — tổng giá trị quyết
+              toán / đã thực thu / còn phải thu, all derived from the same
+              `contractGrandTotal` + `paymentSchedulesPaidTotal` the table
+              footer below uses, so the header and footer numbers can
+              never disagree. */}
+          <Grid columns={{ minWidth: 260, max: 3, repeat: 'fill' }} gap={3}>
+            <Card padding={4} xstyle={kpiStyles.card}>
+              <VStack gap={2} hAlign="stretch">
+                <Text type="label" size="sm" color="secondary">
+                  Tổng giá trị quyết toán
+                </Text>
+                <Text weight="bold" size="2xl">
+                  {formatMoney(contractGrandTotal, contract.currency)}
+                </Text>
+              </VStack>
+            </Card>
+            <Card padding={4} xstyle={kpiStyles.card}>
+              <VStack gap={2} hAlign="stretch">
+                <HStack gap={1.5} vAlign="center">
+                  <StatusDot variant="success" label="Đã thực thu" />
+                  <Text type="label" size="sm" color="secondary">
+                    Đã thực thu
+                  </Text>
+                </HStack>
+                <Text weight="bold" size="2xl" xstyle={kpiStyles.valueSuccess}>
+                  {formatMoney(paymentSchedulesPaidTotal, contract.currency)}
+                </Text>
+              </VStack>
+            </Card>
+            <Card padding={4} xstyle={kpiStyles.card}>
+              <VStack gap={2} hAlign="stretch">
+                <HStack gap={1.5} vAlign="center">
+                  <StatusDot variant="accent" label="Còn phải thu" />
+                  <Text type="label" size="sm" color="secondary">
+                    Còn phải thu
+                  </Text>
+                </HStack>
+                <Text weight="bold" size="2xl" xstyle={kpiStyles.valueAccent}>
+                  {formatMoney(
+                    Math.max(
+                      0,
+                      contractGrandTotal - paymentSchedulesPaidTotal,
+                    ),
+                    contract.currency,
+                  )}
+                </Text>
+              </VStack>
+            </Card>
+          </Grid>
+
           {/* Requires the contract to be fully signed to create; the
               backend also enforces this (`400` otherwise), the disabled
               button + tooltip here is just the UX-level mirror of that
               rule. */}
           <HStack hAlign="between" vAlign="center">
-            <Text weight="semibold">Lịch sử thanh toán</Text>
+            <Heading level={2}>Tiến độ thanh toán</Heading>
             <Button
               label="Thêm đợt thanh toán"
               variant="secondary"
@@ -351,6 +450,15 @@ export function ContractExpandedDetails({
                 dividers="rows"
                 density="compact"
               />
+              <HStack hAlign="between" vAlign="center">
+                <Text color="secondary">
+                  Tổng số {paymentSchedules.length} đợt thanh toán chính
+                </Text>
+                <Text weight="semibold">
+                  TỔNG ĐÃ THU:{' '}
+                  {formatMoney(paymentSchedulesPaidTotal, contract.currency)}
+                </Text>
+              </HStack>
               <HStack hAlign="between" vAlign="center">
                 <Text weight="semibold">Tổng cộng thanh toán:</Text>
                 <Text weight="semibold">

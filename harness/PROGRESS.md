@@ -12436,3 +12436,184 @@ first real use).
   IBM Plex Sans font — all scoped correctly to the page body only, and
   at a narrower width confirmed the wrap fix prevents the button row
   from clipping off-screen.
+
+## 2026-09-18 — Maritime theme: Payment Summary card (`payment-summary-card.jsx`)
+
+Built `MaritimePaymentSummaryCard` from the Figma file
+https://www.figma.com/design/lPZR4jL1VwX6ICnLiiBinv (frame
+`fg.card-gia-tri`, node 3:504), read directly via the Figma MCP bridge —
+no Stitch HTML mockup exists for this screen. 4 financial stat cards +
+a 3-segment payment-progress bar + a horizontally-scrolling row of 10
+installment cards. Not wired into any real page yet — added to
+`src/app/preview-maritime/page.jsx` (scratch preview) alongside the
+existing `MaritimeContractOverviewCard` for visual verification.
+
+**Astryx quirk found and fixed:** `Text`'s `color="inherit"` silently
+resolves to `var(--color-text-primary)` instead of literal
+`color: inherit` once an explicit `size` override (e.g. `size="2xl"`)
+is also passed — confirmed via computed-style inspection in the browser
+(`.color-x1tgivj0` rule, `:not(#\#)`-boosted to max specificity, always
+wins). Fixed the same way `chip.jsx` already fixes the analogous `Token`
+issue: registered real custom `color` variants
+(`components.text['color:maritime-muted']` etc.) in `theme.js` instead
+of relying on CSS inheritance. Smaller `size` values (e.g. `"sm"`,
+`"4xs"`, or no `size` override at all) don't trigger it — `inherit`
+still works fine there (used as-is in `InstallmentStep`).
+
+**Discovered (out of scope, not touched):** `./harness/verify.sh`'s
+`typecheck` step was already red on this branch before this session,
+independent of this change — confirmed via `git stash` (tracked-file
+changes only) + `tsc --noEmit -p jsconfig.json`, which still shows 2
+pre-existing errors in `contract-overview-card.jsx`:
+`MaritimeBadgeProps` not exported from `badge.jsx` (`TS2694`, lines
+53/55), and a `StyleXStyles` mismatch passing `maritimeButtonHoverStyles.primary`
+to `DropdownMenu`'s `button.xstyle` (`TS2322`, line 159). Neither
+touches this task's files. Left as-is per "don't expand scope beyond
+the selected task"; flagging here so the next session (or whoever owns
+`contract-overview-card.jsx`) picks it up — `./harness/verify.sh`
+currently cannot go fully green until it's fixed.
+
+## 2026-09-18 — Payment Summary card v2: Grid layout, 5th "HỢP ĐỒNG" stat, icon badges
+
+Re-read the Figma selection (frame renamed `payment-summary-card.jsx`,
+node 7:1224 — someone iterated the design in Figma after the first
+build). Updated `MaritimePaymentSummaryCard` to match:
+
+- Stat row now 5 cards (added "HỢP ĐỒNG" = original contract value)
+  instead of 4.
+- Each stat card gained a 28px icon badge (top-right of its label row)
+  and a small icon beside its note text — new `icon`/`noteIcon`/
+  `badgeTone` props on `StatCard`, semantic lucide icons chosen (no
+  exact vector data available from the Figma MCP bridge, only fill
+  colors).
+- Installment step cards gained a status icon (`CheckCircle2` paid,
+  `Clock` active, `Circle` upcoming) next to the "Đợt NN" label.
+- **User feedback, direct quote:** "dùng Grid set max width, không cần
+  phải set full card xong chia đều, lý do: set full screen: nếu màn
+  hình dài quá, sẽ xấu" — swapped the stat row from an equal-flex-grow
+  `HStack` to Astryx's `Grid` (`columns={{minWidth:240, max:5,
+  repeat:'fill'}}`) plus a `maxWidth: 340px` cap on each card, so on a
+  very wide viewport the row keeps its natural card width and leaves
+  empty track instead of stretching. Verified by resizing the browser
+  to 2400px wide — cards stayed capped, no stretch.
+- `theme.js`: registered `components.icon` custom color variants
+  (mirroring the existing `components.text` ones) so `Icon`'s `color`
+  prop can take the same `maritime-*` tone names as `Text`; added
+  `--maritime-badge-teal-bg` token for the "ĐÃ XUẤT" card's teal badge.
+- Verified visually against the Figma screenshot (`get_screenshot` on
+  the selection) — close match on layout, colors, and copy.
+- `./harness/verify.sh`: same pre-existing `contract-overview-card.jsx`
+  typecheck failures as the previous entry (untouched, already logged
+  there); everything else green.
+
+## 2026-09-18 — Payment Summary card: fixed illegible font sizes (~5px)
+
+User flagged "font size quá nhỏ". Root cause: several `Text`/`Icon`
+elements passed both a `size` prop (e.g. `size="4xs"`) AND a literal
+`fontSize` via `xstyle` intended to override it — same high-specificity
+`:not(#\#)`-boosted class mechanism already documented for `color`
+(see the two earlier entries above) also guards `size`/`fontSize`, so
+the `xstyle` value was silently discarded and the `size` prop's own
+scale value won. With this theme's `typography.scale` (`base: 13,
+ratio: 1.2`), `size="4xs"` resolves to ~5px — used on the "ĐANG THU"
+active-installment badge and every installment date/note line,
+confirmed via `getComputedStyle` in the browser (`fontSize: "5px"`).
+
+Fixed by no longer fighting the framework: dropped the dead `xstyle`
+fontSize overrides and picked appropriately-sized `size` tokens instead
+(`sm` = 11px for note/date/amount text, `xsm` = 9px only for the
+compact "ĐANG THU" pill and unit labels) — verified via
+`getComputedStyle` post-fix, nothing renders under 9px now. Applies
+generally: in this theme, never pair a `size` prop with an `xstyle`
+`fontSize` on `Text`/`Heading`/`Icon` — pick the right scale step
+instead, the override will not apply.
+
+## 2026-09-18 — Installment cards: bigger + Carousel (swiper)
+
+User request: "Các card của DEFAULT_INSTALLMENTS hãy cho size to ra.
+Đồng thời dùng swiper mục này."
+
+- `InstallmentStep` cards: `minWidth` 168→210, padding
+  `--spacing-2`→`--spacing-3`, amount `size="sm"`→`"lg"`, status
+  icon/active-badge `"xsm"`→`"sm"`.
+- Swapped the plain `overflow-x` `HStack` row for Astryx's `Carousel`
+  (`@astryxdesign/core/Carousel`, `hasSnap`) — built-in prev/next
+  buttons and edge-fade that only appear once content actually
+  overflows (confirmed: at normal width all 10 cards now fit with room
+  to spare, so no nav chrome renders — expected per its own docs, not a
+  bug).
+- `./harness/verify.sh`: same pre-existing unrelated
+  `contract-overview-card.jsx` typecheck failures; everything else
+  green.
+
+## 2026-09-18 — Installment cards: matched Figma's monospace label/amount
+
+User re-selected the original Figma installment-card node (`7:1339`,
+"Đợt 01") to point out a detail missed in the size bump: its label and
+amount text are set in a monospace font (`JetBrains Mono` in Figma),
+not the body font — only the date/note line stays on the body font.
+
+Fixed: `InstallmentStep`'s label and amount `Text` now use
+`type="code"` (Astryx's monospace semantic type) combined with an
+explicit `size` override — `type`+`size` together is the officially
+supported combo (`size` "overrides the size from type but preserves
+other type properties" per `astryx component Text`), so this keeps the
+bigger sizing from the previous entry while adding the correct font.
+Verified via `getComputedStyle`: label/amount now resolve to
+`"JetBrains Mono", "JetBrains Mono Fallback", "SF Mono", ...` (the
+theme's `--font-family-code` already happens to be JetBrains Mono, no
+extra font loading needed), the date note stays on Be Vietnam Pro.
+
+`./harness/verify.sh`: same pre-existing unrelated
+`contract-overview-card.jsx` typecheck failures; everything else green.
+
+## 2026-09-18 — Figma contract foundation three-column grid
+
+- Read selected Figma frame `7:1432` (`NỘI DUNG 3 CỘT NỀN TẢNG THƯƠNG
+  MẠI`) through the connected MCP bridge, including design context, local
+  styles, variables, and a 1672×703 reference export.
+- Added `MaritimeContractFoundationGrid`: responsive partner, transport/cargo,
+  and bank/payment columns built from Astryx primitives and the existing
+  Maritime tokens; exported it through the Maritime barrel and mounted it on
+  the existing `/preview-maritime` visual-check route.
+- Browser-compared at the Figma frame width (1672px). Final grid measured
+  707px tall versus the 703px reference; adjusted the initial oversized
+  typography pass to 13px section labels and 11px detail rows to match the
+  source's 12px/11px compact rhythm. Evidence:
+  `harness/runs/2026-09-18-figma-three-column/{reference,implementation-final}.png`.
+- New/changed files pass scoped ESLint. Project-wide typecheck remains red on
+  the pre-existing locally swizzled Maritime `TabList` errors and the two
+  previously logged StyleX typing errors in `contract-overview-card.jsx` and
+  `payment-summary-card.jsx`; this component adds no typecheck errors.
+
+## 2026-09-18 — Claude handoff: completed Maritime annex/commission + green gates
+
+- Resumed Claude's in-progress edits to `contract-foundation-grid.jsx`: the
+  third column had begun splitting "PHỤ LỤC" and "HOA HỒNG (COMMISSION)"
+  into dedicated cards, but still referenced a missing `AnnexRow` component
+  and three missing commission progress-bar styles. Implemented the row and
+  progress track/fill using the existing Astryx/Maritime primitives and tokens.
+- Cleared the two previously logged StyleX `StyleXStyles` type gaps with
+  narrow call-site casts (`DropdownMenu.button.xstyle` and the composed stat
+  card tone styles); the entire project now passes `tsc --noEmit`.
+- Visual/browser verification at 1672px completed on `/preview-maritime`;
+  annex and commission sections render without overflow, the swizzled TabList
+  remains exposed as a navigation landmark, and an axe WCAG A/AA audit reports
+  0 violations / 0 incomplete checks. Screenshot:
+  `harness/runs/2026-09-18-claude-handoff/final.png`.
+- `verify.sh` remains unlaunchable through this machine's WSL shim
+  (`Bash/Service/CreateInstance/E_ACCESSDENIED`), so its application gates were
+  replayed directly: lint (0 errors, 2 existing Next font warnings), typecheck,
+  dependency structure (678 modules / 2268 dependencies), harness tests (6/6),
+  unit tests (163/163), production build (45/45 static pages), and quality
+  threshold (168.3 kB shared gzip < 250 kB) all pass.
+
+## 2026-09-18 — Maritime tab navigation stays visible while scrolling
+
+- Made `MaritimeTabNav`'s root `TabList` sticky at the viewport top with an
+  opaque Maritime body background and z-index 10, preserving its existing
+  horizontal overflow behavior on narrower screens.
+- Browser-verified at 1280×720: the nav starts at y=157.08px, resolves to
+  `position: sticky; top: 0px`, and remains at y=0 after scrolling 900px.
+  Evidence: `harness/runs/2026-09-18-sticky-tab-nav/scrolled.png`.
+- Scoped ESLint and the full project TypeScript check pass.

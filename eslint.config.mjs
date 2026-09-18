@@ -101,6 +101,9 @@ const config = [
       // a second, deliberate `defineTheme` source, same exemption reason
       // as the app's own theme.js above.
       'src/shared/components/custom/ibm-plex-corporate/theme.js',
+      // "Maritime" custom theme (user request, 2026-09-18) — same
+      // exemption reason.
+      'src/shared/components/custom/maritime/theme.js',
     ],
     rules: {
       'no-restricted-syntax': [
@@ -139,6 +142,11 @@ const config = [
       'src/shared/components/custom/ibm-plex-corporate/ibm-plex-corporate.js',
       'src/shared/components/custom/ibm-plex-corporate/ibm-plex-corporate.d.ts',
       'src/shared/components/custom/ibm-plex-corporate/theme.built.css',
+      // Same for the "Maritime" custom theme's own build output.
+      'src/shared/components/custom/maritime/maritime.js',
+      'src/shared/components/custom/maritime/maritime.d.ts',
+      'src/shared/components/custom/maritime/maritime.variants.d.ts',
+      'src/shared/components/custom/maritime/theme.built.css',
     ],
   },
 ];
