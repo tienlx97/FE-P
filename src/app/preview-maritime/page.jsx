@@ -7,6 +7,7 @@ import { useState } from 'react';
 
 import {
   MaritimeAnnexListPanel,
+  MaritimeCommissionPanel,
   MaritimeContractFoundationGrid,
   MaritimeContractOverviewCard,
   MaritimePaymentProgressPanel,
@@ -58,6 +59,7 @@ export default function PreviewMaritimePage() {
           {activeTab === 'payments' ? <MaritimePaymentProgressPanel /> : null}
           {activeTab === 'shipment' ? <MaritimeShipmentListPanel /> : null}
           {activeTab === 'annex' ? <MaritimeAnnexListPanel /> : null}
+          {activeTab === 'commission' ? <MaritimeCommissionPanel /> : null}
         </VStack>
       </Section>
     </MaritimeThemeProvider>

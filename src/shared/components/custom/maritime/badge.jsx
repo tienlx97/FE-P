@@ -33,6 +33,7 @@ import * as stylex from '@stylexjs/stylex';
  * } & MaritimeBadgeSizeProps & {
  *   dotVariant?: import('@astryxdesign/core/StatusDot').StatusDotProps['variant'],
  *   isDotPulsing?: boolean,
+ *   isUppercase?: boolean,
  * }} MaritimeBadgeProps
  */
 /**
@@ -50,6 +51,7 @@ export function MaritimeBadge({
   size = 'md',
   dotVariant,
   isDotPulsing,
+  isUppercase = true,
 }) {
   return (
     <HStack
@@ -59,9 +61,18 @@ export function MaritimeBadge({
       xstyle={[styles.base, styles[tone], sizeStyles[size]]}
     >
       {dotVariant ? (
-        <StatusDot variant={dotVariant} label={label} isPulsing={isDotPulsing} />
+        <StatusDot
+          variant={dotVariant}
+          label={label}
+          isPulsing={isDotPulsing}
+        />
       ) : null}
-      <Text as="span" type="label" color="inherit" xstyle={labelSizeStyles[size]}>
+      <Text
+        as="span"
+        type="label"
+        color="inherit"
+        xstyle={[labelSizeStyles[size], !isUppercase && styles.normalCase]}
+      >
         {label}
       </Text>
     </HStack>
@@ -69,6 +80,7 @@ export function MaritimeBadge({
 }
 
 const styles = stylex.create({
+  normalCase: { textTransform: 'none' },
   base: {
     borderRadius: 'var(--radius-inner)', // spec: 4px, badges/tags
     borderStyle: 'solid',

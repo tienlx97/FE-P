@@ -228,7 +228,11 @@ export function MaritimeAnnexListPanel({
                   />
                 </HStack>
               </HStack>
-              <HStack gap={2} vAlign="baseline" wrap="nowrap">
+              <HStack
+                gap={2}
+                vAlign={/** @type {any} */ ('baseline')}
+                wrap="nowrap"
+              >
                 <Text
                   type="code"
                   size="4xl"
@@ -254,7 +258,9 @@ export function MaritimeAnnexListPanel({
                   icon={s.noteIcon}
                   size="xsm"
                   color={
-                    s.tone === 'success' ? 'maritime-teal' : 'maritime-subtle'
+                    /** @type {any} */ (
+                      s.tone === 'success' ? 'maritime-teal' : 'maritime-subtle'
+                    )
                   }
                 />
                 <Text

@@ -27,6 +27,7 @@ export { MaritimeAnnexListPanel } from './annex-list-panel.jsx';
 export { MaritimeBadge } from './badge.jsx';
 export { MaritimeButton } from './button.jsx';
 export { MaritimeChip } from './chip.jsx';
+export { MaritimeCommissionPanel } from './commission-panel.jsx';
 export { MaritimeContractFoundationGrid } from './contract-foundation-grid.jsx';
 export { MaritimeContractOverviewCard } from './contract-overview-card.jsx';
 export { MaritimePaymentProgressPanel } from './payment-progress-panel.jsx';

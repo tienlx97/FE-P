@@ -7,11 +7,20 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { Selector } from '@astryxdesign/core/Selector';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { TextInput } from '@astryxdesign/core/TextInput';
 import * as stylex from '@stylexjs/stylex';
-import { Anchor, CircleCheck, Eye, Package, Pencil, Search, Ship, Warehouse } from 'lucide-react';
+import {
+  Anchor,
+  CircleCheck,
+  Eye,
+  Package,
+  Pencil,
+  Search,
+  Ship,
+  Warehouse,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { TextInput } from '@/shared/components/text-input.jsx';
 
 /**
  * Maritime theme — "Dạng Bảng" view of the Shipment tab: a quick-filter bar
@@ -39,7 +48,10 @@ export function MaritimeShipmentTableView({
   const statusOptions = useMemo(
     () => [
       { value: 'all', label: 'Tất cả trạng thái' },
-      ...shipments.map((s) => ({ value: s.status.label, label: s.status.label })),
+      ...shipments.map((s) => ({
+        value: s.status.label,
+        label: s.status.label,
+      })),
     ],
     [shipments],
   );
@@ -78,7 +90,10 @@ export function MaritimeShipmentTableView({
       renderCell: (row) =>
         row.isTotal ? (
           <Cell>
-            <Text size="lg" color="maritime-subtle">{`${rows.length} Tờ khai`}</Text>
+            <Text
+              size="lg"
+              color="maritime-subtle"
+            >{`${rows.length} Tờ khai`}</Text>
           </Cell>
         ) : (
           <Cell>
@@ -125,7 +140,10 @@ export function MaritimeShipmentTableView({
         <Cell>
           <Text weight="bold" size="lg">
             {row.isTotal
-              ? [totals.conts ? `${totals.conts} Cont` : '', totals.pieces ? `${totals.pieces} Kiện` : '']
+              ? [
+                  totals.conts ? `${totals.conts} Cont` : '',
+                  totals.pieces ? `${totals.pieces} Kiện` : '',
+                ]
                   .filter(Boolean)
                   .join(' + ')
               : row.table.quantity}
@@ -141,7 +159,11 @@ export function MaritimeShipmentTableView({
         row.isTotal ? (
           <Cell>
             <HStack gap={1} vAlign="center" wrap="nowrap">
-              <Icon icon={CircleCheck} size="xsm" color="maritime-teal" />
+              <Icon
+                icon={CircleCheck}
+                size="xsm"
+                color={/** @type {any} */ ('maritime-teal')}
+              />
               <Text weight="semibold" size="lg" color="maritime-teal">
                 100% Hoàn tất
               </Text>
@@ -192,7 +214,12 @@ export function MaritimeShipmentTableView({
       align: 'end',
       renderCell: (row) => (
         <Cell isEnd>
-          <Text type="code" weight="bold" size="lg" color={row.isTotal ? 'accent' : undefined}>
+          <Text
+            type="code"
+            weight="bold"
+            size="lg"
+            color={row.isTotal ? 'accent' : undefined}
+          >
             {`${row.isTotal ? totals.cost.toLocaleString('en-US') : row.costs.total} VNĐ`}
           </Text>
         </Cell>
@@ -217,24 +244,24 @@ export function MaritimeShipmentTableView({
       width: pixel(120),
       renderCell: (row) =>
         row.isTotal ? null : (
-        <HStack gap={1} vAlign="center" wrap="nowrap">
-          <IconButton
-            label={`Xem ${row.code}`}
-            tooltip="Xem"
-            icon={<Icon icon={Eye} size="sm" />}
-            variant="ghost"
-            size="sm"
-            onClick={() => onView?.(row.id)}
-          />
-          <IconButton
-            label={`Sửa ${row.code}`}
-            tooltip="Sửa"
-            icon={<Icon icon={Pencil} size="sm" />}
-            variant="ghost"
-            size="sm"
-            onClick={() => onEdit?.(row.id)}
-          />
-        </HStack>
+          <HStack gap={1} vAlign="center" wrap="nowrap">
+            <IconButton
+              label={`Xem ${row.code}`}
+              tooltip="Xem"
+              icon={<Icon icon={Eye} size="sm" />}
+              variant="ghost"
+              size="sm"
+              onClick={() => onView?.(row.id)}
+            />
+            <IconButton
+              label={`Sửa ${row.code}`}
+              tooltip="Sửa"
+              icon={<Icon icon={Pencil} size="sm" />}
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit?.(row.id)}
+            />
+          </HStack>
         ),
     },
   ];
@@ -247,7 +274,13 @@ export function MaritimeShipmentTableView({
 
   return (
     <Card padding={0} elevation="low" xstyle={styles.card}>
-      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={4} xstyle={styles.filterBar}>
+      <HStack
+        hAlign="between"
+        vAlign="center"
+        wrap="wrap"
+        gap={4}
+        xstyle={styles.filterBar}
+      >
         <HStack gap={4} vAlign="center" wrap="wrap">
           <TextInput
             label="Tìm lô hàng"
@@ -307,7 +340,12 @@ export function MaritimeShipmentTableView({
   );
 }
 
-const STATUS_ICONS = { ship: Ship, anchor: Anchor, yard: Warehouse, pack: Package };
+const STATUS_ICONS = {
+  ship: Ship,
+  anchor: Anchor,
+  yard: Warehouse,
+  pack: Package,
+};
 
 /** @param {string} value */
 function toNumber(value) {
@@ -318,7 +356,12 @@ function toNumber(value) {
 /** @param {{ children: import('react').ReactNode, isEnd?: boolean }} props */
 function Cell({ children, isEnd }) {
   return (
-    <HStack vAlign="center" hAlign={isEnd ? 'end' : 'start'} wrap="nowrap" xstyle={styles.cell}>
+    <HStack
+      vAlign="center"
+      hAlign={isEnd ? 'end' : 'start'}
+      wrap="nowrap"
+      xstyle={styles.cell}
+    >
       {children}
     </HStack>
   );
@@ -332,9 +375,14 @@ function StatusPill({ status }) {
       vAlign="center"
       gap={1}
       wrap="nowrap"
-      xstyle={[styles.pill, pillTones[status.tone] ?? pillTones.blue]}
+      xstyle={[
+        styles.pill,
+        /** @type {any} */ (pillTones)[status.tone] ?? pillTones.blue,
+      ]}
     >
-      {status.icon ? <Icon icon={STATUS_ICONS[status.icon]} size="xsm" color="inherit" /> : null}
+      {status.icon ? (
+        <Icon icon={STATUS_ICONS[status.icon]} size="xsm" color="inherit" />
+      ) : null}
       <span {...stylex.props(styles.pillLabel)}>{status.label}</span>
     </HStack>
   );

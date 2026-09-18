@@ -68,14 +68,35 @@ export function MaritimeShipmentListPanel({
 
   return (
     <VStack gap={4} hAlign="stretch">
-      <Grid columns={{ minWidth: 240, max: 4, repeat: 'fill' }} gap={4} xstyle={styles.fixedCols}>
+      <Grid
+        columns={{ minWidth: 240, max: 4, repeat: 'fill' }}
+        gap={4}
+        xstyle={styles.fixedCols}
+      >
         {stats.map((stat) => (
-          <Card key={stat.label} padding={4} elevation="low" xstyle={styles.borderCard}>
+          <Card
+            key={stat.label}
+            padding={4}
+            elevation="low"
+            xstyle={styles.borderCard}
+          >
             <VStack gap={1} hAlign="stretch">
-              <Text type="label" size="lg" weight="medium" color="maritime-muted" xstyle={styles.tracking}>
+              <Text
+                type="label"
+                size="lg"
+                weight="medium"
+                color="maritime-muted"
+                xstyle={styles.tracking}
+              >
                 {stat.label}
               </Text>
-              <Text type="code" size="4xl" weight="bold" color={stat.color} xstyle={styles.statValue}>
+              <Text
+                type="code"
+                size="4xl"
+                weight="bold"
+                color={stat.color}
+                xstyle={styles.statValue}
+              >
                 {stat.value}
               </Text>
               {stat.note ? (
@@ -96,7 +117,12 @@ export function MaritimeShipmentListPanel({
             size="sm"
             label={`${shipments.length} Lô (${fclCount} FCL, ${lclCount} LCL)`}
           />
-          <HStack gap={0.5} vAlign="center" wrap="nowrap" xstyle={styles.segmented}>
+          <HStack
+            gap={0.5}
+            vAlign="center"
+            wrap="nowrap"
+            xstyle={styles.segmented}
+          >
             <Button
               label="Dạng Thẻ"
               size="sm"
@@ -149,10 +175,21 @@ export function MaritimeShipmentListPanel({
         xstyle={styles.summaryBar}
       >
         <HStack gap={3} vAlign="center" wrap="nowrap">
-          <HStack as="span" hAlign="center" vAlign="center" xstyle={styles.summaryIcon}>
+          <HStack
+            as="span"
+            hAlign="center"
+            vAlign="center"
+            xstyle={styles.summaryIcon}
+          >
             <Icon icon={Banknote} size="sm" color="inherit" />
           </HStack>
-          <Text type="label" size="lg" weight="bold" color="maritime-muted" xstyle={styles.tracking}>
+          <Text
+            type="label"
+            size="lg"
+            weight="bold"
+            color="maritime-muted"
+            xstyle={styles.tracking}
+          >
             TỔNG CHI PHÍ LOGISTICS
           </Text>
         </HStack>
@@ -175,11 +212,30 @@ export function MaritimeShipmentListPanel({
 /** @param {{ shipment: Shipment, onMenu?: (id: string) => void }} props */
 function ShipmentCard({ shipment: s, onMenu }) {
   return (
-    <Card padding={4} elevation="low" xstyle={[styles.borderCard, styles.lotCard]}>
+    <Card
+      padding={4}
+      elevation="low"
+      xstyle={[styles.borderCard, styles.lotCard]}
+    >
       <VStack gap={3} hAlign="stretch">
-        <HStack hAlign="between" vAlign="center" wrap="nowrap" xstyle={styles.cardHeader}>
+        <HStack
+          hAlign="between"
+          vAlign="center"
+          wrap="nowrap"
+          xstyle={styles.cardHeader}
+        >
           <HStack gap={2} vAlign="center" wrap="wrap">
-            <HStack as="span" hAlign="center" vAlign="center" xstyle={[styles.indexBox, s.status.tone === 'success' ? styles.indexSuccess : styles.indexBlue]}>
+            <HStack
+              as="span"
+              hAlign="center"
+              vAlign="center"
+              xstyle={[
+                styles.indexBox,
+                s.status.tone === 'success'
+                  ? styles.indexSuccess
+                  : styles.indexBlue,
+              ]}
+            >
               <Text type="code" size="lg" weight="bold" color="inherit">
                 {s.no}
               </Text>
@@ -210,7 +266,11 @@ function ShipmentCard({ shipment: s, onMenu }) {
                 Tỷ giá {s.value.rate}
               </Text>
             </HStack>
-            <HStack gap={2} vAlign="baseline" wrap="wrap">
+            <HStack
+              gap={2}
+              vAlign={/** @type {any} */ ('baseline')}
+              wrap="wrap"
+            >
               <Text type="code" size="4xl" weight="bold">
                 {s.value.usd}
               </Text>
@@ -235,7 +295,12 @@ function ShipmentCard({ shipment: s, onMenu }) {
           <Panel>
             <SectionLabel>HÀNH TRÌNH & LỊCH TRÌNH</SectionLabel>
             <RoutePoint icon={Anchor} label="Nơi đi:" value={s.route.from} />
-            <RoutePoint icon={MapPin} label="Nơi đến:" value={s.route.to} tone="teal" />
+            <RoutePoint
+              icon={MapPin}
+              label="Nơi đến:"
+              value={s.route.to}
+              tone="teal"
+            />
             <Divider />
             <HStack hAlign="between" wrap="nowrap">
               <VStack gap={0.5}>
@@ -250,7 +315,12 @@ function ShipmentCard({ shipment: s, onMenu }) {
                 <Text size="lg" color="maritime-subtle">
                   {s.route.etaLabel}
                 </Text>
-                <Text type="code" size="lg" weight="semibold" color="maritime-teal">
+                <Text
+                  type="code"
+                  size="lg"
+                  weight="semibold"
+                  color="maritime-teal"
+                >
                   {s.route.eta}
                 </Text>
               </VStack>
@@ -263,7 +333,11 @@ function ShipmentCard({ shipment: s, onMenu }) {
                 <Icon icon={Banknote} size="xsm" color="accent" />
                 <SectionLabel>CHI PHÍ LOGISTICS</SectionLabel>
               </HStack>
-              <HStack gap={1} vAlign="baseline" wrap="nowrap">
+              <HStack
+                gap={1}
+                vAlign={/** @type {any} */ ('baseline')}
+                wrap="nowrap"
+              >
                 <Text type="code" size="xl" weight="bold">
                   {s.costs.total}
                 </Text>
@@ -296,7 +370,12 @@ function ShipmentCard({ shipment: s, onMenu }) {
           <HStack hAlign="between" vAlign="center" wrap="nowrap">
             <HStack gap={2} vAlign="center" wrap="nowrap">
               <Icon icon={Factory} size="sm" color="accent" />
-              <Text type="label" size="lg" weight="bold" xstyle={styles.tracking}>
+              <Text
+                type="label"
+                size="lg"
+                weight="bold"
+                xstyle={styles.tracking}
+              >
                 NHÀ CUNG CẤP & ĐƠN VỊ LIÊN KẾT
               </Text>
             </HStack>
@@ -316,7 +395,11 @@ function ShipmentCard({ shipment: s, onMenu }) {
 /** @param {{ partner: Partner }} props */
 function PartnerCard({ partner: p }) {
   const rowColor = (/** @type {string | undefined} */ tone) =>
-    tone === 'accent' ? 'accent' : tone === 'teal' ? 'maritime-teal' : undefined;
+    tone === 'accent'
+      ? 'accent'
+      : tone === 'teal'
+        ? 'maritime-teal'
+        : undefined;
   return (
     <Card padding={3} elevation="none" xstyle={styles.partnerCard}>
       <VStack gap={2} hAlign="stretch">
@@ -329,7 +412,13 @@ function PartnerCard({ partner: p }) {
         >
           <HStack gap={1.5} vAlign="center" wrap="nowrap">
             <Icon icon={PARTNER_ICONS[p.icon]} size="xsm" color="accent" />
-            <Text type="label" size="lg" weight="bold" color="maritime-muted" xstyle={[styles.tracking, styles.noWrap]}>
+            <Text
+              type="label"
+              size="lg"
+              weight="bold"
+              color="maritime-muted"
+              xstyle={[styles.tracking, styles.noWrap]}
+            >
               {p.title}
             </Text>
           </HStack>
@@ -348,7 +437,12 @@ function PartnerCard({ partner: p }) {
                 <Text size="lg" color="maritime-subtle">
                   {label}
                 </Text>
-                <Text type="code" size="lg" weight="medium" color={rowColor(tone)}>
+                <Text
+                  type="code"
+                  size="lg"
+                  weight="medium"
+                  color={rowColor(tone)}
+                >
                   {value}
                 </Text>
               </HStack>
@@ -372,7 +466,12 @@ function TruckingAllocation({ partner: p }) {
     <VStack gap={1.5} hAlign="stretch">
       <VStack gap={1} hAlign="stretch">
         <HStack hAlign="between" wrap="nowrap">
-          <Text type="label" size="sm" color="maritime-subtle" xstyle={styles.tracking}>
+          <Text
+            type="label"
+            size="sm"
+            color="maritime-subtle"
+            xstyle={styles.tracking}
+          >
             PHÂN BỔ XE
           </Text>
           <Text type="code" size="lg" weight="semibold">
@@ -384,11 +483,18 @@ function TruckingAllocation({ partner: p }) {
             <HStack
               key={u.name}
               as="span"
-              xstyle={[styles.barSeg, segTones[u.tone], segWidth(u.cont / total)]}
+              xstyle={[
+                styles.barSeg,
+                segTones[u.tone],
+                segWidth(u.cont / total),
+              ]}
             />
           ))}
           {rest > 0 ? (
-            <HStack as="span" xstyle={[styles.barSeg, segTones.rest, segWidth(rest / total)]} />
+            <HStack
+              as="span"
+              xstyle={[styles.barSeg, segTones.rest, segWidth(rest / total)]}
+            />
           ) : null}
         </HStack>
       </VStack>
@@ -405,7 +511,12 @@ function TruckingAllocation({ partner: p }) {
             <Text size="lg" weight="medium">
               {u.name}
             </Text>
-            <Text type="code" size="lg" weight="semibold" color={u.tone === 'teal' ? 'maritime-teal' : 'accent'}>
+            <Text
+              type="code"
+              size="lg"
+              weight="semibold"
+              color={u.tone === 'teal' ? 'maritime-teal' : 'accent'}
+            >
               {`${u.cont} ${unitLabel}`}
             </Text>
           </HStack>
@@ -434,7 +545,13 @@ function Panel({ children }) {
 /** @param {{ children: import('react').ReactNode }} props */
 function SectionLabel({ children }) {
   return (
-    <Text type="label" size="lg" weight="bold" color="maritime-muted" xstyle={styles.tracking}>
+    <Text
+      type="label"
+      size="lg"
+      weight="bold"
+      color="maritime-muted"
+      xstyle={styles.tracking}
+    >
       {children}
     </Text>
   );
@@ -444,11 +561,19 @@ function SectionLabel({ children }) {
 function RoutePoint({ icon, label, value, tone }) {
   return (
     <HStack gap={2} vAlign="center" wrap="nowrap">
-      <Icon icon={icon} size="xsm" color={tone === 'teal' ? /** @type {any} */ ('maritime-teal') : 'accent'} />
+      <Icon
+        icon={icon}
+        size="xsm"
+        color={
+          tone === 'teal' ? /** @type {any} */ ('maritime-teal') : 'accent'
+        }
+      />
       <Text size="lg" color="maritime-subtle">
         {label}
       </Text>
-      <Text size="lg" weight="semibold">{value}</Text>
+      <Text size="lg" weight="semibold">
+        {value}
+      </Text>
     </HStack>
   );
 }
@@ -503,7 +628,12 @@ const PARTNER_ICONS = {
 
 /** @type {ShipmentStat[]} */
 const DEFAULT_STATS = [
-  { label: 'SỐ LƯỢNG CONT FCL', value: '3 Lô FCL', note: "Container 40' High Cube", color: 'primary' },
+  {
+    label: 'SỐ LƯỢNG CONT FCL',
+    value: '3 Lô FCL',
+    note: "Container 40' High Cube",
+    color: 'primary',
+  },
   { label: 'TỔNG KHỐI LƯỢNG TỜ KHAI', value: '73.5 Tấn', color: 'accent' },
   {
     label: 'TÌNH TRẠNG HẠ BÃI',
@@ -534,7 +664,11 @@ const BOOKING = {
 const DEFAULT_SHIPMENTS = [
   {
     id: 'lot-01',
-    table: { declDate: '24/03/2024', quantity: "1 Cont 40' HC", vgm: '28.4 Tấn' },
+    table: {
+      declDate: '24/03/2024',
+      quantity: "1 Cont 40' HC",
+      vgm: '28.4 Tấn',
+    },
     no: '01',
     code: '26KCT14/LOT-01',
     kind: 'fcl',
@@ -543,7 +677,7 @@ const DEFAULT_SHIPMENTS = [
       usd: '175,000',
       vnd: '4,453,750,000',
       rate: '25,450',
-      scaleTag: '1 Cont 40\' HC',
+      scaleTag: "1 Cont 40' HC",
       weight: '24.5 Tấn • VGM: 28,400 kg',
     },
     route: {
@@ -614,11 +748,19 @@ const DEFAULT_SHIPMENTS = [
   },
   {
     id: 'lot-02',
-    table: { declDate: '17/03/2024', quantity: "1 Cont 40' HC", vgm: '28.2 Tấn' },
+    table: {
+      declDate: '17/03/2024',
+      quantity: "1 Cont 40' HC",
+      vgm: '28.2 Tấn',
+    },
     no: '02',
     code: '26KCT14/LOT-02',
     kind: 'fcl',
-    status: { label: 'Đã cập cảng đích (DeliveredToPort)', icon: 'anchor', tone: 'success' },
+    status: {
+      label: 'Đã cập cảng đích (DeliveredToPort)',
+      icon: 'anchor',
+      tone: 'success',
+    },
     value: {
       usd: '175,000',
       vnd: '4,453,750,000',
@@ -689,11 +831,19 @@ const DEFAULT_SHIPMENTS = [
   },
   {
     id: 'lot-03',
-    table: { declDate: '30/03/2024', quantity: "1 Cont 40' HC", vgm: '27.9 Tấn' },
+    table: {
+      declDate: '30/03/2024',
+      quantity: "1 Cont 40' HC",
+      vgm: '27.9 Tấn',
+    },
     no: '03',
     code: '26KCT14/LOT-03',
     kind: 'fcl',
-    status: { label: 'Chờ hạ bãi xuất khẩu (AtYardAwaitingExport)', icon: 'yard', tone: 'blue' },
+    status: {
+      label: 'Chờ hạ bãi xuất khẩu (AtYardAwaitingExport)',
+      icon: 'yard',
+      tone: 'blue',
+    },
     value: {
       usd: '135,000',
       vnd: '3,435,750,000',
@@ -769,7 +919,11 @@ const DEFAULT_SHIPMENTS = [
     no: '04',
     code: '26KCT14/LOT-04-LCL',
     kind: 'lcl',
-    status: { label: 'Đang đóng hàng kho CFS (Packing / CFS)', icon: 'pack', tone: 'blue' },
+    status: {
+      label: 'Đang đóng hàng kho CFS (Packing / CFS)',
+      icon: 'pack',
+      tone: 'blue',
+    },
     value: {
       usd: '25,000',
       vnd: '636,250,000',
@@ -927,7 +1081,10 @@ const styles = stylex.create({
     backgroundColor: 'var(--color-background-card)',
     borderColor: 'var(--color-border)',
   },
-  lotCard: { backgroundColor: 'var(--color-background-card)', overflow: 'hidden' },
+  lotCard: {
+    backgroundColor: 'var(--color-background-card)',
+    overflow: 'hidden',
+  },
   summaryBar: {
     backgroundColor: 'var(--maritime-chip-bg)',
     borderColor: 'var(--maritime-badge-info-border)',
