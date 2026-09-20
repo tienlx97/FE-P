@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { MaritimeContractCodeTextInput } from '@/shared/components/custom/maritime/index.js';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { NumberInput } from '@/shared/components/number-input.jsx';
@@ -208,7 +209,7 @@ export function ContractDrawerProfileFields({
           icon={Scale}
         >
           <Grid columns={TWO_COLUMNS} gap={4}>
-            <TextInput
+            <MaritimeContractCodeTextInput
               label="Số hợp đồng"
               value={values.contractNumber}
               onChange={(value) => setField('contractNumber', value)}
@@ -588,6 +589,7 @@ export function ContractDrawerProfileFields({
           <TextArea
             label="Ghi chú"
             isLabelHidden
+            rows={2}
             value={values.note}
             onChange={(value) => setField('note', value)}
             placeholder="Nhập quy chuẩn đóng gói, chất lượng hoặc ghi chú hợp đồng..."

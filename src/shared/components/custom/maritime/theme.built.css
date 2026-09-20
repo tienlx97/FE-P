@@ -211,6 +211,8 @@
     --maritime-chip-border: #bfdbfe;
     --maritime-tab-border: rgba(220, 233, 255, 0.6);
     --maritime-tab-resting-bg: var(--color-background-surface);
+    --maritime-contract-code-font: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --maritime-field-label-color: #45464d;
   }
 
   .astryx-heading.level-1 {
@@ -336,6 +338,114 @@
 
   .astryx-text.maritime-teal-text {
     color: var(--maritime-teal-text);
+  }
+
+  .astryx-field-label {
+    --text-supporting-size: 11px;
+    --text-supporting-leading: 16.5px;
+    color: var(--maritime-field-label-color);
+    font-size: 11px;
+    font-weight: var(--font-weight-semibold);
+    line-height: 16.5px;
+  }
+
+  .astryx-text-input {
+    --text-body-size: 12px;
+    --text-body-leading: 16px;
+    background-color: var(--color-background-surface);
+    border-color: var(--color-border);
+    border-radius: calc(var(--radius-inner) / 2);
+    padding-block: 7px;
+    padding-inline: 10px;
+  }
+
+  .astryx-text-input.md {
+    height: 32px;
+  }
+
+  .astryx-selector {
+    --text-label-size: 12px;
+    --text-label-leading: 18px;
+    background-color: var(--color-background-surface);
+    border-color: var(--color-border);
+    border-radius: calc(var(--radius-inner) / 2);
+    padding-inline: 10px;
+  }
+
+  .astryx-selector.md {
+    min-height: 36px;
+    padding-block: 6px;
+  }
+
+  .astryx-date-input {
+    --text-body-size: 12px;
+    --text-body-leading: 16px;
+    background-color: var(--color-background-surface);
+    border-color: var(--color-border);
+    border-radius: calc(var(--radius-inner) / 2);
+    padding-block: 7px;
+    padding-inline: 10px;
+  }
+
+  .astryx-date-input.md {
+    height: 32px;
+  }
+
+  .astryx-date-time-input {
+    --text-body-size: 12px;
+    --text-body-leading: 16px;
+    background-color: var(--color-background-surface);
+    border-color: var(--color-border);
+    border-radius: calc(var(--radius-inner) / 2);
+  }
+
+  .astryx-time-input {
+    --text-body-size: 12px;
+    --text-body-leading: 16px;
+    background-color: var(--color-background-surface);
+    border-color: var(--color-border);
+    border-radius: calc(var(--radius-inner) / 2);
+  }
+
+  .astryx-number-input {
+    --text-body-size: 12px;
+    --text-body-leading: 16px;
+    background-color: var(--color-background-surface);
+    border-color: var(--color-border);
+    border-radius: calc(var(--radius-inner) / 2);
+    --astryx-number-input-padding-inline: 10px;
+    --astryx-number-input-padding-block-start: 7px;
+    --astryx-number-input-padding-block-end: 7px;
+    --_field-radius: calc(var(--radius-inner) / 2);
+  }
+
+  .astryx-number-input.md {
+    height: 32px;
+  }
+
+  .astryx-input-group {
+    --text-body-size: 12px;
+    --text-body-leading: 16px;
+    background-color: var(--color-background-surface);
+    border-color: var(--color-border);
+    border-radius: calc(var(--radius-inner) / 2);
+  }
+
+  .astryx-input-group.md {
+    height: 32px;
+  }
+
+  .astryx-textarea {
+    --text-body-size: 12px;
+    --text-body-leading: 19.5px;
+    background-color: var(--color-background-surface);
+    border-color: var(--color-border);
+    border-radius: calc(var(--radius-inner) / 2);
+    --_textarea-inline-padding: 10px;
+  }
+
+  .astryx-textarea.md {
+    height: 80.5px;
   }
 
   .astryx-button {

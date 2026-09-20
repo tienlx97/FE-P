@@ -193,6 +193,9 @@ export const maritimeTheme = defineTheme({
     // variant, so normal cascade order (hover declared after default)
     // decides again, like everywhere else `':hover'` is used in this repo.
     '--maritime-tab-resting-bg': 'var(--color-background-surface)',
+    '--maritime-contract-code-font':
+      '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    '--maritime-field-label-color': '#45464d',
   },
 
   components: {
@@ -211,6 +214,105 @@ export const maritimeTheme = defineTheme({
         fontSize: '20px',
         letterSpacing: '-0.5px',
       },
+    },
+    'field-label': {
+      base: {
+        '--text-supporting-size': '11px',
+        '--text-supporting-leading': '16.5px',
+        color: 'var(--maritime-field-label-color)',
+        fontSize: '11px',
+        fontWeight: 'var(--font-weight-semibold)',
+        lineHeight: '16.5px',
+      },
+    },
+    // Compact form-control system extracted from the Contract editor frame.
+    // These are Astryx theme targets, so the published components retain their
+    // behavior and future package fixes; no component source is forked.
+    'text-input': {
+      base: {
+        '--text-body-size': '12px',
+        '--text-body-leading': '16px',
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'calc(var(--radius-inner) / 2)',
+        paddingBlock: '7px',
+        paddingInline: '10px',
+      },
+      'size:md': { height: '32px' },
+    },
+    selector: {
+      base: {
+        '--text-label-size': '12px',
+        '--text-label-leading': '18px',
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'calc(var(--radius-inner) / 2)',
+        paddingInline: '10px',
+      },
+      'size:md': { minHeight: '36px', paddingBlock: '6px' },
+    },
+    'date-input': {
+      base: {
+        '--text-body-size': '12px',
+        '--text-body-leading': '16px',
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'calc(var(--radius-inner) / 2)',
+        paddingBlock: '7px',
+        paddingInline: '10px',
+      },
+      'size:md': { height: '32px' },
+    },
+    'date-time-input': {
+      base: {
+        '--text-body-size': '12px',
+        '--text-body-leading': '16px',
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'calc(var(--radius-inner) / 2)',
+      },
+    },
+    'time-input': {
+      base: {
+        '--text-body-size': '12px',
+        '--text-body-leading': '16px',
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'calc(var(--radius-inner) / 2)',
+      },
+    },
+    'number-input': {
+      base: {
+        '--text-body-size': '12px',
+        '--text-body-leading': '16px',
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'calc(var(--radius-inner) / 2)',
+        paddingBlock: '7px',
+        paddingInline: '10px',
+      },
+      'size:md': { height: '32px' },
+    },
+    'input-group': {
+      base: {
+        '--text-body-size': '12px',
+        '--text-body-leading': '16px',
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'calc(var(--radius-inner) / 2)',
+      },
+      'size:md': { height: '32px' },
+    },
+    textarea: {
+      base: {
+        '--text-body-size': '12px',
+        '--text-body-leading': '19.5px',
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'calc(var(--radius-inner) / 2)',
+        paddingInline: '10px',
+      },
+      'size:md': { height: '80.5px' },
     },
     button: {
       base: {

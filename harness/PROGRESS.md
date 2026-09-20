@@ -13176,3 +13176,26 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
   PASSED in full: readiness, memory safety, TanStack-only, theme build, lint,
   typecheck, structure, harness tests, unit tests, production build, and
   quality thresholds. Evidence: `harness/runs/20260921-001035-1640/`.
+
+## 2026-09-21 — Maritime form controls matched to Figma
+
+- Re-read the complete selected drawer (`52:645`) and its contract-number
+  field (`52:677`). Extracted a shared control system: 11px/600 labels with
+  16.5px leading, 32px text/date/number controls, 36px selectors, 80.5px
+  textarea, 2px radii, `#dce9ff` borders, and 10px inline insets.
+- Configured the published Astryx components through Maritime theme targets:
+  `text-input`, `selector`, `date-input`, `date-time-input`, `time-input`,
+  `number-input`, `input-group`, `textarea`, and `field-label`. No Astryx
+  component implementation is forked or swizzled.
+- The contract identifier uses a thin `MaritimeContractCodeTextInput` adapter
+  around the existing shared Astryx TextInput. StyleX token themes scope only
+  its value to JetBrains Mono 12px/700; Astryx still owns validation,
+  accessibility, state and future package fixes.
+- Verified in the running app with an isolated preview of all affected control
+  types. Browser-computed geometry and typography match the extracted Figma
+  values; screenshot evidence:
+  `harness/runs/20260921-maritime-form-controls/app-controls-final.png`.
+- `./harness/verify.sh` PASSED in full: readiness, memory safety,
+  TanStack-only, theme build, lint, typecheck, structure, harness tests, unit
+  tests, production build, and quality thresholds. Evidence:
+  `harness/runs/20260921-051629-62/`.
