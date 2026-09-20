@@ -56,7 +56,7 @@ export default function PreviewMaritimePage() {
               <MaritimeContractFoundationGrid />
             </>
           ) : null}
-          {activeTab === 'payments' ? <MaritimePaymentProgressPanel /> : null}
+          {activeTab === 'payments' ? <MaritimePaymentProgressPanel onDownloadPayment={() => {}} /> : null}
           {activeTab === 'shipment' ? <MaritimeShipmentListPanel /> : null}
           {activeTab === 'annex' ? <MaritimeAnnexListPanel /> : null}
           {activeTab === 'commission' ? <MaritimeCommissionPanel /> : null}

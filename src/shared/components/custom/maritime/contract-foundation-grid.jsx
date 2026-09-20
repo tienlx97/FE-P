@@ -17,7 +17,6 @@ import {
   Container,
   FileText,
   Hourglass,
-  Phone,
   Scale,
   Truck,
   Wallet,
@@ -26,14 +25,13 @@ import {
 import { MaritimeBadge } from './badge.jsx';
 import { MaritimeChip } from './chip.jsx';
 
-const parties = [
+const DEFAULT_PARTIES = [
   {
     eyebrow: 'BÊN BÁN (SELLER)',
-    country: 'VIET NAM',
-    countryTone: 'success',
+    badge: { label: 'VIET NAM', tone: 'success' },
     name: 'CÔNG TY CỔ PHẦN THƯƠNG MẠI TIẾP VẬN QUỐC TẾ Á CHÂU',
     rows: [
-      ['Người đại diện:', 'Ông Trần Đình Long'],
+      ['Người đại diện:', 'Ông Trần Đình Long', false, false, true],
       ['Chức vụ:', 'Tổng Giám Đốc'],
       ['Mã số thuế:', '0312345678', true],
       ['Địa chỉ:', 'Quận 1, TP. Hồ Chí Minh'],
@@ -41,11 +39,10 @@ const parties = [
   },
   {
     eyebrow: 'BÊN MUA (BUYER)',
-    country: 'UNITED STATES',
-    countryTone: 'blue',
+    badge: { label: 'UNITED STATES', tone: 'blue' },
     name: 'PACIFIC METALS CORPORATION',
     rows: [
-      ['Người đại diện:', 'Mr. Robert Sterling'],
+      ['Người đại diện:', 'Mr. Robert Sterling', false, false, true],
       ['Chức vụ:', 'Procurement Director'],
       ['Mã số thuế:', 'CUS-T-USA-9921', true],
       ['Địa chỉ:', 'Long Beach, California, USA'],
@@ -53,33 +50,109 @@ const parties = [
   },
 ];
 
-const payments = [
-  [
-    'Đợt 1 (30% - T/T)',
-    '$135,000 USD',
-    'Thanh toán cọc trong 03 ngày kể từ ngày ký HĐ.',
-    'paid',
-  ],
-  [
-    'Đợt 2 (40% - T/T)',
-    '$180,250 USD',
-    'Thanh toán khi xuất trình B/L & Tờ khai hải quan thông quan.',
-    'paid',
-  ],
-  [
-    'Đợt 3 (30% - L/C)',
-    '$169,750 USD',
-    'Mở L/C không hủy ngang tại chỗ khi giao bộ chứng từ gốc.',
-    'active',
-  ],
+const DEFAULT_CONTACTS = [
+  {
+    icon: Truck,
+    label: 'CONSIGNEE',
+    name: 'Trans-Pacific Forwarding LLC',
+    rows: [
+      ['Địa chỉ:', 'Terminal 4, Port of Long Beach, CA 90802, USA'],
+      ['Liên hệ:', '+1 (562) 899-4400 (Mr. David Vance)', true, true],
+    ],
+  },
+  {
+    icon: Bell,
+    label: 'NOTIFY PARTY',
+    name: 'Global Logistics & Shipping Co.',
+    rows: [
+      ['Địa chỉ:', 'Suite 300, 1200 Seaside Ave, Long Beach, CA 90802'],
+      ['Liên hệ:', '+1 (562) 555-0199 (Ms. Sarah Connor)', true, true],
+    ],
+  },
 ];
 
-const annexes = [
-  { code: 'AN-01', label: 'Phát sinh tăng', amount: '+$35,000 USD', isPositive: true },
-  { code: 'AN-02', label: 'Thay đổi giá trị', amount: '$0 USD', isPositive: false },
+const DEFAULT_TRANSPORT = {
+  sectionTrailing: '100% Đã xuất xưởng',
+  incotermLabel: 'CIF 2020',
+  rows: [
+    ['Nơi xếp hàng:', 'Cảng Cát Lái (VN-SGN)'],
+    ['Nơi dỡ hàng:', 'Cảng Long Beach (US-LGB)'],
+    ['Ngày báo giá:', '10/03/2024', true],
+    ['Ngày ký:', '15/03/2024', true],
+    ['Ngày hoàn thành:', '31/12/2024', true],
+  ],
+  signingBadges: [
+    { label: 'Bên A đã ký', tone: 'success' },
+    { label: 'Bên B đã ký', tone: 'success' },
+  ],
+};
+
+const DEFAULT_CARGO_METRICS = [
+  { icon: Scale, label: 'KHỐI LƯỢNG TỜ KHAI', value: '73.5', unit: 'Tấn' },
+  {
+    icon: Container,
+    label: 'SỐ LƯỢNG CONT / KIỆN',
+    value: '3 Cont',
+    unit: "(40' HC)",
+  },
 ];
 
-const commission = {
+const DEFAULT_BANK = {
+  items: [
+    {
+      rows: [
+        ['Ngân hàng:', 'Vietcombank (VCB)'],
+        ['Chi nhánh:', 'Tân Bình, TP.HCM'],
+        ['Số tài khoản (USD):', '1032407684', true],
+        ['Mã SWIFT:', 'BFTVVNVX044', true, true],
+      ],
+    },
+  ],
+};
+
+const DEFAULT_PAYMENT_TERMS = {
+  title: '3 MỐC ĐIỀU KHOẢN THANH TOÁN HỢP ĐỒNG',
+  items: [
+    {
+      label: 'Đợt 1 (30% - T/T)',
+      amount: '$135,000 USD',
+      note: 'Thanh toán cọc trong 03 ngày kể từ ngày ký HĐ.',
+      status: 'paid',
+    },
+    {
+      label: 'Đợt 2 (40% - T/T)',
+      amount: '$180,250 USD',
+      note: 'Thanh toán khi xuất trình B/L & Tờ khai hải quan thông quan.',
+      status: 'paid',
+    },
+    {
+      label: 'Đợt 3 (30% - L/C)',
+      amount: '$169,750 USD',
+      note: 'Mở L/C không hủy ngang tại chỗ khi giao bộ chứng từ gốc.',
+      status: 'active',
+    },
+  ],
+};
+
+const DEFAULT_ANNEXES = [
+  {
+    code: 'AN-01',
+    label: 'Phát sinh tăng',
+    amount: '+$35,000 USD',
+    isPositive: true,
+  },
+  {
+    code: 'AN-02',
+    label: 'Thay đổi giá trị',
+    amount: '$0 USD',
+    isPositive: false,
+  },
+];
+
+const DEFAULT_COMMISSION = {
+  percentLabel: '3%',
+  signedLabel: 'Đã ký 2 bên',
+  signedTone: 'success',
   agreementCode: 'CMS-2024/088',
   recipient: 'Pacific Trade Link Ltd. (HK)',
   rateValue: '$14,550.00 USD (3%)',
@@ -91,7 +164,38 @@ const commission = {
   remainingAmount: '$5,092.50 USD',
 };
 
-export function MaritimeContractFoundationGrid() {
+/**
+ * Every section is data-driven: each prop defaults to the Figma mockup's
+ * demo content (what `/preview-maritime` shows), and a real caller passes
+ * its own data. `null`/empty hides the optional cards (`transport`,
+ * `bank`, `paymentTerms`, `commission`); `commission` may also be
+ * `{ isEmpty: true, message, actionLabel?, onAction? }` to render the
+ * "no commission yet" state.
+ * @param {{
+ *   parties?: any[],
+ *   contacts?: any[],
+ *   transport?: any,
+ *   cargoMetrics?: any[],
+ *   bank?: any,
+ *   paymentTerms?: any,
+ *   annexes?: any[],
+ *   onViewAnnexes?: () => void,
+ *   onViewCommission?: () => void,
+ *   commission?: any,
+ * }} props
+ */
+export function MaritimeContractFoundationGrid({
+  parties = DEFAULT_PARTIES,
+  contacts = DEFAULT_CONTACTS,
+  transport = DEFAULT_TRANSPORT,
+  cargoMetrics = DEFAULT_CARGO_METRICS,
+  bank = DEFAULT_BANK,
+  paymentTerms = DEFAULT_PAYMENT_TERMS,
+  annexes = DEFAULT_ANNEXES,
+  onViewAnnexes,
+  onViewCommission,
+  commission = DEFAULT_COMMISSION,
+}) {
   return (
     <Grid
       columns={{ minWidth: 340, max: 3, repeat: 'fill' }}
@@ -103,202 +207,231 @@ export function MaritimeContractFoundationGrid() {
         {parties.map((party) => (
           <PartyCard key={party.eyebrow} {...party} />
         ))}
-        <ContactCard
-          icon={Truck}
-          label="CONSIGNEE"
-          name="Trans-Pacific Forwarding LLC"
-          address="Terminal 4, Port of Long Beach, CA 90802, USA"
-          phone="+1 (562) 899-4400 (Mr. David Vance)"
-        />
-        <ContactCard
-          icon={Bell}
-          label="NOTIFY PARTY"
-          name="Global Logistics & Shipping Co."
-          address="Suite 300, 1200 Seaside Ave, Long Beach, CA 90802"
-          phone="+1 (562) 555-0199 (Ms. Sarah Connor)"
-        />
+        {contacts.map((contact) => (
+          <ContactCard key={contact.label} {...contact} />
+        ))}
       </VStack>
 
       <VStack gap={3} hAlign="stretch">
         <SectionTitle
           number="2"
           label="VẬN CHUYỂN & HÀNG HÓA"
-          trailing="100% Đã xuất xưởng"
+          trailing={transport?.sectionTrailing}
         />
-        <Card padding={4}>
-          <VStack gap={2} hAlign="stretch">
-            <HStack hAlign="between" vAlign="center">
-              <Text type="label" size="lg" color="maritime-muted">
-                VẬN CHUYỂN & INCOTERM
-              </Text>
-              <MaritimeChip label="CIF 2020" size="md" />
-            </HStack>
-            <InfoRows
-              rows={[
-                ['Nơi xếp hàng:', 'Cảng Cát Lái (VN-SGN)'],
-                ['Nơi dỡ hàng:', 'Cảng Long Beach (US-LGB)'],
-                ['Ngày báo giá:', '10/03/2024', true],
-                ['Ngày ký:', '15/03/2024', true],
-                ['Ngày hoàn thành:', '31/12/2024', true],
-              ]}
-            />
-            <Divider />
-            <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
-              <Text size="lg" color="maritime-muted">
-                Trạng thái ký:
-              </Text>
-              <HStack gap={1} wrap="wrap">
-                <MaritimeBadge label="Bên A đã ký" tone="success" />
-                <MaritimeBadge label="Bên B đã ký" tone="success" />
+        {transport ? (
+          <Card padding={4}>
+            <VStack gap={2} hAlign="stretch">
+              <HStack hAlign="between" vAlign="center">
+                <Text type="label" color="maritime-muted">
+                  VẬN CHUYỂN & INCOTERM
+                </Text>
+                {transport.incotermLabel ? (
+                  <MaritimeChip label={transport.incotermLabel} size="md" />
+                ) : null}
               </HStack>
-            </HStack>
-          </VStack>
-        </Card>
-        <Card padding={4}>
-          <VStack gap={3} hAlign="stretch">
-            <HStack gap={2} vAlign="center">
-              <IconBadge icon={Archive} />
-              <VStack gap={0}>
-                <Heading level={3}>QUY CÁCH HÀNG HÓA & ĐÓNG GÓI</Heading>
-              </VStack>
-            </HStack>
-            <Divider />
-            <Grid columns={{ minWidth: 180, max: 2, repeat: 'fill' }} gap={2}>
-              <Metric
-                icon={Scale}
-                label="KHỐI LƯỢNG TỜ KHAI"
-                value="73.5"
-                unit="Tấn"
-              />
-              <Metric
-                icon={Container}
-                label="SỐ LƯỢNG CONT / KIỆN"
-                value="3 Cont"
-                unit="(40' HC)"
-              />
-            </Grid>
-          </VStack>
-        </Card>
+              <InfoRows rows={transport.rows} />
+              {transport.signingBadges?.length ? (
+                <>
+                  <Divider />
+                  <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
+                    <Text color="maritime-muted">
+                      Trạng thái ký:
+                    </Text>
+                    <HStack gap={1} wrap="wrap">
+                      {transport.signingBadges.map(
+                        (/** @type {any} */ badge) => (
+                          <MaritimeBadge
+                            key={badge.label}
+                            label={badge.label}
+                            tone={badge.tone}
+                          />
+                        ),
+                      )}
+                    </HStack>
+                  </HStack>
+                </>
+              ) : null}
+            </VStack>
+          </Card>
+        ) : null}
+        {cargoMetrics ? (
+          <Card padding={4}>
+            <VStack gap={3} hAlign="stretch">
+              <HStack gap={2} vAlign="center">
+                <IconBadge icon={Archive} />
+                <VStack gap={0}>
+                  <Heading level={3}>QUY CÁCH HÀNG HÓA & ĐÓNG GÓI</Heading>
+                </VStack>
+              </HStack>
+              <Divider />
+              <Grid columns={{ minWidth: 180, max: 2, repeat: 'fill' }} gap={2}>
+                {cargoMetrics.map((/** @type {any} */ metric) => (
+                  <Metric key={metric.label} {...metric} />
+                ))}
+              </Grid>
+            </VStack>
+          </Card>
+        ) : null}
       </VStack>
 
       <VStack gap={3} hAlign="stretch">
         <SectionTitle number="3" label="NGÂN HÀNG & THANH TOÁN" />
-        <Card padding={4}>
-          <VStack gap={2} hAlign="stretch">
-            <HStack gap={2} vAlign="center">
-              <Icon icon={Building2} size="sm" color="accent" />
-              <Heading level={3}>NGÂN HÀNG THỤ HƯỞNG</Heading>
-            </HStack>
-            <VStack gap={1} hAlign="stretch" xstyle={styles.inset}>
-              <InfoRows
-                rows={[
-                  ['Ngân hàng:', 'Vietcombank (VCB)'],
-                  ['Chi nhánh:', 'Tân Bình, TP.HCM'],
-                  ['Số tài khoản (USD):', '1032407684', true],
-                  ['Mã SWIFT:', 'BFTVVNVX044', true, true],
-                ]}
-              />
+        {bank?.items?.length ? (
+          <Card padding={4}>
+            <VStack gap={2} hAlign="stretch">
+              <HStack gap={2} vAlign="center">
+                <Icon icon={Building2} size="sm" color="accent" />
+                <Heading level={3}>NGÂN HÀNG THỤ HƯỞNG</Heading>
+              </HStack>
+              {bank.items.map(
+                (/** @type {any} */ item, /** @type {number} */ index) => (
+                  <VStack
+                    key={item.title ?? index}
+                    gap={1}
+                    hAlign="stretch"
+                    xstyle={styles.inset}
+                  >
+                    {item.title ? (
+                      <Text type="label" color="maritime-muted">
+                        {item.title}
+                      </Text>
+                    ) : null}
+                    <InfoRows rows={item.rows} />
+                  </VStack>
+                ),
+              )}
             </VStack>
-          </VStack>
-        </Card>
-        <Card padding={4}>
-          <VStack gap={2} hAlign="stretch">
-            <Text type="label" size="lg" color="maritime-muted">
-              3 MỐC ĐIỀU KHOẢN THANH TOÁN HỢP ĐỒNG
-            </Text>
-            {payments.map(([label, amount, note, status]) => (
-              <PaymentTerm
-                key={label}
-                label={label}
-                amount={amount}
-                note={note}
-                status={status}
-              />
-            ))}
-          </VStack>
-        </Card>
+          </Card>
+        ) : null}
+        {paymentTerms?.items?.length ? (
+          <Card padding={4}>
+            <VStack gap={2} hAlign="stretch">
+              <Text type="label" color="maritime-muted">
+                {paymentTerms.title}
+              </Text>
+              {paymentTerms.items.map((/** @type {any} */ item) => (
+                <PaymentTerm
+                  key={item.label}
+                  label={item.label}
+                  amount={item.amount}
+                  note={item.note}
+                  status={item.status}
+                />
+              ))}
+            </VStack>
+          </Card>
+        ) : null}
         <Card padding={4}>
           <VStack gap={2} hAlign="stretch">
             <HStack hAlign="between" vAlign="center">
-              <Text type="label" size="lg" color="maritime-muted">
+              <Text type="label" color="maritime-muted">
                 PHỤ LỤC
               </Text>
-              <Link size="lg" weight="semibold">
+              <Link weight="semibold" onClick={onViewAnnexes}>
                 + Xem tất cả
               </Link>
             </HStack>
-            {annexes.map((annex) => (
-              <AnnexRow key={annex.code} {...annex} />
-            ))}
+            {annexes.length === 0 ? (
+              <Text color="maritime-muted">
+                Chưa có phụ lục
+              </Text>
+            ) : (
+              annexes.map((annex) => <AnnexRow key={annex.code} {...annex} />)
+            )}
           </VStack>
         </Card>
-        <Card padding={4}>
-          <VStack gap={2} hAlign="stretch">
-            <HStack hAlign="between" vAlign="center">
+        {commission?.isEmpty ? (
+          <Card padding={4}>
+            <VStack gap={2} hAlign="stretch">
               <HStack gap={2} vAlign="center">
                 <IconBadge icon={Wallet} />
-                <Text type="label" size="lg" color="maritime-muted">
+                <Text type="label" color="maritime-muted">
                   HOA HỒNG (COMMISSION)
                 </Text>
-                <MaritimeBadge label="3%" tone="success" />
               </HStack>
-              <Link size="lg" weight="semibold">
-                + Chi tiết
-              </Link>
-            </HStack>
-            <InfoRows
-              rows={[
-                ['Mã thỏa thuận:', commission.agreementCode, true],
-                ['Bên nhận:', commission.recipient],
-                ['Giá trị định mức:', commission.rateValue, true],
-              ]}
-            />
-            <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
-              <Text size="lg" color="maritime-muted">
-                Trạng thái ký:
-              </Text>
-              <MaritimeBadge label="Đã ký 2 bên" tone="success" />
-            </HStack>
-            <Divider />
-            <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
-              <Text size="lg" color="maritime-muted">
-                Tiến độ chi hoa hồng:
-              </Text>
-              <Text type="code" size="lg" weight="bold">
-                {commission.paidAmount} / {commission.totalAmount}
-              </Text>
-            </HStack>
-            <HStack xstyle={styles.commissionTrack}>
-              <HStack
-                as="span"
-                xstyle={[
-                  styles.commissionFill,
-                  styles.commissionFillWidth(commission.paidPercent),
+              <Text color="maritime-muted">{commission.message}</Text>
+              {commission.onAction ? (
+                <HStack>
+                  <Link weight="semibold" onClick={commission.onAction}>
+                    {commission.actionLabel}
+                  </Link>
+                </HStack>
+              ) : null}
+            </VStack>
+          </Card>
+        ) : null}
+        {commission && !commission.isEmpty ? (
+          <Card padding={4}>
+            <VStack gap={2} hAlign="stretch">
+              <HStack hAlign="between" vAlign="center">
+                <HStack gap={2} vAlign="center">
+                  <IconBadge icon={Wallet} />
+                  <Text type="label" color="maritime-muted">
+                    HOA HỒNG (COMMISSION)
+                  </Text>
+                  <MaritimeBadge label={commission.percentLabel} tone="success" />
+                </HStack>
+                <Link weight="semibold" onClick={onViewCommission}>
+                  + Chi tiết
+                </Link>
+              </HStack>
+              <InfoRows
+                rows={[
+                  ['Mã thỏa thuận:', commission.agreementCode, true],
+                  ['Bên nhận:', commission.recipient],
+                  ['Giá trị định mức:', commission.rateValue, true],
                 ]}
               />
-            </HStack>
-            <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
-              <HStack gap={1} vAlign="center">
-                <Icon
-                  icon={Check}
-                  size="xsm"
-                  color={/** @type {any} */ ('maritime-teal')}
+              <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
+                <Text color="maritime-muted">
+                  Trạng thái ký:
+                </Text>
+                <MaritimeBadge
+                  label={commission.signedLabel}
+                  tone={commission.signedTone}
                 />
-                <Text size="lg" color="maritime-muted">
-                  {commission.paidLabel}
+              </HStack>
+              <Divider />
+              <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
+                <Text color="maritime-muted">
+                  Tiến độ chi hoa hồng:
+                </Text>
+                <Text type="code" weight="bold">
+                  {commission.paidAmount} / {commission.totalAmount}
                 </Text>
               </HStack>
-              <HStack gap={1} vAlign="center">
-                <Text size="lg" color="maritime-muted">
-                  Còn lại:
-                </Text>
-                <Text type="code" size="lg" weight="bold" color="primary">
-                  {commission.remainingAmount}
-                </Text>
+              <HStack xstyle={styles.commissionTrack}>
+                <HStack
+                  as="span"
+                  xstyle={[
+                    styles.commissionFill,
+                    styles.commissionFillWidth(commission.paidPercent),
+                  ]}
+                />
               </HStack>
-            </HStack>
-          </VStack>
-        </Card>
+              <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
+                <HStack gap={1} vAlign="center">
+                  <Icon
+                    icon={Check}
+                    size="xsm"
+                    color={/** @type {any} */ ('maritime-teal')}
+                  />
+                  <Text color="maritime-muted">
+                    {commission.paidLabel}
+                  </Text>
+                </HStack>
+                <HStack gap={1} vAlign="center">
+                  <Text color="maritime-muted">
+                    Còn lại:
+                  </Text>
+                  <Text type="code" weight="bold" color="primary">
+                    {commission.remainingAmount}
+                  </Text>
+                </HStack>
+              </HStack>
+            </VStack>
+          </Card>
+        ) : null}
       </VStack>
     </Grid>
   );
@@ -310,12 +443,12 @@ function SectionTitle({ number, label, trailing }) {
     <HStack hAlign="between" vAlign="center" gap={2}>
       <HStack gap={2} vAlign="center">
         <HStack as="span" xstyle={styles.titleMark} />
-        <Text type="label" size="lg" weight="bold">
+        <Text type="label" weight="bold">
           {number}. {label}
         </Text>
       </HStack>
       {trailing ? (
-        <Text size="lg" weight="bold" color="maritime-teal">
+        <Text weight="bold" color="maritime-teal">
           {trailing}
         </Text>
       ) : null}
@@ -323,15 +456,17 @@ function SectionTitle({ number, label, trailing }) {
   );
 }
 /** @param {any} props */
-function PartyCard({ eyebrow, country, countryTone, name, rows }) {
+function PartyCard({ eyebrow, badge, name, rows }) {
   return (
     <Card padding={4}>
       <VStack gap={2} hAlign="stretch">
         <HStack hAlign="between" vAlign="center">
-          <Text type="label" size="lg" color="accent" weight="bold">
+          <Text type="label" color="accent" weight="bold">
             {eyebrow}
           </Text>
-          <MaritimeBadge label={country} tone={countryTone} />
+          {badge ? (
+            <MaritimeBadge label={badge.label} tone={badge.tone} />
+          ) : null}
         </HStack>
         <Heading level={3}>{name}</Heading>
         <VStack gap={1} hAlign="stretch" xstyle={styles.inset}>
@@ -341,44 +476,64 @@ function PartyCard({ eyebrow, country, countryTone, name, rows }) {
     </Card>
   );
 }
-/** @param {any} props */
-function ContactCard({ icon, label, name, address, phone }) {
+/**
+ * Same structure as `PartyCard` (white `Card`, accent eyebrow, heading name,
+ * muted inset with key-value rows) so consignee/notify party read as siblings
+ * of the seller/buyer cards.
+ * @param {any} props
+ */
+function ContactCard({ icon, label, name, rows = [], emptyMessage }) {
   return (
-    <VStack gap={1} hAlign="stretch" xstyle={styles.contact}>
-      <HStack gap={1} vAlign="center">
-        <Icon icon={icon} size="xsm" color="primary" />
-        <Text type="label" size="lg">
-          {label}
-        </Text>
-      </HStack>
-      <Text size="lg" weight="semibold">
-        {name}
-      </Text>
-      <Text size="lg" color="maritime-muted">
-        {address}
-      </Text>
-      <HStack gap={1} vAlign="center">
-        <Icon icon={Phone} size="xsm" color="accent" />
-        <Text type="code" size="lg" color="accent">
-          {phone}
-        </Text>
-      </HStack>
-    </VStack>
+    <Card padding={4}>
+      <VStack gap={2} hAlign="stretch">
+        <HStack gap={1.5} vAlign="center">
+          <Icon icon={icon} size="sm" color="accent" />
+          <Text type="label" color="accent" weight="bold">
+            {label}
+          </Text>
+        </HStack>
+        {emptyMessage ? (
+          <Text color="maritime-muted">{emptyMessage}</Text>
+        ) : (
+          <>
+            <Heading level={3}>{name}</Heading>
+            {rows.length > 0 ? (
+              <VStack gap={1} hAlign="stretch" xstyle={styles.inset}>
+                <InfoRows rows={rows} />
+              </VStack>
+            ) : null}
+          </>
+        )}
+      </VStack>
+    </Card>
   );
 }
-/** @param {{rows: any[]}} props */
-function InfoRows({ rows }) {
-  return rows.map(([label, value, mono, accent]) => (
-    <HStack key={label} hAlign="between" vAlign="start" gap={3}>
-      <Text size="lg" color="maritime-muted">
+/**
+ * Each row is `[label, value, isMono?, accent?, isBold?]`. `isList` switches
+ * from the compact "label ... value" spread (short values, right-aligned) to
+ * a key-value list — fixed label column, left-aligned wrapping value — for
+ * cards with many fields or long values (e.g. bank details).
+ * @param {{rows: any[], isList?: boolean}} props
+ */
+function InfoRows({ rows, isList = false }) {
+  return rows.map(([label, value, mono, accent, isBold], index) => (
+    <HStack
+      key={`${label}-${index}`}
+      hAlign={isList ? 'start' : 'between'}
+      vAlign="start"
+      gap={3}
+    >
+      <Text
+        color="maritime-muted"
+        xstyle={[styles.rowLabel, isList && styles.listLabel]}
+      >
         {label}
       </Text>
       <Text
-        size="lg"
-        weight={mono ? 'semibold' : undefined}
+        weight={isBold ? 'bold' : mono ? 'semibold' : undefined}
         type={mono ? 'code' : undefined}
         color={accent ? (accent === true ? 'accent' : accent) : 'primary'}
-        xstyle={styles.right}
+        xstyle={isList ? styles.listValue : styles.right}
       >
         {value}
       </Text>
@@ -399,7 +554,7 @@ function Metric({ icon, label, value, unit }) {
     <VStack gap={1} hAlign="stretch" xstyle={styles.metric}>
       <HStack gap={1} vAlign="center">
         <Icon icon={icon} size="sm" color="accent" />
-        <Text type="label" size="lg">
+        <Text type="label">
           {label}
         </Text>
       </HStack>
@@ -413,7 +568,7 @@ function Metric({ icon, label, value, unit }) {
         <Text type="code" size="3xl" weight="bold">
           {value}
         </Text>
-        <Text size="lg" color="maritime-muted">
+        <Text color="maritime-muted">
           {unit}
         </Text>
       </HStack>
@@ -445,19 +600,18 @@ function PaymentTerm({ label, amount, note, status }) {
       </HStack>
       <VStack gap={0} hAlign="stretch" xstyle={styles.fill}>
         <HStack hAlign="between" vAlign="center" gap={2}>
-          <Text size="lg" weight="bold" color={paid ? 'primary' : 'accent'}>
+          <Text weight="bold" color={paid ? 'primary' : 'accent'}>
             {label}
           </Text>
           <Text
             type="code"
-            size="lg"
             weight="bold"
             color={paid ? 'maritime-teal' : 'accent'}
           >
             {amount}
           </Text>
         </HStack>
-        <Text size="lg" color="maritime-muted">
+        <Text color="maritime-muted">
           {note}
         </Text>
       </VStack>
@@ -472,17 +626,16 @@ function AnnexRow({ code, label, amount, isPositive }) {
       <HStack gap={2} vAlign="center">
         <Icon icon={FileText} size="sm" color="accent" />
         <VStack gap={0}>
-          <Text type="code" size="lg" weight="bold">
+          <Text type="code" weight="bold">
             {code}
           </Text>
-          <Text size="lg" color="maritime-muted">
+          <Text color="maritime-muted">
             {label}
           </Text>
         </VStack>
       </HStack>
       <Text
         type="code"
-        size="lg"
         weight="bold"
         color={isPositive ? 'maritime-teal' : 'primary'}
       >
@@ -509,14 +662,6 @@ const styles = stylex.create({
     borderWidth: '1px',
     padding: 'var(--spacing-2)',
   },
-  contact: {
-    backgroundColor: 'var(--color-background-muted)',
-    borderColor: 'var(--color-border)',
-    borderRadius: 'var(--radius-inner)',
-    borderStyle: 'solid',
-    borderWidth: '1px',
-    padding: 'var(--spacing-3)',
-  },
   iconBadge: {
     backgroundColor: 'var(--color-accent)',
     borderRadius: '2px',
@@ -534,6 +679,9 @@ const styles = stylex.create({
     padding: 'var(--spacing-3)',
   },
   right: { textAlign: 'right' },
+  rowLabel: { flexShrink: 0, whiteSpace: 'nowrap' },
+  listLabel: { width: '140px' },
+  listValue: { flexGrow: 1, minWidth: 0, overflowWrap: 'anywhere', textAlign: 'left' },
   payment: {
     borderRadius: 'var(--radius-inner)',
     borderStyle: 'solid',

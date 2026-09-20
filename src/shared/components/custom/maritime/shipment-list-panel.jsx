@@ -8,6 +8,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import { Tooltip } from '@astryxdesign/core/Tooltip';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -48,6 +49,9 @@ import { MaritimeShipmentTableView } from './shipment-table-view.jsx';
  *   shipments?: Shipment[],
  *   totalCost?: string,
  *   currency?: string,
+ *   contractCode?: string,
+ *   declarationCurrency?: string,
+ *   createDisabledReason?: string,
  *   onExportExcel?: () => void,
  *   onCreateShipment?: () => void,
  *   onShipmentMenu?: (id: string) => void,
@@ -58,6 +62,9 @@ export function MaritimeShipmentListPanel({
   shipments = DEFAULT_SHIPMENTS,
   totalCost = '128,500,000',
   currency = 'VND',
+  contractCode,
+  declarationCurrency = 'USD',
+  createDisabledReason,
   onExportExcel,
   onCreateShipment,
   onShipmentMenu,
@@ -83,7 +90,6 @@ export function MaritimeShipmentListPanel({
             <VStack gap={1} hAlign="stretch">
               <Text
                 type="label"
-                size="lg"
                 weight="medium"
                 color="maritime-muted"
                 xstyle={styles.tracking}
@@ -92,7 +98,7 @@ export function MaritimeShipmentListPanel({
               </Text>
               <Text
                 type="code"
-                size="4xl"
+                size="3xl"
                 weight="bold"
                 color={stat.color}
                 xstyle={styles.statValue}
@@ -100,7 +106,7 @@ export function MaritimeShipmentListPanel({
                 {stat.value}
               </Text>
               {stat.note ? (
-                <Text size="lg" color={stat.noteColor ?? 'maritime-subtle'}>
+                <Text color={stat.noteColor ?? 'maritime-subtle'}>
                   {stat.note}
                 </Text>
               ) : null}
@@ -111,7 +117,7 @@ export function MaritimeShipmentListPanel({
 
       <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
         <HStack gap={3} vAlign="center" wrap="wrap">
-          <Heading level={2}>Danh sách Lô hàng vận chuyển</Heading>
+          <Heading level={2}>Danh sách</Heading>
           <MaritimeBadge
             tone="blue"
             size="sm"
@@ -140,29 +146,56 @@ export function MaritimeShipmentListPanel({
           </HStack>
         </HStack>
         <HStack gap={2} vAlign="center" wrap="nowrap">
-          <Button
-            label="Xuất Excel"
-            size="sm"
-            variant="secondary"
-            icon={<Icon icon={Download} size="xsm" />}
-            onClick={onExportExcel}
-          />
-          <Button
-            label="Tạo lô hàng mới"
-            size="sm"
-            variant="primary"
-            icon={<Icon icon={Plus} size="xsm" />}
-            onClick={onCreateShipment}
-          />
+          {onExportExcel ? (
+            <Button
+              label="Xuất Excel"
+              size="sm"
+              variant="secondary"
+              icon={<Icon icon={Download} size="xsm" />}
+              onClick={onExportExcel}
+            />
+          ) : null}
+          <Tooltip
+            isEnabled={Boolean(createDisabledReason)}
+            hasHoverIndication={false}
+            content={createDisabledReason}
+          >
+            <HStack>
+              <Button
+                label="Tạo lô hàng mới"
+                size="sm"
+                variant="primary"
+                icon={<Icon icon={Plus} size="xsm" />}
+                isDisabled={Boolean(createDisabledReason)}
+                onClick={onCreateShipment}
+              />
+            </HStack>
+          </Tooltip>
         </HStack>
       </HStack>
 
       {view === 'table' ? (
-        <MaritimeShipmentTableView shipments={shipments} />
+        <MaritimeShipmentTableView
+          shipments={shipments}
+          contractCode={contractCode}
+          currency={declarationCurrency}
+          onView={onShipmentMenu}
+          onEdit={onShipmentMenu}
+        />
       ) : (
         <VStack gap={4} hAlign="stretch">
+          {shipments.length === 0 ? (
+            <Card padding={4} elevation="low" xstyle={styles.borderCard}>
+              <Text color="maritime-muted">Chưa có lô hàng nào.</Text>
+            </Card>
+          ) : null}
           {shipments.map((s) => (
-            <ShipmentCard key={s.id} shipment={s} onMenu={onShipmentMenu} />
+            <ShipmentCard
+              key={s.id}
+              shipment={s}
+              declarationCurrency={declarationCurrency}
+              onMenu={onShipmentMenu}
+            />
           ))}
         </VStack>
       )}
@@ -185,7 +218,6 @@ export function MaritimeShipmentListPanel({
           </HStack>
           <Text
             type="label"
-            size="lg"
             weight="bold"
             color="maritime-muted"
             xstyle={styles.tracking}
@@ -194,13 +226,13 @@ export function MaritimeShipmentListPanel({
           </Text>
         </HStack>
         <HStack gap={2} vAlign="center" wrap="nowrap">
-          <Text size="lg" weight="semibold" color="maritime-muted">
+          <Text weight="semibold" color="maritime-muted">
             TỔNG CỘNG:
           </Text>
-          <Text type="code" size="4xl" weight="bold" color="accent">
+          <Text type="code" size="3xl" weight="bold" color="accent">
             {totalCost}
           </Text>
-          <Text size="lg" weight="semibold" color="maritime-muted">
+          <Text weight="semibold" color="maritime-muted">
             {currency}
           </Text>
         </HStack>
@@ -209,13 +241,17 @@ export function MaritimeShipmentListPanel({
   );
 }
 
-/** @param {{ shipment: Shipment, onMenu?: (id: string) => void }} props */
-function ShipmentCard({ shipment: s, onMenu }) {
+/** @param {{ shipment: Shipment, declarationCurrency: string, onMenu?: (id: string) => void }} props */
+function ShipmentCard({ shipment: s, declarationCurrency, onMenu }) {
   return (
     <Card
       padding={4}
       elevation="low"
-      xstyle={[styles.borderCard, styles.lotCard]}
+      xstyle={[
+        styles.borderCard,
+        styles.lotCard,
+        lotBorderTones[s.status.tone],
+      ]}
     >
       <VStack gap={3} hAlign="stretch">
         <HStack
@@ -236,7 +272,7 @@ function ShipmentCard({ shipment: s, onMenu }) {
                   : styles.indexBlue,
               ]}
             >
-              <Text type="code" size="lg" weight="bold" color="inherit">
+              <Text type="code" weight="bold" color="inherit">
                 {s.no}
               </Text>
             </HStack>
@@ -262,7 +298,7 @@ function ShipmentCard({ shipment: s, onMenu }) {
           <Panel>
             <HStack hAlign="between" vAlign="center" wrap="nowrap">
               <SectionLabel>GIÁ TRỊ TỜ KHAI & QUY MÔ</SectionLabel>
-              <Text type="code" size="lg" color="maritime-muted">
+              <Text type="code" color="maritime-muted">
                 Tỷ giá {s.value.rate}
               </Text>
             </HStack>
@@ -271,23 +307,23 @@ function ShipmentCard({ shipment: s, onMenu }) {
               vAlign={/** @type {any} */ ('baseline')}
               wrap="wrap"
             >
-              <Text type="code" size="4xl" weight="bold">
+              <Text type="code" size="3xl" weight="bold">
                 {s.value.usd}
               </Text>
-              <Text type="code" size="lg" color="maritime-muted">
-                USD ≈
+              <Text type="code" color="maritime-muted">
+                {declarationCurrency} ≈
               </Text>
-              <Text type="code" size="lg" weight="bold" color="accent">
+              <Text type="code" weight="bold" color="accent">
                 {s.value.vnd}
               </Text>
-              <Text type="code" size="lg" color="maritime-muted">
+              <Text type="code" color="maritime-muted">
                 VND
               </Text>
             </HStack>
             <HStack gap={2} vAlign="center" wrap="wrap">
               <Tag label={s.value.scaleTag} tone="blue" />
             </HStack>
-            <Text type="code" size="lg" color="maritime-subtle">
+            <Text type="code" color="maritime-subtle">
               {s.value.weight}
             </Text>
           </Panel>
@@ -304,23 +340,14 @@ function ShipmentCard({ shipment: s, onMenu }) {
             <Divider />
             <HStack hAlign="between" wrap="nowrap">
               <VStack gap={0.5}>
-                <Text size="lg" color="maritime-subtle">
-                  Khởi hành (ETD):
-                </Text>
-                <Text type="code" size="lg" weight="semibold">
+                <Text color="maritime-subtle">Khởi hành (ETD):</Text>
+                <Text type="code" weight="semibold">
                   {s.route.etd}
                 </Text>
               </VStack>
               <VStack gap={0.5}>
-                <Text size="lg" color="maritime-subtle">
-                  {s.route.etaLabel}
-                </Text>
-                <Text
-                  type="code"
-                  size="lg"
-                  weight="semibold"
-                  color="maritime-teal"
-                >
+                <Text color="maritime-subtle">{s.route.etaLabel}</Text>
+                <Text type="code" weight="semibold" color="maritime-teal">
                   {s.route.eta}
                 </Text>
               </VStack>
@@ -341,20 +368,15 @@ function ShipmentCard({ shipment: s, onMenu }) {
                 <Text type="code" size="xl" weight="bold">
                   {s.costs.total}
                 </Text>
-                <Text size="lg" color="maritime-muted">
-                  VND
-                </Text>
+                <Text color="maritime-muted">VND</Text>
               </HStack>
             </HStack>
             <Grid columns={2} gap={2} columnGap={4} xstyle={styles.costList}>
               {s.costs.items.map(([label, value, tone]) => (
                 <HStack key={label} hAlign="between" wrap="nowrap" gap={2}>
-                  <Text size="lg" color="maritime-subtle">
-                    {label}
-                  </Text>
+                  <Text color="maritime-subtle">{label}</Text>
                   <Text
                     type="code"
-                    size="lg"
                     weight="medium"
                     color={tone === 'accent' ? 'accent' : undefined}
                   >
@@ -366,27 +388,24 @@ function ShipmentCard({ shipment: s, onMenu }) {
           </Panel>
         </Grid>
 
-        <VStack gap={3} hAlign="stretch" xstyle={styles.partnersWrap}>
-          <HStack hAlign="between" vAlign="center" wrap="nowrap">
-            <HStack gap={2} vAlign="center" wrap="nowrap">
-              <Icon icon={Factory} size="sm" color="accent" />
-              <Text
-                type="label"
-                size="lg"
-                weight="bold"
-                xstyle={styles.tracking}
-              >
-                NHÀ CUNG CẤP & ĐƠN VỊ LIÊN KẾT
-              </Text>
+        {s.partners.length > 0 ? (
+          <VStack gap={3} hAlign="stretch" xstyle={styles.partnersWrap}>
+            <HStack hAlign="between" vAlign="center" wrap="nowrap">
+              <HStack gap={2} vAlign="center" wrap="nowrap">
+                <Icon icon={Factory} size="sm" color="accent" />
+                <Text type="label" weight="bold" xstyle={styles.tracking}>
+                  NHÀ CUNG CẤP & ĐƠN VỊ LIÊN KẾT
+                </Text>
+              </HStack>
+              <Tag label={`${s.partners.length} Đơn vị vận hành`} tone="blue" />
             </HStack>
-            <Tag label="4 Đơn vị vận hành" tone="blue" />
-          </HStack>
-          <Grid columns={{ minWidth: 300, max: 4, repeat: 'fit' }} gap={3}>
-            {s.partners.map((p) => (
-              <PartnerCard key={p.title} partner={p} />
-            ))}
-          </Grid>
-        </VStack>
+            <Grid columns={{ minWidth: 300, max: 4, repeat: 'fit' }} gap={3}>
+              {s.partners.map((p) => (
+                <PartnerCard key={p.title} partner={p} />
+              ))}
+            </Grid>
+          </VStack>
+        ) : null}
       </VStack>
     </Card>
   );
@@ -414,7 +433,6 @@ function PartnerCard({ partner: p }) {
             <Icon icon={PARTNER_ICONS[p.icon]} size="xsm" color="accent" />
             <Text
               type="label"
-              size="lg"
               weight="bold"
               color="maritime-muted"
               xstyle={[styles.tracking, styles.noWrap]}
@@ -422,27 +440,16 @@ function PartnerCard({ partner: p }) {
               {p.title}
             </Text>
           </HStack>
-          <Tag label={p.tag} tone={p.tagTone ?? 'blue'} />
+          {p.tag ? <Tag label={p.tag} tone={p.tagTone ?? 'blue'} /> : null}
         </HStack>
-        {p.lead ? (
-          <Text size="lg" weight="semibold">
-            {p.lead}
-          </Text>
-        ) : null}
+        {p.lead ? <Text weight="semibold">{p.lead}</Text> : null}
         {p.units ? <TruckingAllocation partner={p} /> : null}
         {p.rows.length > 0 && !p.units ? (
           <VStack gap={1.5} hAlign="stretch" xstyle={styles.detailBlock}>
             {p.rows.map(([label, value, tone]) => (
               <HStack key={label} hAlign="between" wrap="nowrap" gap={2}>
-                <Text size="lg" color="maritime-subtle">
-                  {label}
-                </Text>
-                <Text
-                  type="code"
-                  size="lg"
-                  weight="medium"
-                  color={rowColor(tone)}
-                >
+                <Text color="maritime-subtle">{label}</Text>
+                <Text type="code" weight="medium" color={rowColor(tone)}>
                   {value}
                 </Text>
               </HStack>
@@ -461,59 +468,72 @@ function TruckingAllocation({ partner: p }) {
   const total = p.totalCont ?? units.reduce((sum, u) => sum + u.cont, 0);
   const used = units.reduce((sum, u) => sum + u.cont, 0);
   const rest = Math.max(0, total - used);
+  // Guards the all-empty state (no units, no total yet): the bar is drawn as
+  // an empty track instead of dividing by zero.
+  const denom = total || 1;
   const unitLabel = p.unitLabel ?? 'Cont';
   return (
     <VStack gap={1.5} hAlign="stretch">
       <VStack gap={1} hAlign="stretch">
         <HStack hAlign="between" wrap="nowrap">
-          <Text
-            type="label"
-            size="sm"
-            color="maritime-subtle"
-            xstyle={styles.tracking}
-          >
+          <Text type="label" color="maritime-subtle" xstyle={styles.tracking}>
             PHÂN BỔ XE
           </Text>
-          <Text type="code" size="lg" weight="semibold">
-            {`${total}/${total} ${unitLabel}`}
+          <Text type="code" weight="semibold">
+            {`${used}/${total} ${unitLabel}`}
           </Text>
         </HStack>
         <HStack wrap="nowrap" gap={0.5} xstyle={styles.barTrack} aria-hidden>
-          {units.map((u) => (
+          {units.map((u, index) => (
             <HStack
-              key={u.name}
+              key={`${u.name}-${index}`}
               as="span"
               xstyle={[
                 styles.barSeg,
                 segTones[u.tone],
-                segWidth(u.cont / total),
+                segWidth(u.cont / denom),
               ]}
             />
           ))}
-          {rest > 0 ? (
+          {rest > 0 || total === 0 ? (
             <HStack
               as="span"
-              xstyle={[styles.barSeg, segTones.rest, segWidth(rest / total)]}
+              xstyle={[
+                styles.barSeg,
+                segTones.rest,
+                segWidth(total === 0 ? 1 : rest / total),
+              ]}
             />
           ) : null}
         </HStack>
       </VStack>
       <VStack gap={0.5} hAlign="stretch">
-        {units.map((u) => (
+        {units.length === 0 ? (
           <HStack
-            key={u.name}
             hAlign="between"
             vAlign="center"
             wrap="nowrap"
             gap={2}
             xstyle={styles.unitRow}
           >
-            <Text size="lg" weight="medium">
-              {u.name}
+            <Text weight="medium">___</Text>
+            <Text type="code" weight="semibold" color="maritime-muted">
+              {`___ ${unitLabel}`}
             </Text>
+          </HStack>
+        ) : null}
+        {units.map((u, index) => (
+          <HStack
+            key={`${u.name}-${index}`}
+            hAlign="between"
+            vAlign="center"
+            wrap="nowrap"
+            gap={2}
+            xstyle={styles.unitRow}
+          >
+            <Text weight="medium">{u.name}</Text>
             <Text
               type="code"
-              size="lg"
               weight="semibold"
               color={u.tone === 'teal' ? 'maritime-teal' : 'accent'}
             >
@@ -522,11 +542,7 @@ function TruckingAllocation({ partner: p }) {
           </HStack>
         ))}
       </VStack>
-      {p.restLabel ? (
-        <Text size="lg" color="maritime-subtle">
-          {p.restLabel}
-        </Text>
-      ) : null}
+      {p.restLabel ? <Text color="maritime-subtle">{p.restLabel}</Text> : null}
     </VStack>
   );
 }
@@ -547,7 +563,6 @@ function SectionLabel({ children }) {
   return (
     <Text
       type="label"
-      size="lg"
       weight="bold"
       color="maritime-muted"
       xstyle={styles.tracking}
@@ -568,12 +583,8 @@ function RoutePoint({ icon, label, value, tone }) {
           tone === 'teal' ? /** @type {any} */ ('maritime-teal') : 'accent'
         }
       />
-      <Text size="lg" color="maritime-subtle">
-        {label}
-      </Text>
-      <Text size="lg" weight="semibold">
-        {value}
-      </Text>
+      <Text color="maritime-subtle">{label}</Text>
+      <Text weight="semibold">{value}</Text>
     </HStack>
   );
 }
@@ -592,7 +603,7 @@ function Tag({ label, tone }) {
  * @typedef {{
  *   icon: 'booking' | 'trucking' | 'customs' | 'shipping' | 'cfs',
  *   title: string,
- *   tag: string,
+ *   tag?: string,
  *   tagTone?: 'blue' | 'success' | 'neutral',
  *   lead?: string,
  *   units?: Array<{ name: string, cont: number, tone: 'primary' | 'secondary' | 'teal' }>,
@@ -995,6 +1006,39 @@ const DEFAULT_SHIPMENTS = [
     ],
   },
 ];
+
+// A saturated border per lot status so each lot card stands out from the page
+// and from its own inner panels (user feedback, 2026-09-19): done = teal,
+// in progress = accent blue, warning = amber, not started = slate.
+// `Card`'s border colour is set by the theme's `card` override (a higher
+// layer than `xstyle`), so a `borderColor` here is ignored — an inset outline
+// drawn over the 1px border does the job instead.
+const lotBorderTones = stylex.create({
+  success: {
+    outlineColor: 'var(--maritime-teal-value)',
+    outlineOffset: '-1px',
+    outlineStyle: 'solid',
+    outlineWidth: '2px',
+  },
+  blue: {
+    outlineColor: 'var(--color-accent)',
+    outlineOffset: '-1px',
+    outlineStyle: 'solid',
+    outlineWidth: '2px',
+  },
+  warning: {
+    outlineColor: 'var(--color-warning)',
+    outlineOffset: '-1px',
+    outlineStyle: 'solid',
+    outlineWidth: '2px',
+  },
+  neutral: {
+    outlineColor: 'var(--maritime-text-muted)',
+    outlineOffset: '-1px',
+    outlineStyle: 'solid',
+    outlineWidth: '2px',
+  },
+});
 
 const styles = stylex.create({
   tracking: { letterSpacing: '0.05em' },

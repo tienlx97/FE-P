@@ -60,14 +60,3 @@ export function statusDotVariantForContractStatus(status) {
   if (status === 'Cancelled') return 'error';
   return 'neutral';
 }
-
-/**
- * The status enum value itself, reformatted for display ("InProgress" →
- * "IN PROGRESS") — per user request (2026-09-17), the header badge shows
- * this alongside the Vietnamese label. Purely a formatting transform of
- * the real enum, not a second translation table to keep in sync.
- * @param {import('../types/index.js').ContractStatus | string} status
- */
-export function englishLabelForContractStatus(status) {
-  return status.replace(/([a-z])([A-Z])/g, '$1 $2').toUpperCase();
-}

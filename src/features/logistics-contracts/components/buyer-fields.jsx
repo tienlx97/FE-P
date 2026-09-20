@@ -38,6 +38,7 @@ import { QuickCreateCustomerDialog } from './quick-create-customer-dialog.jsx';
  *   onInlineFieldChange: (field: keyof import('../types/index.js').CustomerFormValues, value: string) => void,
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   isReadOnly?: boolean,
+ *   isDetailsCollapsible?: boolean,
  * }} props
  */
 export function BuyerFields({
@@ -51,6 +52,7 @@ export function BuyerFields({
   onInlineFieldChange,
   extraFieldRows,
   isReadOnly = false,
+  isDetailsCollapsible = true,
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
@@ -120,7 +122,7 @@ export function BuyerFields({
         fieldStatuses={fieldStatuses}
         extraFieldRows={extraFieldRows}
         showCompanyName={false}
-        isCollapsible
+        isCollapsible={isDetailsCollapsible}
         isExpandDisabled={!selectedCustomer && !inlineValues.companyName}
         isReadOnly={isReadOnly}
       />

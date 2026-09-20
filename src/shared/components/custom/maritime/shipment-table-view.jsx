@@ -30,6 +30,7 @@ import { TextInput } from '@/shared/components/text-input.jsx';
  * @param {{
  *   shipments: any[],
  *   contractCode?: string,
+ *   currency?: string,
  *   onView?: (id: string) => void,
  *   onEdit?: (id: string) => void,
  * }} props
@@ -37,6 +38,7 @@ import { TextInput } from '@/shared/components/text-input.jsx';
 export function MaritimeShipmentTableView({
   shipments,
   contractCode = 'CT-2024/EXP-088',
+  currency = 'USD',
   onView,
   onEdit,
 }) {
@@ -45,12 +47,15 @@ export function MaritimeShipmentTableView({
   const [status, setStatus] = useState('all');
 
   const fcl = shipments.filter((s) => s.kind === 'fcl').length;
+  const symbol = currency === 'USD' ? '$' : '';
   const statusOptions = useMemo(
     () => [
       { value: 'all', label: 'Tất cả trạng thái' },
-      ...shipments.map((s) => ({
-        value: s.status.label,
-        label: s.status.label,
+      // One option per distinct status — lots commonly share a status, and
+      // duplicate option values collide as React keys.
+      ...[...new Set(shipments.map((s) => s.status.label))].map((label) => ({
+        value: label,
+        label,
       })),
     ],
     [shipments],
@@ -91,13 +96,12 @@ export function MaritimeShipmentTableView({
         row.isTotal ? (
           <Cell>
             <Text
-              size="lg"
               color="maritime-subtle"
             >{`${rows.length} Tờ khai`}</Text>
           </Cell>
         ) : (
           <Cell>
-            <Text type="code" weight="bold" size="lg">
+            <Text type="code" weight="bold">
               {row.table.declDate}
             </Text>
           </Cell>
@@ -110,11 +114,11 @@ export function MaritimeShipmentTableView({
       renderCell: (row) =>
         row.isTotal ? (
           <Cell>
-            <Text weight="bold" size="lg">{`Tổng ${rows.length} lô`}</Text>
+            <Text weight="bold">{`Tổng ${rows.length} lô`}</Text>
           </Cell>
         ) : (
           <Cell>
-            <Text type="code" weight="bold" size="lg">
+            <Text type="code" weight="bold">
               {row.code}
             </Text>
           </Cell>
@@ -126,7 +130,7 @@ export function MaritimeShipmentTableView({
       width: proportional(1.59),
       renderCell: (row) => (
         <Cell>
-          <Text type="code" weight="semibold" size="lg" color="accent">
+          <Text type="code" weight="semibold" color="accent">
             {row.isTotal ? '1 Hợp đồng' : contractCode}
           </Text>
         </Cell>
@@ -138,7 +142,7 @@ export function MaritimeShipmentTableView({
       width: proportional(1.47),
       renderCell: (row) => (
         <Cell>
-          <Text weight="bold" size="lg">
+          <Text weight="bold">
             {row.isTotal
               ? [
                   totals.conts ? `${totals.conts} Cont` : '',
@@ -164,7 +168,7 @@ export function MaritimeShipmentTableView({
                 size="xsm"
                 color={/** @type {any} */ ('maritime-teal')}
               />
-              <Text weight="semibold" size="lg" color="maritime-teal">
+              <Text weight="semibold" color="maritime-teal">
                 100% Hoàn tất
               </Text>
             </HStack>
@@ -177,18 +181,18 @@ export function MaritimeShipmentTableView({
     },
     {
       key: 'usd',
-      header: 'GIÁ TRỊ TK (USD)',
+      header: `GIÁ TRỊ TK (${currency})`,
       width: proportional(1.47),
       align: 'end',
       renderCell: (row) => (
         <Cell isEnd>
           {row.isTotal ? (
             <Text type="code" weight="bold" size="xl" color="accent">
-              {`$${totals.usd.toLocaleString('en-US')}`}
+              {`${symbol}${totals.usd.toLocaleString('en-US')}`}
             </Text>
           ) : (
-            <Text type="code" weight="bold" size="lg">
-              {`$${row.value.usd}`}
+            <Text type="code" weight="bold">
+              {`${symbol}${row.value.usd}`}
             </Text>
           )}
         </Cell>
@@ -201,7 +205,7 @@ export function MaritimeShipmentTableView({
       align: 'end',
       renderCell: (row) => (
         <Cell isEnd>
-          <Text type="code" weight="semibold" size="lg" color="accent">
+          <Text type="code" weight="semibold" color="accent">
             {`${row.isTotal ? totals.vnd.toLocaleString('en-US') : row.value.vnd} đ`}
           </Text>
         </Cell>
@@ -217,7 +221,6 @@ export function MaritimeShipmentTableView({
           <Text
             type="code"
             weight="bold"
-            size="lg"
             color={row.isTotal ? 'accent' : undefined}
           >
             {`${row.isTotal ? totals.cost.toLocaleString('en-US') : row.costs.total} VNĐ`}
@@ -227,12 +230,12 @@ export function MaritimeShipmentTableView({
     },
     {
       key: 'vgm',
-      header: 'VGM',
+      header: 'KHỐI LƯỢNG',
       width: proportional(1.13),
       align: 'end',
       renderCell: (row) => (
         <Cell isEnd>
-          <Text type="code" weight="semibold" size="lg">
+          <Text type="code" weight="semibold">
             {row.isTotal ? `${totals.vgm.toFixed(1)} Tấn` : row.table.vgm}
           </Text>
         </Cell>
@@ -303,7 +306,7 @@ export function MaritimeShipmentTableView({
             ))}
           </HStack>
           <HStack gap={1.5} vAlign="center" wrap="nowrap">
-            <Text size="lg" color="maritime-subtle">
+            <Text color="maritime-subtle">
               Trạng thái:
             </Text>
             <Selector
@@ -318,14 +321,14 @@ export function MaritimeShipmentTableView({
           </HStack>
         </HStack>
         <HStack gap={2} vAlign="center" wrap="nowrap">
-          <Text size="lg" color="maritime-subtle">
+          <Text color="maritime-subtle">
             {`Hiển thị ${rows.length} / ${shipments.length} lô hàng`}
           </Text>
-          <Text size="lg" color="maritime-muted">
+          <Text color="maritime-muted">
             •
           </Text>
-          <Text type="code" size="lg" weight="semibold" color="accent">
-            {`Tổng tờ khai: $${totalUsd.toLocaleString('en-US')} USD`}
+          <Text type="code" weight="semibold" color="accent">
+            {`Tổng tờ khai: ${symbol}${totalUsd.toLocaleString('en-US')} ${currency}`}
           </Text>
         </HStack>
       </HStack>

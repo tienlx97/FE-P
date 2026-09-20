@@ -7,6 +7,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import { Tooltip } from '@astryxdesign/core/Tooltip';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -80,11 +81,14 @@ import { MaritimeBadge } from './badge.jsx';
  *     id: string,
  *     label: string,
  *     amount: string,
+ *     unit?: string,
  *     dueDate: string,
  *     term?: string,
  *     status: 'paid' | 'active' | 'upcoming',
  *   }>,
  *   activeBadgeLabel?: string,
+ *   installmentDateLabel?: string,
+ *   installmentTermLabel?: string,
  * }} props
  */
 export function MaritimePaymentSummaryCard({
@@ -101,6 +105,8 @@ export function MaritimePaymentSummaryCard({
   onViewDetail,
   installments = DEFAULT_INSTALLMENTS,
   activeBadgeLabel = 'ĐANG THU',
+  installmentDateLabel = 'Ngày thanh toán',
+  installmentTermLabel = 'Hình thức',
 }) {
   const remainingPercent = Math.max(0, 100 - paidPercent - currentPercent);
 
@@ -140,7 +146,7 @@ export function MaritimePaymentSummaryCard({
               string. */}
           <HStack gap={2} vAlign="center" hAlign="between" wrap="wrap">
             <HStack gap={2} vAlign="center" wrap="wrap">
-              <Text type="label" size="lg" color="maritime-muted">
+              <Text type="label" color="maritime-muted">
                 {progressLabel}
               </Text>
               <MaritimeBadge
@@ -150,10 +156,10 @@ export function MaritimePaymentSummaryCard({
               />
             </HStack>
             <HStack gap={2} vAlign="center" wrap="wrap">
-              <Text as="span" weight="bold" size="lg" color="maritime-teal">
+              <Text as="span" weight="bold" color="maritime-teal">
                 {paidAmountValue}
               </Text>
-              <Text as="span" weight="bold" size="lg" color="primary">
+              <Text as="span" weight="bold" color="primary">
                 / {totalAmountValue}
               </Text>
               <HStack
@@ -163,7 +169,6 @@ export function MaritimePaymentSummaryCard({
                 xstyle={styles.detailLink}
               >
                 <Link
-                  size="lg"
                   weight="semibold"
                   color="inherit"
                   onClick={onViewDetail}
@@ -214,6 +219,8 @@ export function MaritimePaymentSummaryCard({
                 key={installment.id}
                 {...installment}
                 activeBadgeLabel={activeBadgeLabel}
+                dateLabel={installmentDateLabel}
+                termLabel={installmentTermLabel}
               />
             ))}
           </Carousel>
@@ -291,7 +298,7 @@ function StatCard({
       xstyle={/** @type {any} */ ([styles.stat, statToneStyles[tone]])}
     >
       <HStack gap={2} vAlign="start" hAlign="between">
-        <Text type="label" size="lg" color={colors.label}>
+        <Text type="label" color={colors.label}>
           {label}
         </Text>
         {icon ? (
@@ -336,7 +343,7 @@ function StatCard({
               color={/** @type {any} */ (colors.note)}
             />
           ) : null}
-          <Text size="lg" color={colors.note}>
+          <Text color={colors.note}>
             {note}
           </Text>
         </HStack>
@@ -349,35 +356,66 @@ function StatCard({
  * @param {{
  *   label: string,
  *   amount: string,
+ *   unit?: string,
  *   dueDate: string,
  *   term?: string,
  *   status: 'paid' | 'active' | 'upcoming',
  *   activeBadgeLabel: string,
+ *   dateLabel: string,
+ *   termLabel: string,
  * }} props
  */
 function InstallmentStep({
   label,
   amount,
+  unit,
   dueDate,
   term,
   status,
   activeBadgeLabel,
+  dateLabel,
+  termLabel,
 }) {
   const StatusIcon = INSTALLMENT_STATUS_ICONS[status];
+  const hasDetails = Boolean(dueDate || term);
   return (
+    <Tooltip
+      isEnabled={hasDetails}
+      hasHoverIndication={false}
+      content={
+        <VStack gap={0.5} hAlign="start">
+          {dueDate ? (
+            <Text color="inherit">
+              {dateLabel}:{' '}
+              <Text as="span" weight="bold" color="inherit">
+                {dueDate}
+              </Text>
+            </Text>
+          ) : null}
+          {term ? (
+            <Text color="inherit">
+              {termLabel}:{' '}
+              <Text as="span" weight="bold" color="inherit">
+                {term}
+              </Text>
+            </Text>
+          ) : null}
+        </VStack>
+      }
+    >
     <VStack
       gap={3}
       hAlign="stretch"
       xstyle={[styles.installment, installmentToneStyles[status]]}
     >
       <HStack gap={1} vAlign="center" hAlign="between" wrap="nowrap">
-        <Text type="code" weight="bold" size="lg" color="inherit">
+        <Text type="code" weight="bold" color="inherit">
           {label}
         </Text>
         <HStack gap={1} vAlign="center" wrap="nowrap">
           {status === 'active' ? (
             <HStack as="span" xstyle={styles.activeBadge}>
-              <Text size="lg" weight="bold" color="inherit">
+              <Text weight="bold" color="inherit">
                 {activeBadgeLabel}
               </Text>
             </HStack>
@@ -396,33 +434,23 @@ function InstallmentStep({
           installmentDividerToneStyles[status],
         ]}
       />
-      {/* Figma: "Đợt NN" label and amount are set in a monospace
-          (JetBrains Mono) font — `type="code"` matches that; the date/
-          term stays on the regular body font. Ngày thanh toán và điều
-          kiện thanh toán (T/T, L/C, ...) là hai dữ liệu khác nhau — tách
-          riêng, nối bằng dấu chấm giữa, đặt ngang hàng bên phải amount
-          thay vì xuống dòng riêng (user feedback, 2026-09-18). */}
-      <HStack gap={1} vAlign="center" hAlign="between" wrap="wrap">
+      {/* Only the amount stays on the card face (Figma monospace, `type=
+          "code"`); the payment date and terms are secondary detail, shown
+          in a `Tooltip` on hovering/focusing the whole card so it stays
+          uncluttered (user feedback, 2026-09-19). Disabled when neither
+          exists. */}
+      <HStack gap={1} vAlign="center" wrap="nowrap">
         <Text type="code" weight="bold" size="xl" color="inherit">
           {amount}
         </Text>
-        <HStack gap={1} vAlign="center" wrap="nowrap">
-          <Text size="lg" weight="bold" color="inherit">
-            {dueDate}
+        {unit ? (
+          <Text type="code" weight="semibold" color="inherit">
+            {unit}
           </Text>
-          {term ? (
-            <>
-              <Text size="lg" weight="bold" color="inherit">
-                ·
-              </Text>
-              <Text size="lg" weight="bold" color="inherit">
-                {term}
-              </Text>
-            </>
-          ) : null}
-        </HStack>
+        ) : null}
       </HStack>
     </VStack>
+    </Tooltip>
   );
 }
 
@@ -507,6 +535,7 @@ const DEFAULT_STAT_CARDS = [
  *   id: string,
  *   label: string,
  *   amount: string,
+ *   unit?: string,
  *   dueDate: string,
  *   term?: string,
  *   status: 'paid' | 'active' | 'upcoming',
@@ -516,7 +545,8 @@ const DEFAULT_INSTALLMENTS = [
   {
     id: 'dot-01',
     label: 'Đợt 01',
-    amount: '$48,500',
+    amount: '48,500',
+    unit: 'USD',
     dueDate: '22/03/24',
     term: 'T/T',
     status: 'paid',
@@ -524,7 +554,8 @@ const DEFAULT_INSTALLMENTS = [
   {
     id: 'dot-02',
     label: 'Đợt 02',
-    amount: '$48,500',
+    amount: '48,500',
+    unit: 'USD',
     dueDate: '15/04/24',
     term: 'T/T',
     status: 'paid',
@@ -532,7 +563,8 @@ const DEFAULT_INSTALLMENTS = [
   {
     id: 'dot-03',
     label: 'Đợt 03',
-    amount: '$72,750',
+    amount: '72,750',
+    unit: 'USD',
     dueDate: '14/05/24',
     term: 'T/T',
     status: 'paid',
@@ -540,7 +572,8 @@ const DEFAULT_INSTALLMENTS = [
   {
     id: 'dot-04',
     label: 'Đợt 04',
-    amount: '$48,500',
+    amount: '48,500',
+    unit: 'USD',
     dueDate: '20/06/24',
     term: 'T/T',
     status: 'paid',
@@ -548,7 +581,8 @@ const DEFAULT_INSTALLMENTS = [
   {
     id: 'dot-05',
     label: 'Đợt 05',
-    amount: '$48,500',
+    amount: '48,500',
+    unit: 'USD',
     dueDate: '18/07/24',
     term: 'T/T',
     status: 'paid',
@@ -556,7 +590,8 @@ const DEFAULT_INSTALLMENTS = [
   {
     id: 'dot-06',
     label: 'Đợt 06',
-    amount: '$48,500',
+    amount: '48,500',
+    unit: 'USD',
     dueDate: '15/08/24',
     term: 'T/T',
     status: 'paid',
@@ -564,7 +599,8 @@ const DEFAULT_INSTALLMENTS = [
   {
     id: 'dot-07',
     label: 'Đợt 07',
-    amount: '$72,750',
+    amount: '72,750',
+    unit: 'USD',
     dueDate: '30/11/24',
     term: 'L/C',
     status: 'active',
@@ -572,21 +608,24 @@ const DEFAULT_INSTALLMENTS = [
   {
     id: 'dot-08',
     label: 'Đợt 08',
-    amount: '$48,500',
+    amount: '48,500',
+    unit: 'USD',
     dueDate: '15/12/24',
     status: 'upcoming',
   },
   {
     id: 'dot-09',
     label: 'Đợt 09',
-    amount: '$24,250',
+    amount: '24,250',
+    unit: 'USD',
     dueDate: '25/12/24',
     status: 'upcoming',
   },
   {
     id: 'dot-10',
     label: 'Đợt 10',
-    amount: '$24,250',
+    amount: '24,250',
+    unit: 'USD',
     dueDate: '31/12/24',
     term: 'Quyết toán cảng',
     status: 'upcoming',

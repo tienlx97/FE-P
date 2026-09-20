@@ -231,19 +231,3 @@
 .astryx-button.destructive {
   color: #ffffff;
 }
-
-/* Same escape hatch as `.astryx-button.destructive` above, for
- * `contract-overview-panel.jsx`'s "Giá trị quyết toán"/"Còn lại" KPI
- * cards (user request, 2026-09-17: settlement value green, remaining
- * value red): a `Text` `xstyle` override for `color` lost to `Text`'s
- * own built-in `color` style, since that one compiles into a
- * higher-priority `@layer` than an ordinary app-level `stylex.create()`
- * call does. `var(--color-text-green)`/`var(--color-text-red)` are the
- * same tokens the theme's own success/error variants use
- * (`kt-xnk.js`/`theme.built.css`). */
-.contract-overview-value-positive {
-  color: var(--color-text-green);
-}
-.contract-overview-value-negative {
-  color: var(--color-text-red);
-}

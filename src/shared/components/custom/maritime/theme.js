@@ -40,11 +40,11 @@ import { defineTheme } from '@astryxdesign/core/theme';
  * - The mockup gives one palette with no distinct dark-mode values, so
  *   every token below uses the same value for both modes.
  *
- * Typography: Be Vietnam Pro (native Vietnamese diacritics + English trade
- * manifests, matches the mockup's own `font-sans`/`data-mono` stack).
- * `astryx theme build` only sets `--font-family-*` tokens, it never loads
- * a font file — `theme-provider.jsx` (this same folder) loads the Google
- * Fonts stylesheet, same URL the mockup's own `<head>` links.
+ * Typography: the app's Optimistic Text for body, headings and "code" text
+ * alike (user request, 2026-09-19; no JetBrains Mono), set through the
+ * `--font-family-*` token overrides below. `typography.*.family` is kept
+ * only so the type scale still builds; the token overrides win. The face is
+ * already loaded app-wide, so `theme-provider.jsx` loads nothing.
  *
  * Radius: mockup's `borderRadius.DEFAULT` is `4px`, matching Astryx's own
  * `radius.base` default — controls/badges need no override. Cards use the
@@ -62,7 +62,9 @@ export const maritimeTheme = defineTheme({
   },
 
   typography: {
-    scale: { base: 13, ratio: 1.2 },
+    // 14px body text (user request, 2026-09-19); components use the
+    // Astryx size scale/types as-is, no per-token overrides.
+    scale: { base: 14, ratio: 1.2 },
     body: {
       family: 'Be Vietnam Pro',
       fallbacks: '-apple-system, system-ui, sans-serif',
@@ -77,11 +79,24 @@ export const maritimeTheme = defineTheme({
   radius: { base: 4, multiplier: 1 },
 
   tokens: {
+    // Same font stack as the rest of the app (`src/shared/components/
+    // theme.js`) instead of the mockup's Be Vietnam Pro: Optimistic Text
+    // (Vietnamese-complete build), loaded once in `globals.css`.
+    '--font-family-body':
+      '"Optimistic Text Vietnamese", "Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    '--font-family-heading':
+      '"Optimistic Text Vietnamese", "Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    // "Code" text (amounts, Đợt NN, Incoterm chip) also uses Optimistic
+    // instead of the app's JetBrains Mono, and headings instead of Montserrat (user request, 2026-09-19).
+    '--font-family-code':
+      '"Optimistic Text Vietnamese", "Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     '--color-background-body': '#f8f9ff', // mockup: surface
     '--color-background-surface': '#ffffff', // mockup: surface-container-lowest
     '--color-background-card': '#ffffff', // mockup: surface-container-lowest
     '--color-background-popover': '#e5eeff', // mockup: surface-container (dropdown menu bg)
-    '--color-background-muted': '#eff4ff', // mockup: surface-container-low (secondary button resting bg)
+    // Keep muted containers transparent so their text retains contrast
+    // against the surface underneath (user feedback, 2026-09-20).
+    '--color-background-muted': 'transparent',
     '--color-text-primary': '#0b1c30', // mockup: on-surface
     '--color-text-secondary': '#475569', // mockup: on-surface-variant
     '--color-icon-primary': '#0b1c30',
@@ -262,7 +277,8 @@ export const maritimeTheme = defineTheme({
       'color:maritime-teal-text': { color: 'var(--maritime-teal-text)' },
     },
     // Figma "Payment Schedule Table" (`payment-progress-panel.jsx`): tinted
-    // header band with 12px/700 uppercase column titles, 12px body.
+    // header band with 13px/700 uppercase column titles, body cells at the
+    // theme's `base` size (14px, user request 2026-09-19).
     // Themed overrides, not `xstyle` — `Table` cells expose no `xstyle`.
     'table-header': {
       base: { backgroundColor: 'var(--color-background-muted)' },
@@ -277,7 +293,7 @@ export const maritimeTheme = defineTheme({
       },
     },
     'table-cell': {
-      base: { fontSize: '16px', lineHeight: '24px' },
+      base: { fontSize: 'var(--font-size-base)', lineHeight: '22px' },
     },
     token: {
       // Desktop-readable chip text (`Token`'s own md size is ~12px).

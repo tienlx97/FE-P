@@ -38,6 +38,8 @@ import {
  * @param {{
  *   summary?: AnnexSummary[],
  *   annexes?: Annex[],
+ *   currency?: string,
+ *   hasNoteColumn?: boolean,
  *   onExport?: () => void,
  *   onCreate?: () => void,
  *   onEdit?: (id: string) => void,
@@ -47,6 +49,8 @@ import {
 export function MaritimeAnnexListPanel({
   summary = DEFAULT_SUMMARY,
   annexes = DEFAULT_ANNEXES,
+  currency = 'USD',
+  hasNoteColumn = true,
   onExport,
   onCreate,
   onEdit,
@@ -57,10 +61,10 @@ export function MaritimeAnnexListPanel({
     {
       key: 'code',
       header: 'MÃ PL',
-      width: proportional(0.8),
+      width: proportional(1.5),
       renderCell: (row) => (
         <Cell>
-          <Text type="code" size="lg" weight="bold" color="accent">
+          <Text type="code" weight="bold" color="accent">
             {row.code}
           </Text>
         </Cell>
@@ -72,7 +76,7 @@ export function MaritimeAnnexListPanel({
       width: proportional(2),
       renderCell: (row) => (
         <Cell>
-          <Text type="code" size="lg" weight="semibold">
+          <Text type="code" weight="semibold">
             {row.number}
           </Text>
         </Cell>
@@ -98,8 +102,8 @@ export function MaritimeAnnexListPanel({
       width: proportional(3),
       renderCell: (row) => (
         <Cell>
-          <Text size="lg">
-            <Text as="span" size="lg" weight="semibold">
+          <Text>
+            <Text as="span" weight="semibold">
               {row.title}
             </Text>
             {row.detail ? ` ${row.detail}` : ''}
@@ -116,11 +120,10 @@ export function MaritimeAnnexListPanel({
         <Cell isEnd>
           <Text
             type="code"
-            size="lg"
             weight="semibold"
             color={row.delta > 0 ? 'maritime-teal' : 'maritime-subtle'}
           >
-            {`${formatDelta(row.delta)} USD`}
+            {`${formatDelta(row.delta)} ${currency}`}
           </Text>
         </Cell>
       ),
@@ -131,7 +134,7 @@ export function MaritimeAnnexListPanel({
       width: proportional(1.2),
       renderCell: (row) => (
         <Cell>
-          <Text type="code" size="lg" color="maritime-muted">
+          <Text type="code" color="maritime-muted">
             {row.signedAt}
           </Text>
         </Cell>
@@ -143,22 +146,19 @@ export function MaritimeAnnexListPanel({
       width: proportional(2),
       renderCell: (row) => (
         <VStack gap={1} hAlign="start" xstyle={styles.signCell}>
-          {row.signatures.map((s) => (
-            <Pill key={s} tone="success" icon={CircleCheck} label={s} />
-          ))}
+          {row.signatures.map((sig) => {
+            const label = typeof sig === 'string' ? sig : sig.label;
+            const isSigned = typeof sig === 'string' ? true : sig.isSigned;
+            return (
+              <Pill
+                key={label}
+                tone={isSigned ? 'success' : 'neutral'}
+                icon={isSigned ? CircleCheck : CircleMinus}
+                label={label}
+              />
+            );
+          })}
         </VStack>
-      ),
-    },
-    {
-      key: 'note',
-      header: 'GHI CHÚ / ĐÍNH KÈM',
-      width: proportional(2.2),
-      renderCell: (row) => (
-        <Cell>
-          <Text size="lg" color="maritime-subtle">
-            {row.note}
-          </Text>
-        </Cell>
       ),
     },
     {
@@ -176,19 +176,25 @@ export function MaritimeAnnexListPanel({
               size="md"
               onClick={() => onEdit?.(row.id)}
             />
-            <IconButton
-              label={`In ${row.code}`}
-              tooltip="In"
-              icon={<Icon icon={Printer} size="sm" />}
-              variant="ghost"
-              size="md"
-              onClick={() => onPrint?.(row.id)}
-            />
+            {onPrint ? (
+              <IconButton
+                label={`In ${row.code}`}
+                tooltip="In"
+                icon={<Icon icon={Printer} size="sm" />}
+                variant="ghost"
+                size="md"
+                onClick={() => onPrint(row.id)}
+              />
+            ) : null}
           </HStack>
         </Cell>
       ),
     },
   ];
+
+  const tableColumns = hasNoteColumn
+    ? [...columns.slice(0, -1), NOTE_COLUMN, columns[columns.length - 1]]
+    : columns;
 
   return (
     <VStack gap={4} hAlign="stretch">
@@ -208,7 +214,6 @@ export function MaritimeAnnexListPanel({
               <HStack hAlign="between" vAlign="center" wrap="nowrap" gap={3}>
                 <Text
                   type="label"
-                  size="lg"
                   weight="bold"
                   color="maritime-muted"
                   xstyle={styles.tracking}
@@ -235,7 +240,7 @@ export function MaritimeAnnexListPanel({
               >
                 <Text
                   type="code"
-                  size="4xl"
+                  size="3xl"
                   weight="bold"
                   color={
                     s.tone === 'success'
@@ -248,8 +253,8 @@ export function MaritimeAnnexListPanel({
                 >
                   {s.value}
                 </Text>
-                <Text size="lg" weight="semibold" color="maritime-muted">
-                  USD
+                <Text weight="semibold" color="maritime-muted">
+                  {currency}
                 </Text>
               </HStack>
               <Divider />
@@ -264,7 +269,6 @@ export function MaritimeAnnexListPanel({
                   }
                 />
                 <Text
-                  size="lg"
                   color={
                     s.tone === 'success' ? 'maritime-teal' : 'maritime-subtle'
                   }
@@ -286,24 +290,26 @@ export function MaritimeAnnexListPanel({
           xstyle={styles.header}
         >
           <VStack gap={0.5}>
-            <Text as="h2" size="3xl" weight="bold">
+            <Text as="h2" size="xl" weight="bold">
               Danh sách Phụ lục hợp đồng (Contract Annex List)
             </Text>
-            <Text size="lg" color="maritime-subtle">
+            <Text color="maritime-subtle">
               Quản lý biến động giá trị và điều khoản bổ sung
             </Text>
           </VStack>
           <HStack gap={2} vAlign="center" wrap="nowrap">
-            <Button
-              label="Xuất báo cáo phụ lục"
-              size="lg"
-              variant="secondary"
-              icon={<Icon icon={Download} size="xsm" />}
-              onClick={onExport}
-            />
+            {onExport ? (
+              <Button
+                label="Xuất báo cáo phụ lục"
+                size="md"
+                variant="secondary"
+                icon={<Icon icon={Download} size="xsm" />}
+                onClick={onExport}
+              />
+            ) : null}
             <Button
               label="Thêm phụ lục mới"
-              size="lg"
+              size="md"
               variant="primary"
               icon={<Icon icon={FilePlus} size="xsm" />}
               onClick={onCreate}
@@ -311,7 +317,7 @@ export function MaritimeAnnexListPanel({
           </HStack>
         </HStack>
         <Table
-          columns={columns}
+          columns={tableColumns}
           data={annexes}
           idKey="id"
           dividers="rows"
@@ -321,6 +327,18 @@ export function MaritimeAnnexListPanel({
     </VStack>
   );
 }
+
+/** @type {import('@astryxdesign/core/Table').TableColumn<Annex>} */
+const NOTE_COLUMN = {
+  key: 'note',
+  header: 'GHI CHÚ / ĐÍNH KÈM',
+  width: proportional(2.2),
+  renderCell: (row) => (
+    <Cell>
+      <Text color="maritime-subtle">{row.note}</Text>
+    </Cell>
+  ),
+};
 
 /** @param {{ children: import('react').ReactNode, isEnd?: boolean }} props */
 function Cell({ children, isEnd }) {
@@ -355,7 +373,7 @@ function Pill({ tone, icon, label }) {
 /** @param {number} n */
 function formatDelta(n) {
   const abs = Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2 });
-  return `${n > 0 ? '+' : n < 0 ? '-' : ''}$${abs}`;
+  return `${n > 0 ? '+' : n < 0 ? '-' : ''}${abs}`;
 }
 
 /** @typedef {{ label: string, value: string, note: string, tone: 'neutral' | 'success' | 'muted', icon: 'file' | 'up' | 'down', noteIcon: import('react').ComponentType }} AnnexSummary */
@@ -364,18 +382,22 @@ function formatDelta(n) {
  *   id: string,
  *   code: string,
  *   number: string,
- *   kind: { label: string, tone: 'blue' | 'success' | 'neutral', icon: 'increase' | 'change' },
+ *   kind: { label: string, tone: 'blue' | 'success' | 'neutral', icon: 'increase' | 'decrease' | 'change' },
  *   title: string,
  *   detail?: string,
  *   delta: number,
  *   signedAt: string,
- *   signatures: string[],
- *   note: string,
+ *   signatures: Array<string | { label: string, isSigned: boolean }>,
+ *   note?: string,
  * }} Annex
  */
 
 const SUMMARY_ICONS = { file: FileText, up: TrendingUp, down: TrendingDown };
-const KIND_ICONS = { increase: TrendingUp, change: RefreshCw };
+const KIND_ICONS = {
+  increase: TrendingUp,
+  decrease: TrendingDown,
+  change: RefreshCw,
+};
 
 /** @type {AnnexSummary[]} */
 const DEFAULT_SUMMARY = [
@@ -474,7 +496,7 @@ const styles = stylex.create({
   },
   pillLabel: {
     color: 'inherit',
-    fontSize: '15px',
+    fontSize: '14px',
     fontWeight: 600,
     lineHeight: '22px',
   },

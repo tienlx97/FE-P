@@ -19,15 +19,3 @@ export function labelForContractType(contractType) {
       ?.label ?? contractType
   );
 }
-
-/**
- * `Badge` color for the contract-type badge (per user request,
- * 2026-09-17: the header mockup shows it as a colored category tag, not
- * flat neutral) — `Badge`'s own guidance is to use color variants for
- * category tags. `Official` (Chính thức) reads as the "real" classification.
- * @param {import('../types/index.js').ContractType | string} contractType
- * @returns {'blue' | 'neutral'}
- */
-export function badgeVariantForContractType(contractType) {
-  return contractType === 'Official' ? 'blue' : 'neutral';
-}

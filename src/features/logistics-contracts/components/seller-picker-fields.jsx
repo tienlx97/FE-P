@@ -38,6 +38,7 @@ import { SellerFields } from './seller-fields.jsx';
  *   onInlineFieldChange: (field: keyof import('../types/index.js').SellerFormValues, value: string) => void,
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   isReadOnly?: boolean,
+ *   isDetailsCollapsible?: boolean,
  * }} props
  */
 export function SellerPickerFields({
@@ -51,6 +52,7 @@ export function SellerPickerFields({
   onInlineFieldChange,
   extraFieldRows,
   isReadOnly = false,
+  isDetailsCollapsible = true,
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -147,7 +149,7 @@ export function SellerPickerFields({
         fieldStatuses={fieldStatuses}
         extraFieldRows={extraFieldRows}
         showCompanyName={false}
-        isCollapsible
+        isCollapsible={isDetailsCollapsible}
         isExpandDisabled={!selectedSeller && !inlineValues.companyName}
         isReadOnly={isReadOnly}
       />

@@ -82,7 +82,7 @@ const styles = stylex.create({
     display: 'inline-flex',
     flexShrink: 0,
     fontFamily: 'inherit',
-    fontSize: '16px', // user feedback, 2026-09-18 — bumped from the Figma-exact 12px
+    fontSize: '14px', // user feedback, 2026-09-18 — bumped from the Figma-exact 12px
     fontWeight: fontWeightVars['--font-weight-medium'],
     gap: spacingVars['--spacing-1'],
     justifyContent: 'center',

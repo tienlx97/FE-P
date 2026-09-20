@@ -12617,3 +12617,562 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
   `position: sticky; top: 0px`, and remains at y=0 after scrolling 900px.
   Evidence: `harness/runs/2026-09-18-sticky-tab-nav/scrolled.png`.
 - Scoped ESLint and the full project TypeScript check pass.
+
+## 2026-09-19 — `apply-maritime-to-contract-detail`: plan + step 1 (theme + header card)
+
+- New change `openspec/changes/apply-maritime-to-contract-detail/` (9 staged
+  tasks, one Maritime component per step, user approves each before the next).
+- Step 1 implemented in `contract-detail-workspace.jsx`: page now wrapped in
+  `MaritimeThemeProvider` (was IBM Plex Corporate); header `Card` replaced by
+  `MaritimeContractOverviewCard` fed with real contract data (status/type
+  tones, incoterm chip, "Thao tác nghiệp vụ" dropdown items unchanged, print
+  as "Xuất PDF", Chỉnh sửa enters edit mode). Added optional `meta` slot to
+  the Maritime card for Ngày ký / Ngày hoàn thành dự án. Edit mode keeps the
+  old Hủy/Lưu `Card`. Removed now-unused clipboard/badge code.
+- `pnpm typecheck` clean; eslint on touched dirs 0 errors.
+- Browser-verified on `localhost:3000` (contract 26KCT39): Maritime header
+  renders real data (code, copy, type/status badges, incoterm chip, project,
+  dates, Xuất PDF / Chỉnh sửa / Thao tác nghiệp vụ); "Chỉnh sửa" switches to
+  the "Hồ sơ" tab with the Hủy/Lưu bar; no console errors.
+- Step 1 approved by user.
+
+## 2026-09-19 (continued) — `apply-maritime-to-contract-detail`: step 2 (tab nav)
+
+- Replaced the page's Astryx `TabList` with `MaritimeTabNav` in
+  `contract-detail-workspace.jsx`: same 6 tabs (`TAB_LABELS`) with lucide icons,
+  same `?tab=` sync. No count chips yet (needs per-tab counts; can add later).
+  `panelId` on tabs dropped (Maritime's vendored Tab has no such prop); the
+  `tabpanel` section is unchanged.
+- `pnpm typecheck` clean, eslint clean. Browser-checked on :3000 (26KCT39): pill
+  nav renders, clicking "Phụ lục" switches content and sets `?tab=annexes`.
+  The dev session dropped once mid-check (recompile) and recovered on reload.
+- **Awaiting user approval of step 2 before step 3 (payment summary card).**
+
+## 2026-09-19 (continued) — `apply-maritime-to-contract-detail`: step 3 (payment summary card)
+
+- Step 2 approved by user.
+- `contract-overview-panel.jsx`: the 4 KPI `InfoCard`s replaced by
+  `MaritimePaymentSummaryCard` fed with real data: stat cards = HỢP ĐỒNG,
+  QUYẾT TOÁN (+ annex note), ĐÃ XUẤT (% giao, FCL/LCL), ĐÃ XUẤT (VNĐ) (sum of
+  `shipment.declarationValueVnd`), CHƯA XUẤT; progress = paid % (sum of
+  PaymentSchedules / settlement), "current" segment = next pending term's share;
+  installment carousel = one card per payment row (paid / first pending =
+  active / upcoming). "Chi tiết thanh toán" jumps to the "Thanh toán" tab
+  (new `onViewPayments` prop). Removed `InfoCard`/`ProgressBar`.
+- Behavior change to flag: the standalone "CÒN LẠI" KPI is gone (progress row
+  shows paid / total instead); `.contract-overview-value-*` CSS in globals is
+  now unused (cleanup in step 9). `paymentCondition` is free text, so the
+  installment tag is shortened (`shortPaymentTerm`: "(T/T)" code or 20 chars).
+- typecheck + eslint clean. Verified on :3000 (26KCT39) via screenshot + DOM
+  text: all 5 stats, progress, and 3 installments render with real values.
+  The Chrome window would not grow past ~378px tall, so the installment row
+  was checked via page text rather than a screenshot.
+- **Awaiting user approval of step 3 before step 4 (foundation grid).**
+- Step 3 follow-up (user: "TIẾN ĐỘ THANH TOÁN chưa thiết kế giống"): compared
+  against `/preview-maritime` computed styles — colors/tokens identical; real
+  diffs were content-driven width. Fixed: installment tag now only the "(T/T)"/
+  "(L/C)" code (free-text `paymentCondition` dropped, `shortPaymentTerm`), and
+  USD amounts render as `$48,927.00` like the design instead of `... USD`.
+  Still differs by nature: cards are content-sized so cents widen them vs the
+  design's whole-dollar mock; only 3 cards here vs 10 in the mock.
+- Step 3 rule change (user): the installment strip now follows actual
+  payments, not agreed `paymentTerms`. Recorded PaymentSchedules -> paid cards
+  (date · T/T|L/C); if settlement - paid > 0, ONE next "active" card holds the
+  whole remainder (nothing paid -> "Đợt 01" = full settlement; Đợt 1 paid ->
+  "Đợt 02" = settlement - Đợt 1). "Chưa thu" text removed (color conveys it).
+  `shortPaymentTerm` deleted. Verified on :3000 for the unpaid case (26KCT39:
+  Đợt 01 $163,090.00, bar fully blue). The paid-then-remainder case is covered
+  by the logic only — not exercised in the browser to avoid writing test
+  payments into shared data.
+- Step 3 follow-up (user: installment cards show too much info): in
+  `payment-summary-card.jsx` the card face now holds only "Đợt NN" + status +
+  amount; payment date and terms moved into an `InfoTip` (lab) list
+  ("Ngày thanh toán" / "Hình thức"), shown only when the installment has either.
+  New optional props `installmentDateLabel`/`installmentTermLabel`. Tooltip text
+  uses `color="inherit"` (default Text color was dark-on-dark). Verified on
+  `/preview-maritime` by hover; the real page's pending card has no detail so
+  no icon there, paid cards get it.
+- Step 3 follow-up 2 (user: hide in tooltip, hover the card): replaced the
+  per-card `InfoTip` icon with a `Tooltip` wrapping the whole installment card
+  (`isEnabled` only when date/term exist, no hover underline). Card face =
+  "Đợt NN" + status icon + amount only. Verified by hovering on
+  `/preview-maritime` (tooltip shows "Ngày thanh toán / Hình thức"); typecheck
+  + eslint clean.
+
+## 2026-09-19 (continued) — Maritime theme now uses the app's fonts
+
+- User: Maritime should use the project's "Optimistic Text" font. In
+  `maritime/theme.js` added `--font-family-body/heading/code` token overrides
+  identical to the app theme (Optimistic Text Vietnamese / Montserrat var /
+  JetBrains Mono var); removed the Be Vietnam Pro Google Fonts `<link>` from
+  `theme-provider.jsx`; rebuilt `theme.built.css` + `maritime.js` with
+  `pnpm exec astryx theme build src/shared/components/custom/maritime/theme.js
+  --out src/shared/components/custom/maritime/theme.built.css`.
+- Verified on :3000: h1, section labels, tabs compute to "Optimistic Text
+  Vietnamese", amounts stay JetBrains Mono. Note `Heading` resolves to the body
+  family in this theme (Montserrat is defined but not applied to `Heading`).
+  Applies to `/preview-maritime` too. typecheck clean.
+- Font follow-up (user still saw JetBrains Mono): I had kept the app's
+  JetBrains Mono for `--font-family-code` (amounts, "Đợt NN", Incoterm chip).
+  Now `--font-family-code` and `--font-family-heading` in `maritime/theme.js`
+  also use Optimistic Text Vietnamese; theme rebuilt. Verified on :3000: all
+  474 text nodes under `<main>` on the contract detail page compute to
+  "Optimistic Text Vietnamese" (0 JetBrains/Montserrat). typecheck clean.
+- Step 3 follow-up 3 (user: "$" -> "... USD", smaller USD): installments now
+  take `amount` (number string) + `unit`; the card renders the amount large and
+  the unit as a small `sm` label (same pattern as the stat cards). The panel
+  passes `formatMoney(x)` + `contract.currency` for every currency (no more
+  `$` special case); preview defaults updated. Verified on :3000
+  ("163,090.00" + small "USD"); typecheck + eslint clean.
+
+## 2026-09-19 (continued) — detail page could not scroll: fixed
+
+- Cause: `ContractDetailWorkspace` used `PageContentShell fillHeight`
+  (`height: calc(100vh - 64px); overflow: hidden`) plus `height="100%"` on
+  its VStacks — built for list pages with pinned internal scroll, so anything
+  taller than the viewport was clipped (60px cut off with the new payment
+  card). Removed `fillHeight` and both `height="100%"`; the document scrolls
+  normally again. Verified on :3000: scrollHeight 1357 > viewport 1249 and
+  `scrollTo(0, 99999)` moved to 108.
+
+## 2026-09-19 (continued) — `apply-maritime-to-contract-detail`: step 4 (foundation grid)
+
+- `contract-foundation-grid.jsx` was 100% hard-coded demo data. It is now
+  props-driven (`parties`, `contacts`, `transport`, `cargoMetrics`, `bank`,
+  `paymentTerms`, `annexes`, `onViewAnnexes`, `commission`); every prop
+  defaults to the old demo content so `/preview-maritime` looks unchanged, and
+  optional cards hide on null/empty. `InfoRows` labels are now `nowrap` (long
+  bank names used to wrap "Ngân hàng:"/"Địa chỉ:"); row keys include the index.
+- `contract-overview-panel.jsx`: the 3 old Astryx cards (Đối tác / Ngân hàng &
+  Đợt thanh toán / Điều kiện giao hàng) replaced by the Maritime grid fed with
+  real data: seller/buyer (rep, title, address), consignee/notify party
+  (address + extraFields), transport (loading/discharge, country, category,
+  quotation/sign/completion dates, incoterm chip, "x% Đã xuất", seller/buyer
+  signed badges), cargo metrics from shipments (total weight in tons, Cont/Kiện
+  counts; card hidden with no shipments), bank rows, agreed payment terms
+  (paid vs pending by number of recorded schedules), annexes (top 3, signed
+  amounts), "+ Xem tất cả" -> Phụ lục tab. Removed `PartyBlock`/
+  `PartyContactBlock`/`paymentRows`.
+- Gaps vs the design (no such data on `Contract`): seller/buyer country badge
+  and tax id, "Chi nhánh" only when bank has `branchName`. Commission card
+  omitted until step 8 (needs commission + recipient lookups).
+- Note: the stat-card note strings in the panel ("HĐ gốc", "0% · 0 FCL · 0
+  LCL", "100%") were shortened by an edit made outside this session; left as is.
+- typecheck + eslint clean; verified on :3000 (26KCT39) by screenshot + page
+  text. Not verified on a contract with shipments/annexes/consignee (26KCT39 has
+  none), so cargo card, annex rows and contact cards are unexercised in the
+  browser.
+- **Awaiting user approval of step 4 before step 5 (payment progress panel).**
+
+## 2026-09-19 (continued) — Maritime custom scrollbar
+
+- User: custom scrollbar. New `maritime/scrollbar.css` (imported by
+  `theme-provider.jsx`): thin, rounded, cool blue-grey thumb (`#c3cfe6`, hover
+  `#8fa1c4` in the WebKit fallback) on a transparent track. The page scrollbar
+  belongs to `<html>`, outside the `<Theme>` subtree, so it is scoped with
+  `html:has([data-maritime-scroll])`; `MaritimeThemeProvider` renders the hidden
+  `<span data-maritime-scroll>` marker. Also styles inner scrollers (tab nav
+  overflow, installment carousel) inside the theme via a sibling selector. Only
+  pages using the Maritime theme are affected (contract detail + preview).
+- Verified on :3000: `scrollbar-width: thin` + `scrollbar-color` resolve on
+  `<html>`; with a temporary spacer to force overflow the thin blue-grey thumb
+  shows at the right edge (spacer removed). typecheck + eslint clean. Inner
+  scrollers were not visually checked.
+
+## 2026-09-19 (continued) — Maritime type sizes: 14px body
+
+- User agreed to 14px body text. Rather than editing ~130 `size="lg"` sites,
+  `maritime/theme.js` now overrides `--font-size-sm/base/lg` to 12/14/14px
+  (built scale was 11/13/16), so data rows, `lg` and `base` text are uniformly
+  14px; display sizes (`xl`+) untouched (numbers stay 27px at `3xl`). The 20
+  uppercase-label sites (`type="label" size="lg"`) were changed to `size="sm"`
+  (12px). Literal px: `Tab.jsx` label 16 -> 14, annex list 15 -> 14, tab count
+  chip 14 -> 13. Theme rebuilt.
+- Verified on :3000 by `getComputedStyle`: heading/tab/row/value text 14px,
+  uppercase labels 12px, big amounts 27px. typecheck + eslint clean.
+- Side effect: `size="lg"`/`base` are now the same size in this theme (only
+  matters if a later step wants a distinct "large" body). Other Maritime panels
+  (shipment/annex/commission/payment progress) also follow it but weren't
+  viewed after the change.
+- Type sizes, redone the Astryx way (user: "dùng size của Astryx, đâu cần ép
+  size"): the previous `--font-size-*` token overrides are REVERTED. Now
+  `maritime/theme.js` only sets `typography.scale.base` 13 -> 14 (built scale:
+  sm 12 / base 14 / lg 17 / xl 20 / 3xl 29), and the components no longer force
+  sizes: `size="lg"|"sm"|"base"` removed from 133 `Text`/`Link` opening tags so
+  they take their size from the semantic `type` (body 14px, label 14px
+  uppercase, heading-3 17px). Explicit display sizes (`xl`+) stay. Theme
+  rebuilt; typecheck + eslint clean. Verified on :3000: body/tab/label/row/link
+  14px, card headings 17px, big amounts 29px (was 27px).
+  Leftover literal px from earlier (Tab.jsx 14, annex list 14, tab count chip
+  13) are unchanged.
+- Partner rows: "Người đại diện" value is now bold (user request).
+  `InfoRows` rows accept a 5th `isBold` flag in the foundation grid; the
+  contract panel and the preview defaults set it on the representative row.
+  Verified on :3000 (font-weight 700 vs 400 for "Chức vụ"); typecheck + eslint
+  clean.
+
+## 2026-09-19 (continued) — step 4 follow-up: Commission card + cargo card always shown
+
+- User: the "HOA HỒNG (COMMISSION)" card and "QUY CÁCH HÀNG HÓA & ĐÓNG GÓI"
+  were missing (I had hidden them when there was no data).
+- Commission (`contract-overview-panel.jsx` + grid): wired to
+  `useCommissionQuery` + `useCustomersQuery`. With a commission: code, recipient
+  (customer name), value + % of settlement, both-party signed badge, paid vs
+  total bar (sum of `paymentHistory`), "Đã chi N đợt", remaining. Without one:
+  an empty-state card "Hợp đồng này chưa có Commission." with "+ Tạo Commission"
+  (opens the existing `CommissionFormDialog` via new `onCreateCommission`;
+  workspace passes `setIsAddingCommission(true)`). "+ Chi tiết" -> "Liên quan"
+  tab (`onViewCommission`). Grid `commission` prop now also accepts
+  `{ isEmpty, message, actionLabel, onAction }`; demo defaults gained
+  `percentLabel/signedLabel/signedTone`.
+- Cargo card always renders; with no shipments it shows 0.00 Tấn / 0 (0 lô).
+- Verified on :3000 (26KCT39: no commission, no shipments): both cards render,
+  "+ Tạo Commission" opens the "Tạo Commission" dialog, closed with Hủy (nothing
+  saved). typecheck + eslint clean. The with-commission branch is NOT exercised
+  in the browser (no contract with a commission was opened).
+- Bank card (user: what if a bank has many fields / several banks): grid `bank`
+  prop is now `{ items: [{ title?, rows }] }` — one inset block per bank, with a
+  "NGÂN HÀNG n" label when more than one. The panel builds rows per bank:
+  Ngân hàng (bold), Người thụ hưởng, Số tài khoản, Chi nhánh, Địa chỉ, Mã SWIFT,
+  plus every `extraFields` entry; optional fields (beneficiary, branch, address)
+  only render when they have a value, account/SWIFT always show ("—" if empty).
+  Verified single-bank on :3000 (26KCT39 now also shows "Người thụ hưởng"); the
+  multi-bank layout is NOT exercised in the browser (no contract with 2+ banks
+  opened). typecheck + eslint clean.
+- Bank card follow-up 2 (user: the bank has many more fields, only adjust the
+  key-value pairs): bank rows now render as a key-value list (`InfoRows isList`:
+  fixed 140px label column, left-aligned value that wraps) instead of the
+  spread "label ... right-aligned value", so long values (bank name) and any
+  number of fields read cleanly. Verified on :3000 (26KCT39). NOTE: the page only
+  shows the fields the contract-banks API returns (name, beneficiary, account,
+  branch, address, SWIFT + `extraFields`); if a field you expect is still
+  missing it's either empty on that bank record or not returned — need to
+  confirm which one.
+- Bank card follow-up 3 (user: values elsewhere are right-aligned, isn't that
+  nicer?): reverted the bank card to the same right-aligned "label ... value"
+  rows as the partner/transport cards for consistency. Kept: per-bank blocks,
+  extra fields, nowrap labels. `InfoRows` still supports `isList` (left-aligned
+  key-value list) but nothing uses it now.
+- Consignee / Notify Party (user: cards missing): they were hidden when
+  `contract.consignee`/`notifyParty` is null. The panel now always emits both
+  cards; a missing contact renders "Chưa có thông tin" (new `emptyMessage` on
+  the grid's `ContactCard`). Verified on :3000 (26KCT39). typecheck + eslint
+  clean. Both fields are read-only in this app (no form to edit them yet), so
+  there is no "add" action on the empty cards.
+- Consignee / Notify Party restyle (user: colors out of sync with other cards):
+  `ContactCard` was a bare grey box; it is now the same structure as
+  `PartyCard` — white `Card`, accent bold eyebrow (with its icon in accent),
+  `Heading` name, muted inset with key-value rows (Địa chỉ + each extra field;
+  demo defaults use "Liên hệ" in accent mono). Grid API: contact = `{ icon,
+  label, name, rows, emptyMessage? }` (replaces `address`/`extras`); the panel
+  maps address + `extraFields` into rows. Removed unused `styles.contact`/`Phone`.
+  Verified on `/preview-maritime` (with data) and :3000 (26KCT39, empty state).
+  typecheck + eslint clean.
+
+## 2026-09-19 (continued) — `apply-maritime-to-contract-detail`: step 5 (payments tab) + sticky tab nav
+
+- Sticky tab nav (user): `MaritimeTabNav` was already `position: sticky; top: 0`
+  but the app's fixed 64px top bar (z-index 40) covered it. New `stickyOffset`
+  prop (px, default 0); the detail workspace passes 64. Verified on :3000: with
+  the page scrolled 500px the nav sits at y=64, `position: sticky; top: 64px`.
+- Step 5: new `contract-payments-panel.jsx` feeds `MaritimePaymentProgressPanel`
+  with real data: KPI cards (settlement, "Đã thu" + %, "Còn phải thu"), a table
+  of recorded `PaymentSchedule`s (code, amount, T/T|L/C, date, Đã thu / Chưa
+  đến hạn by date, note) and "Tổng đã thu". "+ Thêm đợt thanh toán" and the row
+  "Xem" button open `PaymentScheduleFormDialog` (create / edit); the workspace
+  renders this panel for `?tab=payments` and no longer shows the old
+  `ContractExpandedDetails` payments section there. Maritime panel gained
+  `amountHeader` and an optional download button (hidden unless
+  `onDownloadPayment` is passed; preview passes a no-op).
+- Behavior notes: "Đã thu" here counts only schedules dated today or earlier
+  (same rule as the old Thanh toán tab); the overview tab's progress card counts
+  every recorded schedule — they differ only for future-dated schedules. There
+  is no UNC/reference or document download data, so those parts are hidden.
+- Verified on :3000 (26KCT39, no schedules): KPI cards, empty table ("Không có
+  dữ liệu"), and the create dialog opens (closed with Hủy, nothing saved). The
+  table with rows / edit flow is NOT exercised in the browser. typecheck +
+  eslint clean.
+- **Awaiting user approval of step 5 before step 6 (shipment list panel).**
+- Step 5 follow-up (user: 3 KPI cards of Thanh toán): first switched to the
+  overview stat-card grid config (minWidth 240 / max 5 / gap 1, cards capped at
+  340px) — user then said 340px was too short. Now `Grid columns={{ minWidth:
+  320, max: 3, repeat: 'fill' }} gap={4}` with `kpiCard: { maxWidth: '520px' }`
+  in `payment-progress-panel.jsx` (one constant to tune). Card header rows wrap
+  (`wrap="wrap"`, gap 2) and eyebrow labels are `nowrap`, so "CÒN PHẢI THU" no
+  longer breaks and the % badge drops below the label only when space runs out.
+  Verified on :3000 (26KCT39) at a ~2560px-wide viewport: cards ~520px wide,
+  header rows on one line. Narrow widths not visually checked.
+- Step 5 follow-up 2 (user: the % badges and the "HĐ gốc" / "Chưa có phụ lục"
+  tokens look bad, keep only basic values): the 3 KPI cards now show only
+  label + icon box, the amount (+ unit), and — on "Đã thực thu" / "Còn phải
+  thu" — the progress bar. Removed: "% ĐÃ THU" / "% CÒN LẠI" badges, the "HĐ
+  gốc"/annex tokens, "Dòng tiền" / "Theo tiến độ" subtitles and the footnotes.
+  Dropped the now-unused props `contractValueLabel`, `annexLabel`, `paidNote`,
+  `remainingNote` from `MaritimePaymentProgressPanel` and its caller
+  (`contract-payments-panel.jsx`). Verified on :3000 (26KCT39); typecheck +
+  eslint clean. The preview page uses the defaults, so it simplifies too.
+- Step 5 follow-up 3 (user: "Tổng giá trị quyết toán" also gets a progress bar
+  showing contract + annex): card 1 now has a two-segment bar (original contract
+  value in slate, net annex adjustment in accent blue; a net deduction is drawn
+  in the error tone as the removed part of the original value) with a small
+  two-item legend ("● 450,000 USD ● +35,000 USD"; the annex item only when the
+  contract has annexes). New prop `settlementBreakdown` on
+  `MaritimePaymentProgressPanel` (demo default 450k + 35k); computed in
+  `contract-payments-panel.jsx`. Verified on `/preview-maritime` (both segments)
+  and :3000 (26KCT39, no annex: full slate bar + single legend). The deduction
+  (negative annex) case is not exercised in the browser. typecheck + eslint clean.
+- Step 5 follow-up 4 (user): "Đã thực thu" and "Còn phải thu" show their
+  percentage as plain semibold text under the progress bar (teal-text / accent
+  color; no badge). Verified on `/preview-maritime` (65% / 35%); the real page
+  uses the same component. typecheck + eslint clean.
+- Step 5 follow-up 5 (user: recolor the "Tiến độ thanh toán" table, no icon in
+  "Hình thức / Điều kiện"; checked on contract 26KCT14 with 9 paid schedules):
+  removed the method icon (and `METHOD_ICONS`); "Mã đợt" and amount are now
+  semibold in the primary text color (were bold accent-blue / teal — upcoming
+  amounts stay muted); date is plain muted text (no mono); status uses
+  `MaritimeBadge` (tone + dot: paid = success, reconciling = blue, upcoming =
+  neutral) like the other Maritime badges instead of Astryx `Badge` + icon.
+  Verified on :3000 with the 9 real rows; typecheck + eslint clean. Upcoming /
+  reconciling rows were only seen via the badge mapping, not on screen.
+- Step 5 follow-up 6 (user preferred the earlier colors): "Mã đợt" is back to
+  bold accent blue and the amount to bold teal (upcoming still muted), both in
+  the code font as before. Kept: no icon in "Hình thức / Điều kiện", plain
+  muted date, `MaritimeBadge` status. typecheck + eslint clean.
+- Table font size (user: 14 is fine): the Maritime theme's `table-cell`
+  override was a literal 16px/24px; now `font-size: var(--font-size-base)` (14px
+  at the theme's scale) with `line-height: 22px`; header cells stay 13px. Theme
+  rebuilt. Verified on :3000 (contract 26KCT14): cells 14px, header 13px.
+  Applies to every Maritime `Table` (the shipment table view too). typecheck clean.
+
+## 2026-09-19 (continued) — `apply-maritime-to-contract-detail`: step 6 (shipments)
+
+- Step 5 approved by user.
+- New "Lô hàng" tab (`?tab=shipments`, Package icon, between Thanh toán and
+  Liên quan) rendering `contract-shipments-panel.jsx` -> `MaritimeShipmentListPanel`
+  with real `Shipment`s. Mapping: 4 stat cards (lot count + FCL/LCL, total
+  declared weight in tons, declared value + VND equivalent, customs declarations
+  done x/n + inspected count); per-lot card: code/no/status badge (Completed =
+  success, Booked = neutral, else blue), declared value USD/VND/rate + quantity
+  + tons, route (loading/discharge, ETD/ETA), cost totals by category + total,
+  partner cards built from real fields only — Booking (supplier name, booking no,
+  B/L, payment condition), Vận tải biển (shipping line, vessel) and Hải quan
+  (declaration no/date, C/O no/date, "Bị kiểm hoá" tag), each shown only when it
+  has data. Trucking / CFS cards from the design are NOT rendered (no such data on
+  a Shipment; VGM carriers would need a per-shipment query). Table view ("Dạng
+  Bảng") works off the same rows; its column "VGM" was renamed "KHỐI LƯỢNG" (it
+  now shows declared weight, not VGM). "+ Tạo lô hàng mới" opens
+  `ShipmentFormDialog` (disabled with the eligibility reason tooltip when the
+  contract isn't InProgress); the row ⋮ / table eye+pencil open the same dialog
+  for that shipment. "Xuất Excel" is hidden (no handler).
+- Maritime component changes: list panel now takes `contractCode`,
+  `declarationCurrency`, `createDisabledReason`; hides Export without a handler;
+  empty state "Chưa có lô hàng nào."; partner tag optional; "N Đơn vị vận hành"
+  from the real partner count; table view takes `currency`/`contractCode`/
+  `onView`/`onEdit`. Costs are assumed VND (no currency on cost lines).
+- Verified on :3000 (contract 26KCT14, 9 FCL lots): card view, table view, edit
+  dialog opens/closes (no save). The lot cards show empty cost blocks and "—"
+  ETD/ETA for that data (nothing recorded). typecheck + eslint clean. Not
+  verified: create dialog on an InProgress contract, an LCL lot, a lot with
+  shipping/vessel data or cost categories.
+- **Awaiting user approval of step 6 before step 7 (annex list panel).**
+- Step 6 follow-up (user: fields the design needs must be shown, `___` when
+  empty): `contract-shipments-panel.jsx` now always renders the Booking (mã
+  booking, số vận đơn, điều kiện TT, supplier name), Vận tải biển (hãng tàu, tên
+  tàu) and Hải quan (số tờ khai, ngày khai, số C/O, ngày khai C/O, ngày có C/O)
+  cards with all their fields; empty values (including the literal "-" stored in
+  some booking numbers) show `___`. ETD/ETA, loading/discharge and table dates use
+  the same placeholder, and the cost block lists EVERY shipment cost category from
+  the catalog (INSURANCE, CUSTOMS, O/F, Trucking, PORT/TERMINAL, WAREHOUSE on
+  this data) with `___` where the shipment has no amount. Verified on :3000
+  (26KCT14). Still not rendered: the design's Trucking and CFS partner cards —
+  no such fields exist on a Shipment. typecheck + eslint clean.
+- Step 6 follow-up 2 (user: "card 2. TRUCKING bạn quên à"): yes — I had wrongly
+  dropped it as "no data". VGM records carry `carrierCustomerId` (the trucking
+  company per container), so `contract-shipments-panel.jsx` now builds the design's
+  order: 1. BOOKING, 2. TRUCKING, 3. HẢI QUAN, 4. SHIPPING (HÃNG TÀU). Trucking =
+  VGMs grouped by carrier (name via suppliers, falling back to customers) feeding
+  the design's "PHÂN BỔ XE" allocation bar (n/total Cont, total = shipment quantity
+  when its unit is Cont). Uses `useShipmentsVgmsQueries` (one VGM fetch per lot,
+  shared cache with the Liên quan tab). A lot with no VGM shows "Đơn vị vận
+  chuyển: ___ / Số cont đã đóng: ___". Verified on :3000 (26KCT14): all four cards
+  render for every lot; none of its 9 lots has VGM records (confirmed on the Liên
+  quan tab: "Chưa có bản ghi VGM"), so only the ___ state was seen — the allocation
+  bar with real carriers is NOT exercised in the browser. Only the CFS card from the
+  design remains unrendered (no data). typecheck + eslint clean.
+
+## 2026-09-19 (continued) — `apply-maritime-to-contract-detail`: step 7 (annexes) + font-size pass
+
+- Step 6 approved by user.
+- "Phụ lục" tab (`?tab=annexes`) now renders `contract-maritime-annexes-panel.jsx`
+  -> `MaritimeAnnexListPanel`: 3 summary cards (contract value, sum of increases,
+  sum of decreases with counts) and a table of the real `ContractAnnex`es (code,
+  number, type pill with icon — increase green / decrease neutral / ValueChange
+  blue, note as the content summary or `___`, signed adjustment, signed date,
+  seller/buyer signature pills — "Chưa ký" in neutral tone). "Thêm phụ lục mới" and
+  the row pencil open `ContractAnnexFormDialog` (create / edit). The design's
+  "Ghi chú / đính kèm" column is dropped for this data (`hasNoteColumn={false}`:
+  an annex has a single `note`, already the content column); Export / Print
+  buttons are hidden (no handlers). Currency comes from the contract (was
+  hard-coded USD); `$` prefix removed from the adjustment ("+5,620.00 USD").
+- INCIDENT (mine, fixed): I first wrote this component to
+  `contract-annexes-panel.jsx`, which ALREADY existed in the repo (the older
+  panel used by `ContractExpandedDetails`), overwriting it. Caught by typecheck;
+  restored the original with `git checkout -- contract-annexes-panel.jsx` (it was
+  clean at session start) and moved the new component to
+  `contract-maritime-annexes-panel.jsx` (`ContractMaritimeAnnexesPanel`).
+  `git status` confirms no other tracked file under `logistics-contracts/` was
+  affected. The Liên quan / Xem đầy đủ tabs still use the old panel.
+- Font-size pass (user: "chỉnh font size cho phù hợp"): display numbers that used
+  `size="4xl"` (34px at the theme scale) across the Maritime panels — payment KPI
+  amounts, shipment stats/values, annex summary values — now use `3xl` (29px), the
+  same as the overview stat cards; the annex list title `3xl` -> `xl` and its
+  buttons `lg` -> `md`. 6 occurrences changed; components otherwise keep taking
+  sizes from the theme scale.
+- Verified on :3000 (contract 26KCT14, 3 annexes: 2 ValueChange + 1 increase):
+  summary cards, table, code column no longer wraps. typecheck + eslint clean.
+  Not exercised: create/edit dialog from this tab, an AmountDecrease annex,
+  unsigned signature pills.
+- **Awaiting user approval of step 7 before step 8 (commission panel).**
+- Step 6 follow-up 3 (user: draw "2. TRUCKING" like the design even with no data;
+  fill it in when data exists): the Trucking card now ALWAYS uses the design's
+  "PHÂN BỔ XE" layout. `TruckingAllocation` shows `used/total Cont` (it used to print
+  `total/total`), an allocation bar (an empty track when nothing is allocated), the
+  per-carrier rows, and a `___ / ___ Cont` placeholder row when there are no
+  carriers; a zero total no longer divides by zero. `contract-shipments-panel.jsx`
+  always passes `units` (VGMs grouped by carrier), `totalCont` and a "Còn N Cont chưa
+  phân bổ" `restLabel` when fewer VGMs than conts exist. Verified on :3000 (26KCT14:
+  "0/1 Cont", "0/4 Cont" with empty bars + `___` rows). The filled bar / carrier
+  rows are still unverified against real VGM data (none on this contract).
+  typecheck + eslint clean.
+- Bug (user report): React "two children with the same key, `Đã hoàn thành`" on the
+  contract detail page. Cause: `MaritimeShipmentTableView`'s status filter options
+  were built with one entry per shipment (`shipments.map(s => s.status.label)`), so
+  contracts whose lots share a status (26KCT14: 9x "Đã hoàn thành") produced
+  duplicate option keys. Fixed by using the distinct labels (`new Set`). Also made
+  `TruckingAllocation`'s per-carrier keys `name-index` (two carriers without a name
+  would both be `___`). Verified on :3000 (26KCT14, card view then "Dạng Bảng"):
+  no console warnings; typecheck + eslint clean.
+- Step 6 follow-up 4 (user: give the lot cards in "Dạng Thẻ" a coloured border):
+  each lot `Card` now has a 2px coloured inset outline by status — done = teal
+  (`--maritime-teal-value`), in progress = accent blue, warning = amber, not
+  started = slate. Gotcha: a `borderColor` in `xstyle` is ignored on `Card` (the
+  Maritime theme's `card` override sets it in a higher layer — the first attempt
+  changed nothing, computed border stayed `#dce9ff`), so `lotBorderTones` uses
+  `outline` + `outlineOffset: -1px` drawn over the border. Verified on :3000
+  (26KCT14: all lots are "Đã hoàn thành" -> teal). Other statuses' colours are
+  unverified on screen. typecheck + eslint clean.
+
+## 2026-09-19 (continued) — `apply-maritime-to-contract-detail`: step 8 (commission tab)
+
+- Step 7 approved by user.
+- New "Hoa hồng" tab (`?tab=commission`, Percent icon, between Lô hàng and Liên quan)
+  rendering `contract-commission-panel.jsx` (new file; checked first that no file with
+  that name existed) -> `MaritimeCommissionPanel`. With a commission: 3 summary cards
+  (total + % of settlement, paid, remaining with counts), the recipient card (customer:
+  representative, title, tax code, address, signed date, both-signed badge, code) and
+  bank card (first bank account of the customer: name, account, branch, province;
+  SWIFT `___`), and the tracking table pairing agreed `paymentTerms` with recorded
+  `paymentHistory` BY POSITION (paid = a payment exists at that index; amount = actual
+  or ratio x total; condition text truncated to 60 chars) with totals + "Tổng thực chi".
+  "Thêm đợt thanh toán / hoa hồng" opens `CommissionPaymentQuickAddDialog`; the row
+  eye/pencil open `CommissionFormDialog` (view / edit). Without a commission the full
+  design renders with `___` values and the main button becomes "Tạo Commission"
+  (create dialog). The overview tab's commission card "+ Chi tiết" now goes to this
+  tab (was Liên quan). VND equivalents, receipt download, Excel export, footnote and
+  the bank "Hoạt động" badge are not shown (no data/handlers). Commission annexes stay
+  in the Liên quan tab.
+- Maritime panel changes: `currency`, `hasReceiptDownload`, `createLabel` props; optional
+  `vnd`/bank `status`/`note`/footnote; export button only with a handler; font pass
+  (table title `3xl` -> `xl`, broker name `2xl` -> `xl`, buttons `lg` -> `md`).
+- Verified on :3000 (contract 26KCT14 — NO commission exists anywhere in this database:
+  /logistics/commissions is empty): the placeholder layout renders. The with-data branch
+  (summary numbers, recipient/bank cards, tracking table, both dialogs) is NOT exercised
+  in the browser — only typechecked. typecheck + eslint clean.
+- **Awaiting user approval of step 8 before step 9 (cleanup + `./harness/verify.sh`).**
+
+## 2026-09-19 (continued) — `apply-maritime-to-contract-detail`: step 9 cleanup
+
+- Removed the now-unreferenced `.contract-overview-value-positive` and
+  `.contract-overview-value-negative` rules from `src/app/globals.css`; these
+  belonged to the four Astryx KPI cards removed in step 3. Repository search
+  confirms both selectors have zero remaining consumers.
+- Removed `badgeVariantForContractType` and
+  `englishLabelForContractStatus`, which were only used by the Astryx header
+  replaced with `MaritimeContractOverviewCard` in step 1. Kept the shared
+  status-list variant and status-dot mapper because they still have live uses.
+- `./harness/verify.sh` PASSED in full through Git Bash (the Windows WSL shim
+  still returns `E_ACCESSDENIED`): readiness, memory safety, TanStack-only,
+  theme build, lint, typecheck, structure, harness tests, unit tests, production
+  build, and bundle-quality threshold. Evidence:
+  `harness/runs/20260919-122709-870/`.
+- Change `apply-maritime-to-contract-detail` is complete.
+
+## 2026-09-19 — Removed obsolete IBM Plex Corporate theme
+
+- Deleted `src/shared/components/custom/ibm-plex-corporate/` (12 files): the
+  former custom theme, provider, generated theme artifacts, and its component
+  wrappers. Repository search confirmed it had no remaining runtime consumer
+  after the contract detail page moved to Maritime.
+- Removed the folder's hardcoded-color and generated-artifact exemptions from
+  `eslint.config.mjs`; updated two stale Maritime comments that still described
+  the IBM provider/page state. Historical notes in this progress file and the
+  completed step-1 task description remain intentionally intact.
+- `./harness/verify.sh` PASSED in full. Evidence:
+  `harness/runs/20260919-134731-718/`.
+
+## 2026-09-20 — Maritime muted background made transparent
+
+- User reported that Maritime's `--color-background-muted` tint made text
+  difficult to read. Changed the Maritime theme source value from `#eff4ff`
+  to `transparent` and rebuilt its generated theme artifacts.
+- Browser verification on `/preview-maritime` confirmed the Maritime subtree
+  resolves `--color-background-muted` to `transparent`; captured
+  `harness/runs/20260920-maritime-muted-background/preview-maritime-transparent-muted.png`.
+- `./harness/verify.sh` passed readiness, memory-secrets, TanStack-only,
+  theme-build, lint, structure, harness tests, unit tests, production build,
+  and quality thresholds. The overall gate remains red because of three
+  pre-existing `DetailTab`/`profile` type errors in
+  `contract-detail-workspace.jsx`; evidence:
+  `harness/runs/20260920-184708-1945/`. Those unrelated in-progress changes
+  were left untouched to keep this request scoped to the theme token.
+
+## 2026-09-20 — Figma Contract create/edit drawer
+
+- Added change `redesign-contract-form-drawer` and implemented the selected
+  Figma frame as a 760px, end-aligned Maritime drawer built from Astryx
+  `Layout`, `DialogHeader`, `Section`, form controls, and the existing Contract
+  form hook. The drawer keeps its header/footer fixed and groups the form into
+  six desktop-readable business sections: legal, finance/Incoterm, parties,
+  signing, banks/payment terms, and notes.
+- Reused all existing create/edit validation, lookup, quick-create, dirty-state,
+  and submit behavior. Seller and buyer details now accept a drawer-only
+  non-collapsible mode; their default behavior is unchanged elsewhere.
+- The Contract detail page's "Chỉnh sửa" action and `?mode=edit` route now open
+  the same drawer instead of the removed hidden Profile tab. This also resolved
+  the three stale `DetailTab`/`profile` type errors reported in the preceding
+  run without reintroducing the Profile tab.
+- Compared the rendered UI with the bridge screenshot and corrected Astryx
+  `Section`'s default negative full-bleed margin so every blue section respects
+  the Figma frame's 12px content inset. Browser evidence:
+  `harness/runs/20260920-figma-contract-form/figma-reference.png`,
+  `app-second-pass-top.png`, `app-second-pass-middle.png`,
+  `app-edit-drawer-top.png`, and `app-edit-drawer-bottom.png`.
+- `./harness/verify.sh` PASSED in full: readiness, memory safety,
+  TanStack-only, theme build, lint, typecheck, structure, harness tests, unit
+  tests, production build, and quality thresholds. Evidence:
+  `harness/runs/20260920-192542-1131/`.
+
+## 2026-09-21 — Figma Contract drawer spacing calibration
+
+- Re-read the current Figma selection (`52:645`) through the Figma bridge and
+  captured a fresh 2x reference. The frame is 760px wide with 24px body
+  gutters, 16px section padding, 20px inter-section spacing, and 16px
+  two-column gaps.
+- Calibrated the existing Astryx drawer to those measurements using only
+  `Layout`, `LayoutContent`, `LayoutFooter`, `Section`, `Grid`, and Astryx
+  spacing/border/type tokens. Contract form state, validation, lookups,
+  quick-create flows, payloads, and API behavior are unchanged.
+- Targeted ESLint, Prettier, and typecheck passed. `./harness/verify.sh` also
+  PASSED in full: readiness, memory safety, TanStack-only, theme build, lint,
+  typecheck, structure, harness tests, unit tests, production build, and
+  quality thresholds. Evidence: `harness/runs/20260921-001035-1640/`.

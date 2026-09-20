@@ -1,9 +1,7 @@
 'use client';
 
-import { Badge } from '@astryxdesign/core/Badge';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
-import { Divider } from '@astryxdesign/core/Divider';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -12,25 +10,18 @@ import { Link } from '@astryxdesign/core/Link';
 import { ProgressBar } from '@astryxdesign/core/ProgressBar';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
-import { Token } from '@astryxdesign/core/Token';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import {
   BadgeCheck,
-  Banknote,
-  Check,
-  CircleCheck,
-  CircleEllipsis,
   CirclePlus,
   ClipboardClock,
-  Clock,
   Download,
   Eye,
-  FileText,
-  Hourglass,
-  Landmark,
   ScrollText,
 } from 'lucide-react';
+
+import { MaritimeBadge } from './badge.jsx';
 
 /**
  * Maritime theme — "Tiến độ thanh toán" tab body (`MaritimeTabNav` id
@@ -49,14 +40,12 @@ import {
  * overridable prop — this panel has no fixed contract shape.
  * @param {{
  *   totalValue?: string,
- *   contractValueLabel?: string,
- *   annexLabel?: string,
+ *   settlementBreakdown?: SettlementBreakdown,
  *   paidValue?: string,
  *   paidPercent?: number,
- *   paidNote?: string,
  *   remainingValue?: string,
- *   remainingNote?: string,
  *   unit?: string,
+ *   amountHeader?: string,
  *   payments?: PaymentRow[],
  *   paidTotalValue?: string,
  *   onAddPayment?: () => void,
@@ -67,14 +56,12 @@ import {
  */
 export function MaritimePaymentProgressPanel({
   totalValue = '485,000',
-  contractValueLabel = '$450,000',
-  annexLabel = '+2 Phụ lục: +$35,000 USD',
+  settlementBreakdown = DEFAULT_BREAKDOWN,
   paidValue = '315,250',
   paidPercent = 65,
-  paidNote = 'Hoàn tất Đợt 1, 2 và Đợt 3',
   remainingValue = '169,750',
-  remainingNote = 'Đợt 4 (L/C) & Quyết toán',
   unit = 'USD',
+  amountHeader = 'Số tiền (USD)',
   payments = DEFAULT_PAYMENTS,
   paidTotalValue = '$315,250.00 USD',
   onAddPayment,
@@ -98,7 +85,7 @@ export function MaritimePaymentProgressPanel({
     },
     {
       key: 'amount',
-      header: 'Số tiền (USD)',
+      header: amountHeader,
       width: proportional(1),
       align: 'end',
       renderCell: (row) => (
@@ -117,12 +104,9 @@ export function MaritimePaymentProgressPanel({
       header: 'Hình thức / Điều kiện',
       width: proportional(1.7),
       renderCell: (row) => (
-        <HStack gap={1.5} vAlign="center" wrap="nowrap">
-          <Icon icon={METHOD_ICONS[row.method]} size="xsm" />
-          <Text type="inherit" weight="medium">
-            {row.condition}
-          </Text>
-        </HStack>
+        <Text type="inherit" weight="medium">
+          {row.condition}
+        </Text>
       ),
     },
     {
@@ -130,7 +114,7 @@ export function MaritimePaymentProgressPanel({
       header: 'Ngày thanh toán',
       width: proportional(1.2),
       renderCell: (row) => (
-        <Text type="inherit" color="maritime-subtle" xstyle={styles.mono}>
+        <Text type="inherit" color="maritime-muted">
           {row.date}
         </Text>
       ),
@@ -140,10 +124,10 @@ export function MaritimePaymentProgressPanel({
       header: 'Trạng thái',
       width: proportional(1.5),
       renderCell: (row) => (
-        <Badge
-          variant={STATUS_VARIANTS[row.status]}
+        <MaritimeBadge
           label={row.statusLabel}
-          icon={<Icon icon={STATUS_ICONS[row.status]} size="xsm" />}
+          tone={STATUS_TONES[row.status]}
+          dotVariant={STATUS_DOTS[row.status]}
         />
       ),
     },
@@ -187,14 +171,16 @@ export function MaritimePaymentProgressPanel({
             size="sm"
             onClick={() => onViewPayment?.(row.id)}
           />
-          <IconButton
-            label={`Tải chứng từ ${row.code}`}
-            tooltip="Tải chứng từ"
-            icon={<Icon icon={Download} size="sm" />}
-            variant="ghost"
-            size="sm"
-            onClick={() => onDownloadPayment?.(row.id)}
-          />
+          {onDownloadPayment ? (
+            <IconButton
+              label={`Tải chứng từ ${row.code}`}
+              tooltip="Tải chứng từ"
+              icon={<Icon icon={Download} size="sm" />}
+              variant="ghost"
+              size="sm"
+              onClick={() => onDownloadPayment(row.id)}
+            />
+          ) : null}
         </HStack>
       ),
     },
@@ -202,56 +188,52 @@ export function MaritimePaymentProgressPanel({
 
   return (
     <VStack gap={5} hAlign="stretch">
-      <Grid columns={{ minWidth: 300, max: 3, repeat: 'fill' }} gap={4}>
-        <Card padding={5} elevation="low" xstyle={cardTones.default}>
+      {/* Three tracks; each card keeps its natural width up to 520px
+          (user feedback, 2026-09-19: 340px, the overview stat-card cap, then 440px
+          read too short for these denser KPI cards, while filling the full
+          track stretched them too long on wide monitors). */}
+      <Grid columns={{ minWidth: 320, max: 3, repeat: 'fill' }} gap={4}>
+        <Card
+          padding={5}
+          elevation="low"
+          xstyle={[cardTones.default, styles.kpiCard]}
+        >
           <VStack gap={3} hAlign="stretch">
-            <HStack hAlign="between" vAlign="start" wrap="nowrap">
-              <Text type="label" size="base" weight="bold" color="maritime-muted" xstyle={styles.tracking}>
-                TỔNG GIÁ TRỊ QUYẾT TOÁN
+            <HStack hAlign="between" vAlign="center" wrap="nowrap">
+              <Text
+                type="label"
+                weight="bold"
+                color="maritime-muted"
+                xstyle={styles.tracking}
+              >
+                GIÁ TRỊ QUYẾT TOÁN
               </Text>
               <IconBox icon={ScrollText} tone="default" />
             </HStack>
             <Amount value={totalValue} unit={unit} color="primary" />
-            <Divider />
-            <HStack gap={2} wrap="wrap" vAlign="center">
-              <Token
-                size="md"
-                color="default"
-                icon={<Icon icon={FileText} size="xsm" />}
-                label={`HĐ gốc: ${contractValueLabel}`}
-              />
-              <Token
-                size="md"
-                color="blue"
-                icon={<Icon icon={CirclePlus} size="xsm" />}
-                label={annexLabel}
-              />
-            </HStack>
+            <SettlementBar breakdown={settlementBreakdown} />
           </VStack>
         </Card>
 
-        <Card padding={5} elevation="low" xstyle={cardTones.teal}>
+        <Card
+          padding={5}
+          elevation="low"
+          xstyle={[cardTones.teal, styles.kpiCard]}
+        >
           <VStack gap={3} hAlign="stretch">
-            <HStack hAlign="between" vAlign="start" wrap="nowrap">
-              <VStack gap={0.5}>
-                <HStack gap={1.5} vAlign="center" wrap="nowrap">
-                  <Dot tone="teal" />
-                  <Text type="label" size="base" weight="bold" color="maritime-teal-text" xstyle={styles.tracking}>
-                    ĐÃ THỰC THU
-                  </Text>
-                </HStack>
-                <Text size="lg" weight="medium" color="maritime-teal">
-                  Dòng tiền
+            <HStack hAlign="between" vAlign="center" wrap="nowrap">
+              <HStack gap={1.5} vAlign="center" wrap="nowrap">
+                <Dot tone="teal" />
+                <Text
+                  type="label"
+                  weight="bold"
+                  color="maritime-teal-text"
+                  xstyle={styles.tracking}
+                >
+                  ĐÃ THỰC THU
                 </Text>
-              </VStack>
-              <HStack gap={2} vAlign="center" wrap="nowrap">
-                <Badge
-                  variant="teal"
-                  label={`${paidPercent}% ĐÃ THU`}
-                  icon={<Icon icon={Check} size="xsm" />}
-                />
-                <IconBox icon={BadgeCheck} tone="teal" />
               </HStack>
+              <IconBox icon={BadgeCheck} tone="teal" />
             </HStack>
             <Amount value={paidValue} unit={unit} color="maritime-teal" />
             <ProgressBar
@@ -260,37 +242,31 @@ export function MaritimePaymentProgressPanel({
               value={paidPercent}
               variant="success"
             />
-            <HStack gap={1.5} vAlign="center" wrap="nowrap">
-              <Icon icon={Landmark} size="xsm" color={/** @type {any} */ ('maritime-teal-text')} />
-              <Text size="lg" weight="semibold" color="maritime-teal-text">
-                {paidNote}
-              </Text>
-            </HStack>
+            <Text weight="semibold" color="maritime-teal-text">
+              {paidPercent}%
+            </Text>
           </VStack>
         </Card>
 
-        <Card padding={5} elevation="low" xstyle={cardTones.blue}>
+        <Card
+          padding={5}
+          elevation="low"
+          xstyle={[cardTones.blue, styles.kpiCard]}
+        >
           <VStack gap={3} hAlign="stretch">
-            <HStack hAlign="between" vAlign="start" wrap="nowrap">
-              <VStack gap={0.5}>
-                <HStack gap={1.5} vAlign="center" wrap="nowrap">
-                  <Dot tone="blue" />
-                  <Text type="label" size="base" weight="bold" color="accent" xstyle={styles.tracking}>
-                    CÒN PHẢI THU
-                  </Text>
-                </HStack>
-                <Text size="lg" weight="medium" color="maritime-subtle">
-                  Theo tiến độ
+            <HStack hAlign="between" vAlign="center" wrap="nowrap">
+              <HStack gap={1.5} vAlign="center" wrap="nowrap">
+                <Dot tone="blue" />
+                <Text
+                  type="label"
+                  weight="bold"
+                  color="accent"
+                  xstyle={styles.tracking}
+                >
+                  CÒN PHẢI THU
                 </Text>
-              </VStack>
-              <HStack gap={2} vAlign="center" wrap="nowrap">
-                <Badge
-                  variant="blue"
-                  label={`${remainingPercent}% CÒN LẠI`}
-                  icon={<Icon icon={Hourglass} size="xsm" />}
-                />
-                <IconBox icon={ClipboardClock} tone="blue" />
               </HStack>
+              <IconBox icon={ClipboardClock} tone="blue" />
             </HStack>
             <Amount value={remainingValue} unit={unit} color="accent" />
             <ProgressBar
@@ -299,12 +275,9 @@ export function MaritimePaymentProgressPanel({
               value={remainingPercent}
               variant="accent"
             />
-            <HStack gap={1.5} vAlign="center" wrap="nowrap">
-              <Icon icon={Clock} size="xsm" color="accent" />
-              <Text size="lg" weight="semibold" color="maritime-subtle">
-                {remainingNote}
-              </Text>
-            </HStack>
+            <Text weight="semibold" color="accent">
+              {remainingPercent}%
+            </Text>
           </VStack>
         </Card>
       </Grid>
@@ -335,14 +308,12 @@ export function MaritimePaymentProgressPanel({
             wrap="wrap"
             xstyle={styles.footer}
           >
-            <Text size="lg" color="maritime-subtle">
+            <Text color="maritime-subtle">
               Tổng số {payments.length} đợt thanh toán chính
             </Text>
             <HStack gap={2} vAlign="center" wrap="nowrap">
-              <Text size="lg" weight="semibold">
-                TỔNG ĐÃ THU:
-              </Text>
-              <Text type="code" size="lg" weight="bold" color="maritime-teal">
+              <Text weight="semibold">TỔNG ĐÃ THU:</Text>
+              <Text type="code" weight="bold" color="maritime-teal">
                 {paidTotalValue}
               </Text>
             </HStack>
@@ -363,10 +334,16 @@ export function MaritimePaymentProgressPanel({
 function Amount({ value, unit, color }) {
   return (
     <HStack gap={2} vAlign="center" wrap="nowrap">
-      <Text type="code" weight="bold" size="4xl" color={color} xstyle={styles.amount}>
+      <Text
+        type="code"
+        weight="bold"
+        size="3xl"
+        color={color}
+        xstyle={styles.amount}
+      >
         {value}
       </Text>
-      <Text size="lg" weight="semibold" color="maritime-muted">
+      <Text weight="semibold" color="maritime-muted">
         {unit}
       </Text>
     </HStack>
@@ -392,6 +369,82 @@ function Dot({ tone }) {
   return <HStack as="span" xstyle={[styles.dot, dotTones[tone]]} />;
 }
 
+/**
+ * @typedef {{
+ *   contractPercent: number,
+ *   annexPercent: number,
+ *   contractLabel: string,
+ *   annexLabel?: string,
+ *   isAnnexDeduction?: boolean,
+ * }} SettlementBreakdown
+ */
+
+/** @type {SettlementBreakdown} */
+const DEFAULT_BREAKDOWN = {
+  contractPercent: 93,
+  annexPercent: 7,
+  contractLabel: '450,000 USD',
+  annexLabel: '+35,000 USD',
+};
+
+/**
+ * Two-segment bar for the settlement total: original contract value + the
+ * net annex adjustment (a deduction is drawn in the error tone). The legend
+ * only names the segments that exist.
+ * @param {{ breakdown: SettlementBreakdown }} props
+ */
+function SettlementBar({ breakdown }) {
+  const { contractPercent, annexPercent, contractLabel, annexLabel } =
+    breakdown;
+  return (
+    <VStack gap={1.5} hAlign="stretch">
+      <HStack xstyle={styles.settlementTrack}>
+        <HStack
+          as="span"
+          xstyle={[
+            styles.settlementContract,
+            styles.segmentWidth(contractPercent),
+          ]}
+        />
+        {annexLabel ? (
+          <HStack
+            as="span"
+            xstyle={[
+              breakdown.isAnnexDeduction
+                ? styles.settlementDeduction
+                : styles.settlementAnnex,
+              styles.segmentWidth(annexPercent),
+            ]}
+          />
+        ) : null}
+      </HStack>
+      <HStack gap={3} vAlign="center" wrap="wrap">
+        <HStack gap={1} vAlign="center" wrap="nowrap">
+          <HStack
+            as="span"
+            xstyle={[styles.legendDot, styles.settlementContract]}
+          />
+          <Text color="maritime-muted">{contractLabel}</Text>
+        </HStack>
+        {annexLabel ? (
+          <HStack gap={1} vAlign="center" wrap="nowrap">
+            <HStack
+              as="span"
+              xstyle={[
+                styles.legendDot,
+                breakdown.isAnnexDeduction
+                  ? styles.settlementDeduction
+                  : styles.settlementAnnex,
+              ]}
+            />
+            <Text color="maritime-muted">{annexLabel}</Text>
+          </HStack>
+        ) : null}
+      </HStack>
+    </VStack>
+  );
+}
+
 /** @typedef {'paid' | 'reconciling' | 'upcoming'} PaymentStatus */
 /**
  * @typedef {{
@@ -408,25 +461,17 @@ function Dot({ tone }) {
  * }} PaymentRow
  */
 
-/** @type {Record<PaymentRow['method'], import('react').ComponentType>} */
-const METHOD_ICONS = {
-  advance: Banknote,
-  'against-bl': ScrollText,
-  lc: Landmark,
-  settlement: CircleCheck,
-};
-
-/** @type {Record<PaymentStatus, import('react').ComponentType>} */
-const STATUS_ICONS = {
-  paid: CircleCheck,
-  reconciling: CircleEllipsis,
-  upcoming: Clock,
-};
-
-/** @type {Record<PaymentStatus, 'teal' | 'blue' | 'neutral'>} */
-const STATUS_VARIANTS = {
-  paid: 'teal',
+/** @type {Record<PaymentStatus, 'success' | 'blue' | 'neutral'>} */
+const STATUS_TONES = {
+  paid: 'success',
   reconciling: 'blue',
+  upcoming: 'neutral',
+};
+
+/** @type {Record<PaymentStatus, 'success' | 'accent' | 'neutral'>} */
+const STATUS_DOTS = {
+  paid: 'success',
+  reconciling: 'accent',
   upcoming: 'neutral',
 };
 
@@ -481,8 +526,28 @@ const DEFAULT_PAYMENTS = [
 ];
 
 const styles = stylex.create({
-  tracking: { letterSpacing: '0.05em' },
   mono: { fontFamily: 'var(--font-family-code)' },
+  settlementTrack: {
+    backgroundColor: 'var(--color-border)',
+    borderRadius: 'var(--radius-full)',
+    display: 'flex',
+    gap: '2px',
+    height: '8px',
+    overflow: 'hidden',
+    width: '100%',
+  },
+  settlementContract: { backgroundColor: 'var(--maritime-text-muted)' },
+  settlementAnnex: { backgroundColor: 'var(--color-accent)' },
+  settlementDeduction: { backgroundColor: 'var(--color-error)' },
+  segmentWidth: (percent) => ({ flexShrink: 0, width: `${percent}%` }),
+  legendDot: {
+    borderRadius: 'var(--radius-full)',
+    flexShrink: 0,
+    height: '8px',
+    width: '8px',
+  },
+  kpiCard: { maxWidth: '520px' },
+  tracking: { letterSpacing: '0.05em', whiteSpace: 'nowrap' },
   linkCell: { fontSize: 'inherit' },
   amount: { letterSpacing: '-0.025em', lineHeight: 1 },
   iconBox: {

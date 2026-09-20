@@ -38,9 +38,12 @@ import { MaritimeBadge } from './badge.jsx';
  *   broker?: Broker,
  *   bank?: Bank,
  *   payments?: CommissionPayment[],
- *   totals?: { label: string, usd: string, summary: string, vnd: string },
+ *   totals?: { label: string, usd: string, summary: string, vnd?: string },
  *   footnote?: string,
  *   confirmedTotal?: string,
+ *   currency?: string,
+ *   hasReceiptDownload?: boolean,
+ *   createLabel?: string,
  *   onExport?: () => void,
  *   onCreate?: () => void,
  *   onView?: (id: string) => void,
@@ -55,6 +58,9 @@ export function MaritimeCommissionPanel({
   totals = DEFAULT_TOTALS,
   footnote = 'Áp dụng quy chế chi trả môi giới thương mại quốc tế theo biểu mẫu BM-MG-04 ban hành năm 2024',
   confirmedTotal = '$9,700.00 USD (~246,865,000 VNĐ)',
+  currency = 'USD',
+  hasReceiptDownload = true,
+  createLabel = 'Thêm đợt thanh toán / hoa hồng',
   onExport,
   onCreate,
   onView,
@@ -71,7 +77,7 @@ export function MaritimeCommissionPanel({
       renderCell: (row) =>
         row.isTotal ? (
           <Cell>
-            <Text size="lg" weight="semibold" color="maritime-muted">
+            <Text weight="semibold" color="maritime-muted">
               {totals.label}
             </Text>
           </Cell>
@@ -86,7 +92,7 @@ export function MaritimeCommissionPanel({
                 row.paid ? styles.stagePaid : styles.stagePending,
               ]}
             >
-              <Text type="code" size="lg" weight="bold" color="inherit">
+              <Text type="code" weight="bold" color="inherit">
                 {row.no}
               </Text>
             </HStack>
@@ -95,13 +101,13 @@ export function MaritimeCommissionPanel({
     },
     {
       key: 'amount',
-      header: 'SỐ TIỀN HOA HỒNG (USD)',
+      header: `SỐ TIỀN HOA HỒNG (${currency})`,
       width: proportional(2),
       align: 'end',
       renderCell: (row) =>
         row.isTotal ? (
           <Cell isEnd>
-            <Text type="code" size="lg" weight="bold">
+            <Text type="code" weight="bold">
               {totals.usd}
             </Text>
           </Cell>
@@ -110,15 +116,16 @@ export function MaritimeCommissionPanel({
             <VStack gap={0.5} hAlign="end">
               <Text
                 type="code"
-                size="lg"
                 weight="bold"
                 color={row.paid ? 'maritime-teal' : 'accent'}
               >
-                {`${row.usd} USD`}
+                {`${row.usd} ${currency}`}
               </Text>
-              <Text type="code" size="sm" color="maritime-subtle">
-                {`≈ ${row.vnd} VNĐ`}
-              </Text>
+              {row.vnd ? (
+                <Text type="code" color="maritime-subtle">
+                  {`≈ ${row.vnd} VNĐ`}
+                </Text>
+              ) : null}
             </VStack>
           </Cell>
         ),
@@ -130,7 +137,7 @@ export function MaritimeCommissionPanel({
       renderCell: (row) =>
         row.isTotal ? (
           <Cell>
-            <Text size="lg" weight="semibold" color="maritime-teal">
+            <Text weight="semibold" color="maritime-teal">
               {totals.summary}
             </Text>
           </Cell>
@@ -144,7 +151,7 @@ export function MaritimeCommissionPanel({
                   /** @type {any} */ (row.paid ? 'maritime-subtle' : 'accent')
                 }
               />
-              <Text type="code" size="lg" color="maritime-muted">
+              <Text type="code" color="maritime-muted">
                 {`${row.method} • ${row.date}`}
               </Text>
             </HStack>
@@ -158,8 +165,8 @@ export function MaritimeCommissionPanel({
       renderCell: (row) =>
         row.isTotal ? (
           <Cell isEnd>
-            <Text type="code" size="lg" weight="bold" color="maritime-muted">
-              {totals.vnd}
+            <Text type="code" weight="bold" color="maritime-muted">
+              {totals.vnd ?? ''}
             </Text>
           </Cell>
         ) : (
@@ -189,14 +196,16 @@ export function MaritimeCommissionPanel({
                 size="md"
                 onClick={() => onView?.(row.id)}
               />
-              <IconButton
-                label={`${row.paid ? 'Tải phiếu chi' : 'Sửa'} đợt ${row.no}`}
-                tooltip={row.paid ? 'Tải phiếu chi' : 'Sửa'}
-                icon={<Icon icon={row.paid ? Download : Pencil} size="sm" />}
-                variant="ghost"
-                size="md"
-                onClick={() => onAction?.(row.id)}
-              />
+              {row.paid && !hasReceiptDownload ? null : (
+                <IconButton
+                  label={`${row.paid ? 'Tải phiếu chi' : 'Sửa'} đợt ${row.no}`}
+                  tooltip={row.paid ? 'Tải phiếu chi' : 'Sửa'}
+                  icon={<Icon icon={row.paid ? Download : Pencil} size="sm" />}
+                  variant="ghost"
+                  size="md"
+                  onClick={() => onAction?.(row.id)}
+                />
+              )}
             </HStack>
           </Cell>
         ),
@@ -220,7 +229,6 @@ export function MaritimeCommissionPanel({
             <VStack gap={2} hAlign="stretch">
               <Text
                 type="label"
-                size="lg"
                 weight="bold"
                 color={TONE_COLORS[s.tone]?.label ?? 'maritime-muted'}
                 xstyle={styles.tracking}
@@ -234,22 +242,19 @@ export function MaritimeCommissionPanel({
               >
                 <Text
                   type="code"
-                  size="4xl"
+                  size="3xl"
                   weight="bold"
                   color={TONE_COLORS[s.tone]?.value}
                   xstyle={styles.statValue}
                 >
                   {s.value}
                 </Text>
-                <Text size="lg" weight="semibold" color="maritime-muted">
-                  USD
+                <Text weight="semibold" color="maritime-muted">
+                  {currency}
                 </Text>
               </HStack>
               <Divider />
-              <Text
-                size="lg"
-                color={TONE_COLORS[s.tone]?.note ?? 'maritime-subtle'}
-              >
+              <Text color={TONE_COLORS[s.tone]?.note ?? 'maritime-subtle'}>
                 {s.note}
               </Text>
             </VStack>
@@ -267,7 +272,6 @@ export function MaritimeCommissionPanel({
             <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
               <Text
                 type="label"
-                size="lg"
                 weight="bold"
                 color="accent"
                 xstyle={styles.tracking}
@@ -284,7 +288,7 @@ export function MaritimeCommissionPanel({
                 <MaritimeBadge size="sm" tone="blue" label={broker.code} />
               </HStack>
             </HStack>
-            <Text as="h3" size="2xl" weight="bold">
+            <Text as="h3" size="xl" weight="bold">
               {broker.name}
             </Text>
             <KeyValueList rows={broker.rows} />
@@ -300,56 +304,54 @@ export function MaritimeCommissionPanel({
                   {bank.title}
                 </Text>
               </HStack>
-              <MaritimeBadge
-                size="sm"
-                isUppercase={false}
-                tone="success"
-                label={bank.status}
-              />
+              {bank.status ? (
+                <MaritimeBadge
+                  size="sm"
+                  isUppercase={false}
+                  tone="success"
+                  label={bank.status}
+                />
+              ) : null}
             </HStack>
             <VStack gap={2} hAlign="stretch" xstyle={styles.bankBox}>
               <HStack hAlign="between" vAlign="center" wrap="nowrap">
-                <Text size="lg" color="maritime-subtle">
-                  Ngân hàng thụ hưởng:
-                </Text>
-                <Text size="lg" weight="bold" color="accent">
+                <Text color="maritime-subtle">Ngân hàng thụ hưởng:</Text>
+                <Text weight="bold" color="accent">
                   {bank.shortName}
                 </Text>
               </HStack>
-              <Text size="lg" weight="semibold">
-                {bank.fullName}
-              </Text>
+              <Text weight="semibold">{bank.fullName}</Text>
               <Divider />
               <Grid columns={2} gap={3}>
                 <VStack gap={0.5}>
-                  <Text type="label" size="lg" color="maritime-subtle">
+                  <Text type="label" color="maritime-subtle">
                     TÀI KHOẢN USD / VND:
                   </Text>
-                  <Text type="code" size="lg" weight="bold">
+                  <Text type="code" weight="bold">
                     {bank.account}
                   </Text>
                 </VStack>
                 <VStack gap={0.5}>
-                  <Text type="label" size="lg" color="maritime-subtle">
+                  <Text type="label" color="maritime-subtle">
                     MÃ SWIFT:
                   </Text>
-                  <Text type="code" size="lg" weight="bold">
+                  <Text type="code" weight="bold">
                     {bank.swift}
                   </Text>
                 </VStack>
               </Grid>
             </VStack>
             <KeyValueList rows={bank.rows} />
-            <HStack gap={1.5} vAlign="center" wrap="nowrap">
-              <Icon
-                icon={Info}
-                size="xsm"
-                color={/** @type {any} */ ('maritime-subtle')}
-              />
-              <Text size="lg" color="maritime-subtle">
-                {bank.note}
-              </Text>
-            </HStack>
+            {bank.note ? (
+              <HStack gap={1.5} vAlign="center" wrap="nowrap">
+                <Icon
+                  icon={Info}
+                  size="xsm"
+                  color={/** @type {any} */ ('maritime-subtle')}
+                />
+                <Text color="maritime-subtle">{bank.note}</Text>
+              </HStack>
+            ) : null}
           </VStack>
         </Card>
       </Grid>
@@ -362,20 +364,22 @@ export function MaritimeCommissionPanel({
           gap={3}
           xstyle={styles.header}
         >
-          <Text as="h2" size="3xl" weight="bold">
+          <Text as="h2" size="xl" weight="bold">
             Bảng theo dõi
           </Text>
           <HStack gap={2} vAlign="center" wrap="nowrap">
+            {onExport ? (
+              <Button
+                label="Xuất Excel"
+                size="md"
+                variant="secondary"
+                icon={<Icon icon={Download} size="xsm" />}
+                onClick={onExport}
+              />
+            ) : null}
             <Button
-              label="Xuất Excel"
-              size="lg"
-              variant="secondary"
-              icon={<Icon icon={Download} size="xsm" />}
-              onClick={onExport}
-            />
-            <Button
-              label="Thêm đợt thanh toán / hoa hồng"
-              size="lg"
+              label={createLabel}
+              size="md"
               variant="primary"
               icon={<Icon icon={Plus} size="xsm" />}
               onClick={onCreate}
@@ -396,14 +400,10 @@ export function MaritimeCommissionPanel({
           gap={2}
           xstyle={styles.footer}
         >
-          <Text size="lg" color="maritime-muted">
-            {footnote}
-          </Text>
+          <Text color="maritime-muted">{footnote}</Text>
           <HStack gap={2} vAlign="center" wrap="nowrap">
-            <Text size="lg" weight="semibold">
-              TỔNG THỰC CHI ĐÃ XÁC NHẬN:
-            </Text>
-            <Text type="code" size="lg" weight="bold" color="maritime-teal">
+            <Text weight="semibold">TỔNG THỰC CHI ĐÃ XÁC NHẬN:</Text>
+            <Text type="code" weight="bold" color="maritime-teal">
               {confirmedTotal}
             </Text>
           </HStack>
@@ -439,12 +439,9 @@ function KeyValueList({ rows }) {
           wrap="nowrap"
           gap={3}
         >
-          <Text size="lg" color="maritime-subtle">
-            {label}
-          </Text>
+          <Text color="maritime-subtle">{label}</Text>
           <Text
             type={tone === 'code' || tone === 'accent' ? 'code' : undefined}
-            size="lg"
             weight="semibold"
             color={tone === 'accent' ? 'accent' : undefined}
           >
@@ -459,8 +456,8 @@ function KeyValueList({ rows }) {
 /** @typedef {[string, string, ('code' | 'accent')?]} KeyValue */
 /** @typedef {{ label: string, value: string, note: string, tone: 'neutral' | 'success' | 'accent' }} CommissionSummary */
 /** @typedef {{ label: string, signedLabel: string, code: string, name: string, rows: KeyValue[] }} Broker */
-/** @typedef {{ title: string, status: string, shortName: string, fullName: string, account: string, swift: string, rows: KeyValue[], note: string }} Bank */
-/** @typedef {{ id: string, no: string, usd: string, vnd: string, method: string, date: string, status: string, paid: boolean }} CommissionPayment */
+/** @typedef {{ title: string, status?: string, shortName: string, fullName: string, account: string, swift: string, rows: KeyValue[], note?: string }} Bank */
+/** @typedef {{ id: string, no: string, usd: string, vnd?: string, method: string, date: string, status: string, paid: boolean }} CommissionPayment */
 
 const TONE_COLORS =
   /** @type {Record<string, { label?: any, value?: any, note?: any }>} */ ({

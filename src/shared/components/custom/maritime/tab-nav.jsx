@@ -79,15 +79,21 @@ const TabAny = /** @type {any} */ (Tab);
  *   }>,
  *   activeId: string,
  *   onChange?: (id: string) => void,
+ *   stickyOffset?: number,
  * }} props
  */
-export function MaritimeTabNav({ tabs = DEFAULT_TABS, activeId, onChange }) {
+export function MaritimeTabNav({
+  tabs = DEFAULT_TABS,
+  activeId,
+  onChange,
+  stickyOffset = 0,
+}) {
   return (
     <TabListAny
       value={activeId}
       onChange={(/** @type {string} */ value) => onChange?.(value)}
       overflow="scroll"
-      xstyle={styles.nav}
+      xstyle={[styles.nav, styles.stickyTop(stickyOffset)]}
     >
       {tabs.map((tab) => (
         <TabAny
@@ -187,9 +193,11 @@ const styles = stylex.create({
     paddingBottom: 'var(--spacing-1)',
     paddingTop: 'var(--spacing-1)',
     position: 'sticky',
-    top: 0,
     zIndex: 10,
   },
+  // Distance in px from the viewport top the nav sticks at — pages under a
+  // fixed app header pass its height so the nav isn't hidden behind it.
+  stickyTop: (offset) => ({ top: `${offset}px` }),
   countChip: {
     borderRadius: 'var(--radius-inner)',
     borderStyle: 'solid',
@@ -205,7 +213,7 @@ const styles = stylex.create({
     // (user feedback, 2026-09-18), the chip stayed at its old 10px and
     // read disproportionately tiny next to it; scaled up to match (user
     // feedback, 2026-09-18, "check tab nav font size fits desktop").
-    fontSize: '14px',
+    fontSize: '13px',
     fontWeight: 'var(--font-weight-semibold)',
     lineHeight: '20px',
   },

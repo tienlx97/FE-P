@@ -22,9 +22,7 @@ import { MaritimeChip } from './chip.jsx';
  * Astryx components per `CLAUDE.md`'s no-raw-`<div>` rule instead of the
  * mockup's hand-rolled Tailwind markup — visual parity comes from
  * `MaritimeThemeProvider` (this same folder), not from copied classes.
- * Not wired into any page yet; `add-contract-detail-page`'s own header
- * card (`ContractDetailWorkspace`) still uses the IBM Plex Corporate
- * theme.
+ * Used by `ContractDetailWorkspace` as the contract-detail header.
  *
  * Mockup → component mapping:
  * - Contract code `<h1>` + copy `<button>` → `Heading` + `IconButton`,
@@ -68,6 +66,7 @@ import { MaritimeChip } from './chip.jsx';
  *   actionsLabel?: string,
  *   actionsIcon?: import('react').ComponentType,
  *   actionItems: import('@astryxdesign/core/DropdownMenu').DropdownMenuOption[],
+ *   meta?: import('react').ReactNode,
  * }} props
  */
 export function MaritimeContractOverviewCard({
@@ -93,6 +92,7 @@ export function MaritimeContractOverviewCard({
   actionsLabel = 'Thao tác',
   actionsIcon = Plus,
   actionItems,
+  meta,
 }) {
   const { copy, isCopied } = useClipboard({
     announce: copyAnnounce,
@@ -146,6 +146,7 @@ export function MaritimeContractOverviewCard({
               <MaritimeChip label={incotermLabel} size="md" />
             </HStack>
           ) : null}
+          {meta}
         </VStack>
 
         <HStack gap={2} wrap="wrap">

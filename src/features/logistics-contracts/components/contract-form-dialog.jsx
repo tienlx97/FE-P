@@ -2,17 +2,28 @@
 import { Button } from '@astryxdesign/core/Button';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
 import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
+import { FilePenLine, Save } from 'lucide-react';
 import { useId } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
+import {
+  MaritimeBadge,
+  MaritimeThemeProvider,
+} from '@/shared/components/custom/maritime/index.js';
 
+import {
+  labelForContractStatus,
+  statusDotVariantForContractStatus,
+} from '../config/contract-status.js';
 import { useContractEditingState } from '../hooks/use-contract-editing-state.js';
+import { ContractDrawerProfileFields } from './contract-drawer-profile-fields.jsx';
 import { ContractProfileFields } from './contract-profile-fields.jsx';
 
 const styles = stylex.create({
@@ -25,6 +36,27 @@ const styles = stylex.create({
   },
   surface: { backgroundColor: colorVars['--color-background-surface'] },
   disabledTab: { cursor: 'not-allowed', opacity: 0.5 },
+  drawerSurface: {
+    backgroundColor: colorVars['--color-background-surface'],
+    borderRadius: 0,
+  },
+  drawerHeader: {
+    backgroundColor:
+      'color-mix(in srgb, var(--maritime-badge-neutral-bg) 70%, white)',
+  },
+  drawerHeaderIcon: {
+    alignItems: 'center',
+    backgroundColor: colorVars['--color-accent'],
+    borderRadius: 'var(--radius-inner)',
+    color: colorVars['--color-on-accent'],
+    display: 'inline-flex',
+    height: 'var(--spacing-8)',
+    justifyContent: 'center',
+    width: 'var(--spacing-8)',
+  },
+  drawerFooter: {
+    backgroundColor: 'var(--maritime-badge-neutral-bg)',
+  },
   // The native `hidden` attribute alone does NOT hide a `VStack` — its own
   // compiled `display: flex` class is author-origin CSS, which the cascade
   // always prefers over the user-agent's `[hidden] { display: none }`
@@ -39,6 +71,14 @@ const TAB_LABELS = {
   related: 'Liên quan',
   fullView: 'Xem đầy đủ',
 };
+
+/** @param {import('../types/index.js').ContractStatus | string} status */
+function maritimeToneForStatus(status) {
+  if (status === 'InProgress') return 'success';
+  if (status === 'Completed') return 'blue';
+  if (status === 'Cancelled') return 'error';
+  return 'neutral';
+}
 
 /**
  * One fullscreen workspace for creation, inspection and editing, grouped
@@ -93,6 +133,150 @@ export function ContractFormDialog({
   });
   const { submitLabel, isSubmitting, handleSubmit, isDirty } = form;
   const panelId = useId();
+
+  const discardDialog = (
+    <CommonDialog
+      isOpen={discardAction !== null}
+      onOpenChange={(open) => {
+        if (!open) setDiscardAction(null);
+      }}
+      purpose="required"
+    >
+      <Layout
+        header={
+          <DialogHeader
+            title="Bỏ thay đổi chưa lưu?"
+            onOpenChange={() => setDiscardAction(null)}
+          />
+        }
+        content={
+          <LayoutContent padding={4}>
+            <Text>Những thay đổi của bạn sẽ mất nếu rời khỏi biểu mẫu.</Text>
+          </LayoutContent>
+        }
+        footer={
+          <LayoutFooter>
+            <HStack hAlign="end" gap={2}>
+              <Button
+                label="Tiếp tục nhập"
+                variant="primary"
+                onClick={() => setDiscardAction(null)}
+              />
+              <Button
+                label="Bỏ thay đổi"
+                variant="destructive"
+                onClick={() => {
+                  if (discardAction) finish(discardAction);
+                  setDiscardAction(null);
+                }}
+              />
+            </HStack>
+          </LayoutFooter>
+        }
+      />
+    </CommonDialog>
+  );
+
+  if (isEditing) {
+    return (
+      <MaritimeThemeProvider>
+        <CommonDialog
+          isOpen={isOpen}
+          onOpenChange={(open) => {
+            if (!open) requestExit('close');
+          }}
+          width="min(760px, 100vw)"
+          maxHeight="100dvh"
+          topOffset={0}
+          position={{ top: 0, end: 0, bottom: 0 }}
+          style={{ marginInline: 0 }}
+          xstyle={styles.drawerSurface}
+        >
+          <Layout
+            defaultHasDividers
+            padding={5}
+            header={
+              <VStack hAlign="stretch" xstyle={styles.drawerHeader}>
+                <DialogHeader
+                  title={contract ? 'Chỉnh sửa hợp đồng' : 'Thêm hợp đồng mới'}
+                  subtitle={
+                    contract?.contractNumber || 'Hoàn thiện hồ sơ hợp đồng'
+                  }
+                  startContent={
+                    <HStack as="span" xstyle={styles.drawerHeaderIcon}>
+                      <Icon icon={FilePenLine} size="sm" color="inherit" />
+                    </HStack>
+                  }
+                  endContent={
+                    contract ? (
+                      <MaritimeBadge
+                        label={labelForContractStatus(form.values.status)}
+                        tone={maritimeToneForStatus(form.values.status)}
+                        dotVariant={statusDotVariantForContractStatus(
+                          form.values.status,
+                        )}
+                        size="sm"
+                        isUppercase={false}
+                      />
+                    ) : null
+                  }
+                  onOpenChange={() => requestExit('close')}
+                />
+              </VStack>
+            }
+            content={
+              <LayoutContent padding={6}>
+                <ContractDrawerProfileFields
+                  form={form}
+                  formId={formId}
+                  isActive
+                  onSubmit={handleSubmit}
+                />
+              </LayoutContent>
+            }
+            footer={
+              <LayoutFooter padding={4}>
+                <HStack
+                  hAlign="between"
+                  vAlign="center"
+                  gap={3}
+                  wrap="wrap"
+                  xstyle={styles.drawerFooter}
+                >
+                  <Text color="secondary" xstyle={styles.hint}>
+                    {isDirty
+                      ? 'Có thay đổi chưa lưu'
+                      : contract
+                        ? 'Hồ sơ hợp đồng đã đồng bộ'
+                        : 'Nhập đầy đủ các trường bắt buộc'}
+                  </Text>
+                  <HStack gap={2}>
+                    <Button
+                      width={96}
+                      label="Hủy bỏ"
+                      variant="secondary"
+                      isDisabled={isSubmitting}
+                      onClick={() => requestExit(contract ? 'cancel' : 'close')}
+                    />
+                    <Button
+                      width={148}
+                      label={submitLabel}
+                      type="submit"
+                      form={formId}
+                      variant="primary"
+                      icon={<Icon icon={Save} size="sm" />}
+                      isLoading={isSubmitting}
+                    />
+                  </HStack>
+                </HStack>
+              </LayoutFooter>
+            }
+          />
+        </CommonDialog>
+        {discardDialog}
+      </MaritimeThemeProvider>
+    );
+  }
 
   return (
     <>
@@ -241,46 +425,7 @@ export function ContractFormDialog({
           }
         />
       </CommonDialog>
-      <CommonDialog
-        isOpen={discardAction !== null}
-        onOpenChange={(open) => {
-          if (!open) setDiscardAction(null);
-        }}
-        purpose="required"
-      >
-        <Layout
-          header={
-            <DialogHeader
-              title="Bỏ thay đổi chưa lưu?"
-              onOpenChange={() => setDiscardAction(null)}
-            />
-          }
-          content={
-            <LayoutContent padding={4}>
-              <Text>Những thay đổi của bạn sẽ mất nếu rời khỏi biểu mẫu.</Text>
-            </LayoutContent>
-          }
-          footer={
-            <LayoutFooter>
-              <HStack hAlign="end" gap={2}>
-                <Button
-                  label="Tiếp tục nhập"
-                  variant="primary"
-                  onClick={() => setDiscardAction(null)}
-                />
-                <Button
-                  label="Bỏ thay đổi"
-                  variant="destructive"
-                  onClick={() => {
-                    if (discardAction) finish(discardAction);
-                    setDiscardAction(null);
-                  }}
-                />
-              </HStack>
-            </LayoutFooter>
-          }
-        />
-      </CommonDialog>
+      {discardDialog}
     </>
   );
 }

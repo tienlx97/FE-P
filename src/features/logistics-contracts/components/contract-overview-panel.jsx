@@ -1,131 +1,38 @@
 'use client';
-import { Badge } from '@astryxdesign/core/Badge';
-import { Card } from '@astryxdesign/core/Card';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Grid } from '@astryxdesign/core/Grid';
-import { HStack } from '@astryxdesign/core/HStack';
-import { Icon } from '@astryxdesign/core/Icon';
-import { Link } from '@astryxdesign/core/Link';
-import { MetadataList } from '@astryxdesign/core/MetadataList';
-import { ProgressBar } from '@astryxdesign/core/ProgressBar';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { CheckCircle2, Circle } from 'lucide-react';
+import {
+  Bell,
+  CheckCircle2,
+  Clock,
+  Container,
+  FileCheck2,
+  FileText,
+  RefreshCw,
+  Scale,
+  Truck,
+} from 'lucide-react';
 import { useMemo } from 'react';
 
-import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
+import {
+  MaritimeContractFoundationGrid,
+  MaritimePaymentSummaryCard,
+} from '@/shared/components/custom/maritime/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
+import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { useContractBanksQuery } from '../hooks/use-contract-banks-query.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
+import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
   return value == null || value === '' ? '—' : value;
-}
-
-/**
- * A "KPI card": secondary caption on top, a bold value line, and an
- * optional small note line underneath — the shared shape for the 4 cards
- * in `ContractOverviewPanel`'s top row.
- *
- * `valueClassName` is a plain (non-`xstyle`) class for the green/red
- * value-color override ("Xanh"/"đỏ" per user request, 2026-09-17) — a
- * StyleX `xstyle` override loses that fight: `Text`'s own built-in
- * `color` style compiles into a higher-priority `@layer` than a plain
- * app-level `stylex.create()` call does (`useCSSLayers: true`,
- * `postcss.config.js`), so the built-in "primary" color kept winning.
- * Same escape hatch `src/app/globals.css`'s `.astryx-button.destructive`
- * rule already documents for the identical class of bug — a plain
- * unlayered CSS rule always beats ANY layered rule for the same
- * property, regardless of specificity or layer order.
- * @param {{ caption: import('react').ReactNode, value: import('react').ReactNode, valueClassName?: string, note?: import('react').ReactNode, children?: import('react').ReactNode }} props
- */
-function InfoCard({ caption, value, valueClassName, note, children }) {
-  return (
-    <Card>
-      <VStack gap={1.5} hAlign="stretch">
-        {caption}
-        <Text weight="semibold" size="lg" className={valueClassName}>
-          {value}
-        </Text>
-        {note ? <Text color="secondary">{note}</Text> : null}
-        {children}
-      </VStack>
-    </Card>
-  );
-}
-
-/**
- * One party block ("Bên bán"/"Bên mua") inside the "Đối tác" card — the
- * section label renders as a `Badge` per user request (2026-09-17). The
- * mockup this was based on also showed a country/flag next to it, but
- * neither `Buyer` nor `ContractSeller` has a country field (only
- * `Contract.countryId`, a single contract-level "Nước xuất khẩu" that
- * doesn't belong to one party) — substituted with the "Đã ký"/"Chưa ký"
- * signed status instead, since that data actually exists per party.
- * @param {{
- *   label: string,
- *   party: import('../types/index.js').Buyer | import('../types/index.js').ContractSeller,
- *   isSigned: boolean,
- * }} props
- */
-function PartyBlock({ label, party, isSigned }) {
-  return (
-    <VStack gap={2} hAlign="stretch">
-      <HStack hAlign="between" vAlign="center">
-        <Badge label={label} variant="neutral" />
-        <Badge
-          label={isSigned ? 'Đã ký' : 'Chưa ký'}
-          variant={isSigned ? 'success' : 'neutral'}
-        />
-      </HStack>
-      <Text weight="semibold">{party.companyName}</Text>
-      <MetadataList columns={1} label={{ position: 'top' }}>
-        <MetadataListItem label="Đại diện">
-          {orDash(party.representativeName)}
-        </MetadataListItem>
-        <MetadataListItem label="Chức vụ">
-          {orDash(party.representativeTitle)}
-        </MetadataListItem>
-        <MetadataListItem label="Địa chỉ">
-          {orDash(party.address)}
-        </MetadataListItem>
-      </MetadataList>
-    </VStack>
-  );
-}
-
-/**
- * "Đại lý nhận hàng (Consignee)"/"Bên nhận thông báo (Notify Party)"
- * block — both are `ContractPartyContact | null`, read-only (see that
- * type's doc comment: no form exists yet for editing either).
- * `extraFields` is the only place a phone/contact name could live today
- * (the type has no dedicated field for it) — rendered generically as
- * `key: value` lines rather than assuming any particular key exists.
- * @param {{ label: string, contact: import('../types/index.js').ContractPartyContact }} props
- */
-function PartyContactBlock({ label, contact }) {
-  return (
-    <VStack gap={1} hAlign="stretch">
-      <Badge label={label} variant="neutral" />
-      <Text weight="semibold">{contact.name}</Text>
-      {contact.address ? (
-        <Text color="secondary">{contact.address}</Text>
-      ) : null}
-      {contact.extraFields.map((field) => (
-        <Text key={field.key} color="secondary">
-          {field.key}: {field.value}
-        </Text>
-      ))}
-    </VStack>
-  );
 }
 
 /**
@@ -152,9 +59,15 @@ function PartyContactBlock({ label, contact }) {
  *   notify party) / Ngân hàng & Đợt thanh toán (bank details + a
  *   paid-vs-pending payment timeline + a Phụ lục preview linking to that
  *   tab) / Điều kiện giao hàng (Incoterm, places, category, shipment mix).
- * @param {{ contract: import('../types/index.js').Contract, onViewAllAnnexes?: () => void }} props
+ * @param {{ contract: import('../types/index.js').Contract, onViewAllAnnexes?: () => void, onViewPayments?: () => void, onViewCommission?: () => void, onCreateCommission?: () => void }} props
  */
-export function ContractOverviewPanel({ contract, onViewAllAnnexes }) {
+export function ContractOverviewPanel({
+  contract,
+  onViewAllAnnexes,
+  onViewPayments,
+  onViewCommission,
+  onCreateCommission,
+}) {
   const paymentSchedulesQuery = usePaymentSchedulesQuery(contract.id);
   const paymentSchedules = useMemo(
     () =>
@@ -184,52 +97,10 @@ export function ContractOverviewPanel({ contract, onViewAllAnnexes }) {
   }, 0);
   const settlementValue = (contract.contractValue ?? 0) + annexesTotal;
 
-  const remainingValue = Math.max(0, settlementValue - paidValue);
   const paidPercent =
     settlementValue > 0
       ? Math.min(100, Math.round((paidValue / settlementValue) * 100))
       : 0;
-
-  // One row per agreed `paymentTerms` entry: "paid" once a matching
-  // `PaymentSchedule` has been recorded, "pending" otherwise. Both lists
-  // are simply sequential — there is no explicit FK between a term and
-  // the schedule that fulfills it (BE-kt-xnk assigns `paymentNumber`
-  // sequentially in creation order, one schedule per term) — same
-  // implicit assumption the rest of the app already relies on.
-  const paymentRows = useMemo(() => {
-    const rowCount = Math.max(
-      paymentSchedules.length,
-      contract.paymentTerms.length,
-    );
-    const rows = [];
-    for (let index = 0; index < rowCount; index += 1) {
-      const schedule = paymentSchedules[index];
-      const term = contract.paymentTerms[index];
-      if (schedule) {
-        rows.push({
-          key: schedule.id,
-          orderNumber: index + 1,
-          isPaid: true,
-          typeLabel: labelForPaymentType(schedule.type),
-          amount: schedule.amount,
-          date: schedule.paymentDate,
-          note: schedule.note,
-        });
-      } else if (term) {
-        rows.push({
-          key: term.id,
-          orderNumber: index + 1,
-          isPaid: false,
-          typeLabel: term.paymentCondition,
-          amount: (term.paymentRatioPercent / 100) * settlementValue,
-          date: null,
-          note: null,
-        });
-      }
-    }
-    return rows;
-  }, [paymentSchedules, contract.paymentTerms, settlementValue]);
-  const nextPendingRow = paymentRows.find((row) => !row.isPaid);
 
   const shipmentsQuery = useShipmentsQuery(contract.id);
   const shipments = shipmentsQuery.data?.success
@@ -268,221 +139,324 @@ export function ContractOverviewPanel({ contract, onViewAllAnnexes }) {
     countriesQuery.data?.success ? countriesQuery.data.countries : []
   ).find((country) => country.id === contract.countryId)?.name;
 
+  const exportedValueVnd = shipments.reduce(
+    (total, shipment) => total + shipment.declarationValueVnd,
+    0,
+  );
+  const exportedPercent =
+    settlementValue > 0
+      ? Math.round((exportedValue / settlementValue) * 10000) / 100
+      : 0;
+  const annexNote =
+    annexes.length > 0
+      ? `HĐ gốc + ${annexes.length} PL (${annexesTotal >= 0 ? '+' : '-'}${formatMoney(Math.abs(annexesTotal))})`
+      : 'Chưa có phụ lục';
+  const statCards = [
+    {
+      id: 'contract-value',
+      label: 'HỢP ĐỒNG',
+      value: formatMoney(contract.contractValue ?? 0),
+      unit: contract.currency,
+      note: 'HĐ gốc',
+      tone: /** @type {const} */ ('default'),
+      icon: FileText,
+      noteIcon: FileText,
+    },
+    {
+      id: 'settlement',
+      label: 'QUYẾT TOÁN',
+      value: formatMoney(settlementValue),
+      unit: contract.currency,
+      note: annexNote,
+      tone: /** @type {const} */ ('default'),
+      icon: FileCheck2,
+      noteIcon: FileText,
+    },
+    {
+      id: 'exported',
+      label: 'ĐÃ XUẤT',
+      value: formatMoney(exportedValue),
+      unit: contract.currency,
+      note: `${exportedPercent}% · ${fclCount} FCL · ${lclCount} LCL`,
+      tone: /** @type {const} */ ('teal'),
+      badgeTone: /** @type {const} */ ('teal'),
+      icon: Truck,
+      noteIcon: CheckCircle2,
+    },
+    {
+      id: 'exported-vnd',
+      label: 'ĐÃ XUẤT (VNĐ)',
+      value: formatMoney(exportedValueVnd),
+      unit: 'VNĐ',
+      note: `${shipments.length} lô hàng`,
+      tone: /** @type {const} */ ('default'),
+      icon: RefreshCw,
+      noteIcon: RefreshCw,
+    },
+    {
+      id: 'unexported',
+      label: 'CHƯA XUẤT',
+      value: formatMoney(unexportedValue),
+      unit: contract.currency,
+      note: `${Math.max(0, Math.round((100 - exportedPercent) * 100) / 100)}%`,
+      tone: /** @type {const} */ ('accent'),
+      icon: FileText,
+      noteIcon: Clock,
+    },
+  ];
+
+  // The installment strip follows what was actually collected, not the
+  // agreed `paymentTerms` (those are listed in the "Ngân hàng & Đợt thanh
+  // toán" card): recorded payments are "paid" cards, and if anything is
+  // still owed a single next card holds the whole remainder (settlement -
+  // paid) — with nothing paid yet that is the full settlement as "Đợt 1".
+  const remainingToCollect = Math.max(0, settlementValue - paidValue);
+  const currentPercent =
+    remainingToCollect > 0 && settlementValue > 0
+      ? Math.min(
+          100 - paidPercent,
+          Math.round((remainingToCollect / settlementValue) * 100),
+        )
+      : 0;
+  /** @type {Array<{ id: string, label: string, amount: string, unit: string, dueDate: string, term?: string, status: 'paid' | 'active' | 'upcoming' }>} */
+  const installments = paymentSchedules.map((schedule, index) => ({
+    id: schedule.id,
+    label: `Đợt ${String(index + 1).padStart(2, '0')}`,
+    amount: formatMoney(schedule.amount),
+    unit: contract.currency,
+    dueDate: formatDisplayDate(schedule.paymentDate),
+    term: labelForPaymentType(schedule.type),
+    status: 'paid',
+  }));
+  if (remainingToCollect > 0) {
+    installments.push({
+      id: 'next-installment',
+      label: `Đợt ${String(paymentSchedules.length + 1).padStart(2, '0')}`,
+      amount: formatMoney(remainingToCollect),
+      unit: contract.currency,
+      dueDate: '',
+      status: 'active',
+    });
+  }
+
+  /** @param {import('../types/index.js').Buyer | import('../types/index.js').ContractSeller} party */
+  const partyRows = (party) => [
+    ['Người đại diện:', orDash(party.representativeName), false, false, true],
+    ['Chức vụ:', orDash(party.representativeTitle)],
+    ['Địa chỉ:', orDash(party.address)],
+  ];
+  const parties = [
+    {
+      eyebrow: 'BÊN BÁN (SELLER)',
+      name: contract.seller.companyName,
+      rows: partyRows(contract.seller),
+    },
+    {
+      eyebrow: 'BÊN MUA (BUYER)',
+      name: contract.buyer.companyName,
+      rows: partyRows(contract.buyer),
+    },
+  ];
+  /** @type {Array<[string, import('../types/index.js').ContractPartyContact | null, import('react').ComponentType]>} */
+  const contactSources = [
+    ['CONSIGNEE', contract.consignee, Truck],
+    ['NOTIFY PARTY', contract.notifyParty, Bell],
+  ];
+  const contacts = contactSources.map(([label, contact, icon]) =>
+    contact
+      ? {
+          icon,
+          label,
+          name: contact.name,
+          rows: [
+            ...(contact.address ? [['Địa chỉ:', contact.address]] : []),
+            ...contact.extraFields.map((field) => [`${field.key}:`, field.value]),
+          ],
+        }
+      : { icon, label, emptyMessage: 'Chưa có thông tin' },
+  );
+
+  const transport = {
+    sectionTrailing: `${exportedPercent}% Đã xuất`,
+    incotermLabel: `${contract.incoterm} ${contract.incotermYear}`,
+    rows: [
+      ['Nơi xếp hàng:', orDash(contract.placeOfLoading)],
+      ['Nơi dỡ hàng:', orDash(contract.placeOfDischarge)],
+      ['Nước xuất khẩu:', orDash(countryName)],
+      ['Hạng mục:', orDash(contract.category)],
+      ['Ngày báo giá:', formatDisplayDate(contract.quotationDate), true],
+      ['Ngày ký:', formatDisplayDate(contract.createdDate), true],
+      [
+        'Ngày hoàn thành:',
+        contract.projectCompletionDate
+          ? formatDisplayDate(contract.projectCompletionDate)
+          : 'Chưa hoàn thành',
+        true,
+      ],
+    ],
+    signingBadges: [
+      {
+        label: contract.sellerSigned ? 'Bên bán đã ký' : 'Bên bán chưa ký',
+        tone: contract.sellerSigned ? 'success' : 'neutral',
+      },
+      {
+        label: contract.buyerSigned ? 'Bên mua đã ký' : 'Bên mua chưa ký',
+        tone: contract.buyerSigned ? 'success' : 'neutral',
+      },
+    ],
+  };
+
+  const totalWeightTons =
+    shipments.reduce((total, shipment) => total + shipment.declarationWeightKg, 0) /
+    1000;
+  const containerCount = shipments
+    .filter((shipment) => shipment.quantityUnit === 'Cont')
+    .reduce((total, shipment) => total + shipment.quantityAmount, 0);
+  const packageCount = shipments
+    .filter((shipment) => shipment.quantityUnit === 'Kien')
+    .reduce((total, shipment) => total + shipment.quantityAmount, 0);
+  const cargoMetrics = [
+          {
+            icon: Scale,
+            label: 'KHỐI LƯỢNG TỜ KHAI',
+            value: formatMoney(totalWeightTons),
+            unit: 'Tấn',
+          },
+          {
+            icon: Container,
+            label: 'SỐ LƯỢNG CONT / KIỆN',
+            value: [
+              containerCount > 0 ? `${containerCount} Cont` : null,
+              packageCount > 0 ? `${packageCount} Kiện` : null,
+            ]
+              .filter(Boolean)
+              .join(' · ') || '0',
+            unit: `(${shipments.length} lô)`,
+          },
+  ];
+
+  // One block per selected bank; optional fields (beneficiary, branch,
+  // address, extra fields) only appear when they have a value.
+  const bank =
+    banks.length === 0
+      ? null
+      : {
+          items: banks.map((item, index) => ({
+            title: banks.length > 1 ? `NGÂN HÀNG ${index + 1}` : undefined,
+            rows: [
+              ['Ngân hàng:', item.bankName, false, false, true],
+              ...(item.beneficiary
+                ? [['Người thụ hưởng:', item.beneficiary]]
+                : []),
+              ['Số tài khoản:', orDash(item.bankAccountNumber), true],
+              ...(item.branchName ? [['Chi nhánh:', item.branchName]] : []),
+              ...(item.bankAddress ? [['Địa chỉ:', item.bankAddress]] : []),
+              ['Mã SWIFT:', orDash(item.swiftCode), true, true],
+              ...item.extraFields.map((field) => [`${field.key}:`, field.value]),
+            ],
+          })),
+        };
+
+  const paymentTermsView =
+    contract.paymentTerms.length === 0
+      ? null
+      : {
+          title: `${contract.paymentTerms.length} MỐC ĐIỀU KHOẢN THANH TOÁN HỢP ĐỒNG`,
+          items: contract.paymentTerms.map((term, index) => ({
+            label: `Đợt ${index + 1} (${term.paymentRatioPercent}%)`,
+            amount: formatMoney(
+              (term.paymentRatioPercent / 100) * settlementValue,
+              contract.currency,
+            ),
+            note: term.paymentCondition,
+            status: index < paymentSchedules.length ? 'paid' : 'active',
+          })),
+        };
+
+  const commissionQuery = useCommissionQuery(contract.id);
+  const customersQuery = useCustomersQuery();
+  const commissionRecord =
+    commissionQuery.data?.success && commissionQuery.data.exists
+      ? commissionQuery.data.commission
+      : null;
+  let commissionView = null;
+  if (commissionRecord) {
+    const commissionPaid = commissionRecord.paymentHistory.reduce(
+      (total, payment) => total + payment.amount,
+      0,
+    );
+    const commissionPercent =
+      settlementValue > 0
+        ? Math.round((commissionRecord.value / settlementValue) * 10000) / 100
+        : 0;
+    const isFullySigned =
+      commissionRecord.sellerSigned && commissionRecord.partySigned;
+    const recipient = (
+      customersQuery.data?.success ? customersQuery.data.customers : []
+    ).find((customer) => customer.id === commissionRecord.partyCustomerId);
+    commissionView = {
+      percentLabel: `${commissionPercent}%`,
+      signedLabel: isFullySigned ? 'Đã ký 2 bên' : 'Chưa ký đủ',
+      signedTone: isFullySigned ? 'success' : 'neutral',
+      agreementCode: commissionRecord.code,
+      recipient: recipient?.companyName ?? '—',
+      rateValue: `${formatMoney(commissionRecord.value, contract.currency)} (${commissionPercent}%)`,
+      paidAmount: formatMoney(commissionPaid),
+      totalAmount: formatMoney(commissionRecord.value, contract.currency),
+      paidPercent:
+        commissionRecord.value > 0
+          ? Math.min(100, Math.round((commissionPaid / commissionRecord.value) * 100))
+          : 0,
+      paidLabel: `Đã chi ${commissionRecord.paymentHistory.length} đợt`,
+      remainingAmount: formatMoney(
+        Math.max(0, commissionRecord.value - commissionPaid),
+        contract.currency,
+      ),
+    };
+  } else if (commissionQuery.data?.success) {
+    commissionView = {
+      isEmpty: true,
+      message: 'Hợp đồng này chưa có Commission.',
+      actionLabel: '+ Tạo Commission',
+      onAction: onCreateCommission,
+    };
+  }
+
+  const annexItems = annexes.slice(0, 3).map((annex) => ({
+    code: annex.annexCode,
+    label: labelForContractAnnexType(annex.type),
+    amount:
+      annex.type === 'ValueChange'
+        ? formatMoney(0, contract.currency)
+        : `${annex.type === 'AmountIncrease' ? '+' : '-'}${formatMoney(annex.amount, contract.currency)}`,
+    isPositive: annex.type === 'AmountIncrease',
+  }));
+
   return (
     <VStack gap={4} hAlign="stretch">
-      <Grid columns={{ minWidth: 240, max: 4 }} gap={3}>
-        <InfoCard
-          caption={<Text color="secondary">GIÁ TRỊ QUYẾT TOÁN</Text>}
-          value={formatMoney(settlementValue, contract.currency)}
-          valueClassName="contract-overview-value-positive"
-          note={
-            annexes.length > 0
-              ? `${annexes.length} phụ lục: ${annexesTotal >= 0 ? '+' : '-'}${formatMoney(Math.abs(annexesTotal), contract.currency)}`
-              : 'Chưa có phụ lục'
-          }
-        />
+      <MaritimePaymentSummaryCard
+        statCards={statCards}
+        paidPercent={paidPercent}
+        currentPercent={currentPercent}
+        paidPercentLabel={`${paidPercent}% ĐÃ THU`}
+        paidAmountValue={formatMoney(paidValue, contract.currency)}
+        totalAmountValue={formatMoney(settlementValue, contract.currency)}
+        onViewDetail={onViewPayments}
+        installments={installments}
+      />
 
-        <InfoCard
-          caption={
-            <HStack hAlign="between" vAlign="center">
-              <Text color="secondary">ĐÃ THANH TOÁN</Text>
-              <Badge label={`${paidPercent}%`} variant="success" />
-            </HStack>
-          }
-          value={formatMoney(paidValue, contract.currency)}
-        >
-          <ProgressBar
-            value={paidPercent}
-            label="Đã thanh toán"
-            isLabelHidden
-          />
-        </InfoCard>
-
-        <InfoCard
-          caption={<Text color="secondary">CÒN LẠI</Text>}
-          value={formatMoney(remainingValue, contract.currency)}
-          valueClassName="contract-overview-value-negative"
-          note={
-            remainingValue === 0
-              ? 'Đã thanh toán đủ'
-              : nextPendingRow
-                ? `Đợt ${nextPendingRow.orderNumber} (${nextPendingRow.typeLabel})`
-                : null
-          }
-        />
-
-        <InfoCard
-          caption={<Text color="secondary">XUẤT HÀNG (HQ)</Text>}
-          value={formatMoney(exportedValue, contract.currency)}
-          note={`${fclCount} FCL · ${lclCount} LCL — còn ${formatMoney(unexportedValue, contract.currency)}`}
-        />
-      </Grid>
-
-      <Grid columns={{ minWidth: 320, max: 3 }} gap={3}>
-        <Card>
-          <VStack gap={3} hAlign="stretch">
-            <Text weight="semibold">Đối tác</Text>
-            <PartyBlock
-              label="BÊN BÁN"
-              party={contract.seller}
-              isSigned={contract.sellerSigned}
-            />
-            <Divider />
-            <PartyBlock
-              label="BÊN MUA"
-              party={contract.buyer}
-              isSigned={contract.buyerSigned}
-            />
-            {contract.consignee ? (
-              <>
-                <Divider />
-                <PartyContactBlock
-                  label="ĐẠI LÝ NHẬN HÀNG (CONSIGNEE)"
-                  contact={contract.consignee}
-                />
-              </>
-            ) : null}
-            {contract.notifyParty ? (
-              <>
-                <Divider />
-                <PartyContactBlock
-                  label="BÊN NHẬN THÔNG BÁO (NOTIFY PARTY)"
-                  contact={contract.notifyParty}
-                />
-              </>
-            ) : null}
-          </VStack>
-        </Card>
-
-        <Card>
-          <VStack gap={3} hAlign="stretch">
-            <Text weight="semibold">Ngân hàng & Đợt thanh toán</Text>
-
-            <VStack gap={2} hAlign="stretch">
-              <Text color="secondary" weight="semibold">
-                NGÂN HÀNG THỤ HƯỞNG
-              </Text>
-              {banks.length === 0 ? (
-                <Text color="secondary">Chưa chọn ngân hàng</Text>
-              ) : (
-                banks.map((bank, index) => (
-                  <VStack key={bank.id} gap={0.5} hAlign="stretch">
-                    {index > 0 ? <Divider /> : null}
-                    <Text weight="semibold">{bank.bankName}</Text>
-                    <Text color="secondary">
-                      Tài khoản: {orDash(bank.bankAccountNumber)}
-                    </Text>
-                    <Text color="secondary">
-                      SWIFT: {orDash(bank.swiftCode)}
-                    </Text>
-                  </VStack>
-                ))
-              )}
-            </VStack>
-
-            <Divider />
-
-            <VStack gap={2} hAlign="stretch">
-              <Text color="secondary" weight="semibold">
-                ĐỢT THANH TOÁN
-              </Text>
-              {paymentRows.length === 0 ? (
-                <Text color="secondary">Chưa có đợt thanh toán nào.</Text>
-              ) : (
-                paymentRows.map((row) => (
-                  <HStack key={row.key} hAlign="between" vAlign="start">
-                    <HStack gap={2} vAlign="start">
-                      <Icon
-                        icon={row.isPaid ? CheckCircle2 : Circle}
-                        size="sm"
-                        color={row.isPaid ? 'success' : 'secondary'}
-                      />
-                      <VStack gap={0}>
-                        <Text weight="semibold">
-                          Đợt {row.orderNumber} · {row.typeLabel}
-                        </Text>
-                        <Text color="secondary">
-                          {row.isPaid
-                            ? `Đã nhận ${formatDisplayDate(row.date)}${row.note ? ` · ${row.note}` : ''}`
-                            : 'Chưa thanh toán'}
-                        </Text>
-                      </VStack>
-                    </HStack>
-                    <Text weight="semibold">
-                      {formatMoney(row.amount, contract.currency)}
-                    </Text>
-                  </HStack>
-                ))
-              )}
-            </VStack>
-
-            <Divider />
-
-            <VStack gap={2} hAlign="stretch">
-              <HStack hAlign="between" vAlign="center">
-                <Text color="secondary" weight="semibold">
-                  PHỤ LỤC
-                </Text>
-                {onViewAllAnnexes ? (
-                  <Link onClick={onViewAllAnnexes}>Xem tất cả</Link>
-                ) : null}
-              </HStack>
-              {annexes.length === 0 ? (
-                <Text color="secondary">Chưa có phụ lục</Text>
-              ) : (
-                annexes.slice(0, 3).map((annex) => (
-                  <HStack key={annex.id} hAlign="between">
-                    <Text>
-                      {annex.annexCode} ·{' '}
-                      {labelForContractAnnexType(annex.type)}
-                    </Text>
-                    <Text weight="semibold">
-                      {formatMoney(
-                        annex.type === 'ValueChange' ? 0 : annex.amount,
-                        contract.currency,
-                      )}
-                    </Text>
-                  </HStack>
-                ))
-              )}
-            </VStack>
-          </VStack>
-        </Card>
-
-        <Card>
-          <VStack gap={3} hAlign="stretch">
-            <Text weight="semibold">Điều kiện giao hàng</Text>
-            <MetadataList columns={1} label={{ position: 'top' }}>
-              <MetadataListItem label="Incoterm">
-                <Badge label={contract.incoterm} variant="neutral" />{' '}
-                {contract.incotermYear}
-              </MetadataListItem>
-              <MetadataListItem label="Nước xuất khẩu">
-                {orDash(countryName)}
-              </MetadataListItem>
-              <MetadataListItem label="Cảng xếp hàng">
-                {orDash(contract.placeOfLoading)}
-              </MetadataListItem>
-              <MetadataListItem label="Cảng dỡ hàng">
-                {orDash(contract.placeOfDischarge)}
-              </MetadataListItem>
-              <MetadataListItem label="Hạng mục">
-                {orDash(contract.category)}
-              </MetadataListItem>
-              <MetadataListItem label="Số lô hàng">
-                {shipments.length === 0
-                  ? '0'
-                  : `${shipments.length} (${fclCount} FCL · ${lclCount} LCL)`}
-              </MetadataListItem>
-              <MetadataListItem label="Ngày hoàn thành dự án">
-                {contract.projectCompletionDate
-                  ? formatDisplayDate(contract.projectCompletionDate)
-                  : 'Chưa hoàn thành'}
-              </MetadataListItem>
-            </MetadataList>
-          </VStack>
-        </Card>
-      </Grid>
+      <MaritimeContractFoundationGrid
+        parties={parties}
+        contacts={contacts}
+        transport={transport}
+        cargoMetrics={cargoMetrics}
+        bank={bank}
+        paymentTerms={paymentTermsView}
+        annexes={annexItems}
+        onViewAnnexes={onViewAllAnnexes}
+        onViewCommission={onViewCommission}
+        commission={commissionView}
+      />
     </VStack>
   );
 }
