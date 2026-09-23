@@ -100,6 +100,8 @@ const config = [
       // "Maritime" custom theme (user request, 2026-09-18) — same
       // exemption reason.
       'src/shared/components/custom/maritime/theme.js',
+      // "Meta" custom theme (user request, 2026-09-23) — same reason.
+      'src/shared/components/custom/meta/theme.js',
     ],
     rules: {
       'no-restricted-syntax': [
@@ -115,6 +117,86 @@ const config = [
             'TemplateElement[value.raw=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]',
           message:
             'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/theme.js.',
+        },
+      ],
+    },
+  },
+  {
+    // Golden rule #15 (harness/GOLDEN_RULES.md): theme custom components
+    // are composed from Astryx components only — no raw DOM elements, no
+    // `className`/`style`; styling goes through component props, `xstyle`
+    // + tokens, or the theme's own component overrides. Swizzled Astryx
+    // source (`custom/*/astryx/**`) is ejected library code and exempt.
+    files: ['src/shared/components/custom/**/*.jsx'],
+    ignores: [
+      'src/shared/components/custom/*/astryx/**',
+      // Pre-rule Maritime debt (graded C in harness/quality-grades.json):
+      // raw <span>/<button> left over from v5. Remove each entry once fixed.
+      'src/shared/components/custom/maritime/annex-list-panel.jsx',
+      'src/shared/components/custom/maritime/shipment-list-panel.jsx',
+      'src/shared/components/custom/maritime/shipment-table-view.jsx',
+      'src/shared/components/custom/maritime/tab-nav.jsx',
+      'src/shared/components/custom/maritime/theme-provider.jsx',
+    ],
+    rules: {
+      'react/forbid-elements': [
+        'error',
+        {
+          forbid: [
+            'a', 'article', 'aside', 'button', 'div', 'footer', 'form',
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'header', 'img', 'input',
+            'label', 'li', 'main', 'nav', 'ol', 'p', 'section', 'select',
+            'span', 'svg', 'table', 'tbody', 'td', 'textarea', 'th',
+            'thead', 'tr', 'ul',
+          ].map((element) => ({
+            element,
+            message:
+              'Custom components must be built from Astryx components (golden rule #15) — use the matching Astryx component instead of a raw element.',
+          })),
+        },
+      ],
+      'react/forbid-dom-props': [
+        'error',
+        {
+          forbid: ['className', 'style'].map((propName) => ({
+            propName,
+            message:
+              'Custom components style through Astryx props, xstyle + tokens, or theme overrides (golden rule #15).',
+          })),
+        },
+      ],
+    },
+  },
+  {
+    // Golden rule #16: sizes come from Astryx's scales (size props,
+    // --font-size-*, --spacing-*, --size-element-*), not px copied from a
+    // mockup. Re-declares the hex-color selectors above because a later
+    // `no-restricted-syntax` entry replaces the earlier one for these files.
+    // Maritime predates the rule (graded C) and is exempt until cleaned up.
+    files: ['src/shared/components/custom/**/*.jsx'],
+    ignores: [
+      'src/shared/components/custom/*/astryx/**',
+      'src/shared/components/custom/maritime/**',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'Literal[value=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]',
+          message:
+            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/theme.js.',
+        },
+        {
+          selector:
+            'TemplateElement[value.raw=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]',
+          message:
+            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/theme.js.',
+        },
+        {
+          selector: 'Literal[value=/^-?\\d+(\\.\\d+)?px$/]',
+          message:
+            'No px sizes copied from a mockup (golden rule #16) — use an Astryx size prop or token (--font-size-*, --spacing-*, --size-element-*).',
         },
       ],
     },
@@ -139,6 +221,10 @@ const config = [
       'src/shared/components/custom/maritime/maritime.d.ts',
       'src/shared/components/custom/maritime/maritime.variants.d.ts',
       'src/shared/components/custom/maritime/theme.built.css',
+      // And the "Meta" custom theme's.
+      'src/shared/components/custom/meta/meta.js',
+      'src/shared/components/custom/meta/meta.d.ts',
+      'src/shared/components/custom/meta/theme.built.css',
     ],
   },
 ];

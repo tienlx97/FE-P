@@ -62,7 +62,7 @@ export async function listContracts({ page = 1, pageSize = 25 } = {}) {
  *   list's "Quyết toán / Đã xuất / Đã xuất (VNĐ) / Chưa xuất / Đã thanh
  *   toán / Chưa thanh toán" columns.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
- * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, contractValue: number, settlementValue: number, paidValue: number, unpaidValue: number, exportedValue: number, exportedValueVnd: number, unexportedValue: number }[], settlements: { contractId: string, settlementValue: number, paidValue: number, unpaidValue: number, exportedValue: number, exportedValueVnd: number, unexportedValue: number }[] } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, contracts: import('../types/index.js').Contract[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, contractValue: number, settlementValue: number, paidValue: number, unpaidValue: number, exportedValue: number, exportedValueVnd: number, unexportedValue: number, containerCount: number }[], settlements: { contractId: string, settlementValue: number, paidValue: number, unpaidValue: number, exportedValue: number, exportedValueVnd: number, unexportedValue: number, containerCount: number }[] } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchContracts({
   page = 1,

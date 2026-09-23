@@ -7,6 +7,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHeader,
   TableHeaderCell,
   TableRow,
@@ -33,9 +34,11 @@ const EXPANSION_COLUMN_KEY = '__expansion';
 // there. These exist only so a pinned cell's runtime inline `style` (see
 // `rowBg` below) can use the exact same values without a third copy.
 const CARD_BG = colorVars['--color-background-card'];
-const CARD_HOVER_BG = `color-mix(in srgb, ${colorVars['--color-overlay-hover']}, ${CARD_BG})`;
+// Layered (hover wash over an opaque base) instead of `color-mix`, which keeps
+// the wash's alpha and lets a sticky cell's neighbours show through on hover.
+const CARD_HOVER_BG = `linear-gradient(${colorVars['--color-overlay-hover']}, ${colorVars['--color-overlay-hover']}), ${CARD_BG}`;
 const TOTALS_BG = colorVars['--color-background-muted'];
-const TOTALS_HOVER_BG = `color-mix(in srgb, ${colorVars['--color-overlay-hover']}, ${TOTALS_BG})`;
+const TOTALS_HOVER_BG = `linear-gradient(${colorVars['--color-overlay-hover']}, ${colorVars['--color-overlay-hover']}), ${TOTALS_BG}`;
 
 const styles = stylex.create({
   // `height: '100%'` is what lets this wrapper — and through it, `Table`'s
@@ -77,6 +80,17 @@ const styles = stylex.create({
   // scrolling underneath it (the mirror-image border of `headerCell`'s own
   // bottom divider, which now separates the column headers from this row
   // instead of from the body).
+  // Bottom-docked totals (framed list): sticks to the scroller's lower edge.
+  footerCell: {
+    bottom: 0,
+    position: 'sticky',
+    zIndex: 2,
+  },
+  totalsRowDividerTop: {
+    borderBlockStartColor: colorVars['--color-border-emphasized'],
+    borderBlockStartStyle: 'solid',
+    borderBlockStartWidth: borderVars['--border-width'],
+  },
   totalsRowDivider: {
     borderBlockEndColor: colorVars['--color-border'],
     borderBlockEndStyle: 'solid',
@@ -123,6 +137,8 @@ const styles = stylex.create({
     borderInlineEndStyle: 'solid',
     borderInlineEndWidth: borderVars['--border-width'],
   },
+  // A pinned header cell must paint over the header cells scrolling beneath it.
+  pinnedHeader: { zIndex: 4 },
   align: (align) => ({ textAlign: align }),
   pinned: (left, right) => ({ left, position: 'sticky', right, zIndex: 1 }),
   // Row hover is driven by React state (`hoveredRowId`), not a CSS `:hover`
@@ -172,12 +188,20 @@ const styles = stylex.create({
   },
 });
 
+/** @param {unknown} node */
+function isEmptyCell(node) {
+  return node == null || node === false || node === '';
+}
+
 /** TanStack owns rows/columns; Astryx children primitives retain the app theme.
  * Existing filter UI is adapted at its documented header/context slots only.
  * @template {Record<string, unknown>} T
  * @param {{data: T[], columns: import('./advance-table.jsx').AdvanceTableColumn<T>[],
  * idKey: string, density: import('@astryxdesign/core/Table').TableDensity,
  * dividers: import('@astryxdesign/core/Table').TableDividers,
+ * isStriped?: boolean,
+ * totalsPosition?: 'top' | 'bottom',
+ * isFramed?: boolean,
  * activeColumnKeys?: readonly string[], startKeys?: string[], endKeys?: string[],
  * filterPlugin?: import('@astryxdesign/core/Table').TablePlugin<T>,
  * headerGroups?: {id: string, label: string, columnKeys: string[]}[],
@@ -200,6 +224,9 @@ export function TanStackDataTable({
   idKey,
   density,
   dividers,
+  isStriped = false,
+  totalsPosition = 'top',
+  isFramed = false,
   activeColumnKeys = columns.map((column) => column.key),
   startKeys = [],
   endKeys = [],
@@ -443,10 +470,13 @@ export function TanStackDataTable({
     const last = leaves.at(-1)?.column;
     const edge = first?.getIsPinned();
     return edge && last?.getIsPinned() === edge
-      ? styles.pinned(
-          edge === 'left' ? first.getStart('left') : 'auto',
-          edge === 'right' ? last.getAfter('right') : 'auto',
-        )
+      ? [
+          styles.pinned(
+            edge === 'left' ? first.getStart('left') : 'auto',
+            edge === 'right' ? last.getAfter('right') : 'auto',
+          ),
+          styles.pinnedHeader,
+        ]
       : undefined;
   }
   // Build each pinned region independently so a financial group splits at
@@ -472,11 +502,89 @@ export function TanStackDataTable({
   const footerRows = table
     .getRowModel()
     .rows.filter((row) => /** @type {any} */ (row.original).__isTotalsRow);
+  const totalsRowElements = footerRows.map((row, index) => {
+    const isRowHovered = hoveredRowId === row.id;
+    const rowBg = isRowHovered ? TOTALS_HOVER_BG : TOTALS_BG;
+    const isDividerRow =
+      totalsPosition === 'bottom'
+        ? index === 0
+        : index === footerRows.length - 1;
+    const cells = row.getVisibleCells();
+    let labelSpan = 1;
+    if (isFramed) {
+      // Checked on the column's own `renderCell` output: `flexRender` wraps
+      // a function cell into a React element, which is never "empty".
+      while (
+        labelSpan < cells.length &&
+        isEmptyCell(
+          /** @type {{source: import('./advance-table.jsx').AdvanceTableColumn<T>}} */ (
+            cells[labelSpan].column.columnDef.meta
+          ).source.renderCell?.(row.original),
+        )
+      ) {
+        labelSpan += 1;
+      }
+    }
+    return (
+      <TableRow
+        key={row.id}
+        data-is-totals-row="true"
+        xstyle={[
+          isRowHovered ? styles.totalsRowHovered : styles.totalsRow,
+          isDividerRow &&
+            (totalsPosition === 'bottom'
+              ? styles.totalsRowDividerTop
+              : styles.totalsRowDivider),
+        ]}
+        onMouseEnter={() => setHoveredRowId(row.id)}
+        onMouseLeave={() =>
+          setHoveredRowId((current) => (current === row.id ? null : current))
+        }
+      >
+        {cells.map((cell, cellIndex) => {
+          // Docked totals: the label cell spans the empty leading columns
+          // (Figma "Σ TỔNG CỘNG" runs across the first columns).
+          if (cellIndex > 0 && cellIndex <= labelSpan - 1) return null;
+          const source =
+            /** @type {{source: import('./advance-table.jsx').AdvanceTableColumn<T>}} */ (
+              cell.column.columnDef.meta
+            ).source;
+          return (
+            <TableCell
+              key={cell.id}
+              colSpan={cellIndex === 0 ? labelSpan : undefined}
+              data-column-key={cell.column.id}
+              xstyle={[
+                styles.align(source.align ?? 'start'),
+                pinStyle(cell.column),
+                totalsPosition === 'bottom' && styles.footerCell,
+                (dividers === 'grid' || dividers === 'columns') &&
+                  styles.cellDivider,
+              ]}
+              style={
+                isFramed
+                  ? {
+                      backgroundColor:
+                        'var(--table-framed-total-bg, var(--maritime-table-total-bg, var(--color-background-muted)))',
+                    }
+                  : cell.column.getIsPinned()
+                    ? { background: rowBg }
+                    : undefined
+              }
+            >
+              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+            </TableCell>
+          );
+        })}
+      </TableRow>
+    );
+  });
   const content = (
     <div {...stylex.props(styles.wrapper)}>
       <Table
         density={density}
         dividers={dividers}
+        isStriped={isStriped}
         xstyle={styles.table(table.getTotalSize())}
         aria-label="Danh sách hợp đồng"
         data-table-engine="tanstack"
@@ -527,6 +635,18 @@ export function TanStackDataTable({
                     }}
                     scope={source ? 'col' : 'colgroup'}
                     data-column-key={source ? header.column.id : undefined}
+                    style={{
+                      // The themed header cell's own `z-index` (2) outranks a
+                      // StyleX value, so a pinned header cell lifts itself
+                      // above the scrolled ones inline.
+                      ...(headerPinStyle(header) ? { zIndex: 4 } : {}),
+                      ...(isFramed && !source
+                        ? {
+                            backgroundColor:
+                              'var(--table-framed-group-bg, var(--maritime-table-group-bg, var(--color-background-muted)))',
+                          }
+                        : {}),
+                    }}
                     xstyle={[
                       styles.headerCell,
                       styles.align(source?.align ?? 'center'),
@@ -596,56 +716,7 @@ export function TanStackDataTable({
               })}
             </TableRow>
           ))}
-          {footerRows.map((row, index) => {
-            const isRowHovered = hoveredRowId === row.id;
-            const rowBg = isRowHovered ? TOTALS_HOVER_BG : TOTALS_BG;
-            const isLastTotalsRow = index === footerRows.length - 1;
-            return (
-              <TableRow
-                key={row.id}
-                data-is-totals-row="true"
-                xstyle={[
-                  isRowHovered ? styles.totalsRowHovered : styles.totalsRow,
-                  isLastTotalsRow && styles.totalsRowDivider,
-                ]}
-                onMouseEnter={() => setHoveredRowId(row.id)}
-                onMouseLeave={() =>
-                  setHoveredRowId((current) =>
-                    current === row.id ? null : current,
-                  )
-                }
-              >
-                {row.getVisibleCells().map((cell) => {
-                  const source =
-                    /** @type {{source: import('./advance-table.jsx').AdvanceTableColumn<T>}} */ (
-                      cell.column.columnDef.meta
-                    ).source;
-                  return (
-                    <TableCell
-                      key={cell.id}
-                      data-column-key={cell.column.id}
-                      xstyle={[
-                        styles.align(source.align ?? 'start'),
-                        pinStyle(cell.column),
-                        (dividers === 'grid' || dividers === 'columns') &&
-                          styles.cellDivider,
-                      ]}
-                      style={
-                        cell.column.getIsPinned()
-                          ? { backgroundColor: rowBg }
-                          : undefined
-                      }
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  );
-                })}
-              </TableRow>
-            );
-          })}
+          {totalsPosition === 'top' ? totalsRowElements : null}
         </TableHeader>
         <TableBody>
           {bodyRows.map((row) => {
@@ -722,7 +793,7 @@ export function TanStackDataTable({
                         // visibly stale on hover).
                         style={
                           cell.column.getIsPinned()
-                            ? { backgroundColor: rowBg }
+                            ? { background: rowBg }
                             : undefined
                         }
                       >
@@ -755,6 +826,9 @@ export function TanStackDataTable({
             </TableRow>
           ) : null}
         </TableBody>
+        {totalsPosition === 'bottom' && footerRows.length > 0 ? (
+          <TableFooter>{totalsRowElements}</TableFooter>
+        ) : null}
       </Table>
     </div>
   );

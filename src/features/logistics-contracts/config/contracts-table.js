@@ -113,6 +113,9 @@ export const COLUMN_OPTIONS = [
   { key: 'status', label: 'Trạng thái' },
   { key: 'projectName', label: 'Dự án' },
   { key: 'buyer', label: 'Khách hàng' },
+  { key: 'containerCount', label: 'Số cont' },
+  { key: 'logisticsSale', label: 'Chi phí logistics — Sale' },
+  { key: 'logisticsCost', label: 'Chi phí logistics — XNK' },
   { key: 'contractValue', label: 'Giá trị hợp đồng' },
   { key: 'settlementValue', label: 'Giá trị quyết toán' },
   { key: 'exportedValue', label: 'Giá trị đã xuất' },
@@ -160,13 +163,15 @@ export const DEFAULT_COLUMN_KEYS = [
 export const FINANCIAL_COLUMN_KEYS = [
   'createdDate',
   'contractNumber',
-  'buyer',
   'status',
+  'projectCompletionDate',
+  'containerCount',
+  'logisticsSale',
+  'logisticsCost',
   'contractValue',
   'settlementValue',
   'exportedValue',
   'exportedValueVnd',
-  'unexportedValue',
   'paidValue',
   'unpaidValue',
   'actions',
@@ -174,13 +179,17 @@ export const FINANCIAL_COLUMN_KEYS = [
 
 /** @satisfies {ReadonlyArray<import('@/shared/components/advance-table.jsx').AdvanceTableViewPreset>} */
 export const VIEW_PRESETS = [
-  { key: 'default', label: 'Mặc định', columnKeys: DEFAULT_COLUMN_KEYS },
-  { key: 'financial', label: 'Tài chính', columnKeys: FINANCIAL_COLUMN_KEYS },
+  { key: 'basic', label: 'Cơ bản', columnKeys: DEFAULT_COLUMN_KEYS },
+  {
+    key: 'financial',
+    label: 'Giá trị & Dòng tiền',
+    columnKeys: FINANCIAL_COLUMN_KEYS,
+  },
 ];
 
 export const SKELETON_ROW_COUNT = 6;
 
-export const DEFAULT_PAGE_SIZE = 25;
+export const DEFAULT_PAGE_SIZE = 100;
 
 export const PAGE_SIZE_OPTIONS = ['10', '25', '50', '100'];
 

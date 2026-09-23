@@ -8,7 +8,7 @@ A rule with enforcement "manual" is a harness gap — plan to automate it.
 Raising the version creates cleanup work: see harness/ENTROPY.md.
 -->
 
-## v5 — 2026-09-16
+## v7 — 2026-09-23
 
 | # | Rule | Enforcement |
 |---|---|---|
@@ -26,9 +26,22 @@ Raising the version creates cleanup work: see harness/ENTROPY.md.
 | 12 | A `*FormDialog` never renders inside a table's `renderExpanded` callback (a `Selector` field inside it would portal underneath the dialog instead of above it — see ADR-0004) | `harness/tests/selector-dialog-stacking.test.cjs` |
 | 13 | Every list/data table in the system renders through TanStack Table v8 (`AdvanceTable` → `TanStackDataTable`, `src/shared/components/tanstack-data-table.jsx`); no feature builds a bespoke table renderer or drops down to Astryx `Table` row/body primitives directly | `harness/checks/tanstack-table-only.sh` |
 | 14 | A field added to a form schema (`config/*-schema.js`) that a user would plausibly want in the matching list view gets BOTH a `COLUMN_OPTIONS` entry (`config/*-table.js`) AND a matching column definition (`renderCell`) in that list's `*-list.jsx` — a `COLUMN_OPTIONS` entry with no column definition silently does nothing when toggled on in "Tuỳ chọn hiển thị" (found live on `note` in `contracts-list.jsx`, 2026-09-16) | manual → TODO: schema/`COLUMN_OPTIONS`/column-def diff script |
+| 15 | Custom components (`src/shared/components/custom/<theme>/`, e.g. Maritime, Meta) are composed from Astryx components (`@astryxdesign/core`, `@astryxdesign/lab`) only: no raw DOM elements (`<div>`, `<span>`, `<button>`, `<table>`…), no `className`/`style`; styling goes through component props, `xstyle` + tokens, or the theme's own `components` overrides in `theme.js`. If Astryx lacks a behavior, swizzle the Astryx component into `custom/<theme>/astryx/` instead of hand-rolling one | lint (`react/forbid-elements` + `react/forbid-dom-props` on `src/shared/components/custom/**/*.jsx`, `eslint.config.mjs`) |
+| 16 | A Figma/Stitch mockup is the reference for **layout, UI and UX** (structure, order, hierarchy, colors, states, behavior) — **not** for exact font sizes and dimensions. Sizes come from Astryx's own scales, picking the nearest step: component `size` props (`sm`/`md`/`lg`), `Text` `type`/`size`, and tokens (`--font-size-xs|sm|base|lg…`, `--spacing-*`, `--size-element-*`, `--radius-*`). Never copy mockup px (e.g. 13px text, 33px tab, a `size:md` override forced to 36px); px only appears where a theme defines a token's own value | lint (`no-restricted-syntax` on `'NNpx'` literals in `src/shared/components/custom/**/*.jsx`; Maritime exempt, graded C) + manual review of `theme.js` overrides |
 
 ## Changelog
 
+- v7 (2026-09-23): rule #16 — mockups define layout/UI/UX, Astryx scales
+  define sizes (user request after the Meta contract list had copied
+  Figma px: 13px cells, 33px tabs, 36px `md` buttons). Meta already
+  complies; `custom/maritime` (C) still has px literals and is exempt from
+  the lint until cleaned up.
+- v6 (2026-09-23): rule #15 — custom theme components must be built from
+  Astryx (user request while adding the "Meta" theme,
+  `src/shared/components/custom/meta/`). Enforced by lint; five pre-existing
+  Maritime files with raw `<span>`/`<button>` are listed as explicit
+  exemptions in `eslint.config.mjs` and `custom/maritime` is graded C in
+  `harness/quality-grades.json` until they are fixed.
 - v5 (2026-09-16): rule #14 — a Contract field (`sellerSigned`,
   `buyerSigned`, `projectCompletionDate`) shipped in an earlier change
   without ever reaching the contracts list's "Tuỳ chọn hiển thị" column

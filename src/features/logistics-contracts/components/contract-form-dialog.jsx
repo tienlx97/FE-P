@@ -8,6 +8,7 @@ import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
 import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
 import { FilePenLine, Save } from 'lucide-react';
 import { useId } from 'react';
@@ -15,6 +16,7 @@ import { useId } from 'react';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import {
   MaritimeBadge,
+  MaritimeButton,
   MaritimeThemeProvider,
 } from '@/shared/components/custom/maritime/index.js';
 
@@ -40,6 +42,9 @@ const styles = stylex.create({
     backgroundColor: colorVars['--color-background-surface'],
     borderRadius: 0,
   },
+  drawerLayout: {
+    height: '100%',
+  },
   drawerHeader: {
     backgroundColor:
       'color-mix(in srgb, var(--maritime-badge-neutral-bg) 70%, white)',
@@ -55,7 +60,7 @@ const styles = stylex.create({
     width: 'var(--spacing-8)',
   },
   drawerFooter: {
-    backgroundColor: 'var(--maritime-badge-neutral-bg)',
+    // backgroundColor: 'var(--maritime-badge-neutral-bg)',
   },
   // The native `hidden` attribute alone does NOT hide a `VStack` — its own
   // compiled `display: flex` class is author-origin CSS, which the cascade
@@ -104,6 +109,7 @@ function maritimeToneForStatus(status) {
  *   activeTab: 'profile' | 'annexes' | 'payments' | 'related' | 'fullView',
  *   onActiveTabChange: (tab: 'profile' | 'annexes' | 'payments' | 'related' | 'fullView') => void,
  *   children?: import('react').ReactNode,
+ *   closeOnCancel?: boolean,
  * }} props
  */
 export function ContractFormDialog({
@@ -115,6 +121,7 @@ export function ContractFormDialog({
   activeTab,
   onActiveTabChange,
   children,
+  closeOnCancel = false,
 }) {
   const {
     form,
@@ -180,25 +187,26 @@ export function ContractFormDialog({
   if (isEditing) {
     return (
       <MaritimeThemeProvider>
-        <CommonDialog
+        <Drawer
           isOpen={isOpen}
           onOpenChange={(open) => {
             if (!open) requestExit('close');
           }}
-          width="min(760px, 100vw)"
-          maxHeight="100dvh"
-          topOffset={0}
-          position={{ top: 0, end: 0, bottom: 0 }}
-          style={{ marginInline: 0 }}
+          side="end"
+          width={960}
+          isFullWidthOnMobile
+          label={contract ? 'Chỉnh sửa hợp đồng' : 'Thêm hợp đồng mới'}
+          hasCloseButton={false}
           xstyle={styles.drawerSurface}
         >
           <Layout
             defaultHasDividers
             padding={5}
+            xstyle={styles.drawerLayout}
             header={
               <VStack hAlign="stretch" xstyle={styles.drawerHeader}>
                 <DialogHeader
-                  title={contract ? 'Chỉnh sửa hợp đồng' : 'Thêm hợp đồng mới'}
+                  title={contract ? 'Chỉnh sửa hợp đồng' : 'Thêm hợp đồng'}
                   subtitle={
                     contract?.contractNumber || 'Hoàn thiện hồ sơ hợp đồng'
                   }
@@ -215,8 +223,9 @@ export function ContractFormDialog({
                         dotVariant={statusDotVariantForContractStatus(
                           form.values.status,
                         )}
-                        size="sm"
+                        size="md"
                         isUppercase={false}
+                        isDotPulsing
                       />
                     ) : null
                   }
@@ -237,29 +246,26 @@ export function ContractFormDialog({
             footer={
               <LayoutFooter padding={4}>
                 <HStack
-                  hAlign="between"
+                  hAlign="end"
                   vAlign="center"
                   gap={3}
                   wrap="wrap"
                   xstyle={styles.drawerFooter}
                 >
-                  <Text color="secondary" xstyle={styles.hint}>
-                    {isDirty
-                      ? 'Có thay đổi chưa lưu'
-                      : contract
-                        ? 'Hồ sơ hợp đồng đã đồng bộ'
-                        : 'Nhập đầy đủ các trường bắt buộc'}
-                  </Text>
                   <HStack gap={2}>
-                    <Button
-                      width={96}
+                    <MaritimeButton
+                      width={76}
                       label="Hủy bỏ"
                       variant="secondary"
                       isDisabled={isSubmitting}
-                      onClick={() => requestExit(contract ? 'cancel' : 'close')}
+                      onClick={() =>
+                        requestExit(
+                          closeOnCancel || !contract ? 'close' : 'cancel',
+                        )
+                      }
                     />
-                    <Button
-                      width={148}
+                    <MaritimeButton
+                      width={132}
                       label={submitLabel}
                       type="submit"
                       form={formId}
@@ -272,7 +278,7 @@ export function ContractFormDialog({
               </LayoutFooter>
             }
           />
-        </CommonDialog>
+        </Drawer>
         {discardDialog}
       </MaritimeThemeProvider>
     );

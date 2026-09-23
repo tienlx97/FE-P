@@ -1,12 +1,20 @@
 'use client';
 import { Badge } from '@astryxdesign/core/Badge';
+import { Button } from '@astryxdesign/core/Button';
+import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { Link } from '@astryxdesign/core/Link';
+import { ProgressBar } from '@astryxdesign/core/ProgressBar';
+import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
-import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
+import { colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
+import { Banknote, Eye, List, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
@@ -14,10 +22,15 @@ import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
+import { MetaCountBadge } from '@/shared/components/custom/meta/count-badge.jsx';
+import { MetaStatusBadge } from '@/shared/components/custom/meta/status-badge.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
-import { upsertContainsFilterCondition } from '@/shared/config/upsert-filter-condition.js';
+import {
+  upsertContainsFilterCondition,
+  upsertEqualsFilterCondition,
+} from '@/shared/config/upsert-filter-condition.js';
 
 import { searchContracts } from '../api/contracts.js';
 import {
@@ -30,21 +43,73 @@ import {
   DEFAULT_COLUMN_KEYS,
   DEFAULT_PAGE_SIZE,
   FILTER_FIELD_DEFS,
+  FINANCIAL_COLUMN_KEYS,
   PAGE_SIZE_OPTIONS,
   SEARCH_FIELD_DEFS,
   skeletonRows,
   VIEW_PRESETS,
 } from '../config/contracts-table.js';
-import { formatMoney } from '../config/currencies.js';
+import { CURRENCY_CODES, formatMoney } from '../config/currencies.js';
 import { useContractBanksQuery } from '../hooks/use-contract-banks-query.js';
-import { useContractsQuery } from '../hooks/use-contracts-query.js';
+import { useContractPrivateInfosListQuery } from '../hooks/use-contract-private-infos-list-query.js';
+import {
+  useContractListTabCounts,
+  useContractsQuery,
+} from '../hooks/use-contracts-query.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
 import { CustomerDetailDialog } from './customer-detail-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
 
-/** @param {string | null | undefined} value */
+/**
+ * "XNK" logistics cost = cost price per container × container count (the
+ * BOQ's own `logisticsTotal` is the quoted/sale side of the same product).
+ * @param {import('../types/index.js').ContractPrivateInfoListItem | undefined} info
+ */
+function costTotalOf(info) {
+  if (info?.costPricePerContainer == null || info.containerCount == null) {
+    return null;
+  }
+  return info.costPricePerContainer * info.containerCount;
+}
+
+/**
+ * Meta mockup status pills: đang thực hiện = cobalt (pulsing dot), hoàn
+ * thành = green, hủy = red, everything else neutral grey.
+ * @param {string} status
+ * @returns {'accent' | 'success' | 'error' | 'neutral'}
+ */
+function statusTone(status) {
+  if (status === 'InProgress') return 'accent';
+  if (status === 'Completed') return 'success';
+  if (status === 'Cancelled') return 'error';
+  return 'neutral';
+}
+
+/**
+ * Count pill tone per status tab — the selected tab's pill is always the
+ * translucent white one sitting on the filled cobalt tab.
+ * @param {string} status
+ * @param {string} activeStatus
+ * @returns {'accent' | 'success' | 'neutral' | 'on-accent'}
+ */
+function tabCountTone(status, activeStatus) {
+  if (status === activeStatus) return 'on-accent';
+  if (status === 'InProgress') return 'accent';
+  if (status === 'Completed') return 'success';
+  return 'neutral';
+}
+
+const STATUS_TABS = /** @type {const} */ ([
+  { value: 'all', label: 'Tất cả' },
+  { value: 'InProgress', label: 'Đang thực hiện' },
+  { value: 'Completed', label: 'Hoàn thành' },
+  { value: 'Draft', label: 'Bản nháp' },
+  { value: 'Cancelled', label: 'Đã hủy' },
+]);
+
+/** @param {string | number | null | undefined} value */
 function orDash(value) {
   return value == null || value === '' ? '—' : value;
 }
@@ -73,6 +138,8 @@ function formatPaymentTerms(terms) {
  *   exportedValueVnd: number,
  *   unexportedValue: number,
  *   isMultiCurrency: boolean,
+ *   containerCount?: number | null,
+ *   logisticsSale?: number | null,
  * }} ContractTotalsRow
  */
 
@@ -97,42 +164,59 @@ function totalsRowLabel(row) {
  * @type {Record<string, (row: ContractTotalsRow) => import('react').ReactNode>}
  */
 const TOTALS_ROW_CELL_RENDERERS = {
+  containerCount: (row) =>
+    row.containerCount == null ? null : (
+      <Text weight="bold" color="accent" hasTabularNumbers>
+        {row.containerCount}
+      </Text>
+    ),
+  logisticsSale: (row) =>
+    row.logisticsSale == null ? null : (
+      <Text color="primary" weight="bold" hasTabularNumbers>
+        {formatMoney(row.logisticsSale)} đ
+      </Text>
+    ),
   contractValue: (row) => (
-    <Text weight="semibold" hasTabularNumbers>
+    <Text weight="bold" hasTabularNumbers>
       {formatMoney(row.contractValue, row.currency)}
     </Text>
   ),
   settlementValue: (row) => (
-    <Text weight="semibold" hasTabularNumbers>
+    <Text weight="bold" hasTabularNumbers>
       {formatMoney(row.settlementValue, row.currency)}
     </Text>
   ),
   paidValue: (row) => (
-    <Text weight="semibold" hasTabularNumbers>
+    <Text weight="bold" color="accent" hasTabularNumbers>
       {formatMoney(row.paidValue, row.currency)}
     </Text>
   ),
   unpaidValue: (row) => (
-    <Text weight="semibold" hasTabularNumbers>
-      {formatMoney(row.unpaidValue, row.currency)}
-    </Text>
+    <HStack as="span" hAlign="end" xstyle={styles.unpaidText}>
+      <Text weight="bold" color="inherit" hasTabularNumbers>
+        {formatMoney(row.unpaidValue, row.currency)}
+      </Text>
+    </HStack>
   ),
   exportedValue: (row) => (
-    <Text weight="semibold" hasTabularNumbers>
+    <Text weight="bold" hasTabularNumbers>
       {formatMoney(row.exportedValue, row.currency)}
     </Text>
   ),
   exportedValueVnd: (row) => (
-    <Text weight="semibold" hasTabularNumbers>
+    <Text weight="bold" color="secondary" hasTabularNumbers>
       {formatMoney(row.exportedValueVnd)} đ
     </Text>
   ),
   unexportedValue: (row) => (
-    <Text weight="semibold" hasTabularNumbers>
+    <Text weight="bold" hasTabularNumbers>
       {formatMoney(row.unexportedValue, row.currency)}
     </Text>
   ),
 };
+
+const LOGISTICS_GROUP_KEY = 'logistics-cost-group';
+const LOGISTICS_GROUP_COLUMN_KEYS = ['logisticsSale', 'logisticsCost'];
 
 const SETTLEMENT_GROUP_KEY = 'settlement-value-group';
 const SETTLEMENT_GROUP_COLUMN_KEYS = [
@@ -140,13 +224,17 @@ const SETTLEMENT_GROUP_COLUMN_KEYS = [
   'settlementValue',
   'exportedValue',
   'exportedValueVnd',
-  'unexportedValue',
 ];
 
 const PAYMENT_GROUP_KEY = 'payment-status-group';
 const PAYMENT_GROUP_COLUMN_KEYS = ['paidValue', 'unpaidValue'];
 
 const CONTRACT_HEADER_GROUPS = [
+  {
+    id: LOGISTICS_GROUP_KEY,
+    label: 'CHI PHÍ LOGISTICS',
+    columnKeys: LOGISTICS_GROUP_COLUMN_KEYS,
+  },
   {
     id: SETTLEMENT_GROUP_KEY,
     label: 'GIÁ TRỊ',
@@ -174,18 +262,99 @@ const SORTABLE_COLUMN_KEYS = [
 ];
 
 const styles = stylex.create({
-  // Vivid blue link style requested for "Số hợp đồng" (matches a
-  // reference report where record codes render as blue link text) —
-  // `Link`'s own `color` prop only offers the theme's accent color (this
-  // app's brand green). `--color-text-blue` is tuned as a muted/darker
-  // body-text blue for contrast, not the vivid hyperlink shade the
-  // reference calls for, so `--color-icon-blue` (the same vivid blue as
-  // the un-themed base accent) is applied via `xstyle` instead.
+  // Record codes render as bold accent links (Meta mockup: cobalt
+  // `font-bold`, the page's `MetaThemeProvider` accent).
   contractNumberLink: {
-    color: colorVars['--color-icon-blue'],
+    color: colorVars['--color-text-accent'],
     fontWeight: 'bold',
   },
+  nowrap: {
+    whiteSpace: 'nowrap',
+  },
+  totalsCaption: {
+    letterSpacing: '0.05em',
+  },
+  // Track height (4px) comes from the Meta theme's `progress-bar-track`
+  // override; only the length is set here.
+  paidBar: {
+    flexShrink: 0,
+    width: 96,
+  },
+  // Fixed-width, right-aligned % label ("29.5%" is the widest) so every
+  // row's bar starts at the same x regardless of the percent text.
+  paidPercentSlot: {
+    minWidth: spacingVars['--spacing-8'],
+  },
+  paidPercent: {
+    color: colorVars['--color-text-secondary'],
+  },
+  paidPercentDone: {
+    color: colorVars['--color-success'],
+  },
+  // Figma THANH TOÁN leaf headers: green "đã", red "chưa".
+  paidHeader: {
+    color: colorVars['--color-success'],
+  },
+  unpaidHeader: {
+    color: colorVars['--color-error'],
+  },
+  unpaidText: {
+    color: colorVars['--color-error'],
+  },
 });
+
+/**
+ * Amount over a thin bar showing what share of the settlement is paid —
+ * the "Giá trị & Dòng tiền" paid cell; the bar turns green once fully paid.
+ * @param {{ paid: number, settlement: number, currency: string, isFramed?: boolean }} props
+ */
+function PaidCell({ paid, settlement, currency, isFramed }) {
+  const percent =
+    settlement > 0
+      ? Math.min(100, Math.round((paid / settlement) * 1000) / 10)
+      : 0;
+  return (
+    <VStack gap={1} hAlign="end">
+      <Text
+        weight="bold"
+        color={isFramed && percent < 100 ? 'accent' : 'primary'}
+        hasTabularNumbers
+      >
+        {formatMoney(paid, currency)}
+      </Text>
+      <HStack gap={2} vAlign="center">
+        <ProgressBar
+          label="Tỷ lệ đã thanh toán"
+          isLabelHidden
+          xstyle={styles.paidBar}
+          value={percent}
+          variant={percent >= 100 ? 'success' : 'accent'}
+        />
+        <HStack
+          as="span"
+          hAlign="end"
+          xstyle={[
+            styles.paidPercentSlot,
+            percent >= 100 ? styles.paidPercentDone : styles.paidPercent,
+          ]}
+        >
+          <Text
+            type="supporting"
+            size="xsm"
+            weight="bold"
+            color="inherit"
+            hasTabularNumbers
+            xstyle={styles.nowrap}
+          >
+            {percent}%
+          </Text>
+        </HStack>
+      </HStack>
+    </VStack>
+  );
+}
+
+const commercialYear = new Date().getFullYear();
 
 /**
  * Viewing/editing an existing Contract now happens on its own page
@@ -195,12 +364,26 @@ const styles = stylex.create({
  * is a sibling of the table so its Selector portals stay inside their own
  * dialog layer (ADR-0004).
  */
-export function ContractsList() {
+/**
+ * `isFramed` switches to the Meta "Danh sách Hợp đồng" screen (Stitch
+ * project 6957224641630765183): framed workspace card, pill status tabs
+ * with counts, status pill with dot, bold value columns, blue paid / red
+ * unpaid amounts, icon-only row actions. The theme itself comes from the
+ * `MetaThemeProvider` the page wraps around this component.
+ * @param {{ initialViewPresetKey?: 'basic' | 'financial', isFramed?: boolean }} [props]
+ */
+export function ContractsList({
+  initialViewPresetKey = 'financial',
+  isFramed = true,
+} = {}) {
   const router = useRouter();
   // Regenerated on every open so a previous create draft never bleeds
   // into the next one.
   const [createSessionKey, setCreateSessionKey] = useState(
     /** @type {string | null} */ (null),
+  );
+  const [editingContract, setEditingContract] = useState(
+    /** @type {import('../types/index.js').Contract | null} */ (null),
   );
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [pageIndex, setPageIndex] = useState(1);
@@ -232,6 +415,58 @@ export function ContractsList() {
       ]
     ),
   );
+  const activeStatus = (() => {
+    const contractType = filterConditions.find(
+      (condition) =>
+        condition.field === 'contractType' && condition.operator === 'Equals',
+    )?.value;
+    if (contractType === 'Draft') return 'Draft';
+    return (
+      filterConditions.find(
+        (condition) =>
+          condition.field === 'status' && condition.operator === 'Equals',
+      )?.value ?? 'all'
+    );
+  })();
+  const tabCounts = useContractListTabCounts(filterConditions);
+
+  /**
+   * Status navigation from the Stitch screen is intentionally backed by the
+   * same server-side condition array as the advanced-search dialog. This
+   * keeps status switching correct across every page and leaves the funnel
+   * builder fully functional instead of layering on a page-local filter.
+   * @param {string} status
+   */
+  function handleStatusChange(status) {
+    setFilterConditions((current) => {
+      const withoutStatus = current.filter(
+        (condition) =>
+          condition.field !== 'status' && condition.field !== 'contractType',
+      );
+      const contractTypeCondition = {
+        id: generateRowKey(),
+        field: 'contractType',
+        operator: 'Equals',
+        value: status === 'Draft' ? 'Draft' : 'Official',
+        connector: /** @type {const} */ ('And'),
+      };
+      if (status === 'all' || status === 'Draft') {
+        return [...withoutStatus, contractTypeCondition];
+      }
+      return [
+        ...withoutStatus,
+        contractTypeCondition,
+        {
+          id: generateRowKey(),
+          field: 'status',
+          operator: 'Equals',
+          value: status,
+          connector: /** @type {const} */ ('And'),
+        },
+      ];
+    });
+    setPageIndex(1);
+  }
   // "Số hợp đồng" quick-search box — writes into the same server-side
   // `filterConditions` the funnel dialog edits (`Contains`, since it's
   // free text). Without this, `AdvanceTable`'s own quick search only
@@ -244,6 +479,140 @@ export function ContractsList() {
     );
     setPageIndex(1);
   }
+
+  // Figma filter band: "Loại HĐ" / "Tiền tệ" / "Thời gian" dropdowns. Like
+  // the tabs and the funnel dialog they only edit `filterConditions`, so
+  // everything stays server-side.
+  const contractTypeFilter =
+    filterConditions.find((condition) => condition.field === 'contractType')
+      ?.value ?? 'all';
+  const currencyFilter =
+    filterConditions.find((condition) => condition.field === 'currency')
+      ?.value ?? 'all';
+  const createdYearFilter = (() => {
+    const from = filterConditions.find(
+      (condition) => condition.field === 'createdDate',
+    )?.value;
+    return from ? from.slice(0, 4) : 'all';
+  })();
+  /** @param {string | null} type */
+  function handleContractTypeFilterChange(type) {
+    setFilterConditions((current) => {
+      const rest = current.filter(
+        (condition) =>
+          condition.field !== 'contractType' && condition.field !== 'status',
+      );
+      return type && type !== 'all'
+        ? [
+            ...rest,
+            {
+              id: generateRowKey(),
+              field: 'contractType',
+              operator: 'Equals',
+              value: type,
+              connector: /** @type {const} */ ('And'),
+            },
+          ]
+        : rest;
+    });
+    setPageIndex(1);
+  }
+  /** @param {string | null} currency */
+  function handleCurrencyFilterChange(currency) {
+    setFilterConditions((current) =>
+      upsertEqualsFilterCondition(
+        current,
+        'currency',
+        currency === 'all' ? null : currency,
+      ),
+    );
+    setPageIndex(1);
+  }
+  /** @param {string | null} year */
+  function handleYearFilterChange(year) {
+    setFilterConditions((current) => {
+      const rest = current.filter(
+        (condition) => condition.field !== 'createdDate',
+      );
+      return year && year !== 'all'
+        ? [
+            ...rest,
+            {
+              id: generateRowKey(),
+              field: 'createdDate',
+              operator: 'Between',
+              value: `${year}-01-01`,
+              valueTo: `${year}-12-31`,
+              connector: /** @type {const} */ ('And'),
+            },
+          ]
+        : rest;
+    });
+    setPageIndex(1);
+  }
+  function handleResetFilters() {
+    setFilterConditions([
+      {
+        id: generateRowKey(),
+        field: 'contractType',
+        operator: 'Equals',
+        value: 'Official',
+        connector: 'And',
+      },
+    ]);
+    setPageIndex(1);
+  }
+  const framedFilters = isFramed ? (
+    <HStack gap={2} vAlign="center" wrap="nowrap">
+      <Selector
+        label="Loại hợp đồng"
+        isLabelHidden
+        size="lg"
+        value={contractTypeFilter}
+        options={[
+          { value: 'all', label: 'Loại HĐ: Tất cả' },
+          { value: 'Official', label: 'Loại HĐ: Chính thức' },
+          { value: 'Draft', label: 'Loại HĐ: Bản nháp' },
+        ]}
+        onChange={handleContractTypeFilterChange}
+      />
+      <Selector
+        label="Tiền tệ"
+        isLabelHidden
+        size="lg"
+        value={currencyFilter}
+        options={[
+          { value: 'all', label: 'Tiền tệ: Tất cả' },
+          ...CURRENCY_CODES.map((code) => ({
+            value: code,
+            label: `Tiền tệ: ${code}`,
+          })),
+        ]}
+        onChange={handleCurrencyFilterChange}
+      />
+      <Selector
+        label="Thời gian"
+        isLabelHidden
+        size="lg"
+        value={createdYearFilter}
+        options={[
+          { value: 'all', label: 'Thời gian: Tất cả' },
+          ...[0, 1, 2, 3].map((offset) => {
+            const year = String(commercialYear - offset);
+            return { value: year, label: `Thời gian: Năm ${year}` };
+          }),
+        ]}
+        onChange={handleYearFilterChange}
+      />
+      <Button
+        label="Đặt lại"
+        icon={<Icon icon={RotateCcw} size="sm" />}
+        variant="secondary"
+        size="lg"
+        onClick={handleResetFilters}
+      />
+    </HStack>
+  ) : null;
 
   const [customerDetailDialog, setCustomerDetailDialog] = useState(
     /** @type {{ customerId: string } | null} */ (null),
@@ -273,6 +642,30 @@ export function ContractsList() {
     });
     return result.success ? result.contracts : [];
   }
+  // "Chi phí logistics"/"Số cont" come from each contract's BOQ (private
+  // info, `logistics:secret`) — a separate endpoint, so joined by contractId
+  // over the same page/conditions/sort. A forbidden/failed call just leaves
+  // those cells as "—"; the rest of the list is unaffected.
+  const privateInfosQuery = useContractPrivateInfosListQuery({
+    page: pageIndex,
+    pageSize,
+    conditions: filterConditions,
+    sort,
+  });
+  const privateInfosByContractId = useMemo(
+    () =>
+      new Map(
+        (privateInfosQuery.data?.success
+          ? privateInfosQuery.data.items
+          : []
+        ).map((info) => [info.contractId, info]),
+      ),
+    [privateInfosQuery.data],
+  );
+  const privateTotals = privateInfosQuery.data?.success
+    ? privateInfosQuery.data.totals
+    : null;
+
   // Sum of contractValue/settlementValue/paidValue/unpaidValue/
   // exportedValue/exportedValueVnd/unexportedValue across every contract
   // matching the current filters (not just this page — the backend
@@ -295,9 +688,15 @@ export function ContractsList() {
       exportedValue: total.exportedValue,
       exportedValueVnd: total.exportedValueVnd,
       unexportedValue: total.unexportedValue,
+      containerCount: total.containerCount,
+      // BOQ totals are VNĐ-only, so they only make sense on a single row.
+      logisticsSale:
+        totals.length === 1 && privateTotals
+          ? privateTotals.logisticsTotal
+          : null,
       isMultiCurrency: totals.length > 1,
     }));
-  }, [listResult]);
+  }, [listResult, privateTotals]);
   // Per-contract "Quyết toán / Đã thanh toán / Chưa thanh toán" — one entry
   // per row on this page only (unlike `totalsRows` above), keyed by
   // contractId so `renderCell` below can look a row's up in O(1).
@@ -384,17 +783,42 @@ export function ContractsList() {
    * @param {'view' | 'edit'} mode
    */
   function openContract(row, mode) {
-    router.push(
-      `/logistics/contract/${row.id}${mode === 'edit' ? '?mode=edit' : ''}`,
+    if (mode === 'edit') {
+      // "Sửa" opens the same edit drawer as the detail page, in place.
+      setEditingContract(contracts.find((c) => c.id === row.id) ?? row);
+      return;
+    }
+    router.push(`/logistics/contract/${row.id}`);
+  }
+
+  /** @param {import('react').ReactNode} content */
+  function mutedIf(content) {
+    return isFramed ? (
+      <Text color="secondary" weight="medium">
+        {content}
+      </Text>
+    ) : (
+      content
     );
   }
+
+  /** @param {import('react').ReactNode} content */
+  function boldIf(content) {
+    return isFramed ? <Text weight="bold">{content}</Text> : content;
+  }
+
+  // Money columns keep room for full amounts ("108,131,176,875.83 đ") —
+  // the financial view scrolls horizontally instead of squeezing all 13
+  // columns into one screen (user request, 2026-09-23; the first/second
+  // columns and "Thao tác" stay pinned while scrolling).
+  const moneyMinWidth = isFramed ? 180 : 210;
 
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<import('../types/index.js').Contract & Record<string, unknown>>[]} */
   const columns = [
     {
       key: 'contractNumber',
       header: 'Số hợp đồng',
-      width: pixel(180),
+      width: pixel(140),
       filter: 'contractNumber',
       renderCell: (contract) => (
         <Link
@@ -404,7 +828,9 @@ export function ContractsList() {
             openContract(contract, 'view');
           }}
         >
-          {contract.contractNumber}
+          <Text as="span" weight="bold" color="inherit">
+            {contract.contractNumber}
+          </Text>
         </Link>
       ),
     },
@@ -419,14 +845,21 @@ export function ContractsList() {
     {
       key: 'status',
       header: 'Trạng thái',
-      width: pixel(140),
+      width: pixel(isFramed ? 156 : 136),
       filter: 'status',
-      renderCell: (contract) => (
-        <Badge
-          label={labelForContractStatus(contract.status)}
-          variant={badgeVariantForContractStatus(contract.status)}
-        />
-      ),
+      renderCell: (contract) =>
+        isFramed ? (
+          <MetaStatusBadge
+            label={labelForContractStatus(contract.status)}
+            tone={statusTone(contract.status)}
+            isPulsing={contract.status === 'InProgress'}
+          />
+        ) : (
+          <Badge
+            label={labelForContractStatus(contract.status)}
+            variant={badgeVariantForContractStatus(contract.status)}
+          />
+        ),
       exportValue: (contract) => labelForContractStatus(contract.status),
     },
     {
@@ -463,16 +896,62 @@ export function ContractsList() {
       exportValue: (contract) => contract.buyer.companyName,
     },
     {
+      key: 'containerCount',
+      header: 'SỐ CONT',
+      width: pixel(90),
+      align: 'center',
+      renderCell: (contract) =>
+        boldIf(settlementsByContractId.get(contract.id)?.containerCount ?? '—'),
+      exportValue: (contract) =>
+        settlementsByContractId.get(contract.id)?.containerCount ?? '',
+    },
+    {
+      key: 'logisticsSale',
+      header: 'SALE',
+      width: proportional(1, { minWidth: moneyMinWidth }),
+      align: 'end',
+      renderCell: (contract) => {
+        const total = privateInfosByContractId.get(contract.id)?.logisticsTotal;
+        return total == null ? (
+          '—'
+        ) : (
+          <Text color="primary" weight="medium">
+            {formatMoney(total)} đ
+          </Text>
+        );
+      },
+      exportValue: (contract) =>
+        privateInfosByContractId.get(contract.id)?.logisticsTotal ?? '',
+    },
+    {
+      key: 'logisticsCost',
+      header: 'XNK',
+      width: proportional(1, { minWidth: moneyMinWidth }),
+      align: 'end',
+      renderCell: (contract) => {
+        const cost = costTotalOf(privateInfosByContractId.get(contract.id));
+        return cost == null ? (
+          '—'
+        ) : (
+          <Text color="accent" weight="bold">
+            {formatMoney(cost)} đ
+          </Text>
+        );
+      },
+      exportValue: (contract) =>
+        costTotalOf(privateInfosByContractId.get(contract.id)) ?? '',
+    },
+    {
       key: 'contractValue',
       // First of the four settlement-group columns (see
       // `SETTLEMENT_GROUP_COLUMN_KEYS`) — the contract's own value, next to
       // its quyết toán / đã thanh toán / chưa thanh toán position.
-      header: 'HỢP ĐỒNG',
-      width: proportional(1, { minWidth: 180 }),
+      header: 'GIÁ TRỊ HĐ',
+      width: proportional(1, { minWidth: moneyMinWidth }),
       align: 'end',
       filter: 'contractValue',
       renderCell: (contract) =>
-        formatMoney(contract.contractValue, contract.currency),
+        boldIf(formatMoney(contract.contractValue, contract.currency)),
     },
     {
       key: 'settlementValue',
@@ -481,11 +960,13 @@ export function ContractsList() {
       // payment position off them), not stored columns `ContractFilterFields`
       // (BE-kt-xnk) knows how to filter on.
       header: 'QUYẾT TOÁN',
-      width: proportional(1, { minWidth: 180 }),
+      width: proportional(1, { minWidth: moneyMinWidth }),
       align: 'end',
       filter: 'settlementValue',
       renderCell: (contract) =>
-        formatMoney(Number(contract.settlementValue), contract.currency),
+        boldIf(
+          formatMoney(Number(contract.settlementValue), contract.currency),
+        ),
       exportValue: (contract) => Number(contract.settlementValue),
     },
     {
@@ -493,7 +974,7 @@ export function ContractsList() {
       // Sum of every Shipment's `declarationValue` ("Giá trị tờ khai")
       // recorded against this contract (BE `ContractSettlement.ExportedValue`).
       header: 'ĐÃ XUẤT',
-      width: proportional(1, { minWidth: 180 }),
+      width: proportional(1, { minWidth: moneyMinWidth }),
       align: 'end',
       filter: 'exportedValue',
       renderCell: (contract) =>
@@ -505,12 +986,12 @@ export function ContractsList() {
       // Always VNĐ (`declarationValue * declarationExchangeRate` summed
       // across the contract's Shipments) — no `contract.currency` suffix,
       // same "đ" convention `logisticsCost` uses on the Shipment list.
-      header: 'ĐÃ XUẤT (VNĐ)',
-      width: proportional(1, { minWidth: 180 }),
+      header: 'ĐÃ XUẤT VNĐ',
+      width: proportional(1, { minWidth: isFramed ? 220 : 250 }),
       align: 'end',
       filter: 'exportedValueVnd',
       renderCell: (contract) =>
-        `${formatMoney(Number(contract.exportedValueVnd))} đ`,
+        mutedIf(`${formatMoney(Number(contract.exportedValueVnd))} đ`),
       exportValue: (contract) => Number(contract.exportedValueVnd),
     },
     {
@@ -526,22 +1007,44 @@ export function ContractsList() {
     },
     {
       key: 'paidValue',
-      header: 'ĐÃ THANH TOÁN',
-      width: proportional(1, { minWidth: 180 }),
+      header: (
+        <HStack as="span" xstyle={styles.paidHeader}>
+          ĐÃ THANH TOÁN
+        </HStack>
+      ),
+      width: proportional(1, { minWidth: moneyMinWidth }),
       align: 'end',
       filter: 'paidValue',
-      renderCell: (contract) =>
-        formatMoney(Number(contract.paidValue), contract.currency),
+      renderCell: (contract) => (
+        <PaidCell
+          paid={Number(contract.paidValue)}
+          settlement={Number(contract.settlementValue)}
+          currency={contract.currency}
+          isFramed={isFramed}
+        />
+      ),
       exportValue: (contract) => Number(contract.paidValue),
     },
     {
       key: 'unpaidValue',
-      header: 'CHƯA THANH TOÁN',
-      width: proportional(1, { minWidth: 200 }),
+      header: (
+        <HStack as="span" xstyle={styles.unpaidHeader}>
+          CHƯA THANH TOÁN
+        </HStack>
+      ),
+      width: proportional(1, { minWidth: moneyMinWidth }),
       align: 'end',
       filter: 'unpaidValue',
       renderCell: (contract) =>
-        formatMoney(Number(contract.unpaidValue), contract.currency),
+        Number(contract.unpaidValue) === 0 ? (
+          mutedIf(formatMoney(0, contract.currency))
+        ) : (
+          <HStack as="span" hAlign="end" xstyle={styles.unpaidText}>
+            <Text weight="bold" color="inherit" hasTabularNumbers>
+              {formatMoney(Number(contract.unpaidValue), contract.currency)}
+            </Text>
+          </HStack>
+        ),
       exportValue: (contract) => Number(contract.unpaidValue),
     },
     {
@@ -558,9 +1061,10 @@ export function ContractsList() {
     {
       key: 'createdDate',
       header: 'Ngày ký',
-      width: pixel(150),
+      width: pixel(isFramed ? 110 : 108),
       filter: 'createdDate',
-      renderCell: (contract) => formatDisplayDate(contract.createdDate),
+      renderCell: (contract) =>
+        mutedIf(formatDisplayDate(contract.createdDate)),
     },
     {
       key: 'quotationDate',
@@ -574,12 +1078,12 @@ export function ContractsList() {
     },
     {
       key: 'projectCompletionDate',
-      header: 'Ngày hoàn thành dự án',
-      width: pixel(180),
+      header: 'Ngày hoàn thành',
+      width: pixel(isFramed ? 150 : 142),
       // `null` while the project isn't finished yet (only fillable once
       // `status` is "Đã hoàn thành" — see `contract-general-fields.jsx`).
       renderCell: (contract) =>
-        formatDisplayDate(contract.projectCompletionDate),
+        mutedIf(formatDisplayDate(contract.projectCompletionDate)),
     },
     {
       key: 'category',
@@ -660,15 +1164,39 @@ export function ContractsList() {
     },
     {
       key: 'actions',
-      header: 'Chức năng',
-      width: pixel(140),
+      header: isFramed ? 'Thao tác' : 'Chức năng',
+      // The Figma reference uses two icon-only actions in 92px. This app's
+      // accessible actions menu keeps its visible "Chức năng" label, so it
+      // needs a slightly wider floor to avoid clipping while preserving the
+      // same compact end column.
+      width: pixel(isFramed ? 96 : 120),
       align: 'end',
-      renderCell: (row) => (
-        <RecordActionsMenu
-          onView={() => openContract(row, 'view')}
-          onEdit={() => openContract(row, 'edit')}
-        />
-      ),
+      renderCell: (row) =>
+        isFramed ? (
+          <HStack gap={1} vAlign="center" wrap="nowrap">
+            <IconButton
+              label={`Xem ${row.contractNumber}`}
+              tooltip="Xem"
+              icon={<Icon icon={Eye} size="sm" />}
+              variant="ghost"
+              size="sm"
+              onClick={() => openContract(row, 'view')}
+            />
+            <IconButton
+              label={`Sửa ${row.contractNumber}`}
+              tooltip="Sửa"
+              icon={<Icon icon={Pencil} size="sm" />}
+              variant="ghost"
+              size="sm"
+              onClick={() => openContract(row, 'edit')}
+            />
+          </HStack>
+        ) : (
+          <RecordActionsMenu
+            onView={() => openContract(row, 'view')}
+            onEdit={() => openContract(row, 'edit')}
+          />
+        ),
     },
   ];
 
@@ -718,26 +1246,120 @@ export function ContractsList() {
 
       <StackItem size="fill">
         <AdvanceTable
-          title={<Heading level={1}>Hợp đồng</Heading>}
+          title={
+            <VStack gap={1} hAlign="start">
+              <HStack gap={2} vAlign="center" wrap="wrap">
+                <Heading level={1}>Danh sách Hợp đồng</Heading>
+                {isFramed ? (
+                  <MetaStatusBadge
+                    label={`${totalContracts} hợp đồng`}
+                    tone="accent"
+                    hasBorder
+                  />
+                ) : (
+                  <Badge label={`${totalContracts} hợp đồng`} variant="blue" />
+                )}
+              </HStack>
+            </VStack>
+          }
+          headerContent={
+            <TabList
+              role="tablist"
+              size={isFramed ? 'md' : 'sm'}
+              value={activeStatus}
+              onChange={handleStatusChange}
+            >
+              {STATUS_TABS.map((tab) => (
+                <Tab
+                  key={tab.value}
+                  value={tab.value}
+                  label={tab.label}
+                  panelId="contracts-table"
+                  endContent={
+                    isFramed ? (
+                      <MetaCountBadge
+                        value={tabCounts[tab.value]}
+                        tone={tabCountTone(tab.value, activeStatus)}
+                      />
+                    ) : (
+                      <Badge
+                        label={tabCounts[tab.value]}
+                        variant={tab.value === 'all' ? 'blue' : undefined}
+                      />
+                    )
+                  }
+                />
+              ))}
+            </TabList>
+          }
+          viewPresetsInHeader
+          dividers={isFramed ? 'rows' : undefined}
+          isFramed={isFramed}
+          toolbarFilters={framedFilters}
+          isStriped={isFramed}
           headerGroups={CONTRACT_HEADER_GROUPS}
           toolbarLabel="Thao tác danh sách hợp đồng"
           searchFieldDefs={searchFieldDefsWithCustomers}
-          entityLabel="Hợp đồng"
+          entityLabel="Danh sách hợp đồng"
           contentSearchFieldKey="contractNumber"
           onContentSearchChange={handleContractNumberSearchChange}
-          searchPlaceholder="Tìm số HĐ, dự án..."
+          searchPlaceholder="Tìm nhanh theo mã HĐ, tên dự án, khách hàng, số vận đơn B/L..."
           filterFieldDefs={filterFieldDefsWithCustomers}
           advancedFilterConditions={filterConditions}
           onAdvancedFilterChange={setFilterConditions}
           columnOptions={COLUMN_OPTIONS}
-          initialColumnKeys={DEFAULT_COLUMN_KEYS}
-          defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-          viewPresets={VIEW_PRESETS}
+          initialColumnKeys={
+            initialViewPresetKey === 'financial'
+              ? FINANCIAL_COLUMN_KEYS
+              : DEFAULT_COLUMN_KEYS
+          }
+          defaultColumnKeys={
+            initialViewPresetKey === 'financial'
+              ? FINANCIAL_COLUMN_KEYS
+              : DEFAULT_COLUMN_KEYS
+          }
+          initialViewPresetKey={initialViewPresetKey}
+          viewPresets={
+            isFramed
+              ? VIEW_PRESETS.map((preset) => ({
+                  ...preset,
+                  icon: (
+                    <Icon
+                      icon={preset.key === 'basic' ? List : Banknote}
+                      size="sm"
+                    />
+                  ),
+                }))
+              : VIEW_PRESETS
+          }
+          itemLabel="hợp đồng"
+          // Both view presets lead with `createdDate` (Ngày ký) then
+          // `contractNumber` (Số hợp đồng) — pin them by default so they
+          // stay visible while scrolling the wide financial columns
+          // horizontally, same as `fixedEndColumnKeys` pins "Chức năng".
+          defaultStickyStart="two"
           fixedEndColumnKeys={['actions']}
           tableColumns={columnsWithTotalsRow}
           data={searchableContracts}
           totalsRows={totalsRows}
-          totalsRowLabel={totalsRowLabel}
+          totalsRowLabel={
+            isFramed
+              ? (/** @type {ContractTotalsRow} */ row) => (
+                  <HStack gap={2} vAlign="center" wrap="nowrap">
+                    <Text size="lg" weight="bold" color="accent">
+                      Σ
+                    </Text>
+                    <Text
+                      weight="bold"
+                      color="accent"
+                      xstyle={[styles.nowrap, styles.totalsCaption]}
+                    >
+                      {`TỔNG CỘNG (${totalContracts} HỢP ĐỒNG${row.isMultiCurrency ? ` · ${row.currency}` : ''})`}
+                    </Text>
+                  </HStack>
+                )
+              : totalsRowLabel
+          }
           idKey="id"
           isLoading={isLoadingContracts}
           skeletonRows={skeletonRows}
@@ -745,7 +1367,8 @@ export function ContractsList() {
           onRefresh={() => contractsQuery.refetch()}
           isRefreshing={contractsQuery.isFetching}
           primaryAction={{
-            label: 'Tạo hợp đồng',
+            label: 'Tạo hợp đồng mới',
+            icon: <Icon icon={Plus} size="sm" />,
             onClick: () => setCreateSessionKey(generateRowKey()),
           }}
           pagination={{
@@ -776,6 +1399,25 @@ export function ContractsList() {
           onSuccess={(saved) => {
             setCreateSessionKey(null);
             router.push(`/logistics/contract/${saved.id}`);
+          }}
+        />
+      ) : null}
+
+      {editingContract ? (
+        <ContractFormDialog
+          key={editingContract.id}
+          isOpen
+          onOpenChange={(open) => {
+            if (!open) setEditingContract(null);
+          }}
+          contract={editingContract}
+          activeTab="profile"
+          onActiveTabChange={() => {}}
+          initialMode="edit"
+          closeOnCancel
+          onSuccess={() => {
+            setEditingContract(null);
+            contractsQuery.refetch();
           }}
         />
       ) : null}

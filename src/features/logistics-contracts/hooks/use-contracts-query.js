@@ -3,6 +3,7 @@
 import {
   keepPreviousData,
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
@@ -58,6 +59,64 @@ export function useContractsQuery({
   });
 }
 
+const CONTRACT_LIST_TABS = [
+  { key: 'all', condition: null },
+  { key: 'InProgress', condition: { field: 'status', value: 'InProgress' } },
+  { key: 'Completed', condition: { field: 'status', value: 'Completed' } },
+  { key: 'Draft', condition: { field: 'contractType', value: 'Draft' } },
+  { key: 'Cancelled', condition: { field: 'status', value: 'Cancelled' } },
+];
+
+/**
+ * Count badges for the Contract-list status tabs. Counts retain every
+ * advanced-search condition except the tab-owned status/type conditions.
+ * @param {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} conditions
+ */
+export function useContractListTabCounts(conditions) {
+  const baseConditions = conditions.filter(
+    (condition) =>
+      condition.field !== 'status' && condition.field !== 'contractType',
+  );
+  const queries = useQueries({
+    queries: CONTRACT_LIST_TABS.map(({ key, condition }) => {
+      const tabConditions = [
+        ...baseConditions,
+        {
+          id: `contract-list-tab-type-${key}`,
+          field: 'contractType',
+          operator: 'Equals',
+          value: key === 'Draft' ? 'Draft' : 'Official',
+          connector: /** @type {const} */ ('And'),
+        },
+        ...(condition && condition.field === 'status'
+          ? [
+              {
+                id: `contract-list-tab-${key}`,
+                field: condition.field,
+                operator: 'Equals',
+                value: condition.value,
+                connector: /** @type {const} */ ('And'),
+              },
+            ]
+          : []),
+      ];
+      return {
+        queryKey: [...QUERY_KEY, 'tab-count', key, tabConditions],
+        queryFn: () =>
+          searchContracts({ page: 1, pageSize: 1, conditions: tabConditions }),
+        placeholderData: keepPreviousData,
+      };
+    }),
+  });
+
+  return Object.fromEntries(
+    CONTRACT_LIST_TABS.map(({ key }, index) => {
+      const result = queries[index].data;
+      return [key, result?.success ? result.totalCount : 0];
+    }),
+  );
+}
+
 /**
  * Every contract for one customer (Buyer), newest-signed first — backs
  * `CustomerDetailDialog`'s "Hợp đồng đã làm" table. Filters on
@@ -81,7 +140,7 @@ export function useCustomerContractsQuery(customerId) {
             operator: 'Equals',
             // `enabled` below only runs this queryFn once customerId is set.
             value: /** @type {string} */ (customerId),
-            connector: 'And',
+            connector: /** @type {const} */ ('And'),
           },
         ],
         sort: { field: 'createdDate', direction: 'Descending' },

@@ -1,0 +1,41 @@
+/*
+ * Meta scrollbars — mockup (`.stitch/designs/meta-contracts-list.html`):
+ * 6px, pill thumb #ced0d4 (hover #8d949e) on a #f1f4f7 track. Scrollbars
+ * have no Astryx theming target, so this is the one plain stylesheet the
+ * theme ships (same as Maritime's). Scoped by the `data-astryx-theme`
+ * attribute Astryx's own `<Theme>` renders, so no marker element is needed
+ * (golden rule #15); the page scrollbar belongs to <html>, reached with
+ * `:has()`. Literal colors: theme variables are not defined on <html>.
+ * Standard `scrollbar-*` covers Chrome 121+/Firefox; `::-webkit-scrollbar`
+ * is the fallback for older WebKit/Blink.
+ */
+html:has([data-astryx-theme='meta']),
+[data-astryx-theme='meta'],
+[data-astryx-theme='meta'] * {
+  scrollbar-color: #ced0d4 #f1f4f7;
+  scrollbar-width: thin;
+}
+
+@supports not (scrollbar-width: thin) {
+  html:has([data-astryx-theme='meta'])::-webkit-scrollbar,
+  [data-astryx-theme='meta'] *::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+
+  html:has([data-astryx-theme='meta'])::-webkit-scrollbar-track,
+  [data-astryx-theme='meta'] *::-webkit-scrollbar-track {
+    background: #f1f4f7;
+  }
+
+  html:has([data-astryx-theme='meta'])::-webkit-scrollbar-thumb,
+  [data-astryx-theme='meta'] *::-webkit-scrollbar-thumb {
+    background: #ced0d4;
+    border-radius: 9999px;
+  }
+
+  html:has([data-astryx-theme='meta'])::-webkit-scrollbar-thumb:hover,
+  [data-astryx-theme='meta'] *::-webkit-scrollbar-thumb:hover {
+    background: #8d949e;
+  }
+}

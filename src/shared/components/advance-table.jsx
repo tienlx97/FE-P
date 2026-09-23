@@ -27,7 +27,11 @@ import {
   useTableFilterState,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
-import { colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
+import {
+  colorVars,
+  radiusVars,
+  spacingVars,
+} from '@astryxdesign/core/theme/tokens.stylex';
 import { Toolbar } from '@astryxdesign/core/Toolbar';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
@@ -113,6 +117,7 @@ function escapeCsvCell(value) {
  * @property {string} key
  * @property {string} label
  * @property {string[]} columnKeys
+ * @property {import('react').ReactNode} [icon] Shown before the label in the segmented control.
  */
 
 const styles = stylex.create({
@@ -147,6 +152,42 @@ const styles = stylex.create({
   // Matches the search toolbar's own block/inline padding below it (see
   // Toolbar's `size="sm"` defaults) so the two rows line up edge-to-edge.
   titleRow: {
+    paddingBlock: spacingVars['--spacing-2'],
+    paddingInline: spacingVars['--spacing-4'],
+  },
+  frame: {
+    backgroundColor: colorVars['--color-background-card'],
+    borderColor: colorVars['--color-border'],
+    borderRadius: radiusVars['--radius-container'],
+    borderStyle: 'solid',
+    borderWidth: 1,
+    minHeight: 0,
+    overflow: 'hidden',
+  },
+  framedTabsRow: {
+    borderBlockEndColor: colorVars['--color-border'],
+
+
+    borderBlockEndStyle: 'solid',
+    borderBlockEndWidth: 1,
+    paddingBlock: spacingVars['--spacing-3'],
+    paddingInline: spacingVars['--spacing-6'],
+  },
+  framedPresetLabel: {
+    letterSpacing: '0.05em',
+    textTransform: 'uppercase',
+  },
+  framedFooter: {
+    borderBlockStartColor: colorVars['--color-border'],
+    borderBlockStartStyle: 'solid',
+    borderBlockStartWidth: 1,
+    paddingBlock: spacingVars['--spacing-3'],
+    paddingInline: spacingVars['--spacing-6'],
+  },
+  framedFilterBand: {
+    backgroundColor: colorVars['--color-background-muted'],
+  },
+  headerContent: {
     paddingBlock: spacingVars['--spacing-2'],
     paddingInline: spacingVars['--spacing-4'],
   },
@@ -198,6 +239,8 @@ const styles = stylex.create({
  * @template {Record<string, unknown>} T
  * @param {{
  *   title?: import('react').ReactNode,
+ *   headerContent?: import('react').ReactNode,
+ *   viewPresetsInHeader?: boolean,
  *   toolbarLabel: string,
  *   searchFieldDefs: ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>,
  *   entityLabel: string,
@@ -213,6 +256,7 @@ const styles = stylex.create({
  *   initialColumnKeys?: string[],
  *   defaultColumnKeys?: string[],
  *   viewPresets?: ReadonlyArray<AdvanceTableViewPreset>,
+ *   initialViewPresetKey?: string,
  *   fixedEndColumnKeys?: string[],
  *   tableColumns: AdvanceTableColumn<T>[],
  *   headerGroups?: {id: string, label: string, columnKeys: string[]}[],
@@ -237,6 +281,10 @@ const styles = stylex.create({
  *   totalsRowLabel?: (row: any) => import('react').ReactNode,
  *   summary?: import('react').ReactNode,
  *   dividers?: import('@astryxdesign/core/Table').TableDividers,
+ *   isStriped?: boolean,
+ *   isFramed?: boolean,
+ *   itemLabel?: string,
+ *   toolbarFilters?: import('react').ReactNode,
  *   pagination?: {
  *     pageIndex: number,
  *     pageSize: number,
@@ -253,6 +301,8 @@ const styles = stylex.create({
  */
 export function AdvanceTable({
   title,
+  headerContent,
+  viewPresetsInHeader = false,
   toolbarLabel,
   searchFieldDefs,
   entityLabel,
@@ -268,6 +318,7 @@ export function AdvanceTable({
   initialColumnKeys,
   defaultColumnKeys,
   viewPresets,
+  initialViewPresetKey,
   fixedEndColumnKeys = [],
   tableColumns,
   headerGroups,
@@ -291,6 +342,10 @@ export function AdvanceTable({
   // caller relied on this default and looked inconsistent as a result. A
   // caller can still opt out with an explicit `dividers="rows"`.
   dividers = 'grid',
+  isStriped = false,
+  isFramed = false,
+  itemLabel,
+  toolbarFilters,
   pagination,
   sort = null,
   onSortChange,
@@ -305,7 +360,7 @@ export function AdvanceTable({
   // doesn't track a mode either. Not persisted — only the columns/density/
   // sticky settings it produces are.
   const [activePresetKey, setActivePresetKey] = useState(
-    viewPresets?.[0]?.key ?? '',
+    initialViewPresetKey ?? viewPresets?.[0]?.key ?? '',
   );
   const {
     activeColumnKeys,
@@ -833,11 +888,17 @@ export function AdvanceTable({
   const exportMenu = (
     <DropdownMenu
       button={{
-        label: 'Xuất',
+        label: isFramed ? 'Xuất Excel' : 'Xuất',
         tooltip: 'Xuất dữ liệu',
-        variant: 'ghost',
-        size: 'sm',
-        icon: <Icon icon={Download} size="sm" />,
+        variant: isFramed ? 'secondary' : 'ghost',
+        size: isFramed ? 'lg' : 'sm',
+        icon: (
+          <Icon
+            icon={Download}
+            size="sm"
+            color={isFramed ? 'secondary' : 'inherit'}
+          />
+        ),
         isDisabled: isLoading || filteredData.length === 0,
       }}
       items={[
@@ -895,6 +956,7 @@ export function AdvanceTable({
     <Button
       label={primaryAction.label}
       variant="primary"
+      size={isFramed ? 'lg' : undefined}
       icon={primaryAction.icon}
       onClick={primaryAction.onClick}
     />
@@ -911,11 +973,34 @@ export function AdvanceTable({
       >
         {title}
         <HStack gap={2} vAlign="center" wrap="wrap">
-          {printButton}
+          {isFramed ? null : printButton}
           {exportMenu}
           {primaryActionButton}
         </HStack>
       </HStack>
+    ) : null;
+
+  const viewPresetControl =
+    viewPresets && viewPresets.length > 0 ? (
+      <SegmentedControl
+        label="Chế độ xem cột"
+        size="sm"
+        value={activePresetKey}
+        onChange={(key) => {
+          setActivePresetKey(key);
+          const preset = viewPresets.find((candidate) => candidate.key === key);
+          if (preset) setActiveColumnKeys([...preset.columnKeys]);
+        }}
+      >
+        {viewPresets.map((preset) => (
+          <SegmentedControlItem
+            key={preset.key}
+            value={preset.key}
+            label={preset.label}
+            icon={preset.icon}
+          />
+        ))}
+      </SegmentedControl>
     ) : null;
 
   const toolbar = (
@@ -937,7 +1022,7 @@ export function AdvanceTable({
             <InputGroup
               label={searchPlaceholder}
               isLabelHidden
-              size="sm"
+              size={isFramed ? 'lg' : 'sm'}
               xstyle={[styles.search, styles.searchInputGroup]}
             >
               <TextInput
@@ -975,34 +1060,14 @@ export function AdvanceTable({
               handleAdvancedSearchSubmit={handleAdvancedSearchSubmit}
             />
           </StackItem>
+          {toolbarFilters}
           <HStack
             gap={2}
             vAlign="center"
             wrap="wrap"
             xstyle={styles.toolbarEnd}
           >
-            {viewPresets && viewPresets.length > 0 ? (
-              <SegmentedControl
-                label="Chế độ xem cột"
-                size="sm"
-                value={activePresetKey}
-                onChange={(key) => {
-                  setActivePresetKey(key);
-                  const preset = viewPresets.find(
-                    (candidate) => candidate.key === key,
-                  );
-                  if (preset) setActiveColumnKeys([...preset.columnKeys]);
-                }}
-              >
-                {viewPresets.map((preset) => (
-                  <SegmentedControlItem
-                    key={preset.key}
-                    value={preset.key}
-                    label={preset.label}
-                  />
-                ))}
-              </SegmentedControl>
-            ) : null}
+            {!viewPresetsInHeader ? viewPresetControl : null}
             <TableViewOptionsPopover
               fixedEndLabel={fixedEndColumnKeys
                 .map(
@@ -1052,14 +1117,46 @@ export function AdvanceTable({
     />
   );
 
-  return (
+  const layout = (
     <Layout
       height="fill"
       header={
         <LayoutHeader padding={0}>
           <VStack gap={0} hAlign="stretch">
-            {titleRow}
-            {toolbar}
+            {isFramed ? null : titleRow}
+            {headerContent || (viewPresetsInHeader && viewPresetControl) ? (
+              <HStack
+                hAlign="between"
+                vAlign="center"
+                gap={3}
+                xstyle={[
+                  styles.headerContent,
+                  isFramed && styles.framedTabsRow,
+                ]}
+              >
+                {headerContent}
+                {viewPresetsInHeader ? (
+                  <HStack gap={2} vAlign="center">
+                    <Text
+                      type="supporting"
+                      weight={isFramed ? 'bold' : undefined}
+                      color="secondary"
+                      xstyle={isFramed && styles.framedPresetLabel}
+                    >
+                      Chế độ bảng:
+                    </Text>
+                    {viewPresetControl}
+                  </HStack>
+                ) : null}
+              </HStack>
+            ) : null}
+            {isFramed ? (
+              <VStack gap={0} hAlign="stretch" xstyle={styles.framedFilterBand}>
+                {toolbar}
+              </VStack>
+            ) : (
+              toolbar
+            )}
             {quickFilters && quickFilters.length > 0 ? (
               <HStack
                 gap={2}
@@ -1089,7 +1186,7 @@ export function AdvanceTable({
                 ))}
               </HStack>
             ) : null}
-            {activeFilterCount > 0 ? (
+            {activeFilterCount > 0 && !isFramed ? (
               <HStack gap={2} wrap="wrap" vAlign="center">
                 <Text type="supporting" color="secondary">
                   Đang áp dụng {activeFilterCount} điều kiện lọc
@@ -1142,6 +1239,9 @@ export function AdvanceTable({
             idKey={idKey}
             density={density}
             dividers={dividers}
+            isStriped={isStriped}
+            totalsPosition="top"
+            isFramed={isFramed}
             sort={sort}
             onSortChange={onSortChange}
             sortableColumnKeys={sortableColumnKeys}
@@ -1150,7 +1250,11 @@ export function AdvanceTable({
       }
       footer={
         <LayoutFooter padding={0}>
-          <VStack gap={0} hAlign="stretch">
+          <VStack
+            gap={0}
+            hAlign="stretch"
+            xstyle={isFramed && styles.framedFooter}
+          >
             {summary && !isLoading ? (
               <HStack hAlign="end" xstyle={styles.summary}>
                 {summary}
@@ -1160,11 +1264,26 @@ export function AdvanceTable({
               pagination={pagination}
               visibleCount={resultCount}
               isLoading={isLoading}
+              isFramed={isFramed}
+              itemLabel={itemLabel}
             />
           </VStack>
         </LayoutFooter>
       }
     />
+  );
+
+  // Maritime frame (Figma "Danh sách Hợp đồng"): the page title/actions stay
+  // outside a single bordered white card that holds tabs, filters, table and
+  // pagination. `Layout` has no `xstyle`, so the card is a wrapper around it.
+  if (!isFramed) return layout;
+  return (
+    <VStack gap={4} hAlign="stretch" height="100%">
+      {titleRow}
+      <StackItem size="fill" xstyle={styles.frame}>
+        {layout}
+      </StackItem>
+    </VStack>
   );
 }
 

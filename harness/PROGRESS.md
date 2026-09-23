@@ -1,5 +1,115 @@
 # Progress Log
 
+## 2026-09-23 (late) — Astryx size scale + golden rule #16
+
+- Meta contract list sizes moved to Astryx scales: cell text = default
+  `Text` (`--font-size-base`), header `--font-size-sm`, buttons
+  `size="lg"`, status tabs `size="md"`, spacing/progress track via
+  `--spacing-*`. Removed the px overrides (13px cells, 33px tabs, `size:md`
+  forced to 36px). Financial money columns min 180px → horizontal scroll.
+- Golden rules v7, #16: mockups define layout/UI/UX; sizes come from
+  Astryx scales. Lint: `'NNpx'` literals banned in
+  `src/shared/components/custom/**/*.jsx` (Maritime exempt, graded C).
+
+## 2026-09-23 (night) — Contract list: scroll fix + page size
+
+- Table did not scroll under the Meta theme: it lacked Maritime's
+  `table-scroll-wrapper { height: 100% }` + sticky `table-header-cell`
+  overrides; added to `custom/meta/theme.js`.
+- `MetaPagination` got an "N dòng / trang" `Selector` (options from
+  `pageSizeOptions`, resets to page 1); contracts `DEFAULT_PAGE_SIZE` = 100.
+  Verified in Chrome (scroll, 100 → 25 rows).
+
+## 2026-09-23 (evening) — Contract list matched to Figma node 83:509
+
+- Figma frame "Main - MAIN BODY CONTENT" (same design as the Stitch Meta
+  screen) saved to `.stitch/designs/figma-83-509.png`.
+- `AdvanceTable` framed mode: "Xuất Excel" outlined button (no print
+  icon), uppercase "CHẾ ĐỘ BẢNG:", preset icons (`AdvanceTableViewPreset.icon`),
+  40px search, no "Đang áp dụng N điều kiện" row, padded footer, new
+  `itemLabel` prop. Framed pagination = new `MetaPagination` ("Hiển thị
+  a - b trong tổng số N hợp đồng" + circular pages, no page-size picker).
+- `contracts-list.jsx`: Figma cell typography (muted dates / VNĐ, bold
+  cont, blue XNK, blue paid / red unpaid, green 100%), green/red THANH
+  TOÁN headers, "Thao tác", "Đặt lại" with icon, 40px filters, money
+  columns min 120px so all 13 financial columns fit without scrolling.
+- Kept on purpose (not in Figma): funnel advanced-filter button, "Tuỳ chọn
+  hiển thị", refresh; font stays Optimistic (Figma's Inter is Stitch's
+  stand-in). Verified in Chrome at 2560px, page 2 navigation works.
+
+## 2026-09-23 (later) — Contract list re-skinned to the Meta theme; golden rule #15
+
+- Stitch screen "Danh sách Hợp đồng (FB Theme)" (project
+  6957224641630765183) saved to `.stitch/designs/meta-contracts-list.{html,png}`.
+- `/logistics/contracts` now wraps `ContractsList` in `MetaThemeProvider`.
+  Look comes from Meta `theme.js` component overrides (pill buttons /
+  filters / tabs, segmented control, uppercase table header, white
+  outlined secondary buttons) + new `MetaStatusBadge` / `MetaCountBadge`.
+  `ContractsList`'s `isMaritime` prop renamed `isFramed`.
+- Shared fixes: framed totals label now really spans the empty leading
+  columns (`tanstack-data-table.jsx` checked `flexRender` output, which is
+  never empty); framed bands read theme-neutral `--table-framed-*` tokens
+  (Maritime ones kept as fallback); framed card radius = `--radius-container`.
+- Golden rules v6, rule #15: custom theme components are Astryx-only,
+  linted in `eslint.config.mjs`; five legacy Maritime files exempted,
+  `custom/maritime` graded C.
+- Verified in Chrome at 2560px: page renders, no console errors. Edit
+  drawer still uses its Maritime look (unchanged). Not done: "Xuất" is
+  still the ghost dropdown (mockup: outlined "Xuất Excel"), pagination
+  footer text differs from the mockup, and the Meta sidebar/header shell
+  is out of scope.
+
+## 2026-09-23 — "Meta" custom theme scaffolded
+
+- New `src/shared/components/custom/meta/`: `DESIGN.md` (user-supplied
+  "Optimistic VF Commerce & Hardware" spec), `theme.js` (defineTheme:
+  accent cobalt `#0064E0`, spec YAML palette, Optimistic Text/Display,
+  radius base 4, flat hairline cards; extra palette as `--meta-*`
+  `localTokens`), built `meta.js`/`meta.d.ts`/`theme.built.css`,
+  `MetaThemeProvider`, `index.js`. eslint exemptions added like Maritime.
+- Not applied to any page yet — waiting for the user's screen mockups.
+  Rebuild: `pnpm exec astryx theme build src/shared/components/custom/meta/theme.js --out src/shared/components/custom/meta/theme.built.css`.
+
+## 2026-09-22 (evening) — Maritime list is now the main Contract list
+
+- Removed the old list + `/logistics/contracts/v2` route, `ContractsListV2`
+  and the "Hợp đồng V2" sidebar entry; `/logistics/contracts` renders the
+  Maritime list (financial view default, `entityLabel` "Danh sách hợp đồng"
+  → fresh table-view storage key). Totals row shows Σ + total contract count.
+- Contract detail overview: "Đã xuất" = Σ invoiceValue, "Đã xuất (VNĐ)" =
+  Σ invoiceValue × declarationExchangeRate (same as BE settlement).
+
+
+## 2026-09-22 (later) — Contract list V2: Figma frame + settlement formulas
+
+- BE-kt-xnk `SearchContractsQueryHandler`: `exportedValue` = Σ shipment
+  `InvoiceValue`; `exportedValueVnd` = Σ `InvoiceValue × DeclarationExchangeRate`;
+  new `containerCount` (Σ VGM records per shipment) on settlements + totals.
+  `docs/api/Contracts.md` updated; dev API container rebuilt.
+- FE `/logistics/contracts/v2` (`isMaritime`): framed white card (title/actions
+  outside), tinted filter band with Loại HĐ / Tiền tệ / Thời gian selectors +
+  reset, tinted group headers, totals row docked at the bottom
+  (`AdvanceTable` `isFramed`/`toolbarFilters`, `TanStackDataTable`
+  `totalsPosition`), Maritime theme gained `table-scroll-wrapper` height +
+  sticky header cells + `--maritime-table-*` tokens. Primary list unchanged.
+- Dev DB: seeded BOQ for 26KCT03 / 26KCT02 to exercise SALE/XNK columns.
+
+
+## 2026-09-22 — Contract list: Figma "Giá trị & Dòng tiền" frame applied
+
+- Figma frame (node 72:4) was ~80% already covered by the Stitch v2 work
+  (`/logistics/contracts/v2`). Added the gaps in `contracts-list.jsx`:
+  `CHI PHÍ LOGISTICS` header group (SALE / XNK), `SỐ CONT`, paid cell with
+  `ProgressBar` %, red unpaid amount, header "GIÁ TRỊ HĐ", button
+  "Tạo hợp đồng mới". Financial preset key order updated.
+- Logistics/cont data is joined client-side from the BOQ list
+  (`useContractPrivateInfosListQuery`, same page/conditions/sort, keyed by
+  contractId; needs `logistics:secret`, else cells show "—"). No BE change.
+  XNK = costPricePerContainer × containerCount; footer shows Sale + cont
+  from BOQ totals; XNK footer left blank (BE has no cost total).
+- Not verified in a browser (auth). lint/typecheck/tests pass; also fixed
+  two pre-existing `connector` literal typecheck errors.
+
 ## 2026-09-16 (continued) — production-only readonly TextInput/NumberInput/Textarea white background: fixed
 
 - User gave an already-detailed 8-step plan (reproduce against a local
@@ -13199,3 +13309,217 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
   TanStack-only, theme build, lint, typecheck, structure, harness tests, unit
   tests, production build, and quality thresholds. Evidence:
   `harness/runs/20260921-051629-62/`.
+
+## 2026-09-21 — Figma drawer cards and buttons extracted to Maritime
+
+- Re-read the current Figma selection (`52:645`), design context, local styles,
+  variables, and a fresh 1x screenshot. The selected frame remains the 760px
+  Contract editor drawer; the document exposes no local styles or variables.
+- Extracted `MaritimeFormSection` (Astryx `Section`) and `MaritimeCard`
+  (Astryx `Card`) under `src/shared/components/custom/maritime/`. The Contract
+  drawer now consumes these reusable components instead of owning its section
+  and inner-card visual contract in feature-local StyleX.
+- Extended the existing Astryx-backed `MaritimeButton` with a reusable dashed
+  add treatment and external `xstyle` composition. The beneficiary-bank action
+  and the drawer footer now use `MaritimeButton`; the footer action widths match
+  the Figma measurements (76px / 132px), and the add action measures 36px with
+  a dashed accent border.
+- Calibrated the drawer title to 16px/20px and the form-section heading token
+  scope to the Figma compact type treatment without swizzling Astryx source.
+  Contract form behavior, validation, payloads, and API calls are unchanged.
+- Verified against a local production server connected to the development API
+  after signing in with the user-provided account. Evidence includes
+  `harness/runs/20260921-figma-maritime-components/figma-reference.png` and the
+  application top/middle/bottom captures in the same directory.
+- Final `./harness/verify.sh` PASSED in full. Evidence:
+  `harness/runs/20260921-075231-1945/`.
+
+## 2026-09-21 — Figma payment-term cards added to the Contract drawer
+
+- Isolated the selected Figma payment-terms section (`63:2270`) and saved its
+  711×721 reference under
+  `harness/runs/20260921-figma-payment-terms-card/figma-payment-terms.png`.
+- Replaced the Contract form's payment-term table with reusable
+  `MaritimePaymentTermCard` instances built from Astryx `Card`, `Grid`, stack,
+  text, input, icon-button, and button primitives. The adapter lives under
+  `src/shared/components/custom/maritime/` and keeps form/business state in the
+  logistics-contracts feature.
+- Split payment terms and beneficiary banks into distinct Maritime sections.
+  The payment section now has the Figma total-status pill, 188px milestone-card
+  geometry, 96px ratio control, derived amount treatment, highlighted L/C
+  state, and the shared dashed add-button treatment.
+- The API contract remains unchanged: only ratio and payment condition are
+  persisted. Card titles and payment-method summaries are derived from the
+  stored condition so the UI does not introduce fields that cannot be saved.
+- Compared the production render after authenticated navigation with the Figma
+  reference. Screenshots and computed geometry are stored in
+  `harness/runs/20260921-figma-payment-terms-card/`.
+
+## 2026-09-21 — Contract editor moved to Astryx Lab Drawer
+
+- Replaced the edit-mode `CommonDialog` positioning workaround with the native
+  `Drawer` exported by `@astryxdesign/lab`. It opens from the inline end edge,
+  owns its modal scrim/focus behavior, fills the viewport height, and uses a
+  960px desktop width budget with full-width mobile fallback.
+- Raised Maritime form typography to the same desktop scale used by the
+  Contract detail surface: 14px/20px control values, 13px/19.5px field labels
+  and section headings, 12px payment-card captions. The contract-code input
+  keeps its data-face treatment while moving from 12px to 14px.
+- Production-browser measurement at the default 1272px viewport confirmed the
+  Drawer is exactly 960px wide and all regular inputs resolve to 14px/20px.
+  Visual evidence is stored under `harness/runs/20260921-drawer-desktop/`.
+
+## 2026-09-21 — Maritime popovers moved to a neutral surface
+
+- Set `--color-background-popover` explicitly to `#ffffff`. Leaving the token
+  commented did not remove the prior blue tint because Astryx's generated theme
+  continued to emit its default `#e5eeff` fallback.
+- Selector menus and other Maritime popovers now use the same neutral surface as
+  desktop form controls; their border/elevation remains responsible for visual
+  separation from the page.
+
+## 2026-09-21 — TextInput focus matches the supplied reference
+
+- Updated the shared Astryx `TextInput` adapter so editable controls render a
+  solid two-pixel accent treatment on `:focus-within`: the existing one-pixel
+  border plus a one-pixel inset ring in the same accent color. This avoids a
+  layout shift while removing Astryx's lighter accent-muted inner ring.
+- Focus styling is composed after status styling, so a focused success/error
+  input is blue like the supplied reference; its semantic status color returns
+  when focus leaves. Read-only and disabled controls do not receive the active
+  treatment.
+- Astryx's boosted semantic-status selectors overrode the first StyleX
+  `:focus-within` attempt. The shared adapter now tracks the native input focus
+  event and applies only Astryx CSS variables through the component's supported
+  wrapper `style` prop; existing consumer focus/blur callbacks still run.
+- Production-browser verification measured `rgb(14, 83, 216)` for both the
+  one-pixel border and one-pixel inset ring while focused, then confirmed the
+  inline focus treatment was removed after blur. Visual evidence:
+  `harness/runs/20260921-textinput-focus/contract-number-focused-final.png`.
+- Final `./harness/verify.sh` PASSED in full. Evidence:
+  `harness/runs/20260921-105520-461/`.
+
+## 2026-09-21 — Maritime date and selector focus colors aligned
+
+- Added reusable Astryx-backed `MaritimeDateInput`,
+  `MaritimeDateTimeInput`, and `MaritimeSelector` adapters under the Maritime
+  component folder. All three share the same token-based solid accent focus
+  treatment as the shared TextInput, while preserving consumer focus/blur
+  callbacks and disabled behavior.
+- Replaced the Contract drawer's direct DateInput/Selector usage, including its
+  seller and buyer pickers, with these Maritime adapters.
+- Production-browser measurements confirmed both visible controls use
+  `rgb(14, 83, 216)` for the one-pixel border and one-pixel inset ring.
+  Screenshots: `harness/runs/20260921-maritime-field-focus/date-focused.png`
+  and `harness/runs/20260921-maritime-field-focus/selector-focused.png`.
+- Full verification passed. Evidence:
+  `harness/runs/20260921-110356-1437/`.
+## 2026-09-21 — Contract list aligned to approved Stitch screen
+
+- Downloaded the approved 2560×2048 Stitch screen and generated HTML to
+  `.stitch/designs/contracts-list-stitch.{png,html}`.
+- Added the Stitch title/subtitle hierarchy, server-backed status switcher,
+  and renamed table presets (`Cơ bản`, `Giá trị & Dòng tiền`) while retaining
+  the existing advanced-search condition builder.
+- Added a focused regression test. Browser verification is pending because the
+  isolated automation session reaches the authenticated app's login screen and
+  has no credential source.
+- Focused ESLint and `contracts-list-stitch.test.cjs` pass. The repository-wide
+  gate is currently blocked by unrelated in-progress Maritime edits already in
+  the worktree: five TypeScript errors in Contract drawer/Maritime components
+  and `readonly-input-wrappers.test.js` rejecting the new Maritime NumberInput
+  adapter. Evidence from the attempted harness runs is under
+  `harness/runs/20260921-170603-2392/`, `20260921-170626-2464/`, and
+  `20260921-170656-2554/`; the first two additionally expose this Windows
+  environment's WSL-only `bash`/Node PATH mismatch.
+- Follow-up completed the unrelated Maritime worktree fixes that had blocked
+  verification: restored the derived payment-term title, corrected invalid
+  Astryx size props, removed the empty Drawer footer Text node, and routed the
+  Maritime NumberInput through the shared readonly wrapper. Typecheck and all
+  164 unit tests now pass.
+- Authenticated browser verification confirmed the default Basic table, the
+  server-backed `Đã hoàn thành` status filter, the advanced-filter dialog
+  retaining both Official and status conditions, and the full grouped
+  `Giá trị & Dòng tiền` columns. Screenshots:
+  `harness/runs/20260921-contract-list-stitch/contracts-list.png` and
+  `contracts-list-financial.png`. Browser console has no application errors.
+- Final `./harness/verify.sh` PASSED using the installed Git Bash runner.
+  Evidence: `harness/runs/20260921-213115-1754/`.
+
+## 2026-09-21 — Stitch Contract list exposed at `/logistics/contracts/v2`
+
+- Added the protected App Router page at
+  `src/app/(protected)/logistics/contracts/v2/page.jsx`.
+- The route reuses the production `ContractsList` surface, so the Stitch UI,
+  server-backed status filters, advanced-search dialog, pagination, and table
+  view presets are identical to `/logistics/contracts`.
+- V2 now opens on the Stitch reference's `Giá trị & Dòng tiền` preset and uses
+  a separate persisted table-settings key (`Hợp đồng V2`), making the visual
+  difference explicit even when the original list has saved column settings.
+- Added a route-source regression assertion. Full verification passed after
+  the route addition; evidence: `harness/runs/20260921-214427-1844/`.
+- Final verification after the V2 preset adjustment passed:
+  `harness/runs/20260921-214810-625/`.
+- Added the missing Logistics sidebar entry `Hợp đồng V2 (Stitch)` pointing to
+  `/logistics/contracts/v2`; the route is now discoverable in-app rather than
+  URL-only. Full verification after wiring the navigation passed:
+  `harness/runs/20260921-215626-1394/`.
+- Split the v2 entry point into the named `ContractsListV2` component at
+  `src/features/logistics-contracts/components/contracts-list-v2.jsx` and
+  wired the page through the feature index. Final verification passed:
+  `harness/runs/20260921-215830-1814/`.
+- Rechecked the implementation against the current Figma selection (`Container`,
+  node `72:4`). Added the live commercial-year metadata, matched the broader
+  quick-search prompt, and renamed the sidebar entry to the user-facing
+  `Hợp đồng V2`; the advanced-search funnel remains wired to the shared
+  server-side condition array. Focused tests pass and the final full gate
+  passed. Evidence: `harness/runs/20260921-220539-1399/`. A fresh browser
+  screenshot could not be captured because the available automation sessions
+  were redirected to login and no credential source is available; the prior
+  authenticated V2 evidence remains under
+  `harness/runs/20260921-contract-list-stitch/contracts-list-financial.png`.
+
+## 2026-09-21 — Contract detail back navigation and edit-drawer cancel fixed
+
+- Added a visible `Quay lại` action to the Contract detail page. Browser
+  verification confirmed it returns to the actual originating list route,
+  including `/logistics/contracts/v2`.
+- Fixed the detail page's edit drawer so `Hủy bỏ` closes the drawer instead of
+  falling through to the legacy read-only Contract dialog. The shared dialog's
+  existing edit-to-view behavior remains unchanged for other callers.
+- Added a focused regression test. Browser evidence:
+  `harness/runs/20260921-contract-detail-navigation/detail-after-cancel.png`.
+
+## 2026-09-21 — Contract V2 financial table aligned to selected Figma frame
+
+- Rechecked the selected Figma table frame (`72:109`, finance and cashflow
+  view) and reordered the V2 preset to `Ngày ký → Số hợp đồng → Trạng thái →
+  Ngày hoàn thành → Giá trị → Thanh toán → Chức năng`.
+- Removed `Khách hàng` and `Chưa xuất` from the V2 financial preset, shortened
+  the completion header, and tightened numeric column widths to reproduce the
+  dense report geometry without changing the underlying TanStack table.
+- Kept the accessible actions-menu label slightly wider than the icon-only
+  Figma mock so it does not clip. `Số cont` and split logistics-cost values were
+  not fabricated because the Contract search payload does not provide them.
+- Added regression assertions and verified the rendered table in Chrome.
+  Screenshot: `harness/runs/20260921-contract-table-figma/contracts-v2-table.png`.
+
+## 2026-09-21 — Contract list navigation matched to selected Figma container
+
+- Re-read the live Figma selection (`Container`, node `72:4`) and replaced the
+  separate status segmented control with the selected design's underlined
+  `TabList`: Tất cả, Đang thực hiện, Hoàn thành, Bản nháp, and Đã hủy.
+- Added server-backed count badges for every tab. Status tabs retain the
+  established `Official` contract-type filter, while Bản nháp deliberately
+  switches to `contractType = Draft`; every tab still writes into the same
+  advanced-filter condition array.
+- Moved `Chế độ bảng: Cơ bản / Giá trị & Dòng tiền` onto the right side of the
+  same navigation row, matching the Figma hierarchy instead of leaving the
+  mode control in the search toolbar.
+- Strengthened `contracts-list-stitch.test.cjs`; all 166 tests pass and the
+  final `./harness/verify.sh` gate passed. Evidence:
+  `harness/runs/20260921-232217-907/`.
+- A fresh authenticated screenshot could not be produced: the running app
+  redirects automation to `/login`, and the available test credentials are
+  no longer valid against this backend. The selected Figma screenshot and
+  node measurements were inspected directly through the connected file.
