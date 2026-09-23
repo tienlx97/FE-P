@@ -1,15 +1,13 @@
 'use client';
 
 import { Banner } from '@astryxdesign/core/Banner';
-import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { CirclePlus } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -18,6 +16,7 @@ import {
   MetaPaymentTermRow,
 } from '@/shared/components/custom/meta/index.js';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { formatMoney } from '../config/currencies.js';
@@ -27,6 +26,7 @@ import { QuickCreateBankDialog } from './quick-create-bank-dialog.jsx';
 const styles = stylex.create({
   ratio: { flexBasis: 'calc(var(--spacing-12) * 3)' },
   condition: { minWidth: 'calc(var(--spacing-12) * 5)' },
+  minZero: { minWidth: 0 },
 });
 
 /** @param {import('../types/index.js').ContractBank} bank */
@@ -89,42 +89,39 @@ export function ContractDrawerPaymentTerms({
 
   return (
     <MetaFormCard>
-      <VStack gap={2} hAlign="stretch">
-        <HStack hAlign="between" vAlign="center" gap={2} wrap="wrap">
-          <Text size="sm" weight="semibold">
-            Tài khoản / Ngân hàng thụ hưởng chỉ định *
-          </Text>
-          <Button
-            label="Thêm ngân hàng"
-            icon={<Icon icon={CirclePlus} size="sm" />}
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsQuickCreateBankOpen(true)}
+      <HStack gap={2} vAlign="end" wrap="nowrap">
+        <StackItem size="fill" xstyle={styles.minZero}>
+          <MultiSelector
+            label="Tài khoản / Ngân hàng thụ hưởng chỉ định"
+            placeholder={
+              banks.length > 0
+                ? 'Chọn ngân hàng thụ hưởng'
+                : 'Chưa có ngân hàng nào trong danh mục'
+            }
+            options={banks.map((bank) => ({
+              value: bank.id,
+              label: bankLabel(bank),
+            }))}
+            value={selectedBankIds}
+            onChange={onBankIdsChange}
+            triggerDisplay="labels"
+            hasSearch
+            isRequired
+            status={bankStatus}
+            statusVariant="tooltip"
+            width="100%"
           />
-        </HStack>
-        <MultiSelector
-          label="Ngân hàng thụ hưởng"
-          isLabelHidden
-          placeholder={
-            banks.length > 0
-              ? 'Chọn ngân hàng thụ hưởng'
-              : 'Chưa có ngân hàng nào trong danh mục'
-          }
-          options={banks.map((bank) => ({
-            value: bank.id,
-            label: bankLabel(bank),
-          }))}
-          value={selectedBankIds}
-          onChange={onBankIdsChange}
-          triggerDisplay="labels"
-          hasSearch
-          isRequired
-          status={bankStatus}
-          statusVariant="tooltip"
-          width="100%"
+        </StackItem>
+        <IconButton
+          label="Thêm ngân hàng"
+          tooltip="Thêm ngân hàng"
+          icon={<Icon icon={IconPlus} size="sm" />}
+          type="button"
+          size="lg"
+          variant="secondary"
+          onClick={() => setIsQuickCreateBankOpen(true)}
         />
-      </VStack>
+      </HStack>
 
       <MetaPaymentSplitBar
         label="Các đợt thanh toán cam kết"

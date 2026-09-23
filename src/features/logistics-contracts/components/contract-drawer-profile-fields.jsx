@@ -52,6 +52,8 @@ const styles = stylex.create({
   // them.
   fields: {
     // eslint-disable-next-line @stylexjs/valid-styles
+    '--meta-field-height': 'var(--spacing-10)',
+    // eslint-disable-next-line @stylexjs/valid-styles
     '--meta-field-radius': 'var(--meta-radius-inset)',
   },
 });
@@ -338,6 +340,7 @@ export function ContractDrawerProfileFields({
               tooltip="Thêm nước"
               icon={<Icon icon={IconPlus} size="sm" />}
               type="button"
+              size="lg"
               variant="secondary"
               onClick={() => setIsQuickCreateCountryOpen(true)}
             />
@@ -374,6 +377,7 @@ export function ContractDrawerProfileFields({
               tooltip="Thêm nơi xếp hàng"
               icon={<Icon icon={IconPlus} size="sm" />}
               type="button"
+              size="lg"
               variant="secondary"
               isDisabled={!vietnamCountryId}
               onClick={() => setIsQuickCreateLoadingPlaceOpen(true)}
@@ -413,6 +417,7 @@ export function ContractDrawerProfileFields({
               tooltip="Thêm cảng / nơi đến"
               icon={<Icon icon={IconPlus} size="sm" />}
               type="button"
+              size="lg"
               variant="secondary"
               isDisabled={!isPlaceOfDischargeApplicable || !values.countryId}
               onClick={() => setIsQuickCreateDischargePlaceOpen(true)}
@@ -445,6 +450,7 @@ export function ContractDrawerProfileFields({
               onInlineFieldChange={setSellerInlineField}
               extraFieldRows={sellerExtraFieldRows}
               isDetailsCollapsible={false}
+              actionSize="lg"
             />
           </MetaFormCard>
           <MetaFormCard
@@ -456,7 +462,6 @@ export function ContractDrawerProfileFields({
                     <MetaPill
                       label={buyerCountryName.toLocaleUpperCase('vi')}
                       tone="accent"
-                      size="sm"
                     />
                   ) : null}
                 </HStack>
@@ -480,6 +485,7 @@ export function ContractDrawerProfileFields({
               onInlineFieldChange={setBuyerInlineField}
               extraFieldRows={buyerExtraFieldRows}
               isDetailsCollapsible={false}
+              actionSize="lg"
             />
           </MetaFormCard>
         </MetaFormSection>

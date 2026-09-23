@@ -39,6 +39,7 @@ import { QuickCreateCustomerDialog } from './quick-create-customer-dialog.jsx';
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   isReadOnly?: boolean,
  *   isDetailsCollapsible?: boolean,
+ *   actionSize?: 'md' | 'lg',
  * }} props
  */
 export function BuyerFields({
@@ -53,6 +54,7 @@ export function BuyerFields({
   extraFieldRows,
   isReadOnly = false,
   isDetailsCollapsible = true,
+  actionSize = 'md',
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
@@ -90,6 +92,7 @@ export function BuyerFields({
           tooltip="Thêm khách hàng"
           icon={<Icon icon={IconPlus} size="sm" />}
           type="button"
+          size={actionSize}
           variant="secondary"
           onClick={() => setIsQuickCreateOpen(true)}
         />

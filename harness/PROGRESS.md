@@ -1,5 +1,27 @@
 # Progress Log
 
+## 2026-09-23 (afternoon, 5) — Edit drawer: roomier fields, larger small text
+
+- User request: make the drawer and its font sizes fit better. Measured in
+  the browser first (Meta scale: xs 10 / sm 12 / base 14 / lg 17px).
+- Fields: the Meta theme's md text-input / selector / multi-selector /
+  date-input / number-input read `--meta-field-height` (fallback: Astryx
+  md `--spacing-8`). The drawer form sets it to `--spacing-10` (40px;
+  Figma 42px). The "+" / trash icon buttons beside pickers are `lg` to match
+  (new optional `actionSize` prop on `SellerPickerFields` / `BuyerFields`).
+  Date and number inputs take the same border and radius as the other fields.
+- Type: nothing in the drawer below 12px. Section titles 12→14 bold
+  uppercase, section notes 10→12, split-bar labels 10→12 with the total at
+  14, step descriptions 10→12 (up to 2 lines), step tile, number and amount
+  at 14, ratio, status and country pills 10→12, section tint button md.
+- Layout: the bank multi-select uses a normal field label plus a "+" button
+  (same pattern as country / port). The footer shows "Có thay đổi chưa
+  lưu" / "Chưa có thay đổi" on the left. `MetaFormCard` is now an Astryx
+  `Card` (muted) so the extra-fields `Table` bleeds to the card edge
+  instead of 8px past it.
+- Checked in Chrome on 26KCT39; closed without saving. verify.sh passed
+  (`harness/runs/20260923-161120-1966/`).
+
 ## 2026-09-23 (afternoon, 4) — "Chỉnh sửa hợp đồng" drawer in the Meta theme
 
 - Figma Bridge selection 103:4983 (720px edit drawer). Local styles and

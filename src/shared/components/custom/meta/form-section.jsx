@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -34,7 +35,7 @@ export function MetaFormSection({ index, title, meta, action, children }) {
           <HStack as="span" xstyle={styles.bar} />
           <Text
             as="span"
-            size="sm"
+            size="base"
             weight="bold"
             color="primary"
             xstyle={styles.title}
@@ -44,7 +45,7 @@ export function MetaFormSection({ index, title, meta, action, children }) {
         </HStack>
         {action ??
           (meta ? (
-            <Text size="xsm" weight="medium" color="secondary">
+            <Text size="sm" weight="medium" color="secondary">
               {meta}
             </Text>
           ) : null)}
@@ -65,20 +66,24 @@ export function MetaFormSection({ index, title, meta, action, children }) {
  */
 export function MetaFormCard({ header, children }) {
   return (
-    <VStack gap={4} hAlign="stretch" xstyle={styles.card}>
-      {header ? (
-        <HStack
-          hAlign="between"
-          vAlign="center"
-          gap={3}
-          wrap="wrap"
-          xstyle={styles.header}
-        >
-          {header}
-        </HStack>
-      ) : null}
-      {children}
-    </VStack>
+    // Astryx `Card` (not a padded stack) so nested edge-to-edge content —
+    // e.g. the extra-fields `Table` — bleeds to this card's own padding.
+    <Card variant="muted" padding={4} xstyle={styles.card}>
+      <VStack gap={4} hAlign="stretch">
+        {header ? (
+          <HStack
+            hAlign="between"
+            vAlign="center"
+            gap={3}
+            wrap="wrap"
+            xstyle={styles.header}
+          >
+            {header}
+          </HStack>
+        ) : null}
+        {children}
+      </VStack>
+    </Card>
   );
 }
 
@@ -93,7 +98,7 @@ export function MetaTintButton({ xstyle, ...props }) {
     <Button
       {...props}
       variant="ghost"
-      size="sm"
+      size="md"
       xstyle={[
         styles.tint,
         ...(Array.isArray(xstyle) ? xstyle : xstyle ? [xstyle] : []),
@@ -117,7 +122,7 @@ const styles = stylex.create({
     backgroundColor: 'var(--color-accent)',
     borderRadius: 'var(--radius-full)',
     flexShrink: 0,
-    height: 'var(--spacing-3)',
+    height: 'var(--spacing-4)',
     width: 'var(--spacing-1-5)',
   },
   title: {
@@ -125,11 +130,6 @@ const styles = stylex.create({
     textTransform: 'uppercase',
   },
   card: {
-    backgroundColor: 'var(--color-background-muted)',
-    borderColor: 'var(--color-border)',
     borderRadius: 'var(--meta-radius-inset)',
-    borderStyle: 'solid',
-    borderWidth: 'var(--border-width)',
-    padding: 'var(--spacing-4)',
   },
 });

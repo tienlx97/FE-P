@@ -228,7 +228,7 @@ export function ContractFormDialog({
                               tone={metaToneForContractStatus(
                                 form.values.status,
                               )}
-                              size="sm"
+                              size="md"
                             />
                           </>
                         ) : null}
@@ -256,27 +256,32 @@ export function ContractFormDialog({
             }
             footer={
               <LayoutFooter padding={4}>
-                <HStack hAlign="end" vAlign="center" gap={2} wrap="wrap">
-                  <Button
-                    label="Huỷ bỏ"
-                    variant="secondary"
-                    size="lg"
-                    isDisabled={isSubmitting}
-                    onClick={() =>
-                      requestExit(
-                        closeOnCancel || !contract ? 'close' : 'cancel',
-                      )
-                    }
-                  />
-                  <Button
-                    label={submitLabel}
-                    type="submit"
-                    form={formId}
-                    variant="primary"
-                    size="lg"
-                    icon={<Icon icon={Save} size="sm" />}
-                    isLoading={isSubmitting}
-                  />
+                <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
+                  <Text size="sm" color="secondary" xstyle={styles.hint}>
+                    {isDirty ? 'Có thay đổi chưa lưu' : 'Chưa có thay đổi'}
+                  </Text>
+                  <HStack gap={2} vAlign="center" wrap="nowrap">
+                    <Button
+                      label="Huỷ bỏ"
+                      variant="secondary"
+                      size="lg"
+                      isDisabled={isSubmitting}
+                      onClick={() =>
+                        requestExit(
+                          closeOnCancel || !contract ? 'close' : 'cancel',
+                        )
+                      }
+                    />
+                    <Button
+                      label={submitLabel}
+                      type="submit"
+                      form={formId}
+                      variant="primary"
+                      size="lg"
+                      icon={<Icon icon={Save} size="sm" />}
+                      isLoading={isSubmitting}
+                    />
+                  </HStack>
                 </HStack>
               </LayoutFooter>
             }

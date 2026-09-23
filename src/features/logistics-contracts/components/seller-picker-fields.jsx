@@ -38,6 +38,7 @@ import { SellerFields } from './seller-fields.jsx';
  *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   isReadOnly?: boolean,
  *   isDetailsCollapsible?: boolean,
+ *   actionSize?: 'md' | 'lg',
  * }} props
  */
 export function SellerPickerFields({
@@ -52,6 +53,7 @@ export function SellerPickerFields({
   extraFieldRows,
   isReadOnly = false,
   isDetailsCollapsible = true,
+  actionSize = 'md',
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
@@ -109,6 +111,7 @@ export function SellerPickerFields({
             tooltip="Xoá bên bán khỏi danh mục"
             icon={<Icon icon={Trash2} size="sm" />}
             type="button"
+            size={actionSize}
             variant="secondary"
             onClick={() => setIsConfirmingDelete(true)}
           />
@@ -119,6 +122,7 @@ export function SellerPickerFields({
           tooltip="Thêm bên bán"
           icon={<Icon icon={IconPlus} size="sm" />}
           type="button"
+          size={actionSize}
           variant="secondary"
           onClick={() => setIsQuickCreateOpen(true)}
         />

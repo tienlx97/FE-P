@@ -230,14 +230,19 @@ export const metaTheme = defineTheme({
         borderRadius: 'var(--meta-field-radius, var(--radius-full))',
       },
     },
-    // `--meta-field-radius` is unset by default (list filters stay pills);
-    // form surfaces such as the edit drawer set it on an ancestor so every
-    // control inside rounds to the Figma form radius.
+    // `--meta-field-radius` / `--meta-field-height` are unset by default
+    // (list filters stay 32px pills); form surfaces such as the edit drawer
+    // set them on an ancestor so every md control inside takes the Figma
+    // form radius and a roomier height. The fallback is Astryx's own md
+    // height (`--spacing-8`).
     'text-input': {
       base: {
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'var(--meta-field-radius, var(--radius-element))',
+      },
+      'size:md': {
+        height: 'var(--meta-field-height, var(--spacing-8))',
       },
     },
     selector: {
@@ -245,6 +250,37 @@ export const metaTheme = defineTheme({
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'var(--meta-field-radius, var(--radius-full))',
+      },
+      'size:md': {
+        height: 'var(--meta-field-height, var(--spacing-8))',
+      },
+    },
+    'multi-selector': {
+      base: {
+        borderRadius: 'var(--meta-field-radius, var(--radius-element))',
+      },
+      'size:md': {
+        height: 'var(--meta-field-height, var(--spacing-8))',
+      },
+    },
+    'date-input': {
+      base: {
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'var(--meta-field-radius, var(--radius-element))',
+      },
+      'size:md': {
+        height: 'var(--meta-field-height, var(--spacing-8))',
+      },
+    },
+    'number-input': {
+      base: {
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'var(--meta-field-radius, var(--radius-element))',
+      },
+      'size:md': {
+        height: 'var(--meta-field-height, var(--spacing-8))',
       },
     },
     tab: {

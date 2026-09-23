@@ -38,7 +38,7 @@ export function MetaPaymentSplitBar({ label, totalLabel, isBalanced, ratios }) {
     <VStack gap={2} hAlign="stretch">
       <HStack hAlign="between" vAlign="center" gap={2} wrap="wrap">
         <Text
-          size="xsm"
+          size="sm"
           weight="semibold"
           color="secondary"
           xstyle={styles.caps}
@@ -47,7 +47,7 @@ export function MetaPaymentSplitBar({ label, totalLabel, isBalanced, ratios }) {
         </Text>
         <HStack gap={1} vAlign="center" wrap="nowrap">
           <Text
-            size="xsm"
+            size="sm"
             weight="semibold"
             color="secondary"
             xstyle={styles.caps}
@@ -55,7 +55,7 @@ export function MetaPaymentSplitBar({ label, totalLabel, isBalanced, ratios }) {
             Tổng tỷ lệ:
           </Text>
           <Text
-            size="sm"
+            size="base"
             weight="bold"
             color={isBalanced ? 'meta-success' : 'inherit'}
             hasTabularNumbers
@@ -129,7 +129,7 @@ export function MetaPaymentTermRow({
         >
           <Text
             as="span"
-            size="sm"
+            size="base"
             weight="bold"
             color="inherit"
             hasTabularNumbers
@@ -143,15 +143,15 @@ export function MetaPaymentTermRow({
               <Text size="base" weight="bold" maxLines={1}>
                 {title}
               </Text>
-              <MetaPill label={ratioLabel} tone={tone} size="sm" />
+              <MetaPill label={ratioLabel} tone={tone} />
               {amount ? (
-                <Text size="sm" weight="bold" hasTabularNumbers>
+                <Text size="base" weight="bold" hasTabularNumbers>
                   ({amount})
                 </Text>
               ) : null}
             </HStack>
             {description ? (
-              <Text size="xsm" color="secondary" maxLines={1}>
+              <Text size="sm" color="secondary" maxLines={2}>
                 {description}
               </Text>
             ) : null}
@@ -164,7 +164,6 @@ export function MetaPaymentTermRow({
             icon={<Icon icon={isEditing ? Check : Pencil} size="sm" />}
             type="button"
             variant="ghost"
-            size="sm"
             onClick={onToggleEdit}
           />
           <IconButton
@@ -173,7 +172,6 @@ export function MetaPaymentTermRow({
             icon={<Icon icon={Trash2} size="sm" />}
             type="button"
             variant="ghost"
-            size="sm"
             isDisabled={isRemoveDisabled}
             onClick={onRemove}
           />
@@ -217,8 +215,8 @@ const styles = stylex.create({
   tile: {
     borderRadius: 'var(--radius-element)',
     flexShrink: 0,
-    height: 'var(--spacing-8)',
-    width: 'var(--spacing-8)',
+    height: 'var(--spacing-10)',
+    width: 'var(--spacing-10)',
   },
   minZero: {
     minWidth: 0,
