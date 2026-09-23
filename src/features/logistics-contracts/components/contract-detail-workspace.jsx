@@ -1,43 +1,44 @@
 'use client';
 import { Banner } from '@astryxdesign/core/Banner';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
-import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { Spinner } from '@astryxdesign/core/Spinner';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { InfoTip } from '@astryxdesign/lab';
 import {
-  CalendarDays,
-  CircleDollarSign,
+  Banknote,
   Download,
+  FilePen,
   FileText,
-  Hourglass,
-  LayoutDashboard,
+  Landmark,
+  LayoutGrid,
   Package,
-  Paperclip,
   Percent,
+  Ship,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId, useState } from 'react';
 
+import { MaritimeThemeProvider } from '@/shared/components/custom/maritime/index.js';
 import {
-  MaritimeContractOverviewCard,
-  MaritimeTabNav,
-  MaritimeThemeProvider,
-} from '@/shared/components/custom/maritime/index.js';
+  MetaContractBreadcrumb,
+  MetaContractDetailSkeleton,
+  MetaContractHeaderCard,
+  MetaTabNav,
+  MetaThemeProvider,
+} from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
-import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import {
   labelForContractStatus,
-  statusDotVariantForContractStatus,
+  metaToneForContractStatus,
 } from '../config/contract-status.js';
 import { labelForContractType } from '../config/contract-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
+import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { useContractQuery } from '../hooks/use-contracts-query.js';
+import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
+import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractCommissionPanel } from './contract-commission-panel.jsx';
@@ -48,39 +49,26 @@ import { ContractPaymentsPanel } from './contract-payments-panel.jsx';
 import { ContractShipmentsPanel } from './contract-shipments-panel.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 
-/** @param {string} status */
-function maritimeToneForContractStatus(status) {
-  if (status === 'Completed') return 'blue';
-  if (status === 'InProgress') return 'success';
-  if (status === 'Cancelled') return 'error';
-  return 'neutral';
-}
+/** @typedef {'overview' | 'payments' | 'shipments' | 'annexes' | 'commission'} DetailTab */
 
-/** @typedef {'overview' | 'annexes' | 'payments' | 'shipments' | 'commission'} DetailTab */
-
+// Order and labels follow the Meta Figma tab bar (node 89:1064).
 const TAB_LABELS = {
   overview: 'Tổng quan & Tiến độ',
-  annexes: 'Phụ lục',
-  payments: 'Thanh toán',
-  shipments: 'Lô hàng',
-  commission: 'Hoa hồng',
+  payments: 'Tiến độ thanh toán',
+  shipments: 'Lô hàng (Shipment)',
+  annexes: 'Phụ lục (Annex)',
+  commission: 'Hoa hồng (Commission)',
 };
 
 const TAB_ICONS = {
-  overview: LayoutDashboard,
-  annexes: Paperclip,
-  payments: CircleDollarSign,
-  shipments: Package,
-  commission: Percent,
+  overview: LayoutGrid,
+  payments: Landmark,
+  shipments: Ship,
+  annexes: FilePen,
+  commission: Banknote,
 };
 
 const TAB_VALUES = /** @type {DetailTab[]} */ (Object.keys(TAB_LABELS));
-
-const DETAIL_TABS = TAB_VALUES.map((id) => ({
-  id,
-  label: TAB_LABELS[id],
-  icon: TAB_ICONS[id],
-}));
 
 const CSV_BOM = String.fromCharCode(0xfeff);
 
@@ -165,23 +153,17 @@ export function ContractDetailWorkspace({ contractId }) {
       : null;
 
   return (
-    <MaritimeThemeProvider>
+    <MetaThemeProvider>
       <PageContentShell isFullWidth>
         <VStack gap={4} hAlign="stretch">
-          <Breadcrumbs>
-            <BreadcrumbItem href="/logistics">Logistics</BreadcrumbItem>
-            <BreadcrumbItem href="/logistics/contracts">
-              Hợp đồng
-            </BreadcrumbItem>
-            <BreadcrumbItem isCurrent>
-              {contract?.contractNumber ?? '…'}
-            </BreadcrumbItem>
-          </Breadcrumbs>
+          <MetaContractBreadcrumb
+            backHref="/logistics/contracts"
+            onBack={() => router.back()}
+            currentLabel={contract?.contractNumber ?? '…'}
+          />
 
           {contractQuery.isLoading ? (
-            <HStack hAlign="center" paddingBlock={6}>
-              <Spinner label="Đang tải hợp đồng" />
-            </HStack>
+            <MetaContractDetailSkeleton />
           ) : !contract ? (
             <Banner
               status="error"
@@ -202,7 +184,7 @@ export function ContractDetailWorkspace({ contractId }) {
           )}
         </VStack>
       </PageContentShell>
-    </MaritimeThemeProvider>
+    </MetaThemeProvider>
   );
 }
 
@@ -240,22 +222,21 @@ function ContractDetailBody({
   const hasCommission = Boolean(
     commissionQuery.data?.success && commissionQuery.data.exists,
   );
+  const detailTabs = useDetailTabs(contract);
 
   return (
     <>
       <VStack gap={3} hAlign="stretch">
-        <MaritimeContractOverviewCard
+        <MetaContractHeaderCard
           contractCode={contract.contractNumber}
           projectName={contract.projectName}
-          typeLabel={labelForContractType(contract.contractType)}
-          typeTone={contract.contractType === 'Official' ? 'blue' : 'neutral'}
-          statusLabel={labelForContractStatus(contract.status)}
-          statusTone={maritimeToneForContractStatus(contract.status)}
-          statusDotVariant={statusDotVariantForContractStatus(contract.status)}
+          typeLabel={labelForContractType(contract.contractType).toUpperCase()}
+          typeTone={contract.contractType === 'Official' ? 'accent' : 'neutral'}
+          statusLabel={labelForContractStatus(contract.status).toUpperCase()}
+          statusTone={metaToneForContractStatus(contract.status)}
           incotermLabel={`${contract.incoterm} ${contract.incotermYear}`}
           onExportPdf={() => window.print()}
           onEdit={() => setIsEditDrawerOpen(true)}
-          actionsLabel="Thao tác nghiệp vụ"
           actionItems={[
             {
               id: 'shipment',
@@ -290,38 +271,12 @@ function ContractDetailBody({
               onClick: () => exportContractCsv(contract),
             },
           ]}
-          meta={
-            <HStack gap={3} vAlign="center" wrap="wrap">
-              <HStack gap={1.5} vAlign="center">
-                <Icon icon={CalendarDays} size="sm" color="secondary" />
-                <Text color="secondary">
-                  Ngày ký:{' '}
-                  <Text weight="semibold">
-                    {formatDisplayDate(contract.createdDate)}
-                  </Text>
-                </Text>
-              </HStack>
-              <Text color="secondary">•</Text>
-              <HStack gap={1.5} vAlign="center">
-                <Icon icon={Hourglass} size="sm" color="secondary" />
-                <Text color="secondary">
-                  Ngày hoàn thành dự án:{' '}
-                  <Text weight="semibold">
-                    {contract.projectCompletionDate
-                      ? formatDisplayDate(contract.projectCompletionDate)
-                      : 'Chưa hoàn thành'}
-                  </Text>
-                </Text>
-              </HStack>
-            </HStack>
-          }
         />
 
-        <MaritimeTabNav
-          tabs={DETAIL_TABS}
-          // Sticks just under the app's fixed 64px top bar.
-          stickyOffset={64}
+        <MetaTabNav
+          tabs={detailTabs}
           activeId={activeTab}
+          panelId={panelId}
           onChange={(tab) => onActiveTabChange(/** @type {DetailTab} */ (tab))}
         />
 
@@ -339,71 +294,135 @@ function ContractDetailBody({
               onCreateCommission={() => setIsAddingCommission(true)}
             />
           ) : null}
-          {activeTab === 'annexes' ? (
-            <ContractMaritimeAnnexesPanel contract={contract} />
-          ) : null}
           {activeTab === 'payments' ? (
             <ContractPaymentsPanel contract={contract} />
-          ) : null}
-          {activeTab === 'commission' ? (
-            <ContractCommissionPanel contract={contract} />
           ) : null}
           {activeTab === 'shipments' ? (
             <ContractShipmentsPanel contract={contract} />
           ) : null}
+          {activeTab === 'commission' ? (
+            <ContractCommissionPanel contract={contract} />
+          ) : null}
+          {activeTab === 'annexes' ? (
+            <ContractMaritimeAnnexesPanel contract={contract} />
+          ) : null}
         </section>
       </VStack>
 
-      {isEditDrawerOpen ? (
-        <ContractFormDialog
-          isOpen
-          onOpenChange={(open) => setIsEditDrawerOpen(open)}
-          contract={contract}
-          activeTab="profile"
-          onActiveTabChange={() => {}}
-          initialMode="edit"
-          onSuccess={() => setIsEditDrawerOpen(false)}
-        />
-      ) : null}
+      <MaritimeThemeProvider>
+        {isEditDrawerOpen ? (
+          <ContractFormDialog
+            isOpen
+            onOpenChange={(open) => setIsEditDrawerOpen(open)}
+            contract={contract}
+            activeTab="profile"
+            onActiveTabChange={() => {}}
+            initialMode="edit"
+            closeOnCancel
+            onSuccess={() => setIsEditDrawerOpen(false)}
+          />
+        ) : null}
 
-      {isAddingShipment ? (
-        <ShipmentFormDialog
-          isOpen
-          onOpenChange={(open) => {
-            if (!open) setIsAddingShipment(false);
-          }}
-          contractId={contract.id}
-          contract={contract}
-          closeLabel="Quay lại Contract"
-          onSuccess={() => setIsAddingShipment(false)}
-        />
-      ) : null}
+        {isAddingShipment ? (
+          <ShipmentFormDialog
+            isOpen
+            onOpenChange={(open) => {
+              if (!open) setIsAddingShipment(false);
+            }}
+            contractId={contract.id}
+            contract={contract}
+            closeLabel="Quay lại Contract"
+            onSuccess={() => setIsAddingShipment(false)}
+          />
+        ) : null}
 
-      {isAddingAnnex ? (
-        <ContractAnnexFormDialog
-          isOpen
-          onOpenChange={(open) => {
-            if (!open) setIsAddingAnnex(false);
-          }}
-          contractId={contract.id}
-          onSuccess={() => setIsAddingAnnex(false)}
-        />
-      ) : null}
+        {isAddingAnnex ? (
+          <ContractAnnexFormDialog
+            isOpen
+            onOpenChange={(open) => {
+              if (!open) setIsAddingAnnex(false);
+            }}
+            contractId={contract.id}
+            onSuccess={() => setIsAddingAnnex(false)}
+          />
+        ) : null}
 
-      {isAddingCommission ? (
-        <CommissionFormDialog
-          isOpen
-          onOpenChange={(open) => {
-            if (!open) setIsAddingCommission(false);
-          }}
-          contractId={contract.id}
-          contractNumber={contract.contractNumber}
-          projectName={contract.projectName}
-          currency={contract.currency}
-          closeLabel="Quay lại Contract"
-          onSuccess={() => setIsAddingCommission(false)}
-        />
-      ) : null}
+        {isAddingCommission ? (
+          <CommissionFormDialog
+            isOpen
+            onOpenChange={(open) => {
+              if (!open) setIsAddingCommission(false);
+            }}
+            contractId={contract.id}
+            contractNumber={contract.contractNumber}
+            projectName={contract.projectName}
+            currency={contract.currency}
+            closeLabel="Quay lại Contract"
+            onSuccess={() => setIsAddingCommission(false)}
+          />
+        ) : null}
+      </MaritimeThemeProvider>
     </>
   );
+}
+
+/**
+ * Tab bar entries with the Figma's count pills ("4 đợt", "3 FCL", "2",
+ * "3%"), read from the same cached queries the panels use.
+ * @param {import('../types/index.js').Contract} contract
+ */
+function useDetailTabs(contract) {
+  const schedulesQuery = usePaymentSchedulesQuery(contract.id);
+  const shipmentsQuery = useShipmentsQuery(contract.id);
+  const annexesQuery = useContractAnnexesQuery(contract.id);
+  const commissionQuery = useCommissionQuery(contract.id);
+
+  const scheduleCount = schedulesQuery.data?.success
+    ? schedulesQuery.data.schedules.length
+    : 0;
+  const shipments = shipmentsQuery.data?.success
+    ? shipmentsQuery.data.shipments
+    : [];
+  const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
+  const settlementValue =
+    (contract.contractValue ?? 0) +
+    annexes.reduce((total, annex) => {
+      if (annex.type === 'AmountIncrease') return total + annex.amount;
+      if (annex.type === 'AmountDecrease') return total - annex.amount;
+      return total;
+    }, 0);
+  const commission =
+    commissionQuery.data?.success && commissionQuery.data.exists
+      ? commissionQuery.data.commission
+      : null;
+
+  const isAllFcl =
+    shipments.length > 0 &&
+    shipments.every((shipment) => shipment.type === 'FCL');
+  /** @type {Partial<Record<DetailTab, { count: string, countTone?: 'neutral' | 'accent' | 'success' }>>} */
+  const counts = {
+    payments: scheduleCount > 0 ? { count: `${scheduleCount} đợt` } : undefined,
+    shipments:
+      shipments.length > 0
+        ? {
+            count: `${shipments.length} ${isAllFcl ? 'FCL' : 'lô'}`,
+            countTone: 'accent',
+          }
+        : undefined,
+    annexes: annexes.length > 0 ? { count: String(annexes.length) } : undefined,
+    commission:
+      commission && settlementValue > 0
+        ? {
+            count: `${Math.round((commission.value / settlementValue) * 10000) / 100}%`,
+            countTone: 'success',
+          }
+        : undefined,
+  };
+
+  return TAB_VALUES.map((id) => ({
+    id,
+    label: TAB_LABELS[id],
+    icon: TAB_ICONS[id],
+    ...counts[id],
+  }));
 }

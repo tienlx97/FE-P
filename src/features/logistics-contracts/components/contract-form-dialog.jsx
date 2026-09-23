@@ -3,26 +3,31 @@ import { Button } from '@astryxdesign/core/Button';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import { IconButton } from '@astryxdesign/core/IconButton';
+import {
+  Layout,
+  LayoutContent,
+  LayoutFooter,
+  LayoutHeader,
+} from '@astryxdesign/core/Layout';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Text } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { FilePenLine, Save } from 'lucide-react';
+import { FilePenLine, Save, X } from 'lucide-react';
 import { useId } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import {
-  MaritimeBadge,
-  MaritimeButton,
-  MaritimeThemeProvider,
-} from '@/shared/components/custom/maritime/index.js';
+  MetaPill,
+  MetaThemeProvider,
+} from '@/shared/components/custom/meta/index.js';
 
 import {
   labelForContractStatus,
-  statusDotVariantForContractStatus,
+  metaToneForContractStatus,
 } from '../config/contract-status.js';
 import { useContractEditingState } from '../hooks/use-contract-editing-state.js';
 import { ContractDrawerProfileFields } from './contract-drawer-profile-fields.jsx';
@@ -41,26 +46,19 @@ const styles = stylex.create({
   drawerSurface: {
     backgroundColor: colorVars['--color-background-surface'],
     borderRadius: 0,
+    boxShadow: 'var(--meta-shadow-drawer)',
   },
   drawerLayout: {
     height: '100%',
   },
-  drawerHeader: {
-    backgroundColor:
-      'color-mix(in srgb, var(--maritime-badge-neutral-bg) 70%, white)',
-  },
+  // Figma 103:4983: 40px cobalt-wash tile with the edit icon.
   drawerHeaderIcon: {
-    alignItems: 'center',
-    backgroundColor: colorVars['--color-accent'],
-    borderRadius: 'var(--radius-inner)',
-    color: colorVars['--color-on-accent'],
-    display: 'inline-flex',
-    height: 'var(--spacing-8)',
-    justifyContent: 'center',
-    width: 'var(--spacing-8)',
-  },
-  drawerFooter: {
-    // backgroundColor: 'var(--maritime-badge-neutral-bg)',
+    backgroundColor: 'var(--meta-blue-wash)',
+    borderRadius: 'var(--meta-radius-inset)',
+    color: colorVars['--color-accent'],
+    flexShrink: 0,
+    height: 'var(--spacing-10)',
+    width: 'var(--spacing-10)',
   },
   // The native `hidden` attribute alone does NOT hide a `VStack` — its own
   // compiled `display: flex` class is author-origin CSS, which the cascade
@@ -69,6 +67,9 @@ const styles = stylex.create({
   hidden: { display: 'none' },
 });
 
+// Figma 103:4983: "rộng rãi ~720px" edit drawer.
+const DRAWER_WIDTH = 720;
+
 const TAB_LABELS = {
   profile: 'Hồ sơ',
   annexes: 'Phụ lục',
@@ -76,14 +77,6 @@ const TAB_LABELS = {
   related: 'Liên quan',
   fullView: 'Xem đầy đủ',
 };
-
-/** @param {import('../types/index.js').ContractStatus | string} status */
-function maritimeToneForStatus(status) {
-  if (status === 'InProgress') return 'success';
-  if (status === 'Completed') return 'blue';
-  if (status === 'Cancelled') return 'error';
-  return 'neutral';
-}
 
 /**
  * One fullscreen workspace for creation, inspection and editing, grouped
@@ -185,53 +178,71 @@ export function ContractFormDialog({
   );
 
   if (isEditing) {
+    const title = contract ? 'Chỉnh sửa hợp đồng' : 'Thêm hợp đồng mới';
+
     return (
-      <MaritimeThemeProvider>
+      <MetaThemeProvider>
         <Drawer
           isOpen={isOpen}
           onOpenChange={(open) => {
             if (!open) requestExit('close');
           }}
           side="end"
-          width={960}
+          width={DRAWER_WIDTH}
           isFullWidthOnMobile
-          label={contract ? 'Chỉnh sửa hợp đồng' : 'Thêm hợp đồng mới'}
+          label={title}
           hasCloseButton={false}
           xstyle={styles.drawerSurface}
         >
           <Layout
             defaultHasDividers
-            padding={5}
             xstyle={styles.drawerLayout}
             header={
-              <VStack hAlign="stretch" xstyle={styles.drawerHeader}>
-                <DialogHeader
-                  title={contract ? 'Chỉnh sửa hợp đồng' : 'Thêm hợp đồng'}
-                  subtitle={
-                    contract?.contractNumber || 'Hoàn thiện hồ sơ hợp đồng'
-                  }
-                  startContent={
-                    <HStack as="span" xstyle={styles.drawerHeaderIcon}>
-                      <Icon icon={FilePenLine} size="sm" color="inherit" />
+              <LayoutHeader padding={4}>
+                <HStack hAlign="between" vAlign="center" gap={3} wrap="nowrap">
+                  <HStack gap={3} vAlign="center" wrap="nowrap">
+                    <HStack
+                      as="span"
+                      hAlign="center"
+                      vAlign="center"
+                      xstyle={styles.drawerHeaderIcon}
+                    >
+                      <Icon icon={FilePenLine} size="md" color="inherit" />
                     </HStack>
-                  }
-                  endContent={
-                    contract ? (
-                      <MaritimeBadge
-                        label={labelForContractStatus(form.values.status)}
-                        tone={maritimeToneForStatus(form.values.status)}
-                        dotVariant={statusDotVariantForContractStatus(
-                          form.values.status,
-                        )}
-                        size="md"
-                        isUppercase={false}
-                        isDotPulsing
-                      />
-                    ) : null
-                  }
-                  onOpenChange={() => requestExit('close')}
-                />
-              </VStack>
+                    <VStack gap={0.5}>
+                      <Heading level={3}>{title}</Heading>
+                      <HStack gap={2} vAlign="center" wrap="wrap">
+                        <Text size="sm" weight="bold" color="accent">
+                          {contract?.contractNumber ||
+                            'Hoàn thiện hồ sơ hợp đồng'}
+                        </Text>
+                        {contract ? (
+                          <>
+                            <Text size="xsm" color="secondary" aria-hidden>
+                              •
+                            </Text>
+                            <MetaPill
+                              label={labelForContractStatus(
+                                form.values.status,
+                              ).toLocaleUpperCase('vi')}
+                              tone={metaToneForContractStatus(
+                                form.values.status,
+                              )}
+                              size="sm"
+                            />
+                          </>
+                        ) : null}
+                      </HStack>
+                    </VStack>
+                  </HStack>
+                  <IconButton
+                    label="Đóng"
+                    icon={<Icon icon={X} size="sm" />}
+                    variant="ghost"
+                    onClick={() => requestExit('close')}
+                  />
+                </HStack>
+              </LayoutHeader>
             }
             content={
               <LayoutContent padding={6}>
@@ -245,42 +256,34 @@ export function ContractFormDialog({
             }
             footer={
               <LayoutFooter padding={4}>
-                <HStack
-                  hAlign="end"
-                  vAlign="center"
-                  gap={3}
-                  wrap="wrap"
-                  xstyle={styles.drawerFooter}
-                >
-                  <HStack gap={2}>
-                    <MaritimeButton
-                      width={76}
-                      label="Hủy bỏ"
-                      variant="secondary"
-                      isDisabled={isSubmitting}
-                      onClick={() =>
-                        requestExit(
-                          closeOnCancel || !contract ? 'close' : 'cancel',
-                        )
-                      }
-                    />
-                    <MaritimeButton
-                      width={132}
-                      label={submitLabel}
-                      type="submit"
-                      form={formId}
-                      variant="primary"
-                      icon={<Icon icon={Save} size="sm" />}
-                      isLoading={isSubmitting}
-                    />
-                  </HStack>
+                <HStack hAlign="end" vAlign="center" gap={2} wrap="wrap">
+                  <Button
+                    label="Huỷ bỏ"
+                    variant="secondary"
+                    size="lg"
+                    isDisabled={isSubmitting}
+                    onClick={() =>
+                      requestExit(
+                        closeOnCancel || !contract ? 'close' : 'cancel',
+                      )
+                    }
+                  />
+                  <Button
+                    label={submitLabel}
+                    type="submit"
+                    form={formId}
+                    variant="primary"
+                    size="lg"
+                    icon={<Icon icon={Save} size="sm" />}
+                    isLoading={isSubmitting}
+                  />
                 </HStack>
               </LayoutFooter>
             }
           />
         </Drawer>
         {discardDialog}
-      </MaritimeThemeProvider>
+      </MetaThemeProvider>
     );
   }
 

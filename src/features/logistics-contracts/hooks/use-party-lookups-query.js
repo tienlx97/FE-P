@@ -2,7 +2,11 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createPartyGroup, listPartyLookups, partyGroupRoute } from '../api/party-lookups.js';
+import {
+  createPartyGroup,
+  listPartyLookups,
+  partyGroupRoute,
+} from '../api/party-lookups.js';
 
 /** @param {'customer' | 'supplier'} kind */
 export function usePartyLookupsQuery(kind) {
@@ -28,7 +32,9 @@ export function useCreatePartyGroupMutation(kind) {
     mutationFn: (/** @type {string} */ name) => createPartyGroup(kind, name),
     onSuccess: (result) => {
       if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['logistics-contracts', partyGroupRoute(kind)] });
+        queryClient.invalidateQueries({
+          queryKey: ['logistics-contracts', partyGroupRoute(kind)],
+        });
       }
     },
   });

@@ -25,7 +25,11 @@ export const commissionPaymentSchema = z.object({
  * submit (409 on collision), not this schema.
  */
 export const commissionSchema = z.object({
-  code: z.string().trim().min(1, 'Vui lòng nhập mã Commission').max(100, 'Tối đa 100 ký tự'),
+  code: z
+    .string()
+    .trim()
+    .min(1, 'Vui lòng nhập mã Commission')
+    .max(100, 'Tối đa 100 ký tự'),
   signedDate: z.string().trim().min(1, 'Vui lòng chọn ngày ký'),
   partyCustomerId: z.string().trim().min(1, 'Vui lòng chọn bên nhận hoa hồng'),
   value: z
@@ -38,8 +42,9 @@ export const commissionSchema = z.object({
     .min(1, 'Cần ít nhất 1 đợt thanh toán')
     .refine(
       (terms) =>
-        Math.abs(terms.reduce((sum, term) => sum + term.paymentRatioPercent, 0) - 100) <
-        0.01,
+        Math.abs(
+          terms.reduce((sum, term) => sum + term.paymentRatioPercent, 0) - 100,
+        ) < 0.01,
       { message: 'Tổng tỷ lệ các đợt thanh toán phải bằng 100%' },
     ),
   paymentHistory: z.array(commissionPaymentSchema),

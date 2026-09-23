@@ -136,8 +136,7 @@ export const contractSchema = z
     },
   )
   .refine(
-    (values) =>
-      values.status === 'Completed' || !values.projectCompletionDate,
+    (values) => values.status === 'Completed' || !values.projectCompletionDate,
     {
       // UI-only rule (per user request, 2026-09-16) — the backend accepts
       // this field independent of Status, but this form only lets it be
@@ -145,7 +144,8 @@ export const contractSchema = z
       // (`ContractGeneralFields` locks the input the rest of the time, and
       // `useContractForm.setField` clears any stale value the moment
       // status moves away from `Completed`).
-      message: 'Chỉ có thể nhập ngày hoàn thành khi trạng thái là "Đã hoàn thành"',
+      message:
+        'Chỉ có thể nhập ngày hoàn thành khi trạng thái là "Đã hoàn thành"',
       path: ['projectCompletionDate'],
     },
   )

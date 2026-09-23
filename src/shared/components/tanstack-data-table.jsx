@@ -216,6 +216,12 @@ function isEmptyCell(node) {
  * sort?: {field: string, direction: 'Ascending' | 'Descending'} | null,
  * onSortChange?: (field: string | null, direction: 'Ascending' | 'Descending') => void,
  * sortableColumnKeys?: readonly string[],
+ * ariaLabel?: string,
+ * headerCellXstyle?: import('@stylexjs/stylex').StyleXStyles,
+ * headerContentXstyle?: import('@stylexjs/stylex').StyleXStyles,
+ * bodyCellXstyle?: import('@stylexjs/stylex').StyleXStyles,
+ * totalsRowXstyle?: import('@stylexjs/stylex').StyleXStyles,
+ * totalsCellXstyle?: import('@stylexjs/stylex').StyleXStyles,
  * }} props
  */
 export function TanStackDataTable({
@@ -237,6 +243,12 @@ export function TanStackDataTable({
   sort = null,
   onSortChange,
   sortableColumnKeys = [],
+  ariaLabel = 'Danh sách hợp đồng',
+  headerCellXstyle,
+  headerContentXstyle,
+  bodyCellXstyle,
+  totalsRowXstyle,
+  totalsCellXstyle,
 }) {
   'use no memo';
   const [availableWidth, setAvailableWidth] = useState(0);
@@ -531,6 +543,7 @@ export function TanStackDataTable({
         data-is-totals-row="true"
         xstyle={[
           isRowHovered ? styles.totalsRowHovered : styles.totalsRow,
+          totalsRowXstyle,
           isDividerRow &&
             (totalsPosition === 'bottom'
               ? styles.totalsRowDividerTop
@@ -556,6 +569,7 @@ export function TanStackDataTable({
               data-column-key={cell.column.id}
               xstyle={[
                 styles.align(source.align ?? 'start'),
+                totalsCellXstyle,
                 pinStyle(cell.column),
                 totalsPosition === 'bottom' && styles.footerCell,
                 (dividers === 'grid' || dividers === 'columns') &&
@@ -586,7 +600,7 @@ export function TanStackDataTable({
         dividers={dividers}
         isStriped={isStriped}
         xstyle={styles.table(table.getTotalSize())}
-        aria-label="Danh sách hợp đồng"
+        aria-label={ariaLabel}
         data-table-engine="tanstack"
         plugins={{ measureScrollWidth: measureScrollWidthPlugin }}
       >
@@ -649,6 +663,7 @@ export function TanStackDataTable({
                     }}
                     xstyle={[
                       styles.headerCell,
+                      headerCellXstyle,
                       styles.align(source?.align ?? 'center'),
                       headerPinStyle(header),
                     ]}
@@ -666,6 +681,7 @@ export function TanStackDataTable({
                         }
                         xstyle={[
                           styles.headerContent,
+                          headerContentXstyle,
                           header.column.getCanSort() && styles.sortableHeader,
                         ]}
                         {...(header.column.getCanSort()
@@ -779,6 +795,7 @@ export function TanStackDataTable({
                         data-column-key={cell.column.id}
                         xstyle={[
                           styles.align(source.align ?? 'start'),
+                          bodyCellXstyle,
                           pinStyle(cell.column),
                           (dividers === 'grid' || dividers === 'columns') &&
                             styles.cellDivider,

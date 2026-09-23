@@ -124,7 +124,8 @@ export function ContractExpandedDetails({
   );
 
   const isFullySigned = contract.sellerSigned && contract.buyerSigned;
-  const shipmentIneligibleReason = reasonContractIneligibleForShipment(contract);
+  const shipmentIneligibleReason =
+    reasonContractIneligibleForShipment(contract);
   const paymentSchedulesQuery = usePaymentSchedulesQuery(contract.id);
   const paymentSchedules = paymentSchedulesQuery.data?.success
     ? paymentSchedulesQuery.data.schedules
@@ -136,7 +137,9 @@ export function ContractExpandedDetails({
   );
   const paymentSchedulesPaidTotal = paymentSchedules.reduce(
     (total, schedule) =>
-      isPaymentSchedulePaid(schedule.paymentDate) ? total + schedule.amount : total,
+      isPaymentSchedulePaid(schedule.paymentDate)
+        ? total + schedule.amount
+        : total,
     0,
   );
 
@@ -407,10 +410,7 @@ export function ContractExpandedDetails({
                 </HStack>
                 <Text weight="bold" size="2xl" xstyle={kpiStyles.valueAccent}>
                   {formatMoney(
-                    Math.max(
-                      0,
-                      contractGrandTotal - paymentSchedulesPaidTotal,
-                    ),
+                    Math.max(0, contractGrandTotal - paymentSchedulesPaidTotal),
                     contract.currency,
                   )}
                 </Text>

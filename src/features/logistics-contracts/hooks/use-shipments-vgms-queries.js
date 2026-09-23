@@ -5,7 +5,11 @@ import { useQueries } from '@tanstack/react-query';
 import { listShipmentVgms } from '../api/shipment-vgms.js';
 
 /** @param {string} shipmentId */
-const queryKey = (shipmentId) => ['logistics-contracts', 'shipment-vgms', shipmentId];
+const queryKey = (shipmentId) => [
+  'logistics-contracts',
+  'shipment-vgms',
+  shipmentId,
+];
 
 /**
  * Batch VGM fetch across every shipment of one contract, for

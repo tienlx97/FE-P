@@ -44,7 +44,9 @@ export function useUpsertContractPrivateInfoMutation(contractId) {
     ) => upsertContractPrivateInfo(contractId, values, extraFieldRows, version),
     onSuccess: (result) => {
       if (result.success || result.conflict) {
-        return queryClient.invalidateQueries({ queryKey: queryKey(contractId) });
+        return queryClient.invalidateQueries({
+          queryKey: queryKey(contractId),
+        });
       }
     },
   });

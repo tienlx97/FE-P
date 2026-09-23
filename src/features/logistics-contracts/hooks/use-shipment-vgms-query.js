@@ -10,7 +10,11 @@ import {
 } from '../api/shipment-vgms.js';
 
 /** @param {string} shipmentId */
-const queryKey = (shipmentId) => ['logistics-contracts', 'shipment-vgms', shipmentId];
+const queryKey = (shipmentId) => [
+  'logistics-contracts',
+  'shipment-vgms',
+  shipmentId,
+];
 
 /**
  * Per-shipment VGM list — only meaningful once a shipment exists, so
@@ -21,7 +25,8 @@ const queryKey = (shipmentId) => ['logistics-contracts', 'shipment-vgms', shipme
 export function useShipmentVgmsQuery(contractId, shipmentId) {
   return useQuery({
     queryKey: queryKey(shipmentId ?? ''),
-    queryFn: () => listShipmentVgms(contractId, /** @type {string} */ (shipmentId)),
+    queryFn: () =>
+      listShipmentVgms(contractId, /** @type {string} */ (shipmentId)),
     enabled: Boolean(shipmentId),
   });
 }

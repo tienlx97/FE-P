@@ -1,5 +1,192 @@
 # Progress Log
 
+## 2026-09-23 (afternoon, 4) — "Chỉnh sửa hợp đồng" drawer in the Meta theme
+
+- Figma Bridge selection 103:4983 (720px edit drawer). Local styles and
+  variables were empty, so the Meta theme supplies the tokens. The
+  `ContractFormDialog` edit branch now uses `MetaThemeProvider`: a 720px
+  drawer, a cobalt-wash icon tile, a title plus contract number, a status
+  `MetaPill`, and pill "Huỷ bỏ" / "Lưu thay đổi" buttons.
+- `ContractDrawerProfileFields` now follows Figma's 5 groups: 1. general &
+  legal (Công ty kept here, not in Figma), 2. value + currency, category,
+  Incoterm and year, then full-width country / loading / discharge rows,
+  3. seller and buyer `MetaFormCard`s with the "Đã ký kết hợp đồng" check
+  in each header (replaces the separate signing section), 4. payment terms
+  (new `ContractDrawerPaymentTerms`: bank `MultiSelector` + "Thêm ngân
+  hàng", a `MetaPaymentSplitBar`, and a `MetaPaymentTermRow` per step that
+  opens inline inputs from the pencil), 5. notes textarea.
+- New Meta pieces: `MetaFormSection`, `MetaFormCard`, `MetaTintButton`,
+  `MetaPaymentSplitBar`/`MetaPaymentTermRow`, an `indigo` `MetaPill` tone,
+  and the tokens `--meta-indigo*` and `--meta-shadow-drawer`. The selector,
+  text-input and input-group radius now reads `--meta-field-radius`
+  (unset = unchanged; the drawer form sets it to 12px). A theme `variant:tint`
+  Button was tried and dropped: the global `ButtonVariantMap` augmentation
+  broke `maritime/button.jsx` typing. `metaToneForContractStatus` moved to
+  `config/contract-status.js`.
+- Font sizes use the Astryx scale (Figma → used): 17→Heading 3 (lg),
+  12/13 labels and values → default field sizes, section title 12→sm,
+  hints 11→xsm, pills 10–11→`MetaPill sm`.
+- Not implemented (no data or handler): Consignee / Notify party card
+  (read-only on the API), the "+ Thêm mới đối tác" section action (seller
+  and buyer each keep their own quick-create), and the seller country pill.
+- Verified in Chrome on 26KCT39 (render, scroll, step edit toggle, cancel
+  without saving). The viewport could not be resized, so mobile was not
+  checked visually. verify.sh passed.
+
+## 2026-09-23 (afternoon, 3) — "Phụ lục" tab moved to the Meta theme
+
+- User request: convert the annex tab from Maritime to Meta (no new Figma).
+  New `MetaAnnexListPanel` (`custom/meta/annex-list-panel.jsx`), same
+  structure as the Meta payments tab: 3 summary cards (HĐ gốc / Phát sinh
+  tăng / Phát sinh giảm, capped grid), "Danh sách phụ lục" table card
+  (code, number, type pill, summary, adjustment, signed date, signature
+  pills, edit) with a "Tổng điều chỉnh" footer band, skeletons while loading.
+- `contract-maritime-annexes-panel.jsx` (name kept; referenced by openspec)
+  now renders it; every detail tab is Meta now — only the dialogs/drawers
+  are still wrapped in `MaritimeThemeProvider`.
+- Verified in Chrome on 26KCT18 (1 annex; edit dialog opens). verify.sh
+  passes.
+- Follow-up (user): "Số phụ lục" column removed; signature pills use the
+  `md` `MetaPill` size (12px) instead of `sm`.
+
+## 2026-09-23 (afternoon, 2) — "Hoa hồng" tab in the Meta theme
+
+- Figma node 102:4272. New `MetaCommissionPanel`
+  (`custom/meta/commission-panel.jsx`): 3 KPI cards (capped grid), broker +
+  beneficiary-bank cards (full-width 2-column grid), "Bảng theo dõi" table
+  card (Astryx `Table`: numbered installment bubble, amount, method • date,
+  status pill, view / edit-or-download actions) with a totals band and a
+  "Tổng thực chi đã xác nhận" band; skeletons while loading. Same data shape
+  as the Maritime panel plus `broker.isSigned` / `isLoading`.
+  `ContractCommissionPanel` now uses it (placeholder "___" empty state
+  kept) and the tab renders outside the Maritime wrapper (only "Phụ lục"
+  is still Maritime).
+- Figma's FB green added as `--meta-green*` tokens, `meta-green`
+  text/icon variants and a `green` `MetaPill` tone.
+- Not in data, so skipped: VNĐ conversions, "Chức vụ" document ref, bank
+  status / payment method / reconciliation channel rows, footnote text,
+  "Xuất Excel" (no export handler). Totals are a band, not a table footer
+  row aligned to columns (Astryx `TableCell` has no width API).
+- Dev DB has no commissions: empty state verified with real data, filled
+  state verified in Chrome with a client-side mocked commission response.
+  Also fixed two more `Text size="md"` (user edits) in
+  `overview-summary-card.jsx` → `base`. verify.sh passes
+  (`harness/runs/20260923-144947-1903/`).
+
+## 2026-09-23 (afternoon) — Overview info grid back to full width
+
+- User request: the overview's 3 info columns (1. Thông tin đối tác /
+  2. Vận chuyển & hàng hóa / 3. Ngân hàng & thanh toán) span the full
+  content width again — `maxWidth` cap removed from `MetaContractInfoGrid`
+  (still `minWidth: 340`, max 3 columns). The KPI grids keep their caps.
+- Fixed `Text size="md"` (not an Astryx step; broke typecheck) in the
+  user's manual edits to `contract-info-grid.jsx` → `size="base"` (14px,
+  the size it already rendered at).
+- verify.sh passes (`harness/runs/20260923-142437-300/`). Not re-checked in
+  the browser: the Chrome session was logged out.
+
+## 2026-09-23 — Shipment table typography follow-up
+
+- User requested a larger `md` font in the Shipment table. Astryx `Text` has no `md` size; the equivalent project scale is `base` (14px). Scoped headers, body cells, totals and quantity/status pills to that size, adding an opt-in `lg` MetaPill size so other screens are unchanged. Widened the declaration-date and VGM columns to prevent clipping.
+- Authenticated Contract `26KCT03` checked at 1440px and 390px; computed table text is 14px, no header/body cell overflow, and mobile page width remains 390px. Screenshots in `harness/runs/20260923-141125-9189/`.
+- `./harness/verify.sh` in that run passed lint, structure, tests, build and thresholds but failed typecheck solely on five pre-existing `Text size="md"` uses in unrelated `src/shared/components/custom/meta/contract-info-grid.jsx`. Left that file untouched per scope rule; task remains unchecked until the full gate passes.
+
+## 2026-09-23 — Meta Shipment table view
+
+- Inspected the selected Figma Bridge frame `99:3843` (10-column Shipment table with 4 sample rows and a totals footer); local styles and variables are empty, so the existing Meta theme supplies tokens. The Astryx table discovery workflow was used.
+- Matched column order, header/footer bands, row spacing, status pills and actions. The live API provides the displayed declaration date/value, contract number, quantity, logistics costs and VGM; no Figma sample data is hardcoded. Missing VGM records show a placeholder instead of declaration weight. Totals are computed from the displayed shipments. The eye action switches to and scrolls to the corresponding card; pencil opens the existing edit dialog.
+- Checked authenticated Contract `26KCT03` at desktop and 390px mobile. Screenshots: `harness/runs/20260923-134742-8319/shipment-table-desktop-final.png`, `shipment-table-right.png`, and `shipment-table-mobile.png`. At 390px the page width remained 390px while the table scrolled internally. The edit dialog was opened and closed without saving.
+- Full verification passed after the final view-focus tweak in `harness/runs/20260923-135706-8750/`.
+- A later gate rerun found concurrent `Text size="md"` type errors in the unrelated, untracked `contract-info-grid.jsx` (`harness/runs/20260923-135950-8945/`). The Shipment source was returned to the exact version from the passing gate; the unrelated file was left untouched. Harness gap: simultaneous untracked UI edits can invalidate a gate after it passes; rerun the gate once that file is fixed.
+
+## 2026-09-23 — Contract detail Shipment tab in Meta
+
+- Figma Bridge selection `98:2343` (`CHI TIẾT HỢP ĐỒNG > SHIPMENT`) inspected, including the nested lot cards. Local Figma styles/variables were empty; Meta tokens remain sourced from the existing theme.
+- Added `MetaShipmentListPanel` and a TanStack table view. The feature panel now supplies four live KPIs, VGM-derived container details, an XLSX export and existing create/edit dialogs under Meta; unrelated dialogs remain Maritime.
+- Browser preview screenshots at desktop/mobile are in `harness/runs/20260923-123254-7648/`; preview route was removed. Authenticated Contract `26KCT03` was subsequently checked at desktop and 390px mobile, including the TanStack table view; live screenshots are in `harness/runs/20260923-124422-7788/`. Mobile had no page-level horizontal overflow. Live visual review caught and fixed the container count's unwanted `.00` suffix.
+- `./harness/verify.sh` passed on the final source tree (`harness/runs/20260923-133531-8118/`).
+
+## 2026-09-23 (late night, 5) — Payments KPI cards: larger type, 2-color bar
+
+- User request: the 3 payments KPI cards use a larger type step — label,
+  unit, progress label/value and footer at body (14px), figure 3xl (29px),
+  count pill md, icons md. (Overrides the earlier 2xl alignment with the
+  overview KPIs for this tab.)
+- "Tổng giá trị hợp đồng" bar now splits HĐ gốc (cobalt) / phụ lục
+  (emerald) like the overview "Quyết toán" card, with matching legend dots
+  in the footer. Verified on 26KCT18 (1 annex).
+
+## 2026-09-23 (late night, 4) — Meta card grids capped
+
+- User request: card grids use `Grid` with a min and a max card width
+  instead of stretching across the page. Overview KPI grid
+  (`minWidth: 280`, max 4, ≤ `--meta-kpi-card-max` 25rem each), info grid,
+  payments KPI grid and the page skeleton (`minWidth` 340/320, max 3,
+  ≤ `--meta-panel-card-max` 34rem each) via `Grid maxWidth`; grids are
+  left-aligned. Data tables and the full-width section cards are unchanged.
+
+## 2026-09-23 (late night, 3) — Payments KPI update, page skeleton
+
+- Figma 94:1937 updated: "Đã thu" / "Còn thu" card footers are icon-only
+  now (footnote text removed from `MetaPaymentProgressPanel` and its
+  `paidNote*`/`remainingNote*` props dropped). KPI figure 3xl → 2xl
+  (24px), same step as the overview tab's KPI cards.
+- New `MetaContractDetailSkeleton` replaces the "Đang tải hợp đồng"
+  spinner while the contract loads (header card, tab strip, KPI cards,
+  table card); the payments footer count is a skeleton while loading too.
+  Verified in Chrome by delaying `fetch` for contract endpoints.
+- verify.sh passes (`harness/runs/20260923-115542-691/`).
+
+## 2026-09-23 (late night, 2) — "Tiến độ thanh toán" tab in the Meta theme
+
+- Figma node 94:1936. New `MetaPaymentProgressPanel`
+  (`custom/meta/payment-progress-panel.jsx`): 3 KPI cards (Tổng giá trị
+  hợp đồng / Đã thu / Còn thu with progress line + footnote) and the
+  "Tiến độ thanh toán chi tiết" table card (Astryx `Table`, status pills,
+  "Tổng đã thu" footer), skeletons while loading. Same props as the
+  Maritime panel; `ContractPaymentsPanel` now uses it and the tab renders
+  outside the Maritime wrapper. Added `--meta-amber` and a `muted`
+  `MetaPill` tone ("Chưa đến hạn").
+- Table card keeps `Card padding={6}` so Astryx `Table` aligns its edge
+  columns to 24px and bleeds its header band; header/footer bands bleed
+  via `--container-padding-*` negative margins.
+- Not in data, so skipped: "Đang đối chiếu UNC" status (only paid /
+  not-yet-due derived from the date), UNC reference links, download
+  action, T/T sub-type ("Advance" / "against B/L"). Figma's mono font for
+  codes/amounts replaced by tabular numbers (Meta has no mono face).
+- Verified in Chrome at 2560px on 26KCT34 (2 paid rows) and 26KCT39
+  (empty state). Phone width not verified in the browser (window resize
+  had no effect); KPI grid collapses to one column < 600px and the table
+  scrolls horizontally. verify.sh passes (`harness/runs/20260923-114706-775/`;
+  one earlier run failed on a transient Google Fonts fetch in `next build`).
+
+## 2026-09-23 (late night) — Contract detail "Tổng quan" tab in the Meta theme
+
+- Figma node 89:1064 (Meta theme). New Astryx-only Meta components in
+  `src/shared/components/custom/meta/`: `MetaPill`, `MetaContractBreadcrumb`
+  + `MetaContractHeaderCard`, `MetaTabNav`, `MetaOverviewSummaryCard`
+  (4 KPI cards, reconciliation bar, installment chips), `MetaContractInfoGrid`
+  (3 columns). Figma emerald/blue/inset swatches added as `--meta-*` tokens,
+  plus `text`/`icon` color variants `meta-success`, `meta-success-deep`,
+  `meta-subtle`, `meta-danger`.
+- `ContractDetailWorkspace` now renders in `MetaThemeProvider`: breadcrumb
+  back link (still `router.back()`, test updated), Meta header, tabs in
+  Figma order with count pills. The other tabs and all dialogs stay wrapped
+  in `MaritimeThemeProvider` (not redesigned yet).
+- User follow-ups: selected tab is a white pill (cobalt border/text) — the
+  Meta theme's selected-tab rule now reads `--meta-tab-selected-bg/-text`,
+  which `MetaTabNav` sets; list status tabs stay filled. Skeletons for
+  KPI cards, the payment reconciliation block and the bank / cargo / annex /
+  commission cards while their queries load. Sizes follow the Astryx scale
+  (rule #16), roughly 1–2px above Figma. Font audit (measured in Chrome):
+  user chose to keep info-row body text at 14px (`--font-size-base`, same
+  as the list cells) rather than Figma's 12px; the summary card title was
+  raised to Heading level 3 (17px) so it stands above the body text.
+- Not in data, so skipped: breadcrumb "EXP-2024" pill, "BOQ & Nội bộ" tab,
+  seller country tag, consignee/notify phone, "(3/4 lô hàng)" planned count.
+- Verified in Chrome at 2560px on contract 26KCT39; verify.sh passes
+  (`harness/runs/20260923-112206-558/`).
+
 ## 2026-09-23 (late) — Astryx size scale + golden rule #16
 
 - Meta contract list sizes moved to Astryx scales: cell text = default

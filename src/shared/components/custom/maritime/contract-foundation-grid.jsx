@@ -234,9 +234,7 @@ export function MaritimeContractFoundationGrid({
                 <>
                   <Divider />
                   <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
-                    <Text color="maritime-muted">
-                      Trạng thái ký:
-                    </Text>
+                    <Text color="maritime-subtle">Trạng thái ký:</Text>
                     <HStack gap={1} wrap="wrap">
                       {transport.signingBadges.map(
                         (/** @type {any} */ badge) => (
@@ -332,9 +330,7 @@ export function MaritimeContractFoundationGrid({
               </Link>
             </HStack>
             {annexes.length === 0 ? (
-              <Text color="maritime-muted">
-                Chưa có phụ lục
-              </Text>
+              <Text color="maritime-muted">Chưa có phụ lục</Text>
             ) : (
               annexes.map((annex) => <AnnexRow key={annex.code} {...annex} />)
             )}
@@ -369,7 +365,10 @@ export function MaritimeContractFoundationGrid({
                   <Text type="label" color="maritime-muted">
                     HOA HỒNG (COMMISSION)
                   </Text>
-                  <MaritimeBadge label={commission.percentLabel} tone="success" />
+                  <MaritimeBadge
+                    label={commission.percentLabel}
+                    tone="success"
+                  />
                 </HStack>
                 <Link weight="semibold" onClick={onViewCommission}>
                   + Chi tiết
@@ -383,9 +382,7 @@ export function MaritimeContractFoundationGrid({
                 ]}
               />
               <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
-                <Text color="maritime-muted">
-                  Trạng thái ký:
-                </Text>
+                <Text color="maritime-muted">Trạng thái ký:</Text>
                 <MaritimeBadge
                   label={commission.signedLabel}
                   tone={commission.signedTone}
@@ -393,9 +390,7 @@ export function MaritimeContractFoundationGrid({
               </HStack>
               <Divider />
               <HStack hAlign="between" vAlign="center" wrap="wrap" gap={2}>
-                <Text color="maritime-muted">
-                  Tiến độ chi hoa hồng:
-                </Text>
+                <Text color="maritime-muted">Tiến độ chi hoa hồng:</Text>
                 <Text type="code" weight="bold">
                   {commission.paidAmount} / {commission.totalAmount}
                 </Text>
@@ -416,14 +411,10 @@ export function MaritimeContractFoundationGrid({
                     size="xsm"
                     color={/** @type {any} */ ('maritime-teal')}
                   />
-                  <Text color="maritime-muted">
-                    {commission.paidLabel}
-                  </Text>
+                  <Text color="maritime-muted">{commission.paidLabel}</Text>
                 </HStack>
                 <HStack gap={1} vAlign="center">
-                  <Text color="maritime-muted">
-                    Còn lại:
-                  </Text>
+                  <Text color="maritime-muted">Còn lại:</Text>
                   <Text type="code" weight="bold" color="primary">
                     {commission.remainingAmount}
                   </Text>
@@ -524,7 +515,7 @@ function InfoRows({ rows, isList = false }) {
       gap={3}
     >
       <Text
-        color="maritime-muted"
+        color="maritime-subtle"
         xstyle={[styles.rowLabel, isList && styles.listLabel]}
       >
         {label}
@@ -554,9 +545,7 @@ function Metric({ icon, label, value, unit }) {
     <VStack gap={1} hAlign="stretch" xstyle={styles.metric}>
       <HStack gap={1} vAlign="center">
         <Icon icon={icon} size="sm" color="accent" />
-        <Text type="label">
-          {label}
-        </Text>
+        <Text type="label">{label}</Text>
       </HStack>
       {/* `vAlign="center"`, not `"end"` — the value (`3xl`) and unit
           (`lg`) have different line-box heights, so bottom-aligning them
@@ -568,9 +557,7 @@ function Metric({ icon, label, value, unit }) {
         <Text type="code" size="3xl" weight="bold">
           {value}
         </Text>
-        <Text color="maritime-muted">
-          {unit}
-        </Text>
+        <Text color="maritime-muted">{unit}</Text>
       </HStack>
     </VStack>
   );
@@ -611,9 +598,7 @@ function PaymentTerm({ label, amount, note, status }) {
             {amount}
           </Text>
         </HStack>
-        <Text color="maritime-muted">
-          {note}
-        </Text>
+        <Text color="maritime-muted">{note}</Text>
       </VStack>
     </HStack>
   );
@@ -629,9 +614,7 @@ function AnnexRow({ code, label, amount, isPositive }) {
           <Text type="code" weight="bold">
             {code}
           </Text>
-          <Text color="maritime-muted">
-            {label}
-          </Text>
+          <Text color="maritime-muted">{label}</Text>
         </VStack>
       </HStack>
       <Text
@@ -681,7 +664,12 @@ const styles = stylex.create({
   right: { textAlign: 'right' },
   rowLabel: { flexShrink: 0, whiteSpace: 'nowrap' },
   listLabel: { width: '140px' },
-  listValue: { flexGrow: 1, minWidth: 0, overflowWrap: 'anywhere', textAlign: 'left' },
+  listValue: {
+    flexGrow: 1,
+    minWidth: 0,
+    overflowWrap: 'anywhere',
+    textAlign: 'left',
+  },
   payment: {
     borderRadius: 'var(--radius-inner)',
     borderStyle: 'solid',

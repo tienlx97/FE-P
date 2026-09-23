@@ -15,10 +15,12 @@ TabListContext.displayName = 'TabListContext';
  * Returns TabListContext value or throws if used outside TabList.
  */
 export function useTabListContext() {
-    const ctx = use(TabListContext);
-    if (ctx == null) {
-        throw new Error('useTabListContext must be used within TabList. ' +
-            'Wrap your Tab/TabMenu in <TabList>.');
-    }
-    return ctx;
+  const ctx = use(TabListContext);
+  if (ctx == null) {
+    throw new Error(
+      'useTabListContext must be used within TabList. ' +
+        'Wrap your Tab/TabMenu in <TabList>.',
+    );
+  }
+  return ctx;
 }

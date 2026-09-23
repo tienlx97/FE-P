@@ -15,7 +15,6 @@ export const shipmentTypeOptions = [
 /** @param {import('../types/index.js').ShipmentType | string} type */
 export function labelForShipmentType(type) {
   return (
-    shipmentTypeOptions.find((option) => option.value === type)?.label ??
-    type
+    shipmentTypeOptions.find((option) => option.value === type)?.label ?? type
   );
 }

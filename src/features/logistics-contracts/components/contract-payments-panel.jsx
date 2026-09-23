@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useState } from 'react';
 
-import { MaritimePaymentProgressPanel } from '@/shared/components/custom/maritime/index.js';
+import { MetaPaymentProgressPanel } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
@@ -19,9 +19,9 @@ function isPaymentSchedulePaid(paymentDate) {
 }
 
 /**
- * "Thanh toán" tab body (`openspec/changes/apply-maritime-to-contract-
- * detail/`, step 5): `MaritimePaymentProgressPanel` fed with the contract's
- * real `PaymentSchedule`s/annexes, plus the create/edit dialog it opens.
+ * "Tiến độ thanh toán" tab body: `MetaPaymentProgressPanel` (Meta theme,
+ * Figma node 94:1936) fed with the contract's real `PaymentSchedule`s /
+ * annexes, plus the create/edit dialog it opens.
  * "Đã thu" counts only schedules dated today or earlier (same rule as the
  * old tab's totals); the overview tab's progress card counts every recorded
  * schedule.
@@ -68,7 +68,7 @@ export function ContractPaymentsPanel({ contract }) {
       annexes.length > 0
         ? `${annexesTotal >= 0 ? '+' : '-'}${formatMoney(Math.abs(annexesTotal), contract.currency)}`
         : undefined,
-    isAnnexDeduction: annexesTotal < 0,
+    annexCount: annexes.length,
   };
 
   const paidSchedules = schedules.filter((schedule) =>
@@ -103,7 +103,7 @@ export function ContractPaymentsPanel({ contract }) {
 
   return (
     <>
-      <MaritimePaymentProgressPanel
+      <MetaPaymentProgressPanel
         unit={contract.currency}
         amountHeader={`Số tiền (${contract.currency})`}
         totalValue={formatMoney(settlementValue)}
@@ -112,6 +112,7 @@ export function ContractPaymentsPanel({ contract }) {
         paidPercent={paidPercent}
         remainingValue={formatMoney(remainingValue)}
         payments={rows}
+        isLoading={schedulesQuery.isLoading || annexesQuery.isLoading}
         paidTotalValue={formatMoney(paidValue, contract.currency)}
         onAddPayment={() => setDialog({ schedule: null })}
         onViewPayment={(id) =>

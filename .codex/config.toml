@@ -1,2 +1,5 @@
 [mcp_servers.xds]
 url = "https://astryx.atmeta.com/mcp"
+
+[mcp_servers.xds.tools.get]
+approval_mode = "approve"

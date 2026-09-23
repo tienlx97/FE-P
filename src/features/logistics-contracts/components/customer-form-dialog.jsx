@@ -44,7 +44,12 @@ export function CustomerFormDialog({
       title={customer ? 'Sửa khách hàng' : 'Thêm khách hàng'}
       submitLabel={customer ? 'Lưu thay đổi' : 'Thêm'}
       width={1040}
-      draft={{ values: form.values, extraFieldRows: form.extraFieldRows.rows, bankAccounts: form.bankAccounts, deliveryAddresses: form.deliveryAddresses }}
+      draft={{
+        values: form.values,
+        extraFieldRows: form.extraFieldRows.rows,
+        bankAccounts: form.bankAccounts,
+        deliveryAddresses: form.deliveryAddresses,
+      }}
       isSubmitting={form.isSubmitting}
       submitError={form.submitError}
       fieldStatuses={form.fieldStatuses}

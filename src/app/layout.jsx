@@ -15,7 +15,10 @@ export const metadata = {
  */
 export default function RootLayout({ children }) {
   return (
-    <html lang="vi" className={`${montserrat.variable} ${jetbrainsMono.variable}`}>
+    <html
+      lang="vi"
+      className={`${montserrat.variable} ${jetbrainsMono.variable}`}
+    >
       <body>
         <QueryProvider>
           <ThemeProvider>{children}</ThemeProvider>

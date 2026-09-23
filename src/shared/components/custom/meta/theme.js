@@ -137,6 +137,42 @@ export const metaTheme = defineTheme({
     // names read by `tanstack-data-table.jsx`.
     '--table-framed-total-bg': '#f0f5ff', // mockup: Σ totals row
     '--table-framed-group-bg': '#f4f7fc', // mockup: header group band
+
+    // Contract detail "Tổng quan & Tiến độ" (Figma node 89:1064) — the
+    // Tailwind emerald / blue swatches the screen uses instead of the
+    // list's own success/accent pills, plus its neutral inset surfaces.
+    '--meta-emerald-text': '#047857', // figma: emerald-700 (paid amounts, success pills)
+    '--meta-emerald-deep': '#065f46', // figma: emerald-800 (paid milestone label)
+    '--meta-emerald-fill': '#059669', // figma: emerald-600 (bars, check circles)
+    '--meta-emerald-dot': '#10b981', // figma: emerald-500 (status dot)
+    '--meta-emerald-wash': '#ecfdf5', // figma: emerald-50 (pill / icon bg)
+    '--meta-emerald-border': '#a7f3d0', // figma: emerald-200 (pill / paid chip border)
+    '--meta-emerald-divider': '#d1fae5', // figma: emerald-100 (paid chip divider)
+    '--meta-blue-wash': '#e7f0ff', // figma: accent pill / icon bg
+    '--meta-blue-wash-border': '#dbeafe', // figma: blue-100 (accent pill border)
+    '--meta-blue-active-bg': '#f0f6ff', // figma: current milestone / term bg
+    '--meta-blue-active-border': '#bfdbfe', // figma: blue-200 (current term border)
+    '--meta-hairline': '#f0f2f5', // figma: inner dividers, progress track, neutral chip
+    '--meta-inset-bg': '#f8f9fa', // figma: key-value inset panels
+    '--meta-text-subtle': '#8a8d91', // figma: units, "(3/4 lô hàng)" hints
+    '--meta-danger-icon': '#dc2626', // figma: red-600 ("Xuất PDF" icon)
+    // Card grid caps (user request, 2026-09-23: card grids keep a min and
+    // a max card width instead of stretching across the whole page).
+    // Figma 89:1064 KPI card ≈ 394px; 94:1936 KPI / info column ≈ 540px.
+    '--meta-kpi-card-max': '25rem',
+    '--meta-panel-card-max': '34rem',
+    '--meta-amber': '#f59e0b',
+    // Figma 102:4272 ("Hoa hồng" tab) uses the FB green, not emerald.
+    '--meta-green': '#31a24c', // figma: paid commission text / dot
+    '--meta-green-wash': '#e7f6ea', // figma: green pill / icon bg
+    '--meta-green-border': '#bbf7d0', // figma: green-200 pill border // figma 94:1936: amber-500 ("Còn thu" dot + bar)
+    '--meta-radius-inset': '12px', // figma: inset panel radius
+    // Figma 103:4983 ("Chỉnh sửa hợp đồng" drawer): indigo 2nd payment
+    // step (Tailwind indigo-600 / indigo-50).
+    '--meta-indigo': '#4f46e5',
+    '--meta-indigo-wash': '#eef2ff',
+    '--meta-shadow-card': '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // figma: header / summary card
+    '--meta-shadow-drawer': '-10px 0 35px 0 rgba(0, 0, 0, 0.09)', // figma 103:4983: edit drawer
   },
 
   components: {
@@ -150,6 +186,19 @@ export const metaTheme = defineTheme({
       base: {
         fontFeatureSettings: 'var(--meta-font-features)',
       },
+      // Custom colors for the contract-detail overview (Figma 89:1064):
+      // `Text`'s own color classes out-rank `xstyle`/`inherit` once a
+      // `size` is set, so tone colors are registered variants instead.
+      'color:meta-success': { color: 'var(--meta-emerald-text)' },
+      'color:meta-success-deep': { color: 'var(--meta-emerald-deep)' },
+      'color:meta-subtle': { color: 'var(--meta-text-subtle)' },
+      'color:meta-green': { color: 'var(--meta-green)' },
+    },
+    icon: {
+      'color:meta-success': { color: 'var(--meta-emerald-fill)' },
+      'color:meta-subtle': { color: 'var(--meta-text-subtle)' },
+      'color:meta-danger': { color: 'var(--meta-danger-icon)' },
+      'color:meta-green': { color: 'var(--meta-green)' },
     },
     button: {
       base: {
@@ -178,21 +227,24 @@ export const metaTheme = defineTheme({
       base: {
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
-        borderRadius: 'var(--radius-full)',
+        borderRadius: 'var(--meta-field-radius, var(--radius-full))',
       },
     },
+    // `--meta-field-radius` is unset by default (list filters stay pills);
+    // form surfaces such as the edit drawer set it on an ancestor so every
+    // control inside rounds to the Figma form radius.
     'text-input': {
       base: {
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
-        borderRadius: 'var(--radius-element)',
+        borderRadius: 'var(--meta-field-radius, var(--radius-element))',
       },
     },
     selector: {
       base: {
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
-        borderRadius: 'var(--radius-full)',
+        borderRadius: 'var(--meta-field-radius, var(--radius-full))',
       },
     },
     tab: {
@@ -207,9 +259,11 @@ export const metaTheme = defineTheme({
         fontWeight: 'var(--font-weight-semibold)',
         paddingInline: 'var(--spacing-4)',
       },
+      // Filled cobalt by default (list status tabs); `MetaTabNav` flips it
+      // to a white pill through these two vars (user request, 2026-09-23).
       selected: {
-        backgroundColor: 'var(--color-accent)',
-        color: 'var(--color-on-accent)',
+        backgroundColor: 'var(--meta-tab-selected-bg, var(--color-accent))',
+        color: 'var(--meta-tab-selected-text, var(--color-on-accent))',
         fontWeight: 'var(--font-weight-bold)',
       },
     },

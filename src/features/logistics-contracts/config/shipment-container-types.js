@@ -8,7 +8,12 @@
  * member is prefixed `Size`.
  * @type {import('../types/index.js').ShipmentContainerType[]}
  */
-export const SHIPMENT_CONTAINER_TYPES = ['Size20', 'Size40', 'Size40HC', 'Size45'];
+export const SHIPMENT_CONTAINER_TYPES = [
+  'Size20',
+  'Size40',
+  'Size40HC',
+  'Size45',
+];
 
 export const shipmentContainerTypeOptions = [
   { value: 'Size20', label: "20'" },

@@ -94,7 +94,8 @@ export function useContractPrivateInfoForm({
     values,
     extraFields: extraFieldRows.rows,
   });
-  const [initialFingerprint, setInitialFingerprint] = useState(draftFingerprint);
+  const [initialFingerprint, setInitialFingerprint] =
+    useState(draftFingerprint);
 
   function reset() {
     setVersion(privateInfo?.version);

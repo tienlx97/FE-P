@@ -88,7 +88,10 @@ export function useBankForm({ onSuccess } = {}) {
     values,
     setField,
     fieldStatuses: Object.fromEntries(
-      Object.entries(fieldErrors).map(([key, message]) => [key, fieldStatus(message)]),
+      Object.entries(fieldErrors).map(([key, message]) => [
+        key,
+        fieldStatus(message),
+      ]),
     ),
     extraFieldRows,
     submitError,

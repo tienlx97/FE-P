@@ -23,7 +23,10 @@ test('findVietnamCountry returns the matching entry from a mixed list', () => {
     { id: '2', name: 'Việt Nam' },
     { id: '3', name: 'Thái Lan' },
   ];
-  assert.deepEqual(findVietnamCountry(countries), { id: '2', name: 'Việt Nam' });
+  assert.deepEqual(findVietnamCountry(countries), {
+    id: '2',
+    name: 'Việt Nam',
+  });
 });
 
 test('findVietnamCountry returns undefined when no match exists', () => {

@@ -15,9 +15,12 @@ export async function listShipmentCostItemTemplates({ costCategoryId } = {}) {
   const query = costCategoryId
     ? `?${new URLSearchParams({ costCategoryId }).toString()}`
     : '';
-  const result = await apiRequest(`/api/v1/shipment-cost-item-templates${query}`, {
-    errorMessage: GENERIC_LIST_ERROR,
-  });
+  const result = await apiRequest(
+    `/api/v1/shipment-cost-item-templates${query}`,
+    {
+      errorMessage: GENERIC_LIST_ERROR,
+    },
+  );
 
   if (!result.success) {
     return { success: false, message: result.message };

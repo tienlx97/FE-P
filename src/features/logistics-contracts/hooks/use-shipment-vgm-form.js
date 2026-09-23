@@ -67,7 +67,12 @@ function fieldStatus(message) {
  *   onSuccess?: (vgm: import('../types/index.js').ShipmentVgm) => void,
  * }} options
  */
-export function useShipmentVgmForm({ contractId, shipmentId, vgm = null, onSuccess }) {
+export function useShipmentVgmForm({
+  contractId,
+  shipmentId,
+  vgm = null,
+  onSuccess,
+}) {
   const [values, setValues] = useState(
     vgm ? valuesFromVgm(vgm) : emptyValues(),
   );

@@ -26,7 +26,9 @@ export const shipmentVgmSchema = z.object({
   containerType: z.enum(SHIPMENT_CONTAINER_TYPES, {
     error: 'Vui lòng chọn loại cont',
   }),
-  tare: z.number({ error: 'Vui lòng nhập tare' }).positive('Giá trị phải lớn hơn 0'),
+  tare: z
+    .number({ error: 'Vui lòng nhập tare' })
+    .positive('Giá trị phải lớn hơn 0'),
   payload: z
     .number({ error: 'Vui lòng nhập payload' })
     .positive('Giá trị phải lớn hơn 0'),

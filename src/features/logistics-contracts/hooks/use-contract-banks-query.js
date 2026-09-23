@@ -2,7 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createContractBank, listContractBanks } from '../api/contract-banks.js';
+import {
+  createContractBank,
+  listContractBanks,
+} from '../api/contract-banks.js';
 
 const QUERY_KEY = ['logistics-contracts', 'contract-banks'];
 

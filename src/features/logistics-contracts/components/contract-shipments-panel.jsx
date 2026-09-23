@@ -1,11 +1,12 @@
 'use client';
 import { useMemo, useState } from 'react';
 
-import { MaritimeShipmentListPanel } from '@/shared/components/custom/maritime/index.js';
+import { MetaShipmentListPanel } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
+import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
 import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import { labelForShipmentStatus } from '../config/shipment-status.js';
@@ -14,11 +15,15 @@ import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categ
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { useShipmentsVgmsQueries } from '../hooks/use-shipments-vgms-queries.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
+import { ContractShipmentsTable } from './contract-shipments-table.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 
 // Fields the design calls for always render; a missing value shows this
 // placeholder instead of hiding the field or the whole card.
 const BLANK = '___';
+const COUNT_FORMATTER = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 0,
+});
 
 /** @param {string | null | undefined} value */
 const orBlank = (value) =>
@@ -85,10 +90,7 @@ export function ContractShipmentsPanel({ contract }) {
   const customersById = useMemo(
     () =>
       new Map(
-        (customersQuery.data?.success
-          ? customersQuery.data.customers
-          : []
-        ).map(
+        (customersQuery.data?.success ? customersQuery.data.customers : []).map(
           (/** @type {import('../types/index.js').Customer} */ customer) => [
             customer.id,
             customer,
@@ -108,49 +110,58 @@ export function ContractShipmentsPanel({ contract }) {
   const totalTons = toTons(
     shipments.reduce((total, s) => total + s.declarationWeightKg, 0),
   );
-  const totalDeclaration = shipments.reduce(
-    (total, s) => total + s.declarationValue,
-    0,
-  );
-  const totalDeclarationVnd = shipments.reduce(
-    (total, s) => total + s.declarationValueVnd,
+  const totalVgmKg = [...vgmsByShipmentId.values()].reduce(
+    (total, records) =>
+      total + records.reduce((sum, record) => sum + record.vgm, 0),
     0,
   );
   const fclCount = shipments.filter((s) => s.type === 'FCL').length;
   const lclCount = shipments.length - fclCount;
-  const declaredCount = shipments.filter((s) =>
-    Boolean(s.customsDeclarationNumber),
-  ).length;
-  const inspectedCount = shipments.filter((s) => s.customsInspected).length;
   const totalCost = shipments.reduce(
     (total, s) => total + s.costs.reduce((sum, c) => sum + c.amount, 0),
     0,
   );
 
+  const totalContainers = shipments.reduce(
+    (total, shipment) =>
+      total + (shipment.type === 'FCL' ? shipment.quantityAmount : 0),
+    0,
+  );
+  const exportedValue = shipments.reduce(
+    (total, shipment) => total + shipment.invoiceValue,
+    0,
+  );
+  const exportedValueVnd = shipments.reduce(
+    (total, shipment) =>
+      total + shipment.invoiceValue * shipment.declarationExchangeRate,
+    0,
+  );
   const stats = [
     {
-      label: 'SỐ LƯỢNG LÔ HÀNG',
-      value: `${shipments.length} Lô`,
-      note: `${fclCount} FCL · ${lclCount} LCL`,
-      color: 'primary',
+      label: 'TỔNG SỐ CONT & KHỐI LƯỢNG',
+      value: `${COUNT_FORMATTER.format(totalContainers)} Cont /`,
+      highlight: `${formatMoney(totalTons)} Tấn`,
+      note: `${fclCount} Lô FCL · ${lclCount} Lô LCL${totalVgmKg ? ` · VGM: ${formatMoney(toTons(totalVgmKg))} Tấn` : ''}`,
     },
     {
-      label: 'TỔNG KHỐI LƯỢNG TỜ KHAI',
-      value: `${formatMoney(totalTons)} Tấn`,
+      label: 'CHI PHÍ LOGISTICS',
+      value: formatMoney(totalCost),
+      unit: 'VNĐ',
+      note: `${shipments.length} lô hàng`,
       color: 'accent',
     },
     {
-      label: 'GIÁ TRỊ TỜ KHAI',
-      value: `${formatMoney(totalDeclaration)} ${contract.currency}`,
-      note: `≈ ${formatMoney(totalDeclarationVnd)} VND`,
-      color: 'maritime-teal',
+      label: 'GIÁ TRỊ ĐÃ XUẤT',
+      value: formatMoney(exportedValue),
+      unit: contract.currency,
+      note: `Tiến độ: ${contract.contractValue > 0 ? formatMoney((exportedValue / contract.contractValue) * 100) : '0'}%`,
+      color: 'accent',
     },
     {
-      label: 'TỜ KHAI HẢI QUAN',
-      value: `${declaredCount}/${shipments.length}`,
-      note:
-        inspectedCount > 0 ? `${inspectedCount} lô bị kiểm hoá` : undefined,
-      color: 'accent',
+      label: 'GIÁ TRỊ ĐÃ XUẤT (VNĐ)',
+      value: formatMoney(exportedValueVnd),
+      unit: 'VNĐ',
+      note: `Tương đương ${formatMoney(exportedValue)} ${contract.currency}`,
     },
   ];
 
@@ -167,6 +178,7 @@ export function ContractShipmentsPanel({ contract }) {
     };
 
     const vgms = vgmsByShipmentId.get(s.id) ?? [];
+    const vgmTotal = vgms.reduce((total, vgm) => total + vgm.vgm, 0);
     /** @type {Map<string, number>} */
     const contsByCarrier = new Map();
     for (const vgm of vgms) {
@@ -175,7 +187,11 @@ export function ContractShipmentsPanel({ contract }) {
         (contsByCarrier.get(vgm.carrierCustomerId) ?? 0) + 1,
       );
     }
-    const carrierTones = /** @type {const} */ (['teal', 'primary', 'secondary']);
+    const carrierTones = /** @type {const} */ ([
+      'teal',
+      'primary',
+      'secondary',
+    ]);
     const totalCont =
       s.quantityUnit === 'Cont'
         ? Math.max(s.quantityAmount, vgms.length)
@@ -276,12 +292,27 @@ export function ContractShipmentsPanel({ contract }) {
       id: s.id,
       table: {
         declDate: formatDate(s.customsDeclarationDate),
-        quantity,
-        vgm: `${tons.toFixed(2)} Tấn`,
+        hasDeclaration: Boolean(s.customsDeclarationNumber),
+        quantity:
+          s.type === 'FCL' && vgms.length
+            ? `${quantity} ${labelForShipmentContainerType(vgms[0].containerType)}`
+            : quantity,
+        quantityAmount: s.quantityAmount,
+        quantityUnit: unit,
+        status: s.status,
+        declarationValue: s.declarationValue,
+        declarationValueVnd: s.declarationValueVnd,
+        logisticsCost: s.costs.reduce((sum, cost) => sum + cost.amount, 0),
+        vgmKg: vgmTotal,
+        vgm: vgms.length ? `${formatMoney(toTons(vgmTotal))} Tấn` : BLANK,
       },
       no: String(s.shipmentNumber).padStart(2, '0'),
       code: s.shipmentCode,
       kind: /** @type {'fcl' | 'lcl'} */ (s.type === 'FCL' ? 'fcl' : 'lcl'),
+      kindLabel:
+        s.type === 'FCL' && vgms.length
+          ? `${s.type} (${labelForShipmentContainerType(vgms[0].containerType)})`
+          : s.type,
       status: {
         label: labelForShipmentStatus(s.status),
         tone: toneForShipmentStatus(s.status),
@@ -292,6 +323,7 @@ export function ContractShipmentsPanel({ contract }) {
         rate: formatMoney(s.declarationExchangeRate),
         scaleTag: quantity,
         weight: `${formatMoney(tons)} Tấn`,
+        vgm: vgms.length ? `${formatMoney(vgmTotal)} kg` : undefined,
       },
       route: {
         from: orBlank(s.placeOfLoading),
@@ -312,12 +344,9 @@ export function ContractShipmentsPanel({ contract }) {
 
   return (
     <>
-      <MaritimeShipmentListPanel
+      <MetaShipmentListPanel
         stats={stats}
         shipments={rows}
-        totalCost={formatMoney(totalCost)}
-        currency="VND"
-        contractCode={contract.contractNumber}
         declarationCurrency={contract.currency}
         createDisabledReason={createDisabledReason ?? undefined}
         onCreateShipment={() => setDialog({ shipment: null })}
@@ -326,6 +355,45 @@ export function ContractShipmentsPanel({ contract }) {
             shipment: shipments.find((s) => s.id === id) ?? null,
           })
         }
+        onExportExcel={async () => {
+          const XLSX = await import('xlsx');
+          const sheet = XLSX.utils.json_to_sheet(
+            shipments.map((s) => ({
+              'Mã lô hàng': s.shipmentCode,
+              Loại: s.type,
+              'Trạng thái': labelForShipmentStatus(s.status),
+              'Số lượng': s.quantityAmount,
+              'Đơn vị': labelForShipmentQuantityUnit(s.quantityUnit),
+              'Giá trị tờ khai': s.declarationValue,
+              'Tiền tệ': s.declarationCurrency,
+              'Giá trị tờ khai VNĐ': s.declarationValueVnd,
+              'Chi phí logistics VNĐ': s.costs.reduce(
+                (sum, cost) => sum + cost.amount,
+                0,
+              ),
+              'Khối lượng kg': s.declarationWeightKg,
+            })),
+          );
+          const book = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(book, sheet, 'Lô hàng');
+          XLSX.writeFile(
+            book,
+            `lo-hang-${contract.contractNumber.replace(/[/\\]/g, '-')}.xlsx`,
+          );
+        }}
+        renderTable={(onViewShipment) => (
+          <ContractShipmentsTable
+            shipments={rows}
+            contractNumber={contract.contractNumber}
+            declarationCurrency={contract.currency}
+            onView={onViewShipment}
+            onEdit={(id) =>
+              setDialog({
+                shipment: shipments.find((s) => s.id === id) ?? null,
+              })
+            }
+          />
+        )}
       />
 
       {dialog ? (

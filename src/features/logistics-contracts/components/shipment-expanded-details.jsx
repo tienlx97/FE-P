@@ -68,7 +68,10 @@ export function ShipmentExpandedDetails({
         isScrollable={!controlledTab}
       >
         {activeTab === 'info' ? (
-          <ShipmentInfoSection shipment={shipment} supplierName={supplierName} />
+          <ShipmentInfoSection
+            shipment={shipment}
+            supplierName={supplierName}
+          />
         ) : null}
 
         {activeTab === 'vgm' ? (

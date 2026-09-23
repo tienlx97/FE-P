@@ -39,7 +39,9 @@ export function useExtraFieldRows(initialRows = []) {
    */
   function updateRowField(rowKey, field, value) {
     setRows((current) =>
-      current.map((row) => (row.rowKey === rowKey ? { ...row, [field]: value } : row)),
+      current.map((row) =>
+        row.rowKey === rowKey ? { ...row, [field]: value } : row,
+      ),
     );
   }
 

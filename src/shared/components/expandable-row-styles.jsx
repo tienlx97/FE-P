@@ -92,7 +92,10 @@ export const expandableRowStyles = stylex.create({
  */
 export function UnderlinedMetadataListItem(props) {
   return (
-    <MetadataListItem {...props} xstyle={expandableRowStyles.metadataListItemUnderline} />
+    <MetadataListItem
+      {...props}
+      xstyle={expandableRowStyles.metadataListItemUnderline}
+    />
   );
 }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { TextInput as AstryxTextInput } from '@astryxdesign/core/TextInput';
+import { useState } from 'react';
 
 import { readonlyInputStyle } from './readonly-input-style.jsx';
 
@@ -17,19 +18,44 @@ import { readonlyInputStyle } from './readonly-input-style.jsx';
  * shape as `number-input.jsx`/`text-area.jsx`.
  * @param {import('react').ComponentProps<typeof AstryxTextInput>} props
  */
-export function TextInput({ isReadOnly, xstyle, ...props }) {
+export function TextInput({
+  isReadOnly,
+  isDisabled,
+  xstyle,
+  style,
+  onFocus,
+  onBlur,
+  ...props
+}) {
+  const [isFocused, setIsFocused] = useState(false);
+  const showFocusRing = isFocused && !isReadOnly && !isDisabled;
+
   return (
     <AstryxTextInput
       isReadOnly={isReadOnly}
-      xstyle={
-        isReadOnly
-          ? [
-              ...(Array.isArray(xstyle) ? xstyle : xstyle ? [xstyle] : []),
-              readonlyInputStyle.tinted,
-            ]
-          : xstyle
-      }
+      isDisabled={isDisabled}
+      xstyle={[
+        ...(Array.isArray(xstyle) ? xstyle : xstyle ? [xstyle] : []),
+        isReadOnly && readonlyInputStyle.tinted,
+      ]}
+      // Astryx gives semantic status borders boosted specificity. An inline,
+      // token-based focus ring keeps keyboard focus blue while allowing the
+      // success/error border to return immediately on blur.
+      style={showFocusRing ? { ...style, ...focusedStyle } : style}
+      onFocus={(event) => {
+        setIsFocused(true);
+        onFocus?.(event);
+      }}
+      onBlur={(event) => {
+        setIsFocused(false);
+        onBlur?.(event);
+      }}
       {...props}
     />
   );
 }
+
+const focusedStyle = {
+  borderColor: 'var(--color-accent)',
+  boxShadow: 'inset 0 0 0 var(--border-width) var(--color-accent)',
+};

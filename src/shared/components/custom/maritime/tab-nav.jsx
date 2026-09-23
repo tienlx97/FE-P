@@ -101,11 +101,16 @@ export function MaritimeTabNav({
           value={tab.id}
           label={tab.label}
           icon={
-            tab.icon ? <Icon icon={tab.icon} size="sm" color="inherit" /> : undefined
+            tab.icon ? (
+              <Icon icon={tab.icon} size="sm" color="inherit" />
+            ) : undefined
           }
           endContent={
             tab.count ? (
-              <TabCountChip label={tab.count} tone={tab.countTone ?? 'neutral'} />
+              <TabCountChip
+                label={tab.count}
+                tone={tab.countTone ?? 'neutral'}
+              />
             ) : tab.hasTrailingChevron ? (
               <Icon
                 icon={ChevronDown}

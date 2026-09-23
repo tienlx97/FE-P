@@ -171,7 +171,10 @@ test('requires a valid contractType', () => {
 });
 
 test('requires countryId', () => {
-  const result = contractSchema.safeParse({ ...baseCandidate(), countryId: '' });
+  const result = contractSchema.safeParse({
+    ...baseCandidate(),
+    countryId: '',
+  });
   assert.equal(result.success, false);
   if (!result.success) {
     const issue = result.error.issues.find(
@@ -182,7 +185,10 @@ test('requires countryId', () => {
 });
 
 test('requires companyId', () => {
-  const result = contractSchema.safeParse({ ...baseCandidate(), companyId: '' });
+  const result = contractSchema.safeParse({
+    ...baseCandidate(),
+    companyId: '',
+  });
   assert.equal(result.success, false);
   if (!result.success) {
     const issue = result.error.issues.find(

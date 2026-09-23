@@ -26,7 +26,12 @@ export function useCustomersQuery() {
  * want the full unpaged directory).
  * @param {{ page: number, pageSize: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} params
  */
-export function useSearchCustomersQuery({ page, pageSize, conditions = [], sort = null }) {
+export function useSearchCustomersQuery({
+  page,
+  pageSize,
+  conditions = [],
+  sort = null,
+}) {
   return useQuery({
     queryKey: [...SEARCH_QUERY_KEY, page, pageSize, conditions, sort],
     queryFn: () => searchCustomers({ page, pageSize, conditions, sort }),
@@ -44,7 +49,8 @@ export function useCreateCustomerMutation() {
         bankAccounts,
         deliveryAddresses,
       },
-    ) => createCustomer(values, extraFieldRows, bankAccounts, deliveryAddresses),
+    ) =>
+      createCustomer(values, extraFieldRows, bankAccounts, deliveryAddresses),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -66,7 +72,14 @@ export function useUpdateCustomerMutation() {
         bankAccounts,
         deliveryAddresses,
       },
-    ) => updateCustomer(customerId, values, extraFieldRows, bankAccounts, deliveryAddresses),
+    ) =>
+      updateCustomer(
+        customerId,
+        values,
+        extraFieldRows,
+        bankAccounts,
+        deliveryAddresses,
+      ),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });

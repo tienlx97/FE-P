@@ -2,7 +2,7 @@
 import { CircleMinus, CirclePlus, FilePen } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
-import { MaritimeAnnexListPanel } from '@/shared/components/custom/maritime/index.js';
+import { MetaAnnexListPanel } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
@@ -16,8 +16,9 @@ const BLANK = '___';
 
 /**
  * "Phụ lục" tab body (`openspec/changes/apply-maritime-to-contract-detail/`,
- * step 7; not the older `ContractAnnexesPanel`, which the "Liên quan"/"Xem
- * đầy đủ" tabs still use): `MaritimeAnnexListPanel` fed with the contract's real
+ * step 7, moved to the Meta theme 2026-09-23 — the file keeps its old name;
+ * not the older `ContractAnnexesPanel`, which the "Liên quan"/"Xem đầy đủ"
+ * tabs still use): `MetaAnnexListPanel` fed with the contract's real
  * `ContractAnnex`es, plus the create/edit dialog it opens. `AmountIncrease`/
  * `AmountDecrease` adjust the settlement value; `ValueChange` is
  * non-monetary (its `amount` is meaningless, see `ContractAnnex.amount`).
@@ -115,11 +116,11 @@ export function ContractMaritimeAnnexesPanel({ contract }) {
 
   return (
     <>
-      <MaritimeAnnexListPanel
+      <MetaAnnexListPanel
         currency={contract.currency}
         summary={summary}
         annexes={rows}
-        hasNoteColumn={false}
+        isLoading={annexesQuery.isLoading}
         onCreate={() => setDialog({ annex: null })}
         onEdit={(id) =>
           setDialog({

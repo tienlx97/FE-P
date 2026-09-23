@@ -128,7 +128,11 @@ export function MaritimePaymentSummaryCard({
           where there's still leftover space smaller than one more
           `minWidth`-sized track.
         */}
-        <Grid columns={{ minWidth: 240, max: 5, repeat: 'fill' }} gap={1}>
+        <Grid
+          columns={{ minWidth: 240, max: 5, repeat: 'fill' }}
+          gap={1}
+          xstyle={styles.statGrid}
+        >
           {statCards.map((stat) => (
             <StatCard key={stat.id} {...stat} />
           ))}
@@ -150,7 +154,7 @@ export function MaritimePaymentSummaryCard({
                 {progressLabel}
               </Text>
               <MaritimeBadge
-                size="lg"
+                size="sm"
                 label={paidPercentLabel}
                 tone="success"
               />
@@ -168,11 +172,7 @@ export function MaritimePaymentSummaryCard({
                 gap={1}
                 xstyle={styles.detailLink}
               >
-                <Link
-                  weight="semibold"
-                  color="inherit"
-                  onClick={onViewDetail}
-                >
+                <Link weight="semibold" color="inherit" onClick={onViewDetail}>
                   {detailLabel}
                 </Link>
                 <Icon icon={ChevronRight} size="xsm" color="inherit" />
@@ -287,10 +287,13 @@ function StatCard({
   badgeTone = 'default',
   icon,
   noteIcon,
-  valueSize = '3xl',
+  valueSize,
   unitSize = 'base',
 }) {
   const colors = STAT_TONE_COLORS[tone];
+  // Keep short KPIs visually prominent; long unbreakable currency strings
+  // step down before they can escape a card in the 3-column layout.
+  const resolvedValueSize = valueSize ?? (value.length > 11 ? 'xl' : '3xl');
   return (
     <VStack
       gap={2}
@@ -322,7 +325,7 @@ function StatCard({
       <HStack gap={1} vAlign="center" wrap="wrap">
         <Text
           weight="bold"
-          size={valueSize}
+          size={resolvedValueSize}
           color={colors.value}
           xstyle={styles.statValue}
         >
@@ -343,9 +346,7 @@ function StatCard({
               color={/** @type {any} */ (colors.note)}
             />
           ) : null}
-          <Text color={colors.note}>
-            {note}
-          </Text>
+          <Text color={colors.note}>{note}</Text>
         </HStack>
       ) : null}
     </VStack>
@@ -403,53 +404,53 @@ function InstallmentStep({
         </VStack>
       }
     >
-    <VStack
-      gap={3}
-      hAlign="stretch"
-      xstyle={[styles.installment, installmentToneStyles[status]]}
-    >
-      <HStack gap={1} vAlign="center" hAlign="between" wrap="nowrap">
-        <Text type="code" weight="bold" color="inherit">
-          {label}
-        </Text>
-        <HStack gap={1} vAlign="center" wrap="nowrap">
-          {status === 'active' ? (
-            <HStack as="span" xstyle={styles.activeBadge}>
-              <Text weight="bold" color="inherit">
-                {activeBadgeLabel}
-              </Text>
-            </HStack>
-          ) : null}
-          <Icon icon={StatusIcon} size="sm" color="inherit" />
+      <VStack
+        gap={3}
+        hAlign="stretch"
+        xstyle={[styles.installment, installmentToneStyles[status]]}
+      >
+        <HStack gap={1} vAlign="center" hAlign="between" wrap="nowrap">
+          <Text type="code" weight="bold" color="inherit">
+            {label}
+          </Text>
+          <HStack gap={1} vAlign="center" wrap="nowrap">
+            {status === 'active' ? (
+              <HStack as="span" xstyle={styles.activeBadge}>
+                <Text weight="bold" color="inherit">
+                  {activeBadgeLabel}
+                </Text>
+              </HStack>
+            ) : null}
+            <Icon icon={StatusIcon} size="sm" color="inherit" />
+          </HStack>
         </HStack>
-      </HStack>
-      {/* Divider sits as its own row in the `VStack` (not a border glued
+        {/* Divider sits as its own row in the `VStack` (not a border glued
           to the header) so the surrounding `gap` spaces it evenly from
           the label above and the amount below, instead of sitting
           closer to one side (user feedback, 2026-09-18). */}
-      <HStack
-        as="span"
-        xstyle={[
-          styles.installmentDivider,
-          installmentDividerToneStyles[status],
-        ]}
-      />
-      {/* Only the amount stays on the card face (Figma monospace, `type=
+        <HStack
+          as="span"
+          xstyle={[
+            styles.installmentDivider,
+            installmentDividerToneStyles[status],
+          ]}
+        />
+        {/* Only the amount stays on the card face (Figma monospace, `type=
           "code"`); the payment date and terms are secondary detail, shown
           in a `Tooltip` on hovering/focusing the whole card so it stays
           uncluttered (user feedback, 2026-09-19). Disabled when neither
           exists. */}
-      <HStack gap={1} vAlign="center" wrap="nowrap">
-        <Text type="code" weight="bold" size="xl" color="inherit">
-          {amount}
-        </Text>
-        {unit ? (
-          <Text type="code" weight="semibold" color="inherit">
-            {unit}
+        <HStack gap={1} vAlign="center" wrap="nowrap">
+          <Text type="code" weight="bold" size="xl" color="inherit">
+            {amount}
           </Text>
-        ) : null}
-      </HStack>
-    </VStack>
+          {unit ? (
+            <Text type="code" weight="semibold" color="inherit">
+              {unit}
+            </Text>
+          ) : null}
+        </HStack>
+      </VStack>
     </Tooltip>
   );
 }
@@ -633,6 +634,16 @@ const DEFAULT_INSTALLMENTS = [
 ];
 
 const styles = stylex.create({
+  // `minWidth: 240` preserves the desktop card rhythm but it can be wider
+  // than the content area on narrow phones. Override only the mobile grid
+  // track to a shrinkable single column, keeping Astryx's Grid for every
+  // other responsive width.
+  statGrid: {
+    gridTemplateColumns: {
+      default: null,
+      '@media (max-width: 599px)': 'minmax(0, 1fr)',
+    },
+  },
   header: {
     borderBottomColor: 'var(--color-border)',
     borderBottomStyle: 'solid',
@@ -658,6 +669,7 @@ const styles = stylex.create({
     // own `repeat: 'fill'` columns can't always guarantee on their own
     // (see the comment above the `<Grid>` call).
     maxWidth: '340px',
+    minWidth: 0,
     padding: 'var(--spacing-4)',
     transform: {
       default: 'translateY(0)',

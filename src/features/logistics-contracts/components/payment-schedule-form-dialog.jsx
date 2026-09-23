@@ -32,7 +32,9 @@ export function PaymentScheduleFormDialog({
     schedule,
     onSuccess: (savedSchedule) => {
       toast({
-        body: schedule ? 'Đã cập nhật đợt thanh toán.' : 'Đã thêm đợt thanh toán.',
+        body: schedule
+          ? 'Đã cập nhật đợt thanh toán.'
+          : 'Đã thêm đợt thanh toán.',
       });
       onOpenChange(false);
       onSuccess?.(savedSchedule);

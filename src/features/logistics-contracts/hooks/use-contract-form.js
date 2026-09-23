@@ -246,7 +246,8 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     sellerExtras: sellerExtraFieldRows.rows,
     buyerExtras: buyerExtraFieldRows.rows,
   });
-  const [initialFingerprint, setInitialFingerprint] = useState(draftFingerprint);
+  const [initialFingerprint, setInitialFingerprint] =
+    useState(draftFingerprint);
 
   const createMutation = useCreateContractMutation();
   const updateMutation = useUpdateContractMutation();

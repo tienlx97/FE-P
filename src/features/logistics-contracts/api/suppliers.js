@@ -3,14 +3,20 @@ import { apiRequest } from '@/shared/api/api-client.js';
 const LIST_ERROR = 'Không thể tải danh sách nhà cung cấp';
 
 export async function listSuppliers() {
-  const result = await apiRequest('/api/v1/suppliers', { errorMessage: LIST_ERROR });
+  const result = await apiRequest('/api/v1/suppliers', {
+    errorMessage: LIST_ERROR,
+  });
   return result.success
     ? { success: true, suppliers: result.data ?? [] }
     : { success: false, message: result.message };
 }
 
 /** @param {{page?: number, pageSize?: number, conditions?: any[]}} [options] */
-export async function searchSuppliers({ page = 1, pageSize = 25, conditions = [] } = {}) {
+export async function searchSuppliers({
+  page = 1,
+  pageSize = 25,
+  conditions = [],
+} = {}) {
   const result = await apiRequest('/api/v1/suppliers/search', {
     method: 'POST',
     errorMessage: LIST_ERROR,
@@ -39,11 +45,21 @@ export async function searchSuppliers({ page = 1, pageSize = 25, conditions = []
 }
 
 /** @param {any} values @param {any[]} extraFieldRows @param {any[]} bankAccounts @param {any[]} deliveryAddresses */
-export async function createSupplier(values, extraFieldRows, bankAccounts, deliveryAddresses) {
+export async function createSupplier(
+  values,
+  extraFieldRows,
+  bankAccounts,
+  deliveryAddresses,
+) {
   const result = await apiRequest('/api/v1/suppliers', {
     method: 'POST',
     errorMessage: 'Không thể thêm nhà cung cấp',
-    body: buildPartyBody(values, extraFieldRows, bankAccounts, deliveryAddresses),
+    body: buildPartyBody(
+      values,
+      extraFieldRows,
+      bankAccounts,
+      deliveryAddresses,
+    ),
   });
   return result.success
     ? { success: true, supplier: result.data }
@@ -51,11 +67,22 @@ export async function createSupplier(values, extraFieldRows, bankAccounts, deliv
 }
 
 /** @param {string} supplierId @param {any} values @param {any[]} extraFieldRows @param {any[]} bankAccounts @param {any[]} deliveryAddresses */
-export async function updateSupplier(supplierId, values, extraFieldRows, bankAccounts, deliveryAddresses) {
+export async function updateSupplier(
+  supplierId,
+  values,
+  extraFieldRows,
+  bankAccounts,
+  deliveryAddresses,
+) {
   const result = await apiRequest(`/api/v1/suppliers/${supplierId}`, {
     method: 'PUT',
     errorMessage: 'Không thể sửa nhà cung cấp',
-    body: buildPartyBody(values, extraFieldRows, bankAccounts, deliveryAddresses),
+    body: buildPartyBody(
+      values,
+      extraFieldRows,
+      bankAccounts,
+      deliveryAddresses,
+    ),
   });
   return result.success
     ? { success: true, supplier: result.data }
@@ -82,7 +109,12 @@ export async function deleteSupplier(supplierId) {
 }
 
 /** @param {any} values @param {any[]} [extraFieldRows] @param {any[]} [bankAccounts] @param {any[]} [deliveryAddresses] */
-export function buildPartyBody(values, extraFieldRows = [], bankAccounts = [], deliveryAddresses = []) {
+export function buildPartyBody(
+  values,
+  extraFieldRows = [],
+  bankAccounts = [],
+  deliveryAddresses = [],
+) {
   return {
     CompanyName: values.companyName,
     RepresentativeName: values.representativeName || null,
@@ -118,10 +150,19 @@ export function buildPartyBody(values, extraFieldRows = [], bankAccounts = [], d
     },
     BankAccounts: bankAccounts
       .filter((row) => row.accountNumber.trim() || row.bankName.trim())
-      .map(({ accountNumber, bankName, branch, province }) => ({ AccountNumber: accountNumber, BankName: bankName, Branch: branch, Province: province })),
+      .map(({ accountNumber, bankName, branch, province }) => ({
+        AccountNumber: accountNumber,
+        BankName: bankName,
+        Branch: branch,
+        Province: province,
+      })),
     DeliveryAddresses: values.deliveryAddressSameAsMain
       ? []
-      : deliveryAddresses.filter((row) => row.address.trim()).map(({ address }) => ({ Address: address })),
-    ExtraFields: extraFieldRows.filter((row) => row.key.trim()).map((row) => ({ Key: row.key, Value: row.value })),
+      : deliveryAddresses
+          .filter((row) => row.address.trim())
+          .map(({ address }) => ({ Address: address })),
+    ExtraFields: extraFieldRows
+      .filter((row) => row.key.trim())
+      .map((row) => ({ Key: row.key, Value: row.value })),
   };
 }

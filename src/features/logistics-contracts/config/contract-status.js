@@ -60,3 +60,16 @@ export function statusDotVariantForContractStatus(status) {
   if (status === 'Cancelled') return 'error';
   return 'neutral';
 }
+
+/**
+ * `MetaPill` tone for the same status (Meta contract-detail header and
+ * edit drawer): emerald = đang thực hiện, cobalt = hoàn thành, neutral
+ * otherwise.
+ * @param {import('../types/index.js').ContractStatus | string} status
+ * @returns {'accent' | 'success' | 'neutral'}
+ */
+export function metaToneForContractStatus(status) {
+  if (status === 'Completed') return 'accent';
+  if (status === 'InProgress') return 'success';
+  return 'neutral';
+}

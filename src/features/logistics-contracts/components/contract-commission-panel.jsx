@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-import { MaritimeCommissionPanel } from '@/shared/components/custom/maritime/index.js';
+import { MetaCommissionPanel } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
@@ -30,8 +30,8 @@ function shortCondition(value) {
 }
 
 /**
- * "Hoa hồng" tab body (`openspec/changes/apply-maritime-to-contract-detail/`,
- * step 8): `MaritimeCommissionPanel` fed with the contract's real
+ * "Hoa hồng" tab body: `MetaCommissionPanel` (Meta theme, Figma node
+ * 102:4272) fed with the contract's real
  * `Commission` (at most one per contract), its recipient `Customer`
  * (representative, tax code, address, first bank account) and its payment
  * terms/history, plus the dialogs it opens. The agreed `paymentTerms` and the
@@ -97,8 +97,9 @@ export function ContractCommissionPanel({ contract }) {
       ]);
     return (
       <>
-        <MaritimeCommissionPanel
+        <MetaCommissionPanel
           currency={currency}
+          isLoading={commissionQuery.isLoading}
           summary={[
             {
               label: 'TỔNG HOA HỒNG',
@@ -122,6 +123,7 @@ export function ContractCommissionPanel({ contract }) {
           broker={{
             label: 'BÊN NHẬN HOA HỒNG (MÔI GIỚI)',
             signedLabel: 'Chưa ký',
+            isSigned: false,
             code: BLANK,
             name: BLANK,
             rows: emptyRows,
@@ -147,7 +149,7 @@ export function ContractCommissionPanel({ contract }) {
           footnote=""
           confirmedTotal={`${BLANK} ${currency}`}
           hasReceiptDownload={false}
-          createLabel="Tạo Commission"
+          createLabel="+ Tạo Commission"
           onCreate={() => setDialog({ kind: 'form', mode: 'edit' })}
         />
         {formDialog}
@@ -237,12 +239,14 @@ export function ContractCommissionPanel({ contract }) {
 
   return (
     <>
-      <MaritimeCommissionPanel
+      <MetaCommissionPanel
         currency={currency}
+        isLoading={customersQuery.isLoading || annexesQuery.isLoading}
         summary={summary}
         broker={{
           label: 'BÊN NHẬN HOA HỒNG (MÔI GIỚI)',
-          signedLabel: bothSigned ? 'Đã ký 2 bên' : 'Chưa ký đủ',
+          signedLabel: bothSigned ? 'ĐÃ KÝ 2 BÊN' : 'CHƯA KÝ ĐỦ',
+          isSigned: bothSigned,
           code: commission.code,
           name: orBlank(recipient?.companyName),
           rows: brokerRows,

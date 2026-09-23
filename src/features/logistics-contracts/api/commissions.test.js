@@ -49,7 +49,10 @@ test('uses the system-wide Commissions endpoint', async () => {
   try {
     const result = await listCommissions({ page: 2, pageSize: 10 });
 
-    assert.match(String(captured.url), /\/api\/v1\/commissions\?page=2&pageSize=10$/);
+    assert.match(
+      String(captured.url),
+      /\/api\/v1\/commissions\?page=2&pageSize=10$/,
+    );
     assert.equal(captured.method, 'GET');
     assert.equal(result.success && result.commissions[0]?.code, '26CM01');
   } finally {
@@ -82,9 +85,18 @@ test('uses the contract-scoped Commission endpoint for get, create, and update',
     assert.deepEqual(
       captured.map(({ url, method }) => ({ path: url, method })),
       [
-        { path: '/api/backend/api/v1/contracts/contract-1/commission', method: 'GET' },
-        { path: '/api/backend/api/v1/contracts/contract-1/commission', method: 'POST' },
-        { path: '/api/backend/api/v1/contracts/contract-1/commission', method: 'PUT' },
+        {
+          path: '/api/backend/api/v1/contracts/contract-1/commission',
+          method: 'GET',
+        },
+        {
+          path: '/api/backend/api/v1/contracts/contract-1/commission',
+          method: 'POST',
+        },
+        {
+          path: '/api/backend/api/v1/contracts/contract-1/commission',
+          method: 'PUT',
+        },
       ],
     );
   } finally {
@@ -112,7 +124,10 @@ test('uses Commission annex endpoints and preserves commissionId responses', asy
     await createCommissionAnnex('contract-1', ANNEX_VALUES);
     await updateCommissionAnnex('contract-1', 'annex-1', ANNEX_VALUES);
 
-    assert.equal(listed.success && listed.annexes[0]?.commissionId, 'commission-1');
+    assert.equal(
+      listed.success && listed.annexes[0]?.commissionId,
+      'commission-1',
+    );
     assert.deepEqual(
       captured.map(({ url, method }) => ({ path: url, method })),
       [

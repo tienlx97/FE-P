@@ -6,5 +6,6 @@
  * Core: @astryxdesign/core@0.6.2
  */
 
+/// <reference path="./meta.variants.d.ts" />
 import type { DefinedTheme } from '@astryxdesign/core/theme';
 export declare const metaTheme: DefinedTheme;

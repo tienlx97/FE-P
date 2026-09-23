@@ -13,14 +13,21 @@ const GENERIC_LIST_ERROR = 'Không thể tải danh sách BOQ';
  * @param {{ page?: number, pageSize?: number }} [options]
  * @returns {Promise<{ success: true, items: import('../types/index.js').ContractPrivateInfoListItem[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string, conflict: boolean }>}
  */
-export async function listContractPrivateInfos({ page = 1, pageSize = 25 } = {}) {
+export async function listContractPrivateInfos({
+  page = 1,
+  pageSize = 25,
+} = {}) {
   const result = await apiRequest(
     `/api/v1/contracts/private-info?page=${page}&pageSize=${pageSize}`,
     { errorMessage: GENERIC_LIST_ERROR },
   );
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return {
@@ -73,7 +80,11 @@ export async function searchContractPrivateInfos({
   });
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return {
@@ -83,7 +94,11 @@ export async function searchContractPrivateInfos({
     pageSize: result.data?.page?.pageSize ?? pageSize,
     totalCount: result.data?.page?.totalCount ?? 0,
     totalPages: result.data?.page?.totalPages ?? 0,
-    totals: result.data?.totals ?? { containerCount: 0, logisticsTotal: 0, profit: 0 },
+    totals: result.data?.totals ?? {
+      containerCount: 0,
+      logisticsTotal: 0,
+      profit: 0,
+    },
   };
 }
 
@@ -105,7 +120,11 @@ export async function getContractPrivateInfo(contractId) {
   );
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return { success: true, privateInfo: result.data };
@@ -158,7 +177,11 @@ export async function upsertContractPrivateInfo(
   );
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return { success: true, privateInfo: result.data };

@@ -100,7 +100,8 @@ export function useCommissionForm({
     paymentTerms: paymentTermRows.rows,
     paymentHistory: paymentHistoryRows.rows,
   });
-  const [initialFingerprint, setInitialFingerprint] = useState(draftFingerprint);
+  const [initialFingerprint, setInitialFingerprint] =
+    useState(draftFingerprint);
 
   function reset() {
     setValues(commission ? valuesFromCommission(commission) : emptyValues());

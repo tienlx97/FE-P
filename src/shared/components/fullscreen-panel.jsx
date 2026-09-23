@@ -63,7 +63,9 @@ const FullscreenContext = createContext(
 export function useFullscreenToggle() {
   const context = useContext(FullscreenContext);
   if (!context) {
-    throw new Error('useFullscreenToggle must be called within a FullscreenPanel');
+    throw new Error(
+      'useFullscreenToggle must be called within a FullscreenPanel',
+    );
   }
   return context;
 }
@@ -177,7 +179,11 @@ export function FullscreenPanel({ children }) {
   // remount either.
   const content = (
     <FullscreenContext.Provider value={contextValue}>
-      <div {...(isFullscreen ? stylex.props(appShellContentStyle, styles.overlay) : {})}>
+      <div
+        {...(isFullscreen
+          ? stylex.props(appShellContentStyle, styles.overlay)
+          : {})}
+      >
         {children}
       </div>
     </FullscreenContext.Provider>

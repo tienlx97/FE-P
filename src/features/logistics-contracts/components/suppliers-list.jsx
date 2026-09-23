@@ -333,7 +333,9 @@ export function SuppliersList() {
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
       {listResult && !listResult.success ? (
-        <AdvanceTableErrorBanner message={listResult.message ?? 'Không thể tải danh sách nhà cung cấp'} />
+        <AdvanceTableErrorBanner
+          message={listResult.message ?? 'Không thể tải danh sách nhà cung cấp'}
+        />
       ) : null}
 
       <StackItem size="fill">
@@ -411,4 +413,3 @@ export function SuppliersList() {
     </VStack>
   );
 }
-

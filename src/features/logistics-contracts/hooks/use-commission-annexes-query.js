@@ -23,8 +23,7 @@ const queryKey = (contractId) => [
 export function useCommissionAnnexesQuery(contractId) {
   return useQuery({
     queryKey: queryKey(contractId ?? ''),
-    queryFn: () =>
-      listCommissionAnnexes(/** @type {string} */ (contractId)),
+    queryFn: () => listCommissionAnnexes(/** @type {string} */ (contractId)),
     enabled: Boolean(contractId),
   });
 }

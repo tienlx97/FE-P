@@ -40,7 +40,10 @@ test('upsertContractPrivateInfo sends every field as PascalCase, blank date as n
       [],
     );
 
-    assert.match(String(captured.input), /\/contracts\/contract-1\/private-info$/);
+    assert.match(
+      String(captured.input),
+      /\/contracts\/contract-1\/private-info$/,
+    );
     assert.equal(captured.init?.method, 'PUT');
 
     const body = JSON.parse(String(captured.init?.body));
@@ -64,11 +67,7 @@ test('upsertContractPrivateInfo sends unset numeric fields as null', async () =>
   };
 
   try {
-    await upsertContractPrivateInfo(
-      'contract-1',
-      { boqSentDate: '' },
-      [],
-    );
+    await upsertContractPrivateInfo('contract-1', { boqSentDate: '' }, []);
 
     const body = JSON.parse(String(captured.init?.body));
     assert.equal(body.ContainerCount, null);

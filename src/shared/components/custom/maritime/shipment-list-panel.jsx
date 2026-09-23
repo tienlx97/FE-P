@@ -276,22 +276,24 @@ function ShipmentCard({ shipment: s, declarationCurrency, onMenu }) {
                 {s.no}
               </Text>
             </HStack>
-            <Text type="code" size="xl" weight="bold">
+            <Text type="code" size="base" weight="bold">
               {s.code}
             </Text>
+          </HStack>
+          <HStack gap={2}>
             <MaritimeBadge
-              size="md"
+              size="sm"
               tone={s.status.tone}
               label={s.status.label}
             />
+            <IconButton
+              label={`Tùy chọn ${s.code}`}
+              icon={<Icon icon={MoreVertical} size="sm" />}
+              variant="ghost"
+              size="sm"
+              onClick={() => onMenu?.(s.id)}
+            />
           </HStack>
-          <IconButton
-            label={`Tùy chọn ${s.code}`}
-            icon={<Icon icon={MoreVertical} size="sm" />}
-            variant="ghost"
-            size="sm"
-            onClick={() => onMenu?.(s.id)}
-          />
         </HStack>
 
         <Grid columns={{ minWidth: 320, max: 3, repeat: 'fill' }} gap={4}>

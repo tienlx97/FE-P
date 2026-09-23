@@ -224,6 +224,7 @@ const config = [
       // And the "Meta" custom theme's.
       'src/shared/components/custom/meta/meta.js',
       'src/shared/components/custom/meta/meta.d.ts',
+      'src/shared/components/custom/meta/meta.variants.d.ts',
       'src/shared/components/custom/meta/theme.built.css',
     ],
   },

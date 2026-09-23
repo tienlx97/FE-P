@@ -8,7 +8,12 @@ import { useCreateSellerMutation } from './use-sellers-query.js';
 
 /** @returns {import('../types/index.js').SellerFormValues} */
 function emptyValues() {
-  return { companyName: '', representativeName: '', representativeTitle: '', address: '' };
+  return {
+    companyName: '',
+    representativeName: '',
+    representativeTitle: '',
+    address: '',
+  };
 }
 
 /** @param {string} [message] @returns {{ type: 'error', message: string } | undefined} */
@@ -82,7 +87,10 @@ export function useSellerForm({ onSuccess } = {}) {
     values,
     setField,
     fieldStatuses: Object.fromEntries(
-      Object.entries(fieldErrors).map(([key, message]) => [key, fieldStatus(message)]),
+      Object.entries(fieldErrors).map(([key, message]) => [
+        key,
+        fieldStatus(message),
+      ]),
     ),
     extraFieldRows,
     submitError,

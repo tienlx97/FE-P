@@ -142,7 +142,33 @@ export const metaTheme = {
     "--meta-shadow-float": "rgba(20, 22, 26, 0.3) 0px 1px 4px 0px",
     "--meta-font-features": "\"ss01\", \"ss02\"",
     "--table-framed-total-bg": "#f0f5ff",
-    "--table-framed-group-bg": "#f4f7fc"
+    "--table-framed-group-bg": "#f4f7fc",
+    "--meta-emerald-text": "#047857",
+    "--meta-emerald-deep": "#065f46",
+    "--meta-emerald-fill": "#059669",
+    "--meta-emerald-dot": "#10b981",
+    "--meta-emerald-wash": "#ecfdf5",
+    "--meta-emerald-border": "#a7f3d0",
+    "--meta-emerald-divider": "#d1fae5",
+    "--meta-blue-wash": "#e7f0ff",
+    "--meta-blue-wash-border": "#dbeafe",
+    "--meta-blue-active-bg": "#f0f6ff",
+    "--meta-blue-active-border": "#bfdbfe",
+    "--meta-hairline": "#f0f2f5",
+    "--meta-inset-bg": "#f8f9fa",
+    "--meta-text-subtle": "#8a8d91",
+    "--meta-danger-icon": "#dc2626",
+    "--meta-kpi-card-max": "25rem",
+    "--meta-panel-card-max": "34rem",
+    "--meta-amber": "#f59e0b",
+    "--meta-green": "#31a24c",
+    "--meta-green-wash": "#e7f6ea",
+    "--meta-green-border": "#bbf7d0",
+    "--meta-radius-inset": "12px",
+    "--meta-indigo": "#4f46e5",
+    "--meta-indigo-wash": "#eef2ff",
+    "--meta-shadow-card": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    "--meta-shadow-drawer": "-10px 0 35px 0 rgba(0, 0, 0, 0.09)"
   },
   __localTokenOwners: {
     "--meta-primary-strong": "meta",
@@ -171,7 +197,33 @@ export const metaTheme = {
     "--meta-shadow-float": "meta",
     "--meta-font-features": "meta",
     "--table-framed-total-bg": "meta",
-    "--table-framed-group-bg": "meta"
+    "--table-framed-group-bg": "meta",
+    "--meta-emerald-text": "meta",
+    "--meta-emerald-deep": "meta",
+    "--meta-emerald-fill": "meta",
+    "--meta-emerald-dot": "meta",
+    "--meta-emerald-wash": "meta",
+    "--meta-emerald-border": "meta",
+    "--meta-emerald-divider": "meta",
+    "--meta-blue-wash": "meta",
+    "--meta-blue-wash-border": "meta",
+    "--meta-blue-active-bg": "meta",
+    "--meta-blue-active-border": "meta",
+    "--meta-hairline": "meta",
+    "--meta-inset-bg": "meta",
+    "--meta-text-subtle": "meta",
+    "--meta-danger-icon": "meta",
+    "--meta-kpi-card-max": "meta",
+    "--meta-panel-card-max": "meta",
+    "--meta-amber": "meta",
+    "--meta-green": "meta",
+    "--meta-green-wash": "meta",
+    "--meta-green-border": "meta",
+    "--meta-radius-inset": "meta",
+    "--meta-indigo": "meta",
+    "--meta-indigo-wash": "meta",
+    "--meta-shadow-card": "meta",
+    "--meta-shadow-drawer": "meta"
   },
   __localTokenLineage: ["meta"],
   components: {
@@ -275,6 +327,32 @@ export const metaTheme = {
       },
       "base": {
         "fontFeatureSettings": "var(--meta-font-features)"
+      },
+      "color:meta-success": {
+        "color": "var(--meta-emerald-text)"
+      },
+      "color:meta-success-deep": {
+        "color": "var(--meta-emerald-deep)"
+      },
+      "color:meta-subtle": {
+        "color": "var(--meta-text-subtle)"
+      },
+      "color:meta-green": {
+        "color": "var(--meta-green)"
+      }
+    },
+    "icon": {
+      "color:meta-success": {
+        "color": "var(--meta-emerald-fill)"
+      },
+      "color:meta-subtle": {
+        "color": "var(--meta-text-subtle)"
+      },
+      "color:meta-danger": {
+        "color": "var(--meta-danger-icon)"
+      },
+      "color:meta-green": {
+        "color": "var(--meta-green)"
       }
     },
     "button": {
@@ -302,21 +380,21 @@ export const metaTheme = {
       "base": {
         "backgroundColor": "var(--color-background-surface)",
         "borderColor": "var(--color-border)",
-        "borderRadius": "var(--radius-full)"
+        "borderRadius": "var(--meta-field-radius, var(--radius-full))"
       }
     },
     "text-input": {
       "base": {
         "backgroundColor": "var(--color-background-surface)",
         "borderColor": "var(--color-border)",
-        "borderRadius": "var(--radius-element)"
+        "borderRadius": "var(--meta-field-radius, var(--radius-element))"
       }
     },
     "selector": {
       "base": {
         "backgroundColor": "var(--color-background-surface)",
         "borderColor": "var(--color-border)",
-        "borderRadius": "var(--radius-full)"
+        "borderRadius": "var(--meta-field-radius, var(--radius-full))"
       }
     },
     "tab": {
@@ -329,8 +407,8 @@ export const metaTheme = {
         "paddingInline": "var(--spacing-4)"
       },
       "selected": {
-        "backgroundColor": "var(--color-accent)",
-        "color": "var(--color-on-accent)",
+        "backgroundColor": "var(--meta-tab-selected-bg, var(--color-accent))",
+        "color": "var(--meta-tab-selected-text, var(--color-on-accent))",
         "fontWeight": "var(--font-weight-bold)"
       }
     },

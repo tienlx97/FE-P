@@ -49,7 +49,12 @@ export async function listCommissions({ page = 1, pageSize = 25 } = {}) {
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
  * @returns {Promise<{ success: true, commissions: import('../types/index.js').Commission[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, value: number }[] } | { success: false, message: string }>}
  */
-export async function searchCommissions({ page = 1, pageSize = 25, conditions = [], sort = null } = {}) {
+export async function searchCommissions({
+  page = 1,
+  pageSize = 25,
+  conditions = [],
+  sort = null,
+} = {}) {
   const result = await apiRequest('/api/v1/commissions/search', {
     method: 'POST',
     errorMessage: GENERIC_LIST_ERROR,
@@ -90,9 +95,12 @@ export async function searchCommissions({ page = 1, pageSize = 25, conditions = 
  * @returns {Promise<{ success: true, exists: true, commission: import('../types/index.js').Commission } | { success: true, exists: false } | { success: false, message: string }>}
  */
 export async function getCommission(contractId) {
-  const result = await apiRequest(`/api/v1/contracts/${contractId}/commission`, {
-    errorMessage: GENERIC_GET_ERROR,
-  });
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/commission`,
+    {
+      errorMessage: GENERIC_GET_ERROR,
+    },
+  );
 
   if (!result.success) {
     if (result.status === 404) {
@@ -117,27 +125,30 @@ export async function createCommission(
   paymentTerms,
   paymentHistory = [],
 ) {
-  const result = await apiRequest(`/api/v1/contracts/${contractId}/commission`, {
-    method: 'POST',
-    errorMessage: GENERIC_CREATE_ERROR,
-    body: {
-      Code: values.code,
-      SignedDate: values.signedDate,
-      PartyCustomerId: values.partyCustomerId,
-      Value: values.value,
-      SellerSigned: values.sellerSigned,
-      PartySigned: values.partySigned,
-      PaymentTerms: paymentTerms.map((term) => ({
-        PaymentRatioPercent: term.paymentRatioPercent,
-        PaymentCondition: term.paymentCondition,
-      })),
-      PaymentHistory: paymentHistory.map((payment) => ({
-        PaymentDate: payment.paymentDate,
-        Amount: payment.amount,
-        Note: payment.note || null,
-      })),
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/commission`,
+    {
+      method: 'POST',
+      errorMessage: GENERIC_CREATE_ERROR,
+      body: {
+        Code: values.code,
+        SignedDate: values.signedDate,
+        PartyCustomerId: values.partyCustomerId,
+        Value: values.value,
+        SellerSigned: values.sellerSigned,
+        PartySigned: values.partySigned,
+        PaymentTerms: paymentTerms.map((term) => ({
+          PaymentRatioPercent: term.paymentRatioPercent,
+          PaymentCondition: term.paymentCondition,
+        })),
+        PaymentHistory: paymentHistory.map((payment) => ({
+          PaymentDate: payment.paymentDate,
+          Amount: payment.amount,
+          Note: payment.note || null,
+        })),
+      },
     },
-  });
+  );
 
   if (!result.success) {
     return { success: false, message: result.message };
@@ -159,27 +170,30 @@ export async function updateCommission(
   paymentTerms,
   paymentHistory = [],
 ) {
-  const result = await apiRequest(`/api/v1/contracts/${contractId}/commission`, {
-    method: 'PUT',
-    errorMessage: GENERIC_UPDATE_ERROR,
-    body: {
-      Code: values.code,
-      SignedDate: values.signedDate,
-      PartyCustomerId: values.partyCustomerId,
-      Value: values.value,
-      SellerSigned: values.sellerSigned,
-      PartySigned: values.partySigned,
-      PaymentTerms: paymentTerms.map((term) => ({
-        PaymentRatioPercent: term.paymentRatioPercent,
-        PaymentCondition: term.paymentCondition,
-      })),
-      PaymentHistory: paymentHistory.map((payment) => ({
-        PaymentDate: payment.paymentDate,
-        Amount: payment.amount,
-        Note: payment.note || null,
-      })),
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/commission`,
+    {
+      method: 'PUT',
+      errorMessage: GENERIC_UPDATE_ERROR,
+      body: {
+        Code: values.code,
+        SignedDate: values.signedDate,
+        PartyCustomerId: values.partyCustomerId,
+        Value: values.value,
+        SellerSigned: values.sellerSigned,
+        PartySigned: values.partySigned,
+        PaymentTerms: paymentTerms.map((term) => ({
+          PaymentRatioPercent: term.paymentRatioPercent,
+          PaymentCondition: term.paymentCondition,
+        })),
+        PaymentHistory: paymentHistory.map((payment) => ({
+          PaymentDate: payment.paymentDate,
+          Amount: payment.amount,
+          Note: payment.note || null,
+        })),
+      },
     },
-  });
+  );
 
   if (!result.success) {
     return { success: false, message: result.message };
@@ -213,7 +227,11 @@ export async function checkCommissionCodeExists({ code, excludeCommissionId }) {
   );
 
   if (!result.success) {
-    return { success: false, message: result.message, conflict: result.status === 409 };
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
   }
 
   return { success: true, exists: Boolean(result.data?.exists) };

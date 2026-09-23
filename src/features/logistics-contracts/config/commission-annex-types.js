@@ -23,7 +23,7 @@ export const commissionAnnexTypeOptions = [
 /** @param {import('../types/index.js').CommissionAnnexType | string} type */
 export function labelForCommissionAnnexType(type) {
   return (
-    commissionAnnexTypeOptions.find((option) => option.value === type)
-      ?.label ?? type
+    commissionAnnexTypeOptions.find((option) => option.value === type)?.label ??
+    type
   );
 }

@@ -88,20 +88,31 @@ async function proxy(request, context) {
 
   const accessToken = cookieStore.get(ACCESS_TOKEN_KEY)?.value;
 
-  let response = await forward(target, request.method, headers, body, accessToken);
+  let response = await forward(
+    target,
+    request.method,
+    headers,
+    body,
+    accessToken,
+  );
 
   if (response === null) {
     return badGateway();
   }
 
-  const canRetry =
-    response.status === 401 && path.join('/') !== REFRESH_PATH;
+  const canRetry = response.status === 401 && path.join('/') !== REFRESH_PATH;
 
   if (canRetry) {
     const refreshed = await refreshAccessToken(cookieStore);
 
     if (refreshed !== null) {
-      const retried = await forward(target, request.method, headers, body, refreshed);
+      const retried = await forward(
+        target,
+        request.method,
+        headers,
+        body,
+        refreshed,
+      );
 
       if (retried === null) {
         return badGateway();
@@ -210,7 +221,6 @@ async function refreshAccessToken(cookieStore) {
  * @returns {Promise<string | null>}
  */
 async function redeem(cookieStore, refreshToken) {
-
   let response;
   try {
     response = await fetch(`${resolveApiBaseUrl()}/${REFRESH_PATH}`, {

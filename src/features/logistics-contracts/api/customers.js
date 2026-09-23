@@ -32,7 +32,12 @@ export async function listCustomers() {
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
  * @returns {Promise<{ success: true, customers: import('../types/index.js').Customer[], page: number, pageSize: number, totalCount: number, totalPages: number } | { success: false, message: string }>}
  */
-export async function searchCustomers({ page = 1, pageSize = 25, conditions = [], sort = null } = {}) {
+export async function searchCustomers({
+  page = 1,
+  pageSize = 25,
+  conditions = [],
+  sort = null,
+} = {}) {
   const result = await apiRequest('/api/v1/customers/search', {
     method: 'POST',
     errorMessage: GENERIC_LIST_ERROR,
@@ -72,11 +77,21 @@ export async function searchCustomers({ page = 1, pageSize = 25, conditions = []
  * @param {any[]} [deliveryAddresses]
  * @returns {Promise<{ success: true, customer: import('../types/index.js').Customer } | { success: false, message: string }>}
  */
-export async function createCustomer(values, extraFieldRows = [], bankAccounts = [], deliveryAddresses = []) {
+export async function createCustomer(
+  values,
+  extraFieldRows = [],
+  bankAccounts = [],
+  deliveryAddresses = [],
+) {
   const result = await apiRequest('/api/v1/customers', {
     method: 'POST',
     errorMessage: GENERIC_CREATE_ERROR,
-    body: buildPartyBody(values, extraFieldRows, bankAccounts, deliveryAddresses),
+    body: buildPartyBody(
+      values,
+      extraFieldRows,
+      bankAccounts,
+      deliveryAddresses,
+    ),
   });
 
   if (!result.success) {
@@ -97,11 +112,22 @@ export async function createCustomer(values, extraFieldRows = [], bankAccounts =
  * @param {any[]} [deliveryAddresses]
  * @returns {Promise<{ success: true, customer: import('../types/index.js').Customer } | { success: false, message: string }>}
  */
-export async function updateCustomer(customerId, values, extraFieldRows = [], bankAccounts = [], deliveryAddresses = []) {
+export async function updateCustomer(
+  customerId,
+  values,
+  extraFieldRows = [],
+  bankAccounts = [],
+  deliveryAddresses = [],
+) {
   const result = await apiRequest(`/api/v1/customers/${customerId}`, {
     method: 'PUT',
     errorMessage: GENERIC_UPDATE_ERROR,
-    body: buildPartyBody(values, extraFieldRows, bankAccounts, deliveryAddresses),
+    body: buildPartyBody(
+      values,
+      extraFieldRows,
+      bankAccounts,
+      deliveryAddresses,
+    ),
   });
 
   if (!result.success) {

@@ -291,10 +291,7 @@ export function MaritimeAnnexListPanel({
         >
           <VStack gap={0.5}>
             <Text as="h2" size="xl" weight="bold">
-              Danh sách Phụ lục hợp đồng (Contract Annex List)
-            </Text>
-            <Text color="maritime-subtle">
-              Quản lý biến động giá trị và điều khoản bổ sung
+              Danh sách
             </Text>
           </VStack>
           <HStack gap={2} vAlign="center" wrap="nowrap">

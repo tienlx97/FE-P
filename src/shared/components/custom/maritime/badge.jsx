@@ -34,6 +34,7 @@ import * as stylex from '@stylexjs/stylex';
  *   dotVariant?: import('@astryxdesign/core/StatusDot').StatusDotProps['variant'],
  *   isDotPulsing?: boolean,
  *   isUppercase?: boolean,
+ *   icon?: import('react').ReactNode,
  * }} MaritimeBadgeProps
  */
 /**
@@ -52,6 +53,7 @@ export function MaritimeBadge({
   dotVariant,
   isDotPulsing,
   isUppercase = true,
+  icon,
 }) {
   return (
     <HStack
@@ -60,18 +62,19 @@ export function MaritimeBadge({
       gap={1}
       xstyle={[styles.base, styles[tone], sizeStyles[size]]}
     >
-      {dotVariant ? (
-        <StatusDot
-          variant={dotVariant}
-          label={label}
-          isPulsing={isDotPulsing}
-        />
-      ) : null}
+      {icon ??
+        (dotVariant ? (
+          <StatusDot
+            variant={dotVariant}
+            label={label}
+            isPulsing={isDotPulsing}
+          />
+        ) : null)}
       <Text
         as="span"
         type="label"
         color="inherit"
-        xstyle={[labelSizeStyles[size], !isUppercase && styles.normalCase]}
+        xstyle={!isUppercase && styles.normalCase}
       >
         {label}
       </Text>
@@ -140,36 +143,5 @@ const sizeStyles = stylex.create({
   lg: {
     paddingBlock: '3px',
     paddingInline: 'var(--spacing-3)',
-  },
-});
-
-const labelSizeStyles = stylex.create({
-  xsm: {
-    fontSize: '13px',
-    fontWeight: 700,
-    letterSpacing: '0.02em',
-    lineHeight: '17px',
-    textTransform: 'uppercase',
-  },
-  sm: {
-    fontSize: '14px',
-    fontWeight: 700,
-    letterSpacing: '0.02em',
-    lineHeight: '18px',
-    textTransform: 'uppercase',
-  },
-  md: {
-    fontSize: '15px',
-    fontWeight: 700,
-    letterSpacing: '0.02em',
-    lineHeight: '20px',
-    textTransform: 'uppercase',
-  },
-  lg: {
-    fontSize: '16px',
-    fontWeight: 700,
-    letterSpacing: '0.02em',
-    lineHeight: '22px',
-    textTransform: 'uppercase',
   },
 });

@@ -93,7 +93,7 @@ export const maritimeTheme = defineTheme({
     '--color-background-body': '#f8f9ff', // mockup: surface
     '--color-background-surface': '#ffffff', // mockup: surface-container-lowest
     '--color-background-card': '#ffffff', // mockup: surface-container-lowest
-    '--color-background-popover': '#e5eeff', // mockup: surface-container (dropdown menu bg)
+    '--color-background-popover': '#ffffff', // desktop popovers: neutral surface
     // Keep muted containers transparent so their text retains contrast
     // against the surface underneath (user feedback, 2026-09-20).
     '--color-background-muted': 'transparent',
@@ -167,6 +167,11 @@ export const maritimeTheme = defineTheme({
     // Mono data chip (e.g. "CIF 2020") — mockup: bg-secondary-fixed
     // text-on-secondary-fixed border-blue-200. Consumed via `xstyle` from
     // `chip.jsx` in this same folder.
+    // Contract-list table (Figma "Danh sách Hợp đồng", node 72:4): tinted
+    // header / group-header / totals bands and the zebra wash.
+    '--maritime-table-header-bg': '#f4f3fb',
+    '--maritime-table-group-bg': '#eeedf6',
+    '--maritime-table-total-bg': '#eeedf6',
     '--maritime-chip-bg': '#dbe1ff', // mockup: secondary-fixed
     '--maritime-chip-text': '#00174b', // mockup: on-secondary-fixed
     '--maritime-chip-border': '#bfdbfe', // mockup: border-blue-200
@@ -196,6 +201,45 @@ export const maritimeTheme = defineTheme({
     '--maritime-contract-code-font':
       '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
     '--maritime-field-label-color': '#45464d',
+    '--maritime-field-label-size': '13px',
+    '--maritime-field-label-leading': '19.5px',
+    '--maritime-form-control-text-size': '14px',
+    '--maritime-form-control-text-leading': '20px',
+    '--maritime-bank-add-background': '#eff4ff',
+    '--maritime-bank-add-border': 'rgba(0, 81, 213, 0.6)',
+    '--maritime-bank-add-height': '36px',
+    '--maritime-bank-add-radius': '6px',
+    '--maritime-card-accent-border': 'rgba(0, 81, 213, 0.4)',
+    '--maritime-form-section-title-size': '13px',
+    '--maritime-form-section-title-leading': '19.5px',
+    '--maritime-form-section-title-tracking': '0.4px',
+    '--maritime-form-section-meta-size': '12px',
+    '--maritime-form-section-status-radius': '12px',
+    '--maritime-form-section-status-padding-block': '2px',
+    '--maritime-form-section-status-padding-inline': '10px',
+    '--maritime-payment-card-padding': '14px',
+    '--maritime-payment-card-gap': '10px',
+    '--maritime-payment-card-radius': '6px',
+    '--maritime-payment-card-header-height': '34px',
+    '--maritime-payment-header-padding-bottom': '5px',
+    '--maritime-payment-card-divider': 'rgba(220, 233, 255, 0.6)',
+    '--maritime-payment-card-active-background': 'rgba(239, 246, 255, 0.2)',
+    '--maritime-payment-card-active-border': '#bfdbfe',
+    '--maritime-payment-sequence-background': 'rgba(239, 246, 255, 0.5)',
+    '--maritime-payment-sequence-border': '#bfdbfe',
+    '--maritime-payment-sequence-active-background': '#f0fdfa',
+    '--maritime-payment-sequence-active-border': '#5eead4',
+    '--maritime-payment-sequence-padding-block': '2px',
+    '--maritime-payment-muted': '#76777d',
+    '--maritime-payment-label-size': '12px',
+    '--maritime-payment-label-leading': '18px',
+    '--maritime-payment-label-tracking': '0.5px',
+    '--maritime-payment-amount-background': 'rgba(240, 253, 250, 0.5)',
+    '--maritime-payment-amount-border': '#5eead4',
+    '--maritime-payment-control-height': '28px',
+    '--maritime-payment-control-radius': '2px',
+    '--maritime-payment-remove-size': '25px',
+    '--maritime-payment-ratio-width': '96px',
   },
 
   components: {
@@ -214,15 +258,20 @@ export const maritimeTheme = defineTheme({
         fontSize: '20px',
         letterSpacing: '-0.5px',
       },
+      'level:2': {
+        fontSize: '16px',
+        fontWeight: 'var(--font-weight-bold)',
+        lineHeight: '20px',
+      },
     },
     'field-label': {
       base: {
-        '--text-supporting-size': '11px',
-        '--text-supporting-leading': '16.5px',
+        '--text-supporting-size': 'var(--maritime-field-label-size)',
+        '--text-supporting-leading': 'var(--maritime-field-label-leading)',
         color: 'var(--maritime-field-label-color)',
-        fontSize: '11px',
+        fontSize: 'var(--maritime-field-label-size)',
         fontWeight: 'var(--font-weight-semibold)',
-        lineHeight: '16.5px',
+        lineHeight: 'var(--maritime-field-label-leading)',
       },
     },
     // Compact form-control system extracted from the Contract editor frame.
@@ -230,8 +279,8 @@ export const maritimeTheme = defineTheme({
     // behavior and future package fixes; no component source is forked.
     'text-input': {
       base: {
-        '--text-body-size': '12px',
-        '--text-body-leading': '16px',
+        '--text-body-size': 'var(--maritime-form-control-text-size)',
+        '--text-body-leading': 'var(--maritime-form-control-text-leading)',
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'calc(var(--radius-inner) / 2)',
@@ -242,8 +291,8 @@ export const maritimeTheme = defineTheme({
     },
     selector: {
       base: {
-        '--text-label-size': '12px',
-        '--text-label-leading': '18px',
+        '--text-label-size': 'var(--maritime-form-control-text-size)',
+        '--text-label-leading': 'var(--maritime-form-control-text-leading)',
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'calc(var(--radius-inner) / 2)',
@@ -253,8 +302,8 @@ export const maritimeTheme = defineTheme({
     },
     'date-input': {
       base: {
-        '--text-body-size': '12px',
-        '--text-body-leading': '16px',
+        '--text-body-size': 'var(--maritime-form-control-text-size)',
+        '--text-body-leading': 'var(--maritime-form-control-text-leading)',
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'calc(var(--radius-inner) / 2)',
@@ -265,8 +314,8 @@ export const maritimeTheme = defineTheme({
     },
     'date-time-input': {
       base: {
-        '--text-body-size': '12px',
-        '--text-body-leading': '16px',
+        '--text-body-size': 'var(--maritime-form-control-text-size)',
+        '--text-body-leading': 'var(--maritime-form-control-text-leading)',
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'calc(var(--radius-inner) / 2)',
@@ -274,8 +323,8 @@ export const maritimeTheme = defineTheme({
     },
     'time-input': {
       base: {
-        '--text-body-size': '12px',
-        '--text-body-leading': '16px',
+        '--text-body-size': 'var(--maritime-form-control-text-size)',
+        '--text-body-leading': 'var(--maritime-form-control-text-leading)',
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'calc(var(--radius-inner) / 2)',
@@ -283,8 +332,8 @@ export const maritimeTheme = defineTheme({
     },
     'number-input': {
       base: {
-        '--text-body-size': '12px',
-        '--text-body-leading': '16px',
+        '--text-body-size': 'var(--maritime-form-control-text-size)',
+        '--text-body-leading': 'var(--maritime-form-control-text-leading)',
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'calc(var(--radius-inner) / 2)',
@@ -295,8 +344,8 @@ export const maritimeTheme = defineTheme({
     },
     'input-group': {
       base: {
-        '--text-body-size': '12px',
-        '--text-body-leading': '16px',
+        '--text-body-size': 'var(--maritime-form-control-text-size)',
+        '--text-body-leading': 'var(--maritime-form-control-text-leading)',
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'calc(var(--radius-inner) / 2)',
@@ -305,8 +354,8 @@ export const maritimeTheme = defineTheme({
     },
     textarea: {
       base: {
-        '--text-body-size': '12px',
-        '--text-body-leading': '19.5px',
+        '--text-body-size': 'var(--maritime-form-control-text-size)',
+        '--text-body-leading': 'var(--maritime-form-control-text-leading)',
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
         borderRadius: 'calc(var(--radius-inner) / 2)',
@@ -382,12 +431,26 @@ export const maritimeTheme = defineTheme({
     // header band with 13px/700 uppercase column titles, body cells at the
     // theme's `base` size (14px, user request 2026-09-19).
     // Themed overrides, not `xstyle` — `Table` cells expose no `xstyle`.
+    // Same scroll-box contract as the app theme (`../../theme.js`): a bounded
+    // wrapper height plus sticky header cells, so the Contract list's table
+    // scrolls inside its card with the header/totals pinned.
+    'table-scroll-wrapper': {
+      base: { height: '100%' },
+    },
     'table-header': {
-      base: { backgroundColor: 'var(--color-background-muted)' },
+      base: { backgroundColor: 'var(--maritime-table-header-bg)' },
     },
     'table-header-cell': {
       base: {
+        backgroundColor: 'var(--maritime-table-header-bg)',
+        position: 'sticky',
+        top: '0',
+        zIndex: '2',
         color: 'var(--maritime-text-muted)',
+        // Long column titles wrap instead of being clipped by the cell.
+        overflow: 'visible',
+        textOverflow: 'clip',
+        whiteSpace: 'normal',
         fontSize: '13px',
         fontWeight: '700',
         letterSpacing: '0.05em',

@@ -107,7 +107,10 @@ export function usePlaceForm({ countryId, isOpen, onSuccess } = {}) {
     values,
     setField,
     fieldStatuses: Object.fromEntries(
-      Object.entries(fieldErrors).map(([key, message]) => [key, fieldStatus(message)]),
+      Object.entries(fieldErrors).map(([key, message]) => [
+        key,
+        fieldStatus(message),
+      ]),
     ),
     submitError,
     isSubmitting: createMutation.isPending,

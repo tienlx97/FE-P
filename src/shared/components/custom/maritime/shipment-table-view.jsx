@@ -95,9 +95,7 @@ export function MaritimeShipmentTableView({
       renderCell: (row) =>
         row.isTotal ? (
           <Cell>
-            <Text
-              color="maritime-subtle"
-            >{`${rows.length} Tờ khai`}</Text>
+            <Text color="maritime-subtle">{`${rows.length} Tờ khai`}</Text>
           </Cell>
         ) : (
           <Cell>
@@ -306,9 +304,7 @@ export function MaritimeShipmentTableView({
             ))}
           </HStack>
           <HStack gap={1.5} vAlign="center" wrap="nowrap">
-            <Text color="maritime-subtle">
-              Trạng thái:
-            </Text>
+            <Text color="maritime-subtle">Trạng thái:</Text>
             <Selector
               label="Trạng thái"
               isLabelHidden
@@ -324,9 +320,7 @@ export function MaritimeShipmentTableView({
           <Text color="maritime-subtle">
             {`Hiển thị ${rows.length} / ${shipments.length} lô hàng`}
           </Text>
-          <Text color="maritime-muted">
-            •
-          </Text>
+          <Text color="maritime-muted">•</Text>
           <Text type="code" weight="semibold" color="accent">
             {`Tổng tờ khai: ${symbol}${totalUsd.toLocaleString('en-US')} ${currency}`}
           </Text>

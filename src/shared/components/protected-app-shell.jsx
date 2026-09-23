@@ -190,7 +190,8 @@ export function ProtectedAppShell({
   // matched reading scale (see `styles.largeTypography` above) — every
   // other route (including /tutorial) now renders at Astryx's normal UI
   // density.
-  const hasLargeTypography = pathname === '/' || pathname === '/docs' || pathname.startsWith('/docs/');
+  const hasLargeTypography =
+    pathname === '/' || pathname === '/docs' || pathname.startsWith('/docs/');
   // /admin/* uses /docs' layout as its standard (see
   // `shared/components/page-content-shell.jsx`): same self-managed
   // padding/max-width contract, so it also opts out of `paddedMain` below
@@ -272,12 +273,10 @@ export function ProtectedAppShell({
     <div
       {...stylex.props(styles.root)}
       style={
-        /** @type {import('react').CSSProperties} */ (
-          {
-            ...stylex.props(styles.root).style,
-            ...(hasLargeTypography ? LARGE_TYPOGRAPHY_STYLE : null),
-          }
-        )
+        /** @type {import('react').CSSProperties} */ ({
+          ...stylex.props(styles.root).style,
+          ...(hasLargeTypography ? LARGE_TYPOGRAPHY_STYLE : null),
+        })
       }
     >
       {focusMode ? (
@@ -308,7 +307,9 @@ export function ProtectedAppShell({
         </header>
       )}
 
-      <div {...stylex.props(styles.layout, hasSideNavLayout && styles.docsLayout)}>
+      <div
+        {...stylex.props(styles.layout, hasSideNavLayout && styles.docsLayout)}
+      >
         {hasSideNav ? (
           <aside
             aria-label="Điều hướng tài liệu trên máy tính"
@@ -324,7 +325,10 @@ export function ProtectedAppShell({
         ) : null}
 
         <main
-          {...stylex.props(styles.main, !hasSelfManagedPadding && styles.paddedMain)}
+          {...stylex.props(
+            styles.main,
+            !hasSelfManagedPadding && styles.paddedMain,
+          )}
         >
           {children}
         </main>

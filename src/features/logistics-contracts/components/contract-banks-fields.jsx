@@ -5,14 +5,13 @@ import {
   CheckboxList,
   CheckboxListItem,
 } from '@astryxdesign/core/CheckboxList';
-import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { IconButton } from '@astryxdesign/core/IconButton';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { CirclePlus } from 'lucide-react';
 import { useState } from 'react';
 
-import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { MaritimeButton } from '@/shared/components/custom/maritime/index.js';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 
 import { QuickCreateBankDialog } from './quick-create-bank-dialog.jsx';
@@ -44,47 +43,47 @@ export function ContractBanksFields({
         <Banner status="error" title={status.message} container="card" />
       ) : null}
 
-      <HStack hAlign="between" vAlign="start">
-        {banks.length > 0 ? (
-          <ReadOnlyLock isActive={isReadOnly}>
-            <CheckboxList
-              label="Ngân hàng thụ hưởng"
-              isLabelHidden
-              value={selectedBankIds}
-              onChange={onChange}
-              hasDividers
-              width="100%"
-            >
-              {banks.map((bank) => (
-                <CheckboxListItem
-                  key={bank.id}
-                  value={bank.id}
-                  label={bank.bankName || 'Ngân hàng chưa đặt tên'}
-                  description={[
-                    bank.beneficiary,
-                    bank.bankAccountNumber,
-                    bank.branchName,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                />
-              ))}
-            </CheckboxList>
-          </ReadOnlyLock>
-        ) : (
-          <Text color="secondary">Chưa có ngân hàng nào trong danh mục.</Text>
-        )}
+      {banks.length > 0 ? (
+        <ReadOnlyLock isActive={isReadOnly}>
+          <CheckboxList
+            label="Ngân hàng thụ hưởng"
+            isLabelHidden
+            value={selectedBankIds}
+            onChange={onChange}
+            hasDividers
+            width="100%"
+          >
+            {banks.map((bank) => (
+              <CheckboxListItem
+                key={bank.id}
+                value={bank.id}
+                label={bank.bankName || 'Ngân hàng chưa đặt tên'}
+                description={[
+                  bank.beneficiary,
+                  bank.bankAccountNumber,
+                  bank.branchName,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              />
+            ))}
+          </CheckboxList>
+        </ReadOnlyLock>
+      ) : (
+        <Text color="secondary">Chưa có ngân hàng nào trong danh mục.</Text>
+      )}
 
-        <IconButton
-          isDisabled={isReadOnly}
-          label="Thêm ngân hàng"
-          tooltip="Thêm ngân hàng"
-          icon={<Icon icon={IconPlus} size="sm" />}
-          type="button"
-          variant="secondary"
-          onClick={() => setIsQuickCreateOpen(true)}
-        />
-      </HStack>
+      <MaritimeButton
+        isDisabled={isReadOnly}
+        label="Thêm ngân hàng thụ hưởng"
+        icon={<Icon icon={CirclePlus} size="md" />}
+        type="button"
+        variant="secondary"
+        treatment="add"
+        width="100%"
+        size="md"
+        onClick={() => setIsQuickCreateOpen(true)}
+      />
 
       <QuickCreateBankDialog
         isOpen={isQuickCreateOpen}

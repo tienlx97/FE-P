@@ -20,9 +20,9 @@
     "verify:quality": "node harness/checks/quality.mjs"
   },
   "dependencies": {
-    "@astryxdesign/core": "0.5.0",
+    "@astryxdesign/core": "0.6.2",
     "@astryxdesign/lab": "0.6.2-canary.bc93547",
-    "@astryxdesign/theme-stone": "0.5.0",
+    "@astryxdesign/theme-stone": "0.6.2",
     "@codemirror/lang-css": "6.1.1",
     "@codemirror/lang-html": "6.4.3",
     "@codemirror/lang-javascript": "6.1.5",
@@ -51,7 +51,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@astryxdesign/cli": "0.5.0",
+    "@astryxdesign/cli": "0.6.2",
     "@eslint/js": "^9.18.0",
     "@stylexjs/babel-plugin": "^0.15.0",
     "@stylexjs/eslint-plugin": "^0.15.0",

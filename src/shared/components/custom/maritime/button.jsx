@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
+import { borderVars } from '@astryxdesign/core/theme/tokens.stylex';
 import * as stylex from '@stylexjs/stylex';
 
 /**
@@ -21,10 +22,27 @@ import * as stylex from '@stylexjs/stylex';
  * defaults or auto-derived tint (2026-09-18; colors sourced from the
  * mockup HTML's own embedded Tailwind config, see `theme.js`'s file
  * header for why that beats the DESIGN.md prose).
- * @param {import('@astryxdesign/core/Button').ButtonProps} props
+ * @param {import('@astryxdesign/core/Button').ButtonProps & {
+ *   treatment?: 'default' | 'add',
+ * }} props
  */
-export function MaritimeButton({ variant = 'secondary', ...props }) {
-  return <Button variant={variant} xstyle={maritimeButtonHoverStyles[variant]} {...props} />;
+export function MaritimeButton({
+  variant = 'secondary',
+  treatment = 'default',
+  xstyle,
+  ...props
+}) {
+  return (
+    <Button
+      variant={variant}
+      xstyle={[
+        maritimeButtonHoverStyles[variant],
+        treatmentStyles[treatment],
+        ...(Array.isArray(xstyle) ? xstyle : xstyle ? [xstyle] : []),
+      ]}
+      {...props}
+    />
+  );
 }
 
 /**
@@ -40,7 +58,9 @@ export const maritimeButtonHoverStyles = stylex.create({
       // spec: Primary hover — `--maritime-button-primary-hover`
       // (`theme.js`, this same folder; no standard token fits since
       // Astryx doesn't expose a hover-state var for Button).
-      ':hover': { '@media (hover: hover)': 'var(--maritime-button-primary-hover)' },
+      ':hover': {
+        '@media (hover: hover)': 'var(--maritime-button-primary-hover)',
+      },
     },
   },
   secondary: {
@@ -51,7 +71,9 @@ export const maritimeButtonHoverStyles = stylex.create({
       // `--maritime-button-secondary-hover` (`theme.js`, this same
       // folder): one step darker than `--color-background-muted`, no
       // standard token holds that second well shade.
-      ':hover': { '@media (hover: hover)': 'var(--maritime-button-secondary-hover)' },
+      ':hover': {
+        '@media (hover: hover)': 'var(--maritime-button-secondary-hover)',
+      },
     },
   },
   ghost: {
@@ -61,4 +83,24 @@ export const maritimeButtonHoverStyles = stylex.create({
     },
   },
   destructive: {},
+});
+
+const treatmentStyles = stylex.create({
+  default: {},
+  add: {
+    backgroundColor: {
+      default: 'var(--maritime-bank-add-background)',
+      ':hover': {
+        '@media (hover: hover)': 'var(--maritime-button-secondary-hover)',
+      },
+    },
+    borderColor: 'var(--maritime-bank-add-border)',
+    borderRadius: 'var(--maritime-bank-add-radius)',
+    borderStyle: 'dashed',
+    borderWidth: borderVars['--border-width'],
+    color: 'var(--color-accent)',
+    // fontSize: 'var(--font-size-sm)',
+    // height: 'var(--maritime-bank-add-height)',
+    // lineHeight: 'var(--line-height-sm)',
+  },
 });

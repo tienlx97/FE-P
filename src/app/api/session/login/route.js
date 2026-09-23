@@ -34,24 +34,33 @@ export async function POST(request) {
   const { nationalId, password } = credentials ?? {};
 
   if (typeof nationalId !== 'string' || typeof password !== 'string') {
-    return Response.json({ detail: 'Thiếu số CCCD hoặc mật khẩu' }, { status: 400 });
+    return Response.json(
+      { detail: 'Thiếu số CCCD hoặc mật khẩu' },
+      { status: 400 },
+    );
   }
 
   let response;
   try {
-    response = await fetch(`${resolveApiBaseUrl()}/api/v1/authentication/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // Without this the API rate-limits every sign-in against this server's
-        // address, i.e. one shared bucket for the whole user base.
-        ...clientAddressHeaders(request),
+    response = await fetch(
+      `${resolveApiBaseUrl()}/api/v1/authentication/login`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Without this the API rate-limits every sign-in against this server's
+          // address, i.e. one shared bucket for the whole user base.
+          ...clientAddressHeaders(request),
+        },
+        body: JSON.stringify({ NationalId: nationalId, Password: password }),
+        cache: 'no-store',
       },
-      body: JSON.stringify({ NationalId: nationalId, Password: password }),
-      cache: 'no-store',
-    });
+    );
   } catch {
-    return Response.json({ detail: 'Không thể kết nối đến máy chủ' }, { status: 502 });
+    return Response.json(
+      { detail: 'Không thể kết nối đến máy chủ' },
+      { status: 502 },
+    );
   }
 
   const body = await response.json().catch(() => null);
@@ -66,7 +75,10 @@ export async function POST(request) {
   }
 
   if (typeof body?.token !== 'string') {
-    return Response.json({ detail: 'Phản hồi đăng nhập không hợp lệ' }, { status: 502 });
+    return Response.json(
+      { detail: 'Phản hồi đăng nhập không hợp lệ' },
+      { status: 502 },
+    );
   }
 
   const cookieStore = await cookies();

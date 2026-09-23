@@ -1,22 +1,21 @@
 'use client';
 import { VStack } from '@astryxdesign/core/VStack';
 import {
+  ArrowLeftRight,
   Bell,
-  CheckCircle2,
+  CircleCheck,
+  ClipboardClock,
   Clock,
-  Container,
   FileCheck2,
-  FileText,
   RefreshCw,
-  Scale,
   Truck,
 } from 'lucide-react';
 import { useMemo } from 'react';
 
 import {
-  MaritimeContractFoundationGrid,
-  MaritimePaymentSummaryCard,
-} from '@/shared/components/custom/maritime/index.js';
+  MetaContractInfoGrid,
+  MetaOverviewSummaryCard,
+} from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
@@ -35,30 +34,33 @@ function orDash(value) {
   return value == null || value === '' ? '—' : value;
 }
 
+/** @param {number} value */
+function roundTo2(value) {
+  return Math.round(value * 100) / 100;
+}
+
+/**
+ * @typedef {import('@/shared/components/custom/meta/overview-summary-card.jsx').MetaMetric} MetaMetric
+ * @typedef {import('@/shared/components/custom/meta/overview-summary-card.jsx').MetaInstallment} MetaInstallment
+ * @typedef {import('@/shared/components/custom/meta/contract-info-grid.jsx').MetaInfoRow} MetaInfoRow
+ */
+
 /**
  * "Tổng quan & Tiến độ" — the Contract detail page's first tab
  * (`openspec/changes/add-contract-detail-page/`), a read-only dashboard
  * built entirely from fields already on `Contract`/`PaymentSchedule`/
  * `ContractAnnex`/`Shipment`/`ContractBank` (per user's explicit choice,
- * 2026-09-17: only existing fields, no new BE work for bank-guarantee/
- * e-signature/audit-log/sailing-progress — those don't exist in the data
- * model). Reuses the same query hooks `ContractExpandedDetails` already
- * fires for "Thanh toán"/"Phụ lục"/"Liên quan", so no extra requests beyond
- * what those tabs need anyway once visited.
+ * 2026-09-17: only existing fields, no new BE work). Reuses the same query
+ * hooks the other tabs fire, so no extra requests once they're visited.
  *
- * Layout (per 2 follow-up mockups, 2026-09-17):
- * - Top row, 4 KPI cards (Incoterm dropped per the 2nd mockup — its
- *   fields moved into "Điều kiện giao hàng" below): Giá trị quyết toán /
- *   Đã thanh toán / Còn lại / Xuất hàng (HQ). "Quyết toán"
- *   (`contractValue` + annex adjustments) is the same computation
- *   `contracts-list.jsx`'s own "QUYẾT TOÁN" column and
- *   `ContractExpandedDetails`'s `contractGrandTotal` use, so all 3
- *   surfaces never disagree on what a contract "is really worth" after
- *   amendments.
- * - Second row, 3 responsive cards: Đối tác (seller/buyer/consignee/
- *   notify party) / Ngân hàng & Đợt thanh toán (bank details + a
- *   paid-vs-pending payment timeline + a Phụ lục preview linking to that
- *   tab) / Điều kiện giao hàng (Incoterm, places, category, shipment mix).
+ * Layout = Figma node 89:1064 ("Meta" theme, 2026-09-23):
+ * - `MetaOverviewSummaryCard`: 4 metric cards — Quyết toán (`contractValue`
+ *   + annex adjustments, same computation as the list's "QUYẾT TOÁN"
+ *   column) / Đã xuất (Σ shipment `invoiceValue`) / Đã xuất (VNĐ) (Σ
+ *   `invoiceValue × declarationExchangeRate`) / Chưa xuất — then the
+ *   payment-reconciliation bar and one chip per recorded payment.
+ * - `MetaContractInfoGrid`: 1. đối tác / 2. vận chuyển & hàng hóa /
+ *   3. ngân hàng, mốc thanh toán, phụ lục, hoa hồng.
  * @param {{ contract: import('../types/index.js').Contract, onViewAllAnnexes?: () => void, onViewPayments?: () => void, onViewCommission?: () => void, onCreateCommission?: () => void }} props
  */
 export function ContractOverviewPanel({
@@ -95,7 +97,8 @@ export function ContractOverviewPanel({
     if (annex.type === 'AmountDecrease') return total - annex.amount;
     return total;
   }, 0);
-  const settlementValue = (contract.contractValue ?? 0) + annexesTotal;
+  const contractValue = contract.contractValue ?? 0;
+  const settlementValue = contractValue + annexesTotal;
 
   const paidPercent =
     settlementValue > 0
@@ -106,20 +109,26 @@ export function ContractOverviewPanel({
   const shipments = shipmentsQuery.data?.success
     ? shipmentsQuery.data.shipments
     : [];
-  const fclCount = shipments.filter(
-    (shipment) => shipment.type === 'FCL',
-  ).length;
-  const lclCount = shipments.filter(
-    (shipment) => shipment.type === 'LCL',
-  ).length;
-  // Approximation: sums each Shipment's own `declarationValue` regardless
-  // of its `declarationCurrency` — matches `contract.currency` in
-  // practice, same assumption the header's "Xuất" CSV export makes.
+  // Sums each Shipment's `invoiceValue` regardless of its
+  // `invoiceCurrency` — matches `contract.currency` in practice. Same rule as
+  // the BE settlement (`exportedValue`) behind the Contract list.
   const exportedValue = shipments.reduce(
-    (total, shipment) => total + shipment.declarationValue,
+    (total, shipment) => total + shipment.invoiceValue,
     0,
   );
   const unexportedValue = Math.max(0, settlementValue - exportedValue);
+  const exportedValueVnd = shipments.reduce(
+    (total, shipment) =>
+      total + shipment.invoiceValue * shipment.declarationExchangeRate,
+    0,
+  );
+  const exportedPercent =
+    settlementValue > 0 ? roundTo2((exportedValue / settlementValue) * 100) : 0;
+  const unexportedPercent = roundTo2(Math.max(0, 100 - exportedPercent));
+  // Value-weighted average of the shipments' declaration exchange rates.
+  const averageExchangeRate =
+    exportedValue > 0 ? exportedValueVnd / exportedValue : null;
+  const shipmentCountHint = `(${shipments.length} lô hàng)`;
 
   const banksQuery = useContractBanksQuery();
   const banks = useMemo(() => {
@@ -139,77 +148,102 @@ export function ContractOverviewPanel({
     countriesQuery.data?.success ? countriesQuery.data.countries : []
   ).find((country) => country.id === contract.countryId)?.name;
 
-  const exportedValueVnd = shipments.reduce(
-    (total, shipment) => total + shipment.declarationValueVnd,
-    0,
-  );
-  const exportedPercent =
-    settlementValue > 0
-      ? Math.round((exportedValue / settlementValue) * 10000) / 100
-      : 0;
-  const annexNote =
-    annexes.length > 0
-      ? `HĐ gốc + ${annexes.length} PL (${annexesTotal >= 0 ? '+' : '-'}${formatMoney(Math.abs(annexesTotal))})`
-      : 'Chưa có phụ lục';
-  const statCards = [
-    {
-      id: 'contract-value',
-      label: 'HỢP ĐỒNG',
-      value: formatMoney(contract.contractValue ?? 0),
-      unit: contract.currency,
-      note: 'HĐ gốc',
-      tone: /** @type {const} */ ('default'),
-      icon: FileText,
-      noteIcon: FileText,
-    },
+  // "Quyết toán" splits into the original value (accent) and the annexes'
+  // net increase (emerald) — Figma "Gốc: $450k (92.8%) · +2 PL: $35k
+  // (7.2%)". A net decrease has no second segment.
+  const originalPercent =
+    settlementValue > 0 && annexesTotal > 0
+      ? roundTo2((contractValue / settlementValue) * 100)
+      : 100;
+
+  /** @type {MetaMetric[]} */
+  const metrics = [
     {
       id: 'settlement',
       label: 'QUYẾT TOÁN',
+      icon: FileCheck2,
       value: formatMoney(settlementValue),
       unit: contract.currency,
-      note: annexNote,
-      tone: /** @type {const} */ ('default'),
-      icon: FileCheck2,
-      noteIcon: FileText,
+      start: {
+        dotTone: 'accent',
+        label: `Gốc: ${formatMoney(contractValue)}`,
+        hint: annexesTotal > 0 ? `(${originalPercent}%)` : undefined,
+      },
+      end:
+        annexes.length > 0
+          ? {
+              dotTone: 'success',
+              value: `${annexesTotal >= 0 ? '+' : '-'}${annexes.length} PL: ${formatMoney(Math.abs(annexesTotal))}`,
+              tone: 'success',
+              hint:
+                annexesTotal > 0
+                  ? `(${roundTo2(100 - originalPercent)}%)`
+                  : undefined,
+            }
+          : undefined,
+      segments: [
+        { percent: originalPercent, tone: 'accent' },
+        { percent: 100 - originalPercent, tone: 'success' },
+      ],
     },
     {
       id: 'exported',
       label: 'ĐÃ XUẤT',
+      icon: Truck,
+      iconTone: 'success',
+      tone: 'success',
       value: formatMoney(exportedValue),
       unit: contract.currency,
-      note: `${exportedPercent}% · ${fclCount} FCL · ${lclCount} LCL`,
-      tone: /** @type {const} */ ('teal'),
-      badgeTone: /** @type {const} */ ('teal'),
-      icon: Truck,
-      noteIcon: CheckCircle2,
+      start: {
+        icon: CircleCheck,
+        label: 'Tiến độ:',
+        value: `${exportedPercent}%`,
+        tone: 'success',
+      },
+      end: { hint: shipmentCountHint },
+      segments: [{ percent: Math.min(100, exportedPercent), tone: 'success' }],
     },
     {
       id: 'exported-vnd',
       label: 'ĐÃ XUẤT (VNĐ)',
+      icon: RefreshCw,
+      iconTone: 'neutral',
       value: formatMoney(exportedValueVnd),
       unit: 'VNĐ',
-      note: `${shipments.length} lô hàng`,
-      tone: /** @type {const} */ ('default'),
-      icon: RefreshCw,
-      noteIcon: RefreshCw,
+      start: {
+        icon: ArrowLeftRight,
+        label: 'Tỷ giá:',
+        value:
+          averageExchangeRate == null
+            ? '—'
+            : formatMoney(Math.round(averageExchangeRate)),
+      },
+      end: { hint: shipmentCountHint },
+      segments: [{ percent: Math.min(100, exportedPercent), tone: 'neutral' }],
     },
     {
       id: 'unexported',
       label: 'CHƯA XUẤT',
+      hasLabelDot: true,
+      icon: ClipboardClock,
+      tone: 'accent',
       value: formatMoney(unexportedValue),
       unit: contract.currency,
-      note: `${Math.max(0, Math.round((100 - exportedPercent) * 100) / 100)}%`,
-      tone: /** @type {const} */ ('accent'),
-      icon: FileText,
-      noteIcon: Clock,
+      start: {
+        icon: Clock,
+        label: 'Còn lại:',
+        value: `${unexportedPercent}%`,
+        tone: 'accent',
+      },
+      segments: [{ percent: unexportedPercent, tone: 'accent' }],
     },
   ];
 
   // The installment strip follows what was actually collected, not the
-  // agreed `paymentTerms` (those are listed in the "Ngân hàng & Đợt thanh
-  // toán" card): recorded payments are "paid" cards, and if anything is
-  // still owed a single next card holds the whole remainder (settlement -
-  // paid) — with nothing paid yet that is the full settlement as "Đợt 1".
+  // agreed `paymentTerms` (those are listed in the "Mốc điều khoản" card):
+  // recorded payments are "paid" chips, and if anything is still owed a
+  // single next chip holds the whole remainder (settlement - paid) — with
+  // nothing paid yet that is the full settlement as "Đợt 01".
   const remainingToCollect = Math.max(0, settlementValue - paidValue);
   const currentPercent =
     remainingToCollect > 0 && settlementValue > 0
@@ -218,12 +252,11 @@ export function ContractOverviewPanel({
           Math.round((remainingToCollect / settlementValue) * 100),
         )
       : 0;
-  /** @type {Array<{ id: string, label: string, amount: string, unit: string, dueDate: string, term?: string, status: 'paid' | 'active' | 'upcoming' }>} */
+  /** @type {MetaInstallment[]} */
   const installments = paymentSchedules.map((schedule, index) => ({
     id: schedule.id,
     label: `Đợt ${String(index + 1).padStart(2, '0')}`,
     amount: formatMoney(schedule.amount),
-    unit: contract.currency,
     dueDate: formatDisplayDate(schedule.paymentDate),
     term: labelForPaymentType(schedule.type),
     status: 'paid',
@@ -233,17 +266,27 @@ export function ContractOverviewPanel({
       id: 'next-installment',
       label: `Đợt ${String(paymentSchedules.length + 1).padStart(2, '0')}`,
       amount: formatMoney(remainingToCollect),
-      unit: contract.currency,
-      dueDate: '',
       status: 'active',
     });
   }
 
-  /** @param {import('../types/index.js').Buyer | import('../types/index.js').ContractSeller} party */
+  /** @param {import('../types/index.js').ExtraField[]} fields @returns {MetaInfoRow[]} */
+  const extraRows = (fields) =>
+    fields.map((field) => ({ label: `${field.key}:`, value: field.value }));
+
+  /**
+   * @param {import('../types/index.js').Buyer | import('../types/index.js').ContractSeller} party
+   * @returns {MetaInfoRow[]}
+   */
   const partyRows = (party) => [
-    ['Người đại diện:', orDash(party.representativeName), false, false, true],
-    ['Chức vụ:', orDash(party.representativeTitle)],
-    ['Địa chỉ:', orDash(party.address)],
+    {
+      label: 'Người đại diện:',
+      value: orDash(party.representativeName),
+      weight: 'semibold',
+    },
+    { label: 'Chức vụ:', value: orDash(party.representativeTitle) },
+    { label: 'Địa chỉ:', value: orDash(party.address) },
+    ...extraRows(party.extraFields ?? []),
   ];
   const parties = [
     {
@@ -253,6 +296,12 @@ export function ContractOverviewPanel({
     },
     {
       eyebrow: 'BÊN MUA (BUYER)',
+      tag: countryName
+        ? {
+            label: countryName.toUpperCase(),
+            tone: /** @type {const} */ ('accent'),
+          }
+        : undefined,
       name: contract.buyer.companyName,
       rows: partyRows(contract.buyer),
     },
@@ -268,93 +317,133 @@ export function ContractOverviewPanel({
           icon,
           label,
           name: contact.name,
-          rows: [
-            ...(contact.address ? [['Địa chỉ:', contact.address]] : []),
-            ...contact.extraFields.map((field) => [`${field.key}:`, field.value]),
+          lines: [
+            ...(contact.address ? [contact.address] : []),
+            ...contact.extraFields.map(
+              (field) => `${field.key}: ${field.value}`,
+            ),
           ],
         }
       : { icon, label, emptyMessage: 'Chưa có thông tin' },
   );
 
+  /** @type {MetaInfoRow[]} */
+  const transportRows = [
+    {
+      label: 'Nơi xếp hàng:',
+      value: orDash(contract.placeOfLoading),
+      weight: 'semibold',
+    },
+    {
+      label: 'Nơi dỡ hàng:',
+      value: orDash(contract.placeOfDischarge),
+      weight: 'semibold',
+    },
+    { label: 'Nước xuất khẩu:', value: orDash(countryName) },
+    {
+      label: 'Ngày báo giá:',
+      value: formatDisplayDate(contract.quotationDate),
+    },
+    {
+      label: 'Ngày ký:',
+      value: formatDisplayDate(contract.createdDate),
+      weight: 'semibold',
+    },
+    {
+      label: 'Ngày hoàn thành:',
+      value: contract.projectCompletionDate
+        ? formatDisplayDate(contract.projectCompletionDate)
+        : 'Chưa hoàn thành',
+    },
+  ];
   const transport = {
-    sectionTrailing: `${exportedPercent}% Đã xuất`,
+    trailing: `${exportedPercent}% Đã xuất`,
     incotermLabel: `${contract.incoterm} ${contract.incotermYear}`,
-    rows: [
-      ['Nơi xếp hàng:', orDash(contract.placeOfLoading)],
-      ['Nơi dỡ hàng:', orDash(contract.placeOfDischarge)],
-      ['Nước xuất khẩu:', orDash(countryName)],
-      ['Hạng mục:', orDash(contract.category)],
-      ['Ngày báo giá:', formatDisplayDate(contract.quotationDate), true],
-      ['Ngày ký:', formatDisplayDate(contract.createdDate), true],
-      [
-        'Ngày hoàn thành:',
-        contract.projectCompletionDate
-          ? formatDisplayDate(contract.projectCompletionDate)
-          : 'Chưa hoàn thành',
-        true,
-      ],
-    ],
-    signingBadges: [
+    rows: transportRows,
+    signingTags: [
       {
         label: contract.sellerSigned ? 'Bên bán đã ký' : 'Bên bán chưa ký',
-        tone: contract.sellerSigned ? 'success' : 'neutral',
+        tone: /** @type {'success' | 'neutral'} */ (
+          contract.sellerSigned ? 'success' : 'neutral'
+        ),
       },
       {
         label: contract.buyerSigned ? 'Bên mua đã ký' : 'Bên mua chưa ký',
-        tone: contract.buyerSigned ? 'success' : 'neutral',
+        tone: /** @type {'success' | 'neutral'} */ (
+          contract.buyerSigned ? 'success' : 'neutral'
+        ),
       },
     ],
   };
 
   const totalWeightTons =
-    shipments.reduce((total, shipment) => total + shipment.declarationWeightKg, 0) /
-    1000;
+    shipments.reduce(
+      (total, shipment) => total + shipment.declarationWeightKg,
+      0,
+    ) / 1000;
   const containerCount = shipments
     .filter((shipment) => shipment.quantityUnit === 'Cont')
     .reduce((total, shipment) => total + shipment.quantityAmount, 0);
   const packageCount = shipments
     .filter((shipment) => shipment.quantityUnit === 'Kien')
     .reduce((total, shipment) => total + shipment.quantityAmount, 0);
-  const cargoMetrics = [
-          {
-            icon: Scale,
-            label: 'KHỐI LƯỢNG TỜ KHAI',
-            value: formatMoney(totalWeightTons),
-            unit: 'Tấn',
-          },
-          {
-            icon: Container,
-            label: 'SỐ LƯỢNG CONT / KIỆN',
-            value: [
-              containerCount > 0 ? `${containerCount} Cont` : null,
-              packageCount > 0 ? `${packageCount} Kiện` : null,
-            ]
-              .filter(Boolean)
-              .join(' · ') || '0',
-            unit: `(${shipments.length} lô)`,
-          },
-  ];
+  const cargo = {
+    subtitle: contract.category || undefined,
+    weightValue: formatMoney(totalWeightTons),
+    weightUnit: 'Tấn',
+    packingValue:
+      [
+        containerCount > 0 ? `${containerCount} Cont` : null,
+        packageCount > 0 ? `${packageCount} Kiện` : null,
+      ]
+        .filter(Boolean)
+        .join(' · ') || '0',
+    packingUnit: `(${shipments.length} lô)`,
+  };
 
-  // One block per selected bank; optional fields (beneficiary, branch,
+  // One inset per selected bank; optional fields (beneficiary, branch,
   // address, extra fields) only appear when they have a value.
   const bank =
     banks.length === 0
       ? null
       : {
-          items: banks.map((item, index) => ({
-            title: banks.length > 1 ? `NGÂN HÀNG ${index + 1}` : undefined,
-            rows: [
-              ['Ngân hàng:', item.bankName, false, false, true],
+          items: banks.map((item, index) => {
+            /** @type {MetaInfoRow[]} */
+            const rows = [
+              { label: 'Ngân hàng:', value: item.bankName, weight: 'semibold' },
               ...(item.beneficiary
-                ? [['Người thụ hưởng:', item.beneficiary]]
+                ? [{ label: 'Người thụ hưởng:', value: item.beneficiary }]
                 : []),
-              ['Số tài khoản:', orDash(item.bankAccountNumber), true],
-              ...(item.branchName ? [['Chi nhánh:', item.branchName]] : []),
-              ...(item.bankAddress ? [['Địa chỉ:', item.bankAddress]] : []),
-              ['Mã SWIFT:', orDash(item.swiftCode), true, true],
-              ...item.extraFields.map((field) => [`${field.key}:`, field.value]),
-            ],
-          })),
+              ...(item.branchName
+                ? [
+                    {
+                      label: 'Chi nhánh:',
+                      value: item.branchName,
+                      weight: /** @type {const} */ ('semibold'),
+                    },
+                  ]
+                : []),
+              {
+                label: 'Số tài khoản:',
+                value: orDash(item.bankAccountNumber),
+                weight: 'bold',
+              },
+              ...(item.bankAddress
+                ? [{ label: 'Địa chỉ:', value: item.bankAddress }]
+                : []),
+              {
+                label: 'Mã SWIFT:',
+                value: orDash(item.swiftCode),
+                weight: 'bold',
+                tone: 'accent',
+              },
+              ...extraRows(item.extraFields),
+            ];
+            return {
+              title: banks.length > 1 ? `NGÂN HÀNG ${index + 1}` : undefined,
+              rows,
+            };
+          }),
         };
 
   const paymentTermsView =
@@ -369,9 +458,29 @@ export function ContractOverviewPanel({
               contract.currency,
             ),
             note: term.paymentCondition,
-            status: index < paymentSchedules.length ? 'paid' : 'active',
+            status: /** @type {'paid' | 'active'} */ (
+              index < paymentSchedules.length ? 'paid' : 'active'
+            ),
           })),
         };
+
+  const annexesView = {
+    countLabel:
+      annexes.length > 0
+        ? `${String(annexes.length).padStart(2, '0')} Phụ lục (${annexes
+            .map((annex) => annex.annexCode)
+            .join(', ')})`
+        : 'Chưa có phụ lục',
+    items: annexes.slice(0, 3).map((annex) => ({
+      code: annex.annexCode,
+      label: labelForContractAnnexType(annex.type),
+      amount:
+        annex.type === 'ValueChange'
+          ? formatMoney(0, contract.currency)
+          : `${annex.type === 'AmountIncrease' ? '+' : '-'}${formatMoney(annex.amount, contract.currency)}`,
+      isPositive: annex.type === 'AmountIncrease',
+    })),
+  };
 
   const commissionQuery = useCommissionQuery(contract.id);
   const customersQuery = useCustomersQuery();
@@ -379,6 +488,7 @@ export function ContractOverviewPanel({
     commissionQuery.data?.success && commissionQuery.data.exists
       ? commissionQuery.data.commission
       : null;
+  /** @type {import('react').ComponentProps<typeof MetaContractInfoGrid>['commission']} */
   let commissionView = null;
   if (commissionRecord) {
     const commissionPaid = commissionRecord.paymentHistory.reduce(
@@ -387,31 +497,20 @@ export function ContractOverviewPanel({
     );
     const commissionPercent =
       settlementValue > 0
-        ? Math.round((commissionRecord.value / settlementValue) * 10000) / 100
+        ? roundTo2((commissionRecord.value / settlementValue) * 100)
         : 0;
-    const isFullySigned =
-      commissionRecord.sellerSigned && commissionRecord.partySigned;
     const recipient = (
       customersQuery.data?.success ? customersQuery.data.customers : []
     ).find((customer) => customer.id === commissionRecord.partyCustomerId);
     commissionView = {
-      percentLabel: `${commissionPercent}%`,
-      signedLabel: isFullySigned ? 'Đã ký 2 bên' : 'Chưa ký đủ',
-      signedTone: isFullySigned ? 'success' : 'neutral',
-      agreementCode: commissionRecord.code,
+      rateLabel: `Tỷ lệ hoa hồng (${commissionPercent}%):`,
+      rateValue: formatMoney(commissionRecord.value, contract.currency),
       recipient: recipient?.companyName ?? '—',
-      rateValue: `${formatMoney(commissionRecord.value, contract.currency)} (${commissionPercent}%)`,
-      paidAmount: formatMoney(commissionPaid),
-      totalAmount: formatMoney(commissionRecord.value, contract.currency),
-      paidPercent:
-        commissionRecord.value > 0
-          ? Math.min(100, Math.round((commissionPaid / commissionRecord.value) * 100))
-          : 0,
-      paidLabel: `Đã chi ${commissionRecord.paymentHistory.length} đợt`,
-      remainingAmount: formatMoney(
+      paidLabel: `Đã thanh toán ${formatMoney(commissionPaid)}`,
+      remainingLabel: `Còn lại ${formatMoney(
         Math.max(0, commissionRecord.value - commissionPaid),
         contract.currency,
-      ),
+      )}`,
     };
   } else if (commissionQuery.data?.success) {
     commissionView = {
@@ -422,40 +521,40 @@ export function ContractOverviewPanel({
     };
   }
 
-  const annexItems = annexes.slice(0, 3).map((annex) => ({
-    code: annex.annexCode,
-    label: labelForContractAnnexType(annex.type),
-    amount:
-      annex.type === 'ValueChange'
-        ? formatMoney(0, contract.currency)
-        : `${annex.type === 'AmountIncrease' ? '+' : '-'}${formatMoney(annex.amount, contract.currency)}`,
-    isPositive: annex.type === 'AmountIncrease',
-  }));
-
   return (
-    <VStack gap={4} hAlign="stretch">
-      <MaritimePaymentSummaryCard
-        statCards={statCards}
+    <VStack gap={5} hAlign="stretch">
+      <MetaOverviewSummaryCard
+        metrics={metrics}
         paidPercent={paidPercent}
         currentPercent={currentPercent}
         paidPercentLabel={`${paidPercent}% ĐÃ THU`}
-        paidAmountValue={formatMoney(paidValue, contract.currency)}
+        paidAmountValue={formatMoney(paidValue)}
         totalAmountValue={formatMoney(settlementValue, contract.currency)}
         onViewDetail={onViewPayments}
         installments={installments}
+        isMetricsLoading={shipmentsQuery.isLoading || annexesQuery.isLoading}
+        isPaymentsLoading={
+          paymentSchedulesQuery.isLoading || annexesQuery.isLoading
+        }
       />
 
-      <MaritimeContractFoundationGrid
+      <MetaContractInfoGrid
         parties={parties}
         contacts={contacts}
         transport={transport}
-        cargoMetrics={cargoMetrics}
+        cargo={cargo}
         bank={bank}
         paymentTerms={paymentTermsView}
-        annexes={annexItems}
+        annexes={annexesView}
         onViewAnnexes={onViewAllAnnexes}
-        onViewCommission={onViewCommission}
         commission={commissionView}
+        onViewCommission={onViewCommission}
+        loading={{
+          cargo: shipmentsQuery.isLoading,
+          bank: banksQuery.isLoading,
+          annexes: annexesQuery.isLoading,
+          commission: commissionQuery.isLoading || customersQuery.isLoading,
+        }}
       />
     </VStack>
   );

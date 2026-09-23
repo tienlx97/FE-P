@@ -269,6 +269,32 @@
     --meta-font-features: "ss01", "ss02";
     --table-framed-total-bg: #f0f5ff;
     --table-framed-group-bg: #f4f7fc;
+    --meta-emerald-text: #047857;
+    --meta-emerald-deep: #065f46;
+    --meta-emerald-fill: #059669;
+    --meta-emerald-dot: #10b981;
+    --meta-emerald-wash: #ecfdf5;
+    --meta-emerald-border: #a7f3d0;
+    --meta-emerald-divider: #d1fae5;
+    --meta-blue-wash: #e7f0ff;
+    --meta-blue-wash-border: #dbeafe;
+    --meta-blue-active-bg: #f0f6ff;
+    --meta-blue-active-border: #bfdbfe;
+    --meta-hairline: #f0f2f5;
+    --meta-inset-bg: #f8f9fa;
+    --meta-text-subtle: #8a8d91;
+    --meta-danger-icon: #dc2626;
+    --meta-kpi-card-max: 25rem;
+    --meta-panel-card-max: 34rem;
+    --meta-amber: #f59e0b;
+    --meta-green: #31a24c;
+    --meta-green-wash: #e7f6ea;
+    --meta-green-border: #bbf7d0;
+    --meta-radius-inset: 12px;
+    --meta-indigo: #4f46e5;
+    --meta-indigo-wash: #eef2ff;
+    --meta-shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --meta-shadow-drawer: -10px 0 35px 0 rgba(0, 0, 0, 0.09);
   }
 
   .astryx-heading[data-level="1"] {
@@ -388,6 +414,38 @@
     font-feature-settings: var(--meta-font-features);
   }
 
+  .astryx-text[data-color="meta-success"] {
+    color: var(--meta-emerald-text);
+  }
+
+  .astryx-text[data-color="meta-success-deep"] {
+    color: var(--meta-emerald-deep);
+  }
+
+  .astryx-text[data-color="meta-subtle"] {
+    color: var(--meta-text-subtle);
+  }
+
+  .astryx-text[data-color="meta-green"] {
+    color: var(--meta-green);
+  }
+
+  .astryx-icon[data-color="meta-success"] {
+    color: var(--meta-emerald-fill);
+  }
+
+  .astryx-icon[data-color="meta-subtle"] {
+    color: var(--meta-text-subtle);
+  }
+
+  .astryx-icon[data-color="meta-danger"] {
+    color: var(--meta-danger-icon);
+  }
+
+  .astryx-icon[data-color="meta-green"] {
+    color: var(--meta-green);
+  }
+
   .astryx-button {
     border-radius: var(--radius-full);
     font-weight: var(--font-weight-semibold);
@@ -413,19 +471,19 @@
   .astryx-input-group {
     background-color: var(--color-background-surface);
     border-color: var(--color-border);
-    border-radius: var(--radius-full);
+    border-radius: var(--meta-field-radius, var(--radius-full));
   }
 
   .astryx-text-input {
     background-color: var(--color-background-surface);
     border-color: var(--color-border);
-    border-radius: var(--radius-element);
+    border-radius: var(--meta-field-radius, var(--radius-element));
   }
 
   .astryx-selector {
     background-color: var(--color-background-surface);
     border-color: var(--color-border);
-    border-radius: var(--radius-full);
+    border-radius: var(--meta-field-radius, var(--radius-full));
   }
 
   .astryx-tab {
@@ -438,8 +496,8 @@
   }
 
   .astryx-tab[data-selected="selected"] {
-    background-color: var(--color-accent);
-    color: var(--color-on-accent);
+    background-color: var(--meta-tab-selected-bg, var(--color-accent));
+    color: var(--meta-tab-selected-text, var(--color-on-accent));
     font-weight: var(--font-weight-bold);
   }
 
