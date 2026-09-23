@@ -3,12 +3,12 @@
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
-import { MaritimeSelector } from '@/shared/components/custom/maritime/index.js';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 
@@ -67,7 +67,7 @@ export function BuyerFields({
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
           <ReadOnlyLock isActive={isReadOnly}>
-            <MaritimeSelector
+            <Selector
               label="Khách hàng"
               hasSearch
               placeholder={isReadOnly ? '—' : 'Chọn khách hàng'}

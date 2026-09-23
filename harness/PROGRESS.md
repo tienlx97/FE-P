@@ -1,5 +1,130 @@
 # Progress Log
 
+## 2026-09-23 (evening, 2) — "Tạo Commission" Meta drawer (Figma 104:5399)
+
+- New `CommissionFormDrawer` (960px Meta drawer, create + edit) over
+  `useCommissionForm`, so validation, the duplicate-code check and the
+  create / update calls are the same as `CommissionFormDialog`.
+  - Header (`MetaDrawerHeader` with the new `titleBadge` / `meta` props): contract
+    type pill, "Hợp đồng gốc" code pill, project, currency.
+  - Boxed sections on a muted canvas (`MetaFormSection isBoxed`, `index` now
+    optional):
+    1. Basic info & broker: code + signed date, broker as a
+       `MetaPartySummary` card with "Thay đổi" (falls back to the selector),
+       `MetaBankAccountCard` from the supplier's first bank account (copy
+       button; empty state when none), value field with a "Tỷ lệ: x% tổng trị
+       giá HĐ gốc" pill, signing checkboxes in tinted tiles.
+    2. Payment terms: status pill, `MetaPaymentSplitBar hasLegend`
+       ("Đợt N (x%)" in step tones), `PaymentTermsFields`.
+    3. Payment history: "Đã giải ngân" summary, `PaymentHistoryFields`.
+  - Footer: unsaved-changes dot + text, "Huỷ bỏ" / "Tạo Commission".
+  - Discard confirmation on close.
+- Wired: the detail page's "+ Thao tác → Tạo Commission" and the Hoa hồng
+  tab's create / edit open the drawer; the tab's read-only "Xem" keeps
+  `CommissionFormDialog`. The commissions list page is unchanged.
+- Not implemented (no data or handler): "BROKER XÁC MINH" badge, VND
+  conversion / exchange rate, "Thêm tài khoản" (accounts live on the
+  supplier), a per-step long note separate from the condition,
+  commission annexes (not part of this design).
+- Checked in Chrome on 26KCT03: create drawer, broker pick → summary + bank
+  empty state, discard dialog; nothing saved. No dev supplier has a bank
+  account, so the filled bank tiles were not seen with real data.
+  verify.sh passed (`harness/runs/20260923-171053-1112/`). Not committed.
+- Follow-up (user: "Kế hoạch đợt thanh toán" did not match Figma):
+  - `MetaPaymentTermRow` rebuilt to 104:5399:
+    - 28px tile in Figma tones (blue `#d9e2ff` / `#004db0`, indigo
+      `#e0e7ff` / `#3730a3`)
+    - title + small ratio pill over a "Phương thức: …" subtitle
+    - amount in the step tone
+    - small ghost actions
+    - the full condition in a tinted note box across the card
+    - card border tinted per step
+  - Split bar: segments with a gap on the Figma track colour; legend status
+    compact emerald with a check / alert icon.
+  - "Thêm mốc…" is a dashed cobalt button.
+  - New tokens: `--meta-indigo-soft/-border/-deep`, `--meta-split-track`.
+  - Shared, so the contract edit drawer's steps changed too.
+- Bug fixed: a new (empty) step's editor collapsed after the first typed
+  character (open state was derived from "condition is empty"). Empty steps
+  are now added to the open set and stay open until "Xong".
+- Checked in Chrome with 2 sample steps (40% L/C, 60% T/T), then discarded.
+  verify.sh passed (`harness/runs/20260923-202044-870/`).
+- Follow-up (user: "Giá trị HĐ gốc" caption looked bad): it is now a
+  full-width muted info bar under the value field (label left, bold amount
+  right), and the value label shows "· Bắt buộc".
+- Root cause of the cramped spacing: in 40px drawers the md `InputGroup`
+  (number + unit) stayed 32px while its input was 40px, so the input
+  overflowed downward. The Meta theme's md `input-group` now also reads
+  `--meta-field-height`, which affects every unit field in the Meta drawers.
+  verify.sh passed (`harness/runs/20260923-202943-1347/`).
+
+## 2026-09-23 (evening) — BOQ tab (Meta) + contract detail free of Maritime
+
+- User request 1: add a "BOQ" tab to the contract detail page, designed in
+  the Meta theme (no Figma frame). New `MetaBoqPanel`
+  (`custom/meta/boq-panel.jsx`, presentational):
+  - header with "Nội bộ · Bảo mật" and BOQ sent-date pills, "Sửa/Nhập BOQ"
+  - 4 KPI cards:
+    - Tổng tiền USD (+ VND at the rate)
+    - Lợi nhuận (+ margin)
+    - Tổng logistics
+    - Chênh lệch logistics ((giá báo − giá vốn) × cont)
+  - Logistics key-value card with a total band
+  - Đơn giá vốn share bars + total
+  - Khối lượng bars (Sale / Vật tư unit-less as in the form; Tờ khai kg)
+  - extra-fields card, empty state, skeleton
+  - Feature container `ContractBoqPanel` (private-info query).
+- The tab is shown only with `logistics:secret`; `?tab=boq` without it
+  falls back to overview.
+- Editing: new `ContractBoqEditDrawer` (Meta drawer, 960px, same shell as the
+  contract drawer via the new shared `MetaDrawerHeader`, dirty guard) around
+  the existing `ContractPrivateInfoFields` + `useContractPrivateInfoForm`.
+- User request 2: no Maritime on the contract detail screen.
+  - Removed the `MaritimeThemeProvider` wrapper; dialogs are now wrapped in
+    `MetaThemeProvider`.
+  - `MaritimeSelector` / `DateInput` / `NumberInput` /
+    `ContractCodeTextInput` → Astryx `Selector` / `DateInput` / shared
+    `NumberInput` / `TextInput` (drawer, seller / buyer pickers).
+  - `MaritimeButton` → Astryx `Button` (banks).
+  - `PaymentTermsFields` rebuilt on `MetaPaymentTermRow` (in its own
+    `MetaThemeProvider`; also used by the commission form); the edit drawer
+    now reuses it.
+  - `ContractMaritimeAnnexesPanel` renamed to `ContractDetailAnnexesPanel`
+    (the openspec `apply-maritime-to-contract-detail` tasks still name the
+    old file).
+- Finding: `FormDialog` portals to `<body>` and re-wrapped only the app
+  theme, so the commission / annex / shipment dialogs never received the
+  page theme (the old Maritime wrapper had no effect on them). `FormDialog`
+  now re-applies the caller's theme (`ThemeContext`) inside the app
+  providers; app-themed callers are unchanged.
+- Meta theme: md `InputGroup` (number + unit, e.g. VNĐ / USD / kg) now joins
+  cleanly — input start-rounded, unit box end-rounded, same height, light
+  border. List search groups (sm / lg) unchanged (checked in Chrome).
+- Checked in Chrome: BOQ empty (26KCT39) and filled (26KCT03), BOQ drawer,
+  "Tạo Commission" dialog now Meta; all closed without saving. verify.sh
+  passed (`harness/runs/20260923-164354-1342/`). Not committed.
+
+## 2026-09-23 (afternoon, 6) — Wider edit drawer, payment steps for long conditions
+
+- User request: widen the drawer (720 → 960px) and fix the payment step
+  design, which did not cope with long conditions.
+- `MetaPaymentTermRow`: the header line holds the tile, title + ratio pill,
+  the amount right-aligned (no longer in brackets) and the actions. The
+  condition is its own paragraph under the title (12px, clamped to 2 lines,
+  full text in the truncation tooltip). Edit mode replaces the paragraph
+  with the ratio field plus a 3-row `TextArea` for the condition (was a
+  single-line input).
+- Step title: the milestone kind (tạm ứng / B/L / L/C), else the payment
+  method (e.g. "T/T (Telegraphic Transfer)"). "Mốc thanh toán N" only when
+  the condition names neither. `paymentMethod` is exported again.
+- Checked in Chrome on 26KCT39 (edit toggle, cancel without saving).
+  verify.sh passed (`harness/runs/20260923-161523-201/`). Not committed.
+- Follow-up (user: the ratio input + separate "%" box looked bad): the
+  step's ratio is now a `MaritimeNumberInput` (Astryx NumberInput) with
+  `units="%"` inside the field, clamped to 0–100, 160px wide. It commits on
+  blur or Enter; checked that the pill, amount and red 105% total update,
+  then discarded. verify.sh passed (`harness/runs/20260923-162107-301/`).
+
 ## 2026-09-23 (afternoon, 5) — Edit drawer: roomier fields, larger small text
 
 - User request: make the drawer and its font sizes fit better. Measured in

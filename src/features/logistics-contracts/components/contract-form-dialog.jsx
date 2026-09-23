@@ -3,7 +3,6 @@ import { Button } from '@astryxdesign/core/Button';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { IconButton } from '@astryxdesign/core/IconButton';
 import {
   Layout,
   LayoutContent,
@@ -11,16 +10,17 @@ import {
   LayoutHeader,
 } from '@astryxdesign/core/Layout';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Heading, Text } from '@astryxdesign/core/Text';
+import { Text } from '@astryxdesign/core/Text';
 import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { FilePenLine, Save, X } from 'lucide-react';
+import { FilePenLine, Save } from 'lucide-react';
 import { useId } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import {
+  MetaDrawerHeader,
   MetaPill,
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
@@ -51,15 +51,6 @@ const styles = stylex.create({
   drawerLayout: {
     height: '100%',
   },
-  // Figma 103:4983: 40px cobalt-wash tile with the edit icon.
-  drawerHeaderIcon: {
-    backgroundColor: 'var(--meta-blue-wash)',
-    borderRadius: 'var(--meta-radius-inset)',
-    color: colorVars['--color-accent'],
-    flexShrink: 0,
-    height: 'var(--spacing-10)',
-    width: 'var(--spacing-10)',
-  },
   // The native `hidden` attribute alone does NOT hide a `VStack` — its own
   // compiled `display: flex` class is author-origin CSS, which the cascade
   // always prefers over the user-agent's `[hidden] { display: none }`
@@ -67,8 +58,9 @@ const styles = stylex.create({
   hidden: { display: 'none' },
 });
 
-// Figma 103:4983: "rộng rãi ~720px" edit drawer.
-const DRAWER_WIDTH = 720;
+// Figma 103:4983 drew ~720px; widened on user request (2026-09-23) so
+// the two-column form and long payment conditions have room.
+const DRAWER_WIDTH = 960;
 
 const TAB_LABELS = {
   profile: 'Hồ sơ',
@@ -199,49 +191,22 @@ export function ContractFormDialog({
             xstyle={styles.drawerLayout}
             header={
               <LayoutHeader padding={4}>
-                <HStack hAlign="between" vAlign="center" gap={3} wrap="nowrap">
-                  <HStack gap={3} vAlign="center" wrap="nowrap">
-                    <HStack
-                      as="span"
-                      hAlign="center"
-                      vAlign="center"
-                      xstyle={styles.drawerHeaderIcon}
-                    >
-                      <Icon icon={FilePenLine} size="md" color="inherit" />
-                    </HStack>
-                    <VStack gap={0.5}>
-                      <Heading level={3}>{title}</Heading>
-                      <HStack gap={2} vAlign="center" wrap="wrap">
-                        <Text size="sm" weight="bold" color="accent">
-                          {contract?.contractNumber ||
-                            'Hoàn thiện hồ sơ hợp đồng'}
-                        </Text>
-                        {contract ? (
-                          <>
-                            <Text size="xsm" color="secondary" aria-hidden>
-                              •
-                            </Text>
-                            <MetaPill
-                              label={labelForContractStatus(
-                                form.values.status,
-                              ).toLocaleUpperCase('vi')}
-                              tone={metaToneForContractStatus(
-                                form.values.status,
-                              )}
-                              size="md"
-                            />
-                          </>
-                        ) : null}
-                      </HStack>
-                    </VStack>
-                  </HStack>
-                  <IconButton
-                    label="Đóng"
-                    icon={<Icon icon={X} size="sm" />}
-                    variant="ghost"
-                    onClick={() => requestExit('close')}
-                  />
-                </HStack>
+                <MetaDrawerHeader
+                  icon={FilePenLine}
+                  title={title}
+                  code={contract?.contractNumber || 'Hoàn thiện hồ sơ hợp đồng'}
+                  badge={
+                    contract ? (
+                      <MetaPill
+                        label={labelForContractStatus(
+                          form.values.status,
+                        ).toLocaleUpperCase('vi')}
+                        tone={metaToneForContractStatus(form.values.status)}
+                      />
+                    ) : undefined
+                  }
+                  onClose={() => requestExit('close')}
+                />
               </LayoutHeader>
             }
             content={

@@ -1,6 +1,7 @@
 'use client';
 
 import { Banner } from '@astryxdesign/core/Banner';
+import { Button } from '@astryxdesign/core/Button';
 import {
   CheckboxList,
   CheckboxListItem,
@@ -11,7 +12,6 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { CirclePlus } from 'lucide-react';
 import { useState } from 'react';
 
-import { MaritimeButton } from '@/shared/components/custom/maritime/index.js';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 
 import { QuickCreateBankDialog } from './quick-create-bank-dialog.jsx';
@@ -73,13 +73,12 @@ export function ContractBanksFields({
         <Text color="secondary">Chưa có ngân hàng nào trong danh mục.</Text>
       )}
 
-      <MaritimeButton
+      <Button
         isDisabled={isReadOnly}
         label="Thêm ngân hàng thụ hưởng"
         icon={<Icon icon={CirclePlus} size="md" />}
         type="button"
         variant="secondary"
-        treatment="add"
         width="100%"
         size="md"
         onClick={() => setIsQuickCreateOpen(true)}

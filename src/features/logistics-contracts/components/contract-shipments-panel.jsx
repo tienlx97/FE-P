@@ -44,7 +44,7 @@ function toneForShipmentStatus(status) {
 
 /**
  * "Lô hàng" tab body (`openspec/changes/apply-maritime-to-contract-detail/`,
- * step 6): `MaritimeShipmentListPanel` fed with the contract's real
+ * step 6): `MetaShipmentListPanel` fed with the contract's real
  * `Shipment`s, plus the create/edit dialog it opens. Only what the Shipment
  * record actually carries is shown — booking/B-L/shipping-line/vessel,
  * customs declaration + C/O, declared value/weight/quantity, ETD/ETA and the

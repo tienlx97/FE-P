@@ -7,12 +7,14 @@ import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Text } from '@astryxdesign/core/Text';
+import { Theme, ThemeContext } from '@astryxdesign/core/theme';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { useId, useRef, useState, useSyncExternalStore } from 'react';
+import { use, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
 import { CommonDialog } from './common-dialog.jsx';
+import { ktXnkTheme } from './kt-xnk.js';
 import { ThemeProvider } from './theme-provider.jsx';
 
 const styles = stylex.create({
@@ -61,10 +63,20 @@ export function FormDialog(props) {
     getClientSnapshot,
     getServerSnapshot,
   );
+  // The portal leaves the caller's DOM, so a nested theme (e.g. Meta on the
+  // contract detail page) is re-applied inside the app providers.
+  const callerTheme = use(ThemeContext);
   if (!props.isOpen || !isClient) return null;
+  const session = <FormDialogSession {...props} />;
   return createPortal(
     <ThemeProvider>
-      <FormDialogSession {...props} />
+      {callerTheme && callerTheme.theme.name !== ktXnkTheme.name ? (
+        <Theme theme={callerTheme.theme} mode={callerTheme.mode}>
+          {session}
+        </Theme>
+      ) : (
+        session
+      )}
     </ThemeProvider>,
     document.body,
   );

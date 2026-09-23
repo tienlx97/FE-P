@@ -5,6 +5,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { InfoTip } from '@astryxdesign/lab';
 import {
   Banknote,
+  ClipboardList,
   Download,
   FilePen,
   FileText,
@@ -17,7 +18,6 @@ import {
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId, useState } from 'react';
 
-import { MaritimeThemeProvider } from '@/shared/components/custom/maritime/index.js';
 import {
   MetaContractBreadcrumb,
   MetaContractDetailSkeleton,
@@ -26,6 +26,7 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
+import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import {
   labelForContractStatus,
@@ -39,17 +40,21 @@ import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js'
 import { useContractQuery } from '../hooks/use-contracts-query.js';
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
-import { CommissionFormDialog } from './commission-form-dialog.jsx';
+import { CommissionFormDrawer } from './commission-form-drawer.jsx';
 import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
+import { ContractBoqPanel } from './contract-boq-panel.jsx';
 import { ContractCommissionPanel } from './contract-commission-panel.jsx';
+import { ContractDetailAnnexesPanel } from './contract-detail-annexes-panel.jsx';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
-import { ContractMaritimeAnnexesPanel } from './contract-maritime-annexes-panel.jsx';
 import { ContractOverviewPanel } from './contract-overview-panel.jsx';
 import { ContractPaymentsPanel } from './contract-payments-panel.jsx';
 import { ContractShipmentsPanel } from './contract-shipments-panel.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 
-/** @typedef {'overview' | 'payments' | 'shipments' | 'annexes' | 'commission'} DetailTab */
+/** @typedef {'overview' | 'payments' | 'shipments' | 'annexes' | 'commission' | 'boq'} DetailTab */
+
+// BOQ is the contract's private info — only for `logistics:secret`.
+const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 
 // Order and labels follow the Meta Figma tab bar (node 89:1064).
 const TAB_LABELS = {
@@ -58,6 +63,7 @@ const TAB_LABELS = {
   shipments: 'Lô hàng (Shipment)',
   annexes: 'Phụ lục (Annex)',
   commission: 'Hoa hồng (Commission)',
+  boq: 'BOQ',
 };
 
 const TAB_ICONS = {
@@ -66,6 +72,7 @@ const TAB_ICONS = {
   shipments: Ship,
   annexes: FilePen,
   commission: Banknote,
+  boq: ClipboardList,
 };
 
 const TAB_VALUES = /** @type {DetailTab[]} */ (Object.keys(TAB_LABELS));
@@ -222,7 +229,13 @@ function ContractDetailBody({
   const hasCommission = Boolean(
     commissionQuery.data?.success && commissionQuery.data.exists,
   );
-  const detailTabs = useDetailTabs(contract);
+  const hasLogisticsSecret = useSessionPermissions().includes(
+    LOGISTICS_SECRET_PERMISSION,
+  );
+  const detailTabs = useDetailTabs(contract, hasLogisticsSecret);
+  // A `?tab=boq` link opened without the permission falls back to overview.
+  const visibleTab =
+    activeTab === 'boq' && !hasLogisticsSecret ? 'overview' : activeTab;
 
   return (
     <>
@@ -275,7 +288,7 @@ function ContractDetailBody({
 
         <MetaTabNav
           tabs={detailTabs}
-          activeId={activeTab}
+          activeId={visibleTab}
           panelId={panelId}
           onChange={(tab) => onActiveTabChange(/** @type {DetailTab} */ (tab))}
         />
@@ -283,9 +296,9 @@ function ContractDetailBody({
         <section
           id={panelId}
           role="tabpanel"
-          aria-label={TAB_LABELS[activeTab]}
+          aria-label={TAB_LABELS[visibleTab]}
         >
-          {activeTab === 'overview' ? (
+          {visibleTab === 'overview' ? (
             <ContractOverviewPanel
               contract={contract}
               onViewAllAnnexes={() => onActiveTabChange('annexes')}
@@ -294,22 +307,26 @@ function ContractDetailBody({
               onCreateCommission={() => setIsAddingCommission(true)}
             />
           ) : null}
-          {activeTab === 'payments' ? (
+          {visibleTab === 'payments' ? (
             <ContractPaymentsPanel contract={contract} />
           ) : null}
-          {activeTab === 'shipments' ? (
+          {visibleTab === 'shipments' ? (
             <ContractShipmentsPanel contract={contract} />
           ) : null}
-          {activeTab === 'commission' ? (
+          {visibleTab === 'commission' ? (
             <ContractCommissionPanel contract={contract} />
           ) : null}
-          {activeTab === 'annexes' ? (
-            <ContractMaritimeAnnexesPanel contract={contract} />
+          {visibleTab === 'annexes' ? (
+            <ContractDetailAnnexesPanel contract={contract} />
+          ) : null}
+          {visibleTab === 'boq' ? (
+            <ContractBoqPanel contract={contract} />
           ) : null}
         </section>
       </VStack>
 
-      <MaritimeThemeProvider>
+      {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
+      <MetaThemeProvider>
         {isEditDrawerOpen ? (
           <ContractFormDialog
             isOpen
@@ -348,20 +365,12 @@ function ContractDetailBody({
         ) : null}
 
         {isAddingCommission ? (
-          <CommissionFormDialog
-            isOpen
-            onOpenChange={(open) => {
-              if (!open) setIsAddingCommission(false);
-            }}
-            contractId={contract.id}
-            contractNumber={contract.contractNumber}
-            projectName={contract.projectName}
-            currency={contract.currency}
-            closeLabel="Quay lại Contract"
-            onSuccess={() => setIsAddingCommission(false)}
+          <CommissionFormDrawer
+            contract={contract}
+            onClose={() => setIsAddingCommission(false)}
           />
         ) : null}
-      </MaritimeThemeProvider>
+      </MetaThemeProvider>
     </>
   );
 }
@@ -370,8 +379,9 @@ function ContractDetailBody({
  * Tab bar entries with the Figma's count pills ("4 đợt", "3 FCL", "2",
  * "3%"), read from the same cached queries the panels use.
  * @param {import('../types/index.js').Contract} contract
+ * @param {boolean} hasLogisticsSecret shows the BOQ tab
  */
-function useDetailTabs(contract) {
+function useDetailTabs(contract, hasLogisticsSecret) {
   const schedulesQuery = usePaymentSchedulesQuery(contract.id);
   const shipmentsQuery = useShipmentsQuery(contract.id);
   const annexesQuery = useContractAnnexesQuery(contract.id);
@@ -419,10 +429,12 @@ function useDetailTabs(contract) {
         : undefined,
   };
 
-  return TAB_VALUES.map((id) => ({
-    id,
-    label: TAB_LABELS[id],
-    icon: TAB_ICONS[id],
-    ...counts[id],
-  }));
+  return TAB_VALUES.filter((id) => id !== 'boq' || hasLogisticsSecret).map(
+    (id) => ({
+      id,
+      label: TAB_LABELS[id],
+      icon: TAB_ICONS[id],
+      ...counts[id],
+    }),
+  );
 }

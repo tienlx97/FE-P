@@ -167,6 +167,10 @@ export const metaTheme = {
     "--meta-radius-inset": "12px",
     "--meta-indigo": "#4f46e5",
     "--meta-indigo-wash": "#eef2ff",
+    "--meta-indigo-soft": "#e0e7ff",
+    "--meta-indigo-border": "#c7d2fe",
+    "--meta-indigo-deep": "#3730a3",
+    "--meta-split-track": "#e1e2ec",
     "--meta-shadow-card": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
     "--meta-shadow-drawer": "-10px 0 35px 0 rgba(0, 0, 0, 0.09)"
   },
@@ -222,6 +226,10 @@ export const metaTheme = {
     "--meta-radius-inset": "meta",
     "--meta-indigo": "meta",
     "--meta-indigo-wash": "meta",
+    "--meta-indigo-soft": "meta",
+    "--meta-indigo-border": "meta",
+    "--meta-indigo-deep": "meta",
+    "--meta-split-track": "meta",
     "--meta-shadow-card": "meta",
     "--meta-shadow-drawer": "meta"
   },
@@ -381,13 +389,27 @@ export const metaTheme = {
         "backgroundColor": "var(--color-background-surface)",
         "borderColor": "var(--color-border)",
         "borderRadius": "var(--meta-field-radius, var(--radius-full))"
+      },
+      "size:md": {
+        "height": "var(--meta-field-height, var(--spacing-8))",
+        "--meta-input-radius": "var(--meta-field-radius, var(--radius-element)) 0 0 var(--meta-field-radius, var(--radius-element))"
+      }
+    },
+    "input-group-text": {
+      "base": {
+        "backgroundColor": "var(--meta-inset-bg)",
+        "borderColor": "var(--color-border)",
+        "borderInlineStartWidth": "0",
+        "borderRadius": "0 var(--meta-field-radius, var(--radius-element)) var(--meta-field-radius, var(--radius-element)) 0",
+        "color": "var(--color-text-secondary)",
+        "height": "var(--meta-field-height, var(--spacing-8))"
       }
     },
     "text-input": {
       "base": {
         "backgroundColor": "var(--color-background-surface)",
         "borderColor": "var(--color-border)",
-        "borderRadius": "var(--meta-field-radius, var(--radius-element))"
+        "borderRadius": "var(--meta-input-radius, var(--meta-field-radius, var(--radius-element)))"
       },
       "size:md": {
         "height": "var(--meta-field-height, var(--spacing-8))"

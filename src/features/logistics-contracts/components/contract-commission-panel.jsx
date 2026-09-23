@@ -9,6 +9,7 @@ import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { CommissionFormDialog } from './commission-form-dialog.jsx';
+import { CommissionFormDrawer } from './commission-form-drawer.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
 
 // Fields the design calls for always render; a missing value shows this
@@ -65,8 +66,17 @@ export function ContractCommissionPanel({ contract }) {
   }, 0);
   const settlementValue = (contract.contractValue ?? 0) + annexesTotal;
 
+  // Create / edit use the Meta drawer (Figma 104:5399); the read-only
+  // "Xem" keeps the dialog.
   const formDialog =
-    dialog?.kind === 'form' ? (
+    dialog?.kind === 'form' && dialog.mode === 'edit' ? (
+      <CommissionFormDrawer
+        key={commission?.id ?? 'create'}
+        contract={contract}
+        commission={commission}
+        onClose={() => setDialog(null)}
+      />
+    ) : dialog?.kind === 'form' ? (
       <CommissionFormDialog
         key={`${commission?.id ?? 'create'}-${dialog.mode}`}
         isOpen
@@ -129,7 +139,7 @@ export function ContractCommissionPanel({ contract }) {
             rows: emptyRows,
           }}
           bank={{
-            title: '3. NGÂN HÀNG THỤ HƯỞNG',
+            title: 'NGÂN HÀNG THỤ HƯỞNG',
             shortName: BLANK,
             fullName: BLANK,
             account: BLANK,
@@ -252,7 +262,7 @@ export function ContractCommissionPanel({ contract }) {
           rows: brokerRows,
         }}
         bank={{
-          title: '3. NGÂN HÀNG THỤ HƯỞNG',
+          title: 'NGÂN HÀNG THỤ HƯỞNG',
           status: '',
           shortName: orBlank(bankAccount?.bankName),
           fullName: orBlank(bankAccount?.bankName),

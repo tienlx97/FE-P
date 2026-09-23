@@ -171,6 +171,12 @@ export const metaTheme = defineTheme({
     // step (Tailwind indigo-600 / indigo-50).
     '--meta-indigo': '#4f46e5',
     '--meta-indigo-wash': '#eef2ff',
+    // Figma 104:5399 ("Tạo Commission" payment steps): indigo-100 / -200 /
+    // -800 step tile, card border and label; split-bar track.
+    '--meta-indigo-soft': '#e0e7ff',
+    '--meta-indigo-border': '#c7d2fe',
+    '--meta-indigo-deep': '#3730a3',
+    '--meta-split-track': '#e1e2ec',
     '--meta-shadow-card': '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // figma: header / summary card
     '--meta-shadow-drawer': '-10px 0 35px 0 rgba(0, 0, 0, 0.09)', // figma 103:4983: edit drawer
   },
@@ -229,6 +235,25 @@ export const metaTheme = defineTheme({
         borderColor: 'var(--color-border)',
         borderRadius: 'var(--meta-field-radius, var(--radius-full))',
       },
+      // md groups are "number + unit" fields (`FormattedNumberTextInput`):
+      // the input keeps only its start corners so it joins the unit box.
+      // The list search groups are sm / lg and stay as they are.
+      'size:md': {
+        height: 'var(--meta-field-height, var(--spacing-8))',
+        '--meta-input-radius':
+          'var(--meta-field-radius, var(--radius-element)) 0 0 var(--meta-field-radius, var(--radius-element))',
+      },
+    },
+    'input-group-text': {
+      base: {
+        backgroundColor: 'var(--meta-inset-bg)',
+        borderColor: 'var(--color-border)',
+        borderInlineStartWidth: '0',
+        borderRadius:
+          '0 var(--meta-field-radius, var(--radius-element)) var(--meta-field-radius, var(--radius-element)) 0',
+        color: 'var(--color-text-secondary)',
+        height: 'var(--meta-field-height, var(--spacing-8))',
+      },
     },
     // `--meta-field-radius` / `--meta-field-height` are unset by default
     // (list filters stay 32px pills); form surfaces such as the edit drawer
@@ -239,7 +264,8 @@ export const metaTheme = defineTheme({
       base: {
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
-        borderRadius: 'var(--meta-field-radius, var(--radius-element))',
+        borderRadius:
+          'var(--meta-input-radius, var(--meta-field-radius, var(--radius-element)))',
       },
       'size:md': {
         height: 'var(--meta-field-height, var(--spacing-8))',

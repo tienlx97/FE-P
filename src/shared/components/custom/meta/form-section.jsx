@@ -14,15 +14,26 @@ import * as stylex from '@stylexjs/stylex';
  * Composed from Astryx `HStack`/`VStack`/`Text` only (golden rule #15).
  *
  * @param {{
- *   index: number,
+ *   index?: number,
  *   title: string,
  *   meta?: import('react').ReactNode,
  *   action?: import('react').ReactNode,
+ *   isBoxed?: boolean,
  *   children: import('react').ReactNode,
  * }} props
+ *
+ * `isBoxed` puts the section on its own white card (Figma 104:5399, the
+ * "Tạo Commission" drawer, whose body is a muted canvas of section cards).
  */
-export function MetaFormSection({ index, title, meta, action, children }) {
-  return (
+export function MetaFormSection({
+  index,
+  title,
+  meta,
+  action,
+  isBoxed = false,
+  children,
+}) {
+  const section = (
     <VStack as="section" gap={4} hAlign="stretch">
       <HStack
         hAlign="between"
@@ -40,18 +51,28 @@ export function MetaFormSection({ index, title, meta, action, children }) {
             color="primary"
             xstyle={styles.title}
           >
-            {index}. {title}
+            {index === undefined ? title : `${index}. ${title}`}
           </Text>
         </HStack>
         {action ??
-          (meta ? (
+          (typeof meta === 'string' ? (
             <Text size="sm" weight="medium" color="secondary">
               {meta}
             </Text>
-          ) : null)}
+          ) : (
+            (meta ?? null)
+          ))}
       </HStack>
       {children}
     </VStack>
+  );
+
+  return isBoxed ? (
+    <Card padding={5} xstyle={styles.boxed}>
+      {section}
+    </Card>
+  ) : (
+    section
   );
 }
 
@@ -128,6 +149,10 @@ const styles = stylex.create({
   title: {
     letterSpacing: '0.05em',
     textTransform: 'uppercase',
+  },
+  boxed: {
+    borderRadius: 'var(--radius-container)',
+    boxShadow: 'var(--meta-shadow-card)',
   },
   card: {
     borderRadius: 'var(--meta-radius-inset)',

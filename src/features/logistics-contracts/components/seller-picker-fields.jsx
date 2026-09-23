@@ -4,12 +4,12 @@ import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
-import { MaritimeSelector } from '@/shared/components/custom/maritime/index.js';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
@@ -85,7 +85,7 @@ export function SellerPickerFields({
       <HStack gap={2} vAlign="end">
         <StackItem size="fill">
           <ReadOnlyLock isActive={isReadOnly}>
-            <MaritimeSelector
+            <Selector
               label="Bên bán"
               hasSearch
               placeholder={isReadOnly ? '—' : 'Chọn bên bán'}

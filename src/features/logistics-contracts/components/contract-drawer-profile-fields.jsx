@@ -2,22 +2,18 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { DateInput } from '@astryxdesign/core/DateInput';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { CirclePlus } from 'lucide-react';
 import { useState } from 'react';
 
-import {
-  MaritimeContractCodeTextInput,
-  MaritimeDateInput,
-  MaritimeNumberInput,
-  MaritimeSelector,
-} from '@/shared/components/custom/maritime/index.js';
 import {
   MetaFormCard,
   MetaFormSection,
@@ -26,6 +22,7 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { NumberInput } from '@/shared/components/number-input.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
@@ -46,6 +43,8 @@ const CURRENCY_WIDTH = 104;
 
 const styles = stylex.create({
   hidden: { display: 'none' },
+  // Contract identifiers read in bold.
+  code: { fontWeight: 'var(--font-weight-bold)' },
   // Figma 103:4983 form controls are rounded rectangles, not the Meta
   // list's pill selectors (read by the Meta theme's field overrides).
   // StyleX compiles custom-property keys; its lint rule just doesn't know
@@ -147,8 +146,9 @@ export function ContractDrawerProfileFields({
           meta="Bắt buộc"
         >
           <Grid columns={TWO_COLUMNS} gap={4}>
-            <MaritimeContractCodeTextInput
+            <TextInput
               label="Số hợp đồng"
+              xstyle={styles.code}
               value={values.contractNumber}
               onChange={(value) => setField('contractNumber', value)}
               isRequired
@@ -156,7 +156,7 @@ export function ContractDrawerProfileFields({
               status={fieldStatuses.contractNumber}
               statusVariant="tooltip"
             />
-            <MaritimeSelector
+            <Selector
               label="Loại hợp đồng"
               placeholder="Chọn loại hợp đồng"
               value={values.contractType}
@@ -176,7 +176,7 @@ export function ContractDrawerProfileFields({
             statusVariant="tooltip"
           />
           <ReadOnlyLock isActive={isCompanyFixed}>
-            <MaritimeSelector
+            <Selector
               isDisabled={isCompanyFixed}
               disabledMessage="Không thể thay đổi công ty sau khi tạo"
               label="Công ty"
@@ -198,7 +198,7 @@ export function ContractDrawerProfileFields({
             />
           </ReadOnlyLock>
           <Grid columns={TWO_COLUMNS} gap={4}>
-            <MaritimeDateInput
+            <DateInput
               label="Ngày ký hợp đồng"
               value={
                 /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
@@ -211,7 +211,7 @@ export function ContractDrawerProfileFields({
               status={fieldStatuses.createdDate}
               statusVariant="tooltip"
             />
-            <MaritimeDateInput
+            <DateInput
               label="Ngày báo giá"
               value={
                 /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
@@ -224,7 +224,7 @@ export function ContractDrawerProfileFields({
               status={fieldStatuses.quotationDate}
               statusVariant="tooltip"
             />
-            <MaritimeDateInput
+            <DateInput
               label="Ngày hoàn thành dự án"
               value={
                 /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
@@ -245,7 +245,7 @@ export function ContractDrawerProfileFields({
               status={fieldStatuses.projectCompletionDate}
               statusVariant="tooltip"
             />
-            <MaritimeSelector
+            <Selector
               label="Trạng thái hợp đồng"
               value={values.status}
               onChange={(value) => setField('status', value ?? '')}
@@ -274,7 +274,7 @@ export function ContractDrawerProfileFields({
                   statusVariant="tooltip"
                 />
               </StackItem>
-              <MaritimeSelector
+              <Selector
                 label="Tiền tệ"
                 isLabelHidden
                 placeholder="Tiền tệ"
@@ -296,7 +296,7 @@ export function ContractDrawerProfileFields({
               status={fieldStatuses.category}
               statusVariant="tooltip"
             />
-            <MaritimeSelector
+            <Selector
               label="Điều kiện Incoterm"
               placeholder="Chọn Incoterm"
               value={values.incoterm}
@@ -307,7 +307,7 @@ export function ContractDrawerProfileFields({
               statusVariant="tooltip"
               hasSearch
             />
-            <MaritimeNumberInput
+            <NumberInput
               label="Năm Incoterm"
               value={values.incotermYear}
               onChange={(value) => setField('incotermYear', value)}
@@ -319,7 +319,7 @@ export function ContractDrawerProfileFields({
           </Grid>
           <HStack gap={2} vAlign="end">
             <StackItem size="fill">
-              <MaritimeSelector
+              <Selector
                 label="Nước xuất khẩu / Quốc gia đến (Country)"
                 hasSearch
                 placeholder="Chọn nước"
@@ -347,7 +347,7 @@ export function ContractDrawerProfileFields({
           </HStack>
           <HStack gap={2} vAlign="end">
             <StackItem size="fill">
-              <MaritimeSelector
+              <Selector
                 label="Nơi xếp hàng / Cảng đi (Place of Loading)"
                 hasSearch
                 placeholder="Chọn nơi xếp hàng"
@@ -385,7 +385,7 @@ export function ContractDrawerProfileFields({
           </HStack>
           <HStack gap={2} vAlign="end">
             <StackItem size="fill">
-              <MaritimeSelector
+              <Selector
                 label="Nơi dỡ hàng / Cảng đến (Place of Discharge)"
                 hasSearch
                 placeholder="Chọn cảng / nơi đến"

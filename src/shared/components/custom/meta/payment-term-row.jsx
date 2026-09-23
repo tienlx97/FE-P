@@ -7,13 +7,13 @@ import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { Check, Pencil, Trash2 } from 'lucide-react';
+import { Check, CircleAlert, CircleCheck, Pencil, Trash2 } from 'lucide-react';
 
 import { MetaPill } from './pill.jsx';
 
 /** @typedef {'accent' | 'indigo' | 'success'} MetaPaymentStepTone */
 
-/** Figma 103:4983 colors payment steps blue → indigo → emerald, repeating. */
+/** Figma colors payment steps blue → indigo → emerald, repeating. */
 /** @type {MetaPaymentStepTone[]} */
 export const META_PAYMENT_STEP_TONES = ['accent', 'indigo', 'success'];
 
@@ -23,47 +23,106 @@ export function metaPaymentStepTone(index) {
 }
 
 /**
- * "CÁC ĐỢT THANH TOÁN CAM KẾT" header + stacked split bar (Figma 103:4983):
- * one segment per payment step, sized by its ratio, in the step's tone.
+ * Payment split header + stacked bar: one segment per step, sized by its
+ * ratio, in the step's tone (Figma 103:4983). `hasLegend` (Figma 104:5399)
+ * lists "Đợt N (x%)" after `label` in the step tones and shows `totalLabel`
+ * as a compact status with a check / alert icon instead of the uppercase
+ * "Tổng tỷ lệ" caption.
  *
  * @param {{
  *   label: string,
  *   totalLabel: string,
  *   isBalanced: boolean,
  *   ratios: number[],
+ *   hasLegend?: boolean,
  * }} props
  */
-export function MetaPaymentSplitBar({ label, totalLabel, isBalanced, ratios }) {
+export function MetaPaymentSplitBar({
+  label,
+  totalLabel,
+  isBalanced,
+  ratios,
+  hasLegend = false,
+}) {
   return (
     <VStack gap={2} hAlign="stretch">
       <HStack hAlign="between" vAlign="center" gap={2} wrap="wrap">
-        <Text
-          size="sm"
-          weight="semibold"
-          color="secondary"
-          xstyle={styles.caps}
-        >
-          {label}
-        </Text>
-        <HStack gap={1} vAlign="center" wrap="nowrap">
+        {hasLegend ? (
+          <HStack gap={2} vAlign="center" wrap="wrap">
+            <Text size="sm" weight="medium" color="secondary">
+              {label}
+            </Text>
+            {ratios.map((ratio, index) => (
+              <HStack
+                // Ratios are positional; a step has no id of its own here.
+                key={index}
+                gap={2}
+                vAlign="center"
+                wrap="nowrap"
+              >
+                {index > 0 ? (
+                  <Text size="sm" color="secondary" aria-hidden>
+                    +
+                  </Text>
+                ) : null}
+                <Text
+                  size="sm"
+                  weight="bold"
+                  color="inherit"
+                  xstyle={legendTones[metaPaymentStepTone(index)]}
+                >
+                  Đợt {index + 1} ({ratio}%)
+                </Text>
+              </HStack>
+            ))}
+          </HStack>
+        ) : (
           <Text
             size="sm"
             weight="semibold"
             color="secondary"
             xstyle={styles.caps}
           >
-            Tổng tỷ lệ:
+            {label}
           </Text>
-          <Text
-            size="base"
-            weight="bold"
-            color={isBalanced ? 'meta-success' : 'inherit'}
-            hasTabularNumbers
-            xstyle={!isBalanced && styles.error}
+        )}
+        {hasLegend ? (
+          <HStack
+            gap={1}
+            vAlign="center"
+            wrap="nowrap"
+            xstyle={isBalanced ? styles.statusOk : styles.error}
           >
-            {totalLabel}
-          </Text>
-        </HStack>
+            <Icon
+              icon={isBalanced ? CircleCheck : CircleAlert}
+              size="sm"
+              color="inherit"
+            />
+            <Text size="sm" weight="bold" color="inherit">
+              {totalLabel}
+            </Text>
+          </HStack>
+        ) : (
+          <HStack gap={1} vAlign="center" wrap="nowrap">
+            <Text
+              size="sm"
+              weight="semibold"
+              color="secondary"
+              xstyle={styles.caps}
+            >
+              Tổng tỷ lệ:
+            </Text>
+            <Text
+              size="base"
+              weight="bold"
+              color={isBalanced ? 'meta-success' : 'inherit'}
+              hasTabularNumbers
+              xstyle={!isBalanced && styles.error}
+            >
+              {totalLabel}
+            </Text>
+          </HStack>
+        )}
       </HStack>
       <HStack wrap="nowrap" xstyle={styles.track}>
         {ratios.map((ratio, index) => (
@@ -83,17 +142,23 @@ export function MetaPaymentSplitBar({ label, totalLabel, isBalanced, ratios }) {
 }
 
 /**
- * One payment step card (Figma 103:4983): numbered tile, title, ratio pill,
- * amount and a one-line condition, with edit / remove actions. While
- * `isEditing`, `editor` (the step's input controls) renders under it.
+ * One payment step card (Figma 104:5399): a header line — numbered tile,
+ * title + ratio pill over a one-line `subtitle`, then the amount (in the
+ * step's tone) and edit / remove actions — and the step's full condition in
+ * a tinted note box underneath (clamped to `descriptionLines`, full text in
+ * the truncation tooltip). The card border is tinted by the step's tone.
+ * While `isEditing`, `editor` (the step's inputs) replaces the note box.
  *
  * @param {{
  *   sequence: number,
  *   title: string,
+ *   subtitle?: string,
  *   ratioLabel: string,
  *   amount?: string,
  *   description?: string,
+ *   descriptionLines?: number,
  *   isEditing: boolean,
+ *   isReadOnly?: boolean,
  *   onToggleEdit: () => void,
  *   onRemove: () => void,
  *   isRemoveDisabled?: boolean,
@@ -103,10 +168,13 @@ export function MetaPaymentSplitBar({ label, totalLabel, isBalanced, ratios }) {
 export function MetaPaymentTermRow({
   sequence,
   title,
+  subtitle,
   ratioLabel,
   amount,
   description,
+  descriptionLines = 2,
   isEditing,
+  isReadOnly = false,
   onToggleEdit,
   onRemove,
   isRemoveDisabled = false,
@@ -118,66 +186,92 @@ export function MetaPaymentTermRow({
     <VStack
       gap={3}
       hAlign="stretch"
-      xstyle={[styles.row, isEditing && styles.rowEditing]}
+      xstyle={[styles.row, rowTones[tone], isEditing && styles.rowEditing]}
     >
-      <HStack gap={3} vAlign="center" wrap="nowrap">
-        <HStack
-          as="span"
-          hAlign="center"
-          vAlign="center"
-          xstyle={[styles.tile, tileTones[tone]]}
-        >
-          <Text
+      <HStack hAlign="between" vAlign="center" gap={3} wrap="nowrap">
+        <HStack gap={3} vAlign="center" wrap="nowrap" xstyle={styles.minZero}>
+          <HStack
             as="span"
-            size="base"
-            weight="bold"
-            color="inherit"
-            hasTabularNumbers
+            hAlign="center"
+            vAlign="center"
+            xstyle={[styles.tile, tileTones[tone]]}
           >
-            {String(sequence).padStart(2, '0')}
-          </Text>
-        </HStack>
-        <StackItem size="fill" xstyle={styles.minZero}>
-          <VStack gap={0.5} hAlign="stretch">
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              <Text size="base" weight="bold" maxLines={1}>
-                {title}
-              </Text>
-              <MetaPill label={ratioLabel} tone={tone} />
-              {amount ? (
-                <Text size="base" weight="bold" hasTabularNumbers>
-                  ({amount})
+            <Text
+              as="span"
+              size="sm"
+              weight="bold"
+              color="inherit"
+              hasTabularNumbers
+            >
+              {String(sequence).padStart(2, '0')}
+            </Text>
+          </HStack>
+          <StackItem size="fill" xstyle={styles.minZero}>
+            <VStack gap={0.5} hAlign="stretch">
+              <HStack gap={2} vAlign="center" wrap="nowrap">
+                <Text weight="bold" maxLines={1}>
+                  {title}
+                </Text>
+                <MetaPill label={ratioLabel} tone={tone} size="sm" />
+              </HStack>
+              {subtitle ? (
+                <Text size="sm" color="secondary" maxLines={1}>
+                  {subtitle}
                 </Text>
               ) : null}
+            </VStack>
+          </StackItem>
+        </HStack>
+        <HStack gap={2} vAlign="center" wrap="nowrap">
+          {amount ? (
+            <Text
+              weight="bold"
+              color="inherit"
+              hasTabularNumbers
+              xstyle={[styles.amount, amountTones[tone]]}
+            >
+              {amount}
+            </Text>
+          ) : null}
+          {isReadOnly ? null : (
+            <HStack gap={0.5} wrap="nowrap">
+              <IconButton
+                label={isEditing ? 'Xong' : 'Sửa đợt thanh toán'}
+                tooltip={isEditing ? 'Xong' : 'Sửa'}
+                icon={<Icon icon={isEditing ? Check : Pencil} size="sm" />}
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={onToggleEdit}
+              />
+              <IconButton
+                label="Xoá đợt thanh toán"
+                tooltip="Xoá"
+                icon={<Icon icon={Trash2} size="sm" />}
+                type="button"
+                variant="ghost"
+                size="sm"
+                isDisabled={isRemoveDisabled}
+                onClick={onRemove}
+              />
             </HStack>
-            {description ? (
-              <Text size="sm" color="secondary" maxLines={2}>
-                {description}
-              </Text>
-            ) : null}
-          </VStack>
-        </StackItem>
-        <HStack gap={0.5} wrap="nowrap">
-          <IconButton
-            label={isEditing ? 'Xong' : 'Sửa đợt thanh toán'}
-            tooltip={isEditing ? 'Xong' : 'Sửa'}
-            icon={<Icon icon={isEditing ? Check : Pencil} size="sm" />}
-            type="button"
-            variant="ghost"
-            onClick={onToggleEdit}
-          />
-          <IconButton
-            label="Xoá đợt thanh toán"
-            tooltip="Xoá"
-            icon={<Icon icon={Trash2} size="sm" />}
-            type="button"
-            variant="ghost"
-            isDisabled={isRemoveDisabled}
-            onClick={onRemove}
-          />
+          )}
         </HStack>
       </HStack>
-      {isEditing ? editor : null}
+      {isEditing ? (
+        <VStack gap={3} hAlign="stretch">
+          {editor}
+        </VStack>
+      ) : description ? (
+        <Text
+          size="sm"
+          color="secondary"
+          maxLines={descriptionLines}
+          xstyle={styles.note}
+        >
+          {description}
+        </Text>
+      ) : null}
     </VStack>
   );
 }
@@ -190,56 +284,86 @@ const styles = stylex.create({
   error: {
     color: 'var(--color-error)',
   },
+  statusOk: {
+    color: 'var(--meta-emerald-text)',
+  },
   track: {
-    backgroundColor: 'var(--color-border)',
+    backgroundColor: 'var(--meta-split-track)',
     borderRadius: 'var(--radius-full)',
+    gap: 'var(--spacing-0-5)',
     height: 'var(--spacing-2)',
     overflow: 'hidden',
   },
   segment: (/** @type {string} */ basis) => ({
     flexBasis: basis,
-    flexShrink: 0,
+    flexShrink: 1,
     height: '100%',
   }),
   row: {
     backgroundColor: 'var(--color-background-surface)',
-    borderColor: 'var(--color-border)',
-    borderRadius: 'var(--meta-radius-inset)',
+    borderRadius: 'var(--radius-element)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',
-    padding: 'var(--spacing-3)',
+    padding: 'var(--spacing-4)',
   },
   rowEditing: {
-    borderColor: 'var(--meta-blue-active-border)',
+    borderColor: 'var(--color-accent)',
   },
   tile: {
     borderRadius: 'var(--radius-element)',
     flexShrink: 0,
-    height: 'var(--spacing-10)',
-    width: 'var(--spacing-10)',
+    height: 'var(--spacing-7)',
+    width: 'var(--spacing-7)',
+  },
+  note: {
+    backgroundColor: 'var(--meta-surface-container-low)',
+    borderRadius: 'var(--radius-element)',
+    paddingBlock: 'var(--spacing-2)',
+    paddingInline: 'var(--spacing-3)',
+  },
+  amount: {
+    flexShrink: 0,
   },
   minZero: {
     minWidth: 0,
   },
 });
 
+const rowTones = stylex.create({
+  accent: { borderColor: 'var(--color-border-emphasized)' },
+  indigo: { borderColor: 'var(--meta-indigo-border)' },
+  success: { borderColor: 'var(--meta-emerald-border)' },
+});
+
 const tileTones = stylex.create({
   accent: {
-    backgroundColor: 'var(--meta-blue-wash)',
-    color: 'var(--color-accent)',
+    backgroundColor: 'var(--meta-primary-fixed)',
+    color: 'var(--meta-primary-strong)',
   },
   indigo: {
-    backgroundColor: 'var(--meta-indigo-wash)',
-    color: 'var(--meta-indigo)',
+    backgroundColor: 'var(--meta-indigo-soft)',
+    color: 'var(--meta-indigo-deep)',
   },
   success: {
     backgroundColor: 'var(--meta-emerald-wash)',
-    color: 'var(--meta-emerald-fill)',
+    color: 'var(--meta-emerald-text)',
   },
 });
 
+const amountTones = stylex.create({
+  accent: { color: 'var(--color-text-primary)' },
+  indigo: { color: 'var(--meta-indigo-deep)' },
+  success: { color: 'var(--meta-emerald-text)' },
+});
+
+const legendTones = stylex.create({
+  accent: { color: 'var(--meta-primary-strong)' },
+  indigo: { color: 'var(--meta-indigo)' },
+  success: { color: 'var(--meta-emerald-text)' },
+});
+
 const segmentTones = stylex.create({
-  accent: { backgroundColor: 'var(--color-accent)' },
+  accent: { backgroundColor: 'var(--meta-primary-strong)' },
   indigo: { backgroundColor: 'var(--meta-indigo)' },
   success: { backgroundColor: 'var(--meta-emerald-fill)' },
 });

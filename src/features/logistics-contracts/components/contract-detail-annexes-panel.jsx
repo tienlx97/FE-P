@@ -24,7 +24,7 @@ const BLANK = '___';
  * non-monetary (its `amount` is meaningless, see `ContractAnnex.amount`).
  * @param {{ contract: import('../types/index.js').Contract }} props
  */
-export function ContractMaritimeAnnexesPanel({ contract }) {
+export function ContractDetailAnnexesPanel({ contract }) {
   const [dialog, setDialog] = useState(
     /** @type {{ annex: import('../types/index.js').ContractAnnex | null } | null} */ (
       null
