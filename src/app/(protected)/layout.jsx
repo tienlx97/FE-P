@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { UserMenu } from '../../features/auth/index.js';
+import { QuickSearchPalette } from '../../features/logistics-contracts/index.js';
 import { parsePermissionsCookie } from '../../shared/api/jwt.js';
 import {
   filterNavLinksByPermissions,
@@ -43,6 +44,10 @@ export default async function ProtectedLayout({ children }) {
     cookieStore.get(SESSION_PERMISSIONS_KEY)?.value,
   );
 
+  // "Tra cứu nhanh" (Ctrl + K) opens contract / shipment detail pages,
+  // which need the same permission.
+  const canQuickSearch = permissions.includes('logistics:contracts:view');
+
   return (
     <ProtectedAppShell
       endContent={
@@ -67,6 +72,7 @@ export default async function ProtectedLayout({ children }) {
       site={site}
     >
       {children}
+      {canQuickSearch ? <QuickSearchPalette /> : null}
     </ProtectedAppShell>
   );
 }

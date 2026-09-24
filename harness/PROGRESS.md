@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-09-25 — Quick search, Ctrl / ⌘ + K (`add-quick-search`)
+
+- New `QuickSearchPalette` (Astryx `CommandPalette` + `useHotkeys`
+  `mod+k`, allowed in inputs), mounted in the protected layout for users
+  with `logistics:contracts:view`. `26KCT14` / `26kct14` → contracts
+  (exact first) + their lots; `26KCT14/LOT-1`, `lot01`, `LCL-2`, `/LOT`,
+  `/2` → lots only. Enter opens the detail page.
+- No backend change: `POST /contracts/search` + `/shipments/search` with
+  `contractNumber Contains`; the lot suffix (computed at read time on the
+  BE) is matched client-side (`config/quick-search.js`, tested).
+- `QuickSearchInput` highlights the first result on each result set — the
+  palette starts with nothing highlighted, so Enter did nothing.
+- Checked in Chrome: `26kct1` (contracts + lots), `26kct14/lot1` → Enter →
+  26KCT14/LOT-01 detail, `26KCT14` → Enter → contract detail, opened while
+  focus was in the list's search box, `xyz999` → empty message.
+- Discovered: lots come in backend order (LOT-09 first).
+- verify.sh passed (`harness/runs/20260925-012801-268664/`).
+
 ## 2026-09-25 — macOS font smoothing for the Inter scope
 
 - `globals.css`: `-webkit-font-smoothing: antialiased` +
