@@ -1,7 +1,6 @@
 'use client';
 import { VStack } from '@astryxdesign/core/VStack';
 import {
-  ArrowLeftRight,
   Bell,
   CircleCheck,
   ClipboardClock,
@@ -125,9 +124,6 @@ export function ContractOverviewPanel({
   const exportedPercent =
     settlementValue > 0 ? roundTo2((exportedValue / settlementValue) * 100) : 0;
   const unexportedPercent = roundTo2(Math.max(0, 100 - exportedPercent));
-  // Value-weighted average of the shipments' declaration exchange rates.
-  const averageExchangeRate =
-    exportedValue > 0 ? exportedValueVnd / exportedValue : null;
   const shipmentCountHint = `(${shipments.length} lô hàng)`;
 
   const banksQuery = useContractBanksQuery();
@@ -214,14 +210,6 @@ export function ContractOverviewPanel({
       iconTone: 'neutral',
       value: formatMoney(exportedValueVnd),
       unit: 'VNĐ',
-      start: {
-        icon: ArrowLeftRight,
-        label: 'Tỷ giá:',
-        value:
-          averageExchangeRate == null
-            ? '—'
-            : formatMoney(Math.round(averageExchangeRate)),
-      },
       end: { hint: shipmentCountHint },
       segments: [{ percent: Math.min(100, exportedPercent), tone: 'neutral' }],
     },

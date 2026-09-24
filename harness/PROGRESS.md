@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-25 — Contract overview "Đã xuất (VNĐ)" without exchange rate
+
+- `ContractOverviewPanel`: the "Đã xuất (VNĐ)" metric no longer shows the
+  averaged "Tỷ giá" note (and its computation); only "(N lô hàng)" stays.
+- Checked in Chrome on 26KCT14: card shows the VNĐ value and "(9 lô hàng)",
+  bar still aligned with the others.
+- verify.sh passed (`harness/runs/20260925-014234-292398/`).
+
 ## 2026-09-25 — Contract overview metric bars aligned
 
 - "Quyết toán"'s notes (Gốc + PL, with shares) wrapped to 2 lines on a
