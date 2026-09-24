@@ -64,13 +64,13 @@ export function ContractShipmentsTable({ shipments, contractNumber, declarationC
   const isTotal = (row) => Boolean(row.__isTotalsRow);
   /** @param {import('react').ReactNode} content @param {boolean} [bold] */
   const cell = (content, bold = false) => (
-    <Text as="span" size="base" weight={bold ? 'bold' : undefined} hasTabularNumbers xstyle={styles.cell}>
+    <Text as="span" weight={bold ? 'bold' : undefined} hasTabularNumbers xstyle={styles.cell}>
       {content}
     </Text>
   );
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<any>[]} */
   const columns = [
-    { key: 'declarationDate', header: 'NGÀY KHAI HẢI QUAN', width: pixel(196), renderCell: (row) => isTotal(row) ? <Text as="span" size="base" weight="bold" color="secondary">{row.table.declarationCount} TỜ KHAI</Text> : cell(row.table.declDate) },
+    { key: 'declarationDate', header: 'NGÀY KHAI HẢI QUAN', width: pixel(196), renderCell: (row) => isTotal(row) ? <Text as="span" weight="bold" color="secondary">{row.table.declarationCount} TỜ KHAI</Text> : cell(row.table.declDate) },
     { key: 'code', header: 'MÃ LÔ HÀNG', width: pixel(186), renderCell: (row) => isTotal(row) ? cell(`Tổng ${shipments.length} lô`, true) : cell(row.code, true) },
     { key: 'contract', header: 'SỐ HỢP ĐỒNG', width: pixel(147), renderCell: (row) => cell(isTotal(row) ? `${shipments.length ? 1 : 0} Hợp đồng` : contractNumber, isTotal(row)) },
     { key: 'quantity', header: 'SỐ LƯỢNG', width: pixel(151), renderCell: (row) => isTotal(row) ? cell(row.table.quantity || '—', true) : <MetaPill label={row.table.quantity} tone="neutral" size="lg" /> },
@@ -84,7 +84,7 @@ export function ContractShipmentsTable({ shipments, contractNumber, declarationC
     } },
     { key: 'value', header: `GIÁ TRỊ TK (${declarationCurrency})`, width: pixel(148), align: 'end', renderCell: (row) => cell(`${declarationCurrency === 'USD' ? '$' : ''}${MONEY.format(row.table.declarationValue)}`, true) },
     { key: 'vnd', header: 'GIÁ TRỊ TK (VNĐ)', width: pixel(149), align: 'end', renderCell: (row) => cell(`${MONEY.format(row.table.declarationValueVnd)} đ`, isTotal(row)) },
-    { key: 'cost', header: 'CHI PHÍ LOGISTICS', width: pixel(161), align: 'end', renderCell: (row) => <Text as="span" size="base" weight={isTotal(row) ? 'bold' : 'semibold'} color="accent" hasTabularNumbers xstyle={styles.cell}>{MONEY.format(row.table.logisticsCost)} VNĐ</Text> },
+    { key: 'cost', header: 'CHI PHÍ LOGISTICS', width: pixel(161), align: 'end', renderCell: (row) => <Text as="span" weight={isTotal(row) ? 'bold' : 'semibold'} color="accent" hasTabularNumbers xstyle={styles.cell}>{MONEY.format(row.table.logisticsCost)} VNĐ</Text> },
     { key: 'vgm', header: 'VGM', width: pixel(112), align: 'end', renderCell: (row) => cell(isTotal(row) ? row.table.vgmKg ? `${NUMBER.format(row.table.vgmKg / 1000)} Tấn` : '—' : row.table.vgm, isTotal(row)) },
     { key: 'actions', header: 'THAO TÁC', width: pixel(111), align: 'center', renderCell: (row) => isTotal(row) ? cell('—') : <HStack gap={0} xstyle={styles.actionRow}><IconButton label={`Xem ${row.code}`} icon={<Icon icon={Eye} size="sm" />} variant="ghost" size="sm" onClick={() => onView?.(row.id)} /><IconButton label={`Sửa ${row.code}`} icon={<Icon icon={Pencil} size="sm" />} variant="ghost" size="sm" onClick={() => onEdit(row.id)} /></HStack> },
   ];

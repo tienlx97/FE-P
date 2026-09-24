@@ -68,6 +68,22 @@ export const metaTheme = defineTheme({
     '--font-family-heading': OPTIMISTIC_DISPLAY,
     '--font-family-code': OPTIMISTIC_TEXT,
 
+    // Logistics font-size standard (user request, 2026-09-25; ADR-0009):
+    // - base (14px, the default — never write `size="base"`): body text,
+    //   data values, table cells, form values, row titles.
+    // - sm (13px): notes, hints, captions, meta lines, caps labels, table
+    //   headers, pills. The 14 × 1.2 scale puts sm at 12px, too small for
+    //   notes, so it is pinned to 13px.
+    // - lg (17px) for emphasized totals; Heading levels / display types
+    //   for titles and KPI figures.
+    // Nothing smaller than 12px: xs (10px on the scale) is pinned to 12px.
+    '--font-size-xs': '0.75rem',
+    '--font-size-sm': '0.8125rem',
+    // 13px × 1.5385 = 20px, back on the 4px grid (the scale's 1.6667 was
+    // computed for 12px).
+    '--text-supporting-leading': '1.5385',
+    '--text-heading-5-leading': '1.5385',
+
     // Pinned: the `color.accent` seed alone resolves to a contrast-adjusted
     // rgb(0, 88, 210), not the mockup's exact cobalt.
     '--color-accent': '#0064e0', // spec: primary-container

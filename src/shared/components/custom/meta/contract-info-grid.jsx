@@ -147,13 +147,11 @@ export function MetaContractInfoGrid({
               <HStack gap={3} vAlign="center" xstyle={styles.hairlineBottom}>
                 <IconBubble icon={Package} />
                 <VStack gap={0}>
-                  <Text size="base" weight="bold" xstyle={styles.caps}>
+                  <Text weight="bold" xstyle={styles.caps}>
                     QUY CÁCH HÀNG HÓA & ĐÓNG GÓI
                   </Text>
                   {cargo.subtitle ? (
-                    <Text size="base" color="secondary">
-                      {cargo.subtitle}
-                    </Text>
+                    <Text color="secondary">{cargo.subtitle}</Text>
                   ) : null}
                 </VStack>
               </HStack>
@@ -184,7 +182,7 @@ export function MetaContractInfoGrid({
             <VStack gap={3} hAlign="stretch">
               <HStack gap={2} vAlign="center">
                 <Icon icon={Landmark} size="sm" color="accent" />
-                <Text size="base" weight="bold" xstyle={styles.caps}>
+                <Text weight="bold" xstyle={styles.caps}>
                   NGÂN HÀNG THỤ HƯỞNG
                 </Text>
               </HStack>
@@ -375,7 +373,7 @@ function SectionTitle({ label, trailing }) {
 /** @param {{ label: string }} props */
 function CardEyebrow({ label }) {
   return (
-    <Text size="base" weight="semibold" color="secondary" xstyle={styles.caps}>
+    <Text weight="semibold" color="secondary" xstyle={styles.caps}>
       {label}
     </Text>
   );
@@ -399,7 +397,7 @@ function CardHeader({ icon, label, actionLabel, onAction }) {
     >
       <HStack gap={2} vAlign="center">
         <Icon icon={icon} size="sm" color="accent" />
-        <Text size="base" weight="bold" color="secondary" xstyle={styles.caps}>
+        <Text weight="bold" color="secondary" xstyle={styles.caps}>
           {label}
         </Text>
       </HStack>
@@ -458,7 +456,7 @@ function PartyCard({ eyebrow, tag, name, rows }) {
     <Card padding={5}>
       <VStack gap={3} hAlign="stretch">
         <HStack hAlign="between" vAlign="center" gap={2}>
-          <Text size="base" weight="bold" color="accent" xstyle={styles.caps}>
+          <Text weight="bold" color="accent" xstyle={styles.caps}>
             {eyebrow}
           </Text>
           {tag ? (
@@ -623,19 +621,12 @@ function AnnexRow({ code, label, amount, isPositive }) {
       xstyle={[styles.inset, styles.annex]}
     >
       <VStack gap={0}>
-        <Text size="base" weight="semibold">
-          {code}
-        </Text>
-        <Text size="base" weight="medium" color={/** @type {any} */ (tone)}>
+        <Text weight="semibold">{code}</Text>
+        <Text weight="medium" color={/** @type {any} */ (tone)}>
           {label}
         </Text>
       </VStack>
-      <Text
-        size="base"
-        weight="bold"
-        color={/** @type {any} */ (tone)}
-        hasTabularNumbers
-      >
+      <Text weight="bold" color={/** @type {any} */ (tone)} hasTabularNumbers>
         {amount}
       </Text>
     </HStack>

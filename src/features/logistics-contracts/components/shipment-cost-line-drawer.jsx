@@ -248,7 +248,6 @@ export function ShipmentCostLineDrawer({
                                   ) : null}
                                 </HStack>
                                 <Text
-                                  size="base"
                                   weight="semibold"
                                   color={isSelected ? 'accent' : 'primary'}
                                   maxLines={2}
@@ -313,7 +312,6 @@ export function ShipmentCostLineDrawer({
                                 </HStack>
                                 <VStack gap={0.5}>
                                   <Text
-                                    size="base"
                                     weight="bold"
                                     color={
                                       isSelected && isAbnormal
@@ -478,23 +476,17 @@ export function ShipmentCostLineDrawer({
                         gap={3}
                         wrap="wrap"
                       >
-                        <Text size="base" weight="medium" color="accent">
+                        <Text weight="medium" color="accent">
                           {selectedCategory.code}{' '}
                           {isEditing ? 'sau khi lưu' : 'sau khi thêm'}:{' '}
-                          <Text
-                            as="span"
-                            size="base"
-                            weight="bold"
-                            hasTabularNumbers
-                          >
+                          <Text as="span" weight="bold" hasTabularNumbers>
                             {formatVndAmount(groupTotal)}
                           </Text>
                         </Text>
-                        <Text size="base" weight="medium">
+                        <Text weight="medium">
                           Tổng chi phí Shipment:{' '}
                           <Text
                             as="span"
-                            size="base"
                             weight="bold"
                             color="accent"
                             hasTabularNumbers
@@ -615,15 +607,15 @@ function FieldLabel({
 }) {
   return (
     <HStack hAlign="between" vAlign="center" gap={2} aria-hidden>
-      <Text size="base" weight="bold">
+      <Text weight="bold">
         {label}
         {isRequired ? (
-          <Text as="span" size="base" weight="bold" color="meta-danger">
+          <Text as="span" weight="bold" color="meta-danger">
             {' *'}
           </Text>
         ) : null}
         {isOptional ? (
-          <Text as="span" size="base" weight="bold" color="secondary">
+          <Text as="span" weight="bold" color="secondary">
             {' (Tuỳ chọn)'}
           </Text>
         ) : null}
@@ -644,7 +636,7 @@ function FieldLabel({
  */
 function FieldError({ message }) {
   return message ? (
-    <Text size="base" color="meta-danger" role="alert">
+    <Text color="meta-danger" role="alert">
       {message.message}
     </Text>
   ) : null;

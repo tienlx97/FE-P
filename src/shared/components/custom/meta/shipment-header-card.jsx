@@ -182,9 +182,7 @@ export function MetaShipmentHeaderCard({
               >
                 <Icon icon={Compass} size="sm" color="inherit" />
               </HStack>
-              <Text size="base" weight="bold">
-                {journeyTitle}
-              </Text>
+              <Text weight="bold">{journeyTitle}</Text>
               {incotermLabel ? (
                 <Tooltip
                   isEnabled={Boolean(journeySummary)}

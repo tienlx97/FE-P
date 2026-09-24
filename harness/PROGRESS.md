@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-09-25 — Logistics font-size standard (ADR-0009)
+
+- Meta theme (all `/logistics/**`): `--font-size-sm` 12 → 13px, `--font-size-xs`
+  10 → 12px, supporting / heading-5 line height 20px. Standard: base 14px
+  (default, never written) for body / data / table cells; sm 13px for notes,
+  hints, caps labels, table headers, pills; xs 12px only for compact chips
+  (tab counts, small pills, live pill); lg 17px totals; Heading / display for
+  titles and KPIs.
+- Removed 41 redundant `<Text size="base">`; `size="xsm"` texts (10px: note
+  counter, bank caps labels, paid chip) → `sm`; VGM / logistics-cost panel
+  body cells and BOQ key-value values sm → base, matching the list tables.
+- New `harness/checks/logistics-font-sizes.mjs` (in verify.sh) fails on
+  `<Text size="base">` (unless `type="inherit"`) or text below `sm`.
+- Checked in Chrome: shipment list (supporting 13px, cells 14px) and
+  26KCT27/LOT-01 detail (overview + Chi phí logistics: amounts 14px, notes /
+  pills 13px). Nothing saved.
+- verify.sh passed (`harness/runs/20260925-003215-188164/`).
+
 ## 2026-09-24 — Creating a shipment uses the Meta drawer
 
 - `ShipmentEditDrawer` → `ShipmentFormDrawer` (`shipment-form-drawer.jsx`),

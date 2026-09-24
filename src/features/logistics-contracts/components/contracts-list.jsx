@@ -340,7 +340,7 @@ function PaidCell({ paid, settlement, currency, isFramed }) {
         >
           <Text
             type="supporting"
-            size="xsm"
+            size="sm"
             weight="bold"
             color="inherit"
             hasTabularNumbers

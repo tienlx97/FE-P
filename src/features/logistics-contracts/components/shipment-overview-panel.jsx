@@ -392,9 +392,7 @@ export function ShipmentOverviewPanel({
           <HStack hAlign="between" vAlign="center" gap={3}>
             <HStack gap={2} vAlign="center">
               <Icon icon={ScanLine} size="sm" color="accent" />
-              <Text size="base" weight="bold">
-                DANH SÁCH CONTAINER
-              </Text>
+              <Text weight="bold">DANH SÁCH CONTAINER</Text>
             </HStack>
             <Link weight="bold" color="accent" onClick={onViewVgms}>
               <HStack as="span" gap={1} vAlign="center" wrap="nowrap">
@@ -413,7 +411,7 @@ export function ShipmentOverviewPanel({
               ))}
             </Grid>
           ) : vgms.length === 0 ? (
-            <Text size="base" color="secondary">
+            <Text color="secondary">
               Chưa có container nào — thêm ở tab VGM & Container.
             </Text>
           ) : (

@@ -178,7 +178,7 @@ export function ShipmentMilestoneDialog({
             rows={3}
           />
           <HStack hAlign="end">
-            <Text size="xsm" type="code" color="meta-subtle" hasTabularNumbers>
+            <Text size="sm" type="code" color="meta-subtle" hasTabularNumbers>
               {values.note.length}/{NOTE_MAX}
             </Text>
           </HStack>

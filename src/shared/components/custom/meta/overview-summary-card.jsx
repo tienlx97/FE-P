@@ -144,7 +144,7 @@ export function MetaOverviewSummaryCard({
         <VStack gap={3} hAlign="stretch" xstyle={styles.progressSection}>
           <HStack gap={3} vAlign="center" hAlign="between" wrap="wrap">
             <HStack gap={2} vAlign="center" wrap="wrap">
-              <Text size="base" weight="bold" color="secondary">
+              <Text weight="bold" color="secondary">
                 {progressLabel}
               </Text>
               {isPaymentsLoading ? (
@@ -467,7 +467,6 @@ function InstallmentChip({
         >
           <HStack gap={1.5} vAlign="center" wrap="nowrap">
             <Text
-              size="base"
               weight={status === 'upcoming' ? 'medium' : 'bold'}
               color={/** @type {any} */ (INSTALLMENT_LABEL_COLOR[status])}
               textWrap="nowrap"
