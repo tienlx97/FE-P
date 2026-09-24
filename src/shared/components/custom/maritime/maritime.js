@@ -452,6 +452,7 @@ export const maritimeTheme = {
     'table-scroll-wrapper': {
       base: {
         height: '100%',
+        scrollbarGutter: 'stable',
       },
     },
     'table-header': {
@@ -526,11 +527,11 @@ export const maritimeTheme = {
         ratio: 1.2,
       },
       body: {
-        family: 'Inter',
+        family: 'Be Vietnam Pro',
         fallbacks: '-apple-system, system-ui, sans-serif',
       },
       heading: {
-        family: 'Inter',
+        family: 'Be Vietnam Pro',
         fallbacks: '-apple-system, system-ui, sans-serif',
         weight: 'semibold',
       },

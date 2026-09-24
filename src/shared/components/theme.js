@@ -117,7 +117,14 @@ export const ktxnkTheme = defineTheme({
     // `tanstack-data-table.jsx`'s `styles.wrapper` and
     // `page-content-shell.jsx`'s `fillHeight` prop.
     'table-scroll-wrapper': {
-      base: { height: '100%' },
+      base: {
+        // Always reserve the vertical scrollbar's width: otherwise the first
+        // frame after a few-row → many-row switch (skeleton → data on load, a
+        // status tab) still has columns sized for the wider box, and a
+        // horizontal scrollbar flashes until the width is re-measured.
+        height: '100%',
+        scrollbarGutter: 'stable',
+      },
     },
     // Paint cells as well as the section so pinned headers stay opaque.
     // `position: sticky` goes on the header *cells* (`<th>`), not the

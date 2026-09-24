@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Danh sách Shipment - LOGIX ERP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            cobalt: {
+              DEFAULT: '#0064E0',
+              hover: '#1876F2',
+              pressed: '#004DB0',
+              wash: '#E7F0FF',
+            },
+            ink: '#1C1E21',
+            muted: '#65676B',
+            subtle: '#8A8D91',
+            hairline: '#DEE3E9',
+            pageBg: '#FAF8FF',
+            bandBg: '#FAF8FF',
+            totalsBg: '#F0F5FF',
+            groupHead: '#F4F7FC',
+            rowHover: '#F8FAFF',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #FAF8FF;
+      color: #1C1E21;
+      -webkit-font-smoothing: antialiased;
+    }
+    .num-tabular {
+      font-variant-numeric: tabular-nums;
+    }
+    /* Custom clean scrollbar */
+    ::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F8FAFC;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+    /* Sticky action column shadow simulation */
+    .sticky-action {
+      position: sticky;
+      right: 0;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-[#FAF8FF]">
+
+  <!-- TOP APP BAR (64px, White, Bottom hairline) -->
+  <header class="h-16 w-full bg-white border-b border-[#DEE3E9] flex items-center justify-between px-6 sticky top-0 z-30 flex-shrink-0">
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-[#0064E0] flex items-center justify-center text-white shadow-sm font-bold text-sm">
+          <i class="fa-solid fa-anchor"></i>
+        </div>
+        <span class="font-bold text-base tracking-tight text-[#1C1E21]">DAI NGHIA GROUP</span>
+      </div>
+      <span class="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">
+        Logistics v4.2
+      </span>
+    </div>
+
+    <!-- Right nav items & user avatar -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <nav class="flex items-center gap-1.5 mr-2">
+        <a href="#" class="px-3.5 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-gray-100 transition-colors">
+          Tin tức
+        </a>
+        <a href="#" class="px-3.5 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-gray-100 transition-colors">
+          Tài liệu
+        </a>
+        <a href="#" class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0] transition-colors flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#047857]"></span>
+          Logistics
+        </a>
+        <a href="#" class="px-3.5 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-gray-100 transition-colors">
+          Quản trị
+        </a>
+      </nav>
+
+      <div class="h-5 w-[1px] bg-[#DEE3E9] mx-1"></div>
+
+      <!-- Settings Icon -->
+      <button class="w-9 h-9 rounded-full flex items-center justify-center text-[#65676B] hover:bg-gray-100 hover:text-[#1C1E21] transition-colors">
+        <i class="fa-solid fa-gear text-sm"></i>
+      </button>
+
+      <!-- Notification Icon -->
+      <button class="w-9 h-9 rounded-full flex items-center justify-center text-[#65676B] hover:bg-gray-100 hover:text-[#1C1E21] transition-colors relative">
+        <i class="fa-regular fa-bell text-sm"></i>
+        <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#E41E3F]"></span>
+      </button>
+
+      <!-- User Avatar AC -->
+      <div class="flex items-center gap-2 pl-1 cursor-pointer">
+        <div class="w-8 h-8 rounded-full bg-[#E7F0FF] border border-[#DBEAFE] text-[#0064E0] font-bold text-xs flex items-center justify-center">
+          AC
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN BODY LAYOUT (Left Sidebar 200px + Workspace) -->
+  <div class="flex flex-1 w-full min-h-[calc(100vh-64px)]">
+    
+    <!-- LEFT SIDEBAR (200px, White, border-r #DEE3E9) -->
+    <aside class="w-[200px] flex-shrink-0 bg-white border-r border-[#DEE3E9] py-5 px-3 flex flex-col justify-between select-none">
+      <div class="space-y-6">
+        <!-- Section: NGHIỆP VỤ -->
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[#8A8D91] px-3 mb-2">
+            NGHIỆP VỤ
+          </div>
+          <ul class="space-y-1">
+            <li>
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#65676B] hover:bg-[#FAF8FF] hover:text-[#1C1E21] transition-colors">
+                <i class="fa-regular fa-file-lines w-4 text-[#8A8D91]"></i>
+                <span>Hợp đồng</span>
+              </a>
+            </li>
+            <li>
+              <!-- ACTIVE ITEM: Shipment -->
+              <a href="#" class="flex items-center justify-between px-3 py-2 rounded-full text-[13px] font-bold bg-[#E7F0FF] text-[#0064E0] transition-colors">
+                <div class="flex items-center gap-2.5">
+                  <i class="fa-solid fa-box-open w-4 text-[#0064E0]"></i>
+                  <span>Shipment</span>
+                </div>
+                <span class="w-2 h-2 rounded-full bg-[#0064E0]"></span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#65676B] hover:bg-[#FAF8FF] hover:text-[#1C1E21] transition-colors">
+                <i class="fa-solid fa-hand-holding-dollar w-4 text-[#8A8D91]"></i>
+                <span>Commission</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#65676B] hover:bg-[#FAF8FF] hover:text-[#1C1E21] transition-colors">
+                <i class="fa-solid fa-calculator w-4 text-[#8A8D91]"></i>
+                <span>BOQ</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Section: ĐỐI TÁC -->
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[#8A8D91] px-3 mb-2">
+            ĐỐI TÁC
+          </div>
+          <ul class="space-y-1">
+            <li>
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#65676B] hover:bg-[#FAF8FF] hover:text-[#1C1E21] transition-colors">
+                <i class="fa-regular fa-building w-4 text-[#8A8D91]"></i>
+                <span>Khách hàng</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#65676B] hover:bg-[#FAF8FF] hover:text-[#1C1E21] transition-colors">
+                <i class="fa-solid fa-truck-ramp-box w-4 text-[#8A8D91]"></i>
+                <span>Nhà cung cấp</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Section: DANH MỤC -->
+        <div>
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[#8A8D91] px-3 mb-2">
+            DANH MỤC
+          </div>
+          <ul class="space-y-1">
+            <li>
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#65676B] hover:bg-[#FAF8FF] hover:text-[#1C1E21] transition-colors">
+                <i class="fa-solid fa-earth-americas w-4 text-[#8A8D91]"></i>
+                <span>Quốc gia</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#65676B] hover:bg-[#FAF8FF] hover:text-[#1C1E21] transition-colors">
+                <i class="fa-solid fa-location-dot w-4 text-[#8A8D91]"></i>
+                <span>Cảng / Nơi</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Quick Server & EDI status -->
+      <div class="px-3 py-3 rounded-xl bg-[#FAF8FF] border border-[#DEE3E9] text-[11px] text-[#65676B]">
+        <div class="flex items-center justify-between mb-1">
+          <span class="font-semibold text-[#1C1E21]">EDI Hải quan VN</span>
+          <span class="w-2 h-2 rounded-full bg-[#10B981] inline-block animate-pulse"></span>
+        </div>
+        <p class="text-[10px] text-[#8A8D91]">VNACCS/VCIS trực tuyến</p>
+      </div>
+    </aside>
+
+    <!-- CONTENT AREA (24px padding) -->
+    <main class="flex-1 p-6 overflow-x-hidden flex flex-col gap-5 max-w-[1240px]">
+      
+      <!-- BREADCRUMB & PAGE HEADER -->
+      <div class="flex flex-col gap-1.5">
+        <nav class="flex items-center gap-2 text-xs text-[#8A8D91]">
+          <span>Logistics</span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-[#CBD5E1]"></i>
+          <span class="text-[#0064E0] font-semibold">Shipment</span>
+        </nav>
+
+        <div class="flex items-center justify-between mt-1 flex-wrap gap-3">
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-[#1C1E21] tracking-tight">Danh sách Shipment</h1>
+            <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE] text-xs font-semibold">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#0064E0]"></span>
+              <span>128 lô hàng</span>
+            </div>
+          </div>
+
+          <!-- Top Action Buttons -->
+          <div class="flex items-center gap-3">
+            <button class="px-4 py-2 rounded-full border border-[#DEE3E9] bg-white text-xs font-semibold text-[#1C1E21] hover:bg-gray-50 flex items-center gap-2 shadow-sm transition-all active:scale-[0.98]">
+              <i class="fa-solid fa-arrow-down-to-line text-[#65676B]"></i>
+              <span>Xuất Excel</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-[#8A8D91]"></i>
+            </button>
+            <button class="px-4 py-2 rounded-full bg-[#0064E0] hover:bg-[#1876F2] active:bg-[#004DB0] text-xs font-bold text-white flex items-center gap-2 shadow-sm transition-all active:scale-[0.98]">
+              <i class="fa-solid fa-plus text-xs"></i>
+              <span>+ Thêm Shipment</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORKSPACE CARD (White, 16px radius, hairline border, subtle shadow) -->
+      <div class="bg-white rounded-2xl border border-[#DEE3E9] shadow-[0_1px_2px_rgba(0,0,0,0.05)] overflow-hidden flex flex-col">
+        
+        <!-- 1) STATUS TAB ROW + TABLE MODE SEGMENTED CONTROL -->
+        <div class="px-5 py-3.5 border-b border-[#DEE3E9] flex items-center justify-between gap-4 flex-wrap bg-white">
+          <!-- Status pill tabs -->
+          <div class="flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
+            <!-- Selected Tab: Tất cả 128 (Solid cobalt pill with white text & translucent-white count) -->
+            <button class="px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#0064E0] text-white flex items-center gap-1.5 whitespace-nowrap shadow-sm">
+              <span>Tất cả</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-white/20 text-white text-[11px] font-bold">128</span>
+            </button>
+
+            <!-- Đã book 6 -->
+            <button class="px-3 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-[#FAF8FF] border border-transparent hover:border-[#DEE3E9] flex items-center gap-1.5 whitespace-nowrap transition-colors">
+              <span>Đã book</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-[#F1F3F6] text-[#65676B] text-[11px] font-semibold">6</span>
+            </button>
+
+            <!-- Đang đóng hàng 4 -->
+            <button class="px-3 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-[#FAF8FF] border border-transparent hover:border-[#DEE3E9] flex items-center gap-1.5 whitespace-nowrap transition-colors">
+              <span>Đang đóng hàng</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-[#FFFBEB] text-[#B45309] text-[11px] font-semibold border border-[#FDE68A]/60">4</span>
+            </button>
+
+            <!-- Hạ bãi chờ xuất 3 -->
+            <button class="px-3 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-[#FAF8FF] border border-transparent hover:border-[#DEE3E9] flex items-center gap-1.5 whitespace-nowrap transition-colors">
+              <span>Hạ bãi chờ xuất</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-[#EEF2FF] text-[#4338CA] text-[11px] font-semibold">3</span>
+            </button>
+
+            <!-- Shipping 9 -->
+            <button class="px-3 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-[#FAF8FF] border border-transparent hover:border-[#DEE3E9] flex items-center gap-1.5 whitespace-nowrap transition-colors">
+              <span>Shipping</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-[#E7F0FF] text-[#0064E0] text-[11px] font-semibold">9</span>
+            </button>
+
+            <!-- Đã giao đến cảng 5 -->
+            <button class="px-3 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-[#FAF8FF] border border-transparent hover:border-[#DEE3E9] flex items-center gap-1.5 whitespace-nowrap transition-colors">
+              <span>Đã giao đến cảng</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-[#EEF2FF] text-[#4338CA] text-[11px] font-semibold">5</span>
+            </button>
+
+            <!-- Khai HQ 2 -->
+            <button class="px-3 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-[#FAF8FF] border border-transparent hover:border-[#DEE3E9] flex items-center gap-1.5 whitespace-nowrap transition-colors">
+              <span>Khai HQ</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-[#FFFBEB] text-[#B45309] text-[11px] font-semibold border border-[#FDE68A]/60">2</span>
+            </button>
+
+            <!-- Trucking đến site 1 -->
+            <button class="px-3 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-[#FAF8FF] border border-transparent hover:border-[#DEE3E9] flex items-center gap-1.5 whitespace-nowrap transition-colors">
+              <span>Trucking đến site</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-[#E7F0FF] text-[#0064E0] text-[11px] font-semibold">1</span>
+            </button>
+
+            <!-- Đã hoàn thành 98 -->
+            <button class="px-3 py-1.5 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] hover:bg-[#FAF8FF] border border-transparent hover:border-[#DEE3E9] flex items-center gap-1.5 whitespace-nowrap transition-colors">
+              <span>Đã hoàn thành</span>
+              <span class="px-1.5 py-0.2 rounded-full bg-[#ECFDF5] text-[#047857] text-[11px] font-semibold border border-[#A7F3D0]/60">98</span>
+            </button>
+          </div>
+
+          <!-- Segmented control: Chế độ bảng -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="text-[11px] font-bold text-[#8A8D91] uppercase tracking-wider">CHẾ ĐỘ BẢNG:</span>
+            <div class="p-0.5 rounded-full bg-[#FAF8FF] border border-[#DEE3E9] flex items-center">
+              <button class="px-3 py-1 rounded-full text-xs font-medium text-[#65676B] hover:text-[#1C1E21] transition-colors">
+                Cơ bản
+              </button>
+              <button class="px-3 py-1 rounded-full text-xs font-bold bg-white text-[#0064E0] shadow-sm border border-[#DEE3E9]/60 transition-all">
+                Giá trị & Chi phí
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2) FILTER BAR (Muted band #FAF8FF, hairline bottom) -->
+        <div class="px-5 py-3 bg-[#FAF8FF] border-b border-[#DEE3E9] flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex items-center gap-2.5 flex-wrap flex-1">
+            <!-- Wide pill search input with icon and advance filter button -->
+            <div class="relative flex-1 min-w-[280px] max-w-[420px]">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#8A8D91]">
+                <i class="fa-solid fa-magnifying-glass text-xs"></i>
+              </div>
+              <input 
+                type="text" 
+                value="" 
+                placeholder="Tìm mã, tên lô hàng, số hợp đồng, booking…" 
+                class="w-full pl-9 pr-10 py-1.5 rounded-full bg-white border border-[#DEE3E9] text-xs text-[#1C1E21] placeholder-[#8A8D91] focus:outline-none focus:border-[#0064E0] focus:ring-1 focus:ring-[#0064E0] transition-all"
+              />
+              <button title="Bộ lọc nâng cao" class="absolute inset-y-0 right-0 pr-3 flex items-center text-[#8A8D91] hover:text-[#0064E0] transition-colors">
+                <i class="fa-solid fa-sliders text-xs"></i>
+              </button>
+            </div>
+
+            <!-- Compact pill dropdowns -->
+            <!-- Loại hình: Tất cả -->
+            <div class="relative">
+              <button class="px-3.5 py-1.5 rounded-full bg-white border border-[#DEE3E9] text-xs font-medium text-[#1C1E21] hover:border-gray-400 flex items-center gap-2 transition-colors">
+                <span class="text-[#65676B]">Loại hình:</span>
+                <span class="font-semibold">Tất cả</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-[#8A8D91]"></i>
+              </button>
+            </div>
+
+            <!-- Forwarder: Tất cả -->
+            <div class="relative">
+              <button class="px-3.5 py-1.5 rounded-full bg-white border border-[#DEE3E9] text-xs font-medium text-[#1C1E21] hover:border-gray-400 flex items-center gap-2 transition-colors">
+                <span class="text-[#65676B]">Forwarder:</span>
+                <span class="font-semibold">Tất cả</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-[#8A8D91]"></i>
+              </button>
+            </div>
+
+            <!-- Ngày khai HQ: Tất cả -->
+            <div class="relative">
+              <button class="px-3.5 py-1.5 rounded-full bg-white border border-[#DEE3E9] text-xs font-medium text-[#1C1E21] hover:border-gray-400 flex items-center gap-2 transition-colors">
+                <i class="fa-regular fa-calendar text-[11px] text-[#8A8D91]"></i>
+                <span class="text-[#65676B]">Ngày khai HQ:</span>
+                <span class="font-semibold">Tất cả</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-[#8A8D91]"></i>
+              </button>
+            </div>
+
+            <!-- Ghost "Đặt lại" button -->
+            <button class="px-2.5 py-1.5 rounded-full text-xs font-medium text-[#8A8D91] hover:text-[#1C1E21] hover:bg-gray-200/50 flex items-center gap-1.5 transition-colors">
+              <i class="fa-solid fa-rotate-left text-[11px]"></i>
+              <span>Đặt lại</span>
+            </button>
+          </div>
+
+          <!-- Right: Tùy chọn hiển thị & Refresh icon -->
+          <div class="flex items-center gap-2">
+            <button class="px-3 py-1.5 rounded-full bg-white border border-[#DEE3E9] text-xs font-medium text-[#1C1E21] hover:border-gray-400 flex items-center gap-1.5 transition-colors shadow-sm">
+              <i class="fa-solid fa-table-columns text-[11px] text-[#65676B]"></i>
+              <span>Tuỳ chọn hiển thị</span>
+              <i class="fa-solid fa-chevron-down text-[10px] text-[#8A8D91]"></i>
+            </button>
+            <button title="Làm mới dữ liệu" class="w-8 h-8 rounded-full bg-white border border-[#DEE3E9] text-[#65676B] hover:text-[#0064E0] hover:border-[#0064E0] flex items-center justify-center transition-colors shadow-sm">
+              <i class="fa-solid fa-arrow-rotate-right text-xs"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- 3) DATA TABLE (Full width, sticky header, horizontal scroll) -->
+        <div class="overflow-x-auto relative w-full">
+          <table class="w-full text-left border-collapse text-xs select-text min-w-[1280px]">
+            
+            <!-- GROUPED HEADER BAND (#F4F7FC) ABOVE MONEY COLUMNS -->
+            <thead>
+              <tr class="bg-[#F4F7FC] text-[#65676B] text-[11px] font-bold uppercase tracking-wider border-b border-[#DEE3E9]">
+                <th colspan="8" class="py-1 px-4 border-r border-[#DEE3E9]/80">
+                  <span class="text-[10px] tracking-widest text-[#8A8D91]">THÔNG TIN LÔ HÀNG VẬN TẢI & HẢI QUAN</span>
+                </th>
+                <th colspan="2" class="py-1 px-4 text-center border-r border-[#DEE3E9]/80 bg-[#EDF3FC]">
+                  <span class="text-[#0064E0] font-bold text-[11px] tracking-wider">GIÁ TRỊ</span>
+                </th>
+                <th class="py-1 px-4 text-center border-r border-[#DEE3E9]/80 bg-[#F1F5FA]">
+                  <span class="text-[#1C1E21] font-bold text-[11px] tracking-wider">CHI PHÍ</span>
+                </th>
+                <th class="py-1 px-3 text-center border-r border-[#DEE3E9]/80"></th>
+                <th class="py-1 px-3 text-center sticky-action bg-[#F4F7FC]"></th>
+              </tr>
+
+              <!-- MAIN COLUMN HEADERS (12px bold uppercase, letter-spacing 0.05em, #65676B) -->
+              <tr class="bg-[#FAF8FF] text-[#65676B] text-[12px] font-bold uppercase tracking-[0.05em] border-b border-[#DEE3E9] select-none">
+                <!-- NGÀY KHAI HQ -->
+                <th class="py-3 px-4 whitespace-nowrap">
+                  <div class="flex items-center gap-1.5 cursor-pointer hover:text-[#1C1E21]">
+                    <span>NGÀY KHAI HQ</span>
+                    <i class="fa-solid fa-arrow-down text-[10px] text-[#0064E0]"></i>
+                  </div>
+                </th>
+                <!-- MÃ -->
+                <th class="py-3 px-3 whitespace-nowrap">
+                  <div class="flex items-center gap-1.5 cursor-pointer hover:text-[#1C1E21]">
+                    <span>MÃ</span>
+                  </div>
+                </th>
+                <!-- SỐ HỢP ĐỒNG -->
+                <th class="py-3 px-3 whitespace-nowrap min-w-[170px]">
+                  <div class="flex items-center gap-1.5 cursor-pointer hover:text-[#1C1E21]">
+                    <span>SỐ HỢP ĐỒNG</span>
+                  </div>
+                </th>
+                <!-- LOẠI HÌNH -->
+                <th class="py-3 px-3 whitespace-nowrap">
+                  <span>LOẠI HÌNH</span>
+                </th>
+                <!-- SỐ LƯỢNG -->
+                <th class="py-3 px-3 whitespace-nowrap">
+                  <span>SỐ LƯỢNG</span>
+                </th>
+                <!-- TÌNH TRẠNG -->
+                <th class="py-3 px-3 whitespace-nowrap min-w-[140px]">
+                  <span>TÌNH TRẠNG</span>
+                </th>
+                <!-- BOOKING -->
+                <th class="py-3 px-3 whitespace-nowrap">
+                  <span>BOOKING</span>
+                </th>
+                <!-- FORWARDER -->
+                <th class="py-3 px-3 whitespace-nowrap min-w-[160px] border-r border-[#DEE3E9]/80">
+                  <span>FORWARDER</span>
+                </th>
+                <!-- GIÁ TRỊ TỜ KHAI -->
+                <th class="py-3 px-3 text-right whitespace-nowrap bg-[#FAF8FF]">
+                  <span>GIÁ TRỊ TỜ KHAI</span>
+                </th>
+                <!-- GIÁ TRỊ TỜ KHAI (VNĐ) -->
+                <th class="py-3 px-3 text-right whitespace-nowrap bg-[#FAF8FF] border-r border-[#DEE3E9]/80">
+                  <span>GIÁ TRỊ TỜ KHAI (VNĐ)</span>
+                </th>
+                <!-- CHI PHÍ LOGISTICS -->
+                <th class="py-3 px-3 text-right whitespace-nowrap bg-[#FAF8FF] border-r border-[#DEE3E9]/80">
+                  <span>CHI PHÍ LOGISTICS</span>
+                </th>
+                <!-- VGM -->
+                <th class="py-3 px-3 text-center whitespace-nowrap border-r border-[#DEE3E9]/80">
+                  <span>VGM</span>
+                </th>
+                <!-- THAO TÁC (Sticky Right) -->
+                <th class="py-3 px-3 text-center whitespace-nowrap sticky-action bg-[#FAF8FF] shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)]">
+                  <span>THAO TÁC</span>
+                </th>
+              </tr>
+            </thead>
+
+            <tbody class="divide-y divide-[#DEE3E9] text-[13px] text-[#1C1E21]">
+
+              <!-- FIRST BODY ROW: TOTALS ROW (bg #F0F5FF, bold cobalt label spanning leading columns) -->
+              <tr class="bg-[#F0F5FF] font-bold text-[#1C1E21] border-b border-[#DEE3E9]">
+                <td colspan="8" class="py-3 px-4 border-r border-[#DEE3E9]/80">
+                  <div class="flex items-center gap-2 text-[#0064E0]">
+                    <span class="text-sm font-extrabold">Σ TỔNG CỘNG (128 LÔ HÀNG)</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-[#DBEAFE] text-[#0064E0] font-bold">128 records</span>
+                  </div>
+                </td>
+                <!-- Total USD -->
+                <td class="py-3 px-3 text-right num-tabular text-[#0064E0] font-bold text-sm whitespace-nowrap">
+                  4,897,685.64 USD
+                </td>
+                <!-- Total VNĐ -->
+                <td class="py-3 px-3 text-right num-tabular text-[#0064E0] font-bold text-sm whitespace-nowrap border-r border-[#DEE3E9]/80">
+                  108,131,176,875.83 đ
+                </td>
+                <!-- Total Chi phí Logistics -->
+                <td class="py-3 px-3 text-right num-tabular text-[#B45309] font-bold text-sm whitespace-nowrap border-r border-[#DEE3E9]/80">
+                  1,250,400,000 đ
+                </td>
+                <!-- Total VGM -->
+                <td class="py-3 px-3 text-center num-tabular text-[#1C1E21] font-bold border-r border-[#DEE3E9]/80">
+                  <span class="px-2 py-0.5 rounded-full bg-[#E7F0FF] text-[#0064E0] text-xs">218 cont</span>
+                </td>
+                <!-- Blank action for totals -->
+                <td class="py-3 px-3 text-center sticky-action bg-[#F0F5FF] shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] text-[#8A8D91]">
+                  —
+                </td>
+              </tr>
+
+              <!-- ROW 1: 26KCT34/LOT-01 · 26KCT34 · WH(77.4x65.7) · FCL · 2 Cont · Đã hoàn thành · KMTCVN01154082 · XPO GLOBAL -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">24/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT34/LOT-01
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT34</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="WH(77.4x65.7) Nhà máy Vũng Tàu">
+                    WH(77.4x65.7) Nhà máy Vũng Tàu
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">FCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">2 Cont</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#047857]"></span>
+                    Đã hoàn thành
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#1C1E21] whitespace-nowrap">KMTCVN01154082</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="XPO GLOBAL">
+                  XPO GLOBAL
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">163,090.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">4,151,941,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">38,500,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-2 py-0.5 rounded-full bg-[#FAF8FF] border border-[#DEE3E9] text-xs font-semibold">2</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ROW 2: 26KCT33/LCL-01 · 26KCT33 · STEEL STRUCTURE · LCL · 1 Kiện · Khai HQ · BKBKK2607336 · SUPER CARGO SERVICE CO., LTD -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">22/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT33/LCL-01
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT33</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="STEEL STRUCTURE GIA ĐỊNH">
+                    STEEL STRUCTURE GIA ĐỊNH
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#EEF2FF] text-[#4338CA] border border-[#C7D2FE]">LCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">1 Kiện</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#B45309]"></span>
+                    Khai HQ
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#1C1E21] whitespace-nowrap">BKBKK2607336</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="SUPER CARGO SERVICE CO., LTD">
+                  SUPER CARGO SERVICE CO., LTD
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">42,500.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">1,081,875,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">14,200,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[#8A8D91] bg-[#F2F3FE]">0</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ROW 3: 26KCT39/LOT-02 · 26KCT39 · CARIBOO GOLD - PO#1125 · FCL · 3 Cont · Shipping · MAEU240918771 · QUỐC TẾ CHÍ THÀNH -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">20/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT39/LOT-02
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT39</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="CARIBOO GOLD - PO#1125">
+                    CARIBOO GOLD - PO#1125
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">FCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">3 Cont</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0064E0]"></span>
+                    Shipping
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#1C1E21] whitespace-nowrap">MAEU240918771</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="QUỐC TẾ CHÍ THÀNH">
+                  QUỐC TẾ CHÍ THÀNH
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">245,600.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">6,252,520,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">54,000,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-2 py-0.5 rounded-full bg-[#FAF8FF] border border-[#DEE3E9] text-xs font-semibold">3</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ROW 4: 26KCT41/LOT-01 · 26KCT41 · HÒA PHÁT DUNG QUẤT EXP · FCL · 4 Cont · Hạ bãi chờ xuất · ONEY6619284 · TRANSIMEX LOGISTICS -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">18/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT41/LOT-01
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT41</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="HÒA PHÁT DUNG QUẤT EXP">
+                    HÒA PHÁT DUNG QUẤT EXP
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">FCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">4 Cont</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EEF2FF] text-[#4338CA] border border-[#C7D2FE]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#4338CA]"></span>
+                    Hạ bãi chờ xuất
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#1C1E21] whitespace-nowrap">ONEY6619284</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="TRANSIMEX LOGISTICS">
+                  TRANSIMEX LOGISTICS
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">310,000.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">7,892,600,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">68,200,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-2 py-0.5 rounded-full bg-[#FAF8FF] border border-[#DEE3E9] text-xs font-semibold">4</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ROW 5: 26KCT42/LCL-02 · 26KCT42 · PHỤ KIỆN LẮP RÁP METRO · LCL · 3 Kiện · Đang đóng hàng · COSU6311029 · ASIA TRANS LOGISTICS -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">17/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT42/LCL-02
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT42</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="PHỤ KIỆN LẮP RÁP METRO">
+                    PHỤ KIỆN LẮP RÁP METRO
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#EEF2FF] text-[#4338CA] border border-[#C7D2FE]">LCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">3 Kiện</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#FFFBEB] text-[#B45309] border border-[#FDE68A]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#B45309]"></span>
+                    Đang đóng hàng
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#1C1E21] whitespace-nowrap">COSU6311029</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="ASIA TRANS LOGISTICS">
+                  ASIA TRANS LOGISTICS
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">58,750.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">1,495,775,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">18,500,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[#8A8D91] bg-[#F2F3FE]">0</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ROW 6: 26KCT45/LOT-01 · 26KCT45 · PACIFIC STEEL BRIDGE · FCL · 2 Cont · Đã giao đến cảng · CMACGM091172 · SITC CONTAINER LINES -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">15/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT45/LOT-01
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT45</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="PACIFIC STEEL BRIDGE PO-88">
+                    PACIFIC STEEL BRIDGE PO-88
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">FCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">2 Cont</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#EEF2FF] text-[#4338CA] border border-[#C7D2FE]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#4338CA]"></span>
+                    Đã giao đến cảng
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#1C1E21] whitespace-nowrap">CMACGM091172</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="SITC CONTAINER LINES">
+                  SITC CONTAINER LINES
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">182,300.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">4,641,358,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">42,000,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-2 py-0.5 rounded-full bg-[#FAF8FF] border border-[#DEE3E9] text-xs font-semibold">2</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ROW 7: 26KCT47/LOT-03 · 26KCT47 · LONG AN SOLAR EXP · FCL · 1 Cont · Trucking đến site · HLCU0192837 · VẬN TẢI HÙNG PHÁT -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">12/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT47/LOT-03
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT47</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="LONG AN SOLAR EXP PHASE 2">
+                    LONG AN SOLAR EXP PHASE 2
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">FCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">1 Cont</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0064E0]"></span>
+                    Trucking đến site
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#1C1E21] whitespace-nowrap">HLCU0192837</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="VẬN TẢI HÙNG PHÁT">
+                  VẬN TẢI HÙNG PHÁT
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">95,400.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">2,428,884,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">22,500,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-2 py-0.5 rounded-full bg-[#FAF8FF] border border-[#DEE3E9] text-xs font-semibold">1</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ROW 8: 26KCT48/LOT-01 · 26KCT48 · NHÔM KÍNH CHẾ TẠO HOA PHÁT · FCL · 2 Cont · Đã book · WHLN0981772 · TOÀN CẦU EXPRESS -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">10/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT48/LOT-01
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT48</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="NHÔM KÍNH CHẾ TẠO HOA PHÁT">
+                    NHÔM KÍNH CHẾ TẠO HOA PHÁT
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">FCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">2 Cont</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0064E0]"></span>
+                    Đã book
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#1C1E21] whitespace-nowrap">WHLN0981772</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="TOÀN CẦU EXPRESS">
+                  TOÀN CẦU EXPRESS
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">140,000.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">3,564,400,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">36,000,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-2 py-0.5 rounded-full bg-[#FAF8FF] border border-[#DEE3E9] text-xs font-semibold">2</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ROW 9: 26KCT50/LCL-01 · 26KCT50 · SẢN PHẨM MẪU TEST LAB · LCL · 1 Kiện · Đã hoàn thành · — · DHL GLOBAL FORWARDING -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">08/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT50/LCL-01
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT50</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="SẢN PHẨM MẪU TEST LAB">
+                    SẢN PHẨM MẪU TEST LAB
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#EEF2FF] text-[#4338CA] border border-[#C7D2FE]">LCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">1 Kiện</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#ECFDF5] text-[#047857] border border-[#A7F3D0]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#047857]"></span>
+                    Đã hoàn thành
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#8A8D91] whitespace-nowrap">—</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="DHL GLOBAL FORWARDING">
+                  DHL GLOBAL FORWARDING
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">12,800.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">325,888,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">8,500,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[#8A8D91] bg-[#F2F3FE]">0</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- ROW 10: 26KCT52/LOT-01 · 26KCT52 · THÉP KẾT CẤU CẦU THỦ THIÊM · FCL · 5 Cont · Shipping · MSCU9081267 · Á CHÂU LOGISTICS JSC -->
+              <tr class="hover:bg-[#F8FAFF] transition-colors h-[52px]">
+                <td class="py-2.5 px-4 text-[#65676B] num-tabular whitespace-nowrap">05/03/2026</td>
+                <td class="py-2.5 px-3 font-semibold text-[#0064E0] hover:underline cursor-pointer whitespace-nowrap">
+                  26KCT52/LOT-01
+                </td>
+                <td class="py-2.5 px-3">
+                  <div class="font-semibold text-[#0064E0] hover:underline cursor-pointer leading-tight">26KCT52</div>
+                  <div class="text-[11px] text-[#65676B] truncate max-w-[160px]" title="THÉP KẾT CẤU CẦU THỦ THIÊM">
+                    THÉP KẾT CẤU CẦU THỦ THIÊM
+                  </div>
+                </td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">FCL</span>
+                </td>
+                <td class="py-2.5 px-3 font-medium whitespace-nowrap">5 Cont</td>
+                <td class="py-2.5 px-3 whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#E7F0FF] text-[#0064E0] border border-[#DBEAFE]">
+                    <span class="w-1.5 h-1.5 rounded-full bg-[#0064E0]"></span>
+                    Shipping
+                  </span>
+                </td>
+                <td class="py-2.5 px-3 font-mono text-xs num-tabular text-[#1C1E21] whitespace-nowrap">MSCU9081267</td>
+                <td class="py-2.5 px-3 text-[#1C1E21] font-medium border-r border-[#DEE3E9]/80 truncate max-w-[160px]" title="Á CHÂU LOGISTICS JSC">
+                  Á CHÂU LOGISTICS JSC
+                </td>
+                <td class="py-2.5 px-3 text-right num-tabular font-medium text-[#1C1E21] whitespace-nowrap">480,000.00 USD</td>
+                <td class="py-2.5 px-3 text-right num-tabular text-[#65676B] whitespace-nowrap border-r border-[#DEE3E9]/80">12,220,800,000 đ</td>
+                <td class="py-2.5 px-3 text-right num-tabular font-semibold text-[#1C1E21] whitespace-nowrap border-r border-[#DEE3E9]/80">82,400,000 đ</td>
+                <td class="py-2.5 px-3 text-center num-tabular border-r border-[#DEE3E9]/80">
+                  <span class="px-2 py-0.5 rounded-full bg-[#FAF8FF] border border-[#DEE3E9] text-xs font-semibold">5</span>
+                </td>
+                <!-- Sticky Actions -->
+                <td class="py-2.5 px-3 text-center sticky-action bg-white shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.03)] whitespace-nowrap">
+                  <div class="flex items-center justify-center gap-1 text-[#8A8D91]">
+                    <button title="Xem" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-eye text-xs"></i>
+                    </button>
+                    <button title="Sửa" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#E7F0FF] hover:text-[#0064E0] transition-colors">
+                      <i class="fa-regular fa-pen-to-square text-xs"></i>
+                    </button>
+                    <button title="Xoá" class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 hover:text-red-600 transition-colors">
+                      <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 4) FOOTER BAR (Inside the card, top hairline, pagination & page size) -->
+        <div class="px-5 py-3.5 border-t border-[#DEE3E9] flex items-center justify-between gap-4 flex-wrap bg-white">
+          <!-- Left: Hiển thị 1–25 trong tổng số 128 lô hàng -->
+          <div class="text-xs text-[#65676B] flex items-center gap-1.5">
+            <span>Hiển thị</span>
+            <span class="px-2 py-0.5 rounded bg-[#F1F3F6] font-semibold text-[#1C1E21] num-tabular">1–25</span>
+            <span>trong tổng số</span>
+            <span class="px-2 py-0.5 rounded bg-[#F1F3F6] font-bold text-[#1C1E21] num-tabular">128</span>
+            <span>lô hàng</span>
+          </div>
+
+          <!-- Right: Page size pill dropdown + Pagination buttons -->
+          <div class="flex items-center gap-3">
+            <!-- Page-size pill dropdown -->
+            <div class="relative">
+              <button class="px-3 py-1.5 rounded-full bg-white border border-[#DEE3E9] text-xs font-medium text-[#1C1E21] hover:border-gray-400 flex items-center gap-2 transition-colors">
+                <span>25 dòng / trang</span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-[#8A8D91]"></i>
+              </button>
+            </div>
+
+            <!-- Pagination buttons -->
+            <div class="flex items-center gap-1">
+              <button class="w-8 h-8 rounded-full border border-[#DEE3E9] bg-white text-[#8A8D91] hover:text-[#1C1E21] hover:bg-gray-50 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled>
+                <i class="fa-solid fa-chevron-left text-[10px]"></i>
+              </button>
+              
+              <!-- Current page = solid cobalt circle -->
+              <button class="w-8 h-8 rounded-full bg-[#0064E0] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                1
+              </button>
+              
+              <button class="w-8 h-8 rounded-full border border-transparent hover:border-[#DEE3E9] hover:bg-gray-50 text-[#65676B] font-medium text-xs flex items-center justify-center transition-colors">
+                2
+              </button>
+              
+              <button class="w-8 h-8 rounded-full border border-transparent hover:border-[#DEE3E9] hover:bg-gray-50 text-[#65676B] font-medium text-xs flex items-center justify-center transition-colors">
+                3
+              </button>
+
+              <button class="w-8 h-8 rounded-full border border-transparent hover:border-[#DEE3E9] hover:bg-gray-50 text-[#65676B] font-medium text-xs flex items-center justify-center transition-colors">
+                4
+              </button>
+
+              <span class="px-1 text-xs text-[#8A8D91]">…</span>
+
+              <button class="w-8 h-8 rounded-full border border-transparent hover:border-[#DEE3E9] hover:bg-gray-50 text-[#65676B] font-medium text-xs flex items-center justify-center transition-colors">
+                6
+              </button>
+              
+              <button class="w-8 h-8 rounded-full border border-[#DEE3E9] bg-white text-[#65676B] hover:text-[#1C1E21] hover:bg-gray-50 flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Quick Tips & Data Sync Note -->
+      <div class="flex items-center justify-between text-xs text-[#8A8D91] px-1 py-1">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-[#0064E0]"></i>
+          <span>Dữ liệu giá trị tờ khai và chi phí logistics được đối soát tự động theo thời gian thực từ cơ sở dữ liệu hợp đồng.</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span>Thời gian đồng bộ gần nhất:</span>
+          <span class="font-medium text-[#1C1E21]">Vừa xong</span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

@@ -32,3 +32,21 @@ export function formatMoney(value, currency) {
 
   return currency ? `${formatted} ${currency}` : formatted;
 }
+
+const VND_AMOUNT_FORMATTER = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+});
+
+/**
+ * VNĐ logistics cost amounts as in Figma 109:6632 ("85,200,000 đ"): no
+ * forced ".00", real fractions kept.
+ * @param {number | null | undefined} value
+ */
+export function formatVndAmount(value) {
+  if (value === undefined || value === null || !Number.isFinite(value)) {
+    return '';
+  }
+
+  return `${VND_AMOUNT_FORMATTER.format(value)} đ`;
+}

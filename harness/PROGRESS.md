@@ -1,5 +1,94 @@
 # Progress Log
 
+## 2026-09-24 — LOG cost groups + "Giá trị & Chi phí" view (Figma 109:6632)
+
+- BE-kt-xnk `add-shipment-cost-log-groups` (user request): cost groups are
+  the fixed LOG-01 … LOG-08 catalog (code, name, note; no create/delete),
+  cost lines carry `costNature` (Standard / Abnormal), search `summary`
+  gains `costTotalsByCategory`. Old free-form groups migrated by name (user
+  picked the mapping: O/F, Insurance → LOG-04; Port, Customs → LOG-03;
+  Trucking, Warehouse → LOG-02; Duty → LOG-08; else LOG-03); existing lines
+  default to Standard.
+- Cost form (`shipment-cost-lines-fields.jsx`): group picker shows
+  "LOG-0x · Name" (note as description), groups sorted by code, new "Cost
+  Nature" column, "Trong đó Abnormal" beside the total. "+ Thêm nhóm chi
+  phí" and its dialog / form hook / schema / create API removed.
+- List "Giá trị & Chi phí" preset: Mã, Số hợp đồng, GIÁ TRỊ group (Giá trị
+  tờ khai, … (VNĐ)) with a cobalt band, CHI PHÍ LOGISTICS group with one
+  column per LOG group (LOG-04 bold), Σ row with cobalt value totals and
+  amber per-group totals. `headerGroups` now takes a ReactNode label and
+  `tone: 'accent'` (`--table-framed-group-accent-bg`); Meta Text color
+  `meta-amber`.
+- Cost Nature is not shown in the list (user choice: form only).
+- Checked in Chrome after re-login: "Giá trị & Chi phí" view with dev data
+  (GIÁ TRỊ band, 8 LOG columns, Σ totals 33,000,000 / 8,719,939.78 /
+  2,009,697.04 đ) and 26KCT02/LOT-01's cost tab in view mode (LOG-02/03/04
+  groups, Cost Nature column); nothing saved. Fixes from that pass: VNĐ
+  cost amounts use `formatVndAmount` (no forced ".00", as in Figma), zero
+  group totals show "—", logistics group + leaf headers in ink.
+- verify.sh passed (`harness/runs/20260924-004140-440/`). Not committed.
+- Follow-up (user): "Logistics" column first under CHI PHÍ LOGISTICS = sum
+  of all LOG groups (reuses `logisticsCost`, bold; Σ row from
+  `logisticsCostTotal` in amber; column option "Logistics (tổng chi phí)").
+  verify.sh passed (`harness/runs/20260924-004735-1559/`). Checked in
+  Chrome: 26KCT02/LOT-01 Logistics = 33,000,000 + 8,719,939.78 +
+  2,009,697.04 = 43,729,636.82 đ; Σ row the same (only shipment with costs
+  in dev data).
+
+## 2026-09-23 (night) — Meta "Danh sách Shipment", tab Cơ bản (Figma 108:5920)
+
+- `/logistics/shipments` re-skinned in the Meta theme (page wraps
+  `MetaThemeProvider`), same framed `AdvanceTable` shell as the contract
+  list:
+  - title + "N lô hàng" pill; pill status tabs (Tất cả + 8 statuses) with
+    counts; "Chế độ bảng": Cơ bản / Giá trị & Chi phí / Nhà cung cấp.
+  - filter band: Loại hình, Forwarder (`supplierName` Equals), Ngày khai HQ
+    (tháng này / tháng trước / 30 ngày / năm nay → `Between`), Đặt lại.
+  - Cơ bản columns: Ngày khai HQ (default sort, newest first), Mã, Số hợp
+    đồng, Loại hình (FCL cobalt / LCL indigo pill), Số lượng, Tình trạng
+    (dot pill, `metaToneForShipmentStatus`), Booking, B/L, Cảng đến, Số tờ
+    khai (mono), Số C/O, Thao tác (Xem / Sửa / Xoá icons).
+  - Σ totals row: "x FCL / y LCL", "n Cont / m Kiện", "n Đã hoàn thành",
+    "—", "n Tờ khai", "n Bộ C/O".
+  - The other two presets reuse existing columns (no Figma frame yet).
+- Meta theme: `--meta-amber-wash/-border/-text`; `MetaPill` and
+  `MetaCountBadge` gained a `warning` tone.
+- BE-kt-xnk (`openspec/changes/add-shipment-list-summary/`): search response
+  gains `summary` (record counts + per-status counts without the status
+  condition) and sort field `customsDeclarationDate`. FE `searchAllShipments`
+  parses it (`summary`, unit test).
+- Not implemented: C/O form suffix "(Form B)" — no such field on Shipment;
+  quantity shows "2 Cont" instead of "2 × 40'HC" (container type lives on
+  VGM records, not the list response).
+- Checked in Chrome on :3000 with dev data (47 shipments): tabs, counts,
+  totals row, "Đã hoàn thành" tab filter + reset; no console errors.
+  Narrow/mobile width not checked (window could not be resized).
+  verify.sh passed (`harness/runs/20260923-232140-1731/`). Not committed.
+- Follow-up (user): status tabs sit in an Astryx `Carousel` (capped to the
+  space left of "Chế độ bảng", swipe + prev/next); Meta `scrollbar.css`
+  now hides the native scrollbar on `.astryx-carousel-scroller` (its
+  global thin-scrollbar rule was re-showing one). "Cảng đến" is 220px with
+  `Text maxLines={1}` (… + tooltip). Default 100 rows. `PageContentShell`
+  fill-height pages now scroll vertically (`overflowY: auto`, was hidden)
+  and the shipment list has `minHeight: 36rem`, so short screens scroll
+  instead of squashing the table; `AdvanceTable`'s preset group no longer
+  shrinks. Checked in Chrome by forcing the shell to 900px wide / 420px
+  tall. verify.sh passed (`harness/runs/20260923-233235-1497/`).
+- Follow-up (user): "Incoterm" column (Cơ bản, after Số hợp đồng) —
+  the parent contract's `incoterm incotermYear`, resolved client-side like
+  the contract number; no shipment filter / sort field. verify.sh passed
+  (`harness/runs/20260923-233828-1062/`).
+- Bug (user): horizontal table scrollbar flashed once on load. Cause:
+  skeleton (6 rows, no vertical scrollbar) sizes the columns for the full
+  box; when 47 rows arrive the 10px vertical scrollbar appears and for one
+  frame the table is 10px wider than its box until the `ResizeObserver`
+  re-measures. Fix: `scrollbarGutter: 'stable'` on `table-scroll-wrapper`
+  in the app, Meta and Maritime themes (all rebuilt), so the box width no
+  longer changes. Could not watch the flash itself (automation window was
+  hidden, no rendering); confirmed the gutter is reserved (10px) and
+  scrollWidth = clientWidth. verify.sh passed
+  (`harness/runs/20260923-235501-483/`).
+
 ## 2026-09-23 (evening, 2) — "Tạo Commission" Meta drawer (Figma 104:5399)
 
 - New `CommissionFormDrawer` (960px Meta drawer, create + edit) over

@@ -143,6 +143,7 @@ export const metaTheme = {
     "--meta-font-features": "\"ss01\", \"ss02\"",
     "--table-framed-total-bg": "#f0f5ff",
     "--table-framed-group-bg": "#f4f7fc",
+    "--table-framed-group-accent-bg": "#ebf3fe",
     "--meta-emerald-text": "#047857",
     "--meta-emerald-deep": "#065f46",
     "--meta-emerald-fill": "#059669",
@@ -171,6 +172,9 @@ export const metaTheme = {
     "--meta-indigo-border": "#c7d2fe",
     "--meta-indigo-deep": "#3730a3",
     "--meta-split-track": "#e1e2ec",
+    "--meta-amber-wash": "#fffbeb",
+    "--meta-amber-border": "#fde68a",
+    "--meta-amber-text": "#b45309",
     "--meta-shadow-card": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
     "--meta-shadow-drawer": "-10px 0 35px 0 rgba(0, 0, 0, 0.09)"
   },
@@ -202,6 +206,7 @@ export const metaTheme = {
     "--meta-font-features": "meta",
     "--table-framed-total-bg": "meta",
     "--table-framed-group-bg": "meta",
+    "--table-framed-group-accent-bg": "meta",
     "--meta-emerald-text": "meta",
     "--meta-emerald-deep": "meta",
     "--meta-emerald-fill": "meta",
@@ -230,6 +235,9 @@ export const metaTheme = {
     "--meta-indigo-border": "meta",
     "--meta-indigo-deep": "meta",
     "--meta-split-track": "meta",
+    "--meta-amber-wash": "meta",
+    "--meta-amber-border": "meta",
+    "--meta-amber-text": "meta",
     "--meta-shadow-card": "meta",
     "--meta-shadow-drawer": "meta"
   },
@@ -344,6 +352,9 @@ export const metaTheme = {
       },
       "color:meta-subtle": {
         "color": "var(--meta-text-subtle)"
+      },
+      "color:meta-amber": {
+        "color": "var(--meta-amber-text)"
       },
       "color:meta-green": {
         "color": "var(--meta-green)"
@@ -492,7 +503,8 @@ export const metaTheme = {
     },
     "table-scroll-wrapper": {
       "base": {
-        "height": "100%"
+        "height": "100%",
+        "scrollbarGutter": "stable"
       }
     },
     "table-header-cell": {

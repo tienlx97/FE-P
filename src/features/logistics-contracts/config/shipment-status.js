@@ -55,3 +55,20 @@ export function badgeVariantForShipmentStatus(status) {
   if (status === 'Booked') return 'neutral';
   return 'blue';
 }
+
+/**
+ * Meta list pill tone per status (Figma 108:5920): packing / customs =
+ * amber, at the yard / trucking = indigo, moving = cobalt, done = emerald,
+ * booked = neutral.
+ * @param {import('../types/index.js').ShipmentStatus | string} status
+ * @returns {'accent' | 'success' | 'indigo' | 'warning' | 'neutral'}
+ */
+export function metaToneForShipmentStatus(status) {
+  if (status === 'Completed') return 'success';
+  if (status === 'Packing' || status === 'CustomsDeclaration') return 'warning';
+  if (status === 'AtYardAwaitingExport' || status === 'TruckingToSite') {
+    return 'indigo';
+  }
+  if (status === 'Shipping' || status === 'DeliveredToPort') return 'accent';
+  return 'neutral';
+}

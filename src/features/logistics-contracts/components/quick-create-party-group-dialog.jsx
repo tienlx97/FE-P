@@ -7,7 +7,7 @@ import { usePartyGroupForm } from '../hooks/use-party-group-form.js';
 
 /**
  * "+" opened from the "Nhóm khách hàng"/"Nhóm nhà cung cấp" Selector in
- * `party-form-fields.jsx` — mirrors `QuickCreateShipmentCostCategoryDialog`.
+ * `party-form-fields.jsx` — a small create-and-select dialog.
  * @param {{
  *   kind: 'customer' | 'supplier',
  *   isOpen: boolean,

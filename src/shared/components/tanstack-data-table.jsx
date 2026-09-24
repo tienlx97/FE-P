@@ -204,7 +204,7 @@ function isEmptyCell(node) {
  * isFramed?: boolean,
  * activeColumnKeys?: readonly string[], startKeys?: string[], endKeys?: string[],
  * filterPlugin?: import('@astryxdesign/core/Table').TablePlugin<T>,
- * headerGroups?: {id: string, label: string, columnKeys: string[]}[],
+ * headerGroups?: {id: string, label: import('react').ReactNode, columnKeys: string[], tone?: 'accent'}[],
  * rowExpansion?: {
  *   expandedIds: ReadonlySet<string>,
  *   onToggle: (id: string) => void,
@@ -373,7 +373,9 @@ export function TanStackDataTable({
       ...leaves.filter((column) => !grouped.has(column.id)),
       ...headerGroups.map((group) => ({
         id: group.id,
-        header: group.label,
+        // A function so a ReactNode label (icon + text) fits TanStack's
+        // `header` type, which only takes strings or render functions.
+        header: () => group.label,
         columns: leaves.filter((column) =>
           group.columnKeys.includes(column.id),
         ),
@@ -623,6 +625,10 @@ export function TanStackDataTable({
                   /** @type {{source?: import('./advance-table.jsx').AdvanceTableColumn<T>}} */ (
                     header.column.columnDef.meta
                   )?.source;
+                const isAccentGroup =
+                  !source &&
+                  headerGroups.find((group) => group.id === header.column.id)
+                    ?.tone === 'accent';
                 const slots = source
                   ? filterPlugin.transformHeaderCell?.(
                       {
@@ -656,8 +662,12 @@ export function TanStackDataTable({
                       ...(headerPinStyle(header) ? { zIndex: 4 } : {}),
                       ...(isFramed && !source
                         ? {
-                            backgroundColor:
-                              'var(--table-framed-group-bg, var(--maritime-table-group-bg, var(--color-background-muted)))',
+                            backgroundColor: isAccentGroup
+                              ? 'var(--table-framed-group-accent-bg, var(--table-framed-group-bg, var(--color-background-muted)))'
+                              : 'var(--table-framed-group-bg, var(--maritime-table-group-bg, var(--color-background-muted)))',
+                            ...(isAccentGroup
+                              ? { color: 'var(--color-text-accent)' }
+                              : {}),
                           }
                         : {}),
                     }}

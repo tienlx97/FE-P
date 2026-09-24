@@ -570,18 +570,22 @@ export {};
  */
 
 /**
- * Logistics cost-group catalog entry ("nhóm chi phí", e.g. Trucking, O/F,
- * Customs) — a dynamic, user-managed list (unlike {@link Place}, which is
- * create/list only). `ShipmentCostLine.costCategoryId` is a live,
- * FK-enforced reference into this catalog.
+ * Logistics cost group ("nhóm chi phí") — the fixed LOG-01 … LOG-08 catalog
+ * (BE-kt-xnk `add-shipment-cost-log-groups`, 2026-09-24): listed and
+ * name/note-editable only, never created or deleted.
+ * `ShipmentCostLine.costCategoryId` is a live, FK-enforced reference into it.
  * @typedef {Object} ShipmentCostCategory
  * @property {string} id
+ * @property {string} code - "LOG-01" … "LOG-08"
  * @property {string} name
+ * @property {string | null} note
  */
 
 /**
- * @typedef {Object} ShipmentCostCategoryFormValues
- * @property {string} name
+ * "Standard" = normal cost of moving the goods (O/F, THC, D/O…);
+ * "Abnormal" = incident cost (demurrage, detention, late-document storage,
+ * container repair, B/L amendment…).
+ * @typedef {'Standard' | 'Abnormal'} ShipmentCostNature
  */
 
 /**
@@ -620,6 +624,7 @@ export {};
  * @property {string | null} note
  * @property {string | null} providerCustomerId
  * @property {string | null} invoiceNumber - "Số hoá đơn", optional
+ * @property {ShipmentCostNature} costNature
  */
 
 /**
@@ -630,6 +635,7 @@ export {};
  * @property {string} note
  * @property {string} providerCustomerId
  * @property {string} invoiceNumber
+ * @property {ShipmentCostNature} costNature
  */
 
 /**
@@ -641,6 +647,7 @@ export {};
  * @property {string} note
  * @property {string} providerCustomerId
  * @property {string} invoiceNumber
+ * @property {ShipmentCostNature} costNature
  */
 
 /**

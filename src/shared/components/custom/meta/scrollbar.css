@@ -39,3 +39,16 @@ html:has([data-astryx-theme='meta']),
     background: #8d949e;
   }
 }
+
+/*
+ * Carousel swipes with its own prev/next buttons and edge fades; the rule
+ * above would otherwise put a thin native scrollbar back under it (e.g.
+ * the shipment list's status tabs).
+ */
+[data-astryx-theme='meta'] .astryx-carousel-scroller {
+  scrollbar-width: none;
+}
+
+[data-astryx-theme='meta'] .astryx-carousel-scroller::-webkit-scrollbar {
+  display: none;
+}

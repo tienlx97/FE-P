@@ -39,6 +39,7 @@ function toCostsRequestBody(costLines) {
     Note: cost.note || null,
     ProviderCustomerId: cost.providerCustomerId || null,
     InvoiceNumber: cost.invoiceNumber || null,
+    CostNature: cost.costNature ?? 'Standard',
   }));
 }
 
@@ -192,9 +193,12 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
  * currency field, and `declarationValueVndTotal` is `declarationValue *
  * declarationExchangeRate` summed, mirroring each row's own
  * `declarationValueVnd`). All cover every matching shipment (not just this
- * page), backing the list's per-column totals row.
+ * page), backing the list's per-column totals row. `summary` holds the
+ * record counts of the same set (FCL / LCL, completed, with customs
+ * declaration / C/O number) and per-status tab counts computed without the
+ * `status` conditions; an older backend without it yields all zeros.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
- * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number, declarationValue: number }[], logisticsCostTotal: number, declarationValueVndTotal: number, quantityTotals: { unit: import('../types/index.js').ShipmentQuantityUnit, amount: number }[], vgmCountTotal: number } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number, declarationValue: number }[], logisticsCostTotal: number, declarationValueVndTotal: number, quantityTotals: { unit: import('../types/index.js').ShipmentQuantityUnit, amount: number }[], vgmCountTotal: number, summary: ShipmentListSummary } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchAllShipments({
   page = 1,
@@ -239,6 +243,44 @@ export async function searchAllShipments({
     declarationValueVndTotal: result.data?.declarationValueVndTotal ?? 0,
     quantityTotals: result.data?.quantityTotals ?? [],
     vgmCountTotal: result.data?.vgmCountTotal ?? 0,
+    summary: toListSummary(result.data?.summary),
+  };
+}
+
+/**
+ * @typedef {{
+ *   fclCount: number,
+ *   lclCount: number,
+ *   completedCount: number,
+ *   customsDeclarationCount: number,
+ *   coCount: number,
+ *   statusCounts: Partial<Record<import('../types/index.js').ShipmentStatus, number>>,
+ *   costTotalsByCategory: { costCategoryId: string, code: string, name: string, totalAmount: number }[],
+ * }} ShipmentListSummary
+ */
+
+/**
+ * `statusCounts` arrives as `[{ status, count }]`; keyed by status here so
+ * the tabs can look theirs up directly.
+ * @param {any} summary
+ * @returns {ShipmentListSummary}
+ */
+function toListSummary(summary) {
+  return {
+    fclCount: summary?.fclCount ?? 0,
+    lclCount: summary?.lclCount ?? 0,
+    completedCount: summary?.completedCount ?? 0,
+    customsDeclarationCount: summary?.customsDeclarationCount ?? 0,
+    coCount: summary?.coCount ?? 0,
+    statusCounts: Object.fromEntries(
+      (summary?.statusCounts ?? []).map(
+        (/** @type {{ status: string, count: number }} */ entry) => [
+          entry.status,
+          entry.count,
+        ],
+      ),
+    ),
+    costTotalsByCategory: summary?.costTotalsByCategory ?? [],
   };
 }
 

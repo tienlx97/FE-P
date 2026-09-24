@@ -15,7 +15,7 @@ import * as stylex from '@stylexjs/stylex';
  *
  * @param {{
  *   value: number | string,
- *   tone?: 'accent' | 'success' | 'neutral' | 'on-accent',
+ *   tone?: 'accent' | 'success' | 'warning' | 'neutral' | 'on-accent',
  * }} props
  */
 export function MetaCountBadge({ value, tone = 'neutral' }) {
@@ -58,6 +58,11 @@ const tones = stylex.create({
     backgroundColor: 'var(--meta-success-pill-bg)',
     borderColor: 'var(--meta-success-pill-border)',
     color: 'var(--color-success)',
+  },
+  warning: {
+    backgroundColor: 'var(--meta-amber-wash)',
+    borderColor: 'var(--meta-amber-border)',
+    color: 'var(--meta-amber-text)',
   },
   neutral: {
     backgroundColor: 'var(--color-background-surface)',

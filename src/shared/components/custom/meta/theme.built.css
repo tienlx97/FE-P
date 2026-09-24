@@ -269,6 +269,7 @@
     --meta-font-features: "ss01", "ss02";
     --table-framed-total-bg: #f0f5ff;
     --table-framed-group-bg: #f4f7fc;
+    --table-framed-group-accent-bg: #ebf3fe;
     --meta-emerald-text: #047857;
     --meta-emerald-deep: #065f46;
     --meta-emerald-fill: #059669;
@@ -297,6 +298,9 @@
     --meta-indigo-border: #c7d2fe;
     --meta-indigo-deep: #3730a3;
     --meta-split-track: #e1e2ec;
+    --meta-amber-wash: #fffbeb;
+    --meta-amber-border: #fde68a;
+    --meta-amber-text: #b45309;
     --meta-shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --meta-shadow-drawer: -10px 0 35px 0 rgba(0, 0, 0, 0.09);
   }
@@ -428,6 +432,10 @@
 
   .astryx-text[data-color="meta-subtle"] {
     color: var(--meta-text-subtle);
+  }
+
+  .astryx-text[data-color="meta-amber"] {
+    color: var(--meta-amber-text);
   }
 
   .astryx-text[data-color="meta-green"] {
@@ -579,6 +587,7 @@
 
   .astryx-table-scroll-wrapper {
     height: 100%;
+    scrollbar-gutter: stable;
   }
 
   .astryx-table-header-cell {

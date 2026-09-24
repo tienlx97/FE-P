@@ -11,7 +11,6 @@ import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { useState } from 'react';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
@@ -20,16 +19,27 @@ import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
-import { formatMoney } from '../config/currencies.js';
+import { formatVndAmount } from '../config/currencies.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
-import { QuickCreateShipmentCostCategoryDialog } from './quick-create-shipment-cost-category-dialog.jsx';
 
-// Sentinel `Selector` value for the trailing "+ Thêm nhóm chi phí" option —
-// picking it opens `QuickCreateShipmentCostCategoryDialog` instead of
-// assigning it as the row's `costCategoryId`, per user request (2026-09-05)
-// to fold that action into the dropdown itself instead of a separate
-// `IconButton` beside it.
-const ADD_COST_CATEGORY_OPTION_VALUE = '__add_cost_category__';
+// Business decision 2026-09-24 (BE-kt-xnk `add-shipment-cost-log-groups`).
+const COST_NATURE_OPTIONS = [
+  {
+    value: 'Standard',
+    label: 'Standard',
+    description: 'Chi phí thông thường (O/F, THC, D/O…)',
+  },
+  {
+    value: 'Abnormal',
+    label: 'Abnormal',
+    description: 'Phát sinh bất thường (demurrage, detention, lưu kho…)',
+  },
+];
+
+/** @param {import('../types/index.js').ShipmentCostCategory | undefined} costCategory */
+function costCategoryLabel(costCategory) {
+  return costCategory ? `${costCategory.code} · ${costCategory.name}` : '—';
+}
 
 /**
  * "Thông tin chi phí logistics" grid for a Shipment — mirrors
@@ -48,7 +58,7 @@ const ADD_COST_CATEGORY_OPTION_VALUE = '__add_cost_category__';
  *   isReadOnly?: boolean,
  *   onAddRow: (costCategoryId?: string) => void,
  *   onRemoveRow: (rowKey: string) => void,
- *   onUpdateRowField: (rowKey: string, field: 'costCategoryId' | 'name' | 'amount' | 'note' | 'providerCustomerId' | 'invoiceNumber', value: number | string | undefined) => void,
+ *   onUpdateRowField: (rowKey: string, field: 'costCategoryId' | 'name' | 'amount' | 'note' | 'providerCustomerId' | 'invoiceNumber' | 'costNature', value: number | string | undefined) => void,
  * }} props
  */
 export function ShipmentCostLinesFields({
@@ -60,10 +70,6 @@ export function ShipmentCostLinesFields({
   onRemoveRow,
   onUpdateRowField,
 }) {
-  const [quickCreateForRowKey, setQuickCreateForRowKey] = useState(
-    /** @type {string | null} */ (null),
-  );
-
   const costCategoriesQuery = useShipmentCostCategoriesQuery();
   const costCategories = costCategoriesQuery.data?.success
     ? costCategoriesQuery.data.costCategories
@@ -73,6 +79,11 @@ export function ShipmentCostLinesFields({
   );
 
   const total = rows.reduce((sum, row) => sum + (row.amount ?? 0), 0);
+  const abnormalTotal = rows.reduce(
+    (sum, row) =>
+      row.costNature === 'Abnormal' ? sum + (row.amount ?? 0) : sum,
+    0,
+  );
 
   // Rows visually grouped by cost category (per user request 2026-09-14:
   // was one flat table with a category picker per row, easy to lose track
@@ -80,8 +91,8 @@ export function ShipmentCostLinesFields({
   // the separate breakdown below it). A row with no category yet (a
   // freshly-added blank row) falls into "Chưa phân loại", sorted last so
   // it doesn't visually dominate the top of an otherwise-categorized list.
-  // Groups are ordered by category name — stable regardless of the order
-  // rows were added in, unlike grouping by first-appearance.
+  // Groups are ordered by LOG code — stable regardless of the order rows
+  // were added in, unlike grouping by first-appearance.
   // Kept as a live computation over `rows` (the in-progress edit, not
   // `shipment.costTotalsByCategory`, a server-computed snapshot) so it
   // stays correct while editing, same reasoning the previous "Tổng theo
@@ -100,9 +111,9 @@ export function ShipmentCostLinesFields({
     .sort(([keyA], [keyB]) => {
       if (keyA === UNCATEGORIZED_KEY) return 1;
       if (keyB === UNCATEGORIZED_KEY) return -1;
-      const nameA = costCategoriesById.get(keyA)?.name ?? '';
-      const nameB = costCategoriesById.get(keyB)?.name ?? '';
-      return nameA.localeCompare(nameB, 'vi');
+      const codeA = costCategoriesById.get(keyA)?.code ?? '';
+      const codeB = costCategoriesById.get(keyB)?.code ?? '';
+      return codeA.localeCompare(codeB);
     })
     .flatMap(([key, groupRows]) => [
       {
@@ -115,7 +126,7 @@ export function ShipmentCostLinesFields({
         categoryLabel:
           key === UNCATEGORIZED_KEY
             ? 'Chưa phân loại'
-            : (costCategoriesById.get(key)?.name ?? '—'),
+            : costCategoryLabel(costCategoriesById.get(key)),
         subtotal: groupRows.reduce((sum, row) => sum + (row.amount ?? 0), 0),
       },
       ...groupRows,
@@ -146,34 +157,23 @@ export function ShipmentCostLinesFields({
     {
       key: 'costCategoryId',
       header: 'Nhóm chi phí',
-      width: pixel(280),
+      width: pixel(320),
       renderCell: (row) => (
         <ReadOnlyLock isActive={isReadOnly}>
           <Selector
             label="Nhóm chi phí"
             isLabelHidden
             hasSearch
-            placeholder={isReadOnly ? '—' : 'Chọn nhóm chi phí'}
+            placeholder={isReadOnly ? '—' : 'Chọn nhóm LOG'}
             value={row.costCategoryId}
-            onChange={(value) => {
-              if (value === ADD_COST_CATEGORY_OPTION_VALUE) {
-                setQuickCreateForRowKey(row.rowKey);
-                return;
-              }
-              onUpdateRowField(row.rowKey, 'costCategoryId', value ?? '');
-            }}
-            options={[
-              ...costCategories.map((costCategory) => ({
-                value: costCategory.id,
-                label: costCategory.name,
-              })),
-              { type: 'divider' },
-              {
-                value: ADD_COST_CATEGORY_OPTION_VALUE,
-                label: 'Thêm nhóm chi phí',
-                icon: <Icon icon={IconPlus} size="sm" />,
-              },
-            ]}
+            onChange={(value) =>
+              onUpdateRowField(row.rowKey, 'costCategoryId', value ?? '')
+            }
+            options={costCategories.map((costCategory) => ({
+              value: costCategory.id,
+              label: costCategoryLabel(costCategory),
+              description: costCategory.note ?? undefined,
+            }))}
             width="100%"
           />
         </ReadOnlyLock>
@@ -189,7 +189,7 @@ export function ShipmentCostLinesFields({
           isLabelHidden
           value={row.name}
           onChange={(value) => onUpdateRowField(row.rowKey, 'name', value)}
-          placeholder={isReadOnly ? '—' : 'Ví dụ: Phí THC, Phí D/O'}
+          placeholder={isReadOnly ? '—' : 'Ví dụ: O/F, THC xuất, D/O'}
           isReadOnly={isReadOnly}
         />
       ),
@@ -208,6 +208,25 @@ export function ShipmentCostLinesFields({
           size="sm"
           isReadOnly={isReadOnly}
         />
+      ),
+    },
+    {
+      key: 'costNature',
+      header: 'Cost Nature',
+      width: pixel(150),
+      renderCell: (row) => (
+        <ReadOnlyLock isActive={isReadOnly}>
+          <Selector
+            label="Cost Nature"
+            isLabelHidden
+            value={row.costNature}
+            onChange={(value) =>
+              onUpdateRowField(row.rowKey, 'costNature', value ?? 'Standard')
+            }
+            options={COST_NATURE_OPTIONS}
+            width="100%"
+          />
+        </ReadOnlyLock>
       ),
     },
     {
@@ -320,7 +339,7 @@ export function ShipmentCostLinesFields({
       if (column.key === 'amount') {
         return (
           <Text weight="semibold" hasTabularNumbers>
-            {formatMoney(row.subtotal)} đ
+            {formatVndAmount(row.subtotal)}
           </Text>
         );
       }
@@ -344,7 +363,16 @@ export function ShipmentCostLinesFields({
           onClick={() => onAddRow()}
         />
         {rows.length > 0 ? (
-          <Text weight="semibold">Tổng chi phí: {formatMoney(total)} đ</Text>
+          <HStack gap={3} vAlign="center">
+            {abnormalTotal > 0 ? (
+              <Text color="secondary">
+                Trong đó Abnormal: {formatVndAmount(abnormalTotal)}
+              </Text>
+            ) : null}
+            <Text weight="semibold">
+              Tổng chi phí: {formatVndAmount(total)}
+            </Text>
+          </HStack>
         ) : null}
       </HStack>
 
@@ -363,23 +391,6 @@ export function ShipmentCostLinesFields({
       {status ? (
         <Banner status="error" title={status.message} container="card" />
       ) : null}
-
-      <QuickCreateShipmentCostCategoryDialog
-        isOpen={quickCreateForRowKey !== null}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) setQuickCreateForRowKey(null);
-        }}
-        onCreated={(costCategory) => {
-          if (quickCreateForRowKey) {
-            onUpdateRowField(
-              quickCreateForRowKey,
-              'costCategoryId',
-              costCategory.id,
-            );
-          }
-          setQuickCreateForRowKey(null);
-        }}
-      />
     </VStack>
   );
 }

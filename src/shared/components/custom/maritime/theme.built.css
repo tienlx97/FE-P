@@ -591,6 +591,7 @@
 
   .astryx-table-scroll-wrapper {
     height: 100%;
+    scrollbar-gutter: stable;
   }
 
   .astryx-table-header {

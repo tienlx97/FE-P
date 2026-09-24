@@ -167,7 +167,6 @@ const styles = stylex.create({
   framedTabsRow: {
     borderBlockEndColor: colorVars['--color-border'],
 
-
     borderBlockEndStyle: 'solid',
     borderBlockEndWidth: 1,
     paddingBlock: spacingVars['--spacing-3'],
@@ -186,6 +185,10 @@ const styles = stylex.create({
   },
   framedFilterBand: {
     backgroundColor: colorVars['--color-background-muted'],
+  },
+  // Never squeezed by a wide `headerContent` (e.g. a status carousel).
+  presetGroup: {
+    flexShrink: 0,
   },
   headerContent: {
     paddingBlock: spacingVars['--spacing-2'],
@@ -259,7 +262,7 @@ const styles = stylex.create({
  *   initialViewPresetKey?: string,
  *   fixedEndColumnKeys?: string[],
  *   tableColumns: AdvanceTableColumn<T>[],
- *   headerGroups?: {id: string, label: string, columnKeys: string[]}[],
+ *   headerGroups?: {id: string, label: import('react').ReactNode, columnKeys: string[], tone?: 'accent'}[],
  *   data: T[],
  *   idKey: string,
  *   isLoading?: boolean,
@@ -1136,7 +1139,7 @@ export function AdvanceTable({
               >
                 {headerContent}
                 {viewPresetsInHeader ? (
-                  <HStack gap={2} vAlign="center">
+                  <HStack gap={2} vAlign="center" xstyle={styles.presetGroup}>
                     <Text
                       type="supporting"
                       weight={isFramed ? 'bold' : undefined}

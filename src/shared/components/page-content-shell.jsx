@@ -51,7 +51,10 @@ export const pageContentShellStyles = stylex.create({
   // dead space pushed below the fold instead of trailing whitespace.
   fillHeightOuter: {
     height: 'calc(100vh - 64px)',
-    overflow: 'hidden',
+    // Scrolls vertically only when the viewport is shorter than the
+    // page's own minimum (e.g. the shipment list's `minHeight`).
+    overflowX: 'hidden',
+    overflowY: 'auto',
     paddingBlockEnd: 0,
   },
   fillHeightInner: {

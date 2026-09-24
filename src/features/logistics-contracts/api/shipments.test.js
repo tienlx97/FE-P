@@ -16,6 +16,17 @@ test('parses full-set Shipment money, quantity, cost, and VGM totals', async () 
         { unit: 'Kien', amount: 5 },
       ],
       vgmCountTotal: 4,
+      summary: {
+        fclCount: 3,
+        lclCount: 1,
+        completedCount: 2,
+        customsDeclarationCount: 4,
+        coCount: 2,
+        statusCounts: [
+          { status: 'Booked', count: 1 },
+          { status: 'Completed', count: 2 },
+        ],
+      },
     });
 
   try {
@@ -30,6 +41,15 @@ test('parses full-set Shipment money, quantity, cost, and VGM totals', async () 
     assert.equal(result.logisticsCostTotal, 30);
     assert.equal(result.declarationValueVndTotal, 40);
     assert.equal(result.vgmCountTotal, 4);
+    assert.deepEqual(result.summary, {
+      fclCount: 3,
+      lclCount: 1,
+      completedCount: 2,
+      customsDeclarationCount: 4,
+      coCount: 2,
+      statusCounts: { Booked: 1, Completed: 2 },
+      costTotalsByCategory: [],
+    });
   } finally {
     globalThis.fetch = originalFetch;
   }

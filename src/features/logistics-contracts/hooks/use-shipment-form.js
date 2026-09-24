@@ -132,6 +132,7 @@ export function useShipmentForm({
           note: cost.note ?? '',
           providerCustomerId: cost.providerCustomerId ?? '',
           invoiceNumber: cost.invoiceNumber ?? '',
+          costNature: cost.costNature ?? 'Standard',
         }))
       : undefined,
   );
@@ -160,6 +161,7 @@ export function useShipmentForm({
             note: cost.note ?? '',
             providerCustomerId: cost.providerCustomerId ?? '',
             invoiceNumber: cost.invoiceNumber ?? '',
+            costNature: cost.costNature ?? 'Standard',
           }))
         : [],
     );
@@ -179,6 +181,7 @@ export function useShipmentForm({
         note: row.note,
         providerCustomerId: row.providerCustomerId,
         invoiceNumber: row.invoiceNumber,
+        costNature: row.costNature,
       })),
     };
 

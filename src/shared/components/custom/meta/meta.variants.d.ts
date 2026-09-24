@@ -14,6 +14,7 @@ declare module '@astryxdesign/core/Text' {
     'meta-success': true;
     'meta-success-deep': true;
     'meta-subtle': true;
+    'meta-amber': true;
     'meta-green': true;
   }
 }

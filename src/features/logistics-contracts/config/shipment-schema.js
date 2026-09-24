@@ -10,7 +10,7 @@ import { SHIPMENT_TYPES } from './shipment-types.js';
  * `costCategoryId`/`name` required, `amount` must be > 0. `note` is
  * optional, max 500 chars. `providerCustomerId` and `invoiceNumber` ("Số
  * hoá đơn") are both optional — not every cost line has a known provider
- * or invoice yet.
+ * or invoice yet. `costNature` is Standard or Abnormal (incident cost).
  */
 const shipmentCostLineSchema = z.object({
   costCategoryId: z.string().trim().min(1, 'Vui lòng chọn nhóm chi phí'),
@@ -25,6 +25,7 @@ const shipmentCostLineSchema = z.object({
   note: z.string().trim().max(500, 'Tối đa 500 ký tự'),
   providerCustomerId: z.string().trim(),
   invoiceNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
+  costNature: z.enum(['Standard', 'Abnormal']),
 });
 
 /**

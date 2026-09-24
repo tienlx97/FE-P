@@ -137,6 +137,7 @@ export const metaTheme = defineTheme({
     // names read by `tanstack-data-table.jsx`.
     '--table-framed-total-bg': '#f0f5ff', // mockup: Σ totals row
     '--table-framed-group-bg': '#f4f7fc', // mockup: header group band
+    '--table-framed-group-accent-bg': '#ebf3fe', // figma 109:6632: "GIÁ TRỊ" band
 
     // Contract detail "Tổng quan & Tiến độ" (Figma node 89:1064) — the
     // Tailwind emerald / blue swatches the screen uses instead of the
@@ -177,6 +178,11 @@ export const metaTheme = defineTheme({
     '--meta-indigo-border': '#c7d2fe',
     '--meta-indigo-deep': '#3730a3',
     '--meta-split-track': '#e1e2ec',
+    // Figma 108:5920 ("Danh sách Shipment"): amber-50 / -200 / -700
+    // "Đang đóng hàng" / "Khai HQ" status pills and tab counts.
+    '--meta-amber-wash': '#fffbeb',
+    '--meta-amber-border': '#fde68a',
+    '--meta-amber-text': '#b45309',
     '--meta-shadow-card': '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // figma: header / summary card
     '--meta-shadow-drawer': '-10px 0 35px 0 rgba(0, 0, 0, 0.09)', // figma 103:4983: edit drawer
   },
@@ -198,6 +204,8 @@ export const metaTheme = defineTheme({
       'color:meta-success': { color: 'var(--meta-emerald-text)' },
       'color:meta-success-deep': { color: 'var(--meta-emerald-deep)' },
       'color:meta-subtle': { color: 'var(--meta-text-subtle)' },
+      // Figma 109:6632: logistics cost totals.
+      'color:meta-amber': { color: 'var(--meta-amber-text)' },
       'color:meta-green': { color: 'var(--meta-green)' },
     },
     icon: {
@@ -356,7 +364,12 @@ export const metaTheme = defineTheme({
     // header cells stay pinned while the body scrolls under them.
     'table-scroll-wrapper': {
       base: {
+        // Always reserve the vertical scrollbar's width: otherwise the first
+        // frame after a few-row → many-row switch (skeleton → data on load, a
+        // status tab) still has columns sized for the wider box, and a
+        // horizontal scrollbar flashes until the width is re-measured.
         height: '100%',
+        scrollbarGutter: 'stable',
       },
     },
     'table-header-cell': {

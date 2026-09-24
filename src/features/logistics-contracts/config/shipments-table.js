@@ -25,42 +25,144 @@ export const SEARCH_FIELD_DEFS = [
   { key: 'vgmCount', type: 'number', label: 'VGM' },
 ];
 
+/**
+ * One column per fixed LOG cost group (BE-kt-xnk
+ * `add-shipment-cost-log-groups`), headers abbreviated as in Figma 109:6632.
+ */
+export const COST_GROUP_COLUMNS = [
+  {
+    key: 'cost-LOG-01',
+    code: 'LOG-01',
+    name: 'Packing & Export Preparation',
+    header: 'Packing & Exp. Prep',
+  },
+  {
+    key: 'cost-LOG-02',
+    code: 'LOG-02',
+    name: 'Origin Inland Transportation & Depot',
+    header: 'Inland Trans. (Origin)',
+  },
+  {
+    key: 'cost-LOG-03',
+    code: 'LOG-03',
+    name: 'Origin Port & Export Charges',
+    header: 'Origin Port Charges',
+  },
+  {
+    key: 'cost-LOG-04',
+    code: 'LOG-04',
+    name: 'International Freight & Insurance',
+    header: "Int'l Freight & Ins.",
+  },
+  {
+    key: 'cost-LOG-05',
+    code: 'LOG-05',
+    name: 'Destination Port Charges',
+    header: 'Dest. Port Charges',
+  },
+  {
+    key: 'cost-LOG-06',
+    code: 'LOG-06',
+    name: 'Destination Inland Transportation',
+    header: 'Dest. Inland Trans.',
+  },
+  {
+    key: 'cost-LOG-07',
+    code: 'LOG-07',
+    name: 'Import Customs & Clearance',
+    header: 'Import Custom Clearance',
+  },
+  {
+    key: 'cost-LOG-08',
+    code: 'LOG-08',
+    name: 'Import Duty & Tax',
+    header: 'Import Duty & Tax',
+  },
+];
+
 export const COLUMN_OPTIONS = [
+  { key: 'customsDeclarationDate', label: 'Ngày khai HQ' },
   { key: 'shipmentCode', label: 'Mã', isAlwaysVisible: true },
   { key: 'contractNumber', label: 'Số hợp đồng' },
+  { key: 'incoterm', label: 'Incoterm' },
   { key: 'projectName', label: 'Dự án' },
   { key: 'name', label: 'Tên lô hàng' },
   { key: 'type', label: 'Loại hình' },
-  { key: 'status', label: 'Tình trạng' },
   { key: 'quantity', label: 'Số lượng' },
+  { key: 'status', label: 'Tình trạng' },
   { key: 'bookingNumber', label: 'Booking' },
-  { key: 'customsDeclarationDate', label: 'Ngày khai Hải quan' },
+  { key: 'billOfLadingNumber', label: 'B/L' },
+  { key: 'placeOfDischarge', label: 'Cảng đến' },
+  { key: 'customsDeclarationNumber', label: 'Số tờ khai' },
+  { key: 'coNumber', label: 'Số C/O' },
   { key: 'supplier', label: 'Forwarder' },
   { key: 'invoiceValue', label: 'Giá trị invoice' },
   { key: 'declarationValue', label: 'Giá trị tờ khai' },
   { key: 'declarationValueVnd', label: 'Giá trị tờ khai (VNĐ)' },
-  { key: 'logisticsCost', label: 'Chi phí Logistics' },
+  { key: 'logisticsCost', label: 'Logistics (tổng chi phí)' },
+  ...COST_GROUP_COLUMNS.map((group) => ({
+    key: group.key,
+    label: `${group.code} · ${group.name}`,
+  })),
   { key: 'vgm', label: 'VGM' },
-  { key: 'actions', label: 'Chức năng', isAlwaysVisible: true },
+  { key: 'actions', label: 'Thao tác', isAlwaysVisible: true },
 ];
 
-// Narrow default, same "start narrow, opt in via Tuỳ chọn hiển thị"
-// convention as `contracts-list.jsx`'s `DEFAULT_COLUMN_KEYS` — per user
-// request (2026-09-14): Mã, Số hợp đồng, Số cont (`quantity` — same column
-// FCL/LCL always used, just the one most shipments here care about at a
-// glance), Tình trạng, Ngày khai Hải quan, Giá trị tờ khai,
-// Chi phí Logistics, VGM.
+// "Cơ bản" — Figma 108:5920 (Meta "Danh sách Shipment"): identity,
+// type / quantity / status, then the shipping documents.
 export const DEFAULT_COLUMN_KEYS = [
   'customsDeclarationDate',
   'shipmentCode',
   'contractNumber',
+  'incoterm',
+  'type',
   'quantity',
   'status',
+  'bookingNumber',
+  'billOfLadingNumber',
+  'placeOfDischarge',
+  'customsDeclarationNumber',
+  'coNumber',
+  'actions',
+];
+
+// "Giá trị & Chi phí" — Figma 109:6632: declaration values under "GIÁ TRỊ",
+// then one column per LOG cost group under "CHI PHÍ LOGISTICS".
+export const VALUE_COLUMN_KEYS = [
+  'shipmentCode',
+  'contractNumber',
   'declarationValue',
   'declarationValueVnd',
+  // "Logistics" = sum of the LOG groups, first in the cost group.
   'logisticsCost',
-  'vgm',
+  ...COST_GROUP_COLUMNS.map((group) => group.key),
   'actions',
+];
+
+// "Nhà cung cấp" — forwarder and booking context. No Figma frame yet.
+export const SUPPLIER_COLUMN_KEYS = [
+  'customsDeclarationDate',
+  'shipmentCode',
+  'contractNumber',
+  'projectName',
+  'name',
+  'supplier',
+  'bookingNumber',
+  'billOfLadingNumber',
+  'placeOfDischarge',
+  'status',
+  'actions',
+];
+
+/** @satisfies {ReadonlyArray<import('@/shared/components/advance-table.jsx').AdvanceTableViewPreset>} */
+export const VIEW_PRESETS = [
+  { key: 'basic', label: 'Cơ bản', columnKeys: DEFAULT_COLUMN_KEYS },
+  { key: 'value', label: 'Giá trị & Chi phí', columnKeys: VALUE_COLUMN_KEYS },
+  {
+    key: 'supplier',
+    label: 'Nhà cung cấp',
+    columnKeys: SUPPLIER_COLUMN_KEYS,
+  },
 ];
 
 // `shipmentCode` (computed from the parent contract's number + shipment
@@ -109,7 +211,8 @@ export const FILTER_FIELD_DEFS = [
 
 export const SKELETON_ROW_COUNT = 6;
 
-export const DEFAULT_PAGE_SIZE = 25;
+// User request (2026-09-23): 100 rows by default.
+export const DEFAULT_PAGE_SIZE = 100;
 
 export const PAGE_SIZE_OPTIONS = ['10', '25', '50', '100'];
 

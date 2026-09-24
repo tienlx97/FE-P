@@ -435,7 +435,14 @@ export const maritimeTheme = defineTheme({
     // wrapper height plus sticky header cells, so the Contract list's table
     // scrolls inside its card with the header/totals pinned.
     'table-scroll-wrapper': {
-      base: { height: '100%' },
+      base: {
+        // Always reserve the vertical scrollbar's width: otherwise the first
+        // frame after a few-row → many-row switch (skeleton → data on load, a
+        // status tab) still has columns sized for the wider box, and a
+        // horizontal scrollbar flashes until the width is re-measured.
+        height: '100%',
+        scrollbarGutter: 'stable',
+      },
     },
     'table-header': {
       base: { backgroundColor: 'var(--maritime-table-header-bg)' },

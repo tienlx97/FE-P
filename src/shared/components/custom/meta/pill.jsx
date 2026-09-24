@@ -17,7 +17,7 @@ import * as stylex from '@stylexjs/stylex';
  *
  * @param {{
  *   label: string,
- *   tone?: 'accent' | 'success' | 'green' | 'indigo' | 'neutral' | 'muted' | 'solid' | 'on-accent',
+ *   tone?: 'accent' | 'success' | 'green' | 'indigo' | 'warning' | 'neutral' | 'muted' | 'solid' | 'on-accent',
  *   hasDot?: boolean,
  *   icon?: import('react').ComponentType,
  *   hasBorder?: boolean,
@@ -32,6 +32,7 @@ export function MetaPill({
   hasBorder = tone === 'accent' ||
     tone === 'success' ||
     tone === 'green' ||
+    tone === 'warning' ||
     tone === 'muted',
   size = 'md',
 }) {
@@ -116,6 +117,11 @@ const tones = stylex.create({
     backgroundColor: 'var(--meta-indigo-wash)',
     color: 'var(--meta-indigo)',
   },
+  // Figma 108:5920 shipment "Đang đóng hàng" / "Khai HQ".
+  warning: {
+    backgroundColor: 'var(--meta-amber-wash)',
+    color: 'var(--meta-amber-text)',
+  },
   neutral: {
     backgroundColor: 'var(--meta-hairline)',
     color: 'var(--color-text-primary)',
@@ -141,6 +147,7 @@ const borders = stylex.create({
   success: { borderColor: 'var(--meta-emerald-border)' },
   green: { borderColor: 'var(--meta-green-border)' },
   indigo: { borderColor: 'var(--meta-indigo-wash)' },
+  warning: { borderColor: 'var(--meta-amber-border)' },
   neutral: { borderColor: 'var(--color-border)' },
   muted: { borderColor: 'var(--color-border)' },
   solid: { borderColor: 'var(--color-accent)' },
@@ -152,6 +159,7 @@ const dots = stylex.create({
   success: { backgroundColor: 'var(--meta-emerald-dot)' },
   green: { backgroundColor: 'var(--meta-green)' },
   indigo: { backgroundColor: 'var(--meta-indigo)' },
+  warning: { backgroundColor: 'var(--meta-amber-text)' },
   neutral: { backgroundColor: 'var(--color-text-secondary)' },
   muted: { backgroundColor: 'var(--meta-text-subtle)' },
   solid: { backgroundColor: 'var(--color-on-accent)' },
