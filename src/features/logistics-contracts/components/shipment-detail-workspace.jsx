@@ -1,7 +1,6 @@
 'use client';
 
 import { Banner } from '@astryxdesign/core/Banner';
-import { Card } from '@astryxdesign/core/Card';
 import { Icon } from '@astryxdesign/core/Icon';
 import { VStack } from '@astryxdesign/core/VStack';
 import {
@@ -43,7 +42,7 @@ import { useShipmentJourneyQuery } from '../hooks/use-shipment-journey-query.js'
 import { useShipmentVgmsQuery } from '../hooks/use-shipment-vgms-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
-import { ShipmentCostsSection } from './shipment-costs-section.jsx';
+import { ShipmentCostPanel } from './shipment-cost-panel.jsx';
 import { ShipmentEmptyReturnDialog } from './shipment-empty-return-dialog.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 import { ShipmentMilestoneDialog } from './shipment-milestone-dialog.jsx';
@@ -365,7 +364,13 @@ function ShipmentDetailBody({
   onOpenContract,
 }) {
   const panelId = useId();
-  const [isEditing, setIsEditing] = useState(false);
+  // Which editor request is open: the header's "Chỉnh sửa", or the cost
+  // grid's "Thêm chi phí" / group "+" (opens on the cost tab, one new line).
+  const [editRequest, setEditRequest] = useState(
+    /** @type {{ key: number, tab: 'info' | 'costs', addCostLine: { costCategoryId?: string } | null } | null} */ (
+      null
+    ),
+  );
   const [selectedMilestone, setSelectedMilestone] = useState(
     /** @type {import('../types/index.js').ShipmentJourneyStep | null} */ (
       null
@@ -449,7 +454,9 @@ function ShipmentDetailBody({
           journeySummary={journey?.summary}
           isJourneyLoading={journeyQuery.isLoading}
           onPrint={() => window.print()}
-          onEdit={() => setIsEditing(true)}
+          onEdit={() =>
+            setEditRequest({ key: Date.now(), tab: 'info', addCostLine: null })
+          }
           moreItems={[
             {
               id: 'contract',
@@ -511,31 +518,41 @@ function ShipmentDetailBody({
             />
           ) : null}
           {activeTab === 'costs' ? (
-            <Card padding={6}>
-              <ShipmentCostsSection
-                shipment={shipment}
-                customersById={customersById}
-                costCategoriesById={costCategoriesById}
-              />
-            </Card>
+            <ShipmentCostPanel
+              contractId={contract.id}
+              shipment={shipment}
+              costCategoriesById={costCategoriesById}
+              isCategoriesLoading={costCategoriesQuery.isLoading}
+              customersById={customersById}
+              onAddCostLine={(costCategoryId) =>
+                setEditRequest({
+                  key: Date.now(),
+                  tab: 'costs',
+                  addCostLine: { costCategoryId },
+                })
+              }
+            />
           ) : null}
         </section>
       </VStack>
 
       {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
-        {isEditing ? (
+        {editRequest ? (
           <ShipmentFormDialog
+            key={editRequest.key}
             isOpen
             initialMode="edit"
+            initialTab={editRequest.tab}
+            addCostLine={editRequest.addCostLine}
             onOpenChange={(open) => {
-              if (!open) setIsEditing(false);
+              if (!open) setEditRequest(null);
             }}
             contractId={contract.id}
             contract={contract}
             shipment={shipment}
             closeLabel="Quay lại lô hàng"
-            onSuccess={() => setIsEditing(false)}
+            onSuccess={() => setEditRequest(null)}
           />
         ) : null}
         {selectedMilestone ? (

@@ -1,5 +1,39 @@
 # Progress Log
 
+## 2026-09-24 — Shipment detail page, tab "Chi phí logistics" (Figma 124:9667)
+
+- The tab is now one full-width Meta card, `MetaCostPanel` (new shared
+  block): accent-bar title + count, "Thêm chi phí", "Trong đó Abnormal"
+  (amber) | "Tổng chi phí" (accent); a full-grid table (column shares
+  from the Figma header) with one tinted row per LOG-01 … LOG-08 group
+  (label + "+" + subtotal; all 8 always shown, lines of an unknown
+  category go to "Chưa phân nhóm"), then its lines (STT, group, name,
+  amount, Standard / Abnormal pill, note / provider / invoice or a muted
+  dash, delete); a tinted "Σ Tổng cộng chi phí" footer (line count,
+  total, Abnormal, provider and invoice counts) and the helper note.
+  `ShipmentCostPanel` feeds it; amounts use `formatVndAmount`.
+- Cost lines have no endpoint of their own (the shipment PUT replaces the
+  list): "Thêm chi phí" / a group's "+" open the existing shipment editor
+  on its "Chi phí Logistics" tab with one new line (pre-filled group for
+  "+"; new `initialTab` / `addCostLine` props on `ShipmentFormDialog`);
+  delete confirms, then resends the shipment without that line
+  (`useRemoveShipmentCostLine`, reuses the now-exported
+  `valuesFromShipment` + `shipmentSchema`).
+- Differences from Figma: pills are the Meta rounded `MetaPill`, not 4px
+  tags; the "Lưới dữ liệu tự động đồng bộ kế toán nội bộ" note is left
+  out (no such sync exists); the Figma table is 1480px in a 1398px card
+  (actions column clipped) — here it fits, with the delete column shown.
+- Checked in Chrome on 26KCT02/LOT-01 (13 lines): headers sentence case
+  (the theme's `<th>` caps are reset on the label `Text`, the cell
+  xstyle loses), line rows 45px like Figma; card at 1180 / 900px: no
+  horizontal scroll (text wraps); at 358px the table scrolls inside the
+  card. LOG-03 "+" opened the editor on the cost tab with a new LOG-03
+  row; discarded, nothing saved. Delete confirmation opened and was
+  cancelled; still 13 lines. No console errors. Gotcha: Astryx
+  `TableRow` spreads `xstyle`, so pass an array (`[styles.x]`) or it
+  throws "Spread syntax requires ...iterable".
+- verify.sh passed (`harness/runs/20260924-144648-1166/`).
+
 ## 2026-09-24 — Shipment detail page, tab "VGM" (Figma 120:9075)
 
 - The "VGM" tab (renamed from "VGM & Container") is now one full-width

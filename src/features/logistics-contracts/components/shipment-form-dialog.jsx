@@ -3,7 +3,7 @@
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
 import * as stylex from '@stylexjs/stylex';
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
@@ -30,6 +30,9 @@ const styles = stylex.create({
  * the backend on success). Xem and Sửa share the same `ShipmentFields`
  * layout — only `isReadOnly` differs per field — so there is no separate
  * view-only content branch.
+ * `initialTab` opens on another tab (the detail page's cost grid opens
+ * "Chi phí Logistics"); `addCostLine` also appends one new cost line on
+ * open, pre-filled with `costCategoryId` when a group's "+" was used.
  * @param {{
  *   isOpen: boolean,
  *   initialMode?: 'view' | 'edit',
@@ -39,6 +42,8 @@ const styles = stylex.create({
  *   shipment?: import('../types/index.js').Shipment | null,
  *   onSuccess?: (shipment: import('../types/index.js').Shipment) => void,
  *   closeLabel?: string,
+ *   initialTab?: 'info' | 'vgm' | 'costs',
+ *   addCostLine?: { costCategoryId?: string } | null,
  * }} props
  */
 export function ShipmentFormDialog({
@@ -50,6 +55,8 @@ export function ShipmentFormDialog({
   shipment = null,
   onSuccess,
   closeLabel = 'Đóng',
+  initialTab = 'info',
+  addCostLine = null,
 }) {
   const [mode, setMode] = useState(initialMode);
   const isViewing = mode === 'view' && Boolean(shipment);
@@ -80,7 +87,18 @@ export function ShipmentFormDialog({
     onOpenChange(nextIsOpen);
   }
 
-  const [activeTab, setActiveTab] = useState('info');
+  const [activeTab, setActiveTab] = useState(
+    /** @type {string} */ (initialTab),
+  );
+
+  // Once per mount (the caller keys the dialog per request).
+  const hasAddedCostLine = useRef(false);
+  const { addRow } = form.costLineRows;
+  useEffect(() => {
+    if (!addCostLine || hasAddedCostLine.current) return;
+    hasAddedCostLine.current = true;
+    addRow(addCostLine.costCategoryId);
+  }, [addCostLine, addRow]);
   const panelId = useId();
   return (
     <FormDialog

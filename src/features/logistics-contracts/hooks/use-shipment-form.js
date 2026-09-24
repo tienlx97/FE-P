@@ -72,7 +72,7 @@ function emptyValues(contract = null) {
  * @param {import('../types/index.js').Shipment} shipment
  * @returns {import('../types/index.js').ShipmentFormValues}
  */
-function valuesFromShipment(shipment) {
+export function valuesFromShipment(shipment) {
   const details = shipment.operationalDetails;
   const siCutoff = splitSiCutoff(details?.siCutoff);
   return {

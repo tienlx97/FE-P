@@ -23,6 +23,7 @@ export {
   MetaContractHeaderCard,
 } from './contract-header-card.jsx';
 export { MetaContractInfoGrid } from './contract-info-grid.jsx';
+export { MetaCostPanel } from './cost-panel.jsx';
 export { MetaCountBadge } from './count-badge.jsx';
 export { MetaDrawerHeader } from './drawer-header.jsx';
 export {
