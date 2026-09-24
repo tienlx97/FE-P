@@ -1,15 +1,20 @@
 'use client';
 
+import { Icon } from '@astryxdesign/core/Icon';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { proportional } from '@astryxdesign/core/Table';
-import { Heading } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
+import {
+  MetaListTitle,
+  MetaPrimaryCell,
+} from '@/shared/components/custom/meta/list-parts.jsx';
 
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { CountryFormDialog } from './country-form-dialog.jsx';
@@ -43,7 +48,9 @@ export function CountriesList() {
       header: 'Tên nước',
       width: proportional(1),
       filter: 'name',
-      renderCell: (country) => country.name,
+      renderCell: (country) => (
+        <MetaPrimaryCell>{country.name}</MetaPrimaryCell>
+      ),
     },
   ];
 
@@ -55,9 +62,19 @@ export function CountriesList() {
 
       <StackItem size="fill">
         <AdvanceTable
-          title={<Heading level={1}>Nước xuất khẩu</Heading>}
+          title={
+            <MetaListTitle
+              title="Danh sách nước xuất khẩu"
+              count={listResult?.success ? countries.length : undefined}
+              unit="nước"
+            />
+          }
+          isFramed
+          isStriped
+          dividers="rows"
           primaryAction={{
             label: 'Thêm nước',
+            icon: <Icon icon={Plus} size="sm" />,
             onClick: () => {
               setHasOpenedCreate(true);
               setIsCreateOpen(true);

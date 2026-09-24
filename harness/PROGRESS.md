@@ -14316,3 +14316,57 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
   redirects automation to `/login`, and the available test credentials are
   no longer valid against this backend. The selected Figma screenshot and
   node measurements were inspected directly through the connected file.
+
+## 2026-09-24 — Meta theme on the catalogue list screens
+
+- Commission, BOQ, Khách hàng, Nhà cung cấp, Quốc gia and Cảng / Nơi now
+  follow the Hợp đồng / Shipment list look: each page wraps its list in
+  `MetaThemeProvider`; `AdvanceTable` is `isFramed` + `isStriped` +
+  `dividers="rows"`; the title is "Danh sách …" + an accent count badge;
+  primary actions carry a `+` icon.
+- New shared `src/shared/components/custom/meta/list-parts.jsx`
+  (`MetaListTitle`, `MetaTotalsLabel`, `MetaPrimaryCell`, `MetaCellText`) so
+  the six lists don't each re-derive the Shipment list's pieces.
+- Cells: identifying name/code bold (record links via `Link weight="bold"
+  color="accent"` — `recordLinkStyles`' `fontWeight` is overridden by the
+  Link's inner Text, see Discovered); empty cells a muted "—"; Commission's
+  "Đã ký / Chưa ký" became `MetaPill`s; totals rows use "Σ TỔNG CỘNG".
+- Cảng / Nơi: the standalone "Lọc theo nước" Selector moved into the table
+  toolbar as a Meta `lg` filter pill ("Nước: …").
+- `./harness/verify.sh` passed: `harness/runs/20260924-235648-124645/`.
+  No screenshot: the automation browser was redirected to `/login` and no
+  credentials are available to it.
+
+### Discovered
+- `Link`'s `xstyle` `fontWeight` (e.g. `recordLinkStyles.link`,
+  `shipments-list.jsx` `styles.bold`) does not reach the rendered text —
+  measured 400 in the Shipment list's "Mã" column. `Link weight="bold"` works.
+
+## 2026-09-25 — Commission / BOQ lists create in the Meta drawers
+
+- "Tạo Commission" (Commission list): after the contract picker, opens
+  `CommissionFormDrawer` (same drawer as the contract detail's Hoa hồng tab)
+  instead of `CommissionFormDialog`. View/Sửa of existing rows unchanged.
+- "Thêm BOQ" (BOQ list): after the contract picker, a small `BoqCreateDrawer`
+  loads the picked contract's private info (upsert — empty when none yet)
+  and opens `ContractBoqEditDrawer`; a load failure toasts and closes.
+  `ContractBoqEditDrawer`'s `contract` prop narrowed to `id` +
+  `contractNumber`. View/Sửa of existing rows still use the detail dialog.
+- `./harness/verify.sh` passed: `harness/runs/20260925-000130-133326/`.
+  Not browser-verified (automation session is logged out).
+
+## 2026-09-25 — Commission / BOQ list row actions: drawers + contract detail
+
+- "Chức năng" → "Thao tác" with `MetaRowActions` icon buttons (new, in
+  `custom/meta/list-parts.jsx`) on both lists.
+- Commission list: "Xem" and the "Mã" link go to the contract detail's
+  `?tab=commission`; "Sửa" opens `CommissionFormDrawer` via a small
+  `CommissionEditDrawer` loader (contract + commission by id). The list no
+  longer renders `CommissionFormDialog` / annex / payment quick-add dialogs.
+- BOQ list: "Số hợp đồng" links to the contract detail; "Xem" goes to
+  `?tab=boq`; "Sửa" and "Thêm BOQ" share `BoqDrawer` (loads private info,
+  opens `ContractBoqEditDrawer`). `ContractPrivateInfoDetailDialog` is no
+  longer referenced by any list (still exists; still used by
+  `contract-related-entities-panel.jsx`).
+- `./harness/verify.sh` passed: `harness/runs/20260925-000727-146152/`.
+  Not browser-verified (automation session logged out).

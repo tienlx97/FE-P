@@ -19,19 +19,27 @@ import { Link } from '@astryxdesign/core/Link';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel } from '@astryxdesign/core/Table';
-import { Heading, Text } from '@astryxdesign/core/Text';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
-import { recordLinkStyles } from '@/shared/components/record-link-style.js';
+import {
+  MetaCellText,
+  MetaListTitle,
+  MetaRowActions,
+  MetaTotalsLabel,
+} from '@/shared/components/custom/meta/list-parts.jsx';
+import { MetaPill } from '@/shared/components/custom/meta/pill.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { searchCommissions } from '../api/commissions.js';
 import {
@@ -44,13 +52,14 @@ import {
   skeletonRows,
 } from '../config/commissions-table.js';
 import { formatMoney } from '../config/currencies.js';
+import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useCommissionsQuery } from '../hooks/use-commissions-query.js';
-import { useContractsQuery } from '../hooks/use-contracts-query.js';
+import {
+  useContractQuery,
+  useContractsQuery,
+} from '../hooks/use-contracts-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
-import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
-import { CommissionFormDialog } from './commission-form-dialog.jsx';
-import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
-import { RecordActionsMenu } from './record-actions-menu.jsx';
+import { CommissionFormDrawer } from './commission-form-drawer.jsx';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -85,9 +94,25 @@ const SORTABLE_COLUMN_KEYS = [
  */
 function totalsRowLabel(row) {
   return (
-    <Text weight="semibold">
-      {row.isMultiCurrency ? `Tổng cộng (${row.currency})` : 'Tổng cộng'}
-    </Text>
+    <MetaTotalsLabel
+      caption={
+        row.isMultiCurrency ? `Tổng cộng (${row.currency})` : 'Tổng cộng'
+      }
+    />
+  );
+}
+
+/**
+ * "Đã ký" / "Chưa ký" as a Meta status pill (status → pill, not text).
+ * @param {boolean} isSigned
+ */
+function signedPill(isSigned) {
+  return (
+    <MetaPill
+      label={isSigned ? 'Đã ký' : 'Chưa ký'}
+      tone={isSigned ? 'success' : 'neutral'}
+      hasDot
+    />
   );
 }
 
@@ -122,28 +147,18 @@ export function CommissionsList() {
     setSort(field ? { field, direction } : null);
     setPageIndex(1);
   }
-  const [dialogMode, setDialogMode] = useState(
-    /** @type {'view' | 'edit'} */ ('view'),
-  );
-  const [editingCommissionRow, setEditingCommissionRow] = useState(
-    /** @type {CommissionListRow | null} */ (null),
-  );
-  const [annexDialog, setAnnexDialog] = useState(
-    /** @type {{ contractId: string, annex?: import('../types/index.js').CommissionAnnex } | null} */ (
-      null
-    ),
-  );
-  const [paymentDialog, setPaymentDialog] = useState(
-    /** @type {CommissionListRow | null} */ (null),
+  const router = useRouter();
+  // Contract whose Commission "Sửa" is editing in the Meta drawer.
+  const [editingContractId, setEditingContractId] = useState(
+    /** @type {string | null} */ (null),
   );
   const [isPickingContract, setIsPickingContract] = useState(false);
   const [pickedContractId, setPickedContractId] = useState(
     /** @type {string | null} */ (null),
   );
-  const [creatingCommission, setCreatingCommission] = useState(
-    /** @type {{ contractId: string, contractNumber: string, projectName: string, currency: string } | null} */ (
-      null
-    ),
+  // The picked contract, once "Tiếp tục" opens the Meta create drawer.
+  const [creatingForContract, setCreatingForContract] = useState(
+    /** @type {import('../types/index.js').Contract | null} */ (null),
   );
 
   const commissionsQuery = useCommissionsQuery({
@@ -260,15 +275,11 @@ export function CommissionsList() {
     return result.success ? enrichCommissions(result.commissions) : [];
   }
 
-  /**
-   * Shared by the "Mã" cell (design.md section 4: "Mã bản ghi mở Xem") and
-   * `RecordActionsMenu`'s own "Xem"/"Sửa" below.
-   * @param {CommissionListRow} row
-   * @param {'view' | 'edit'} mode
-   */
-  function openCommission(row, mode) {
-    setDialogMode(mode);
-    setEditingCommissionRow(row);
+  // "Xem" (the "Mã" link and the row's eye button) is the contract detail's
+  // "Hoa hồng" tab — a Commission is 1:1 with its contract.
+  /** @param {CommissionListRow} row */
+  function commissionHref(row) {
+    return `/logistics/contract/${row.contractId}?tab=commission`;
   }
 
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<CommissionListRow>[]} */
@@ -279,15 +290,14 @@ export function CommissionsList() {
       width: pixel(120),
       filter: 'code',
       renderCell: (row) => (
-        <Button
-          label={row.code}
-          variant="ghost"
-          size="sm"
-          onClick={(event) => {
-            event.stopPropagation();
-            openCommission(row, 'view');
-          }}
-        />
+        <Link
+          href={commissionHref(row)}
+          weight="bold"
+          color="accent"
+          onClick={(event) => event.stopPropagation()}
+        >
+          {row.code}
+        </Link>
       ),
     },
     {
@@ -299,7 +309,8 @@ export function CommissionsList() {
         contractsById.has(row.contractId) ? (
           <Link
             href={`/logistics/contract/${row.contractId}`}
-            xstyle={recordLinkStyles.link}
+            weight="bold"
+            color="accent"
             onClick={(event) => event.stopPropagation()}
           >
             {orDash(row.contractNumber)}
@@ -313,14 +324,14 @@ export function CommissionsList() {
       header: 'Dự án',
       width: pixel(160),
       filter: 'projectName',
-      renderCell: (row) => orDash(row.projectName),
+      renderCell: (row) => <MetaCellText value={row.projectName} />,
     },
     {
       key: 'partyCustomerName',
       header: 'Bên nhận hoa hồng',
       width: pixel(200),
       filter: 'partyCustomerName',
-      renderCell: (row) => orDash(row.partyCustomerName),
+      renderCell: (row) => <MetaCellText value={row.partyCustomerName} />,
     },
     {
       key: 'value',
@@ -339,25 +350,26 @@ export function CommissionsList() {
       key: 'sellerSigned',
       header: 'Bên bán đã ký',
       width: pixel(130),
-      renderCell: (row) => (row.sellerSigned ? 'Đã ký' : 'Chưa ký'),
+      renderCell: (row) => signedPill(row.sellerSigned),
       exportValue: (row) => (row.sellerSigned ? 'Đã ký' : 'Chưa ký'),
     },
     {
       key: 'partySigned',
       header: 'Bên nhận hoa hồng đã ký',
       width: pixel(170),
-      renderCell: (row) => (row.partySigned ? 'Đã ký' : 'Chưa ký'),
+      renderCell: (row) => signedPill(row.partySigned),
       exportValue: (row) => (row.partySigned ? 'Đã ký' : 'Chưa ký'),
     },
     {
       key: 'actions',
-      header: 'Chức năng',
-      width: pixel(140),
-      align: 'end',
+      header: 'Thao tác',
+      width: pixel(104),
+      align: 'center',
       renderCell: (row) => (
-        <RecordActionsMenu
-          onView={() => openCommission(row, 'view')}
-          onEdit={() => openCommission(row, 'edit')}
+        <MetaRowActions
+          recordLabel={row.code}
+          onView={() => router.push(commissionHref(row))}
+          onEdit={() => setEditingContractId(row.contractId)}
         />
       ),
     },
@@ -377,19 +389,11 @@ export function CommissionsList() {
   function handleContinuePickingContract() {
     if (!pickedContractId) return;
     const contract = contractsById.get(pickedContractId);
+    if (!contract) return;
     setIsPickingContract(false);
-    setCreatingCommission({
-      contractId: pickedContractId,
-      contractNumber: contract?.contractNumber ?? '',
-      projectName: contract?.projectName ?? '',
-      currency: contract?.currency ?? '',
-    });
+    setCreatingForContract(contract);
     setPickedContractId(null);
   }
-
-  const selectedCommission =
-    searchableCommissions.find((row) => row.id === editingCommissionRow?.id) ??
-    editingCommissionRow;
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
@@ -399,10 +403,19 @@ export function CommissionsList() {
 
       <StackItem size="fill">
         <AdvanceTable
-          title={<Heading level={1}>Commission</Heading>}
+          title={
+            <MetaListTitle
+              title="Danh sách Commission"
+              count={listResult?.success ? totalCommissions : undefined}
+              unit="commission"
+            />
+          }
+          isFramed
+          isStriped
+          dividers="rows"
           primaryAction={{
             label: 'Tạo Commission',
-            icon: <Icon icon={Plus} />,
+            icon: <Icon icon={Plus} size="sm" />,
             onClick: () => setIsPickingContract(true),
           }}
           toolbarLabel="Thao tác danh sách Commission"
@@ -509,80 +522,62 @@ export function CommissionsList() {
         </CommonDialog>
       ) : null}
 
-      {creatingCommission ? (
-        <CommissionFormDialog
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setCreatingCommission(null);
-          }}
-          contractId={creatingCommission.contractId}
-          contractNumber={creatingCommission.contractNumber}
-          projectName={creatingCommission.projectName}
-          currency={creatingCommission.currency}
-          onSuccess={() => setCreatingCommission(null)}
+      {/* Create in the Meta drawer, same as the contract detail's
+          "Hoa hồng" tab (the drawer re-applies the Meta theme itself). */}
+      {creatingForContract ? (
+        <CommissionFormDrawer
+          contract={creatingForContract}
+          onClose={() => setCreatingForContract(null)}
         />
       ) : null}
 
-      {editingCommissionRow ? (
-        <CommissionFormDialog
-          key={editingCommissionRow.id}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setEditingCommissionRow(null);
-          }}
-          contractId={editingCommissionRow.contractId}
-          contractNumber={editingCommissionRow.contractNumber}
-          projectName={editingCommissionRow.projectName}
-          currency={editingCommissionRow.currency}
-          commission={selectedCommission}
-          initialMode={dialogMode}
-          onAddAnnex={() =>
-            selectedCommission &&
-            setAnnexDialog({ contractId: selectedCommission.contractId })
-          }
-          onEditAnnex={(annex) =>
-            selectedCommission &&
-            setAnnexDialog({
-              contractId: selectedCommission.contractId,
-              annex,
-            })
-          }
-          onAddPayment={() =>
-            selectedCommission && setPaymentDialog(selectedCommission)
-          }
-          // This dialog only ever edits an existing Commission (creation
-          // uses `creatingCommission`/`CommissionFormDialog` without a
-          // `commission` prop below) — `CommissionFormDialog` itself
-          // returns to Xem in place on save, so nothing to close here.
-          onSuccess={() => {}}
-        />
-      ) : null}
-
-      {annexDialog ? (
-        <CommissionAnnexFormDialog
-          key={annexDialog.annex?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setAnnexDialog(null);
-          }}
-          contractId={annexDialog.contractId}
-          annex={annexDialog.annex}
-          onSuccess={() => setAnnexDialog(null)}
-        />
-      ) : null}
-
-      {paymentDialog ? (
-        <CommissionPaymentQuickAddDialog
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setPaymentDialog(null);
-          }}
-          contractId={paymentDialog.contractId}
-          commission={paymentDialog}
-          currency={paymentDialog.currency}
-          onSuccess={() => setPaymentDialog(null)}
+      {editingContractId ? (
+        <CommissionEditDrawer
+          key={editingContractId}
+          contractId={editingContractId}
+          onClose={() => setEditingContractId(null)}
         />
       ) : null}
     </VStack>
   );
+}
+
+/**
+ * "Sửa" → the contract detail's Meta Commission drawer. Loads the contract
+ * (the drawer needs its value / currency / type) and its Commission by id,
+ * so it works for rows whose contract isn't in the picker's first page; the
+ * drawer opens once both arrive, a load failure toasts and closes.
+ * @param {{ contractId: string, onClose: () => void }} props
+ */
+function CommissionEditDrawer({ contractId, onClose }) {
+  const toast = useAppToast();
+  const contractQuery = useContractQuery(contractId);
+  const commissionQuery = useCommissionQuery(contractId);
+  const contract = contractQuery.data?.success
+    ? contractQuery.data.contract
+    : null;
+  const commission =
+    commissionQuery.data?.success && commissionQuery.data.exists
+      ? commissionQuery.data.commission
+      : null;
+  const failure =
+    contractQuery.data && !contractQuery.data.success
+      ? contractQuery.data.message
+      : commissionQuery.data && !commissionQuery.data.success
+        ? commissionQuery.data.message
+        : null;
+
+  useEffect(() => {
+    if (!failure) return;
+    toast({ body: failure, type: 'error' });
+    onClose();
+  }, [failure, onClose, toast]);
+
+  return contract && commission ? (
+    <CommissionFormDrawer
+      contract={contract}
+      commission={commission}
+      onClose={onClose}
+    />
+  ) : null;
 }

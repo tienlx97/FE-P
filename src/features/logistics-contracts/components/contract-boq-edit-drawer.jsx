@@ -61,8 +61,10 @@ const styles = stylex.create({
  * confirmation); the form body is the existing `ContractPrivateInfoFields`
  * driven by `useContractPrivateInfoForm`, so validation and the upsert stay
  * shared with the BOQ list's dialog.
+ * Also the BOQ list's "Thêm BOQ" drawer, which only knows the picked
+ * contract's id + number.
  * @param {{
- *   contract: import('../types/index.js').Contract,
+ *   contract: Pick<import('../types/index.js').Contract, 'id' | 'contractNumber'>,
  *   privateInfo: import('../types/index.js').ContractPrivateInfo,
  *   onClose: () => void,
  * }} props

@@ -3,6 +3,7 @@ import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { CountriesList } from '@/features/logistics-contracts/index.js';
+import { MetaThemeProvider } from '@/shared/components/custom/meta/theme-provider.jsx';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
 
 export const metadata = {
@@ -23,7 +24,9 @@ export default function LogisticsCountriesPage() {
         </Breadcrumbs>
 
         <StackItem size="fill">
-          <CountriesList />
+          <MetaThemeProvider>
+            <CountriesList />
+          </MetaThemeProvider>
         </StackItem>
       </VStack>
     </PageContentShell>

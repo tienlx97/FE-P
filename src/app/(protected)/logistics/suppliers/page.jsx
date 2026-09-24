@@ -3,6 +3,7 @@ import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { SuppliersList } from '@/features/logistics-contracts';
+import { MetaThemeProvider } from '@/shared/components/custom/meta/theme-provider.jsx';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
 
 export const metadata = { title: 'Nhà cung cấp · Logistics · KT-XNK' };
@@ -17,7 +18,9 @@ export default function SuppliersPage() {
         </Breadcrumbs>
 
         <StackItem size="fill">
-          <SuppliersList />
+          <MetaThemeProvider>
+            <SuppliersList />
+          </MetaThemeProvider>
         </StackItem>
       </VStack>
     </PageContentShell>

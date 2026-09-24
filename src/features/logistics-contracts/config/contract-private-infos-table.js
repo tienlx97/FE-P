@@ -12,7 +12,7 @@ export const COLUMN_OPTIONS = [
   { key: 'quotedPricePerContainer', label: 'Giá báo khách' },
   { key: 'logisticsTotal', label: 'Tổng' },
   { key: 'profit', label: 'Lợi nhuận' },
-  { key: 'actions', label: 'Chức năng', isAlwaysVisible: true },
+  { key: 'actions', label: 'Thao tác', isAlwaysVisible: true },
 ];
 
 export const DEFAULT_COLUMN_KEYS = [

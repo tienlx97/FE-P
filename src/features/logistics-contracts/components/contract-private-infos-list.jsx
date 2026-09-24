@@ -12,15 +12,22 @@ import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Plus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
-import { recordLinkStyles } from '@/shared/components/record-link-style.js';
+import {
+  MetaCellText,
+  MetaListTitle,
+  MetaRowActions,
+  MetaTotalsLabel,
+} from '@/shared/components/custom/meta/list-parts.jsx';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import { searchContractPrivateInfos } from '../api/contract-private-info.js';
@@ -33,10 +40,10 @@ import {
   SEARCH_FIELD_DEFS,
   skeletonRows,
 } from '../config/contract-private-infos-table.js';
+import { useContractPrivateInfoQuery } from '../hooks/use-contract-private-info-query.js';
 import { useContractPrivateInfosListQuery } from '../hooks/use-contract-private-infos-list-query.js';
 import { useContractsQuery } from '../hooks/use-contracts-query.js';
-import { ContractPrivateInfoDetailDialog } from './contract-private-info-detail-dialog.jsx';
-import { RecordActionsMenu } from './record-actions-menu.jsx';
+import { ContractBoqEditDrawer } from './contract-boq-edit-drawer.jsx';
 
 const LOGISTICS_SECRET_PERMISSION = 'logistics:secret';
 
@@ -67,7 +74,7 @@ function orDashNumber(value, suffix = '') {
  * `contracts-list.jsx`'s `totalsRowLabel`.
  */
 function totalsRowLabel() {
-  return <Text weight="semibold">Tổng cộng</Text>;
+  return <MetaTotalsLabel caption="Tổng cộng" />;
 }
 
 /**
@@ -118,10 +125,11 @@ export function ContractPrivateInfosList() {
     setSort(field ? { field, direction } : null);
     setPageIndex(1);
   }
-  const [detailDialog, setDetailDialog] = useState(
-    /** @type {{ row: Pick<import('../types/index.js').ContractPrivateInfoListItem, 'contractId' | 'contractNumber'>, initialEditing: boolean } | null} */ (
-      null
-    ),
+  const router = useRouter();
+  // Contract whose BOQ the Meta drawer is open for — "Thêm BOQ" (after the
+  // picker) and a row's "Sửa" both land here (saving is an upsert).
+  const [drawerContract, setDrawerContract] = useState(
+    /** @type {{ id: string, contractNumber: string } | null} */ (null),
   );
   const [isPickingContract, setIsPickingContract] = useState(false);
   const [pickedContractId, setPickedContractId] = useState(
@@ -161,12 +169,9 @@ export function ContractPrivateInfosList() {
     const contract = contractsById.get(pickedContractId);
     setIsPickingContract(false);
     setPickedContractId(null);
-    setDetailDialog({
-      row: {
-        contractId: pickedContractId,
-        contractNumber: contract?.contractNumber ?? '',
-      },
-      initialEditing: true,
+    setDrawerContract({
+      id: pickedContractId,
+      contractNumber: contract?.contractNumber ?? '',
     });
   }
 
@@ -208,16 +213,13 @@ export function ContractPrivateInfosList() {
       header: 'Số hợp đồng',
       width: pixel(160),
       filter: 'contractNumber',
-      // "Mã bản ghi mở Xem" (design.md section 4) — same handler
-      // `RecordActionsMenu`'s "Xem" below uses. BOQ rows are 1:1 with a
-      // Contract, so its number is this row's own identifier.
+      // Opens the contract's detail page (BOQ rows are 1:1 with a Contract).
       renderCell: (row) => (
         <Link
-          xstyle={recordLinkStyles.link}
-          onClick={(event) => {
-            event.stopPropagation();
-            setDetailDialog({ row, initialEditing: false });
-          }}
+          href={`/logistics/contract/${row.contractId}`}
+          weight="bold"
+          color="accent"
+          onClick={(event) => event.stopPropagation()}
         >
           {row.contractNumber}
         </Link>
@@ -228,7 +230,7 @@ export function ContractPrivateInfosList() {
       header: 'Dự án',
       width: proportional(1.2),
       filter: 'projectName',
-      renderCell: (row) => row.projectName,
+      renderCell: (row) => <MetaCellText value={row.projectName} />,
     },
     {
       key: 'containerCount',
@@ -262,13 +264,21 @@ export function ContractPrivateInfosList() {
     },
     {
       key: 'actions',
-      header: 'Chức năng',
-      width: pixel(140),
-      align: 'end',
+      header: 'Thao tác',
+      width: pixel(104),
+      align: 'center',
       renderCell: (row) => (
-        <RecordActionsMenu
-          onView={() => setDetailDialog({ row, initialEditing: false })}
-          onEdit={() => setDetailDialog({ row, initialEditing: true })}
+        <MetaRowActions
+          recordLabel={`BOQ ${row.contractNumber}`}
+          onView={() =>
+            router.push(`/logistics/contract/${row.contractId}?tab=boq`)
+          }
+          onEdit={() =>
+            setDrawerContract({
+              id: row.contractId,
+              contractNumber: row.contractNumber,
+            })
+          }
         />
       ),
     },
@@ -305,10 +315,19 @@ export function ContractPrivateInfosList() {
 
       <StackItem size="fill">
         <AdvanceTable
-          title={<Heading level={1}>BOQ</Heading>}
+          title={
+            <MetaListTitle
+              title="Danh sách BOQ"
+              count={listResult?.success ? totalItems : undefined}
+              unit="BOQ"
+            />
+          }
+          isFramed
+          isStriped
+          dividers="rows"
           primaryAction={{
-            label: 'Thêm',
-            icon: <Icon icon={Plus} />,
+            label: 'Thêm BOQ',
+            icon: <Icon icon={Plus} size="sm" />,
             onClick: () => setIsPickingContract(true),
           }}
           toolbarLabel="Thao tác danh sách BOQ"
@@ -407,17 +426,43 @@ export function ContractPrivateInfosList() {
         </CommonDialog>
       ) : null}
 
-      {detailDialog ? (
-        <ContractPrivateInfoDetailDialog
-          key={detailDialog.row.contractId}
-          contractId={detailDialog.row.contractId}
-          contractNumber={detailDialog.row.contractNumber}
-          initialEditing={detailDialog.initialEditing}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setDetailDialog(null);
-          }}
+      {drawerContract ? (
+        <BoqDrawer
+          key={drawerContract.id}
+          contract={drawerContract}
+          onClose={() => setDrawerContract(null)}
         />
       ) : null}
     </VStack>
   );
+}
+
+/**
+ * "Thêm BOQ" / "Sửa" → the contract detail's Meta BOQ drawer. A BOQ row is 1:1 with
+ * its Contract and saving is an upsert, so the picked contract's current
+ * private info is loaded first (empty fields when it has none yet); the
+ * drawer opens once it arrives.
+ * @param {{
+ *   contract: { id: string, contractNumber: string },
+ *   onClose: () => void,
+ * }} props
+ */
+function BoqDrawer({ contract, onClose }) {
+  const query = useContractPrivateInfoQuery(contract.id);
+  const toast = useAppToast();
+  const failure = query.data && !query.data.success ? query.data.message : null;
+
+  useEffect(() => {
+    if (!failure) return;
+    toast({ body: failure, type: 'error' });
+    onClose();
+  }, [failure, onClose, toast]);
+
+  return query.data?.success ? (
+    <ContractBoqEditDrawer
+      contract={contract}
+      privateInfo={query.data.privateInfo}
+      onClose={onClose}
+    />
+  ) : null;
 }

@@ -9,13 +9,18 @@ import { proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { Building2, Pencil, Printer, Trash2 } from 'lucide-react';
+import { Building2, Pencil, Plus, Printer, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
+import {
+  MetaCellText,
+  MetaListTitle,
+  MetaPrimaryCell,
+} from '@/shared/components/custom/meta/list-parts.jsx';
 import {
   expandableRowStyles,
   UnderlinedMetadataListItem as MetadataListItem,
@@ -262,39 +267,46 @@ export function CustomersList() {
       header: 'Tên công ty',
       width: proportional(1.4),
       filter: 'companyName',
-      renderCell: (customer) => customer.companyName,
+      renderCell: (customer) => (
+        <MetaPrimaryCell>{customer.companyName}</MetaPrimaryCell>
+      ),
     },
     {
       key: 'representativeName',
       header: 'Người đại diện',
       width: proportional(1),
       filter: 'representativeName',
-      renderCell: (customer) => customer.representativeName || '—',
+      renderCell: (customer) => (
+        <MetaCellText value={customer.representativeName} />
+      ),
     },
     {
       key: 'representativeTitle',
       header: 'Chức vụ',
       width: proportional(0.8),
       filter: 'representativeTitle',
-      renderCell: (customer) => customer.representativeTitle || '—',
+      renderCell: (customer) => (
+        <MetaCellText value={customer.representativeTitle} />
+      ),
     },
     {
       key: 'address',
       header: 'Địa chỉ',
       width: proportional(1.4),
       filter: 'address',
-      renderCell: (customer) => customer.address || '—',
+      renderCell: (customer) => <MetaCellText value={customer.address} />,
     },
     {
       key: 'extraFields',
       header: 'Trường tùy ý',
       width: proportional(1),
-      renderCell: (customer) =>
-        customer.extraFields.length > 0
-          ? customer.extraFields
-              .map((field) => `${field.key}: ${field.value}`)
-              .join(', ')
-          : '—',
+      renderCell: (customer) => (
+        <MetaCellText
+          value={customer.extraFields
+            .map((field) => `${field.key}: ${field.value}`)
+            .join(', ')}
+        />
+      ),
     },
   ];
 
@@ -331,9 +343,19 @@ export function CustomersList() {
 
       <StackItem size="fill">
         <AdvanceTable
-          title={<Heading level={1}>Khách hàng</Heading>}
+          title={
+            <MetaListTitle
+              title="Danh sách khách hàng"
+              count={listResult?.success ? totalCustomers : undefined}
+              unit="khách hàng"
+            />
+          }
+          isFramed
+          isStriped
+          dividers="rows"
           primaryAction={{
             label: 'Thêm khách hàng',
+            icon: <Icon icon={Plus} size="sm" />,
             onClick: () => {
               setHasOpenedCreate(true);
               setIsCreateOpen(true);

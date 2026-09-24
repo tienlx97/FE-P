@@ -3,6 +3,7 @@ import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { ContractPrivateInfosList } from '@/features/logistics-contracts/index.js';
+import { MetaThemeProvider } from '@/shared/components/custom/meta/theme-provider.jsx';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
 
 export const metadata = {
@@ -25,7 +26,9 @@ export default function LogisticsBoqPage() {
         </Breadcrumbs>
 
         <StackItem size="fill">
-          <ContractPrivateInfosList />
+          <MetaThemeProvider>
+            <ContractPrivateInfosList />
+          </MetaThemeProvider>
         </StackItem>
       </VStack>
     </PageContentShell>

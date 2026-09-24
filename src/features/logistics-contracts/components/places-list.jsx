@@ -1,16 +1,24 @@
 'use client';
 
+import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { proportional } from '@astryxdesign/core/Table';
-import { Heading } from '@astryxdesign/core/Text';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
+import {
+  MetaCellText,
+  MetaListTitle,
+  MetaPrimaryCell,
+} from '@/shared/components/custom/meta/list-parts.jsx';
 
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { usePlacesQuery } from '../hooks/use-places-query.js';
@@ -67,42 +75,73 @@ export function PlacesList() {
       header: 'Tên cảng / nơi',
       width: proportional(1.2),
       filter: 'name',
-      renderCell: (place) => place.name,
+      renderCell: (place) => <MetaPrimaryCell>{place.name}</MetaPrimaryCell>,
     },
     {
       key: 'countryName',
       header: 'Nước',
       width: proportional(1),
       filter: 'countryName',
-      renderCell: (place) => countriesById.get(place.countryId)?.name ?? '—',
+      renderCell: (place) => (
+        <MetaCellText value={countriesById.get(place.countryId)?.name} />
+      ),
     },
   ];
 
-  return (
-    <VStack gap={4} hAlign="stretch" height="100%">
-      <Selector
-        label="Lọc theo nước"
-        hasSearch
-        hasClear
-        placeholder="Tất cả các nước"
-        value={countryFilter || null}
-        onChange={(value) => setCountryFilter(value ?? '')}
-        options={countries.map((country) => ({
+  // Meta filter pill in the table toolbar (same as the Shipment list's
+  // "Loại hình:" band): muted caption, bold current country.
+  const countryFilterPill = (
+    <Selector
+      label="Lọc theo nước"
+      isLabelHidden
+      size="lg"
+      hasSearch
+      value={countryFilter || 'all'}
+      onChange={(value) =>
+        setCountryFilter(value == null || value === 'all' ? '' : value)
+      }
+      options={[
+        { value: 'all', label: 'Tất cả' },
+        ...countries.map((country) => ({
           value: country.id,
           label: country.name,
-        }))}
-        width={280}
-      />
+        })),
+      ]}
+      renderValue={(option) => (
+        <HStack as="span" gap={1} vAlign="center" wrap="nowrap">
+          <Text as="span" type="supporting" weight="medium">
+            Nước:
+          </Text>
+          <Text as="span" type="supporting" weight="semibold" color="primary">
+            {option.label}
+          </Text>
+        </HStack>
+      )}
+    />
+  );
 
+  return (
+    <VStack gap={4} hAlign="stretch" height="100%">
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}
 
       <StackItem size="fill">
         <AdvanceTable
-          title={<Heading level={1}>Cảng / Nơi</Heading>}
+          title={
+            <MetaListTitle
+              title="Danh sách cảng / nơi"
+              count={listResult?.success ? places.length : undefined}
+              unit="cảng / nơi"
+            />
+          }
+          isFramed
+          isStriped
+          dividers="rows"
+          toolbarFilters={countryFilterPill}
           primaryAction={{
             label: 'Thêm cảng / nơi đến',
+            icon: <Icon icon={Plus} size="sm" />,
             onClick: () => {
               setHasOpenedCreate(true);
               setIsCreateOpen(true);
