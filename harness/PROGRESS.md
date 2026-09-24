@@ -1,5 +1,28 @@
 # Progress Log
 
+## 2026-09-25 — Contract shipments tab: invoice values, links, pinned columns
+
+- Dạng bảng (`ContractShipmentsTable`): "Mã lô hàng" is a bold accent
+  `Link` to the shipment detail page (`shipmentHref`); "GIÁ TRỊ TK (…)" →
+  "GIÁ TRỊ INV" (`invoiceValue`), "GIÁ TRỊ TK (VNĐ)" → "GIÁ TRỊ INV (VNĐ)"
+  (`invoiceValue × declarationExchangeRate`), totals row likewise; "NGÀY
+  KHAI HẢI QUAN" → "NGÀY KHAI HQ"; NGÀY KHAI HQ + MÃ LÔ HÀNG pinned start,
+  THAO TÁC pinned end.
+- Dạng thẻ: "Giá trị tờ khai & quy mô" shows invoice value and invoice ×
+  rate. The "Giá trị đã xuất" stat cards already summed invoice values.
+- `TanStackDataTable`: pinned cells of a bottom-docked totals row get
+  `zIndex: 3` — `footerCell` gave every totals cell 2, so scrolled cells
+  painted over the pinned ones ("1 Hợp đồng" over "Tổng 9 lô").
+- `recordLinkStyles` does not bold/colour a `Link` in the Meta theme (the
+  inner `Text` sets its own weight/colour) — use `weight` / `color` props.
+- Checked in Chrome on 26KCT14: link → LOT-01 detail; totals $765,805 /
+  20,003,088,856 đ match the cards; pinned columns stay while scrolling,
+  totals row no longer overlaps.
+- Not included: uncommitted local edits by someone else (Điều kiện TT
+  commented out in `contract-shipments-panel.jsx`, ETD/ETA labels in
+  `shipment-list-panel.jsx`).
+- verify.sh passed (`harness/runs/20260925-020803-337494/`).
+
 ## 2026-09-25 — Payments table: wider Mã đợt, full "Thao tác" header
 
 - `MetaPaymentProgressPanel` table: "Mã đợt" `proportional(0.8)` (121px,

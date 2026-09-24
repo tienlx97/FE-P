@@ -301,8 +301,8 @@ export function ContractShipmentsPanel({ contract }) {
         quantityAmount: s.quantityAmount,
         quantityUnit: unit,
         status: s.status,
-        declarationValue: s.declarationValue,
-        declarationValueVnd: s.declarationValueVnd,
+        invoiceValue: s.invoiceValue,
+        invoiceValueVnd: s.invoiceValue * s.declarationExchangeRate,
         logisticsCost: s.costs.reduce((sum, cost) => sum + cost.amount, 0),
         vgmKg: vgmTotal,
         vgm: vgms.length ? `${formatMoney(toTons(vgmTotal))} Tấn` : BLANK,
@@ -319,8 +319,8 @@ export function ContractShipmentsPanel({ contract }) {
         tone: toneForShipmentStatus(s.status),
       },
       value: {
-        usd: formatMoney(s.declarationValue),
-        vnd: formatMoney(s.declarationValueVnd),
+        usd: formatMoney(s.invoiceValue),
+        vnd: formatMoney(s.invoiceValue * s.declarationExchangeRate),
         rate: formatMoney(s.declarationExchangeRate),
         scaleTag: quantity,
         weight: `${formatMoney(tons)} Tấn`,
@@ -391,6 +391,9 @@ export function ContractShipmentsPanel({ contract }) {
             contractNumber={contract.contractNumber}
             declarationCurrency={contract.currency}
             onView={onViewShipment}
+            shipmentHref={(id) =>
+              `/logistics/contract/${contract.id}/shipment/${id}`
+            }
             onEdit={(id) =>
               setDialog({
                 shipment: shipments.find((s) => s.id === id) ?? null,

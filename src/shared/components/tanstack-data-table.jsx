@@ -86,6 +86,11 @@ const styles = stylex.create({
     position: 'sticky',
     zIndex: 2,
   },
+  // Every docked-totals cell is sticky at `zIndex: 2` (`footerCell`, which
+  // also overrides `pinned`'s 1), so without this a pinned totals cell ties
+  // with the cells scrolling beneath it and the later ones in the DOM paint
+  // over it ("1 Hợp đồng" over "Tổng 9 lô", reported 2026-09-25).
+  pinnedFooterCell: { zIndex: 3 },
   totalsRowDividerTop: {
     borderBlockStartColor: colorVars['--color-border-emphasized'],
     borderBlockStartStyle: 'solid',
@@ -574,6 +579,9 @@ export function TanStackDataTable({
                 totalsCellXstyle,
                 pinStyle(cell.column),
                 totalsPosition === 'bottom' && styles.footerCell,
+                totalsPosition === 'bottom' &&
+                  cell.column.getIsPinned() &&
+                  styles.pinnedFooterCell,
                 (dividers === 'grid' || dividers === 'columns') &&
                   styles.cellDivider,
               ]}
