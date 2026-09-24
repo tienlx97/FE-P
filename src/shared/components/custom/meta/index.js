@@ -51,5 +51,6 @@ export {
 export { MetaStatusBadge } from './status-badge.jsx';
 export { MetaTabNav } from './tab-nav.jsx';
 export { MetaThemeProvider } from './theme-provider.jsx';
+export { MetaVgmPanel } from './vgm-panel.jsx';
 // The *built* theme (`meta.js`), same object `MetaThemeProvider` applies.
 export { metaTheme } from './meta.js';

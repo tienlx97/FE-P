@@ -1,5 +1,50 @@
 # Progress Log
 
+## 2026-09-24 — Shipment detail page, tab "VGM" (Figma 120:9075)
+
+- The "VGM" tab (renamed from "VGM & Container") is now one full-width
+  Meta card, `MetaVgmPanel` (new shared block): accent-bar title + count,
+  "Xuất Excel" / "Thêm VGM"; a banner of 3 metric tiles (containers with
+  type mix, total VGM kg + tonnes, declaration rate); a dense edge-to-edge
+  table (STT, nhà vận chuyển, ngày đóng, loại cont pill, số container,
+  seal with lock icon, max gross / tare / G.W / VGM in mono, VGM in cobalt,
+  edit / delete) with a tinted "Σ Tổng cộng" footer.
+  `ShipmentVgmPanel` feeds it (add / edit dialog, delete confirmation,
+  xlsx export). Totals in `config/shipment-vgm-summary.js` (+2 unit tests).
+  `ShipmentVgmSection` is unchanged for the dialog / expanded-row uses.
+- Differences from Figma: no "Nhập từ Excel" (no import endpoint /
+  parser; the panel accepts `onImport` once one exists); "Tỷ lệ khai báo"
+  = records with VGM > 0 / `quantityAmount` for Cont shipments ("đã khai
+  VGM"). VGM records have no approval state, so it can't say "đã duyệt".
+  LCL shows "—". Container labels come from the enum (20' / 40'HC, no
+  "GP"). The 11px Figma labels use the 12px scale (golden rule #16).
+  The totals label is "Σ Tổng cộng" (the count is in the next cell).
+- Checked in Chrome on 26KCT03/LOT-01 (5 records): desktop matches the
+  frame; at 390px the page is 376px wide (no page scroll), the tiles
+  stack and the table scrolls inside the card with no clipped cells
+  (cells lift Astryx's `max-width: 0` for the auto layout). The "Thêm VGM"
+  dialog opens; nothing saved. No console errors. Gotcha: Astryx `Table`
+  bleeds on its own when it is the first/last child of a Card, so don't
+  wrap it in another bleed container (that clips the header).
+- verify.sh passed (`harness/runs/20260924-135150-1684/`, desktop
+  screenshot `vgm-tab-desktop.jpg`). Not committed.
+- Column balance pass: header cells carry the Figma column shares
+  (`columnWidths`, sum 100%) so spare width spreads like the frame
+  (at 2560px the old auto layout left a gap between "Số seal" and
+  "Max gross"); dropped the fixed `minWidth: 72rem`, cell inline padding
+  3 → 2, caps tracking 0.05 → 0.04em, carrier cell may wrap (min
+  2 × spacing-12), and header labels may wrap (`headCell`
+  `whiteSpace: normal` — Astryx `<th>` is nowrap, and the caps labels,
+  not the data, set the min widths). Measured with the card at 1180px
+  (≈1568px viewport): before, a 1195px table in a 1074px scroller;
+  after, 1074 / 1074, no scroll, headers on 2 lines, rows still one
+  line. At 2560px, unchanged single-line headers, Figma shares.
+  Known leftover: the Meta theme's `table-scroll-wrapper`
+  `scrollbar-gutter: stable` keeps ~10px empty at the table's right edge
+  (header / totals tint stop short of the card edge); it's theme-wide on
+  purpose and `Table` has no prop for its wrapper, so left as is.
+  verify.sh passed (`harness/runs/20260924-142914-1596/`).
+
 ## 2026-09-24 — Shipment journey connected to backend
 
 - The shipment detail page now reads the resolved Incoterm journey from

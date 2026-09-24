@@ -48,7 +48,7 @@ import { ShipmentEmptyReturnDialog } from './shipment-empty-return-dialog.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 import { ShipmentMilestoneDialog } from './shipment-milestone-dialog.jsx';
 import { ShipmentOverviewPanel } from './shipment-overview-panel.jsx';
-import { ShipmentVgmSection } from './shipment-vgm-section.jsx';
+import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
 
 /** @typedef {'overview' | 'vgm' | 'costs'} ShipmentDetailTab */
 
@@ -56,7 +56,7 @@ import { ShipmentVgmSection } from './shipment-vgm-section.jsx';
 // document storage for shipments yet.
 const TAB_LABELS = {
   overview: 'Tổng quan',
-  vgm: 'VGM & Container',
+  vgm: 'VGM',
   costs: 'Chi phí logistics',
 };
 
@@ -502,13 +502,13 @@ function ShipmentDetailBody({
             />
           ) : null}
           {activeTab === 'vgm' ? (
-            <Card padding={6}>
-              <ShipmentVgmSection
-                contractId={contract.id}
-                shipmentId={shipment.id}
-                customersById={customersById}
-              />
-            </Card>
+            <ShipmentVgmPanel
+              contractId={contract.id}
+              shipment={shipment}
+              vgms={vgms}
+              isLoading={vgmsQuery.isLoading}
+              customersById={customersById}
+            />
           ) : null}
           {activeTab === 'costs' ? (
             <Card padding={6}>

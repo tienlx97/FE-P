@@ -113,7 +113,7 @@ export function ShipmentEmptyReturnDialog({
     >
       {containers.length === 0 ? (
         <Text color="secondary">
-          Lô hàng chưa có container — thêm ở tab VGM & Container.
+          Lô hàng chưa có container — thêm ở tab VGM.
         </Text>
       ) : (
         <VStack gap={3} hAlign="stretch">
