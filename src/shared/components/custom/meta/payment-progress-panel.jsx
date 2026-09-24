@@ -644,12 +644,11 @@ const styles = stylex.create({
   value: {
     lineHeight: 1,
   },
+  // Same track as the overview tab's metric cards
+  // (`overview-summary-card.jsx` `track` + `metricTrack`).
   track: {
-    backgroundColor: 'var(--meta-surface-container-low)',
-    borderColor: 'var(--color-border)',
+    backgroundColor: 'var(--meta-hairline)',
     borderRadius: 'var(--radius-full)',
-    borderStyle: 'solid',
-    borderWidth: 'var(--border-width)',
     height: 'var(--spacing-2)',
     overflow: 'hidden',
     padding: 'var(--spacing-0-5)',
@@ -714,7 +713,7 @@ const styles = stylex.create({
 
 const dotTones = stylex.create({
   accent: { backgroundColor: 'var(--color-accent)' },
-  success: { backgroundColor: 'var(--meta-emerald-dot)' },
+  success: { backgroundColor: 'var(--meta-emerald-fill)' },
   amber: { backgroundColor: 'var(--meta-amber)' },
 });
 
@@ -735,6 +734,6 @@ const bubbleTones = stylex.create({
 
 const segmentTones = stylex.create({
   accent: { backgroundColor: 'var(--color-accent)' },
-  success: { backgroundColor: 'var(--meta-emerald-dot)' },
+  success: { backgroundColor: 'var(--meta-emerald-fill)' },
   amber: { backgroundColor: 'var(--meta-amber)' },
 });

@@ -1,5 +1,16 @@
 # Progress Log
 
+## 2026-09-25 — Payments tab progress bars match the overview
+
+- `MetaPaymentProgressPanel` KPI bars now use the overview metric track:
+  `--meta-hairline` track, no border (was surface-container-low + border),
+  8px / 2px padding / full radius; paid fill `--meta-emerald-fill` (was
+  `--meta-emerald-dot`). Accent and amber fills unchanged.
+- Checked in Chrome on 26KCT14: computed styles of both tabs' bars match
+  (track rgb(240,242,245), no border, 8px, 2px padding; fills rgb(0,100,224)
+  / rgb(5,150,105)).
+- verify.sh passed (`harness/runs/20260925-014444-297311/`).
+
 ## 2026-09-25 — Contract overview "Đã xuất (VNĐ)" without exchange rate
 
 - `ContractOverviewPanel`: the "Đã xuất (VNĐ)" metric no longer shows the
