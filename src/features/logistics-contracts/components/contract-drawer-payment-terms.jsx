@@ -67,7 +67,7 @@ export function ContractDrawerPaymentTerms({
   const isBalanced = Math.abs(totalPercent - 100) < 0.01;
 
   return (
-    <MetaFormCard>
+    <MetaFormCard variant="default">
       <HStack gap={2} vAlign="end" wrap="nowrap">
         <StackItem size="fill" xstyle={styles.minZero}>
           <MultiSelector

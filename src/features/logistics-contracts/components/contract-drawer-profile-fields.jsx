@@ -427,6 +427,7 @@ export function ContractDrawerProfileFields({
 
         <MetaFormSection index={3} title="Các bên tham gia hợp đồng">
           <MetaFormCard
+            variant="default"
             header={
               <>
                 <MetaPill label="BÊN BÁN (SELLER)" tone="accent" />
@@ -454,6 +455,7 @@ export function ContractDrawerProfileFields({
             />
           </MetaFormCard>
           <MetaFormCard
+            variant="default"
             header={
               <>
                 <HStack gap={2} vAlign="center" wrap="wrap">

@@ -36,10 +36,7 @@ import { labelForContractType } from '../config/contract-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
-import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { useContractQuery } from '../hooks/use-contracts-query.js';
-import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
-import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { CommissionFormDrawer } from './commission-form-drawer.jsx';
 import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractBoqPanel } from './contract-boq-panel.jsx';
@@ -232,7 +229,7 @@ function ContractDetailBody({
   const hasLogisticsSecret = useSessionPermissions().includes(
     LOGISTICS_SECRET_PERMISSION,
   );
-  const detailTabs = useDetailTabs(contract, hasLogisticsSecret);
+  const detailTabs = useDetailTabs(hasLogisticsSecret);
   // A `?tab=boq` link opened without the permission falls back to overview.
   const visibleTab =
     activeTab === 'boq' && !hasLogisticsSecret ? 'overview' : activeTab;
@@ -370,65 +367,11 @@ function ContractDetailBody({
 }
 
 /**
- * Tab bar entries with the Figma's count pills ("4 đợt", "3 FCL", "2",
- * "3%"), read from the same cached queries the panels use.
- * @param {import('../types/index.js').Contract} contract
+ * Tab bar entries — plain labels + icons, no count pills.
  * @param {boolean} hasLogisticsSecret shows the BOQ tab
  */
-function useDetailTabs(contract, hasLogisticsSecret) {
-  const schedulesQuery = usePaymentSchedulesQuery(contract.id);
-  const shipmentsQuery = useShipmentsQuery(contract.id);
-  const annexesQuery = useContractAnnexesQuery(contract.id);
-  const commissionQuery = useCommissionQuery(contract.id);
-
-  const scheduleCount = schedulesQuery.data?.success
-    ? schedulesQuery.data.schedules.length
-    : 0;
-  const shipments = shipmentsQuery.data?.success
-    ? shipmentsQuery.data.shipments
-    : [];
-  const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
-  const settlementValue =
-    (contract.contractValue ?? 0) +
-    annexes.reduce((total, annex) => {
-      if (annex.type === 'AmountIncrease') return total + annex.amount;
-      if (annex.type === 'AmountDecrease') return total - annex.amount;
-      return total;
-    }, 0);
-  const commission =
-    commissionQuery.data?.success && commissionQuery.data.exists
-      ? commissionQuery.data.commission
-      : null;
-
-  const isAllFcl =
-    shipments.length > 0 &&
-    shipments.every((shipment) => shipment.type === 'FCL');
-  /** @type {Partial<Record<DetailTab, { count: string, countTone?: 'neutral' | 'accent' | 'success' }>>} */
-  const counts = {
-    payments: scheduleCount > 0 ? { count: `${scheduleCount} đợt` } : undefined,
-    shipments:
-      shipments.length > 0
-        ? {
-            count: `${shipments.length} ${isAllFcl ? 'FCL' : 'lô'}`,
-            countTone: 'accent',
-          }
-        : undefined,
-    annexes: annexes.length > 0 ? { count: String(annexes.length) } : undefined,
-    commission:
-      commission && settlementValue > 0
-        ? {
-            count: `${Math.round((commission.value / settlementValue) * 10000) / 100}%`,
-            countTone: 'success',
-          }
-        : undefined,
-  };
-
+function useDetailTabs(hasLogisticsSecret) {
   return TAB_VALUES.filter((id) => id !== 'boq' || hasLogisticsSecret).map(
-    (id) => ({
-      id,
-      label: TAB_LABELS[id],
-      icon: TAB_ICONS[id],
-      ...counts[id],
-    }),
+    (id) => ({ id, label: TAB_LABELS[id], icon: TAB_ICONS[id] }),
   );
 }

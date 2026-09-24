@@ -83,17 +83,19 @@ export function MetaFormSection({
 /**
  * Muted inset card inside a `MetaFormSection` (Figma 103:4983: "BÊN BÁN",
  * "BÊN MUA", payment-terms block). `header` sits above a hairline.
+ * `variant="default"` swaps the muted wash for a white, bordered card.
  *
  * @param {{
  *   header?: import('react').ReactNode,
+ *   variant?: 'muted' | 'default',
  *   children: import('react').ReactNode,
  * }} props
  */
-export function MetaFormCard({ header, children }) {
+export function MetaFormCard({ header, variant = 'muted', children }) {
   return (
     // Astryx `Card` (not a padded stack) so nested edge-to-edge content —
     // e.g. the extra-fields `Table` — bleeds to this card's own padding.
-    <Card variant="muted" padding={4} xstyle={styles.card}>
+    <Card variant={variant} padding={4} xstyle={styles.card}>
       <VStack gap={4} hAlign="stretch">
         {header ? (
           <HStack

@@ -328,16 +328,32 @@ function ShipmentCard({ shipment: s, declarationCurrency, onMenu, href }) {
               </Text>
             </HStack>
             <Divider />
-            <Grid columns={{ minWidth: 130, max: 2 }} gap={2}>
-              {s.costs.items.map(([label, value]) => (
-                <HStack key={label} hAlign="between" gap={2} wrap="wrap">
-                  <Text color="secondary">{label}</Text>
-                  <Text weight="semibold" hasTabularNumbers>
-                    {value}
-                  </Text>
-                </HStack>
-              ))}
-            </Grid>
+            {/* One cost type per row. The list is taken out of flow so it
+                never sets the row height: it fills whatever height the
+                sibling panels give and scrolls the rest. */}
+            <VStack xstyle={styles.costListFrame}>
+              <VStack
+                gap={2}
+                hAlign="stretch"
+                isScrollable
+                xstyle={styles.costList}
+              >
+                {s.costs.items.map(([label, value]) => (
+                  <HStack key={label} hAlign="between" vAlign="center" gap={3}>
+                    <Text color="secondary" maxLines={1}>
+                      {label}
+                    </Text>
+                    <Text
+                      weight="semibold"
+                      hasTabularNumbers
+                      xstyle={styles.noShrink}
+                    >
+                      {value}
+                    </Text>
+                  </HStack>
+                ))}
+              </VStack>
+            </VStack>
           </SummaryPanel>
         </Grid>
 
@@ -368,7 +384,7 @@ function ShipmentCard({ shipment: s, declarationCurrency, onMenu, href }) {
 function SummaryPanel({ children }) {
   return (
     <Card padding={4} elevation="none" xstyle={styles.innerCard}>
-      <VStack gap={2} hAlign="stretch">
+      <VStack gap={2} hAlign="stretch" height="100%">
         {children}
       </VStack>
     </Card>
@@ -529,6 +545,21 @@ const styles = stylex.create({
     borderColor: 'var(--color-border)',
     borderRadius: 'var(--radius-element)',
   },
+  // ~5 cost rows, then the list scrolls.
+  // Grows into the panel's leftover height; the floor keeps ~3 rows
+  // visible when the sibling panels are short.
+  costListFrame: {
+    flexBasis: 0,
+    flexGrow: 1,
+    minHeight: 'calc(var(--spacing-10) * 2.5)',
+    position: 'relative',
+  },
+  costList: {
+    inset: 0,
+    paddingInlineEnd: 'var(--spacing-2)',
+    position: 'absolute',
+  },
+  noShrink: { flexShrink: 0, whiteSpace: 'nowrap' },
   partnersArea: {
     backgroundColor: 'var(--meta-surface-container-low)',
     borderColor: 'var(--color-border)',

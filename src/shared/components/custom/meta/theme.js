@@ -283,14 +283,22 @@ export const metaTheme = defineTheme({
         height: 'var(--meta-field-height, var(--spacing-8))',
       },
     },
+    // Same corner as `text-input` / `date-input` so form fields line up;
+    // only the list-toolbar filters (lg) and pagination (sm) stay pills.
     selector: {
       base: {
         backgroundColor: 'var(--color-background-surface)',
         borderColor: 'var(--color-border)',
-        borderRadius: 'var(--meta-field-radius, var(--radius-full))',
+        borderRadius: 'var(--meta-field-radius, var(--radius-element))',
+      },
+      'size:sm': {
+        borderRadius: 'var(--radius-full)',
       },
       'size:md': {
         height: 'var(--meta-field-height, var(--spacing-8))',
+      },
+      'size:lg': {
+        borderRadius: 'var(--radius-full)',
       },
     },
     'multi-selector': {

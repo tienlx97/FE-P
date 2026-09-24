@@ -7,17 +7,28 @@ import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 
-const TAB_WIDTHS = ['9rem', '10rem', '10rem', '8.5rem', '11rem'];
-const KPI_CARDS = [0, 1, 2];
-const TABLE_ROWS = [0, 1, 2, 3];
+// One per real tab: Tổng quan, Tiến độ thanh toán, Lô hàng, Phụ lục,
+// Hoa hồng, BOQ.
+const TAB_WIDTHS = ['9rem', '10rem', '9rem', '8rem', '10rem', '5rem'];
+const KPI_CARDS = [0, 1, 2, 3];
+const INSTALLMENTS = [0, 1, 2];
+// Rows per card in each of `MetaContractInfoGrid`'s three columns.
+const INFO_COLUMNS = [
+  [5, 3],
+  [5, 2],
+  [4, 3],
+];
 
 /**
  * "Meta" contract-detail page placeholder, shown while the contract itself
  * loads (instead of a lone spinner): the header card (code, pills, project
- * line, action buttons), the pill tab strip, then a generic tab body —
- * a row of KPI cards and a table card — in the same shapes and spacing as
- * the real page so nothing jumps when data arrives. Astryx `Skeleton`
- * blocks inside `Card` / `Grid` / stacks (golden rule #15).
+ * line, action buttons), the pill tab strip, then the default "Tổng quan"
+ * tab — `MetaOverviewSummaryCard` (4 KPI cards, payment progress,
+ * installments) and `MetaContractInfoGrid`'s three card columns — using
+ * the same grids / breakpoints as the real page so nothing jumps when data
+ * arrives at any desktop width. Text bars size in `%` / `clamp()`, never a
+ * fixed width alone. Astryx `Skeleton` blocks inside `Card` / `Grid` /
+ * stacks (golden rule #15).
  *
  * @param {{ label?: string }} props
  */
@@ -26,46 +37,41 @@ export function MetaContractDetailSkeleton({ label = 'Đang tải hợp đồng'
     <VStack gap={3} hAlign="stretch" aria-busy="true" aria-label={label}>
       <Card padding={5} xstyle={styles.card}>
         <HStack hAlign="between" vAlign="center" gap={4} wrap="wrap">
-          <VStack gap={2} hAlign="start">
+          <VStack gap={2} hAlign="stretch" xstyle={styles.headerText}>
             <HStack gap={2} vAlign="center">
-              <Skeleton width="11rem" height="var(--spacing-7)" radius={2} />
               <Skeleton
-                width="6rem"
+                width="clamp(6rem, 30%, 9rem)"
+                height="var(--spacing-7)"
+                radius={2}
+              />
+              <Skeleton
+                width="clamp(4rem, 18%, 6rem)"
                 height="var(--spacing-6)"
                 radius="rounded"
               />
               <Skeleton
-                width="8rem"
+                width="clamp(5rem, 24%, 8rem)"
                 height="var(--spacing-6)"
                 radius="rounded"
               />
             </HStack>
             <Skeleton
-              width="18rem"
+              width="clamp(10rem, 55%, 16rem)"
               height="var(--spacing-4)"
               radius={2}
               index={1}
             />
           </VStack>
           <HStack gap={2} vAlign="center">
-            <Skeleton
-              width="6.5rem"
-              height="var(--spacing-9)"
-              radius="rounded"
-              index={1}
-            />
-            <Skeleton
-              width="7rem"
-              height="var(--spacing-9)"
-              radius="rounded"
-              index={1}
-            />
-            <Skeleton
-              width="8.5rem"
-              height="var(--spacing-9)"
-              radius="rounded"
-              index={1}
-            />
+            {['6.5rem', '7rem', '8.5rem'].map((width) => (
+              <Skeleton
+                key={width}
+                width={width}
+                height="var(--spacing-9)"
+                radius="rounded"
+                index={1}
+              />
+            ))}
           </HStack>
         </HStack>
       </Card>
@@ -73,7 +79,7 @@ export function MetaContractDetailSkeleton({ label = 'Đang tải hợp đồng'
       <HStack gap={1.5} vAlign="center" wrap="wrap" xstyle={styles.tabs}>
         {TAB_WIDTHS.map((width, index) => (
           <Skeleton
-            key={width + index}
+            key={index}
             width={width}
             height="var(--spacing-9)"
             radius="rounded"
@@ -82,124 +88,160 @@ export function MetaContractDetailSkeleton({ label = 'Đang tải hợp đồng'
         ))}
       </HStack>
 
-      <Grid
-        columns={{ minWidth: 320, max: 3 }}
-        maxWidth="calc(3 * var(--meta-panel-card-max) + 2 * var(--spacing-5))"
-        gap={5}
-        xstyle={styles.kpiGrid}
-      >
-        {KPI_CARDS.map((index) => (
-          <Card key={index} padding={6} xstyle={styles.card}>
-            <VStack gap={4} hAlign="stretch">
-              <HStack hAlign="between" vAlign="center">
+      <OverviewCardSkeleton />
+      <InfoGridSkeleton />
+    </VStack>
+  );
+}
+
+/** `MetaOverviewSummaryCard`'s frame: title, 4 KPIs, progress, installments. */
+function OverviewCardSkeleton() {
+  return (
+    <Card padding={6} xstyle={styles.card}>
+      <VStack gap={5} hAlign="stretch">
+        <HStack gap={2} vAlign="center" xstyle={styles.titleRow}>
+          <Skeleton
+            width="var(--spacing-6)"
+            height="var(--spacing-6)"
+            radius="rounded"
+          />
+          <Skeleton
+            width="clamp(10rem, 30%, 18rem)"
+            height="var(--spacing-5)"
+            radius={2}
+          />
+        </HStack>
+
+        <Grid
+          columns={{ minWidth: 280, max: 4 }}
+          maxWidth="calc(4 * var(--meta-kpi-card-max) + 3 * var(--spacing-4))"
+          gap={4}
+          xstyle={styles.singleColumnOnPhone}
+        >
+          {KPI_CARDS.map((index) => (
+            <VStack key={index} gap={4} hAlign="stretch" xstyle={styles.kpi}>
+              <HStack hAlign="between" vAlign="center" gap={2}>
                 <Skeleton
-                  width="40%"
-                  height="var(--spacing-4)"
+                  width="45%"
+                  height="var(--spacing-3)"
                   radius={2}
                   index={index}
                 />
                 <Skeleton
-                  width="var(--spacing-9)"
-                  height="var(--spacing-9)"
-                  radius="rounded"
+                  width="var(--spacing-8)"
+                  height="var(--spacing-8)"
+                  radius={2}
                   index={index}
                 />
               </HStack>
               <Skeleton
-                width="55%"
+                width="60%"
                 height="var(--spacing-7)"
                 radius={2}
                 index={index}
               />
               <Skeleton
-                height="var(--spacing-2)"
+                height="var(--spacing-1)"
                 radius="rounded"
-                index={index}
-              />
-              <Skeleton
-                width="65%"
-                height="var(--spacing-4)"
-                radius={2}
                 index={index}
               />
             </VStack>
-          </Card>
-        ))}
-      </Grid>
+          ))}
+        </Grid>
 
-      <Card padding={6} xstyle={styles.card}>
-        <VStack gap={0} hAlign="stretch">
-          <HStack
-            hAlign="between"
-            vAlign="center"
-            gap={3}
-            xstyle={styles.tableTitle}
-          >
-            <HStack gap={3} vAlign="center">
-              <Skeleton
-                width="var(--spacing-8)"
-                height="var(--spacing-8)"
-                radius="rounded"
-              />
-              <VStack gap={1.5}>
-                <Skeleton width="14rem" height="var(--spacing-5)" radius={2} />
-                <Skeleton width="22rem" height="var(--spacing-3)" radius={2} />
-              </VStack>
-            </HStack>
+        <VStack gap={3} hAlign="stretch" xstyle={styles.progressSection}>
+          <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
             <Skeleton
-              width="11rem"
-              height="var(--spacing-9)"
-              radius="rounded"
+              width="clamp(10rem, 25%, 14rem)"
+              height="var(--spacing-5)"
+              radius={2}
+            />
+            <Skeleton
+              width="clamp(10rem, 25%, 16rem)"
+              height="var(--spacing-4)"
+              radius={2}
             />
           </HStack>
-          {TABLE_ROWS.map((index) => (
-            <HStack
-              key={index}
-              gap={6}
-              vAlign="center"
-              xstyle={styles.tableRow}
-            >
-              <Skeleton
-                width="10%"
-                height="var(--spacing-4)"
-                radius={2}
-                index={index}
-              />
-              <Skeleton
-                width="12%"
-                height="var(--spacing-4)"
-                radius={2}
-                index={index}
-              />
-              <Skeleton
-                width="16%"
-                height="var(--spacing-4)"
-                radius={2}
-                index={index}
-              />
-              <Skeleton
-                width="10%"
-                height="var(--spacing-4)"
-                radius={2}
-                index={index}
-              />
-              <Skeleton
-                width="9%"
-                height="var(--spacing-6)"
-                radius="rounded"
-                index={index}
-              />
-              <Skeleton
-                width="22%"
-                height="var(--spacing-4)"
-                radius={2}
-                index={index}
-              />
-            </HStack>
+          <Skeleton
+            height="calc(var(--spacing-2) + var(--spacing-0-5))"
+            radius="rounded"
+          />
+          <Grid columns={{ minWidth: 180, repeat: 'fill' }} gap={3}>
+            {INSTALLMENTS.map((index) => (
+              <VStack
+                key={index}
+                gap={2}
+                hAlign="stretch"
+                xstyle={styles.installment}
+              >
+                <Skeleton
+                  width="50%"
+                  height="var(--spacing-4)"
+                  radius={2}
+                  index={index}
+                />
+                <Skeleton
+                  width="70%"
+                  height="var(--spacing-5)"
+                  radius={2}
+                  index={index}
+                />
+              </VStack>
+            ))}
+          </Grid>
+        </VStack>
+      </VStack>
+    </Card>
+  );
+}
+
+/** `MetaContractInfoGrid`'s frame: three columns of titled cards. */
+function InfoGridSkeleton() {
+  return (
+    <Grid
+      columns={{ minWidth: 340, max: 3 }}
+      gap={5}
+      xstyle={[styles.singleColumnOnPhone, styles.infoGrid]}
+    >
+      {INFO_COLUMNS.map((cards, column) => (
+        <VStack key={column} gap={4} hAlign="stretch">
+          <Skeleton
+            width="clamp(8rem, 55%, 14rem)"
+            height="var(--spacing-4)"
+            radius={2}
+            index={column}
+          />
+          {cards.map((rows, card) => (
+            <Card key={card} padding={5} xstyle={styles.card}>
+              <VStack gap={3} hAlign="stretch">
+                <Skeleton
+                  width="45%"
+                  height="var(--spacing-4)"
+                  radius={2}
+                  index={column + card}
+                />
+                {Array.from({ length: rows }, (_, row) => (
+                  <HStack key={row} hAlign="between" vAlign="center" gap={3}>
+                    <Skeleton
+                      width="30%"
+                      height="var(--spacing-3)"
+                      radius={2}
+                      index={column + row}
+                    />
+                    <Skeleton
+                      width="40%"
+                      height="var(--spacing-3)"
+                      radius={2}
+                      index={column + row}
+                    />
+                  </HStack>
+                ))}
+              </VStack>
+            </Card>
           ))}
         </VStack>
-      </Card>
-    </VStack>
+      ))}
+    </Grid>
   );
 }
 
@@ -207,25 +249,50 @@ const styles = stylex.create({
   card: {
     boxShadow: 'var(--meta-shadow-card)',
   },
+  // Code / pills / project line take what the action buttons leave.
+  headerText: {
+    flexBasis: 'calc(var(--spacing-10) * 8)',
+    flexGrow: 1,
+    minWidth: 0,
+  },
   tabs: {
     paddingBlock: 'var(--spacing-1)',
   },
-  kpiGrid: {
+  titleRow: {
+    borderBottomColor: 'var(--color-border)',
+    borderBottomStyle: 'solid',
+    borderBottomWidth: 'var(--border-width)',
+    paddingBottom: 'var(--spacing-3)',
+  },
+  singleColumnOnPhone: {
     gridTemplateColumns: {
       default: null,
       '@media (max-width: 599px)': 'minmax(0, 1fr)',
     },
   },
-  tableTitle: {
-    borderBottomColor: 'var(--color-border)',
-    borderBottomStyle: 'solid',
-    borderBottomWidth: 'var(--border-width)',
-    paddingBottom: 'var(--spacing-5)',
+  infoGrid: {
+    alignItems: 'start',
+    width: '100%',
   },
-  tableRow: {
-    borderBottomColor: 'var(--color-border)',
-    borderBottomStyle: 'solid',
-    borderBottomWidth: 'var(--border-width)',
-    paddingBlock: 'var(--spacing-5)',
+  // `MetaOverviewSummaryCard`'s metric tile frame.
+  kpi: {
+    borderColor: 'var(--color-border)',
+    borderRadius: 'var(--radius-container)',
+    borderStyle: 'solid',
+    borderWidth: 'var(--border-width)',
+    padding: 'var(--spacing-4)',
+  },
+  progressSection: {
+    borderTopColor: 'var(--color-border)',
+    borderTopStyle: 'solid',
+    borderTopWidth: 'var(--border-width)',
+    paddingTop: 'var(--spacing-3)',
+  },
+  installment: {
+    borderColor: 'var(--color-border)',
+    borderRadius: 'var(--radius-container)',
+    borderStyle: 'solid',
+    borderWidth: 'var(--border-width)',
+    padding: 'var(--spacing-3)',
   },
 });
