@@ -38,11 +38,11 @@ import { formatVndAmount } from '../config/currencies.js';
 import { useShipmentCostItemTemplatesQuery } from '../hooks/use-shipment-cost-item-templates-query.js';
 import { useShipmentCostLineForm } from '../hooks/use-shipment-cost-line-form.js';
 
-// Figma 125:11995 drawer width.
-const DRAWER_WIDTH = 640;
+// Figma 125:11995 is 640px; widened on request (roomier cards / text).
+const DRAWER_WIDTH = 800;
 const NAME_MAX = 200;
 const NOTE_MAX = 500;
-const TWO_COLUMNS = { minWidth: 220, max: 2 };
+const TWO_COLUMNS = { minWidth: 260, max: 2 };
 
 /** Figma 125:12089 — Cost Nature options with their hint line. */
 const COST_NATURES = /** @type {const} */ ([
@@ -193,11 +193,11 @@ export function ShipmentCostLineDrawer({
                     title="Phân loại"
                     meta={<MetaPill label="Bắt buộc" tone="accent" />}
                   >
-                    <VStack gap={2} hAlign="stretch">
+                    <VStack gap={3} hAlign="stretch">
                       <FieldLabel label="Nhóm chi phí" isRequired />
                       <Grid
                         columns={TWO_COLUMNS}
-                        gap={2}
+                        gap={3}
                         role="radiogroup"
                         aria-label="Nhóm chi phí"
                       >
@@ -212,7 +212,7 @@ export function ShipmentCostLineDrawer({
                               onChange={() =>
                                 setField('costCategoryId', category.id)
                               }
-                              padding={2}
+                              padding={3}
                               xstyle={[
                                 styles.option,
                                 isSelected && styles.optionSelected,
@@ -226,7 +226,7 @@ export function ShipmentCostLineDrawer({
                                 >
                                   <Text
                                     as="span"
-                                    size="xsm"
+                                    size="sm"
                                     type="code"
                                     weight="bold"
                                     xstyle={[
@@ -239,13 +239,13 @@ export function ShipmentCostLineDrawer({
                                   {isSelected ? (
                                     <Icon
                                       icon={CircleCheck}
-                                      size="sm"
+                                      size="md"
                                       color="accent"
                                     />
                                   ) : null}
                                 </HStack>
                                 <Text
-                                  size="sm"
+                                  size="base"
                                   weight="semibold"
                                   color={isSelected ? 'accent' : 'primary'}
                                   maxLines={2}
@@ -260,11 +260,11 @@ export function ShipmentCostLineDrawer({
                       <FieldError message={fieldStatuses.costCategoryId} />
                     </VStack>
 
-                    <VStack gap={2} hAlign="stretch">
+                    <VStack gap={3} hAlign="stretch">
                       <FieldLabel label="Cost Nature" isRequired />
                       <Grid
                         columns={TWO_COLUMNS}
-                        gap={2}
+                        gap={3}
                         role="radiogroup"
                         aria-label="Cost Nature"
                       >
@@ -279,7 +279,7 @@ export function ShipmentCostLineDrawer({
                               onChange={() =>
                                 setField('costNature', nature.value)
                               }
-                              padding={2}
+                              padding={3}
                               xstyle={[
                                 styles.option,
                                 isSelected &&
@@ -310,7 +310,7 @@ export function ShipmentCostLineDrawer({
                                 </HStack>
                                 <VStack gap={0.5}>
                                   <Text
-                                    size="sm"
+                                    size="base"
                                     weight="bold"
                                     color={
                                       isSelected && isAbnormal
@@ -321,7 +321,7 @@ export function ShipmentCostLineDrawer({
                                     {nature.label}
                                   </Text>
                                   <Text
-                                    size="xsm"
+                                    size="sm"
                                     color={
                                       isSelected && isAbnormal
                                         ? 'meta-amber'
@@ -363,7 +363,7 @@ export function ShipmentCostLineDrawer({
                         width="100%"
                       />
                       <VStack gap={1.5} hAlign="stretch" xstyle={styles.hints}>
-                        <Text size="xsm" color="meta-subtle">
+                        <Text size="sm" color="meta-subtle">
                           {!selectedCategory
                             ? 'Chọn nhóm chi phí để xem gợi ý'
                             : suggestions.length > 0
@@ -376,7 +376,7 @@ export function ShipmentCostLineDrawer({
                               <Token
                                 key={template.id}
                                 label={template.name}
-                                size="sm"
+                                size="md"
                                 xstyle={[
                                   styles.chip,
                                   template.name === values.name.trim() &&
@@ -408,7 +408,7 @@ export function ShipmentCostLineDrawer({
                           status={fieldStatuses.amount}
                           statusVariant="detached"
                         />
-                        <Text size="xsm" color="meta-subtle">
+                        <Text size="sm" color="meta-subtle">
                           Chỉ ghi nhận bằng VNĐ
                         </Text>
                       </VStack>
@@ -475,23 +475,23 @@ export function ShipmentCostLineDrawer({
                         gap={3}
                         wrap="wrap"
                       >
-                        <Text size="sm" weight="medium" color="accent">
+                        <Text size="base" weight="medium" color="accent">
                           {selectedCategory.code}{' '}
                           {isEditing ? 'sau khi lưu' : 'sau khi thêm'}:{' '}
                           <Text
                             as="span"
-                            size="sm"
+                            size="base"
                             weight="bold"
                             hasTabularNumbers
                           >
                             {formatVndAmount(groupTotal)}
                           </Text>
                         </Text>
-                        <Text size="sm" weight="medium">
+                        <Text size="base" weight="medium">
                           Tổng chi phí Shipment:{' '}
                           <Text
                             as="span"
-                            size="sm"
+                            size="base"
                             weight="bold"
                             color="accent"
                             hasTabularNumbers
@@ -500,7 +500,7 @@ export function ShipmentCostLineDrawer({
                           </Text>
                         </Text>
                       </HStack>
-                      <Text size="xsm" weight="medium" color="meta-amber">
+                      <Text size="sm" weight="medium" color="meta-amber">
                         Trong đó Abnormal: {formatVndAmount(abnormalTotal)}
                       </Text>
                     </VStack>
@@ -612,21 +612,21 @@ function FieldLabel({
 }) {
   return (
     <HStack hAlign="between" vAlign="center" gap={2} aria-hidden>
-      <Text size="sm" weight="bold">
+      <Text size="base" weight="bold">
         {label}
         {isRequired ? (
-          <Text as="span" size="sm" weight="bold" color="meta-danger">
+          <Text as="span" size="base" weight="bold" color="meta-danger">
             {' *'}
           </Text>
         ) : null}
         {isOptional ? (
-          <Text as="span" size="sm" weight="bold" color="secondary">
+          <Text as="span" size="base" weight="bold" color="secondary">
             {' (Tuỳ chọn)'}
           </Text>
         ) : null}
       </Text>
       {counter ? (
-        <Text size="xsm" type="code" color="meta-subtle" hasTabularNumbers>
+        <Text size="sm" type="code" color="meta-subtle" hasTabularNumbers>
           {counter}
         </Text>
       ) : null}
@@ -641,7 +641,7 @@ function FieldLabel({
  */
 function FieldError({ message }) {
   return message ? (
-    <Text size="sm" color="meta-danger" role="alert">
+    <Text size="base" color="meta-danger" role="alert">
       {message.message}
     </Text>
   ) : null;
@@ -665,7 +665,7 @@ const styles = stylex.create({
   // lint rule just doesn't know them.
   fields: {
     // eslint-disable-next-line @stylexjs/valid-styles
-    '--meta-field-height': 'var(--spacing-9)',
+    '--meta-field-height': 'var(--spacing-10)',
     // eslint-disable-next-line @stylexjs/valid-styles
     '--meta-field-radius': 'var(--meta-radius-inset)',
   },
@@ -708,9 +708,9 @@ const styles = stylex.create({
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',
     flexShrink: 0,
-    height: 'calc(var(--spacing-3) + var(--spacing-0-5))',
-    marginTop: 'var(--spacing-0-5)',
-    width: 'calc(var(--spacing-3) + var(--spacing-0-5))',
+    height: 'var(--spacing-4)',
+    marginTop: 'var(--spacing-1)',
+    width: 'var(--spacing-4)',
   },
   radioStandard: {
     backgroundColor: 'var(--color-accent)',
@@ -723,8 +723,8 @@ const styles = stylex.create({
   radioDot: {
     backgroundColor: 'var(--color-background-card)',
     borderRadius: 'var(--radius-full)',
-    height: 'var(--spacing-1-5)',
-    width: 'var(--spacing-1-5)',
+    height: 'var(--spacing-2)',
+    width: 'var(--spacing-2)',
   },
   hints: {
     paddingTop: 'var(--spacing-1)',

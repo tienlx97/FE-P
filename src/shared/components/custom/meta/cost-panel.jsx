@@ -16,7 +16,6 @@ import {
   TableRow,
 } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
-import { VisuallyHidden } from '@astryxdesign/core/VisuallyHidden';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Info, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -62,7 +61,7 @@ const COLUMNS = /** @type {const} */ ([
   ['note', 'Ghi chú', 'start'],
   ['provider', 'Nhà cung cấp', 'start'],
   ['invoice', 'Số hoá đơn', 'start'],
-  ['actions', '', 'center'],
+  ['actions', 'Thao tác', 'center'],
 ]);
 
 /**
@@ -190,18 +189,14 @@ export function MetaCostPanel({
                       columnWidths[key],
                     ]}
                   >
-                    {header ? (
-                      <Text
-                        size="sm"
-                        weight="semibold"
-                        color="secondary"
-                        xstyle={styles.headLabel}
-                      >
-                        {header}
-                      </Text>
-                    ) : (
-                      <VisuallyHidden>Thao tác</VisuallyHidden>
-                    )}
+                    <Text
+                      size="sm"
+                      weight="semibold"
+                      color="secondary"
+                      xstyle={styles.headLabel}
+                    >
+                      {header}
+                    </Text>
                   </TableHeaderCell>
                 ))}
               </TableRow>
@@ -303,7 +298,13 @@ export function MetaCostPanel({
                       <TableCell xstyle={styles.cell}>
                         <OptionalText value={row.invoiceNumber} isCode />
                       </TableCell>
-                      <TableCell xstyle={[styles.cell, alignStyles.center]}>
+                      <TableCell
+                        xstyle={[
+                          styles.cell,
+                          styles.nowrap,
+                          alignStyles.center,
+                        ]}
+                      >
                         <HStack
                           gap={1}
                           vAlign="center"
@@ -470,6 +471,9 @@ const styles = stylex.create({
     paddingBlock: 'var(--spacing-4)',
     paddingInline: 'var(--spacing-3)',
   },
+  nowrap: {
+    whiteSpace: 'nowrap',
+  },
   groupRow: {
     backgroundColor: 'var(--meta-surface-container-low)',
   },
@@ -516,8 +520,8 @@ const columnWidths = stylex.create({
   name: { width: '12%' },
   amount: { width: '10%' },
   nature: { width: '9%' },
-  note: { width: '15%' },
+  note: { width: '14%' },
   provider: { width: '16%' },
   invoice: { width: '10%' },
-  actions: { width: '5%' },
+  actions: { width: '6%' },
 });

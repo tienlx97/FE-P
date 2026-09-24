@@ -1,5 +1,18 @@
 # Progress Log
 
+## 2026-09-24 — Cost drawer sizing + visible "Thao tác" column (user request)
+
+- `ShipmentCostLineDrawer` widened 640 → 800px; every text one step up
+  (xsm → sm, sm → base; suggestion tokens md); group / Cost Nature cards
+  padding 2 → 3, gaps 2 → 3, grid min column 220 → 260px, radio 16px;
+  fields 40px tall like the commission drawer.
+- Cost grid: the actions column now has a visible "Thao tác" header
+  (was screen-reader only) with the edit (pencil) + delete buttons, kept
+  on one line (127px at 2560px viewport; rows still 45px).
+- Checked in Chrome on 26KCT02/LOT-01: header shows "Thao tác"; edit on
+  "Seal" opens the 800px drawer; closed without changes. verify.sh passed
+  (`harness/runs/20260924-153445-552/`).
+
 ## 2026-09-24 — Shipment cost drawer "Thêm / Sửa chi phí logistics" (Figma 125:11995)
 
 - New `ShipmentCostLineDrawer` (640px Meta drawer, same frame as the
