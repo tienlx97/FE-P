@@ -5,7 +5,7 @@ import { MetaShipmentListPanel } from '@/shared/components/custom/meta/index.js'
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
-import { labelForPaymentType } from '../config/payment-schedule-types.js';
+// import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
 import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
@@ -226,7 +226,7 @@ export function ContractShipmentsPanel({ contract }) {
         rows: [
           field('Mã Booking:', s.bookingNumber, 'accent'),
           field('Số Vận đơn:', s.billOfLadingNumber),
-          field('Điều kiện TT:', labelForPaymentType(s.paymentCondition)),
+          // field('Điều kiện TT:', labelForPaymentType(s.paymentCondition)),
         ],
       },
       {

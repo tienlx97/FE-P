@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-09-25 — Shipment cards: no "Điều kiện TT", short ETD / ETA labels
+
+- Contract shipments tab, Dạng thẻ: the Booking partner card no longer
+  lists "Điều kiện TT" (row + import commented out in
+  `contract-shipments-panel.jsx`); route labels "Khởi hành (ETD):" /
+  "Dự kiến đến (ETA):" → "ETD:" / "ETA:" (`shipment-list-panel.jsx`).
+- Edits made locally by the user; committed on request.
+- verify.sh passed (`harness/runs/20260925-021059-342493/`).
+
 ## 2026-09-25 — Contract shipments tab: invoice values, links, pinned columns
 
 - Dạng bảng (`ContractShipmentsTable`): "Mã lô hàng" is a bold accent

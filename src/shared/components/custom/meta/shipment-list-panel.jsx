@@ -306,11 +306,11 @@ function ShipmentCard({ shipment: s, declarationCurrency, onMenu, href }) {
             <Divider />
             <HStack hAlign="between" gap={3} wrap="wrap">
               <VStack gap={0.5}>
-                <Text color="secondary">Khởi hành (ETD):</Text>
+                <Text color="secondary">ETD:</Text>
                 <Text weight="semibold">{s.route.etd}</Text>
               </VStack>
               <VStack gap={0.5}>
-                <Text color="secondary">Dự kiến đến (ETA):</Text>
+                <Text color="secondary">ETA:</Text>
                 <Text weight="semibold" color="meta-success">
                   {s.route.eta}
                 </Text>
