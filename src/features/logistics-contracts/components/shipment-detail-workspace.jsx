@@ -43,8 +43,8 @@ import { useShipmentVgmsQuery } from '../hooks/use-shipment-vgms-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { ShipmentCostPanel } from './shipment-cost-panel.jsx';
-import { ShipmentEditDrawer } from './shipment-edit-drawer.jsx';
 import { ShipmentEmptyReturnDialog } from './shipment-empty-return-dialog.jsx';
+import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 import { ShipmentMilestoneDialog } from './shipment-milestone-dialog.jsx';
 import { ShipmentOverviewPanel } from './shipment-overview-panel.jsx';
 import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
@@ -525,7 +525,7 @@ function ShipmentDetailBody({
       {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
         {isEditing ? (
-          <ShipmentEditDrawer
+          <ShipmentFormDrawer
             contract={contract}
             shipment={shipment}
             onClose={() => setIsEditing(false)}

@@ -49,7 +49,7 @@ import { ContractFormDialog } from './contract-form-dialog.jsx';
 import { ContractOverviewPanel } from './contract-overview-panel.jsx';
 import { ContractPaymentsPanel } from './contract-payments-panel.jsx';
 import { ContractShipmentsPanel } from './contract-shipments-panel.jsx';
-import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
+import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 
 /** @typedef {'overview' | 'payments' | 'shipments' | 'annexes' | 'commission' | 'boq'} DetailTab */
 
@@ -341,15 +341,9 @@ function ContractDetailBody({
         ) : null}
 
         {isAddingShipment ? (
-          <ShipmentFormDialog
-            isOpen
-            onOpenChange={(open) => {
-              if (!open) setIsAddingShipment(false);
-            }}
-            contractId={contract.id}
+          <ShipmentFormDrawer
             contract={contract}
-            closeLabel="Quay lại Contract"
-            onSuccess={() => setIsAddingShipment(false)}
+            onClose={() => setIsAddingShipment(false)}
           />
         ) : null}
 

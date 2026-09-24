@@ -17,6 +17,7 @@ import { useShipmentsVgmsQueries } from '../hooks/use-shipments-vgms-queries.js'
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { ContractShipmentsTable } from './contract-shipments-table.jsx';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
+import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 
 // Fields the design calls for always render; a missing value shows this
 // placeholder instead of hiding the field or the whole card.
@@ -399,7 +400,15 @@ export function ContractShipmentsPanel({ contract }) {
         )}
       />
 
-      {dialog ? (
+      {/* Creating uses the Meta drawer; viewing / editing an existing
+          shipment from this tab keeps the dialog (VGM / cost tabs). */}
+      {dialog && !dialog.shipment ? (
+        <ShipmentFormDrawer
+          contract={contract}
+          onClose={() => setDialog(null)}
+        />
+      ) : null}
+      {dialog?.shipment ? (
         <ShipmentFormDialog
           key={dialog.shipment?.id ?? 'create'}
           isOpen

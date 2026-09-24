@@ -98,6 +98,7 @@ import { useShipmentsListQuery } from '../hooks/use-shipments-list-query.js';
 import { useDeleteShipmentMutation } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
+import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -1381,7 +1382,14 @@ export function ShipmentsList() {
         </CommonDialog>
       ) : null}
 
-      {shipmentDialog ? (
+      {/* Creating (after picking a contract) uses the Meta drawer;
+          "Xem" / "Sửa" on a row keep the dialog (VGM / cost tabs). */}
+      {shipmentDialog && !shipmentDialog.shipment && shipmentDialog.contract ? (
+        <ShipmentFormDrawer
+          contract={shipmentDialog.contract}
+          onClose={() => setShipmentDialog(null)}
+        />
+      ) : shipmentDialog ? (
         <ShipmentFormDialog
           key={shipmentDialog.shipment?.id ?? 'create'}
           isOpen

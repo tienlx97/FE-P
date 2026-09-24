@@ -62,10 +62,7 @@ import {
   labelForShipmentType,
   shipmentTypeOptions,
 } from '../config/shipment-types.js';
-import {
-  useShipmentForm,
-  valuesFromShipment,
-} from '../hooks/use-shipment-form.js';
+import { useShipmentForm } from '../hooks/use-shipment-form.js';
 import { QuickCreateSupplierDialog } from './quick-create-supplier-dialog.jsx';
 
 // Stitch "Chỉnh sửa Shipment" (project 6957224641630765183, screen
@@ -78,39 +75,53 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** @typedef {import('@astryxdesign/core/Calendar').ISODateString} ISODateString */
 
 /**
- * Meta drawer that edits a shipment's information — Stitch "Chỉnh sửa
- * Shipment" (`.stitch/prompts/meta-shipment-edit-drawer.md`). Replaces the
- * fullscreen `ShipmentFormDialog` on the shipment detail page; VGM and
- * costs keep their own tabs. Same data and rules as that dialog —
- * `useShipmentForm` (validation, update call, supplier list; the cost
- * lines are resent unchanged) — laid out as three boxed sections: "Thông
- * tin lô hàng", "Booking & vận chuyển", "Hải quan & C/O". Field errors sit
- * under each field (detached) and the body scrolls to the first one.
- * Closing with changes asks first.
+ * Meta drawer that creates a shipment under `contract`, or edits one
+ * (`shipment`) — Stitch "Chỉnh sửa Shipment"
+ * (`.stitch/prompts/meta-shipment-edit-drawer.md`). Replaces the
+ * fullscreen `ShipmentFormDialog` on the Meta pages; VGM and costs are
+ * managed on the shipment page after creating. Same data and rules as that
+ * dialog — `useShipmentForm` (validation, create / update call, supplier
+ * list, defaults such as the contract's ports; on edit the cost lines are
+ * resent unchanged) — laid out as three boxed sections: "Thông tin lô
+ * hàng", "Booking & vận chuyển", "Hải quan & C/O". Field errors sit under
+ * each field (detached) and the body scrolls to the first one. Closing with
+ * changes asks first. "Loại hình" is only editable when creating.
  *
  * @param {{
  *   contract: import('../types/index.js').Contract,
- *   shipment: import('../types/index.js').Shipment,
+ *   shipment?: import('../types/index.js').Shipment | null,
  *   onClose: () => void,
+ *   onSaved?: (shipment: import('../types/index.js').Shipment) => void,
  * }} props
  */
-export function ShipmentEditDrawer({ contract, shipment, onClose }) {
+export function ShipmentFormDrawer({
+  contract,
+  shipment = null,
+  onClose,
+  onSaved,
+}) {
+  const isCreating = shipment === null;
+  const title = isCreating ? 'Thêm Shipment' : 'Chỉnh sửa Shipment';
   const formId = useId();
   const formRef = useRef(/** @type {HTMLFormElement | null} */ (null));
   const toast = useAppToast();
   const [isConfirmingDiscard, setIsConfirmingDiscard] = useState(false);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
-  const [initialValues] = useState(() => valuesFromShipment(shipment));
   const form = useShipmentForm({
     contractId: contract.id,
     contract,
     shipment,
-    onSuccess: () => {
-      toast({ body: 'Đã cập nhật Shipment.' });
+    onSuccess: (saved) => {
+      toast({
+        body: isCreating ? 'Đã tạo Shipment.' : 'Đã cập nhật Shipment.',
+      });
+      onSaved?.(saved);
       onClose();
     },
   });
   const { values, setField, fieldStatuses } = form;
+  // The hook starts from the shipment (edit) or its defaults (create).
+  const [initialValues] = useState(values);
   const customers = /** @type {import('../types/index.js').Supplier[]} */ (
     form.customers
   );
@@ -166,7 +177,7 @@ export function ShipmentEditDrawer({ contract, shipment, onClose }) {
         side="end"
         width={DRAWER_WIDTH}
         isFullWidthOnMobile
-        label="Chỉnh sửa Shipment"
+        label={title}
         hasCloseButton={false}
         xstyle={styles.surface}
       >
@@ -177,25 +188,46 @@ export function ShipmentEditDrawer({ contract, shipment, onClose }) {
             <LayoutHeader padding={4}>
               <MetaDrawerHeader
                 icon={Ship}
-                title="Chỉnh sửa Shipment"
+                title={title}
                 meta={
-                  <HStack gap={2} vAlign="center" wrap="wrap">
-                    <Text size="sm" weight="bold" color="accent" type="code">
-                      {shipment.shipmentCode}
-                    </Text>
-                    <Text size="sm" color="secondary" aria-hidden>
-                      •
-                    </Text>
-                    <MetaPill
-                      label={labelForShipmentType(shipment.type)}
-                      tone="accent"
-                    />
-                    <MetaPill
-                      label={labelForShipmentStatus(shipment.status)}
-                      tone={metaToneForShipmentStatus(shipment.status)}
-                      hasBorder
-                    />
-                  </HStack>
+                  shipment ? (
+                    <HStack gap={2} vAlign="center" wrap="wrap">
+                      <Text size="sm" weight="bold" color="accent" type="code">
+                        {shipment.shipmentCode}
+                      </Text>
+                      <Text size="sm" color="secondary" aria-hidden>
+                        •
+                      </Text>
+                      <MetaPill
+                        label={labelForShipmentType(shipment.type)}
+                        tone="accent"
+                      />
+                      <MetaPill
+                        label={labelForShipmentStatus(shipment.status)}
+                        tone={metaToneForShipmentStatus(shipment.status)}
+                        hasBorder
+                      />
+                    </HStack>
+                  ) : (
+                    <HStack gap={2} vAlign="center" wrap="wrap">
+                      <Text size="sm" color="secondary">
+                        Hợp đồng
+                      </Text>
+                      <Text size="sm" weight="bold" color="accent" type="code">
+                        {contract.contractNumber}
+                      </Text>
+                      <Text size="sm" color="secondary" aria-hidden>
+                        •
+                      </Text>
+                      <MetaPill
+                        label={`${contract.incoterm} ${contract.incotermYear}`}
+                        tone="neutral"
+                      />
+                      <Text size="sm" color="secondary" maxLines={1}>
+                        {contract.projectName}
+                      </Text>
+                    </HStack>
+                  )
                 }
                 onClose={requestClose}
               />
@@ -241,13 +273,26 @@ export function ShipmentEditDrawer({ contract, shipment, onClose }) {
                       <StackItem size="static">
                         <Selector
                           label="Loại hình"
+                          placeholder="LCL/FCL"
                           value={values.type}
-                          onChange={() => {}}
+                          onChange={(value) =>
+                            setField(
+                              'type',
+                              /** @type {import('../types/index.js').ShipmentType | ''} */ (
+                                value ?? ''
+                              ),
+                            )
+                          }
                           options={shipmentTypeOptions}
                           width={160}
-                          isDisabled
-                          disabledMessage="Không đổi được sau khi tạo Shipment"
+                          isDisabled={!isCreating || isDisabled}
+                          disabledMessage={
+                            isCreating
+                              ? undefined
+                              : 'Không đổi được sau khi tạo Shipment'
+                          }
                           isRequired
+                          {...statusOf('type')}
                         />
                       </StackItem>
                     </HStack>
@@ -758,7 +803,6 @@ export function ShipmentEditDrawer({ contract, shipment, onClose }) {
                       <VStack xstyle={styles.checkTile}>
                         <CheckboxInput
                           label="Bị kiểm hoá hải quan"
-                          description="Lô hàng thực hiện soi chiếu hoặc kiểm tra thực tế hàng hoá tại cảng"
                           value={values.customsInspected}
                           onChange={(checked) =>
                             setField('customsInspected', checked)
@@ -795,12 +839,12 @@ export function ShipmentEditDrawer({ contract, shipment, onClose }) {
                     onClick={requestClose}
                   />
                   <Button
-                    label="Lưu thay đổi"
+                    label={isCreating ? 'Tạo Shipment' : 'Lưu thay đổi'}
                     type="submit"
                     form={formId}
                     variant="primary"
                     size="lg"
-                    icon={<Icon icon={Save} size="sm" />}
+                    icon={<Icon icon={isCreating ? Plus : Save} size="sm" />}
                     isLoading={form.isSubmitting}
                   />
                 </HStack>

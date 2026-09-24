@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-09-24 — Creating a shipment uses the Meta drawer
+
+- `ShipmentEditDrawer` → `ShipmentFormDrawer` (`shipment-form-drawer.jsx`),
+  create or edit: without `shipment` it is "Thêm Shipment" (header:
+  contract number • incoterm pill • project), "Loại hình" is selectable
+  (with the "Chọn loại hình trước…" hint on Số lượng), defaults come from
+  `useShipmentForm` (contract ports, status Đã book), submit "Tạo
+  Shipment" (+). New `onSaved` callback.
+- Create now opens the drawer from: contract page "+ Thao tác → Thêm
+  Shipment", the contract's Shipment tab, and the shipment list (after
+  picking the contract). Viewing / editing a shipment from those lists
+  still uses `ShipmentFormDialog` (it has the VGM / cost tabs); the old
+  contract dialog's "Liên quan" panel is unchanged.
+- Shipment list "Nhà cung cấp" view: the "Mã" link was already bold
+  (700, commit 6f45c5b) — nothing changed.
+- Checked in Chrome on 25KCT47 (eligible contract): drawer opens at 960px
+  with Loại hình enabled, POL / POD from the contract, "Tạo Shipment";
+  closes without asking when untouched. Nothing created.
+- verify.sh passed (`harness/runs/20260924-202537-1763/`).
+
 ## 2026-09-24 — Journey edit dialogs in the Meta theme
 
 - New `MetaFormDialog` (`src/shared/components/meta-form-dialog.jsx`, next
