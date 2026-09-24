@@ -932,17 +932,6 @@ export function ShipmentsList() {
         ),
     },
     {
-      key: 'supplier',
-      header: 'Booking (Forwarder)',
-      width: proportional(1),
-      // No `filter` on this column (not part of the header-filter set), so
-      // the BE-kt-xnk wire sort field (`supplierName`) needs stating
-      // explicitly — it doesn't match this column's own `key`.
-      sortField: 'supplierName',
-      renderCell: (row) => primaryText(orDash(row.supplierName)),
-      exportValue: (row) => row.supplierName,
-    },
-    {
       key: 'shippingLine',
       header: 'Hãng tàu',
       width: proportional(1, { minWidth: 180 }),
@@ -953,6 +942,17 @@ export function ShipmentsList() {
           '—'
         ),
       exportValue: (row) => row.shippingLine ?? '',
+    },
+    {
+      key: 'supplier',
+      header: 'Booking (Forwarder)',
+      width: proportional(1),
+      // No `filter` on this column (not part of the header-filter set), so
+      // the BE-kt-xnk wire sort field (`supplierName`) needs stating
+      // explicitly — it doesn't match this column's own `key`.
+      sortField: 'supplierName',
+      renderCell: (row) => primaryText(orDash(row.supplierName)),
+      exportValue: (row) => row.supplierName,
     },
     {
       key: 'customsBrokers',

@@ -24,6 +24,16 @@ Updated 2026-09-24 for the latest UI changes:
   indigo, Shipping / Đã giao đến cảng = cobalt, Đã hoàn thành = emerald,
   Đã book = neutral. Amber tokens: wash #fffbeb, border #fde68a, text #b45309.
 - Record codes (shipment, contract) render as semibold cobalt links.
+- Tổng quan tab rewritten from the real overview panel
+  (`shipment-overview-panel.jsx`, blocks in
+  `src/shared/components/custom/meta/shipment-overview-blocks.jsx`,
+  Figma 111:7829): 3 KPI cards (invoice / tờ khai with "Khớp x%" / tỷ giá with
+  the VND estimate), then "Thông tin booking", "Hải quan & Chứng nhận xuất xứ
+  (C/O)" and "Thông tin hàng hoá & Danh sách Container" (container cards from
+  the VGM records). It now shows the new fields: Số hoá đơn TM, Số chuyến,
+  Hạn nộp SI / VGM (closed state), Điều kiện giao nhận, Phương thức vận chuyển,
+  Form C/O, Luồng tờ khai, Số L/C. Đại lý hải quan, Đơn vị trucking and Hạn trả
+  cont rỗng are editable in the form but not shown on this tab in the code.
 - Chi phí tab re-checked line by line against `shipment-cost-lines-fields.jsx`:
   "Thêm chi phí" + totals share one toolbar above the table (not a summary
   bar below it), column widths match the code, STT runs across groups, group
@@ -129,26 +139,72 @@ PAGE SHELL (same on every tab)
 ```text
 [paste PAGE SHELL] Active tab: "Tổng quan".
 
-CONTENT: two stacked cards, each with a card title row (short 4px cobalt bar + 16px bold title)
-and a read-only label-above-value grid (label 12px muted, value 14px #1c1e21, "—" in subtle
-grey when empty, hairline under each item).
+CONTENT (vertical gap 24px): a row of 3 KPI cards, then 3 section cards.
 
-Card "Thông tin Book" — 3-column grid:
-Forwarder "Công ty TNHH Đại Phát Logistics" · Số booking "KMTCVN01154082" · Số B/L "KMTCHPH0456789" ·
-Line tàu "KMTC" · Tên tàu "KMTC JAKARTA // 2604S" · ETD "02/10/2026" · ETA "12/10/2026" ·
-Cảng/nơi xếp hàng "Hải Phòng (VNHPH)" · Cảng/nơi đến "Laem Chabang (THLCH)".
-Sub-group divider "Hải quan & C/O":
-Mã C/O "VN-TH 26/01/0452" · Ngày khai C/O "28/09/2026" · Ngày có C/O "30/09/2026" ·
-Số tờ khai "305123456780" · Ngày khai "29/09/2026" · Bị kiểm hoá: amber pill "Có"
-(or neutral pill "Không").
+SHARED BLOCKS
+- KPI CARD: white, hairline border, radius 12px, padding 16px, soft card shadow. Top row: 36px
+  tinted icon tile + 12px semibold UPPERCASE muted label + a small tag pill on the right. Middle:
+  large value (28px bold, tabular) followed by a smaller unit in the card's tone colour. Bottom,
+  under a hairline: muted caption (+ bold value) on the left, a status (icon + text in tone) on the
+  right.
+- SECTION CARD: white, hairline border, radius 12px, padding 16px. Header: 32px tinted icon tile +
+  16px bold title, optional pill on the right, hairline underneath. Body: grid of FIELD TILES,
+  3 per row (min 260px), gap 16px.
+- FIELD TILE: white, hairline border, radius 8px, padding 12px. 12px semibold UPPERCASE muted label,
+  then the value (14px bold; ID-like values in tabular monospace-ish digits), optionally with a
+  leading tinted icon or a trailing small pill, and an optional 12px caption line below.
+  Empty value → "—" in subtle grey #8a8d91.
 
-Card "Thông tin lô hàng" — 3-column grid:
-Tên lô hàng "Thép cuộn cán nóng – đợt 1" · Loại hình: cobalt pill "FCL" ·
-Điều kiện thanh toán "L/C" · Tình trạng: indigo pill "Hạ bãi chờ xuất" · Số lượng "4 Cont" ·
-Khối lượng tờ khai "98,450.00 kg".
-Highlighted value strip (bg #ebf3fe, radius 8px, 3 figures, label 12px muted uppercase,
-value bold 18px tabular cobalt):
-"GIÁ TRỊ INVOICE 412,500.00 USD" · "GIÁ TRỊ TỜ KHAI 412,500.00 USD" · "TỶ GIÁ TỜ KHAI 25,380 đ".
+1. KPI ROW (3 equal cards, gap 20px)
+   - "GIÁ TRỊ INVOICE (THƯƠNG MẠI)" — cobalt tile with receipt icon, neutral tag "INV".
+     Value "412,500.00" + cobalt unit "USD". Footer: "Hoá đơn TM số:" **INV-26KCT-01**, right
+     emerald "✓ Đã phát hành". (Variant with no invoice number: "—" and neutral dashed-circle
+     "Chưa có số HĐ".)
+   - "GIÁ TRỊ TỜ KHAI HẢI QUAN" — emerald tile with shield-check icon, emerald tag with dot
+     "Khớp 100%". Value "412,500.00" + emerald unit "USD". Footer: "Trị giá tính thuế xuất khẩu",
+     right emerald "✓ Khớp invoice". (Variant when values differ: amber tag "Khớp 97.5%" and amber
+     "Lệch invoice". Tag and status are hidden when invoice and declaration currencies differ.)
+   - "TỶ GIÁ QUY ĐỔI TỜ KHAI" — indigo tile with refresh icon, no tag. Value "25,380" + indigo unit
+     "VND / USD". Footer: "Quy đổi ước tính:" **~ 10,469,250,000 đ**.
+
+2. SECTION "Thông tin booking" — cobalt truck icon; right pill "CY / CY" (Điều kiện giao nhận).
+   Field tiles:
+   Forwarder "Công ty TNHH Đại Phát Logistics" · Số booking "KMTCVN01154082" ·
+   Số B/L (vận đơn đường biển) "KMTCHPH0456789" in cobalt · Hãng tàu / Line tàu "KMTC" ·
+   Tên tàu // Số chuyến "KMTC JAKARTA // 2604S" ·
+   Thời hạn nộp SI / VGM: cobalt clock icon + cobalt "16:00 • 29/09/2026"
+     (variant after the deadline: amber icon + amber "16:00 • 29/09/2026 (Đã đóng)") ·
+   Cảng xếp hàng (POL): cobalt anchor icon + "Hải Phòng (VNHPH)", cobalt caption "ETD: 02/10/2026" ·
+   Cảng dỡ hàng (POD): red map-pin icon + "Laem Chabang (THLCH)", muted caption "ETA: 12/10/2026" ·
+   Phương thức vận chuyển: emerald navigation icon + "Đi thẳng (Direct)"
+     (or "Chuyển tải (Transshipment)").
+
+3. SECTION "Hải quan & Chứng nhận xuất xứ (C/O)" — amber file-check icon; right amber pill
+   "Luồng Vàng" (Luồng Xanh = emerald, Luồng Vàng = amber, Luồng Đỏ = red; no pill when unset).
+   Field tiles:
+   Mã số C/O "VN-TH 26/01/0452" + trailing neutral pill "Form D" · Ngày khai C/O "28/09/2026" ·
+   Ngày cấp C/O "30/09/2026" · Số tờ khai xuất khẩu "305123456780" + trailing amber pill
+   "Luồng Vàng" · Ngày khai tờ khai "29/09/2026" ·
+   Kiểm hoá thực tế: amber pill with scan icon "Bị kiểm hoá"
+     (or emerald pill with check "Không kiểm hoá").
+
+4. SECTION "Thông tin hàng hoá & Danh sách Container" — cobalt package icon; right cobalt pill
+   "4x40'HC" (container mix from the VGM records; "4 Cont" when there are none).
+   Field tiles, 4 per row (min 240px):
+   Tên lô hàng "Thép cuộn cán nóng – đợt 1", caption "4 Cont" ·
+   Điều kiện thanh toán: neutral bordered pill "L/C", caption "LC: LC-VCB-2026-0391" ·
+   Tổng khối lượng gộp "98,450.00 kg", caption "Net weight: 98,000.00 kg"
+     (label becomes "Khối lượng tờ khai" with no caption when there are no VGM records) ·
+   Tình trạng lô hàng: indigo pill with dot "Hạ bãi chờ xuất", caption "Hải Phòng (VNHPH)".
+   Sub-header row: cobalt scan icon + bold "DANH SÁCH CONTAINER", right a bold cobalt link
+   "Xem VGM →" (jumps to the VGM tab).
+   Container cards, 4 per row (white, hairline, radius 12px, padding 16px): top "CONT #1" muted
+   + small cobalt chip "40'HC"; container number "KMTU7412356" (16px bold tabular); "Seal:
+   SL0098213" muted; hairline; bottom row "Đóng hàng 25/09/2026" left, "VGM 28,512.50 kg" bold
+   right. 4 cards: KMTU7412356 / SL0098213, KMTU7412361 / SL0098214, TGHU8834120 / SL0098215,
+   TCLU5520947 / SL0098216, all 40'HC, VGM 28,512.50 kg.
+   Loading variant: 4 grey skeleton cards (180px). Empty variant: muted text
+   "Chưa có container nào — thêm ở tab VGM & Container."
 ```
 
 ## Tab 2 — VGM
