@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-09-25 — Inter on /admin + /logistics, Maritime theme deleted (ADR-0010)
+
+- Inter 4.1.1 variable (normal + italic, 100–900, opsz) self-hosted in
+  `public/fonts/inter/` from the MISA CDN; `@font-face` in `globals.css`.
+- `ProtectedAppShell` marks `/admin*` and `/logistics*` with
+  `data-app-font="inter"`; `globals.css` redefines the font tokens on
+  `html` and the app `<Theme>` element containing it (portals included),
+  with `liga calt tnum lnum` and tabular lining numbers.
+- Meta theme: body / heading / code → Inter, `--meta-font-features` →
+  `liga calt tnum lnum` (was Optimistic's ss01 / ss02); rebuilt.
+- Deleted `src/shared/components/custom/maritime/`, `/preview-maritime`,
+  their eslint exemptions / quality grade and the `--maritime-table-*`
+  fallbacks in `tanstack-data-table.jsx`; golden rules changelog v8.
+- `fonts.test.js`: new test for the Inter faces, files and scope.
+- verify.sh passed (`harness/runs/20260925-004159-204486/`).
+- Checked in Chrome: /admin/users (table, nav, headings, buttons → Inter,
+  font loaded), shipment 26KCT27/LOT-01 (Meta text + "Chỉnh sửa Shipment"
+  drawer inputs → Inter, Vietnamese diacritics fine; closed with Huỷ bỏ,
+  nothing saved), /docs unchanged (Optimistic).
+
 ## 2026-09-25 — Logistics font-size standard (ADR-0009)
 
 - Meta theme (all `/logistics/**`): `--font-size-sm` 12 → 13px, `--font-size-xs`

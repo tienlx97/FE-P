@@ -97,9 +97,6 @@ const config = [
     files: ['src/**/*.js', 'src/**/*.jsx'],
     ignores: [
       'src/shared/components/theme.js',
-      // "Maritime" custom theme (user request, 2026-09-18) — same
-      // exemption reason.
-      'src/shared/components/custom/maritime/theme.js',
       // "Meta" custom theme (user request, 2026-09-23) — same reason.
       'src/shared/components/custom/meta/theme.js',
     ],
@@ -130,13 +127,6 @@ const config = [
     files: ['src/shared/components/custom/**/*.jsx'],
     ignores: [
       'src/shared/components/custom/*/astryx/**',
-      // Pre-rule Maritime debt (graded C in harness/quality-grades.json):
-      // raw <span>/<button> left over from v5. Remove each entry once fixed.
-      'src/shared/components/custom/maritime/annex-list-panel.jsx',
-      'src/shared/components/custom/maritime/shipment-list-panel.jsx',
-      'src/shared/components/custom/maritime/shipment-table-view.jsx',
-      'src/shared/components/custom/maritime/tab-nav.jsx',
-      'src/shared/components/custom/maritime/theme-provider.jsx',
     ],
     rules: {
       'react/forbid-elements': [
@@ -172,11 +162,9 @@ const config = [
     // --font-size-*, --spacing-*, --size-element-*), not px copied from a
     // mockup. Re-declares the hex-color selectors above because a later
     // `no-restricted-syntax` entry replaces the earlier one for these files.
-    // Maritime predates the rule (graded C) and is exempt until cleaned up.
     files: ['src/shared/components/custom/**/*.jsx'],
     ignores: [
       'src/shared/components/custom/*/astryx/**',
-      'src/shared/components/custom/maritime/**',
     ],
     rules: {
       'no-restricted-syntax': [
@@ -216,12 +204,7 @@ const config = [
       'src/shared/components/kt-xnk.js',
       'src/shared/components/kt-xnk.d.ts',
       'src/shared/components/kt-xnk.variants.d.ts',
-      // Same for the "Maritime" custom theme's own build output.
-      'src/shared/components/custom/maritime/maritime.js',
-      'src/shared/components/custom/maritime/maritime.d.ts',
-      'src/shared/components/custom/maritime/maritime.variants.d.ts',
-      'src/shared/components/custom/maritime/theme.built.css',
-      // And the "Meta" custom theme's.
+      // Same for the "Meta" custom theme's own build output.
       'src/shared/components/custom/meta/meta.js',
       'src/shared/components/custom/meta/meta.d.ts',
       'src/shared/components/custom/meta/meta.variants.d.ts',

@@ -10,7 +10,7 @@ import { metaTheme } from './meta.js';
 /**
  * Scopes the "Meta" theme (`theme.js`, this same folder) to whatever
  * subtree wraps it — a nested `<Theme>` re-themes just that region without
- * touching the app's own theme or Maritime. Not applied to any page yet.
+ * touching the app's own theme.
  *
  * @param {{ children: import('react').ReactNode, mode?: 'system' | 'light' | 'dark' }} props
  */

@@ -107,11 +107,11 @@ export const metaTheme = {
     '--radius-chat': '28px',
     '--radius-full': '9999px',
     '--font-family-body':
-      '"Optimistic Text Vietnamese", "Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      'InterVariable, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     '--font-family-heading':
-      '"Optimistic Display Vietnamese", "Optimistic Display", "Optimistic Text Vietnamese", "Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      'InterVariable, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     '--font-family-code':
-      '"Optimistic Text Vietnamese", "Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      'InterVariable, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     '--color-error': '#ba1a1a',
     '--color-on-error': '#ffffff',
     '--color-error-muted': '#ffdad6',
@@ -144,7 +144,7 @@ export const metaTheme = {
     '--meta-surface-container': '#ecedf8',
     '--meta-surface-container-high': '#e6e7f2',
     '--meta-shadow-float': 'rgba(20, 22, 26, 0.3) 0px 1px 4px 0px',
-    '--meta-font-features': '"ss01", "ss02"',
+    '--meta-font-features': '"liga" 1, "calt" 1, "tnum" 1, "lnum" 1',
     '--table-framed-total-bg': '#f0f5ff',
     '--table-framed-group-bg': '#f4f7fc',
     '--table-framed-group-accent-bg': '#ebf3fe',
@@ -588,11 +588,11 @@ export const metaTheme = {
         ratio: 1.2,
       },
       body: {
-        family: 'Optimistic Text',
+        family: 'InterVariable',
         fallbacks: '-apple-system, system-ui, sans-serif',
       },
       heading: {
-        family: 'Optimistic Display',
+        family: 'InterVariable',
         fallbacks: '-apple-system, system-ui, sans-serif',
         weight: 'bold',
       },

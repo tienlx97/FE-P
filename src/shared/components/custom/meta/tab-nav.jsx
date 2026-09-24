@@ -13,7 +13,7 @@ import { MetaPill } from './pill.jsx';
  * white too (user request, 2026-09-23 — not the Figma's filled cobalt),
  * marked by a cobalt border + cobalt bold label instead.
  * Built on Astryx `TabList`/`Tab` in the WAI-ARIA tabs pattern; each tab
- * points at `panelId`. Same `tabs` shape as `MaritimeTabNav`.
+ * points at `panelId`.
  *
  * @param {{
  *   tabs: Array<{

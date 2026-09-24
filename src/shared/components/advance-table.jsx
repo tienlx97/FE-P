@@ -1286,7 +1286,7 @@ export function AdvanceTable({
     />
   );
 
-  // Maritime frame (Figma "Danh sách Hợp đồng"): the page title/actions stay
+  // Framed list (Figma "Danh sách Hợp đồng"): the page title/actions stay
   // outside a single bordered white card that holds tabs, filters, table and
   // pagination. `Layout` has no `xstyle`, so the card is a wrapper around it.
   if (!isFramed) return layout;

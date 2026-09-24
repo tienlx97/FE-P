@@ -1,16 +1,16 @@
 import { defineTheme } from '@astryxdesign/core/theme';
 
-const OPTIMISTIC_TEXT =
-  '"Optimistic Text Vietnamese", "Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-const OPTIMISTIC_DISPLAY =
-  '"Optimistic Display Vietnamese", "Optimistic Display", "Optimistic Text Vietnamese", "Optimistic Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+// Inter 4.1.1 variable, self-hosted in `public/fonts/inter/` and declared
+// in `src/app/globals.css` (user request, 2026-09-25).
+const INTER =
+  'InterVariable, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
 /**
  * "Meta" — a custom Astryx theme built from the "Optimistic VF Commerce &
  * Hardware" design system (user request, 2026-09-23; spec copied verbatim
  * into `DESIGN.md`, this same folder) plus the first screen mockup built
  * on it (`.stitch/designs/meta-contracts-list.html`, Stitch project
- * 6957224641630765183). Same rule as Maritime: the mockup's own Tailwind
+ * 6957224641630765183). The mockup's own Tailwind
  * `colors`/`borderRadius` config is the source of truth, the prose is only
  * a summary of it.
  *
@@ -30,9 +30,9 @@ const OPTIMISTIC_DISPLAY =
  * - One palette, no dark values: every token uses the same value in both
  *   modes.
  *
- * Typography: "Optimistic VF" → the app's already-loaded Optimistic Text
- * (body) and Optimistic Display (headings) Vietnamese builds, stylistic
- * sets ss01/ss02 on.
+ * Typography: Inter (variable, optical sizing) for body, headings and
+ * code (user request, 2026-09-25 — replaces the spec's "Optimistic VF"),
+ * with ligatures and tabular lining numbers on.
  *
  * Shape: the mockup is pill-shaped (buttons, filters, tabs, badges =
  * `rounded-full`) inside a `rounded-2xl` (16px) workspace card; form
@@ -51,11 +51,11 @@ export const metaTheme = defineTheme({
   typography: {
     scale: { base: 14, ratio: 1.2 },
     body: {
-      family: 'Optimistic Text',
+      family: 'InterVariable',
       fallbacks: '-apple-system, system-ui, sans-serif',
     },
     heading: {
-      family: 'Optimistic Display',
+      family: 'InterVariable',
       fallbacks: '-apple-system, system-ui, sans-serif',
       weight: 'bold',
     },
@@ -64,9 +64,9 @@ export const metaTheme = defineTheme({
   radius: { base: 4, multiplier: 1 },
 
   tokens: {
-    '--font-family-body': OPTIMISTIC_TEXT,
-    '--font-family-heading': OPTIMISTIC_DISPLAY,
-    '--font-family-code': OPTIMISTIC_TEXT,
+    '--font-family-body': INTER,
+    '--font-family-heading': INTER,
+    '--font-family-code': INTER,
 
     // Logistics font-size standard (user request, 2026-09-25; ADR-0009):
     // - base (14px, the default — never write `size="base"`): body text,
@@ -147,7 +147,7 @@ export const metaTheme = defineTheme({
     // Elevation — only sticky checkout bars / summary panels
     '--meta-shadow-float': 'rgba(20, 22, 26, 0.3) 0px 1px 4px 0px',
 
-    '--meta-font-features': '"ss01", "ss02"',
+    '--meta-font-features': '"liga" 1, "calt" 1, "tnum" 1, "lnum" 1',
 
     // Framed list table (`AdvanceTable isFramed`) bands — theme-neutral
     // names read by `tanstack-data-table.jsx`.
@@ -388,7 +388,7 @@ export const metaTheme = defineTheme({
       },
     },
     // The framed list card clips its overflow, so the table's own scroller
-    // must fill the card's content area to scroll (same as Maritime);
+    // must fill the card's content area to scroll;
     // header cells stay pinned while the body scrolls under them.
     'table-scroll-wrapper': {
       base: {

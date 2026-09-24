@@ -581,7 +581,7 @@ export function TanStackDataTable({
                 isFramed
                   ? {
                       backgroundColor:
-                        'var(--table-framed-total-bg, var(--maritime-table-total-bg, var(--color-background-muted)))',
+                        'var(--table-framed-total-bg, var(--color-background-muted))',
                     }
                   : cell.column.getIsPinned()
                     ? { background: rowBg }
@@ -664,7 +664,7 @@ export function TanStackDataTable({
                         ? {
                             backgroundColor: isAccentGroup
                               ? 'var(--table-framed-group-accent-bg, var(--table-framed-group-bg, var(--color-background-muted)))'
-                              : 'var(--table-framed-group-bg, var(--maritime-table-group-bg, var(--color-background-muted)))',
+                              : 'var(--table-framed-group-bg, var(--color-background-muted))',
                             ...(isAccentGroup
                               ? { color: 'var(--color-text-accent)' }
                               : {}),

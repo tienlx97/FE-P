@@ -78,13 +78,12 @@ function formatDelta(value) {
 }
 
 /**
- * "Meta" contract-detail "Phụ lục (Annex)" tab — the Maritime annex panel
- * (Figma node 44:4355) re-skinned to the Meta theme with the same
+ * "Meta" contract-detail "Phụ lục (Annex)" tab (Figma node 44:4355) with the same
  * structure as the Meta payments tab (Figma 94:1936): 3 summary cards
  * (HĐ gốc / Phát sinh tăng / Phát sinh giảm) in a capped grid, then a
  * "Danh sách phụ lục" table card (code, type pill, summary,
  * adjustment, signed date, signature pills, actions) with a totals band.
- * Same data shape as `MaritimeAnnexListPanel`; `isLoading` swaps figures and
+ * `isLoading` swaps figures and
  * rows for `Skeleton`s. Composed from Astryx `Card` / `Grid` / `Table` /
  * `Button` / `IconButton` / `Skeleton` + `MetaPill` (golden rule #15).
  *

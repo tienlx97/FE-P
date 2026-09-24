@@ -67,8 +67,7 @@ const SUMMARY_TONES = /** @type {const} */ ({
  * 102:4272: 3 KPI cards (Tổng hoa hồng / Đã chi trả / Còn phải chi), the
  * broker card and the beneficiary-bank card side by side, then the
  * "Bảng theo dõi" card (one row per commission installment, a totals band
- * and a footnote band with the confirmed paid total). Same data shape as
- * `MaritimeCommissionPanel`; `isLoading` swaps figures and rows for
+ * and a footnote band with the confirmed paid total). `isLoading` swaps figures and rows for
  * `Skeleton`s. Composed from Astryx `Card` / `Grid` / `Table` / `Button` /
  * `IconButton` / `Skeleton` + `MetaPill` (golden rule #15).
  *
