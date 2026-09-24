@@ -45,7 +45,6 @@ import { MetaPill } from './pill.jsx';
 
 const SUMMARY_ICONS = [Banknote, CircleCheck, ClipboardClock];
 
-
 const SUMMARY_TONES = /** @type {const} */ ({
   neutral: {
     label: 'meta-subtle',
@@ -72,8 +71,8 @@ const SUMMARY_TONES = /** @type {const} */ ({
  * 102:4272: 3 KPI cards (Tổng hoa hồng / Đã chi trả / Còn phải chi), the
  * broker card and the beneficiary-bank card side by side, then the
  * "Đợt chi hoa hồng" card (one row per commission installment and a
- * totals band); `beforeTable` renders between the broker / bank cards and
- * that card (the contract tab's "Phụ lục Commission"). `isLoading` swaps figures and rows for
+ * totals band); `afterTable` renders below that card (the contract tab's
+ * "Lịch sử thanh toán" and "Phụ lục Commission"). `isLoading` swaps figures and rows for
  * `Skeleton`s. Composed from Astryx `Card` / `Grid` / `Table` / `Button` /
  * `IconButton` / `Skeleton` + `MetaPill` (golden rule #15).
  *
@@ -84,7 +83,7 @@ const SUMMARY_TONES = /** @type {const} */ ({
  *   bank: MetaCommissionBank,
  *   payments: MetaCommissionPayment[],
  *   totals: { label: string, usd: string, summary: string, vnd?: string },
- *   beforeTable?: import('react').ReactNode,
+ *   afterTable?: import('react').ReactNode,
  *   hasReceiptDownload?: boolean,
  *   createLabel?: string,
  *   tableTitle?: string,
@@ -102,7 +101,7 @@ export function MetaCommissionPanel({
   bank,
   payments,
   totals,
-  beforeTable,
+  afterTable,
   hasReceiptDownload = true,
   createLabel = 'Thêm lần chi',
   tableTitle = 'Đợt chi hoa hồng',
@@ -251,8 +250,6 @@ export function MetaCommissionPanel({
         <BankCard bank={bank} isLoading={isLoading} />
       </Grid>
 
-      {beforeTable}
-
       <Card padding={6} xstyle={styles.tableCard}>
         <VStack gap={0} hAlign="stretch">
           <HStack
@@ -377,9 +374,10 @@ export function MetaCommissionPanel({
               </Text>
             ) : null}
           </HStack>
-
         </VStack>
       </Card>
+
+      {afterTable}
     </VStack>
   );
 }

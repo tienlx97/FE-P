@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-09-25 — Commission tab: "Hoa hồng quyết toán", payment history table
+
+- First KPI "TỔNG HOA HỒNG" → "HOA HỒNG QUYẾT TOÁN (x% of the contract
+  settlement)": commission value ± its annexes (display-only, like the
+  overview's Quyết toán), note "Gốc … + n PL …"; "Còn phải chi" and the
+  paid / remaining % use it. Installment amounts stay on the original value
+  (how annex money maps onto installments is still open).
+- New `CommissionPaymentHistoryCard` ("Lịch sử thanh toán", read-only
+  table: Lần, Ngày thanh toán, Số tiền, Ghi chú / Chứng từ; oldest first;
+  "n lần • total" pill).
+- `MetaCommissionPanel`'s slot is now `afterTable`: order is Đợt chi hoa
+  hồng → Lịch sử thanh toán → Phụ lục Commission.
+- Checked in Chrome on 26KCT14 (data now has a second 2,222 payment made
+  outside this session): 10,800.00 "Gốc 10,000.00 + 1 PL 800.00", đã chi
+  6,222 (57.6%), còn 4,578; history lists both payments. A negative bottom
+  margin first clipped the history table's second row — removed.
+- verify.sh passed (`harness/runs/20260925-034149-490514/`).
+
 ## 2026-09-25 — Commission tab: annexes above the table, trimmed cards
 
 - `MetaCommissionPanel` gains `beforeTable`; the "Phụ lục Commission" card

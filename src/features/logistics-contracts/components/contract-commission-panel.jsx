@@ -9,11 +9,13 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { allocateCommissionPayments } from '../config/commission-payment-allocation.js';
 import { formatMoney } from '../config/currencies.js';
+import { useCommissionAnnexesQuery } from '../hooks/use-commission-annexes-query.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { CommissionAnnexesSection } from './commission-annexes-section.jsx';
 import { CommissionFormDrawer } from './commission-form-drawer.jsx';
+import { CommissionPaymentHistoryCard } from './commission-payment-history-card.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
 
 // A missing broker / bank value shows this placeholder.
@@ -55,6 +57,7 @@ export function ContractCommissionPanel({ contract }) {
   // The broker is picked from the Supplier catalog (`useCommissionForm`).
   const suppliersQuery = useSuppliersQuery();
   const annexesQuery = useContractAnnexesQuery(contract.id);
+  const commissionAnnexesQuery = useCommissionAnnexesQuery(contract.id);
 
   const commission =
     commissionQuery.data?.success && commissionQuery.data.exists
@@ -104,8 +107,21 @@ export function ContractCommissionPanel({ contract }) {
   const bankAccount = recipient?.bankAccounts?.[0];
 
   const total = commission.value;
+  // "Hoa hồng quyết toán" = the commission's value plus its annexes (±),
+  // display-only like the overview's "Quyết toán" — annexes never change
+  // the stored value (`docs/api/Commissions.md`). Installments below stay
+  // on the original value.
+  const commissionAnnexes = commissionAnnexesQuery.data?.success
+    ? commissionAnnexesQuery.data.annexes
+    : [];
+  const annexAdjustment = commissionAnnexes.reduce((sum, annex) => {
+    if (annex.type === 'AmountIncrease') return sum + annex.amount;
+    if (annex.type === 'AmountDecrease') return sum - annex.amount;
+    return sum;
+  }, 0);
+  const settledTotal = total + annexAdjustment;
   const pct = (/** @type {number} */ value) =>
-    total > 0 ? Math.round((value / total) * 1000) / 10 : 0;
+    settledTotal > 0 ? Math.round((value / settledTotal) * 1000) / 10 : 0;
 
   // Payments are not linked to terms; allocate them in date order
   // (`allocateCommissionPayments`) so each planned installment shows how
@@ -141,19 +157,22 @@ export function ContractCommissionPanel({ contract }) {
   const paidCount = allocation.terms.filter(
     (term) => term.state === 'paid',
   ).length;
-  const remainingValue = Math.max(0, total - paidValue);
+  const remainingValue = Math.max(0, settledTotal - paidValue);
   const remainingCount = rowCount - paidCount;
   const bothSigned = commission.sellerSigned && commission.partySigned;
   const percentOfSettlement =
     settlementValue > 0
-      ? Math.round((total / settlementValue) * 10000) / 100
+      ? Math.round((settledTotal / settlementValue) * 10000) / 100
       : 0;
 
   const summary = [
     {
-      label: `TỔNG HOA HỒNG (${percentOfSettlement}%)`,
-      value: formatMoney(total),
-      note: `${rowCount} đợt thanh toán`,
+      label: `HOA HỒNG QUYẾT TOÁN (${percentOfSettlement}%)`,
+      value: formatMoney(settledTotal),
+      note:
+        commissionAnnexes.length > 0
+          ? `Gốc ${formatMoney(total)} ${annexAdjustment < 0 ? '−' : '+'} ${commissionAnnexes.length} PL ${formatMoney(Math.abs(annexAdjustment))}`
+          : `${rowCount} đợt thanh toán`,
       tone: /** @type {const} */ ('neutral'),
     },
     {
@@ -190,7 +209,11 @@ export function ContractCommissionPanel({ contract }) {
     <>
       <MetaCommissionPanel
         currency={currency}
-        isLoading={suppliersQuery.isLoading || annexesQuery.isLoading}
+        isLoading={
+          suppliersQuery.isLoading ||
+          annexesQuery.isLoading ||
+          commissionAnnexesQuery.isLoading
+        }
         summary={summary}
         broker={{
           label: 'BÊN NHẬN HOA HỒNG (MÔI GIỚI)',
@@ -225,13 +248,19 @@ export function ContractCommissionPanel({ contract }) {
               : '',
           vnd: '',
         }}
-        beforeTable={
-          <CommissionAnnexesSection
-            variant="card"
-            contractId={contract.id}
-            commissionValue={commission.value}
-            currency={currency}
-          />
+        afterTable={
+          <>
+            <CommissionPaymentHistoryCard
+              payments={commission.paymentHistory}
+              currency={currency}
+            />
+            <CommissionAnnexesSection
+              variant="card"
+              contractId={contract.id}
+              commissionValue={commission.value}
+              currency={currency}
+            />
+          </>
         }
         hasReceiptDownload={false}
         createLabel="Thêm lần chi"
