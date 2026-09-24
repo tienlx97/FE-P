@@ -12,14 +12,17 @@
   shows an error and keeps the return editor unavailable until records load.
   Removed the obsolete frontend journey config and its status-only tests;
   `docs/shipment-journey-incoterms.md` now points to the backend rules.
-- Full gate passed: `harness/runs/20260924-103650-1568/`. Desktop / mobile
+- Final full gate passed: `harness/runs/20260924-115949-1449/`. Desktop / mobile
   component screenshots are under `harness/runs/20260924-103114-380/`;
-  the preview fixture route was removed. Browser testing of a live save remains
-  unverified because the protected route redirected the isolated session to
-  `/login` and no test login was available.
-- Harness gap: the frontend has no authenticated journey flow test, so the
-  endpoint-to-dialog interaction is covered by static checks and backend
-  contracts but not a browser regression.
+  the preview fixture route was removed. Authenticated browser verification
+  on `26KCT03/LOT-01`: confirm / reopen one milestone, then save / clear one
+  CIF container return (0/5 → 1/5 → 0/5); original backend data restored.
+  Live desktop, mobile and return-dialog screenshots are in
+  `harness/runs/20260924-103650-1568/`. At 390px the page width equals the
+  viewport and the journey carousel scrolls internally; the browser reported
+  no application errors.
+- Harness gap: the authenticated journey flow is manually verified but not
+  automated as a browser regression.
 
 ## 2026-09-24 — Shipment detail page, tab "Tổng quan" (Figma 111:7829)
 
