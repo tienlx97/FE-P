@@ -1,5 +1,30 @@
 # Progress Log
 
+## 2026-09-25 — Commission "Xem" opens the Meta drawer read-only
+
+- `CommissionFormDrawer` gains `initialMode` ('view' | 'edit'). View:
+  title "Commission · <code>", fields read-only (`isReadOnly` /
+  `ReadOnlyLock` for date + checkboxes), no required / optional markers or
+  code check, broker without "Thay đổi", payment terms as
+  `MetaPaymentTermRow` summaries, payment-history cards read-only (no
+  delete / add), footer "Chế độ xem" + Đóng / Chỉnh sửa (switches to edit in
+  place). The contract Commission tab's "Xem" uses it; the commission list
+  and related-entities panel still use `CommissionFormDialog`.
+- Bug found while testing: "Chỉnh sửa" submitted the form — React reused
+  the clicked footer `<button>` as the submit button and the browser's
+  click activation then submitted. Fixed with distinct `key`s on the two
+  footer groups + `type="button"`. The accidental save re-sent unchanged
+  values of the test commission HH-TEST-26KCT14.
+- Checked in Chrome on 26KCT14: view locks code / date / checkboxes;
+  Chỉnh sửa → "Cập nhật Commission" with no request / toast; Huỷ bỏ closes.
+- verify.sh passed (`harness/runs/20260925-025343-414931/`).
+
+### Harness gaps
+
+- Swapping a plain button for a `type="submit"` one in the same slot on
+  click submits the form. A lint / structural check for conditional
+  sibling buttons with differing `type` and no `key` would catch it.
+
 ## 2026-09-25 — Contract Commission tab review fixes
 
 - No commission: `MetaCommissionEmptyState` (one card: icon, "Hợp đồng này

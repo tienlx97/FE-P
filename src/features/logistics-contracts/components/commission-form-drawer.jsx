@@ -19,7 +19,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { BadgeCheck, ChevronDown, Handshake } from 'lucide-react';
+import { BadgeCheck, ChevronDown, Handshake, Pencil } from 'lucide-react';
 import { useId, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
@@ -33,6 +33,7 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
@@ -115,7 +116,10 @@ const styles = stylex.create({
  * `PaymentTermsFields`) and payment history — over `useCommissionForm`, so
  * validation, the duplicate-code check and the create/update calls are the
  * same as `CommissionFormDialog`. Creating closes on success; editing
- * closes too (the detail tab shows the saved record).
+ * closes too (the detail tab shows the saved record). `initialMode="view"`
+ * (the tab's "Xem") shows the same drawer read-only — controls locked, no
+ * add / remove / change actions, steps as summaries — with "Chỉnh sửa" in
+ * the footer switching it to edit in place.
  * Not in the data, so not rendered: broker verification badge, VND
  * conversion / exchange rate, "Thêm tài khoản" (bank accounts are managed on
  * the supplier), per-step long description separate from the condition.
@@ -124,6 +128,7 @@ const styles = stylex.create({
  *   commission?: import('../types/index.js').Commission | null,
  *   onClose: () => void,
  *   onSuccess?: (commission: import('../types/index.js').Commission) => void,
+ *   initialMode?: 'view' | 'edit',
  * }} props
  */
 export function CommissionFormDrawer({
@@ -131,8 +136,11 @@ export function CommissionFormDrawer({
   commission = null,
   onClose,
   onSuccess,
+  initialMode = 'edit',
 }) {
   const formId = useId();
+  const [mode, setMode] = useState(initialMode);
+  const isViewing = mode === 'view' && commission !== null;
   const toast = useAppToast();
   const [isPickingBroker, setIsPickingBroker] = useState(false);
   const [isConfirmingDiscard, setIsConfirmingDiscard] = useState(false);
@@ -215,7 +223,13 @@ export function CommissionFormDrawer({
         side="end"
         width={DRAWER_WIDTH}
         isFullWidthOnMobile
-        label={commission ? 'Cập nhật Commission' : 'Tạo Commission'}
+        label={
+          isViewing
+            ? 'Chi tiết Commission'
+            : commission
+              ? 'Cập nhật Commission'
+              : 'Tạo Commission'
+        }
         hasCloseButton={false}
         xstyle={styles.surface}
       >
@@ -227,9 +241,11 @@ export function CommissionFormDrawer({
               <MetaDrawerHeader
                 icon={Handshake}
                 title={
-                  commission
-                    ? `Cập nhật Commission · ${commission.code}`
-                    : 'Tạo Thỏa thuận Hoa hồng (Commission)'
+                  isViewing
+                    ? `Commission · ${commission.code}`
+                    : commission
+                      ? `Cập nhật Commission · ${commission.code}`
+                      : 'Tạo Thỏa thuận Hoa hồng (Commission)'
                 }
                 titleBadge={
                   <MetaPill
@@ -278,45 +294,54 @@ export function CommissionFormDrawer({
                   <MetaFormSection
                     isBoxed
                     title="Thông tin cơ bản & môi giới"
-                    meta={<MetaPill label="Bắt buộc" tone="accent" />}
+                    meta={
+                      isViewing ? undefined : (
+                        <MetaPill label="Bắt buộc" tone="accent" />
+                      )
+                    }
                   >
                     <Grid columns={TWO_COLUMNS} gap={4}>
                       <TextInput
                         label="Mã Commission"
                         value={values.code}
                         onChange={(value) => setField('code', value)}
-                        isRequired
-                        isLoading={form.isCheckingCode}
-                        status={fieldStatuses.code}
+                        isReadOnly={isViewing}
+                        isRequired={!isViewing}
+                        isLoading={!isViewing && form.isCheckingCode}
+                        status={isViewing ? undefined : fieldStatuses.code}
                         statusVariant="tooltip"
                       />
-                      <DateInput
-                        label="Ngày ký thỏa thuận"
-                        format={formatDateInputValue}
-                        value={
-                          /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                            values.signedDate
-                          )
-                        }
-                        onChange={(value) =>
-                          setField('signedDate', value ?? '')
-                        }
-                        isRequired
-                        status={fieldStatuses.signedDate}
-                        statusVariant="tooltip"
-                        width="100%"
-                      />
+                      <ReadOnlyLock isActive={isViewing}>
+                        <DateInput
+                          label="Ngày ký thỏa thuận"
+                          format={formatDateInputValue}
+                          value={
+                            /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                              values.signedDate
+                            )
+                          }
+                          onChange={(value) =>
+                            setField('signedDate', value ?? '')
+                          }
+                          isRequired={!isViewing}
+                          status={fieldStatuses.signedDate}
+                          statusVariant="tooltip"
+                          width="100%"
+                        />
+                      </ReadOnlyLock>
                     </Grid>
 
-                    {broker && !isPickingBroker ? (
+                    {broker && (isViewing || !isPickingBroker) ? (
                       <VStack gap={1} hAlign="stretch">
                         <HStack gap={1} vAlign="center" wrap="wrap">
                           <Text weight="medium">
                             Bên nhận hoa hồng (Môi giới / Broker)
                           </Text>
-                          <Text size="sm" color="secondary">
-                            · Bắt buộc
-                          </Text>
+                          {isViewing ? null : (
+                            <Text size="sm" color="secondary">
+                              · Bắt buộc
+                            </Text>
+                          )}
                         </HStack>
                         <MetaPartySummary
                           name={broker.companyName}
@@ -327,14 +352,16 @@ export function CommissionFormDrawer({
                             broker.address ?? '',
                           ].filter(Boolean)}
                           action={
-                            <Button
-                              label="Thay đổi"
-                              variant="ghost"
-                              size="sm"
-                              type="button"
-                              icon={<Icon icon={ChevronDown} size="sm" />}
-                              onClick={() => setIsPickingBroker(true)}
-                            />
+                            isViewing ? undefined : (
+                              <Button
+                                label="Thay đổi"
+                                variant="ghost"
+                                size="sm"
+                                type="button"
+                                icon={<Icon icon={ChevronDown} size="sm" />}
+                                onClick={() => setIsPickingBroker(true)}
+                              />
+                            )
                           }
                         />
                       </VStack>
@@ -380,9 +407,11 @@ export function CommissionFormDrawer({
                           <Text weight="medium">
                             Tổng giá trị hoa hồng cam kết
                           </Text>
-                          <Text size="sm" color="secondary">
-                            · Bắt buộc
-                          </Text>
+                          {isViewing ? null : (
+                            <Text size="sm" color="secondary">
+                              · Bắt buộc
+                            </Text>
+                          )}
                         </HStack>
                         {ratioOfContract !== null ? (
                           <MetaPill
@@ -398,7 +427,8 @@ export function CommissionFormDrawer({
                           value={values.value}
                           onChange={(value) => setField('value', value)}
                           units={currency || undefined}
-                          isRequired
+                          isReadOnly={isViewing}
+                          isRequired={!isViewing}
                           status={fieldStatuses.value}
                           statusVariant="tooltip"
                         />
@@ -421,22 +451,26 @@ export function CommissionFormDrawer({
 
                     <Grid columns={TWO_COLUMNS} gap={3}>
                       <HStack vAlign="center" xstyle={styles.checkTile}>
-                        <CheckboxInput
-                          label="Bên bán ký"
-                          value={values.sellerSigned}
-                          onChange={(checked) =>
-                            setField('sellerSigned', checked)
-                          }
-                        />
+                        <ReadOnlyLock isActive={isViewing}>
+                          <CheckboxInput
+                            label="Bên bán ký"
+                            value={values.sellerSigned}
+                            onChange={(checked) =>
+                              setField('sellerSigned', checked)
+                            }
+                          />
+                        </ReadOnlyLock>
                       </HStack>
                       <HStack vAlign="center" xstyle={styles.checkTile}>
-                        <CheckboxInput
-                          label="Bên môi giới ký"
-                          value={values.partySigned}
-                          onChange={(checked) =>
-                            setField('partySigned', checked)
-                          }
-                        />
+                        <ReadOnlyLock isActive={isViewing}>
+                          <CheckboxInput
+                            label="Bên môi giới ký"
+                            value={values.partySigned}
+                            onChange={(checked) =>
+                              setField('partySigned', checked)
+                            }
+                          />
+                        </ReadOnlyLock>
                       </HStack>
                     </Grid>
                   </MetaFormSection>
@@ -472,6 +506,7 @@ export function CommissionFormDrawer({
                       status={fieldStatuses.paymentTerms}
                       contractValue={values.value}
                       currency={currency}
+                      isReadOnly={isViewing}
                       onAddRow={paymentTermRows.addRow}
                       onRemoveRow={paymentTermRows.removeRow}
                       onUpdateRowField={paymentTermRows.updateRowField}
@@ -499,6 +534,7 @@ export function CommissionFormDrawer({
                       rows={form.paymentHistoryRows.rows}
                       status={fieldStatuses.paymentHistory}
                       currency={currency}
+                      isReadOnly={isViewing}
                       onAddRow={form.paymentHistoryRows.addRow}
                       onRemoveRow={form.paymentHistoryRows.removeRow}
                       onUpdateRowField={form.paymentHistoryRows.updateRowField}
@@ -521,27 +557,54 @@ export function CommissionFormDrawer({
                     <HStack as="span" xstyle={styles.dot} />
                   ) : null}
                   <Text size="sm" color="secondary">
-                    {form.isDirty ? 'Có thay đổi chưa lưu' : 'Chưa có thay đổi'}
+                    {isViewing
+                      ? 'Chế độ xem'
+                      : form.isDirty
+                        ? 'Có thay đổi chưa lưu'
+                        : 'Chưa có thay đổi'}
                   </Text>
                 </HStack>
-                <HStack gap={2} vAlign="center" wrap="nowrap">
-                  <Button
-                    label="Huỷ bỏ"
-                    variant="secondary"
-                    size="lg"
-                    isDisabled={form.isSubmitting}
-                    onClick={requestClose}
-                  />
-                  <Button
-                    label={form.submitLabel}
-                    type="submit"
-                    form={formId}
-                    variant="primary"
-                    size="lg"
-                    icon={<Icon icon={BadgeCheck} size="sm" />}
-                    isLoading={form.isSubmitting}
-                  />
-                </HStack>
+                {/* Distinct keys: reusing the clicked "Chỉnh sửa" <button> as
+                    the submit button would let the browser's click
+                    activation submit the form right after the switch. */}
+                {isViewing ? (
+                  <HStack key="view" gap={2} vAlign="center" wrap="nowrap">
+                    <Button
+                      label="Đóng"
+                      type="button"
+                      variant="secondary"
+                      size="lg"
+                      onClick={onClose}
+                    />
+                    <Button
+                      label="Chỉnh sửa"
+                      type="button"
+                      variant="primary"
+                      size="lg"
+                      icon={<Icon icon={Pencil} size="sm" />}
+                      onClick={() => setMode('edit')}
+                    />
+                  </HStack>
+                ) : (
+                  <HStack key="edit" gap={2} vAlign="center" wrap="nowrap">
+                    <Button
+                      label="Huỷ bỏ"
+                      variant="secondary"
+                      size="lg"
+                      isDisabled={form.isSubmitting}
+                      onClick={requestClose}
+                    />
+                    <Button
+                      label={form.submitLabel}
+                      type="submit"
+                      form={formId}
+                      variant="primary"
+                      size="lg"
+                      icon={<Icon icon={BadgeCheck} size="sm" />}
+                      isLoading={form.isSubmitting}
+                    />
+                  </HStack>
+                )}
               </HStack>
             </LayoutFooter>
           }

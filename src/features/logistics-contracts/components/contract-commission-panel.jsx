@@ -12,7 +12,6 @@ import { formatMoney } from '../config/currencies.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
-import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { CommissionFormDrawer } from './commission-form-drawer.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
 
@@ -70,31 +69,16 @@ export function ContractCommissionPanel({ contract }) {
   }, 0);
   const settlementValue = (contract.contractValue ?? 0) + annexesTotal;
 
-  // Create / edit use the Meta drawer (Figma 104:5399); the read-only
-  // "Xem" keeps the dialog.
+  // Create / view / edit all use the Meta drawer (Figma 104:5399); "Xem"
+  // opens it read-only with "Chỉnh sửa" to switch in place.
   const formDialog =
-    dialog?.kind === 'form' && dialog.mode === 'edit' ? (
+    dialog?.kind === 'form' ? (
       <CommissionFormDrawer
         key={commission?.id ?? 'create'}
         contract={contract}
         commission={commission}
-        onClose={() => setDialog(null)}
-      />
-    ) : dialog?.kind === 'form' ? (
-      <CommissionFormDialog
-        key={`${commission?.id ?? 'create'}-${dialog.mode}`}
-        isOpen
         initialMode={dialog.mode}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) setDialog(null);
-        }}
-        contractId={contract.id}
-        contractNumber={contract.contractNumber}
-        projectName={contract.projectName}
-        currency={currency}
-        commission={commission}
-        closeLabel="Quay lại Contract"
-        onSuccess={() => setDialog(null)}
+        onClose={() => setDialog(null)}
       />
     ) : null;
 

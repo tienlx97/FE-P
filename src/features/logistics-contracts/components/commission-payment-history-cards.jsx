@@ -13,6 +13,7 @@ import * as stylex from '@stylexjs/stylex';
 import { CirclePlus, Trash2 } from 'lucide-react';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
@@ -58,10 +59,13 @@ const styles = stylex.create({
  * payment-term steps above it, with the same dashed add button. The
  * section header already shows the paid total, so there is no footer sum.
  * The older commission dialog keeps `PaymentHistoryFields`' grid.
+ * `isReadOnly` (the drawer's view mode) locks the fields and drops the
+ * delete / add actions.
  * @param {{
  *   rows: import('../types/index.js').CommissionPaymentRow[],
  *   status?: { type: 'error' | 'success', message: string },
  *   currency?: string,
+ *   isReadOnly?: boolean,
  *   onAddRow: () => void,
  *   onRemoveRow: (rowKey: string) => void,
  *   onUpdateRowField: (rowKey: string, field: 'paymentDate' | 'amount' | 'note', value: number | string | undefined) => void,
@@ -71,6 +75,7 @@ export function CommissionPaymentHistoryCards({
   rows,
   status,
   currency,
+  isReadOnly = false,
   onAddRow,
   onRemoveRow,
   onUpdateRowField,
@@ -118,33 +123,37 @@ export function CommissionPaymentHistoryCards({
                     {formatMoney(row.amount, currency ?? '')}
                   </Text>
                 ) : null}
-                <IconButton
-                  label={`Xoá lần thanh toán ${sequence}`}
-                  tooltip="Xoá"
-                  icon={<Icon icon={Trash2} size="sm" />}
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRemoveRow(row.rowKey)}
-                />
+                {isReadOnly ? null : (
+                  <IconButton
+                    label={`Xoá lần thanh toán ${sequence}`}
+                    tooltip="Xoá"
+                    icon={<Icon icon={Trash2} size="sm" />}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onRemoveRow(row.rowKey)}
+                  />
+                )}
               </HStack>
             </HStack>
 
             <Grid columns={TWO_COLUMNS} gap={3}>
-              <DateInput
-                label="Ngày thanh toán"
-                placeholder="Chọn ngày"
-                value={
-                  /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
-                    row.paymentDate || null
-                  )
-                }
-                onChange={(value) =>
-                  onUpdateRowField(row.rowKey, 'paymentDate', value ?? '')
-                }
-                format={formatDateInputValue}
-                width="100%"
-              />
+              <ReadOnlyLock isActive={isReadOnly}>
+                <DateInput
+                  label="Ngày thanh toán"
+                  placeholder="Chọn ngày"
+                  value={
+                    /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                      row.paymentDate || null
+                    )
+                  }
+                  onChange={(value) =>
+                    onUpdateRowField(row.rowKey, 'paymentDate', value ?? '')
+                  }
+                  format={formatDateInputValue}
+                  width="100%"
+                />
+              </ReadOnlyLock>
               <FormattedNumberTextInput
                 label="Giá trị"
                 value={row.amount}
@@ -152,30 +161,36 @@ export function CommissionPaymentHistoryCards({
                   onUpdateRowField(row.rowKey, 'amount', value)
                 }
                 units={currency || undefined}
+                isReadOnly={isReadOnly}
               />
             </Grid>
             <TextArea
               label="Ghi chú / Chứng từ"
-              isOptional
+              isOptional={!isReadOnly}
               rows={2}
               value={row.note}
               onChange={(value) => onUpdateRowField(row.rowKey, 'note', value)}
-              placeholder="Ví dụ: UNC số 123, chuyển khoản ngày…"
+              placeholder={
+                isReadOnly ? '—' : 'Ví dụ: UNC số 123, chuyển khoản ngày…'
+              }
               width="100%"
+              isReadOnly={isReadOnly}
             />
           </VStack>
         );
       })}
 
-      <Button
-        label="Thêm lần thanh toán"
-        type="button"
-        variant="ghost"
-        icon={<Icon icon={CirclePlus} size="sm" />}
-        onClick={onAddRow}
-        width="100%"
-        xstyle={styles.addButton}
-      />
+      {isReadOnly ? null : (
+        <Button
+          label="Thêm lần thanh toán"
+          type="button"
+          variant="ghost"
+          icon={<Icon icon={CirclePlus} size="sm" />}
+          onClick={onAddRow}
+          width="100%"
+          xstyle={styles.addButton}
+        />
+      )}
 
       {status ? (
         <Banner status="error" title={status.message} container="card" />
