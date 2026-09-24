@@ -1,5 +1,28 @@
 # Progress Log
 
+## 2026-09-24 — Journey edit dialogs in the Meta theme
+
+- New `MetaFormDialog` (`src/shared/components/meta-form-dialog.jsx`, next
+  to `FormDialog` since it owns a native `<form>`, which golden rule #15
+  keeps out of `custom/`): `MetaDrawerHeader` (icon tile, title, pill
+  line, close), body on the muted Meta canvas, footer with the unsaved
+  hint + "Huỷ bỏ" + large primary with icon, discard confirmation;
+  re-applies Meta itself.
+- `ShipmentMilestoneDialog` on it: header pills (milestone, state —
+  "Đã xác nhận tay" / "Đã hoàn thành" / "Chặng hiện tại" / "Kế hoạch" —
+  and Seller / Buyer scope); boxed "Hoàn thành thực tế" card (date with a
+  detached error, note with 0/500 counter); info strip on how manual
+  confirmations combine with the status; a "Bỏ xác nhận mốc" card for a
+  confirmed step. Submit "Xác nhận hoàn thành" / "Lưu thay đổi".
+- `ShipmentEmptyReturnDialog` on it: header pills "Đã trả x/y cont"
+  (green complete / amber otherwise) and "Hạn trả …" (red when overdue);
+  a boxed "Container" card, one row per container (Cont #n · type, number,
+  Đã trả / Chưa trả pill, date, depot).
+- Checked in Chrome on 26KCT03/LOT-01: both dialogs open (560 / 760px)
+  with the Meta header / canvas / footer and close without changes.
+  Nothing saved.
+- verify.sh passed (`harness/runs/20260924-164311-143/`).
+
 ## 2026-09-24 — Shipment detail "Chỉnh sửa" drawer (Stitch cab96b6c…)
 
 - New `ShipmentEditDrawer` (960px Meta drawer, Stitch "Chỉnh sửa Shipment",
