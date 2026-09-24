@@ -30,9 +30,16 @@ const INFO_COLUMNS = [
  * fixed width alone. Astryx `Skeleton` blocks inside `Card` / `Grid` /
  * stacks (golden rule #15).
  *
- * @param {{ label?: string }} props
+ * Opened on another tab (`?tab=commission` …), the body is a neutral
+ * titled card instead, so the overview's KPI / installment frame doesn't
+ * flash before an unrelated tab layout.
+ *
+ * @param {{ label?: string, tab?: string }} props
  */
-export function MetaContractDetailSkeleton({ label = 'Đang tải hợp đồng' }) {
+export function MetaContractDetailSkeleton({
+  label = 'Đang tải hợp đồng',
+  tab = 'overview',
+}) {
   return (
     <VStack gap={3} hAlign="stretch" aria-busy="true" aria-label={label}>
       <Card padding={5} xstyle={styles.card}>
@@ -88,9 +95,42 @@ export function MetaContractDetailSkeleton({ label = 'Đang tải hợp đồng'
         ))}
       </HStack>
 
-      <OverviewCardSkeleton />
-      <InfoGridSkeleton />
+      {tab === 'overview' ? (
+        <>
+          <OverviewCardSkeleton />
+          <InfoGridSkeleton />
+        </>
+      ) : (
+        <TabBodySkeleton />
+      )}
     </VStack>
+  );
+}
+
+const TAB_BODY_ROWS = [0, 1, 2];
+
+/** Any non-overview tab: a titled card with a few rows. */
+function TabBodySkeleton() {
+  return (
+    <Card padding={6} xstyle={styles.card}>
+      <VStack gap={5} hAlign="stretch">
+        <HStack gap={2} vAlign="center" xstyle={styles.titleRow}>
+          <Skeleton
+            width="clamp(10rem, 30%, 18rem)"
+            height="var(--spacing-5)"
+            radius={2}
+          />
+        </HStack>
+        {TAB_BODY_ROWS.map((index) => (
+          <Skeleton
+            key={index}
+            height="var(--spacing-6)"
+            radius={2}
+            index={index}
+          />
+        ))}
+      </VStack>
+    </Card>
   );
 }
 

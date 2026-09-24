@@ -2,6 +2,7 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
+import { EmptyState } from '@astryxdesign/core/EmptyState';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -35,11 +36,26 @@ import { MetaPill } from './pill.jsx';
  *   cobalt (tax code, reference numbers).
  * @typedef {{ label: string, value: string, note: string, tone: 'neutral' | 'success' | 'accent' }} MetaCommissionSummary
  * @typedef {{ label: string, signedLabel: string, isSigned: boolean, code: string, name: string, rows: MetaKeyValue[] }} MetaCommissionBroker
- * @typedef {{ title: string, status?: string, shortName: string, fullName: string, account: string, swift: string, rows: MetaKeyValue[], note?: string }} MetaCommissionBank
- * @typedef {{ id: string, no: string, usd: string, vnd?: string, method: string, date: string, status: string, paid: boolean }} MetaCommissionPayment
+ * @typedef {{ title: string, status?: string, shortName: string, fullName: string, account: string, swift: string, rows: MetaKeyValue[], note?: string, emptyMessage?: string }} MetaCommissionBank
+ *   `emptyMessage` replaces the whole body (no account on file).
+ * @typedef {'paid' | 'partial' | 'unpaid'} MetaCommissionPaymentState
+ * @typedef {{ id: string, no: string, usd: string, vnd?: string, paidNote?: string, method: string, date: string, status: string, paid: boolean, state?: MetaCommissionPaymentState }} MetaCommissionPayment
+ *   `state` defaults from `paid`; `partial` renders amber with `paidNote`
+ *   ("Đã chi 1,000.00") under the amount.
  */
 
 const SUMMARY_ICONS = [Banknote, CircleCheck, ClipboardClock];
+
+const STATE_PILL_TONES = /** @type {const} */ ({
+  paid: 'green',
+  partial: 'warning',
+  unpaid: 'accent',
+});
+
+/** @param {MetaCommissionPayment} row @returns {MetaCommissionPaymentState} */
+function paymentState(row) {
+  return row.state ?? (row.paid ? 'paid' : 'unpaid');
+}
 
 const SUMMARY_TONES = /** @type {const} */ ({
   neutral: {
@@ -82,6 +98,7 @@ const SUMMARY_TONES = /** @type {const} */ ({
  *   confirmedTotal: string,
  *   hasReceiptDownload?: boolean,
  *   createLabel?: string,
+ *   tableTitle?: string,
  *   onExport?: () => void,
  *   onCreate?: () => void,
  *   onView?: (id: string) => void,
@@ -99,7 +116,8 @@ export function MetaCommissionPanel({
   footnote,
   confirmedTotal,
   hasReceiptDownload = true,
-  createLabel = '+ Thêm đợt thanh toán / hoa hồng',
+  createLabel = 'Thêm lần chi',
+  tableTitle = 'Đợt chi hoa hồng',
   onExport,
   onCreate,
   onView,
@@ -148,6 +166,15 @@ export function MetaCommissionPanel({
           >
             {row.usd} {currency}
           </Text>
+          {row.paidNote ? (
+            <Text
+              size="sm"
+              color={/** @type {any} */ ('meta-subtle')}
+              hasTabularNumbers
+            >
+              {row.paidNote}
+            </Text>
+          ) : null}
           {row.vnd ? (
             <Text
               size="sm"
@@ -172,7 +199,7 @@ export function MetaCommissionPanel({
             color={row.paid ? 'secondary' : 'accent'}
           />
           <Text type="inherit" color="secondary" maxLines={1}>
-            {row.method} • {row.date}
+            {row.date ? `${row.method} • ${row.date}` : row.method}
           </Text>
         </HStack>
       ),
@@ -184,7 +211,7 @@ export function MetaCommissionPanel({
       renderCell: (row) => (
         <MetaPill
           label={row.status}
-          tone={row.paid ? 'green' : 'accent'}
+          tone={STATE_PILL_TONES[paymentState(row)]}
           icon={row.paid ? CircleCheck : Clock}
         />
       ),
@@ -257,7 +284,7 @@ export function MetaCommissionPanel({
             wrap="wrap"
             xstyle={styles.tableHeader}
           >
-            <Heading level={3}>Bảng theo dõi</Heading>
+            <Heading level={3}>{tableTitle}</Heading>
             <HStack gap={2} vAlign="center" wrap="wrap">
               {onExport ? (
                 <Button
@@ -480,6 +507,50 @@ function SummaryCard({ label, value, note, tone, icon, unit, isLoading }) {
   );
 }
 
+/**
+ * The Commission tab before a commission exists: one centered empty state
+ * with the create action, instead of the full layout filled with blanks.
+ * @param {{ createLabel?: string, onCreate?: () => void, isLoading?: boolean }} props
+ */
+export function MetaCommissionEmptyState({
+  createLabel = 'Tạo Commission',
+  onCreate,
+  isLoading = false,
+}) {
+  return (
+    <Card padding={6} xstyle={styles.card}>
+      {isLoading ? (
+        <VStack gap={3} hAlign="center" xstyle={styles.emptyState}>
+          <Skeleton
+            width="var(--spacing-12)"
+            height="var(--spacing-12)"
+            radius="rounded"
+          />
+          <Skeleton width="16rem" height="var(--spacing-5)" radius={2} />
+          <Skeleton width="22rem" height="var(--spacing-4)" radius={2} />
+        </VStack>
+      ) : (
+        <EmptyState
+          icon={<Icon icon={HandCoins} size="lg" color="accent" />}
+          title="Hợp đồng này chưa có Commission"
+          description="Tạo thỏa thuận hoa hồng để theo dõi bên nhận, kế hoạch chi và các lần đã chi."
+          actions={
+            onCreate ? (
+              <Button
+                label={createLabel}
+                variant="primary"
+                icon={<Icon icon={CirclePlus} size="sm" />}
+                onClick={onCreate}
+              />
+            ) : undefined
+          }
+          xstyle={styles.emptyState}
+        />
+      )}
+    </Card>
+  );
+}
+
 /** @param {{ broker: MetaCommissionBroker, isLoading: boolean }} props */
 function BrokerCard({ broker, isLoading }) {
   return (
@@ -552,6 +623,11 @@ function BankCard({ bank, isLoading }) {
         </HStack>
         {isLoading ? (
           <Skeleton height="calc(var(--spacing-12) * 3)" radius={3} />
+        ) : bank.emptyMessage ? (
+          <HStack gap={2} vAlign="center" xstyle={styles.inset}>
+            <Icon icon={Info} size="sm" color="secondary" />
+            <Text color="secondary">{bank.emptyMessage}</Text>
+          </HStack>
         ) : (
           <>
             <VStack gap={1} hAlign="stretch" xstyle={styles.inset}>
@@ -563,8 +639,14 @@ function BankCard({ bank, isLoading }) {
                   {bank.shortName}
                 </Text>
               </HStack>
-              <Text weight="semibold">{bank.fullName}</Text>
-              <Grid columns={2} gap={2} xstyle={styles.bankNumbers}>
+              {bank.fullName && bank.fullName !== bank.shortName ? (
+                <Text weight="semibold">{bank.fullName}</Text>
+              ) : null}
+              <Grid
+                columns={bank.swift ? 2 : 1}
+                gap={2}
+                xstyle={styles.bankNumbers}
+              >
                 <VStack gap={0}>
                   <Text
                     size="sm"
@@ -578,17 +660,19 @@ function BankCard({ bank, isLoading }) {
                     {bank.account}
                   </Text>
                 </VStack>
-                <VStack gap={0}>
-                  <Text
-                    size="sm"
-                    weight="medium"
-                    color="secondary"
-                    xstyle={styles.caps}
-                  >
-                    MÃ SWIFT:
-                  </Text>
-                  <Text weight="bold">{bank.swift}</Text>
-                </VStack>
+                {bank.swift ? (
+                  <VStack gap={0}>
+                    <Text
+                      size="sm"
+                      weight="medium"
+                      color="secondary"
+                      xstyle={styles.caps}
+                    >
+                      MÃ SWIFT:
+                    </Text>
+                    <Text weight="bold">{bank.swift}</Text>
+                  </VStack>
+                ) : null}
               </Grid>
             </VStack>
             <VStack gap={0} hAlign="stretch" xstyle={styles.detailRows}>
@@ -648,6 +732,9 @@ function KeyValueRows({ rows }) {
 }
 
 const styles = stylex.create({
+  emptyState: {
+    paddingBlock: 'var(--spacing-10)',
+  },
   responsiveGrid: {
     gridTemplateColumns: {
       default: null,

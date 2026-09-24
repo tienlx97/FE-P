@@ -167,7 +167,7 @@ export function ContractDetailWorkspace({ contractId }) {
           />
 
           {contractQuery.isLoading ? (
-            <MetaContractDetailSkeleton />
+            <MetaContractDetailSkeleton tab={activeTab} />
           ) : !contract ? (
             <Banner
               status="error"

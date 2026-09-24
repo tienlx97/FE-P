@@ -1,5 +1,33 @@
 # Progress Log
 
+## 2026-09-25 — Contract Commission tab review fixes
+
+- No commission: `MetaCommissionEmptyState` (one card: icon, "Hợp đồng này
+  chưa có Commission", "Tạo Commission") replaces the full layout filled
+  with ~25 "___" placeholders.
+- Broker / bank looked the recipient up in Customers, but the drawer picks
+  it from Suppliers → both cards were always blank. Now `useSuppliersQuery`.
+- "Đợt chi hoa hồng" (was "Bảng theo dõi"): payments are allocated to terms
+  in date order (`config/commission-payment-allocation.js`, tested) instead
+  of pairing term n with payment n; per term: planned amount, "Đã chi …"
+  under a partial one, status Đã chi <date> / Chi một phần (x% of the
+  term) / Chưa chi (amber pill for partial); paid / remaining counts use
+  the allocation; overpayment shows in the totals line. Create button on a
+  filled tab: "Thêm lần chi".
+- Bank card: no SWIFT column (no data), bank name shown once, and a single
+  note when the supplier has no bank account.
+- `MetaContractDetailSkeleton` takes `tab`; non-overview tabs get a neutral
+  card instead of the overview frame.
+- Test data (dev DB, with the user's OK): commission HH-TEST-26KCT14 on
+  26KCT14 — QUỐC TẾ CHÍ THÀNH, 10,000 USD, 30% / 70%, one 4,000 payment on
+  20/09/2026.
+- Checked in Chrome on 26KCT14 before / after creating it: empty state;
+  cards 10,000 / 4,000 (1/2 đợt) / 6,000; Đợt 01 3,000 Đã chi 20/09/2026,
+  Đợt 02 7,000 "Đã chi 1,000.00", Chi một phần (14.3%); broker details
+  filled; bank note.
+- Not done: "Xem" still opens the old commission dialog.
+- verify.sh passed (`harness/runs/20260925-024547-400413/`).
+
 ## 2026-09-25 — Payment-term steps as open cards when editable
 
 - `PaymentTermsFields` (commission drawer, contract edit drawer, contract

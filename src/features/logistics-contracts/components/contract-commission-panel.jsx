@@ -1,19 +1,22 @@
 'use client';
 import { useState } from 'react';
 
-import { MetaCommissionPanel } from '@/shared/components/custom/meta/index.js';
+import {
+  MetaCommissionEmptyState,
+  MetaCommissionPanel,
+} from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import { allocateCommissionPayments } from '../config/commission-payment-allocation.js';
 import { formatMoney } from '../config/currencies.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
-import { useCustomersQuery } from '../hooks/use-customers-query.js';
+import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { CommissionFormDialog } from './commission-form-dialog.jsx';
 import { CommissionFormDrawer } from './commission-form-drawer.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
 
-// Fields the design calls for always render; a missing value shows this
-// placeholder.
+// A missing broker / bank value shows this placeholder.
 const BLANK = '___';
 
 /** @param {string | null | undefined} value */
@@ -49,7 +52,8 @@ export function ContractCommissionPanel({ contract }) {
   );
 
   const commissionQuery = useCommissionQuery(contract.id);
-  const customersQuery = useCustomersQuery();
+  // The broker is picked from the Supplier catalog (`useCommissionForm`).
+  const suppliersQuery = useSuppliersQuery();
   const annexesQuery = useContractAnnexesQuery(contract.id);
 
   const commission =
@@ -95,71 +99,10 @@ export function ContractCommissionPanel({ contract }) {
     ) : null;
 
   if (!commission) {
-    // No commission yet: the full design with placeholders, so the layout is
-    // already there and fills in once one is created.
-    const emptyRows =
-      /** @type {Array<[string, string, ('code' | 'accent')?]>} */ ([
-        ['Người đại diện:', BLANK],
-        ['Chức vụ:', BLANK],
-        ['Mã số thuế:', BLANK, 'accent'],
-        ['Địa chỉ / Trụ sở:', BLANK],
-        ['Ngày ký:', BLANK],
-      ]);
     return (
       <>
-        <MetaCommissionPanel
-          currency={currency}
+        <MetaCommissionEmptyState
           isLoading={commissionQuery.isLoading}
-          summary={[
-            {
-              label: 'TỔNG HOA HỒNG',
-              value: BLANK,
-              note: 'Chưa có Commission',
-              tone: 'neutral',
-            },
-            {
-              label: 'ĐÃ CHI TRẢ',
-              value: BLANK,
-              note: 'Đã chi ___ đợt',
-              tone: 'success',
-            },
-            {
-              label: 'CÒN PHẢI CHI',
-              value: BLANK,
-              note: 'Còn ___ đợt',
-              tone: 'accent',
-            },
-          ]}
-          broker={{
-            label: 'BÊN NHẬN HOA HỒNG (MÔI GIỚI)',
-            signedLabel: 'Chưa ký',
-            isSigned: false,
-            code: BLANK,
-            name: BLANK,
-            rows: emptyRows,
-          }}
-          bank={{
-            title: 'NGÂN HÀNG THỤ HƯỞNG',
-            shortName: BLANK,
-            fullName: BLANK,
-            account: BLANK,
-            swift: BLANK,
-            rows: [
-              ['Chủ tài khoản:', BLANK],
-              ['Chi nhánh:', BLANK],
-              ['Tỉnh / Thành phố:', BLANK],
-            ],
-          }}
-          payments={[]}
-          totals={{
-            label: 'TỔNG CỘNG',
-            usd: `${BLANK} ${currency}`,
-            summary: '',
-          }}
-          footnote=""
-          confirmedTotal={`${BLANK} ${currency}`}
-          hasReceiptDownload={false}
-          createLabel="Tạo Commission"
           onCreate={() => setDialog({ kind: 'form', mode: 'edit' })}
         />
         {formDialog}
@@ -168,32 +111,46 @@ export function ContractCommissionPanel({ contract }) {
   }
 
   const recipient = (
-    customersQuery.data?.success ? customersQuery.data.customers : []
-  ).find((customer) => customer.id === commission.partyCustomerId);
+    suppliersQuery.data?.success ? suppliersQuery.data.suppliers : []
+  ).find(
+    (/** @type {import('../types/index.js').Supplier} */ supplier) =>
+      supplier.id === commission.partyCustomerId,
+  );
   const bankAccount = recipient?.bankAccounts?.[0];
 
   const total = commission.value;
-  const rowCount = Math.max(
-    commission.paymentTerms.length,
-    commission.paymentHistory.length,
-  );
   const pct = (/** @type {number} */ value) =>
     total > 0 ? Math.round((value / total) * 1000) / 10 : 0;
 
-  const rows = Array.from({ length: rowCount }, (_, index) => {
-    const term = commission.paymentTerms[index];
-    const payment = commission.paymentHistory[index];
-    const amount =
-      payment?.amount ?? (term ? (term.paymentRatioPercent / 100) * total : 0);
-    const date = payment ? formatDisplayDate(payment.paymentDate) : BLANK;
+  // Payments are not linked to terms; allocate them in date order
+  // (`allocateCommissionPayments`) so each planned installment shows how
+  // much of it has been paid.
+  const allocation = allocateCommissionPayments(
+    commission.paymentTerms,
+    commission.paymentHistory,
+    total,
+  );
+  const rowCount = commission.paymentTerms.length;
+  const rows = commission.paymentTerms.map((term, index) => {
+    const { planned, paid, state, lastPaymentDate } =
+      allocation.terms[index];
+    const date = lastPaymentDate ? formatDisplayDate(lastPaymentDate) : '';
     return {
-      id: payment?.id ?? term?.id ?? String(index),
+      id: term.id ?? String(index),
       no: String(index + 1).padStart(2, '0'),
-      usd: formatMoney(amount),
-      method: shortCondition(term?.paymentCondition),
+      usd: formatMoney(planned),
+      paidNote:
+        state === 'partial' ? `Đã chi ${formatMoney(paid)}` : undefined,
+      method: shortCondition(term.paymentCondition),
       date,
-      status: payment ? `Đã chi ${date}` : 'Chưa thanh toán',
-      paid: Boolean(payment),
+      status:
+        state === 'paid'
+          ? `Đã chi ${date}`
+          : state === 'partial'
+            ? `Chi một phần (${Math.round((paid / planned) * 1000) / 10}%)`
+            : 'Chưa chi',
+      paid: state === 'paid',
+      state,
     };
   });
 
@@ -201,9 +158,11 @@ export function ContractCommissionPanel({ contract }) {
     (sum, payment) => sum + payment.amount,
     0,
   );
-  const paidCount = commission.paymentHistory.length;
+  const paidCount = allocation.terms.filter(
+    (term) => term.state === 'paid',
+  ).length;
   const remainingValue = Math.max(0, total - paidValue);
-  const remainingCount = Math.max(0, rowCount - paidCount);
+  const remainingCount = rowCount - paidCount;
   const bothSigned = commission.sellerSigned && commission.partySigned;
   const percentOfSettlement =
     settlementValue > 0
@@ -251,7 +210,7 @@ export function ContractCommissionPanel({ contract }) {
     <>
       <MetaCommissionPanel
         currency={currency}
-        isLoading={customersQuery.isLoading || annexesQuery.isLoading}
+        isLoading={suppliersQuery.isLoading || annexesQuery.isLoading}
         summary={summary}
         broker={{
           label: 'BÊN NHẬN HOA HỒNG (MÔI GIỚI)',
@@ -265,9 +224,13 @@ export function ContractCommissionPanel({ contract }) {
           title: 'NGÂN HÀNG THỤ HƯỞNG',
           status: '',
           shortName: orBlank(bankAccount?.bankName),
-          fullName: orBlank(bankAccount?.bankName),
+          fullName: '',
           account: orBlank(bankAccount?.accountNumber),
-          swift: BLANK,
+          // Customer bank accounts carry no SWIFT code yet.
+          swift: '',
+          emptyMessage: bankAccount
+            ? undefined
+            : 'Bên nhận chưa có tài khoản ngân hàng trong danh mục Nhà cung cấp.',
           rows: bankRows,
           note: '',
         }}
@@ -275,12 +238,21 @@ export function ContractCommissionPanel({ contract }) {
         totals={{
           label: `TỔNG CỘNG (${rowCount} ĐỢT)`,
           usd: `${formatMoney(total)} ${currency}`,
-          summary: `Đã thanh toán: ${formatMoney(paidValue)} (${pct(paidValue)}%) • Còn lại: ${formatMoney(remainingValue)} (${pct(remainingValue)}%)`,
+          summary: [
+            `Đã thanh toán: ${formatMoney(paidValue)} (${pct(paidValue)}%)`,
+            `Còn lại: ${formatMoney(remainingValue)} (${pct(remainingValue)}%)`,
+            allocation.overpaid > 0
+              ? `Chi vượt kế hoạch: ${formatMoney(allocation.overpaid)}`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(' • '),
           vnd: '',
         }}
         footnote=""
         confirmedTotal={`${formatMoney(paidValue)} ${currency}`}
         hasReceiptDownload={false}
+        createLabel="Thêm lần chi"
         onCreate={() => setDialog({ kind: 'payment' })}
         onView={() => setDialog({ kind: 'form', mode: 'view' })}
         onAction={() => setDialog({ kind: 'form', mode: 'edit' })}
