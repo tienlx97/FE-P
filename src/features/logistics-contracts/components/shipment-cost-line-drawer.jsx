@@ -229,6 +229,9 @@ export function ShipmentCostLineDrawer({
                                     size="sm"
                                     type="code"
                                     weight="bold"
+                                    // The chip's own xstyle color wins only
+                                    // over an inherited one, not a set one.
+                                    color="inherit"
                                     xstyle={[
                                       styles.code,
                                       isSelected && styles.codeSelected,
