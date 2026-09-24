@@ -38,24 +38,13 @@ import { MetaPill } from './pill.jsx';
  * @typedef {{ label: string, signedLabel: string, isSigned: boolean, code: string, name: string, rows: MetaKeyValue[] }} MetaCommissionBroker
  * @typedef {{ title: string, status?: string, shortName: string, fullName: string, account: string, swift: string, rows: MetaKeyValue[], note?: string, emptyMessage?: string }} MetaCommissionBank
  *   `emptyMessage` replaces the whole body (no account on file).
- * @typedef {'paid' | 'partial' | 'unpaid'} MetaCommissionPaymentState
- * @typedef {{ id: string, no: string, usd: string, vnd?: string, paidNote?: string, method: string, date: string, status: string, paid: boolean, state?: MetaCommissionPaymentState }} MetaCommissionPayment
- *   `state` defaults from `paid`; `partial` renders amber with `paidNote`
- *   ("Đã chi 1,000.00") under the amount.
+ * @typedef {{ id: string, no: string, usd: string, vnd?: string, paidNote?: string, method: string, paid: boolean }} MetaCommissionPayment
+ *   `paidNote` ("Đã chi 20/09/2026", "Đã chi 1,000.00") sits under the
+ *   amount — the table has no separate status column.
  */
 
 const SUMMARY_ICONS = [Banknote, CircleCheck, ClipboardClock];
 
-const STATE_PILL_TONES = /** @type {const} */ ({
-  paid: 'green',
-  partial: 'warning',
-  unpaid: 'accent',
-});
-
-/** @param {MetaCommissionPayment} row @returns {MetaCommissionPaymentState} */
-function paymentState(row) {
-  return row.state ?? (row.paid ? 'paid' : 'unpaid');
-}
 
 const SUMMARY_TONES = /** @type {const} */ ({
   neutral: {
@@ -82,8 +71,9 @@ const SUMMARY_TONES = /** @type {const} */ ({
  * "Meta" contract-detail "Hoa hồng (Commission)" tab — Figma node
  * 102:4272: 3 KPI cards (Tổng hoa hồng / Đã chi trả / Còn phải chi), the
  * broker card and the beneficiary-bank card side by side, then the
- * "Bảng theo dõi" card (one row per commission installment, a totals band
- * and a footnote band with the confirmed paid total). `isLoading` swaps figures and rows for
+ * "Đợt chi hoa hồng" card (one row per commission installment and a
+ * totals band); `beforeTable` renders between the broker / bank cards and
+ * that card (the contract tab's "Phụ lục Commission"). `isLoading` swaps figures and rows for
  * `Skeleton`s. Composed from Astryx `Card` / `Grid` / `Table` / `Button` /
  * `IconButton` / `Skeleton` + `MetaPill` (golden rule #15).
  *
@@ -94,8 +84,7 @@ const SUMMARY_TONES = /** @type {const} */ ({
  *   bank: MetaCommissionBank,
  *   payments: MetaCommissionPayment[],
  *   totals: { label: string, usd: string, summary: string, vnd?: string },
- *   footnote?: string,
- *   confirmedTotal: string,
+ *   beforeTable?: import('react').ReactNode,
  *   hasReceiptDownload?: boolean,
  *   createLabel?: string,
  *   tableTitle?: string,
@@ -113,8 +102,7 @@ export function MetaCommissionPanel({
   bank,
   payments,
   totals,
-  footnote,
-  confirmedTotal,
+  beforeTable,
   hasReceiptDownload = true,
   createLabel = 'Thêm lần chi',
   tableTitle = 'Đợt chi hoa hồng',
@@ -189,7 +177,7 @@ export function MetaCommissionPanel({
     },
     {
       key: 'method',
-      header: 'Hình thức & thời hạn',
+      header: 'Điều kiện thanh toán',
       width: proportional(1.9),
       renderCell: (row) => (
         <HStack gap={1.5} vAlign="center" wrap="nowrap">
@@ -199,21 +187,9 @@ export function MetaCommissionPanel({
             color={row.paid ? 'secondary' : 'accent'}
           />
           <Text type="inherit" color="secondary" maxLines={1}>
-            {row.date ? `${row.method} • ${row.date}` : row.method}
+            {row.method}
           </Text>
         </HStack>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'Trạng thái',
-      width: proportional(1.6),
-      renderCell: (row) => (
-        <MetaPill
-          label={row.status}
-          tone={STATE_PILL_TONES[paymentState(row)]}
-          icon={row.paid ? CircleCheck : Clock}
-        />
       ),
     },
     {
@@ -274,6 +250,8 @@ export function MetaCommissionPanel({
         <BrokerCard broker={broker} isLoading={isLoading} />
         <BankCard bank={bank} isLoading={isLoading} />
       </Grid>
+
+      {beforeTable}
 
       <Card padding={6} xstyle={styles.tableCard}>
         <VStack gap={0} hAlign="stretch">
@@ -365,7 +343,7 @@ export function MetaCommissionPanel({
             vAlign="center"
             gap={4}
             wrap="wrap"
-            xstyle={styles.band}
+            xstyle={[styles.band, styles.footnoteBand]}
           >
             <HStack gap={6} vAlign="center" wrap="wrap">
               <Text
@@ -400,33 +378,6 @@ export function MetaCommissionPanel({
             ) : null}
           </HStack>
 
-          <HStack
-            hAlign="between"
-            vAlign="center"
-            gap={4}
-            wrap="wrap"
-            xstyle={[styles.band, styles.footnoteBand]}
-          >
-            <Text size="sm" color="secondary">
-              {footnote}
-            </Text>
-            <HStack gap={2} vAlign="center" wrap="nowrap">
-              <Text size="sm" weight="semibold" xstyle={styles.caps}>
-                TỔNG THỰC CHI ĐÃ XÁC NHẬN:
-              </Text>
-              {isLoading ? (
-                <Skeleton width="8rem" height="var(--spacing-5)" radius={2} />
-              ) : (
-                <Text
-                  weight="bold"
-                  color={/** @type {any} */ ('meta-green')}
-                  hasTabularNumbers
-                >
-                  {confirmedTotal}
-                </Text>
-              )}
-            </HStack>
-          </HStack>
         </VStack>
       </Card>
     </VStack>

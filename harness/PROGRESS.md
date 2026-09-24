@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-09-25 — Commission tab: annexes above the table, trimmed cards
+
+- `MetaCommissionPanel` gains `beforeTable`; the "Phụ lục Commission" card
+  now sits above "Đợt chi hoa hồng".
+- "Đợt chi hoa hồng": "Trạng thái" column and the "TỔNG THỰC CHI ĐÃ XÁC
+  NHẬN" band removed (props `footnote` / `confirmedTotal` dropped). The paid
+  state moves under the amount ("Đã chi 20/09/2026" / "Đã chi 1,000.00
+  (14.3%)"); "Hình thức & thời hạn" → "Điều kiện thanh toán" (condition
+  only). The totals band keeps "TỔNG CỘNG (n ĐỢT)" and only an overpayment
+  note — paid / remaining are in the KPI cards.
+- "Phụ lục Commission" rows: no "PL" tile; signing as "Ký <date> · Đã ký 2
+  bên / Chưa ký đủ".
+- Checked in Chrome on 26KCT14.
+- verify.sh passed (`harness/runs/20260925-033311-477467/`).
+
 ## 2026-09-25 — "Phụ lục Commission" card on the contract Commission tab
 
 - `CommissionAnnexesSection` gains `variant="card"`: a standalone card

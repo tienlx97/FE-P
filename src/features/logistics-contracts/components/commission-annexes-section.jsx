@@ -72,14 +72,6 @@ const styles = stylex.create({
   editor: {
     borderColor: 'var(--color-accent)',
   },
-  tile: {
-    backgroundColor: 'var(--meta-surface-container-low)',
-    borderRadius: 'var(--radius-element)',
-    color: 'var(--color-text-secondary)',
-    flexShrink: 0,
-    height: 'var(--spacing-7)',
-    paddingInline: 'var(--spacing-1-5)',
-  },
   // Same framed checkbox tile as the drawer's "Bên bán ký".
   checkTile: {
     backgroundColor: 'var(--color-background-surface)',
@@ -237,11 +229,6 @@ function AnnexCard({ annex, currency, onEdit }) {
   const amount = signedAmount(annex);
   return (
     <HStack gap={3} vAlign="center" wrap="nowrap" xstyle={styles.row}>
-      <HStack as="span" hAlign="center" vAlign="center" xstyle={styles.tile}>
-        <Text as="span" size="sm" weight="bold" color="inherit">
-          PL
-        </Text>
-      </HStack>
       <StackItem size="fill" xstyle={styles.minZero}>
         <VStack gap={0.5} hAlign="stretch">
           <HStack gap={2} vAlign="center" wrap="wrap">
@@ -253,11 +240,10 @@ function AnnexCard({ annex, currency, onEdit }) {
             />
           </HStack>
           <Text size="sm" color="secondary" maxLines={1}>
-            {[
-              `Ký ${formatDisplayDate(annex.signedDate)}`,
-              `Bên bán ${annex.sellerSigned ? 'đã ký' : 'chưa ký'}`,
-              `Bên môi giới ${annex.partySigned ? 'đã ký' : 'chưa ký'}`,
-            ].join(' · ')}
+            Ký {formatDisplayDate(annex.signedDate)} ·{' '}
+            {annex.sellerSigned && annex.partySigned
+              ? 'Đã ký 2 bên'
+              : 'Chưa ký đủ'}
           </Text>
         </VStack>
       </StackItem>
