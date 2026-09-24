@@ -150,7 +150,8 @@ export function ContractOverviewPanel({
 
   // "Quyết toán" splits into the original value (accent) and the annexes'
   // net increase (emerald) — Figma "Gốc: $450k (92.8%) · +2 PL: $35k
-  // (7.2%)". A net decrease has no second segment.
+  // (7.2%)". The shares sit in each note's tooltip so both notes fit one
+  // line on a narrow card. A net decrease has no second segment.
   const originalPercent =
     settlementValue > 0 && annexesTotal > 0
       ? roundTo2((contractValue / settlementValue) * 100)
@@ -167,7 +168,10 @@ export function ContractOverviewPanel({
       start: {
         dotTone: 'accent',
         label: `Gốc: ${formatMoney(contractValue)}`,
-        hint: annexesTotal > 0 ? `(${originalPercent}%)` : undefined,
+        tooltip:
+          annexesTotal > 0
+            ? `${originalPercent}% giá trị quyết toán`
+            : undefined,
       },
       end:
         annexes.length > 0
@@ -175,9 +179,9 @@ export function ContractOverviewPanel({
               dotTone: 'success',
               value: `${annexesTotal >= 0 ? '+' : '-'}${annexes.length} PL: ${formatMoney(Math.abs(annexesTotal))}`,
               tone: 'success',
-              hint:
+              tooltip:
                 annexesTotal > 0
-                  ? `(${roundTo2(100 - originalPercent)}%)`
+                  ? `${roundTo2(100 - originalPercent)}% giá trị quyết toán`
                   : undefined,
             }
           : undefined,

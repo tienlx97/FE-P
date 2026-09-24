@@ -1,5 +1,19 @@
 # Progress Log
 
+## 2026-09-25 — Contract overview metric bars aligned
+
+- "Quyết toán"'s notes (Gốc + PL, with shares) wrapped to 2 lines on a
+  ~285px card and pushed its bar ~22px below the other three.
+- `MetaOverviewSummaryCard`: the note + bar footer is pinned to the card
+  bottom (`marginTop: auto`; the loading body grows too), so bars align
+  whatever the note height. `MetaMetricNote` gains `tooltip`.
+- `ContractOverviewPanel`: the Gốc / PL shares move from inline hints to
+  tooltips ("99.26% giá trị quyết toán"), so both notes fit one line.
+- Checked in Chrome on 26KCT14: notes on one line, 4 bars at the same top
+  (4 columns and 2 columns); a note forced to 3 lines via DevTools still
+  keeps all bars aligned; tooltip on Gốc shows the share.
+- verify.sh passed (`harness/runs/20260925-013547-282193/`).
+
 ## 2026-09-25 — Contract overview installments in a Carousel
 
 - `MetaOverviewSummaryCard`: the "Tiến độ thanh toán" installment chips

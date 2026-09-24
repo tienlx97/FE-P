@@ -30,6 +30,7 @@ import { MetaPill } from './pill.jsx';
  *   label?: string,
  *   value?: string,
  *   hint?: string,
+ *   tooltip?: string,
  *   tone?: MetaTone,
  * }} MetaMetricNote
  *
@@ -302,7 +303,7 @@ function MetricCard({
       </HStack>
 
       {isLoading ? (
-        <VStack gap={3} hAlign="stretch">
+        <VStack gap={3} hAlign="stretch" xstyle={styles.metricBody}>
           <Skeleton width="60%" height="var(--spacing-7)" radius={2} />
           <VStack gap={2} hAlign="stretch" xstyle={styles.metricFooter}>
             <Skeleton width="80%" height="var(--spacing-4)" radius={2} />
@@ -354,46 +355,60 @@ function MetricCard({
 }
 
 /** @param {MetaMetricNote} props */
-function MetricNote({ icon, dotTone, label, value, hint, tone = 'secondary' }) {
+function MetricNote({
+  icon,
+  dotTone,
+  label,
+  value,
+  hint,
+  tooltip,
+  tone = 'secondary',
+}) {
   const labelColor = TEXT_COLOR[tone];
   const valueColor = tone === 'secondary' ? 'primary' : TEXT_COLOR[tone];
   return (
-    <HStack gap={1} vAlign="center" wrap="nowrap">
-      {dotTone ? (
-        <HStack as="span" xstyle={[styles.smallDot, dotTones[dotTone]]} />
-      ) : null}
-      {icon ? (
-        <Icon
-          icon={icon}
-          size="xsm"
-          color={
-            /** @type {any} */ (
-              tone === 'success' ? 'meta-success' : labelColor
-            )
-          }
-        />
-      ) : null}
-      {label ? (
-        <Text size="sm" color={/** @type {any} */ (labelColor)}>
-          {label}
-        </Text>
-      ) : null}
-      {value ? (
-        <Text
-          size="sm"
-          weight="bold"
-          color={/** @type {any} */ (valueColor)}
-          hasTabularNumbers
-        >
-          {value}
-        </Text>
-      ) : null}
-      {hint ? (
-        <Text size="sm" color={/** @type {any} */ ('meta-subtle')}>
-          {hint}
-        </Text>
-      ) : null}
-    </HStack>
+    <Tooltip
+      isEnabled={Boolean(tooltip)}
+      hasHoverIndication={false}
+      content={tooltip}
+    >
+      <HStack gap={1} vAlign="center" wrap="nowrap">
+        {dotTone ? (
+          <HStack as="span" xstyle={[styles.smallDot, dotTones[dotTone]]} />
+        ) : null}
+        {icon ? (
+          <Icon
+            icon={icon}
+            size="xsm"
+            color={
+              /** @type {any} */ (
+                tone === 'success' ? 'meta-success' : labelColor
+              )
+            }
+          />
+        ) : null}
+        {label ? (
+          <Text size="sm" color={/** @type {any} */ (labelColor)}>
+            {label}
+          </Text>
+        ) : null}
+        {value ? (
+          <Text
+            size="sm"
+            weight="bold"
+            color={/** @type {any} */ (valueColor)}
+            hasTabularNumbers
+          >
+            {value}
+          </Text>
+        ) : null}
+        {hint ? (
+          <Text size="sm" color={/** @type {any} */ ('meta-subtle')}>
+            {hint}
+          </Text>
+        ) : null}
+      </HStack>
+    </Tooltip>
   );
 }
 
@@ -568,10 +583,16 @@ const styles = stylex.create({
   metricValue: {
     lineHeight: 1,
   },
+  metricBody: {
+    flexGrow: 1,
+  },
+  // Pinned to the card's bottom: a note row that wraps (e.g. Quyết toán's
+  // Gốc + PL on a narrow card) must not push its bar below the others'.
   metricFooter: {
     borderTopColor: 'var(--meta-hairline)',
     borderTopStyle: 'solid',
     borderTopWidth: 'var(--border-width)',
+    marginTop: 'auto',
     paddingTop: 'var(--spacing-2)',
   },
   progressSection: {
