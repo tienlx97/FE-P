@@ -202,7 +202,7 @@ export function MetaShipmentHeaderCard({
           </HStack>
 
           {isJourneyLoading ? (
-            <JourneySkeleton label={journeyTitle} />
+            <MetaJourneySkeleton label={journeyTitle} />
           ) : (
             <Carousel gap={0} hasSnap aria-label={journeyTitle}>
               {steps.map((step, index) => (
@@ -287,7 +287,7 @@ const SKELETON_STEPS = 5;
  * progress row — so the card doesn't jump when the data arrives.
  * @param {{ label: string }} props
  */
-function JourneySkeleton({ label }) {
+export function MetaJourneySkeleton({ label }) {
   return (
     <VStack gap={0} hAlign="stretch" aria-busy aria-label={`Đang tải ${label}`}>
       <HStack gap={0} wrap="nowrap" xstyle={styles.skeletonTrack}>
@@ -363,7 +363,7 @@ function JourneySkeleton({ label }) {
         <HStack gap={3} vAlign="center">
           <Skeleton
             width="calc(var(--spacing-10) * 3)"
-            height="var(--spacing-3)"
+            height="calc(var(--spacing-4) + var(--spacing-0-5))"
           />
           <Skeleton
             width="calc(var(--spacing-10) * 5)"

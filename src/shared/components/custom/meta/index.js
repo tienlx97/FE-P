@@ -41,7 +41,11 @@ export {
   MetaPaymentTermRow,
 } from './payment-term-row.jsx';
 export { MetaPill } from './pill.jsx';
-export { MetaShipmentHeaderCard } from './shipment-header-card.jsx';
+export { MetaShipmentDetailSkeleton } from './shipment-detail-skeleton.jsx';
+export {
+  MetaJourneySkeleton,
+  MetaShipmentHeaderCard,
+} from './shipment-header-card.jsx';
 export { MetaShipmentListPanel } from './shipment-list-panel.jsx';
 export {
   MetaContainerCard,

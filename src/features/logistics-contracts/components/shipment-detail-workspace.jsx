@@ -23,7 +23,7 @@ import { useId, useMemo, useState } from 'react';
 
 import {
   MetaContractBreadcrumb,
-  MetaContractDetailSkeleton,
+  MetaShipmentDetailSkeleton,
   MetaShipmentHeaderCard,
   MetaTabNav,
   MetaThemeProvider,
@@ -327,7 +327,7 @@ export function ShipmentDetailWorkspace({ contractId, shipmentId }) {
           />
 
           {contractQuery.isLoading || shipmentsQuery.isLoading ? (
-            <MetaContractDetailSkeleton />
+            <MetaShipmentDetailSkeleton tab={activeTab} />
           ) : !contract || !shipment ? (
             <Banner status="error" title={errorMessage} container="card" />
           ) : (

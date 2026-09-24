@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-09-24 — Shipment detail page skeleton
+
+- New `MetaShipmentDetailSkeleton` replaces the contract-layout
+  `MetaContractDetailSkeleton` while the contract / shipments load:
+  header card (code, copy, type / status pills, incoterm, In / Chỉnh sửa /
+  more buttons, journey title + the now-exported `MetaJourneySkeleton`),
+  3 tab pills, then the active tab's body — overview: 3 KPI cards +
+  booking (9 field tiles) and customs (6) sections; VGM / costs: a table
+  card.
+- Measured against the real page (26KCT34/LOT-01 vs 26KCT32/LOT-01 held
+  in the tab by patching fetch): header 460 / 464, tabs 40 / 40, KPI
+  164 / 166, booking 367 / 364, customs 281 / 283 px. The VGM / costs
+  variant was not viewed in the browser.
+- verify.sh passed (`harness/runs/20260924-160848-307/`).
+
 ## 2026-09-24 — Skeleton for the "Hành trình vận chuyển" card
 
 - While the journey query loads, `MetaShipmentHeaderCard` now shows
