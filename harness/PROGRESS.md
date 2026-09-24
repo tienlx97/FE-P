@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-09-25 — Contract overview installments in a Carousel
+
+- `MetaOverviewSummaryCard`: the "Tiến độ thanh toán" installment chips
+  (and their loading skeletons) move from a wrapping `Grid` to an Astryx
+  `Carousel` (`gap={3}`, snap, `aria-label` "Các đợt thanh toán"), each chip
+  a fixed `calc(var(--spacing-10) * 4.5)` wide — same pattern as the
+  shipment journey carousel. Tooltips unchanged.
+- Checked in Chrome on 26KCT14 (9 installments): one row, Đợt 01–08
+  visible with ›, clicking it scrolls to Đợt 09 and shows ‹; tooltip on
+  Đợt 08 / 09 shows date + term.
+- verify.sh passed (`harness/runs/20260925-013100-274466/`).
+
 ## 2026-09-25 — Quick search, Ctrl / ⌘ + K (`add-quick-search`)
 
 - New `QuickSearchPalette` (Astryx `CommandPalette` + `useHotkeys`

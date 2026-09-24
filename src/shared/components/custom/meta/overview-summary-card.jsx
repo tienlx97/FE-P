@@ -1,6 +1,7 @@
 'use client';
 
 import { Card } from '@astryxdesign/core/Card';
+import { Carousel } from '@astryxdesign/core/Carousel';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -69,10 +70,10 @@ const TEXT_COLOR = /** @type {const} */ ({
  * CARDS" block: a titled card holding 4 metric cards (Quyết toán / Đã
  * xuất / Đã xuất (VNĐ) / Chưa xuất, each with a note row and a thin
  * progress bar), then the "Tiến độ đối soát thanh toán" row, a segmented
- * paid / current / remaining bar and one chip per installment ("Đợt 01"…),
- * paid chips in emerald, the current one outlined cobalt with an "ĐANG
+ * paid / current / remaining bar and one fixed-width chip per installment
+ * ("Đợt 01"…) in an Astryx `Carousel` (swipe / prev-next), paid chips in emerald, the current one outlined cobalt with an "ĐANG
  * THU" tag, upcoming ones neutral. Due date / payment term show in a
- * tooltip on each chip. Composed from Astryx `Card` / `Grid` / `HStack` /
+ * tooltip on each chip. Composed from Astryx `Card` / `Grid` / `Carousel` / `HStack` /
  * `Text` / `Link` / `Tooltip` / `Skeleton` + `MetaPill` (golden rule #15).
  * `isMetricsLoading` / `isPaymentsLoading` swap the figures that are still
  * being fetched for Astryx `Skeleton` placeholders of the same shape.
@@ -92,6 +93,7 @@ const TEXT_COLOR = /** @type {const} */ ({
  *   activeBadgeLabel?: string,
  *   installmentDateLabel?: string,
  *   installmentTermLabel?: string,
+ *   installmentsLabel?: string,
  *   isMetricsLoading?: boolean,
  *   isPaymentsLoading?: boolean,
  * }} props
@@ -111,6 +113,7 @@ export function MetaOverviewSummaryCard({
   activeBadgeLabel = 'ĐANG THU',
   installmentDateLabel = 'Ngày thanh toán',
   installmentTermLabel = 'Hình thức',
+  installmentsLabel = 'Các đợt thanh toán',
   isMetricsLoading = false,
   isPaymentsLoading = false,
 }) {
@@ -199,11 +202,7 @@ export function MetaOverviewSummaryCard({
             </HStack>
           )}
 
-          <Grid
-            columns={{ minWidth: 180, repeat: 'fill' }}
-            gap={3}
-            xstyle={styles.installmentGrid}
-          >
+          <Carousel gap={3} hasSnap aria-label={installmentsLabel}>
             {isPaymentsLoading
               ? SKELETON_CHIPS.map((index) => (
                   <InstallmentSkeleton key={index} index={index} />
@@ -217,7 +216,7 @@ export function MetaOverviewSummaryCard({
                     termLabel={installmentTermLabel}
                   />
                 ))}
-          </Grid>
+          </Carousel>
         </VStack>
       </VStack>
     </Card>
@@ -600,15 +599,15 @@ const styles = stylex.create({
     height: '100%',
   },
   width: (percent) => ({ width: `${percent}%` }),
-  installmentGrid: {
-    paddingTop: 'var(--spacing-1)',
-  },
+  // Fixed chip width: every installment reads the same in the carousel.
   installment: {
     borderRadius: 'var(--radius-container)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',
+    flexShrink: 0,
     minWidth: 0,
     padding: 'var(--spacing-3)',
+    width: 'calc(var(--spacing-10) * 4.5)',
   },
   installmentHeader: {
     borderBottomStyle: 'solid',
