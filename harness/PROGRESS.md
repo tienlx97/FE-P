@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-25 — Commission create labels, shorter annex headers
+
+- "+ Tạo Commission" → "Tạo Commission" (commission tab create button,
+  overview empty-state action); annex table headers "Nội dung tóm tắt" →
+  "Nội dung", "Giá trị điều chỉnh (…)" → "Giá trị (…)".
+- Edits made locally by the user; committed on request.
+- verify.sh passed (`harness/runs/20260925-022414-364678/`).
+
 ## 2026-09-25 — Commission drawer: framed sign checkboxes, payment history cards
 
 - `CommissionFormDrawer`: "Bên bán ký" / "Bên môi giới ký" tiles are white

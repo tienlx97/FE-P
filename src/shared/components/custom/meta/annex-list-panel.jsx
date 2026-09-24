@@ -136,7 +136,7 @@ export function MetaAnnexListPanel({
     },
     {
       key: 'content',
-      header: 'Nội dung tóm tắt',
+      header: 'Nội dung',
       width: proportional(2.8),
       renderCell: (row) => (
         <Text type="inherit" weight="medium">
@@ -146,7 +146,7 @@ export function MetaAnnexListPanel({
     },
     {
       key: 'value',
-      header: `Giá trị điều chỉnh (${currency})`,
+      header: `Giá trị (${currency})`,
       width: proportional(1.5),
       align: 'end',
       renderCell: (row) => (

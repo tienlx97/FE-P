@@ -508,7 +508,7 @@ export function ContractOverviewPanel({
     commissionView = {
       isEmpty: true,
       message: 'Hợp đồng này chưa có Commission.',
-      actionLabel: '+ Tạo Commission',
+      actionLabel: 'Tạo Commission',
       onAction: onCreateCommission,
     };
   }

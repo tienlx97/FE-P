@@ -159,7 +159,7 @@ export function ContractCommissionPanel({ contract }) {
           footnote=""
           confirmedTotal={`${BLANK} ${currency}`}
           hasReceiptDownload={false}
-          createLabel="+ Tạo Commission"
+          createLabel="Tạo Commission"
           onCreate={() => setDialog({ kind: 'form', mode: 'edit' })}
         />
         {formDialog}
