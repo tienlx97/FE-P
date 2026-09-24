@@ -67,23 +67,74 @@ const SUMMARY_TONES = /** @type {const} */ ({
 });
 
 /**
- * "Meta" contract-detail "Hoa hồng (Commission)" tab — Figma node
- * 102:4272: 3 KPI cards (Tổng hoa hồng / Đã chi trả / Còn phải chi), the
- * broker card and the beneficiary-bank card side by side, then the
- * "Đợt chi hoa hồng" card (one row per commission installment and a
- * totals band); `afterTable` renders below that card (the contract tab's
- * "Lịch sử thanh toán" and "Phụ lục Commission"). `isLoading` swaps figures and rows for
- * `Skeleton`s. Composed from Astryx `Card` / `Grid` / `Table` / `Button` /
- * `IconButton` / `Skeleton` + `MetaPill` (golden rule #15).
+ * "Meta" commission cards (Figma 102:4272), composed by the contract
+ * Commission tab and the commission detail page: `MetaCommissionSummaryCards`
+ * (3 KPI cards), `MetaCommissionParties` (broker card, plus the
+ * beneficiary-bank card when `bank` is given) and `MetaCommissionTrackingCard`
+ * ("Đợt chi hoa hồng": one row per installment and a totals band).
+ * `isLoading` swaps figures and rows for `Skeleton`s. Composed from Astryx
+ * `Card` / `Grid` / `Table` / `Button` / `IconButton` / `Skeleton` +
+ * `MetaPill` (golden rule #15).
  *
  * @param {{
  *   currency: string,
  *   summary: MetaCommissionSummary[],
+ *   isLoading?: boolean,
+ * }} props
+ */
+export function MetaCommissionSummaryCards({
+  currency,
+  summary,
+  isLoading = false,
+}) {
+  return (
+    <Grid
+      columns={{ minWidth: 300, max: 3 }}
+      maxWidth="calc(3 * var(--meta-panel-card-max) + 2 * var(--spacing-4))"
+      gap={4}
+      xstyle={styles.responsiveGrid}
+    >
+      {summary.map((item, index) => (
+        <SummaryCard
+          key={item.label}
+          {...item}
+          icon={SUMMARY_ICONS[index] ?? Banknote}
+          unit={currency}
+          isLoading={isLoading}
+        />
+      ))}
+    </Grid>
+  );
+}
+
+/**
+ * Broker card, with the beneficiary-bank card beside it when `bank` is
+ * given (the broker alone spans the row).
+ * @param {{
  *   broker: MetaCommissionBroker,
- *   bank: MetaCommissionBank,
+ *   bank?: MetaCommissionBank,
+ *   isLoading?: boolean,
+ * }} props
+ */
+export function MetaCommissionParties({ broker, bank, isLoading = false }) {
+  return (
+    <Grid
+      columns={{ minWidth: 420, max: bank ? 2 : 1 }}
+      gap={4}
+      xstyle={[styles.responsiveGrid, styles.alignStart]}
+    >
+      <BrokerCard broker={broker} isLoading={isLoading} />
+      {bank ? <BankCard bank={bank} isLoading={isLoading} /> : null}
+    </Grid>
+  );
+}
+
+/**
+ * "Đợt chi hoa hồng" card.
+ * @param {{
+ *   currency: string,
  *   payments: MetaCommissionPayment[],
  *   totals: { label: string, usd: string, summary: string, vnd?: string },
- *   afterTable?: import('react').ReactNode,
  *   hasReceiptDownload?: boolean,
  *   createLabel?: string,
  *   tableTitle?: string,
@@ -94,14 +145,10 @@ const SUMMARY_TONES = /** @type {const} */ ({
  *   isLoading?: boolean,
  * }} props
  */
-export function MetaCommissionPanel({
+export function MetaCommissionTrackingCard({
   currency,
-  summary,
-  broker,
-  bank,
   payments,
   totals,
-  afterTable,
   hasReceiptDownload = true,
   createLabel = 'Thêm lần chi',
   tableTitle = 'Đợt chi hoa hồng',
@@ -223,162 +270,132 @@ export function MetaCommissionPanel({
   ];
 
   return (
-    <VStack gap={5} hAlign="stretch">
-      <Grid
-        columns={{ minWidth: 300, max: 3 }}
-        maxWidth="calc(3 * var(--meta-panel-card-max) + 2 * var(--spacing-4))"
-        gap={4}
-        xstyle={styles.responsiveGrid}
-      >
-        {summary.map((item, index) => (
-          <SummaryCard
-            key={item.label}
-            {...item}
-            icon={SUMMARY_ICONS[index] ?? Banknote}
-            unit={currency}
-            isLoading={isLoading}
+    <Card padding={6} xstyle={styles.tableCard}>
+      <VStack gap={0} hAlign="stretch">
+        <HStack
+          hAlign="between"
+          vAlign="center"
+          gap={3}
+          wrap="wrap"
+          xstyle={styles.tableHeader}
+        >
+          <Heading level={3}>{tableTitle}</Heading>
+          <HStack gap={2} vAlign="center" wrap="wrap">
+            {onExport ? (
+              <Button
+                label="Xuất Excel"
+                variant="secondary"
+                icon={
+                  <Icon
+                    icon={Download}
+                    size="sm"
+                    color={/** @type {any} */ ('meta-green')}
+                  />
+                }
+                onClick={onExport}
+              />
+            ) : null}
+            {onCreate ? (
+              <Button
+                label={createLabel}
+                variant="primary"
+                icon={<Icon icon={CirclePlus} size="sm" />}
+                onClick={onCreate}
+              />
+            ) : null}
+          </HStack>
+        </HStack>
+
+        {isLoading ? (
+          [0, 1, 2].map((index) => (
+            <HStack
+              key={index}
+              gap={6}
+              vAlign="center"
+              xstyle={styles.skeletonRow}
+            >
+              <Skeleton
+                width="12%"
+                height="var(--spacing-6)"
+                radius="rounded"
+                index={index}
+              />
+              <Skeleton
+                width="16%"
+                height="var(--spacing-4)"
+                radius={2}
+                index={index}
+              />
+              <Skeleton
+                width="22%"
+                height="var(--spacing-4)"
+                radius={2}
+                index={index}
+              />
+              <Skeleton
+                width="16%"
+                height="var(--spacing-6)"
+                radius="rounded"
+                index={index}
+              />
+            </HStack>
+          ))
+        ) : payments.length === 0 ? (
+          <HStack hAlign="center" xstyle={styles.emptyRow}>
+            <Text color="secondary">Chưa có đợt chi hoa hồng nào.</Text>
+          </HStack>
+        ) : (
+          <Table
+            columns={columns}
+            data={/** @type {any} */ (payments)}
+            idKey="id"
+            dividers="rows"
+            density="spacious"
+            xstyle={styles.table}
           />
-        ))}
-      </Grid>
+        )}
 
-      <Grid
-        columns={{ minWidth: 420, max: 2 }}
-        gap={4}
-        xstyle={[styles.responsiveGrid, styles.alignStart]}
-      >
-        <BrokerCard broker={broker} isLoading={isLoading} />
-        <BankCard bank={bank} isLoading={isLoading} />
-      </Grid>
-
-      <Card padding={6} xstyle={styles.tableCard}>
-        <VStack gap={0} hAlign="stretch">
-          <HStack
-            hAlign="between"
-            vAlign="center"
-            gap={3}
-            wrap="wrap"
-            xstyle={styles.tableHeader}
-          >
-            <Heading level={3}>{tableTitle}</Heading>
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              {onExport ? (
-                <Button
-                  label="Xuất Excel"
-                  variant="secondary"
-                  icon={
-                    <Icon
-                      icon={Download}
-                      size="sm"
-                      color={/** @type {any} */ ('meta-green')}
-                    />
-                  }
-                  onClick={onExport}
-                />
-              ) : null}
-              {onCreate ? (
-                <Button
-                  label={createLabel}
-                  variant="primary"
-                  icon={<Icon icon={CirclePlus} size="sm" />}
-                  onClick={onCreate}
-                />
-              ) : null}
-            </HStack>
+        <HStack
+          hAlign="between"
+          vAlign="center"
+          gap={4}
+          wrap="wrap"
+          xstyle={[styles.band, styles.footnoteBand]}
+        >
+          <HStack gap={6} vAlign="center" wrap="wrap">
+            <Text
+              size="sm"
+              weight="bold"
+              color="secondary"
+              xstyle={styles.caps}
+            >
+              {totals.label}
+            </Text>
+            {isLoading ? (
+              <Skeleton width="8rem" height="var(--spacing-5)" radius={2} />
+            ) : (
+              <Text weight="bold" hasTabularNumbers>
+                {totals.usd}
+              </Text>
+            )}
           </HStack>
-
-          {isLoading ? (
-            [0, 1, 2].map((index) => (
-              <HStack
-                key={index}
-                gap={6}
-                vAlign="center"
-                xstyle={styles.skeletonRow}
-              >
-                <Skeleton
-                  width="12%"
-                  height="var(--spacing-6)"
-                  radius="rounded"
-                  index={index}
-                />
-                <Skeleton
-                  width="16%"
-                  height="var(--spacing-4)"
-                  radius={2}
-                  index={index}
-                />
-                <Skeleton
-                  width="22%"
-                  height="var(--spacing-4)"
-                  radius={2}
-                  index={index}
-                />
-                <Skeleton
-                  width="16%"
-                  height="var(--spacing-6)"
-                  radius="rounded"
-                  index={index}
-                />
-              </HStack>
-            ))
-          ) : payments.length === 0 ? (
-            <HStack hAlign="center" xstyle={styles.emptyRow}>
-              <Text color="secondary">Chưa có đợt chi hoa hồng nào.</Text>
-            </HStack>
-          ) : (
-            <Table
-              columns={columns}
-              data={/** @type {any} */ (payments)}
-              idKey="id"
-              dividers="rows"
-              density="spacious"
-              xstyle={styles.table}
-            />
-          )}
-
-          <HStack
-            hAlign="between"
-            vAlign="center"
-            gap={4}
-            wrap="wrap"
-            xstyle={[styles.band, styles.footnoteBand]}
-          >
-            <HStack gap={6} vAlign="center" wrap="wrap">
-              <Text
-                size="sm"
-                weight="bold"
-                color="secondary"
-                xstyle={styles.caps}
-              >
-                {totals.label}
-              </Text>
-              {isLoading ? (
-                <Skeleton width="8rem" height="var(--spacing-5)" radius={2} />
-              ) : (
-                <Text weight="bold" hasTabularNumbers>
-                  {totals.usd}
-                </Text>
-              )}
-            </HStack>
-            {!isLoading && totals.summary ? (
-              <Text
-                weight="semibold"
-                color={/** @type {any} */ ('meta-green')}
-                hasTabularNumbers
-              >
-                {totals.summary}
-              </Text>
-            ) : null}
-            {!isLoading && totals.vnd ? (
-              <Text weight="bold" color="secondary" hasTabularNumbers>
-                ~{totals.vnd} VNĐ
-              </Text>
-            ) : null}
-          </HStack>
-        </VStack>
-      </Card>
-
-      {afterTable}
-    </VStack>
+          {!isLoading && totals.summary ? (
+            <Text
+              weight="semibold"
+              color={/** @type {any} */ ('meta-green')}
+              hasTabularNumbers
+            >
+              {totals.summary}
+            </Text>
+          ) : null}
+          {!isLoading && totals.vnd ? (
+            <Text weight="bold" color="secondary" hasTabularNumbers>
+              ~{totals.vnd} VNĐ
+            </Text>
+          ) : null}
+        </HStack>
+      </VStack>
+    </Card>
   );
 }
 

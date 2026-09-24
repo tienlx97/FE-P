@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-09-25 — Commission detail page (`add-commission-detail-page`)
+
+- New `/logistics/contract/[id]/commission` → `CommissionDetailWorkspace`:
+  breadcrumb (back to the contract's Hoa hồng tab), `MetaContractHeaderCard`
+  reused (code, broker, "Commission" / signing pills, "HĐ <number>",
+  Chỉnh sửa → drawer, + Thao tác: Thêm lần chi / Thêm phụ lục / Mở hợp
+  đồng; its "Xuất PDF" now renders only with `onExportPdf`), tabs in
+  `?tab=`: Tổng quan (KPI + broker + bank), Tiến độ thanh toán (Đợt chi +
+  Lịch sử thanh toán), Phụ lục (annex card).
+- `MetaCommissionPanel` split into `MetaCommissionSummaryCards`,
+  `MetaCommissionParties` (bank optional) and `MetaCommissionTrackingCard`;
+  view model moved to `hooks/use-commission-view.js`.
+- Contract "Hoa hồng" tab: "Commission · <code>" + "Xem chi tiết hoa hồng",
+  KPI cards and the broker only. Commission list "Xem" → the new page
+  (`config/commission-routes.js`).
+- Checked in Chrome on 26KCT14: slim tab → button → detail page; the three
+  tabs render (2 lần chi, 1 phụ lục); Chỉnh sửa opens "Cập nhật Commission"
+  (closed unchanged).
+- verify.sh passed (`harness/runs/20260925-035012-504545/`).
+
 ## 2026-09-25 — Commission tab: "Hoa hồng quyết toán", payment history table
 
 - First KPI "TỔNG HOA HỒNG" → "HOA HỒNG QUYẾT TOÁN (x% of the contract

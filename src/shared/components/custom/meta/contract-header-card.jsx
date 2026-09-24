@@ -82,7 +82,8 @@ export function MetaContractBreadcrumb({
  * "Meta" contract-detail header card — Figma node 89:1064's "2. HEADER
  * TITLE & GLOBAL ACTION BAR": contract number + copy button + type/status
  * pills on the first row, project name • incoterm chip on the second, and
- * "Xuất PDF" / "Chỉnh sửa" / "+ Thao tác" on the right. Composed from Astryx `Card` / `Heading` / `Button` /
+ * "Xuất PDF" (only with `onExportPdf`) / "Chỉnh sửa" / "+ Thao tác" on
+ * the right; also the commission detail page's header. Composed from Astryx `Card` / `Heading` / `Button` /
  * `DropdownMenu` / `IconButton` + `MetaPill` (golden rule #15).
  *
  * @param {{
@@ -169,18 +170,20 @@ export function MetaContractHeaderCard({
         </VStack>
 
         <HStack gap={2} vAlign="center" wrap="wrap">
-          <Button
-            label={exportPdfLabel}
-            variant="secondary"
-            icon={
-              <Icon
-                icon={FileText}
-                size="sm"
-                color={/** @type {any} */ ('meta-danger')}
-              />
-            }
-            onClick={onExportPdf}
-          />
+          {onExportPdf ? (
+            <Button
+              label={exportPdfLabel}
+              variant="secondary"
+              icon={
+                <Icon
+                  icon={FileText}
+                  size="sm"
+                  color={/** @type {any} */ ('meta-danger')}
+                />
+              }
+              onClick={onExportPdf}
+            />
+          ) : null}
           <Button
             label={editLabel}
             variant="secondary"

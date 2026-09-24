@@ -42,6 +42,7 @@ import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { searchCommissions } from '../api/commissions.js';
+import { commissionDetailHref } from '../config/commission-routes.js';
 import {
   COLUMN_OPTIONS,
   DEFAULT_COLUMN_KEYS,
@@ -275,11 +276,11 @@ export function CommissionsList() {
     return result.success ? enrichCommissions(result.commissions) : [];
   }
 
-  // "Xem" (the "Mã" link and the row's eye button) is the contract detail's
-  // "Hoa hồng" tab — a Commission is 1:1 with its contract.
+  // "Xem" (the "Mã" link and the row's eye button) is the commission detail
+  // page — a Commission is 1:1 with its contract.
   /** @param {CommissionListRow} row */
   function commissionHref(row) {
-    return `/logistics/contract/${row.contractId}?tab=commission`;
+    return commissionDetailHref(row.contractId);
   }
 
   /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<CommissionListRow>[]} */

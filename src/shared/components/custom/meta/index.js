@@ -18,7 +18,9 @@ export { MetaAnnexListPanel } from './annex-list-panel.jsx';
 export { MetaBoqPanel } from './boq-panel.jsx';
 export {
   MetaCommissionEmptyState,
-  MetaCommissionPanel,
+  MetaCommissionParties,
+  MetaCommissionSummaryCards,
+  MetaCommissionTrackingCard,
 } from './commission-panel.jsx';
 export { MetaContractDetailSkeleton } from './contract-detail-skeleton.jsx';
 export {
