@@ -37,7 +37,7 @@ function todayIso() {
  */
 function stepStatePill(step) {
   if (step.isConfirmed) return { label: 'Đã xác nhận tay', tone: 'success' };
-  if (step.state === 'Done') return { label: 'Đã hoàn thành', tone: 'success' };
+  if (step.state === 'Done') return { label: 'Hoàn thành', tone: 'success' };
   if (step.state === 'Current') {
     return { label: 'Chặng hiện tại', tone: 'accent' };
   }

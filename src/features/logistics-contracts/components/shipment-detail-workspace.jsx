@@ -175,7 +175,7 @@ function journeyFor({
         };
       case 'OnBoard':
         return {
-          title: shipment.vesselName ? `Tàu ${shipment.vesselName}` : label,
+          title: shipment.vesselName || label,
           footLabel: 'Rời cảng (ETD)',
           footValue: formatDisplayDate(shipment.etd),
         };
@@ -238,7 +238,7 @@ function journeyFor({
         step.milestone === 'EmptyReturn' && emptyReturn?.overdueDays
           ? `Quá hạn ${emptyReturn.overdueDays} ngày`
           : step.state === 'Done'
-            ? 'Đã hoàn thành'
+            ? 'Hoàn thành'
             : step.state === 'Current'
               ? 'Chặng hiện tại'
               : step.scope === 'Buyer'
@@ -319,10 +319,12 @@ export function ShipmentDetailWorkspace({ contractId, shipmentId }) {
       <PageContentShell isFullWidth>
         <VStack gap={4} hAlign="stretch">
           <MetaContractBreadcrumb
-            backLabel={
+            backLabel="Quay lại"
+            backHref="/logistics/shipments"
+            parentLabel={
               contract ? `Hợp đồng ${contract.contractNumber}` : 'Hợp đồng'
             }
-            backHref={`/logistics/contract/${contractId}?tab=shipments`}
+            parentHref={`/logistics/contract/${contractId}?tab=shipments`}
             currentLabel={shipment?.shipmentCode ?? '…'}
           />
 
@@ -423,16 +425,11 @@ function ShipmentDetailBody({
         },
       })
     : null;
+  // Plain tabs (no count pills), same as the contract detail tab bar.
   const tabs = TAB_VALUES.map((id) => ({
     id,
     label: TAB_LABELS[id],
     icon: TAB_ICONS[id],
-    count:
-      id === 'vgm' && vgms.length > 0
-        ? String(vgms.length)
-        : id === 'costs' && shipment.costs.length > 0
-          ? String(shipment.costs.length)
-          : undefined,
   }));
 
   return (

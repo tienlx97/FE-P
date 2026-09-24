@@ -121,16 +121,6 @@ export function MetaCostPanel({
             <MetaCountBadge value={count} />
           </HStack>
           <HStack gap={4} vAlign="center" wrap="wrap">
-            {onCreate ? (
-              <Button
-                label="Thêm chi phí"
-                variant="secondary"
-                size="sm"
-                isDisabled={isReadOnly || isLoading}
-                icon={<Icon icon={Plus} size="sm" />}
-                onClick={onCreate}
-              />
-            ) : null}
             <HStack gap={3} vAlign="center" wrap="wrap">
               <Text size="sm" color="secondary">
                 Trong đó Abnormal:{' '}
@@ -158,6 +148,15 @@ export function MetaCostPanel({
                 </Text>
               </Text>
             </HStack>
+            {onCreate ? (
+              <Button
+                label="Thêm chi phí"
+                variant="primary"
+                isDisabled={isReadOnly || isLoading}
+                icon={<Icon icon={Plus} size="sm" />}
+                onClick={onCreate}
+              />
+            ) : null}
           </HStack>
         </HStack>
 

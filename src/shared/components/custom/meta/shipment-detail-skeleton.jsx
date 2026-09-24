@@ -45,9 +45,13 @@ export function MetaShipmentDetailSkeleton({
             wrap="wrap"
             xstyle={styles.titleRow}
           >
-            <VStack gap={2} hAlign="start">
+            <VStack gap={2} hAlign="stretch" xstyle={styles.headerText}>
               <HStack gap={2} vAlign="center">
-                <Skeleton width="13rem" height="var(--spacing-10)" radius={2} />
+                <Skeleton
+                  width="clamp(8rem, 40%, 13rem)"
+                  height="var(--spacing-10)"
+                  radius={2}
+                />
                 <Skeleton
                   width="var(--spacing-8)"
                   height="var(--spacing-8)"
@@ -59,7 +63,7 @@ export function MetaShipmentDetailSkeleton({
                   radius="rounded"
                 />
                 <Skeleton
-                  width="7rem"
+                  width="clamp(4rem, 22%, 7rem)"
                   height="var(--spacing-6)"
                   radius="rounded"
                 />
@@ -100,7 +104,11 @@ export function MetaShipmentDetailSkeleton({
                 height="var(--spacing-9)"
                 radius={2}
               />
-              <Skeleton width="12rem" height="var(--spacing-4)" radius={2} />
+              <Skeleton
+                width="clamp(8rem, 25%, 12rem)"
+                height="var(--spacing-4)"
+                radius={2}
+              />
               <Skeleton
                 width="5rem"
                 height="var(--spacing-6)"
@@ -195,7 +203,7 @@ function OverviewSkeleton() {
                 index={section}
               />
               <Skeleton
-                width="12rem"
+                width="clamp(8rem, 30%, 12rem)"
                 height="var(--spacing-5)"
                 radius={2}
                 index={section}
@@ -248,7 +256,11 @@ function TableSkeleton() {
               height="var(--spacing-6)"
               radius="rounded"
             />
-            <Skeleton width="10rem" height="var(--spacing-5)" radius={2} />
+            <Skeleton
+              width="clamp(7rem, 20%, 10rem)"
+              height="var(--spacing-5)"
+              radius={2}
+            />
             <Skeleton
               width="var(--spacing-7)"
               height="var(--spacing-5)"
@@ -315,6 +327,12 @@ const styles = stylex.create({
     borderBottomStyle: 'solid',
     borderBottomWidth: 'var(--border-width)',
     paddingBottom: 'var(--spacing-6)',
+  },
+  // Code / pills / incoterm take what the action buttons leave.
+  headerText: {
+    flexBasis: 'calc(var(--spacing-10) * 8)',
+    flexGrow: 1,
+    minWidth: 0,
   },
   tabs: {
     paddingBlock: 'var(--spacing-0-5)',

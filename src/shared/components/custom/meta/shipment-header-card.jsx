@@ -234,7 +234,7 @@ export function MetaShipmentHeaderCard({
               wrap="wrap"
               xstyle={styles.progressRow}
             >
-              <HStack gap={3} vAlign="center">
+              <HStack gap={3} vAlign="center" xstyle={styles.progressGroup}>
                 <Text size="sm" weight="bold" color="secondary">
                   TIẾN ĐỘ LỘ TRÌNH:
                 </Text>
@@ -418,7 +418,7 @@ function JourneyStep({ step, index, liveLabel }) {
             vAlign="center"
             xstyle={[styles.stepIcon, stepIconTones[look]]}
           >
-            <Icon icon={isDone ? Check : step.icon} size="md" color="inherit" />
+            <Icon icon={step.icon} size="md" color="inherit" />
           </HStack>
           <HStack gap={1} vAlign="center" hAlign="end" wrap="nowrap">
             {step.markerLabel ? (
@@ -460,7 +460,7 @@ function JourneyStep({ step, index, liveLabel }) {
             color={isCurrent ? 'accent' : /** @type {any} */ ('meta-subtle')}
             maxLines={1}
           >
-            MỐC {String(index + 1).padStart(2, '0')} •{' '}
+            ROUTE {String(index + 1).padStart(2, '0')} •{' '}
             {step.label.toUpperCase()}
           </Text>
           <Text size="lg" weight="bold" maxLines={1} hasTruncateTooltip>
@@ -626,12 +626,19 @@ const styles = stylex.create({
     borderTopWidth: 'var(--border-width)',
     paddingTop: 'var(--spacing-4)',
   },
+  // Label + bar + % take the row's space left of the legend.
+  progressGroup: {
+    flexGrow: 1,
+    minWidth: 0,
+  },
+  // Stretches with the row; never shorter than the old fixed bar.
   progressTrack: {
     backgroundColor: 'var(--color-border)',
     borderRadius: 'var(--radius-full)',
+    flexGrow: 1,
     height: 'var(--spacing-2)',
+    minWidth: 'calc(var(--spacing-10) * 5)',
     overflow: 'hidden',
-    width: 'calc(var(--spacing-10) * 5)',
   },
   progressFill: {
     backgroundImage:

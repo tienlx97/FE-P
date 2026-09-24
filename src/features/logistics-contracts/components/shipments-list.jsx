@@ -29,7 +29,6 @@ import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
-import { colorVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -748,7 +747,11 @@ export function ShipmentsList() {
   /** @param {string[]} names */
   function providerListCell(names) {
     if (names.length === 0) return '—';
-    return <Text maxLines={2}>{names.join(', ')}</Text>;
+    return (
+      <Text weight="bold" maxLines={2}>
+        {names.join(', ')}
+      </Text>
+    );
   }
 
   /** @param {import('react').ReactNode} content */
@@ -784,7 +787,9 @@ export function ShipmentsList() {
       renderCell: (row) => (
         <Link
           href={`/logistics/contract/${row.contractId}/shipment/${row.id}`}
-          xstyle={[styles.recordLink, styles.bold]}
+          weight="bold"
+          color="accent"
+          xstyle={styles.nowrap}
           onClick={(event) => event.stopPropagation()}
         >
           {orDash(row.shipmentCode)}
@@ -800,7 +805,9 @@ export function ShipmentsList() {
         contractsById.has(row.contractId) ? (
           <Link
             href={`/logistics/contract/${row.contractId}`}
-            xstyle={styles.recordLink}
+            weight="bold"
+            color="accent"
+            xstyle={styles.nowrap}
             onClick={(event) => event.stopPropagation()}
           >
             {orDash(row.contractNumber)}
@@ -952,7 +959,9 @@ export function ShipmentsList() {
       // the BE-kt-xnk wire sort field (`supplierName`) needs stating
       // explicitly — it doesn't match this column's own `key`.
       sortField: 'supplierName',
-      renderCell: (row) => primaryText(orDash(row.supplierName)),
+      renderCell: (row) => (
+        <Text xstyle={styles.nowrap}>{orDash(row.supplierName)}</Text>
+      ),
       exportValue: (row) => row.supplierName,
     },
     {
@@ -1427,24 +1436,17 @@ const styles = stylex.create({
   root: {
     minHeight: '36rem',
   },
-  // Takes the space left of "Chế độ bảng" and no more.
+  // Takes the space left of "Chế độ bảng", capped so the tabs swipe
+  // instead of stretching across the whole header.
   statusCarousel: {
     flexGrow: 1,
+    maxWidth: 'calc(var(--spacing-10) * 18)',
     minWidth: 0,
-  },
-  // Record codes render as semibold accent links (Figma 108:5920).
-  recordLink: {
-    color: colorVars['--color-text-accent'],
-    fontWeight: 'var(--font-weight-semibold)',
-    whiteSpace: 'nowrap',
   },
   nowrap: {
     whiteSpace: 'nowrap',
   },
   totalsCaption: {
     letterSpacing: '0.05em',
-  },
-  bold: {
-    fontWeight: 'var(--font-weight-bold)',
   },
 });

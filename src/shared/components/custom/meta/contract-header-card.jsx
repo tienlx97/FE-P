@@ -29,19 +29,25 @@ import { MetaPill } from './pill.jsx';
  * Astryx `Breadcrumbs` owns the separators and `aria-current`. `onBack`
  * (e.g. `router.back()`, keeping the list's filters/scroll) runs instead of
  * following `backHref`; `backHref` stays the link target for new-tab /
- * no-JS navigation.
+ * no-JS navigation. `parentLabel` + `parentHref` add a linked crumb between
+ * the back link and the current page (e.g. the shipment detail's
+ * "← Quay lại / Hợp đồng … / Lô hàng").
  *
  * @param {{
  *   backLabel?: string,
  *   backHref: string,
  *   onBack?: () => void,
+ *   parentLabel?: string,
+ *   parentHref?: string,
  *   currentLabel: string,
  * }} props
  */
 export function MetaContractBreadcrumb({
-  backLabel = 'Danh sách hợp đồng',
+  backLabel = 'Quay lại',
   backHref,
   onBack,
+  parentLabel,
+  parentHref,
   currentLabel,
 }) {
   return (
@@ -60,6 +66,9 @@ export function MetaContractBreadcrumb({
       >
         {backLabel}
       </BreadcrumbItem>
+      {parentLabel ? (
+        <BreadcrumbItem href={parentHref}>{parentLabel}</BreadcrumbItem>
+      ) : null}
       <BreadcrumbItem isCurrent>
         <Text as="span" type="inherit" weight="bold">
           {currentLabel}

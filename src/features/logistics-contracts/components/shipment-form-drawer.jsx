@@ -27,7 +27,7 @@ import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { ArrowRight, Plus, Save, Ship, Split } from 'lucide-react';
+import { ArrowRight, Plus, Save, ScanLine, Ship, Split } from 'lucide-react';
 import { useId, useRef, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
@@ -673,17 +673,19 @@ export function ShipmentFormDrawer({
                         width="100%"
                         {...statusOf('placeOfLoading')}
                       />
-                      <TextInput
-                        label="Cảng/nơi đến (POD)"
-                        value={values.placeOfDischarge}
-                        onChange={(value) =>
-                          setField('placeOfDischarge', value)
-                        }
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                        {...statusOf('placeOfDischarge')}
-                      />
+                      <VStack hAlign="stretch" xstyle={styles.fullRow}>
+                        <TextInput
+                          label="Cảng/nơi đến (POD)"
+                          value={values.placeOfDischarge}
+                          onChange={(value) =>
+                            setField('placeOfDischarge', value)
+                          }
+                          isOptional
+                          isDisabled={isDisabled}
+                          width="100%"
+                          {...statusOf('placeOfDischarge')}
+                        />
+                      </VStack>
                     </Grid>
                   </MetaFormSection>
 
@@ -749,46 +751,7 @@ export function ShipmentFormDrawer({
                         width="100%"
                         {...statusOf('customsDeclarationNumber')}
                       />
-                      <Selector
-                        label="Luồng tờ khai"
-                        placeholder="Xanh / Vàng / Đỏ"
-                        value={values.customsChannel || null}
-                        onChange={(value) =>
-                          setField(
-                            'customsChannel',
-                            /** @type {import('../types/index.js').ShipmentCustomsChannel | ''} */ (
-                              value ?? ''
-                            ),
-                          )
-                        }
-                        options={shipmentCustomsChannelOptions}
-                        renderOption={(option) => (
-                          <MetaPill
-                            label={option.label ?? String(option.value)}
-                            tone={metaToneForCustomsChannel(
-                              /** @type {import('../types/index.js').ShipmentCustomsChannel} */ (
-                                option.value
-                              ),
-                            )}
-                            hasDot
-                          />
-                        )}
-                        renderValue={(option) => (
-                          <MetaPill
-                            label={option.label ?? String(option.value)}
-                            tone={metaToneForCustomsChannel(
-                              /** @type {import('../types/index.js').ShipmentCustomsChannel} */ (
-                                option.value
-                              ),
-                            )}
-                            hasDot
-                          />
-                        )}
-                        hasClear
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                      />
+
                       <DateInput
                         label="Ngày khai"
                         value={dateValue('customsDeclarationDate')}
@@ -800,16 +763,83 @@ export function ShipmentFormDrawer({
                         isDisabled={isDisabled}
                         {...statusOf('customsDeclarationDate')}
                       />
-                      <VStack xstyle={styles.checkTile}>
-                        <CheckboxInput
-                          label="Bị kiểm hoá hải quan"
-                          value={values.customsInspected}
-                          onChange={(checked) =>
-                            setField('customsInspected', checked)
+
+                      {/* Own full row, like the "Bị kiểm hoá" tile below. */}
+                      <VStack hAlign="stretch" xstyle={styles.fullRow}>
+                        <Selector
+                          label="Luồng tờ khai"
+                          placeholder="Xanh / Vàng / Đỏ"
+                          value={values.customsChannel || null}
+                          onChange={(value) =>
+                            setField(
+                              'customsChannel',
+                              /** @type {import('../types/index.js').ShipmentCustomsChannel | ''} */ (
+                                value ?? ''
+                              ),
+                            )
                           }
+                          options={shipmentCustomsChannelOptions}
+                          renderOption={(option) => (
+                            <MetaPill
+                              label={option.label ?? String(option.value)}
+                              tone={metaToneForCustomsChannel(
+                                /** @type {import('../types/index.js').ShipmentCustomsChannel} */ (
+                                  option.value
+                                ),
+                              )}
+                              hasDot
+                            />
+                          )}
+                          renderValue={(option) => (
+                            <MetaPill
+                              label={option.label ?? String(option.value)}
+                              tone={metaToneForCustomsChannel(
+                                /** @type {import('../types/index.js').ShipmentCustomsChannel} */ (
+                                  option.value
+                                ),
+                              )}
+                              hasDot
+                            />
+                          )}
+                          hasClear
+                          isOptional
                           isDisabled={isDisabled}
+                          width="100%"
                         />
                       </VStack>
+                      {/* Full-row option tile: scan icon + checkbox with a
+                          hint; turns amber (same tone as the "Bị kiểm hoá"
+                          pill on the overview) once ticked. */}
+                      <HStack
+                        gap={3}
+                        vAlign="center"
+                        xstyle={[
+                          styles.checkTile,
+                          values.customsInspected && styles.checkTileOn,
+                        ]}
+                      >
+                        <HStack
+                          hAlign="center"
+                          vAlign="center"
+                          xstyle={[
+                            styles.checkIcon,
+                            values.customsInspected && styles.checkIconOn,
+                          ]}
+                        >
+                          <Icon icon={ScanLine} size="sm" color="inherit" />
+                        </HStack>
+                        <StackItem size="fill">
+                          <CheckboxInput
+                            label="Bị kiểm hoá hải quan"
+                            description="Lô hàng bị hải quan kiểm tra thực tế (luồng đỏ)"
+                            value={values.customsInspected}
+                            onChange={(checked) =>
+                              setField('customsInspected', checked)
+                            }
+                            isDisabled={isDisabled}
+                          />
+                        </StackItem>
+                      </HStack>
                     </Grid>
                   </MetaFormSection>
                 </VStack>
@@ -987,10 +1017,36 @@ const styles = stylex.create({
   alignWithField: {
     paddingTop: 'calc(var(--spacing-5) + var(--spacing-1-5))',
   },
+  fullRow: {
+    gridColumn: '1 / -1',
+  },
   checkTile: {
-    backgroundColor: 'var(--meta-surface-container-low)',
+    backgroundColor: 'var(--color-background-card)',
+    borderColor: 'var(--color-border)',
+    borderRadius: 'var(--radius-container)',
+    borderStyle: 'solid',
+    borderWidth: 'var(--border-width)',
+    gridColumn: '1 / -1',
+    paddingBlock: 'var(--spacing-3)',
+    paddingInline: 'var(--spacing-4)',
+    transitionDuration: 'var(--duration-fast)',
+    transitionProperty: 'background-color, border-color',
+  },
+  checkTileOn: {
+    backgroundColor: 'var(--meta-amber-wash)',
+    borderColor: 'var(--meta-amber-border)',
+  },
+  checkIcon: {
+    backgroundColor: 'var(--meta-neutral-pill-bg)',
     borderRadius: 'var(--radius-element)',
-    padding: 'var(--spacing-3)',
+    color: 'var(--color-text-secondary)',
+    flexShrink: 0,
+    height: 'var(--spacing-9)',
+    width: 'var(--spacing-9)',
+  },
+  checkIconOn: {
+    backgroundColor: 'var(--meta-amber-border)',
+    color: 'var(--meta-amber-text)',
   },
   dot: {
     backgroundColor: 'var(--color-accent)',

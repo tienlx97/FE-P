@@ -76,13 +76,13 @@ headers), `docs/shipment-journey-incoterms.md` (journey milestones).
 
 | Code | Tên nhóm (Name) | Header cột trên danh sách | Mốc hành trình | Khoản chi phí mẫu (templates) |
 |---|---|---|---|---|
-| LOG-01 | Packing & Export Preparation | Packing & Exp. Prep | 01 Hàng sẵn sàng | Kit đóng hàng |
-| LOG-02 | Origin Inland Transportation & Depot | Inland Trans. (Origin) | 02 Vận chuyển ra cảng | Phí kéo container, Vận chuyển nội địa, Phí lưu kho, Nâng cont rỗng, Detention đầu xuất*, Sửa chữa container đầu xuất* |
-| LOG-03 | Origin Port & Export Charges | Origin Port Charges | 03 Cảng xuất, 04 Xếp hàng lên tàu | Phí THC, THC xuất, Hạ cont tại cảng, Phí hạ cont sớm, Seal, Phí chứng từ, Chứng từ, Telex, CSHT, Phí CO form D, Dịch vụ C/O, Khai C/O, Dịch vụ hải quan, Khai hải quan, Điện L/C, B/L amendment*, Demurrage tại cảng xuất* |
-| LOG-04 | International Freight & Insurance | Int'l Freight & Ins. | 04 Xếp hàng lên tàu, 05 Hải trình biển | O/F, Vận chuyển quốc tế, Bảo hiểm |
-| LOG-05 | Destination Port Charges | Dest. Port Charges | 06 Cảng đích, 10 Trả cont rỗng (DEM/DET) | D/O, Phí D/O, Storage cảng đích do chứng từ trễ* |
-| LOG-06 | Destination Inland Transportation | Dest. Inland Trans. | 08 Vận chuyển nội địa | — (no template yet) |
-| LOG-07 | Import Customs & Clearance | Import Custom Clearance | 07 Thông quan nhập khẩu | — (no template yet) |
+| LOG-01 | Packing & Export Preparation | Packing & Exp. Prep | 01 Packing | Kit đóng hàng |
+| LOG-02 | Origin Inland Transportation & Depot | Inland Trans. (Origin) | 02 Pre-carriage | Phí kéo container, Vận chuyển nội địa, Phí lưu kho, Nâng cont rỗng, Detention đầu xuất*, Sửa chữa container đầu xuất* |
+| LOG-03 | Origin Port & Export Charges | Origin Port Charges | 03 POL, 04 Shipped on Board | Phí THC, THC xuất, Hạ cont tại cảng, Phí hạ cont sớm, Seal, Phí chứng từ, Chứng từ, Telex, CSHT, Phí CO form D, Dịch vụ C/O, Khai C/O, Dịch vụ hải quan, Khai hải quan, Điện L/C, B/L amendment*, Demurrage tại cảng xuất* |
+| LOG-04 | International Freight & Insurance | Int'l Freight & Ins. | 04 Shipped on Board, 05 Ocean Freight | O/F, Vận chuyển quốc tế, Bảo hiểm |
+| LOG-05 | Destination Port Charges | Dest. Port Charges | 06 POD, 10 Empty Return (DEM/DET) | D/O, Phí D/O, Storage cảng đích do chứng từ trễ* |
+| LOG-06 | Destination Inland Transportation | Dest. Inland Trans. | 08 On-carriage | — (no template yet) |
+| LOG-07 | Import Customs & Clearance | Import Custom Clearance | 07 Import Clearance | — (no template yet) |
 | LOG-08 | Import Duty & Tax | Import Duty & Tax | — | Duty DDP |
 
 \* Usually entered as **Abnormal** (incident cost). Everything else defaults

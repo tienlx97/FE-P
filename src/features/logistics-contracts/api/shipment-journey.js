@@ -4,6 +4,48 @@ const GENERIC_LOAD_ERROR = 'Không thể tải hành trình lô hàng';
 const GENERIC_CONFIRM_ERROR = 'Không thể xác nhận mốc hành trình';
 const GENERIC_REOPEN_ERROR = 'Không thể bỏ xác nhận mốc hành trình';
 
+// FE-side milestone names (standard English logistics terms) in place of
+// the backend's Vietnamese `label`. Most milestones have one name; the two
+// whose backend label depends on the Incoterm (EXW / CIF / DDP) are
+// translated per label so that distinction survives.
+/** @type {Partial<Record<import('../types/index.js').ShipmentMilestone, string>>} */
+const MILESTONE_LABELS = {
+  CargoReady: 'Packing',
+  OriginPort: 'POL',
+  OnBoard: 'Shipped on Board',
+  Ocean: 'Ocean Freight',
+  DestinationPort: 'POD',
+  DestinationInland: 'On-carriage',
+  Site: 'Site Delivery',
+  EmptyReturn: 'Empty Return',
+};
+
+/** @type {Record<string, string>} */
+const INCOTERM_LABELS = {
+  'Vận chuyển ra cảng': 'Pre-carriage',
+  'Buyer nhận hàng': 'Buyer Pickup',
+  'Thông quan nhập khẩu': 'Import Clearance',
+  'Buyer nhận hàng & nhập khẩu': 'Buyer Pickup & Import',
+  'Thông quan & thuế NK': 'Import Clearance & Duties',
+};
+
+/**
+ * @param {import('../types/index.js').ShipmentJourney} journey
+ * @returns {import('../types/index.js').ShipmentJourney}
+ */
+function withMilestoneLabels(journey) {
+  return {
+    ...journey,
+    steps: journey.steps.map((step) => ({
+      ...step,
+      label:
+        MILESTONE_LABELS[step.milestone] ??
+        INCOTERM_LABELS[step.label] ??
+        step.label,
+    })),
+  };
+}
+
 /** @param {string} contractId @param {string} shipmentId */
 function journeyUrl(contractId, shipmentId) {
   return `/api/v1/contracts/${contractId}/shipments/${shipmentId}/journey`;
@@ -23,7 +65,7 @@ export async function getShipmentJourney(contractId, shipmentId) {
   });
 
   return result.success
-    ? { success: true, journey: result.data }
+    ? { success: true, journey: withMilestoneLabels(result.data) }
     : { success: false, message: result.message };
 }
 
@@ -52,7 +94,7 @@ export async function confirmShipmentMilestone(
   );
 
   return result.success
-    ? { success: true, journey: result.data }
+    ? { success: true, journey: withMilestoneLabels(result.data) }
     : { success: false, message: result.message };
 }
 
@@ -63,13 +105,17 @@ export async function confirmShipmentMilestone(
  * @param {import('../types/index.js').ShipmentMilestone} milestone
  * @returns {Promise<{ success: true, journey: import('../types/index.js').ShipmentJourney } | { success: false, message: string }>}
  */
-export async function reopenShipmentMilestone(contractId, shipmentId, milestone) {
+export async function reopenShipmentMilestone(
+  contractId,
+  shipmentId,
+  milestone,
+) {
   const result = await apiRequest(
     `${journeyUrl(contractId, shipmentId)}/milestones/${milestone}`,
     { method: 'DELETE', errorMessage: GENERIC_REOPEN_ERROR },
   );
 
   return result.success
-    ? { success: true, journey: result.data }
+    ? { success: true, journey: withMilestoneLabels(result.data) }
     : { success: false, message: result.message };
 }
