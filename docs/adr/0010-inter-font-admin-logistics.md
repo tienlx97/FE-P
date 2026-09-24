@@ -22,7 +22,9 @@ page imported it) deleted outright.
   element that contains the marker (the app `<Theme>` sets those tokens on
   its own element with an unlayered single-class rule, which `[attr]:has()`
   out-ranks), so portalled dialogs / popovers get Inter too. In scope,
-  numbers are tabular + lining (`tnum`, `lnum`, plus `liga` / `calt`).
+  numbers are tabular + lining (`tnum`, `lnum`, plus `liga` / `calt`), with
+  macOS grayscale antialiasing (`-webkit-font-smoothing: antialiased`,
+  `-moz-osx-font-smoothing: grayscale`) as in the MISA stylesheet.
 - The Meta theme uses Inter for body, headings and code and its
   `--meta-font-features` became the same `liga calt tnum lnum` set (the
   old `ss01` / `ss02` were Optimistic's; on Inter they would switch to

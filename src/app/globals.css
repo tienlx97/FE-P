@@ -259,6 +259,10 @@ html:has([data-app-font='inter']) body {
     'lnum' 1;
   font-optical-sizing: auto;
   font-variant-numeric: tabular-nums lining-nums;
+  /* macOS only (Chrome / Safari, Firefox): thinner grayscale antialiasing,
+   * as in MISA's Inter stylesheet; no effect on Windows / Linux. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @stylex;
