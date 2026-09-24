@@ -116,7 +116,8 @@ export function MetaPaymentProgressPanel({
     {
       key: 'code',
       header: 'Mã đợt',
-      width: proportional(0.8),
+      // Fits "{contractNumber}/PR-nn" on one line (e.g. 26KCT14/PR-01).
+      width: pixel(176),
       renderCell: (row) => (
         <Text
           type="inherit"
@@ -201,7 +202,9 @@ export function MetaPaymentProgressPanel({
     {
       key: 'actions',
       header: 'Thao tác',
-      width: pixel(112),
+      // Wide enough for the caps header "THAO TÁC" itself, not just the
+      // two icon buttons.
+      width: pixel(136),
       renderCell: (row) => (
         <HStack gap={1} vAlign="center" wrap="nowrap">
           <IconButton
@@ -330,15 +333,11 @@ export function MetaPaymentProgressPanel({
               </HStack>
               <VStack gap={0}>
                 <Heading level={3}>Tiến độ thanh toán chi tiết</Heading>
-                <Text size="sm" color="secondary">
-                  Quản lý các đợt giải ngân, đối soát UNC và hạn chứng từ thanh
-                  toán
-                </Text>
               </VStack>
             </HStack>
             {onAddPayment ? (
               <Button
-                label="+ Thêm đợt thanh toán"
+                label="Thêm đợt thanh toán"
                 variant="primary"
                 icon={<Icon icon={CirclePlus} size="sm" />}
                 onClick={onAddPayment}

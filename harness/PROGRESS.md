@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-09-25 — Payments table: wider Mã đợt, full "Thao tác" header
+
+- `MetaPaymentProgressPanel` table: "Mã đợt" `proportional(0.8)` (121px,
+  "26KCT14/PR-01" wrapped to 2 lines) → `pixel(176)`; "Thao tác"
+  `pixel(112)` (header needed 113px, clipped) → `pixel(136)`.
+- Checked in Chrome on 26KCT14: code cells one line (17px high, was 37px),
+  header "THAO TÁC" fully visible, no overflow on any header.
+- verify.sh passed (`harness/runs/20260925-015053-309260/`).
+
 ## 2026-09-25 — Payments tab KPI cards: renamed, no titles below the divider
 
 - `MetaPaymentProgressPanel`: "TỔNG GIÁ TRỊ HỢP ĐỒNG" → "GIÁ TRỊ QUYẾT
