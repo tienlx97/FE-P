@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-09-25 — Commission annexes in the Meta drawer
+
+- New `CommissionAnnexesSection` ("Phụ lục Commission", existing
+  commissions only) at the end of `CommissionFormDrawer`: one card per
+  annex (code, type pill, signing, ± amount) with "Sửa", a dashed "Thêm
+  phụ lục", and "Sau phụ lục: <value + annexes>" in the header. Add / edit
+  go through `CommissionAnnexFormDialog`, whose state lives in the drawer
+  and which renders outside the drawer's `<form>` (React submit events
+  bubble through portals). Works in view mode — annexes save on their own.
+- `ContractRelatedEntitiesPanel` opens the drawer read-only instead of
+  `CommissionFormDialog` (its annex / quick-payment dialogs dropped). That
+  panel is not rendered anywhere any more, and `CommissionFormDialog` now
+  has no caller either — the contract Commission tab is the only surface.
+- Test data (dev DB): annex HH-TEST-26KCT14/AN-01, Phát sinh tăng 500 USD,
+  22/09/2026.
+- Checked in Chrome on 26KCT14: Xem → section empty → Thêm phụ lục →
+  dialog over the drawer → saved; card "+ 500.00 USD", header "Sau phụ
+  lục: 10,500.00 USD", drawer stayed in view mode (not submitted).
+- verify.sh passed (`harness/runs/20260925-030406-433695/`).
+
 ## 2026-09-25 — Commission "Xem" opens the Meta drawer read-only
 
 - `CommissionFormDrawer` gains `initialMode` ('view' | 'edit'). View:

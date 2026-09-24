@@ -1,9 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
-import { CommissionFormDialog } from './commission-form-dialog.jsx';
-import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
+import { CommissionFormDrawer } from './commission-form-drawer.jsx';
 import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractExpandedDetails } from './contract-expanded-details.jsx';
 import { ContractPrivateInfoDetailDialog } from './contract-private-info-detail-dialog.jsx';
@@ -41,7 +39,7 @@ export function ContractRelatedEntitiesPanel({
   activeTab,
 }) {
   const [relatedCommissionDialog, setRelatedCommissionDialog] = useState(
-    /** @type {{ contractId: string, contractNumber: string, projectName: string, currency: string, commission: import('../types/index.js').Commission | null } | null} */ (
+    /** @type {{ commission: import('../types/index.js').Commission | null } | null} */ (
       null
     ),
   );
@@ -60,16 +58,6 @@ export function ContractRelatedEntitiesPanel({
   );
   const [paymentScheduleDialog, setPaymentScheduleDialog] = useState(
     /** @type {{ contractId: string, schedule?: import('../types/index.js').PaymentSchedule } | null} */ (
-      null
-    ),
-  );
-  const [commissionAnnexDialog, setCommissionAnnexDialog] = useState(
-    /** @type {{ contractId: string, annex?: import('../types/index.js').CommissionAnnex } | null} */ (
-      null
-    ),
-  );
-  const [commissionPaymentDialog, setCommissionPaymentDialog] = useState(
-    /** @type {{ contractId: string, currency: string, commission: import('../types/index.js').Commission } | null} */ (
       null
     ),
   );
@@ -105,13 +93,7 @@ export function ContractRelatedEntitiesPanel({
         onAddVgm={(payload) => setVgmDialog(payload)}
         onEditVgm={(payload) => setVgmDialog(payload)}
         onOpenCommission={(commission) =>
-          setRelatedCommissionDialog({
-            contractId: contract.id,
-            contractNumber: contract.contractNumber,
-            projectName: contract.projectName,
-            currency: contract.currency,
-            commission,
-          })
+          setRelatedCommissionDialog({ commission })
         }
         onOpenBoq={() =>
           setRelatedBoqDialog({
@@ -121,44 +103,15 @@ export function ContractRelatedEntitiesPanel({
         }
       />
 
+      {/* Same Meta drawer as the contract page's Commission tab: opens
+          read-only ("Chỉnh sửa" switches in place), phụ lục inside. */}
       {relatedCommissionDialog ? (
-        <CommissionFormDialog
+        <CommissionFormDrawer
           key={relatedCommissionDialog.commission?.id ?? 'create'}
-          isOpen
-          initialMode="view"
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setRelatedCommissionDialog(null);
-          }}
-          contractId={relatedCommissionDialog.contractId}
-          contractNumber={relatedCommissionDialog.contractNumber}
-          projectName={relatedCommissionDialog.projectName}
-          currency={relatedCommissionDialog.currency}
+          contract={contract}
           commission={relatedCommissionDialog.commission}
-          closeLabel="Quay lại Contract"
-          onSuccess={(saved) =>
-            setRelatedCommissionDialog((current) =>
-              current ? { ...current, commission: saved } : current,
-            )
-          }
-          onAddAnnex={() =>
-            setCommissionAnnexDialog({
-              contractId: relatedCommissionDialog.contractId,
-            })
-          }
-          onEditAnnex={(annex) =>
-            setCommissionAnnexDialog({
-              contractId: relatedCommissionDialog.contractId,
-              annex,
-            })
-          }
-          onAddPayment={() =>
-            relatedCommissionDialog.commission &&
-            setCommissionPaymentDialog({
-              contractId: relatedCommissionDialog.contractId,
-              currency: relatedCommissionDialog.currency,
-              commission: relatedCommissionDialog.commission,
-            })
-          }
+          initialMode="view"
+          onClose={() => setRelatedCommissionDialog(null)}
         />
       ) : null}
 
@@ -216,32 +169,6 @@ export function ContractRelatedEntitiesPanel({
           contractId={paymentScheduleDialog.contractId}
           schedule={paymentScheduleDialog.schedule}
           onSuccess={() => setPaymentScheduleDialog(null)}
-        />
-      ) : null}
-
-      {commissionAnnexDialog ? (
-        <CommissionAnnexFormDialog
-          key={commissionAnnexDialog.annex?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setCommissionAnnexDialog(null);
-          }}
-          contractId={commissionAnnexDialog.contractId}
-          annex={commissionAnnexDialog.annex}
-          onSuccess={() => setCommissionAnnexDialog(null)}
-        />
-      ) : null}
-
-      {commissionPaymentDialog ? (
-        <CommissionPaymentQuickAddDialog
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setCommissionPaymentDialog(null);
-          }}
-          contractId={commissionPaymentDialog.contractId}
-          commission={commissionPaymentDialog.commission}
-          currency={commissionPaymentDialog.currency}
-          onSuccess={() => setCommissionPaymentDialog(null)}
         />
       ) : null}
 
