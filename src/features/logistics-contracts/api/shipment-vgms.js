@@ -135,3 +135,36 @@ export async function deleteShipmentVgm(contractId, shipmentId, vgmId) {
 
   return { success: true };
 }
+
+/**
+ * Records (or clears, with an empty date) one container's empty return —
+ * the CIF journey's "Trả cont rỗng" step reads these. Requires
+ * `logistics:contracts:manage`.
+ * @param {string} contractId
+ * @param {string} shipmentId
+ * @param {string} vgmId
+ * @param {{ returnedOn: string, depot: string }} values
+ * @returns {Promise<{ success: true, vgm: import('../types/index.js').ShipmentVgm } | { success: false, message: string }>}
+ */
+export async function recordShipmentVgmEmptyReturn(
+  contractId,
+  shipmentId,
+  vgmId,
+  values,
+) {
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/shipments/${shipmentId}/vgm/${vgmId}/empty-return`,
+    {
+      method: 'PUT',
+      errorMessage: 'Không thể ghi nhận trả cont rỗng',
+      body: {
+        ReturnedOn: values.returnedOn || null,
+        Depot: values.depot || null,
+      },
+    },
+  );
+
+  return result.success
+    ? { success: true, vgm: result.data }
+    : { success: false, message: result.message };
+}

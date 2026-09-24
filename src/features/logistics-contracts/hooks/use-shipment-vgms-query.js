@@ -6,8 +6,10 @@ import {
   createShipmentVgm,
   deleteShipmentVgm,
   listShipmentVgms,
+  recordShipmentVgmEmptyReturn,
   updateShipmentVgm,
 } from '../api/shipment-vgms.js';
+import { SHIPMENT_JOURNEY_QUERY_PREFIX } from './use-shipment-journey-query.js';
 
 /** @param {string} shipmentId */
 const queryKey = (shipmentId) => [
@@ -42,6 +44,9 @@ export function useCreateShipmentVgmMutation(contractId, shipmentId) {
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKey(shipmentId) });
+        queryClient.invalidateQueries({
+          queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
+        });
       }
     },
   });
@@ -61,6 +66,9 @@ export function useUpdateShipmentVgmMutation(contractId, shipmentId) {
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKey(shipmentId) });
+        queryClient.invalidateQueries({
+          queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
+        });
       }
     },
   });
@@ -76,7 +84,46 @@ export function useDeleteShipmentVgmMutation(contractId, shipmentId) {
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKey(shipmentId) });
+        queryClient.invalidateQueries({
+          queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
+        });
       }
     },
+  });
+}
+
+/**
+ * Record (or clear) one container's empty return; refreshes the VGM list
+ * and the journey (CIF "Trả cont rỗng").
+ * @param {string} contractId
+ * @param {string} shipmentId
+ */
+export function useRecordShipmentVgmEmptyReturnMutation(
+  contractId,
+  shipmentId,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (
+      /** @type {{ vgmId: string, returnedOn: string, depot: string }} */ {
+        vgmId,
+        returnedOn,
+        depot,
+      },
+    ) =>
+      recordShipmentVgmEmptyReturn(contractId, shipmentId, vgmId, {
+        returnedOn,
+        depot,
+      }),
+    onSuccess: (result) =>
+      result.success
+        ? Promise.all([
+            queryClient.invalidateQueries({ queryKey: queryKey(shipmentId) }),
+            queryClient.invalidateQueries({
+              queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
+            }),
+          ])
+        : undefined,
   });
 }

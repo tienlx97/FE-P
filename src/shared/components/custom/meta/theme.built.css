@@ -442,6 +442,10 @@
     color: var(--meta-green);
   }
 
+  .astryx-text[data-color="meta-danger"] {
+    color: var(--color-error);
+  }
+
   .astryx-icon[data-color="meta-success"] {
     color: var(--meta-emerald-fill);
   }
@@ -456,6 +460,10 @@
 
   .astryx-icon[data-color="meta-green"] {
     color: var(--meta-green);
+  }
+
+  .astryx-icon[data-color="meta-amber"] {
+    color: var(--meta-amber-text);
   }
 
   .astryx-button {

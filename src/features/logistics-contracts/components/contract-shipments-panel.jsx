@@ -350,6 +350,9 @@ export function ContractShipmentsPanel({ contract }) {
         declarationCurrency={contract.currency}
         createDisabledReason={createDisabledReason ?? undefined}
         onCreateShipment={() => setDialog({ shipment: null })}
+        shipmentHref={(id) =>
+          `/logistics/contract/${contract.id}/shipment/${id}`
+        }
         onShipmentMenu={(id) =>
           setDialog({
             shipment: shipments.find((s) => s.id === id) ?? null,

@@ -7,6 +7,7 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { Link } from '@astryxdesign/core/Link';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { Tooltip } from '@astryxdesign/core/Tooltip';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -43,7 +44,8 @@ const KPI_ICONS = [Container, Truck, Package, Banknote];
 /** @typedef {{ id: string, no: string, code: string, kind: 'fcl' | 'lcl', kindLabel?: string, status: {label: string, tone: string}, value: {usd: string, vnd: string, rate: string, scaleTag: string, weight: string, vgm?: string}, route: {from: string, to: string, etd: string, eta: string}, costs: {total: string, items: Array<[string, string]>}, partners: Partner[] }} Shipment */
 
 /** Meta shipment tab, based on Figma frame 98:2343. All figures and details are supplied by the contract API.
- * @param {{ stats: Array<{label: string, value: string, highlight?: string, unit?: string, note: string, color?: string}>, shipments: Shipment[], declarationCurrency: string, createDisabledReason?: string, onCreateShipment: () => void, onShipmentMenu: (id: string) => void, onExportExcel: () => void, renderTable: (onViewShipment: (id: string) => void) => import('react').ReactNode }} props
+ * `shipmentHref` turns each card's shipment code into a link (detail page).
+ * @param {{ stats: Array<{label: string, value: string, highlight?: string, unit?: string, note: string, color?: string}>, shipments: Shipment[], declarationCurrency: string, createDisabledReason?: string, onCreateShipment: () => void, onShipmentMenu: (id: string) => void, onExportExcel: () => void, renderTable: (onViewShipment: (id: string) => void) => import('react').ReactNode, shipmentHref?: (id: string) => string }} props
  */
 export function MetaShipmentListPanel({
   stats,
@@ -54,6 +56,7 @@ export function MetaShipmentListPanel({
   onShipmentMenu,
   onExportExcel,
   renderTable,
+  shipmentHref,
 }) {
   const [view, setView] = useState('card');
   const [focusedShipmentId, setFocusedShipmentId] = useState(
@@ -200,6 +203,7 @@ export function MetaShipmentListPanel({
               shipment={shipment}
               declarationCurrency={declarationCurrency}
               onMenu={onShipmentMenu}
+              href={shipmentHref?.(shipment.id)}
             />
           ))}
         </VStack>
@@ -208,8 +212,8 @@ export function MetaShipmentListPanel({
   );
 }
 
-/** @param {{shipment: Shipment, declarationCurrency: string, onMenu: (id: string) => void}} props */
-function ShipmentCard({ shipment: s, declarationCurrency, onMenu }) {
+/** @param {{shipment: Shipment, declarationCurrency: string, onMenu: (id: string) => void, href?: string}} props */
+function ShipmentCard({ shipment: s, declarationCurrency, onMenu, href }) {
   return (
     <Card
       id={`shipment-card-${s.id}`}
@@ -236,7 +240,13 @@ function ShipmentCard({ shipment: s, declarationCurrency, onMenu }) {
                 {s.no}
               </Text>
             </HStack>
-            <Text weight="bold">{s.code}</Text>
+            {href ? (
+              <Link href={href} weight="bold" color="accent">
+                {s.code}
+              </Link>
+            ) : (
+              <Text weight="bold">{s.code}</Text>
+            )}
             <MetaPill
               label={s.kindLabel ?? s.kind.toUpperCase()}
               tone="neutral"

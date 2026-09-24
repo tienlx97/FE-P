@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { CURRENCY_CODES } from './currencies.js';
 import { PAYMENT_TYPES } from './payment-schedule-types.js';
+import { SHIPMENT_CUSTOMS_CHANNELS } from './shipment-operational-details.js';
 import { SHIPMENT_STATUSES } from './shipment-status.js';
 import { SHIPMENT_TYPES } from './shipment-types.js';
 
@@ -41,58 +42,80 @@ const shipmentCostLineSchema = z.object({
  * 3-letter-code regex. `costLines` may be empty — a shipment can have no
  * logistics costs recorded yet.
  */
-export const shipmentSchema = z.object({
-  supplierCustomerId: z.string().trim().min(1, 'Vui lòng chọn forwarder'),
-  customsBrokerIds: z.array(z.string()),
-  truckingIds: z.array(z.string()),
-  bookingNumber: z
-    .string()
-    .trim()
-    .min(1, 'Vui lòng nhập số booking')
-    .max(100, 'Tối đa 100 ký tự'),
-  billOfLadingNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
-  shippingLine: z.string().trim().max(100, 'Tối đa 100 ký tự'),
-  vesselName: z.string().trim().max(200, 'Tối đa 200 ký tự'),
-  etd: z.string(),
-  eta: z.string(),
-  placeOfLoading: z.string().trim().max(200, 'Tối đa 200 ký tự'),
-  placeOfDischarge: z.string().trim().max(200, 'Tối đa 200 ký tự'),
-  type: z.enum(SHIPMENT_TYPES, { error: 'Vui lòng chọn loại hình' }),
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Vui lòng nhập tên lô hàng')
-    .max(200, 'Tối đa 200 ký tự'),
-  paymentCondition: z.enum(PAYMENT_TYPES, {
-    error: 'Vui lòng chọn điều kiện thanh toán',
-  }),
-  invoiceValue: z
-    .number({ error: 'Vui lòng nhập giá trị invoice' })
-    .positive('Giá trị phải lớn hơn 0'),
-  invoiceCurrency: z.enum(CURRENCY_CODES, {
-    error: 'Vui lòng chọn đơn vị tiền tệ',
-  }),
-  declarationValue: z
-    .number({ error: 'Vui lòng nhập giá trị tờ khai' })
-    .positive('Giá trị phải lớn hơn 0'),
-  declarationCurrency: z.enum(CURRENCY_CODES, {
-    error: 'Vui lòng chọn đơn vị tiền tệ',
-  }),
-  declarationExchangeRate: z
-    .number({ error: 'Vui lòng nhập tỷ giá tờ khai' })
-    .positive('Tỷ giá phải lớn hơn 0'),
-  quantityAmount: z
-    .number({ error: 'Vui lòng nhập số lượng' })
-    .positive('Số lượng phải lớn hơn 0'),
-  declarationWeightKg: z
-    .number({ error: 'Vui lòng nhập khối lượng tờ khai' })
-    .positive('Khối lượng phải lớn hơn 0'),
-  coNumber: z.string().trim().max(50, 'Tối đa 50 ký tự'),
-  coDeclarationDate: z.string(),
-  coIssuedDate: z.string(),
-  customsDeclarationNumber: z.string().trim().max(50, 'Tối đa 50 ký tự'),
-  customsDeclarationDate: z.string(),
-  customsInspected: z.boolean(),
-  costLines: z.array(shipmentCostLineSchema),
-  status: z.enum(SHIPMENT_STATUSES, { error: 'Vui lòng chọn tình trạng' }),
-});
+export const shipmentSchema = z
+  .object({
+    supplierCustomerId: z.string().trim().min(1, 'Vui lòng chọn forwarder'),
+    customsBrokerIds: z.array(z.string()),
+    truckingIds: z.array(z.string()),
+    bookingNumber: z
+      .string()
+      .trim()
+      .min(1, 'Vui lòng nhập số booking')
+      .max(100, 'Tối đa 100 ký tự'),
+    billOfLadingNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
+    shippingLine: z.string().trim().max(100, 'Tối đa 100 ký tự'),
+    vesselName: z.string().trim().max(200, 'Tối đa 200 ký tự'),
+    etd: z.string(),
+    eta: z.string(),
+    placeOfLoading: z.string().trim().max(200, 'Tối đa 200 ký tự'),
+    placeOfDischarge: z.string().trim().max(200, 'Tối đa 200 ký tự'),
+    type: z.enum(SHIPMENT_TYPES, { error: 'Vui lòng chọn loại hình' }),
+    name: z
+      .string()
+      .trim()
+      .min(1, 'Vui lòng nhập tên lô hàng')
+      .max(200, 'Tối đa 200 ký tự'),
+    paymentCondition: z.enum(PAYMENT_TYPES, {
+      error: 'Vui lòng chọn điều kiện thanh toán',
+    }),
+    invoiceValue: z
+      .number({ error: 'Vui lòng nhập giá trị invoice' })
+      .positive('Giá trị phải lớn hơn 0'),
+    invoiceCurrency: z.enum(CURRENCY_CODES, {
+      error: 'Vui lòng chọn đơn vị tiền tệ',
+    }),
+    declarationValue: z
+      .number({ error: 'Vui lòng nhập giá trị tờ khai' })
+      .positive('Giá trị phải lớn hơn 0'),
+    declarationCurrency: z.enum(CURRENCY_CODES, {
+      error: 'Vui lòng chọn đơn vị tiền tệ',
+    }),
+    declarationExchangeRate: z
+      .number({ error: 'Vui lòng nhập tỷ giá tờ khai' })
+      .positive('Tỷ giá phải lớn hơn 0'),
+    quantityAmount: z
+      .number({ error: 'Vui lòng nhập số lượng' })
+      .positive('Số lượng phải lớn hơn 0'),
+    declarationWeightKg: z
+      .number({ error: 'Vui lòng nhập khối lượng tờ khai' })
+      .positive('Khối lượng phải lớn hơn 0'),
+    coNumber: z.string().trim().max(50, 'Tối đa 50 ký tự'),
+    coDeclarationDate: z.string(),
+    coIssuedDate: z.string(),
+    customsDeclarationNumber: z.string().trim().max(50, 'Tối đa 50 ký tự'),
+    customsDeclarationDate: z.string(),
+    customsInspected: z.boolean(),
+    costLines: z.array(shipmentCostLineSchema),
+    status: z.enum(SHIPMENT_STATUSES, { error: 'Vui lòng chọn tình trạng' }),
+    invoiceNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
+    voyageNumber: z.string().trim().max(50, 'Tối đa 50 ký tự'),
+    siCutoffDate: z.string(),
+    siCutoffTime: z.string(),
+    serviceTerm: z.string().trim().max(20, 'Tối đa 20 ký tự'),
+    isTransshipment: z.boolean(),
+    coForm: z.string().trim().max(20, 'Tối đa 20 ký tự'),
+    customsChannel: z.union([z.enum(SHIPMENT_CUSTOMS_CHANNELS), z.literal('')]),
+    letterOfCreditNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
+  emptyReturnDeadline: z.string(),
+  })
+  .superRefine((values, context) => {
+    // "Hạn nộp SI / VGM" is one date-time on the backend: a time alone has
+    // nothing to attach to.
+    if (values.siCutoffTime && !values.siCutoffDate) {
+      context.addIssue({
+        code: 'custom',
+        path: ['siCutoffDate'],
+        message: 'Vui lòng chọn ngày',
+      });
+    }
+  });

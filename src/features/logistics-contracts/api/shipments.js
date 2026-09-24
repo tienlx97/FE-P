@@ -1,5 +1,7 @@
 import { apiRequest } from '@/shared/api/api-client.js';
 
+import { joinSiCutoff } from '../config/shipment-operational-details.js';
+
 const GENERIC_LIST_ERROR = 'Không thể tải danh sách lần xuất hàng';
 const GENERIC_LIST_ALL_ERROR = 'Không thể tải danh sách Shipment';
 const GENERIC_CREATE_ERROR = 'Không thể thêm lần xuất hàng';
@@ -62,6 +64,25 @@ function toServiceProvidersRequestBody(values) {
 }
 
 /**
+ * Sent whole on create and update (omitted on update = unchanged on the
+ * backend, but this form always has every field).
+ * @param {import('../types/index.js').ShipmentFormValues} values
+ */
+function toOperationalDetailsRequestBody(values) {
+  return {
+    InvoiceNumber: values.invoiceNumber || null,
+    VoyageNumber: values.voyageNumber || null,
+    SiCutoff: joinSiCutoff(values.siCutoffDate, values.siCutoffTime),
+    ServiceTerm: values.serviceTerm || null,
+    IsTransshipment: values.isTransshipment,
+    CoForm: values.coForm || null,
+    CustomsChannel: values.customsChannel || null,
+    LetterOfCreditNumber: values.letterOfCreditNumber || null,
+    EmptyReturnDeadline: values.emptyReturnDeadline || null,
+  };
+}
+
+/**
  * `QuantityUnit` is derived from `Type` on the backend now (LCL is always
  * Kiện, FCL always Cont) — never sent, on create or update.
  * @param {import('../types/index.js').ShipmentFormValues} values
@@ -97,6 +118,7 @@ function toCreateRequestBody(values, costLines) {
     Costs: toCostsRequestBody(costLines),
     Status: values.status,
     ServiceProviders: toServiceProvidersRequestBody(values),
+    OperationalDetails: toOperationalDetailsRequestBody(values),
   };
 }
 
@@ -135,6 +157,7 @@ function toUpdateRequestBody(values, costLines) {
     Costs: toCostsRequestBody(costLines),
     Status: values.status,
     ServiceProviders: toServiceProvidersRequestBody(values),
+    OperationalDetails: toOperationalDetailsRequestBody(values),
   };
 }
 

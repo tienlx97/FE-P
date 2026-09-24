@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
+import { splitSiCutoff } from '../config/shipment-operational-details.js';
 import { shipmentSchema } from '../config/shipment-schema.js';
 import { SHIPMENT_STATUSES } from '../config/shipment-status.js';
 import { useShipmentCostLineRows } from './use-shipment-cost-line-rows.js';
@@ -54,11 +55,26 @@ function emptyValues(contract = null) {
     // New shipments default to "Đã book" — matches the backend's own
     // default (BE-kt-xnk).
     status: SHIPMENT_STATUSES[0],
+    invoiceNumber: '',
+    voyageNumber: '',
+    siCutoffDate: '',
+    siCutoffTime: '',
+    serviceTerm: '',
+    isTransshipment: false,
+    coForm: '',
+    customsChannel: '',
+    letterOfCreditNumber: '',
+    emptyReturnDeadline: '',
   };
 }
 
-/** @param {import('../types/index.js').Shipment} shipment */
+/**
+ * @param {import('../types/index.js').Shipment} shipment
+ * @returns {import('../types/index.js').ShipmentFormValues}
+ */
 function valuesFromShipment(shipment) {
+  const details = shipment.operationalDetails;
+  const siCutoff = splitSiCutoff(details?.siCutoff);
   return {
     supplierCustomerId: shipment.supplierCustomerId,
     customsBrokerIds: (shipment.serviceProviders ?? [])
@@ -92,6 +108,16 @@ function valuesFromShipment(shipment) {
     customsDeclarationDate: shipment.customsDeclarationDate ?? '',
     customsInspected: shipment.customsInspected,
     status: shipment.status,
+    invoiceNumber: details?.invoiceNumber ?? '',
+    voyageNumber: details?.voyageNumber ?? '',
+    siCutoffDate: siCutoff.date,
+    siCutoffTime: siCutoff.time,
+    serviceTerm: details?.serviceTerm ?? '',
+    isTransshipment: details?.isTransshipment ?? false,
+    coForm: details?.coForm ?? '',
+    customsChannel: details?.customsChannel ?? '',
+    letterOfCreditNumber: details?.letterOfCreditNumber ?? '',
+    emptyReturnDeadline: details?.emptyReturnDeadline ?? '',
   };
 }
 

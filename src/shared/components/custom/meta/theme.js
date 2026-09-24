@@ -207,12 +207,16 @@ export const metaTheme = defineTheme({
       // Figma 109:6632: logistics cost totals.
       'color:meta-amber': { color: 'var(--meta-amber-text)' },
       'color:meta-green': { color: 'var(--meta-green)' },
+      // Figma 111:7829: "Luồng Đỏ" customs channel text.
+      'color:meta-danger': { color: 'var(--color-error)' },
     },
     icon: {
       'color:meta-success': { color: 'var(--meta-emerald-fill)' },
       'color:meta-subtle': { color: 'var(--meta-text-subtle)' },
       'color:meta-danger': { color: 'var(--meta-danger-icon)' },
       'color:meta-green': { color: 'var(--meta-green)' },
+      // Figma 111:7829: SI / VGM cut-off clock, customs tile icon.
+      'color:meta-amber': { color: 'var(--meta-amber-text)' },
     },
     button: {
       base: {

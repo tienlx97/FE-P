@@ -40,7 +40,14 @@ export {
   MetaPaymentTermRow,
 } from './payment-term-row.jsx';
 export { MetaPill } from './pill.jsx';
+export { MetaShipmentHeaderCard } from './shipment-header-card.jsx';
 export { MetaShipmentListPanel } from './shipment-list-panel.jsx';
+export {
+  MetaContainerCard,
+  MetaShipmentField,
+  MetaShipmentKpiCard,
+  MetaShipmentSection,
+} from './shipment-overview-blocks.jsx';
 export { MetaStatusBadge } from './status-badge.jsx';
 export { MetaTabNav } from './tab-nav.jsx';
 export { MetaThemeProvider } from './theme-provider.jsx';

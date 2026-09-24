@@ -5,5 +5,6 @@ export { ContractsList } from './components/contracts-list.jsx';
 export { CountriesList } from './components/countries-list.jsx';
 export { CustomersList } from './components/customers-list.jsx';
 export { PlacesList } from './components/places-list.jsx';
+export { ShipmentDetailWorkspace } from './components/shipment-detail-workspace.jsx';
 export { ShipmentsList } from './components/shipments-list.jsx';
 export { SuppliersList } from './components/suppliers-list.jsx';

@@ -17,7 +17,7 @@ import * as stylex from '@stylexjs/stylex';
  *
  * @param {{
  *   label: string,
- *   tone?: 'accent' | 'success' | 'green' | 'indigo' | 'warning' | 'neutral' | 'muted' | 'solid' | 'on-accent',
+ *   tone?: 'accent' | 'success' | 'green' | 'indigo' | 'warning' | 'danger' | 'neutral' | 'muted' | 'solid' | 'on-accent',
  *   hasDot?: boolean,
  *   icon?: import('react').ComponentType,
  *   hasBorder?: boolean,
@@ -33,6 +33,7 @@ export function MetaPill({
     tone === 'success' ||
     tone === 'green' ||
     tone === 'warning' ||
+    tone === 'danger' ||
     tone === 'muted',
   size = 'md',
 }) {
@@ -122,6 +123,11 @@ const tones = stylex.create({
     backgroundColor: 'var(--meta-amber-wash)',
     color: 'var(--meta-amber-text)',
   },
+  // Figma 111:7829 "Luồng Đỏ" (customs red channel).
+  danger: {
+    backgroundColor: 'var(--color-error-muted)',
+    color: 'var(--color-error)',
+  },
   neutral: {
     backgroundColor: 'var(--meta-hairline)',
     color: 'var(--color-text-primary)',
@@ -148,6 +154,7 @@ const borders = stylex.create({
   green: { borderColor: 'var(--meta-green-border)' },
   indigo: { borderColor: 'var(--meta-indigo-wash)' },
   warning: { borderColor: 'var(--meta-amber-border)' },
+  danger: { borderColor: 'var(--color-error-muted)' },
   neutral: { borderColor: 'var(--color-border)' },
   muted: { borderColor: 'var(--color-border)' },
   solid: { borderColor: 'var(--color-accent)' },
@@ -160,6 +167,7 @@ const dots = stylex.create({
   green: { backgroundColor: 'var(--meta-green)' },
   indigo: { backgroundColor: 'var(--meta-indigo)' },
   warning: { backgroundColor: 'var(--meta-amber-text)' },
+  danger: { backgroundColor: 'var(--color-error)' },
   neutral: { backgroundColor: 'var(--color-text-secondary)' },
   muted: { backgroundColor: 'var(--meta-text-subtle)' },
   solid: { backgroundColor: 'var(--color-on-accent)' },

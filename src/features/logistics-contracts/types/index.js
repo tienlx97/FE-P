@@ -716,6 +716,63 @@ export {};
  * @property {ShipmentStatus} status
  * @property {number} vgmCount - number of `ShipmentVgm` records, computed at read time, never stored (BE-kt-xnk `add-shipment-vgm-count`)
  * @property {ShipmentServiceProvider[]} [serviceProviders] - customs brokers / trucking companies, several per role allowed (BE-kt-xnk `add-shipment-service-providers`)
+ * @property {ShipmentOperationalDetails} [operationalDetails] - booking / customs facts for the detail page (BE-kt-xnk `add-shipment-operational-details`); missing on older backends
+ */
+
+/**
+ * @typedef {'Green' | 'Yellow' | 'Red'} ShipmentCustomsChannel
+ */
+
+/**
+ * Booking / customs details of a shipment, sent and returned as one object
+ * (omitted on update = unchanged, BE-kt-xnk).
+ * @typedef {Object} ShipmentOperationalDetails
+ * @property {string | null} invoiceNumber - "Số hoá đơn TM"
+ * @property {string | null} voyageNumber - "Số chuyến"
+ * @property {string | null} siCutoff - local date-time "YYYY-MM-DDTHH:mm:ss", "Hạn nộp SI / VGM"
+ * @property {string | null} serviceTerm - "CY/CY", "CFS/CY"…
+ * @property {boolean} isTransshipment - false = đi thẳng
+ * @property {string | null} coForm - "Form D", "Form E"…
+ * @property {ShipmentCustomsChannel | null} customsChannel - "Luồng" tờ khai
+ * @property {string | null} letterOfCreditNumber - "Số L/C"
+ * @property {string | null} [emptyReturnDeadline] - ISO date, "Hạn trả cont rỗng" (end of free time)
+ */
+
+/**
+ * @typedef {'CargoReady' | 'OriginInland' | 'OriginPort' | 'OnBoard' | 'Ocean' | 'DestinationPort' | 'ImportClearance' | 'DestinationInland' | 'Site' | 'EmptyReturn'} ShipmentMilestone
+ */
+
+/**
+ * One step of a shipment's tracking journey, resolved by the backend from
+ * the contract's Incoterm flow, the status and hand confirmations
+ * (BE-kt-xnk `add-shipment-journey-tracking`).
+ * @typedef {Object} ShipmentJourneyStep
+ * @property {ShipmentMilestone} milestone
+ * @property {string} label
+ * @property {'Seller' | 'Buyer'} scope
+ * @property {'Risk' | 'Freight' | 'Delivery' | 'Completion' | null} marker
+ * @property {'Done' | 'Current' | 'Upcoming'} state
+ * @property {string | null} completedOn - ISO date (confirmed step, or last empty return)
+ * @property {boolean} isConfirmed - confirmed by hand
+ * @property {string | null} note
+ */
+
+/**
+ * @typedef {Object} ShipmentEmptyReturnProgress
+ * @property {number} containerCount
+ * @property {number} returnedCount
+ * @property {string | null} deadline
+ * @property {string | null} lastReturnedOn
+ * @property {number} overdueDays
+ * @property {boolean} isComplete
+ */
+
+/**
+ * @typedef {Object} ShipmentJourney
+ * @property {string} incoterm
+ * @property {string} summary
+ * @property {ShipmentJourneyStep[]} steps
+ * @property {ShipmentEmptyReturnProgress | null} emptyReturn - CIF only
  */
 
 /**
@@ -759,6 +816,16 @@ export {};
  * @property {string} customsDeclarationDate
  * @property {boolean} customsInspected
  * @property {ShipmentStatus | ''} status
+ * @property {string} invoiceNumber
+ * @property {string} voyageNumber
+ * @property {string} siCutoffDate - ISO date part of `siCutoff`
+ * @property {string} siCutoffTime - "HH:mm" part of `siCutoff`
+ * @property {string} serviceTerm
+ * @property {boolean} isTransshipment
+ * @property {string} coForm
+ * @property {ShipmentCustomsChannel | ''} customsChannel
+ * @property {string} letterOfCreditNumber
+ * @property {string} emptyReturnDeadline
  */
 
 /**
@@ -795,6 +862,8 @@ export {};
  * @property {string | null} truckArrivalTime
  * @property {string} carrierCustomerId
  * @property {string | null} note
+ * @property {string | null} [emptyReturnedOn] - ISO date the empty container went back; null = not yet
+ * @property {string | null} [emptyReturnDepot]
  */
 
 /**

@@ -71,26 +71,42 @@ export function ShipmentLotFields({
         </StackItem>
       </FormGrid>
 
-      <ReadOnlyLock isActive={isReadOnly}>
-        <Selector
-          label="Điều kiện thanh toán"
-          placeholder={isReadOnly ? '—' : 'Chọn điều kiện thanh toán'}
-          value={values.paymentCondition}
-          onChange={(value) =>
-            setField(
-              'paymentCondition',
-              /** @type {import('../types/index.js').PaymentType | ''} */ (
-                value ?? ''
-              ),
-            )
-          }
-          options={paymentTypeOptions}
-          isRequired
-          status={fieldStatuses.paymentCondition}
-          statusVariant="tooltip"
-          width="100%"
-        />
-      </ReadOnlyLock>
+      <FormGrid>
+        <StackItem size="fill">
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Điều kiện thanh toán"
+              placeholder={isReadOnly ? '—' : 'Chọn điều kiện thanh toán'}
+              value={values.paymentCondition}
+              onChange={(value) =>
+                setField(
+                  'paymentCondition',
+                  /** @type {import('../types/index.js').PaymentType | ''} */ (
+                    value ?? ''
+                  ),
+                )
+              }
+              options={paymentTypeOptions}
+              isRequired
+              status={fieldStatuses.paymentCondition}
+              statusVariant="tooltip"
+              width="100%"
+            />
+          </ReadOnlyLock>
+        </StackItem>
+        <StackItem size="fill">
+          <TextInput
+            label="Số L/C"
+            placeholder={isReadOnly ? '—' : 'Khi thanh toán bằng L/C'}
+            value={values.letterOfCreditNumber}
+            onChange={(value) => setField('letterOfCreditNumber', value)}
+            isOptional
+            status={fieldStatuses.letterOfCreditNumber}
+            statusVariant="tooltip"
+            isReadOnly={isReadOnly}
+          />
+        </StackItem>
+      </FormGrid>
 
       <ReadOnlyLock isActive={isReadOnly}>
         <Selector
@@ -112,6 +128,17 @@ export function ShipmentLotFields({
           width="100%"
         />
       </ReadOnlyLock>
+
+      <TextInput
+        label="Số hoá đơn thương mại"
+        placeholder={isReadOnly ? '—' : 'Ví dụ: INV-26KCT-01'}
+        value={values.invoiceNumber}
+        onChange={(value) => setField('invoiceNumber', value)}
+        isOptional
+        status={fieldStatuses.invoiceNumber}
+        statusVariant="tooltip"
+        isReadOnly={isReadOnly}
+      />
 
       <FormGrid>
         <StackItem size="fill">

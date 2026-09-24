@@ -778,14 +778,13 @@ export function ShipmentsList() {
       header: 'Mã',
       width: pixel(170),
       filter: 'shipmentCode',
-      // "Mã bản ghi mở Xem" (design.md section 4).
+      // Opens the shipment detail page (Figma 111:7829); the row's "Xem"
+      // icon keeps the quick dialog.
       renderCell: (row) => (
         <Link
+          href={`/logistics/contract/${row.contractId}/shipment/${row.id}`}
           xstyle={styles.recordLink}
-          onClick={(event) => {
-            event.stopPropagation();
-            openShipment(row, 'view');
-          }}
+          onClick={(event) => event.stopPropagation()}
         >
           {orDash(row.shipmentCode)}
         </Link>

@@ -9,6 +9,7 @@ import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
+import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { useState } from 'react';
 
 import { FormGrid } from '@/shared/components/form-grid.jsx';
@@ -18,6 +19,11 @@ import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
+import {
+  shipmentCustomsChannelOptions,
+  shipmentRoutingOptions,
+  shipmentServiceTermOptions,
+} from '../config/shipment-operational-details.js';
 import { QuickCreateSupplierDialog } from './quick-create-supplier-dialog.jsx';
 
 /** @param {{
@@ -159,6 +165,85 @@ export function ShipmentBookingFields({
 
       <FormGrid>
         <StackItem size="fill">
+          <TextInput
+            label="Số chuyến"
+            placeholder={isReadOnly ? '—' : 'Ví dụ: 2604S'}
+            value={values.voyageNumber}
+            onChange={(value) => setField('voyageNumber', value)}
+            isOptional
+            status={fieldStatuses.voyageNumber}
+            statusVariant="tooltip"
+            isReadOnly={isReadOnly}
+          />
+        </StackItem>
+        <StackItem size="fill">
+          <HStack gap={2} vAlign="end">
+            <StackItem size="fill">
+              <ReadOnlyLock isActive={isReadOnly}>
+                <DateInput
+                  label="Hạn nộp SI / VGM"
+                  value={
+                    /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+                      values.siCutoffDate || null
+                    )
+                  }
+                  onChange={(value) => setField('siCutoffDate', value ?? '')}
+                  format={formatDateInputValue}
+                  isOptional
+                  status={fieldStatuses.siCutoffDate}
+                  statusVariant="tooltip"
+                />
+              </ReadOnlyLock>
+            </StackItem>
+            <ReadOnlyLock isActive={isReadOnly}>
+              <TimeInput
+                label="Giờ nộp SI / VGM"
+                isLabelHidden
+                value={
+                  /** @type {import('@astryxdesign/core/TimeInput').ISOTimeString} */ (
+                    values.siCutoffTime || undefined
+                  )
+                }
+                onChange={(value) => setField('siCutoffTime', value ?? '')}
+                hourFormat="24h"
+              />
+            </ReadOnlyLock>
+          </HStack>
+        </StackItem>
+      </FormGrid>
+
+      <FormGrid>
+        <StackItem size="fill">
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Điều kiện giao nhận"
+              placeholder={isReadOnly ? '—' : 'CY/CY, CFS/CFS…'}
+              value={values.serviceTerm}
+              onChange={(value) => setField('serviceTerm', value ?? '')}
+              options={shipmentServiceTermOptions}
+              hasClear
+              isOptional
+              width="100%"
+            />
+          </ReadOnlyLock>
+        </StackItem>
+        <StackItem size="fill">
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Phương thức vận chuyển"
+              value={values.isTransshipment ? 'transshipment' : 'direct'}
+              onChange={(value) =>
+                setField('isTransshipment', value === 'transshipment')
+              }
+              options={shipmentRoutingOptions}
+              width="100%"
+            />
+          </ReadOnlyLock>
+        </StackItem>
+      </FormGrid>
+
+      <FormGrid>
+        <StackItem size="fill">
           <ReadOnlyLock isActive={isReadOnly}>
             <DateInput
               label="ETD"
@@ -194,6 +279,24 @@ export function ShipmentBookingFields({
         </StackItem>
       </FormGrid>
 
+      {/* End of free time at the destination: containers must be back
+          empty by then (CIF journey "Trả cont rỗng"). */}
+      <ReadOnlyLock isActive={isReadOnly}>
+        <DateInput
+          label="Hạn trả cont rỗng"
+          value={
+            /** @type {import('@astryxdesign/core/Calendar').ISODateString} */ (
+              values.emptyReturnDeadline || null
+            )
+          }
+          onChange={(value) => setField('emptyReturnDeadline', value ?? '')}
+          format={formatDateInputValue}
+          isOptional
+          status={fieldStatuses.emptyReturnDeadline}
+          statusVariant="tooltip"
+        />
+      </ReadOnlyLock>
+
       <FormGrid>
         <StackItem size="fill">
           <TextInput
@@ -221,16 +324,32 @@ export function ShipmentBookingFields({
 
       <Text weight="semibold">C/O (Certificate of Origin)</Text>
 
-      <TextInput
-        label="Mã C/O"
-        placeholder={isReadOnly ? '—' : 'Do hải quan cấp, tự nhập'}
-        value={values.coNumber}
-        onChange={(value) => setField('coNumber', value)}
-        isOptional
-        status={fieldStatuses.coNumber}
-        statusVariant="tooltip"
-        isReadOnly={isReadOnly}
-      />
+      <FormGrid>
+        <StackItem size="fill">
+          <TextInput
+            label="Mã C/O"
+            placeholder={isReadOnly ? '—' : 'Do hải quan cấp, tự nhập'}
+            value={values.coNumber}
+            onChange={(value) => setField('coNumber', value)}
+            isOptional
+            status={fieldStatuses.coNumber}
+            statusVariant="tooltip"
+            isReadOnly={isReadOnly}
+          />
+        </StackItem>
+        <StackItem size="fill">
+          <TextInput
+            label="Form C/O"
+            placeholder={isReadOnly ? '—' : 'Ví dụ: Form D, Form E'}
+            value={values.coForm}
+            onChange={(value) => setField('coForm', value)}
+            isOptional
+            status={fieldStatuses.coForm}
+            statusVariant="tooltip"
+            isReadOnly={isReadOnly}
+          />
+        </StackItem>
+      </FormGrid>
 
       <FormGrid>
         <StackItem size="fill">
@@ -271,16 +390,41 @@ export function ShipmentBookingFields({
 
       <Text weight="semibold">Tờ khai Hải quan</Text>
 
-      <TextInput
-        label="Số tờ khai"
-        placeholder={isReadOnly ? '—' : 'Do hải quan cấp, tự nhập'}
-        value={values.customsDeclarationNumber}
-        onChange={(value) => setField('customsDeclarationNumber', value)}
-        isOptional
-        status={fieldStatuses.customsDeclarationNumber}
-        statusVariant="tooltip"
-        isReadOnly={isReadOnly}
-      />
+      <FormGrid>
+        <StackItem size="fill">
+          <TextInput
+            label="Số tờ khai"
+            placeholder={isReadOnly ? '—' : 'Do hải quan cấp, tự nhập'}
+            value={values.customsDeclarationNumber}
+            onChange={(value) => setField('customsDeclarationNumber', value)}
+            isOptional
+            status={fieldStatuses.customsDeclarationNumber}
+            statusVariant="tooltip"
+            isReadOnly={isReadOnly}
+          />
+        </StackItem>
+        <StackItem size="fill">
+          <ReadOnlyLock isActive={isReadOnly}>
+            <Selector
+              label="Luồng tờ khai"
+              placeholder={isReadOnly ? '—' : 'Xanh / Vàng / Đỏ'}
+              value={values.customsChannel}
+              onChange={(value) =>
+                setField(
+                  'customsChannel',
+                  /** @type {import('../types/index.js').ShipmentCustomsChannel | ''} */ (
+                    value ?? ''
+                  ),
+                )
+              }
+              options={shipmentCustomsChannelOptions}
+              hasClear
+              isOptional
+              width="100%"
+            />
+          </ReadOnlyLock>
+        </StackItem>
+      </FormGrid>
 
       <FormGrid>
         <StackItem size="fill">

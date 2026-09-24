@@ -1,5 +1,102 @@
 # Progress Log
 
+## 2026-09-24 — Shipment journey connected to backend
+
+- The shipment detail page now reads the resolved Incoterm journey from
+  `GET .../journey` instead of the local status calculator. Milestone cards
+  use backend state, scope, marker and confirmation dates. Their actions open
+  the actual-date confirmation dialog (including edit / reopen), while CIF's
+  empty-return card opens the per-container return dialog. The card shows
+  backend returned / total counts, deadline and overdue state.
+- The VGM and journey queries refresh after return changes. A VGM load failure
+  shows an error and keeps the return editor unavailable until records load.
+  Removed the obsolete frontend journey config and its status-only tests;
+  `docs/shipment-journey-incoterms.md` now points to the backend rules.
+- Full gate passed: `harness/runs/20260924-103650-1568/`. Desktop / mobile
+  component screenshots are under `harness/runs/20260924-103114-380/`;
+  the preview fixture route was removed. Browser testing of a live save remains
+  unverified because the protected route redirected the isolated session to
+  `/login` and no test login was available.
+- Harness gap: the frontend has no authenticated journey flow test, so the
+  endpoint-to-dialog interaction is covered by static checks and backend
+  contracts but not a browser regression.
+
+## 2026-09-24 — Shipment detail page, tab "Tổng quan" (Figma 111:7829)
+
+- New route `/logistics/contract/[id]/shipment/[shipmentId]`
+  (`ShipmentDetailWorkspace`, Meta theme): breadcrumb back to the contract,
+  `MetaShipmentHeaderCard` (code + copy, FCL/LCL + status pills, incoterm,
+  In / Chỉnh sửa / … "Mở hợp đồng", journey stepper: origin port → vessel
+  → sea transit → destination, leg derived from status, packing date from
+  the latest VGM, transit days = ETA − ETD), `MetaTabNav` tabs Tổng quan /
+  VGM & Container / Chi phí logistics (the last two reuse
+  `ShipmentVgmSection` / `ShipmentCostsSection`).
+- Tổng quan (`ShipmentOverviewPanel`): 3 KPI cards (invoice + số HĐ TM,
+  tờ khai + "Khớp x%" vs invoice, tỷ giá + VND estimate), "Thông tin
+  booking", "Hải quan & C/O", "Hàng hoá & Danh sách Container" (VGM
+  records as cards, "Xem VGM" → VGM tab). New shared Meta blocks:
+  `MetaShipmentKpiCard`, `MetaShipmentSection`, `MetaShipmentField`,
+  `MetaContainerCard`; `MetaPill` tone `danger`; theme Text
+  `meta-danger` / Icon `meta-amber` variants.
+- BE-kt-xnk `add-shipment-operational-details` (missing data): số hoá đơn
+  TM, số chuyến, hạn SI/VGM, CY/CY, đi thẳng / chuyển tải, Form C/O, luồng
+  tờ khai, số L/C. Shipment form gained these inputs (Book + Lô hàng
+  sections); sent as `OperationalDetails`.
+- Links: list "Mã" cell and contract "Lô hàng" cards open the page (the
+  list's eye icon keeps the quick dialog).
+- Differences from Figma: pill tabs (same `MetaTabNav` as the contract
+  page) instead of underline tabs; no "Chứng từ đính kèm" tab (no document
+  storage); no "Cập nhật hh:mm" stamp (no updated-at on Shipment); "In"
+  prints the page (no packing-list generator); no exchange-rate source
+  tag ("VCB"); kiểm hoá shows Có / Không (no inspection method); journey
+  track is a bar above the step cards rather than a line behind them.
+- verify.sh passed (`harness/runs/20260924-090257-415/`). Not committed.
+- Follow-up (user: fonts too small, journey cards ugly): smallest text on
+  the page is now 12px (field / KPI labels, pills; were 8–10px), field
+  values 17px, captions / KPI footers 14px, value-slot pills 14px. The
+  journey is a node + connector timeline on an inset panel (done emerald
+  with check, current cobalt with a halo, upcoming outlined; connector
+  emerald / cobalt fade / grey) instead of 4 boxed cards. Checked in
+  Chrome on 26KCT03/LOT-01 (all done) and 25KCT14-PS/LOT-01 (Đã book).
+  verify.sh passed (`harness/runs/20260924-091619-334/`).
+- Follow-up 2 (user): field tiles are white inner cards (as the contract
+  "Lô hàng" tab), 12px label / 14px (md) value. Journey back to the Figma
+  step cards, now Incoterm-driven: `config/shipment-journey.js` holds one
+  master milestone list (cargo ready → origin inland → origin port →
+  on board → ocean → destination port → import clearance → inland →
+  site); each Incoterm picks 5–6 legs, seller / buyer scope and markers
+  (FOB / CIF "Chuyển rủi ro" at on board, CIF "Hết cước & bảo hiểm" at
+  the destination port, EXW / DDP "Điểm giao hàng"), and maps
+  `Shipment.status` to a leg (FOB "Đã giao đến cảng" = on board, CIF =
+  destination port). Buyer legs past the seller's scope are dashed /
+  muted, never "current". Summary line + Seller / Buyer legend above the
+  cards. Only EXW / FOB / CIF / DDP exist in the Incoterm enum; others
+  fall back to the port-to-port legs (DAP / FCA… = one config entry).
+  Unit tests `shipment-journey.test.js` (5). Checked in Chrome: CIF
+  26KCT03/LOT-01 (Completed) and FOB 25KCT14-PS/LOT-01 (Đã book).
+  verify.sh passed (`harness/runs/20260924-092831-88/`).
+- Follow-up 3 (user, Figma 115:8469): journey cards in an Astryx
+  `Carousel` (swipe, prev / next, snap), fixed 320px wide, same min height.
+  Card per Figma: icon tile + status badge (Đã hoàn thành / Chặng hiện
+  tại / Kế hoạch / Phạm vi Buyer) and marker, "MỐC 0n • LEG", place /
+  vessel title and detail line (… + tooltip when long), label + date chip
+  (emerald / solid cobalt / grey). Current leg: 2px cobalt outline, blue
+  wash, floating live status pill. Header: compass tile, "HÀNH TRÌNH VẬN
+  CHUYỂN" + Incoterm pill + summary. Footer "TIẾN ĐỘ LỘ TRÌNH" bar +
+  "x% hoàn thành" + done / running / planned counts. Not used: Figma's
+  "Real-time Tracking" pill, vessel speed / position (no tracking data).
+  Checked in Chrome (CIF done, FOB booked, carousel at 1100px wide).
+  verify.sh passed (`harness/runs/20260924-094309-477/`).
+- Follow-up 4 (user: wider cards, tracking essentials only): cards 360px;
+  each keeps only milestone ("MỐC 0n • LEG"), place / vessel (17px, … +
+  tooltip), status badge + marker, and one key date. Dropped: detail
+  lines (cont / kg, tờ khai, B/L, voyage, thuế), "Hành trình: A → B"
+  (ocean card title is now the route), buyer legend; the Incoterm summary
+  moved into a tooltip on the Incoterm pill. Feet: Đóng hàng / Hạn SI-VGM
+  / Khai hải quan / ETD / transit / ETA / Phụ trách / Giao hàng. Markers
+  shortened ("Hết cước & BH", "Điểm giao") so badges fit one row.
+  verify.sh passed (`harness/runs/20260924-094849-1653/`).
+
 ## 2026-09-24 — "Nhà cung cấp" view (Figma 110:7496) + service providers
 
 - BE-kt-xnk `add-shipment-service-providers`: customs brokers and trucking
