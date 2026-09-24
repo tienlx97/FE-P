@@ -1,4 +1,5 @@
 'use client';
+import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
 import {
@@ -12,6 +13,7 @@ import { formatMoney } from '../config/currencies.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
+import { CommissionAnnexesSection } from './commission-annexes-section.jsx';
 import { CommissionFormDrawer } from './commission-form-drawer.jsx';
 import { CommissionPaymentQuickAddDialog } from './commission-payment-quick-add-dialog.jsx';
 
@@ -116,15 +118,13 @@ export function ContractCommissionPanel({ contract }) {
   );
   const rowCount = commission.paymentTerms.length;
   const rows = commission.paymentTerms.map((term, index) => {
-    const { planned, paid, state, lastPaymentDate } =
-      allocation.terms[index];
+    const { planned, paid, state, lastPaymentDate } = allocation.terms[index];
     const date = lastPaymentDate ? formatDisplayDate(lastPaymentDate) : '';
     return {
       id: term.id ?? String(index),
       no: String(index + 1).padStart(2, '0'),
       usd: formatMoney(planned),
-      paidNote:
-        state === 'partial' ? `Đã chi ${formatMoney(paid)}` : undefined,
+      paidNote: state === 'partial' ? `Đã chi ${formatMoney(paid)}` : undefined,
       method: shortCondition(term.paymentCondition),
       date,
       status:
@@ -192,55 +192,63 @@ export function ContractCommissionPanel({ contract }) {
 
   return (
     <>
-      <MetaCommissionPanel
-        currency={currency}
-        isLoading={suppliersQuery.isLoading || annexesQuery.isLoading}
-        summary={summary}
-        broker={{
-          label: 'BÊN NHẬN HOA HỒNG (MÔI GIỚI)',
-          signedLabel: bothSigned ? 'ĐÃ KÝ 2 BÊN' : 'CHƯA KÝ ĐỦ',
-          isSigned: bothSigned,
-          code: commission.code,
-          name: orBlank(recipient?.companyName),
-          rows: brokerRows,
-        }}
-        bank={{
-          title: 'NGÂN HÀNG THỤ HƯỞNG',
-          status: '',
-          shortName: orBlank(bankAccount?.bankName),
-          fullName: '',
-          account: orBlank(bankAccount?.accountNumber),
-          // Customer bank accounts carry no SWIFT code yet.
-          swift: '',
-          emptyMessage: bankAccount
-            ? undefined
-            : 'Bên nhận chưa có tài khoản ngân hàng trong danh mục Nhà cung cấp.',
-          rows: bankRows,
-          note: '',
-        }}
-        payments={rows}
-        totals={{
-          label: `TỔNG CỘNG (${rowCount} ĐỢT)`,
-          usd: `${formatMoney(total)} ${currency}`,
-          summary: [
-            `Đã thanh toán: ${formatMoney(paidValue)} (${pct(paidValue)}%)`,
-            `Còn lại: ${formatMoney(remainingValue)} (${pct(remainingValue)}%)`,
-            allocation.overpaid > 0
-              ? `Chi vượt kế hoạch: ${formatMoney(allocation.overpaid)}`
-              : null,
-          ]
-            .filter(Boolean)
-            .join(' • '),
-          vnd: '',
-        }}
-        footnote=""
-        confirmedTotal={`${formatMoney(paidValue)} ${currency}`}
-        hasReceiptDownload={false}
-        createLabel="Thêm lần chi"
-        onCreate={() => setDialog({ kind: 'payment' })}
-        onView={() => setDialog({ kind: 'form', mode: 'view' })}
-        onAction={() => setDialog({ kind: 'form', mode: 'edit' })}
-      />
+      <VStack gap={5} hAlign="stretch">
+        <MetaCommissionPanel
+          currency={currency}
+          isLoading={suppliersQuery.isLoading || annexesQuery.isLoading}
+          summary={summary}
+          broker={{
+            label: 'BÊN NHẬN HOA HỒNG (MÔI GIỚI)',
+            signedLabel: bothSigned ? 'ĐÃ KÝ 2 BÊN' : 'CHƯA KÝ ĐỦ',
+            isSigned: bothSigned,
+            code: commission.code,
+            name: orBlank(recipient?.companyName),
+            rows: brokerRows,
+          }}
+          bank={{
+            title: 'NGÂN HÀNG THỤ HƯỞNG',
+            status: '',
+            shortName: orBlank(bankAccount?.bankName),
+            fullName: '',
+            account: orBlank(bankAccount?.accountNumber),
+            // Customer bank accounts carry no SWIFT code yet.
+            swift: '',
+            emptyMessage: bankAccount
+              ? undefined
+              : 'Bên nhận chưa có tài khoản ngân hàng trong danh mục Nhà cung cấp.',
+            rows: bankRows,
+            note: '',
+          }}
+          payments={rows}
+          totals={{
+            label: `TỔNG CỘNG (${rowCount} ĐỢT)`,
+            usd: `${formatMoney(total)} ${currency}`,
+            summary: [
+              `Đã thanh toán: ${formatMoney(paidValue)} (${pct(paidValue)}%)`,
+              `Còn lại: ${formatMoney(remainingValue)} (${pct(remainingValue)}%)`,
+              allocation.overpaid > 0
+                ? `Chi vượt kế hoạch: ${formatMoney(allocation.overpaid)}`
+                : null,
+            ]
+              .filter(Boolean)
+              .join(' • '),
+            vnd: '',
+          }}
+          footnote=""
+          confirmedTotal={`${formatMoney(paidValue)} ${currency}`}
+          hasReceiptDownload={false}
+          createLabel="Thêm lần chi"
+          onCreate={() => setDialog({ kind: 'payment' })}
+          onView={() => setDialog({ kind: 'form', mode: 'view' })}
+          onAction={() => setDialog({ kind: 'form', mode: 'edit' })}
+        />
+        <CommissionAnnexesSection
+          variant="card"
+          contractId={contract.id}
+          commissionValue={commission.value}
+          currency={currency}
+        />
+      </VStack>
 
       {formDialog}
 

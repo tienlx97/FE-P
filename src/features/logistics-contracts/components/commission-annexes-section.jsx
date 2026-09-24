@@ -2,6 +2,7 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -10,7 +11,7 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Check, CirclePlus, Pencil } from 'lucide-react';
@@ -39,6 +40,25 @@ const THREE_COLUMNS = { minWidth: 180, max: 3 };
 const TWO_COLUMNS = { minWidth: 220, max: 2 };
 
 const styles = stylex.create({
+  // `variant="card"` (the contract Commission tab): same frame as the tab's
+  // "Đợt chi hoa hồng" card, header band bleeding edge to edge, and the
+  // drawer's roomy field sizing (read by the Meta theme's field overrides).
+  card: {
+    // eslint-disable-next-line @stylexjs/valid-styles
+    '--meta-field-height': 'var(--spacing-10)',
+    // eslint-disable-next-line @stylexjs/valid-styles
+    '--meta-field-radius': 'var(--meta-radius-inset)',
+    boxShadow: 'var(--meta-shadow-card)',
+  },
+  cardHeader: {
+    borderBottomColor: 'var(--color-border)',
+    borderBottomStyle: 'solid',
+    borderBottomWidth: 'var(--border-width)',
+    marginInline: 'calc(-1 * var(--container-padding-inline-start))',
+    marginTop: 'calc(-1 * var(--container-padding-block-start))',
+    paddingBlock: 'var(--spacing-4)',
+    paddingInline: 'var(--container-padding-inline-start)',
+  },
   // Same card as the payment-history cards above it.
   row: {
     backgroundColor: 'var(--color-background-surface)',
@@ -99,17 +119,20 @@ function signedAmount(annex) {
  * own value, `docs/api/Commissions.md`). "Thêm phụ lục" / "Sửa" open an
  * editor card in place (one at a time) that saves the annex on its own
  * (`useCommissionAnnexForm`), independent of the drawer's form — so it
- * also works in view mode.
+ * also works in view mode. `variant="card"` renders it as a standalone
+ * card for the contract Commission tab instead of a drawer form section.
  * @param {{
  *   contractId: string,
  *   commissionValue: number | undefined,
  *   currency: string,
+ *   variant?: 'section' | 'card',
  * }} props
  */
 export function CommissionAnnexesSection({
   contractId,
   commissionValue,
   currency,
+  variant = 'section',
 }) {
   // 'new', an annex id, or null when no editor is open.
   const [editing, setEditing] = useState(/** @type {string | null} */ (null));
@@ -119,65 +142,86 @@ export function CommissionAnnexesSection({
     (commissionValue ?? 0) +
     annexes.reduce((sum, annex) => sum + signedAmount(annex), 0);
 
-  return (
-    <MetaFormSection
-      isBoxed
-      title="Phụ lục Commission"
-      meta={
-        annexes.length > 0 ? (
-          <MetaPill
-            label={`Sau phụ lục: ${formatMoney(total, currency)}`}
-            tone="accent"
-          />
-        ) : undefined
-      }
-    >
-      <VStack gap={2} hAlign="stretch">
-        {annexes.length === 0 && editing !== 'new' ? (
-          <Text size="sm" color="secondary">
-            {annexesQuery.isLoading
-              ? 'Đang tải phụ lục…'
-              : 'Chưa có phụ lục cho Commission này.'}
-          </Text>
-        ) : null}
+  const meta =
+    annexes.length > 0 ? (
+      <MetaPill
+        label={`Sau phụ lục: ${formatMoney(total, currency)}`}
+        tone="accent"
+      />
+    ) : undefined;
 
-        {annexes.map((annex) =>
-          editing === annex.id ? (
-            <AnnexEditorCard
-              key={annex.id}
-              contractId={contractId}
-              annex={annex}
-              currency={currency}
-              onDone={() => setEditing(null)}
-            />
-          ) : (
-            <AnnexCard
-              key={annex.id}
-              annex={annex}
-              currency={currency}
-              onEdit={() => setEditing(annex.id)}
-            />
-          ),
-        )}
+  const body = (
+    <VStack gap={2} hAlign="stretch">
+      {annexes.length === 0 && editing !== 'new' ? (
+        <Text size="sm" color="secondary">
+          {annexesQuery.isLoading
+            ? 'Đang tải phụ lục…'
+            : 'Chưa có phụ lục cho Commission này.'}
+        </Text>
+      ) : null}
 
-        {editing === 'new' ? (
+      {annexes.map((annex) =>
+        editing === annex.id ? (
           <AnnexEditorCard
+            key={annex.id}
             contractId={contractId}
+            annex={annex}
             currency={currency}
             onDone={() => setEditing(null)}
           />
         ) : (
-          <Button
-            label="Thêm phụ lục"
-            type="button"
-            variant="ghost"
-            icon={<Icon icon={CirclePlus} size="sm" />}
-            onClick={() => setEditing('new')}
-            width="100%"
-            xstyle={styles.addButton}
+          <AnnexCard
+            key={annex.id}
+            annex={annex}
+            currency={currency}
+            onEdit={() => setEditing(annex.id)}
           />
-        )}
-      </VStack>
+        ),
+      )}
+
+      {editing === 'new' ? (
+        <AnnexEditorCard
+          contractId={contractId}
+          currency={currency}
+          onDone={() => setEditing(null)}
+        />
+      ) : (
+        <Button
+          label="Thêm phụ lục"
+          type="button"
+          variant="ghost"
+          icon={<Icon icon={CirclePlus} size="sm" />}
+          onClick={() => setEditing('new')}
+          width="100%"
+          xstyle={styles.addButton}
+        />
+      )}
+    </VStack>
+  );
+
+  if (variant === 'card') {
+    return (
+      <Card padding={6} xstyle={styles.card}>
+        <VStack gap={4} hAlign="stretch">
+          <HStack
+            hAlign="between"
+            vAlign="center"
+            gap={3}
+            wrap="wrap"
+            xstyle={styles.cardHeader}
+          >
+            <Heading level={3}>Phụ lục Commission</Heading>
+            {meta}
+          </HStack>
+          {body}
+        </VStack>
+      </Card>
+    );
+  }
+
+  return (
+    <MetaFormSection isBoxed title="Phụ lục Commission" meta={meta}>
+      {body}
     </MetaFormSection>
   );
 }

@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-09-25 — "Phụ lục Commission" card on the contract Commission tab
+
+- `CommissionAnnexesSection` gains `variant="card"`: a standalone card
+  (same shadow / edge-to-edge header band as "Đợt chi hoa hồng", heading
+  "Phụ lục Commission", "Sau phụ lục" pill) with the drawer's field sizing
+  vars. `ContractCommissionPanel` renders it under the tracking table when
+  a commission exists — list, inline add / edit, same query as the drawer.
+- Checked in Chrome on 26KCT14: card lists AN-01 (+800.00 USD, "Sau phụ
+  lục: 10,800.00 USD"); "Thêm phụ lục" opens the editor with 40px fields;
+  Huỷ closes it. Nothing saved.
+- verify.sh passed (`harness/runs/20260925-032630-466735/`).
+
 ## 2026-09-25 — Commission annexes edited inline in the drawer
 
 - `CommissionAnnexesSection`: "Thêm phụ lục" / "Sửa" open an editor card in
