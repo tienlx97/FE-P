@@ -73,8 +73,7 @@ const AMOUNT_COLOR = {
  * three KPI cards (Tổng giá trị hợp đồng / Đã thu / Còn thu, each with a
  * progress line and a footnote) above a "Tiến độ thanh toán chi tiết"
  * table card (header with "+ Thêm đợt thanh toán", one row per payment,
- * "Tổng đã thu" footer). Same props as `MaritimePaymentProgressPanel` so
- * `ContractPaymentsPanel` can swap one for the other; `isLoading` swaps
+ * "Tổng đã thu" footer). `isLoading` swaps
  * figures and rows for `Skeleton`s. Composed from Astryx `Card` / `Grid` /
  * `Table` / `Button` / `IconButton` / `Skeleton` + `MetaPill` (golden
  * rule #15).

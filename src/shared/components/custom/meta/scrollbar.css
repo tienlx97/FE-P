@@ -2,7 +2,7 @@
  * Meta scrollbars — mockup (`.stitch/designs/meta-contracts-list.html`):
  * 6px, pill thumb #ced0d4 (hover #8d949e) on a #f1f4f7 track. Scrollbars
  * have no Astryx theming target, so this is the one plain stylesheet the
- * theme ships (same as Maritime's). Scoped by the `data-astryx-theme`
+ * theme ships. Scoped by the `data-astryx-theme`
  * attribute Astryx's own `<Theme>` renders, so no marker element is needed
  * (golden rule #15); the page scrollbar belongs to <html>, reached with
  * `:has()`. Literal colors: theme variables are not defined on <html>.

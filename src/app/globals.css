@@ -209,8 +209,56 @@
   font-display: swap;
 }
 
+/* Inter 4.1.1 (SIL OFL 1.1, `public/fonts/inter/README.md`), self-hosted
+ * from common.misacdn.net/static/fonts/inter-4.1.1. Only the variable
+ * faces: they cover weights 100–900 and carry the `opsz` axis that
+ * replaces the static InterDisplay files (`font-optical-sizing: auto`). */
+@font-face {
+  font-family: InterVariable;
+  src: url('/fonts/inter/InterVariable.woff2?v=4.1') format('woff2');
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: InterVariable;
+  src: url('/fonts/inter/InterVariable-Italic.woff2?v=4.1') format('woff2');
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
   color-scheme: light;
+}
+
+/* `/admin/**` and `/logistics/**` use Inter (user request, 2026-09-25).
+ * `ProtectedAppShell` marks those routes with `data-app-font="inter"`. The
+ * app `<Theme>` defines the font tokens on its own element (an unlayered
+ * `:root, .<class>` rule), so they are redefined on every theme root that
+ * contains the marker — the `<Theme>` div and <html> (Astryx mirrors
+ * `data-astryx-theme` there, which covers dialogs / popovers portalled to
+ * <body>). `[attr]:has()` out-ranks the single class. The Meta theme sets
+ * the same families on its own `<Theme>` element. Numbers are tabular +
+ * lining everywhere in scope (aligned columns). */
+html:has([data-app-font='inter']),
+[data-astryx-theme]:has([data-app-font='inter']) {
+  --font-family-body:
+    InterVariable, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Helvetica, Arial, sans-serif;
+  --font-family-heading: var(--font-family-body);
+  --font-family-code: var(--font-family-body);
+}
+
+html:has([data-app-font='inter']) body {
+  font-feature-settings:
+    'liga' 1,
+    'calt' 1,
+    'tnum' 1,
+    'lnum' 1;
+  font-optical-sizing: auto;
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 @stylex;

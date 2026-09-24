@@ -10,7 +10,7 @@ import * as stylex from '@stylexjs/stylex';
  * dot before the label (`Đang thực hiện` / `Hoàn thành` / `Bản nháp`, and
  * the "142 hợp đồng" count next to the page title). Composed from Astryx
  * `HStack` + `StatusDot` + `Text` (golden rule #15); `Text color="inherit"`
- * picks up the tone color from the pill, same reason as `MaritimeBadge`.
+ * picks up the tone color from the pill.
  *
  * @param {{
  *   label: string,

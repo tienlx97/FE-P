@@ -196,12 +196,12 @@ export function ProtectedAppShell({
   // `shared/components/page-content-shell.jsx`): same self-managed
   // padding/max-width contract, so it also opts out of `paddedMain` below
   // — the page itself wraps its content in `PageContentShell` instead.
-  const hasSelfManagedPadding =
-    hasMdxLayout ||
+  const isAdminOrLogistics =
     pathname === '/admin' ||
     pathname.startsWith('/admin/') ||
     pathname === '/logistics' ||
     pathname.startsWith('/logistics/');
+  const hasSelfManagedPadding = hasMdxLayout || isAdminOrLogistics;
   // Grid columns follow side-nav presence in general (any side-nav'd
   // section gets the 2-column layout); self-managed-padding content
   // additionally opts out of `main`'s own padding below since it applies
@@ -272,6 +272,9 @@ export function ProtectedAppShell({
   return (
     <div
       {...stylex.props(styles.root)}
+      // `/admin/**` and `/logistics/**` render in Inter: `globals.css` keys
+      // the font tokens on <html> off this attribute.
+      data-app-font={isAdminOrLogistics ? 'inter' : undefined}
       style={
         /** @type {import('react').CSSProperties} */ ({
           ...stylex.props(styles.root).style,

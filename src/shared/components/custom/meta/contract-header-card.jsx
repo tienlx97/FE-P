@@ -82,9 +82,7 @@ export function MetaContractBreadcrumb({
  * "Meta" contract-detail header card — Figma node 89:1064's "2. HEADER
  * TITLE & GLOBAL ACTION BAR": contract number + copy button + type/status
  * pills on the first row, project name • incoterm chip on the second, and
- * "Xuất PDF" / "Chỉnh sửa" / "+ Thao tác" on the right. Same props as
- * `MaritimeContractOverviewCard` so `ContractDetailWorkspace` can swap
- * one for the other. Composed from Astryx `Card` / `Heading` / `Button` /
+ * "Xuất PDF" / "Chỉnh sửa" / "+ Thao tác" on the right. Composed from Astryx `Card` / `Heading` / `Button` /
  * `DropdownMenu` / `IconButton` + `MetaPill` (golden rule #15).
  *
  * @param {{
