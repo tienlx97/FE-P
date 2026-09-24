@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-09-24 — Skeleton for the "Hành trình vận chuyển" card
+
+- While the journey query loads, `MetaShipmentHeaderCard` now shows
+  `JourneySkeleton` instead of the "Đang tải hành trình…" text: 5 step
+  card frames (same `styles.step` / upcoming border / size as
+  `JourneyStep`, with connectors) filled with skeleton bars (icon tile,
+  badge, label, title, foot), plus a progress-row skeleton; the track
+  clips at the card edge like the carousel. `aria-busy` + "Đang tải …".
+- Checked in Chrome by holding `/journey` requests (fetch patched in the
+  tab only) and opening 26KCT27/LOT-01 client-side: skeleton cards match
+  the real cards' height; released → real steps replace it.
+- Not changed: the whole-page loading state of the shipment page still
+  reuses `MetaContractDetailSkeleton` (contract layout).
+- verify.sh passed (`harness/runs/20260924-155235-1510/`).
+
 ## 2026-09-24 — Cost drawer sizing + visible "Thao tác" column (user request)
 
 - `ShipmentCostLineDrawer` widened 640 → 800px; every text one step up

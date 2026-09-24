@@ -8,6 +8,7 @@ import { useClipboard } from '@astryxdesign/core/hooks';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { Tooltip } from '@astryxdesign/core/Tooltip';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -201,7 +202,7 @@ export function MetaShipmentHeaderCard({
           </HStack>
 
           {isJourneyLoading ? (
-            <Text color="secondary">Đang tải hành trình…</Text>
+            <JourneySkeleton label={journeyTitle} />
           ) : (
             <Carousel gap={0} hasSnap aria-label={journeyTitle}>
               {steps.map((step, index) => (
@@ -274,6 +275,108 @@ export function MetaShipmentHeaderCard({
         </VStack>
       </VStack>
     </Card>
+  );
+}
+
+/** Placeholder step cards shown while the journey loads. */
+const SKELETON_STEPS = 5;
+
+/**
+ * Loading state of the journey: the same step card frames (size, border,
+ * connectors) as `JourneyStep`, filled with skeleton bars, plus the
+ * progress row — so the card doesn't jump when the data arrives.
+ * @param {{ label: string }} props
+ */
+function JourneySkeleton({ label }) {
+  return (
+    <VStack gap={0} hAlign="stretch" aria-busy aria-label={`Đang tải ${label}`}>
+      <HStack gap={0} wrap="nowrap" xstyle={styles.skeletonTrack}>
+        {Array.from({ length: SKELETON_STEPS }, (_, index) => (
+          <HStack key={index} vAlign="start" gap={0} wrap="nowrap">
+            {index > 0 ? (
+              <HStack
+                xstyle={[styles.connector, connectorTones.upcoming]}
+                aria-hidden
+              />
+            ) : null}
+            <VStack hAlign="stretch" xstyle={styles.slide}>
+              <VStack
+                gap={3}
+                hAlign="stretch"
+                xstyle={[styles.step, stepTones.upcoming]}
+              >
+                <HStack hAlign="between" vAlign="start" gap={2}>
+                  <Skeleton
+                    width="var(--spacing-10)"
+                    height="var(--spacing-10)"
+                    radius={2}
+                    index={index}
+                  />
+                  <Skeleton
+                    width="calc(var(--spacing-10) * 2.5)"
+                    height="var(--spacing-6)"
+                    radius="rounded"
+                    index={index}
+                  />
+                </HStack>
+                <VStack gap={2} hAlign="stretch">
+                  <Skeleton
+                    width="60%"
+                    height="var(--spacing-3)"
+                    index={index}
+                  />
+                  <Skeleton
+                    width="85%"
+                    height="var(--spacing-5)"
+                    index={index}
+                  />
+                </VStack>
+                <HStack
+                  hAlign="between"
+                  vAlign="center"
+                  gap={2}
+                  xstyle={styles.stepFoot}
+                >
+                  <Skeleton
+                    width="40%"
+                    height="var(--spacing-3)"
+                    index={index}
+                  />
+                  <Skeleton
+                    width="calc(var(--spacing-10) * 2)"
+                    height="var(--spacing-6)"
+                    index={index}
+                  />
+                </HStack>
+              </VStack>
+            </VStack>
+          </HStack>
+        ))}
+      </HStack>
+      <HStack
+        hAlign="between"
+        vAlign="center"
+        gap={4}
+        wrap="wrap"
+        xstyle={styles.progressRow}
+      >
+        <HStack gap={3} vAlign="center">
+          <Skeleton
+            width="calc(var(--spacing-10) * 3)"
+            height="var(--spacing-3)"
+          />
+          <Skeleton
+            width="calc(var(--spacing-10) * 5)"
+            height="var(--spacing-2)"
+            radius="rounded"
+          />
+        </HStack>
+        <Skeleton
+          width="calc(var(--spacing-10) * 6)"
+          height="var(--spacing-3)"
+        />
+      </HStack>
+    </VStack>
   );
 }
 
@@ -512,6 +615,10 @@ const styles = stylex.create({
     height: 'var(--spacing-0-5)',
     marginTop: 'calc(var(--spacing-3) + var(--spacing-4) + var(--spacing-5))',
     width: 'var(--spacing-4)',
+  },
+  // Skeleton cards clip at the card edge like the carousel's track.
+  skeletonTrack: {
+    overflow: 'hidden',
   },
   progressRow: {
     borderTopColor: 'var(--meta-hairline)',
