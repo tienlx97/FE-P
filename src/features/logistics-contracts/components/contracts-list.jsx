@@ -369,11 +369,12 @@ const commercialYear = new Date().getFullYear();
  * project 6957224641630765183): framed workspace card, pill status tabs
  * with counts, status pill with dot, bold value columns, blue paid / red
  * unpaid amounts, icon-only row actions. The theme itself comes from the
- * `MetaThemeProvider` the page wraps around this component.
+ * `MetaThemeProvider` the page wraps around this component. Opens on the
+ * "Cơ bản" view preset, also after a reload (user request, 2026-09-24).
  * @param {{ initialViewPresetKey?: 'basic' | 'financial', isFramed?: boolean }} [props]
  */
 export function ContractsList({
-  initialViewPresetKey = 'financial',
+  initialViewPresetKey = 'basic',
   isFramed = true,
 } = {}) {
   const router = useRouter();

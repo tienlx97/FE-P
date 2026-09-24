@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-09-24 — Contract / shipment lists open on "Cơ bản" after reload
+
+- `ContractsList` now defaults to the "Cơ bản" view preset (was
+  "Giá trị & Dòng tiền"). `AdvanceTable` never persisted the selected
+  preset, but did persist the shown columns, so after F5 the label reset
+  while the columns of the last-picked preset stayed. Columns are now
+  persisted per preset (`usePersistedTableViewOptions` `columnScope` →
+  `columnKeysByScope`); switching presets no longer overwrites them, and
+  "Khôi phục" restores the active preset's defaults. Density / sticky
+  stay shared. Tables without presets keep the old `activeColumnKeys`.
+- One-time effect: column edits saved before this on the two preset lists
+  (old unscoped `activeColumnKeys`) are ignored.
+- Checked in Chrome: shipments — pick "Giá trị & Chi phí", F5 → "Cơ bản"
+  with basic columns; contracts — pick "Giá trị & Dòng tiền", F5 → "Cơ
+  bản" (Ngày ký, Số hợp đồng, Khách hàng, Trạng thái, Dự án, Incoterm).
+- verify.sh passed (`harness/runs/20260924-161518-835/`).
+
 ## 2026-09-24 — Shipment detail page skeleton
 
 - New `MetaShipmentDetailSkeleton` replaces the contract-layout

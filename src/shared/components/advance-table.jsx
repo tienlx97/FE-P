@@ -359,13 +359,16 @@ export function AdvanceTable({
   const [searchFilters, setSearchFilters] = useState(
     /** @type {import('@astryxdesign/core/PowerSearch').PowerSearchFilter[]} */ ([]),
   );
-  // Which `viewPresets` segment reads as selected — a label only, not a
-  // strict mode: manually editing columns via the picker afterward doesn't
-  // clear or resync this, same as the picker's own "Khôi phục" button
-  // doesn't track a mode either. Not persisted — only the columns/density/
-  // sticky settings it produces are.
+  // Which `viewPresets` segment is selected. Not persisted: a reload
+  // always opens `initialViewPresetKey` (user request, 2026-09-24: "default
+  // khi F5 là tab cơ bản"). Each preset keeps its own persisted column list
+  // (`columnScope`), so the columns always match the selected preset,
+  // including edits made to it via the picker.
   const [activePresetKey, setActivePresetKey] = useState(
     initialViewPresetKey ?? viewPresets?.[0]?.key ?? '',
+  );
+  const activePreset = viewPresets?.find(
+    (preset) => preset.key === activePresetKey,
   );
   const {
     activeColumnKeys,
@@ -379,8 +382,10 @@ export function AdvanceTable({
   } = usePersistedTableViewOptions({
     storageKey: entityLabel,
     columnOptions,
-    initialColumnKeys:
-      initialColumnKeys ?? columnOptions.map((column) => column.key),
+    initialColumnKeys: activePreset
+      ? [...activePreset.columnKeys]
+      : (initialColumnKeys ?? columnOptions.map((column) => column.key)),
+    columnScope: activePreset?.key,
     defaultStickyStart,
     defaultStickyEnd,
   });
@@ -992,10 +997,10 @@ export function AdvanceTable({
         size="sm"
         value={activePresetKey}
         onChange={(key) => {
+          // The preset's own (persisted or default) columns follow via
+          // `columnScope`.
           setActivePresetKey(key);
           onViewPresetChange?.(key);
-          const preset = viewPresets.find((candidate) => candidate.key === key);
-          if (preset) setActiveColumnKeys([...preset.columnKeys]);
         }}
       >
         {viewPresets.map((preset) => (
@@ -1085,7 +1090,9 @@ export function AdvanceTable({
               columns={columnOptions}
               activeColumnKeys={[...columnSettingsState.activeColumnKeys]}
               onChangeActiveColumnKeys={columnSettingsState.setActiveColumnKeys}
-              defaultColumnKeys={defaultColumnKeys}
+              defaultColumnKeys={
+                activePreset ? [...activePreset.columnKeys] : defaultColumnKeys
+              }
               density={density}
               onChangeDensity={(value) =>
                 setDensity(

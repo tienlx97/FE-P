@@ -28,6 +28,7 @@ function slugify(raw) {
 /**
  * @typedef {{
  *   activeColumnKeys?: string[],
+ *   columnKeysByScope?: Record<string, string[]>,
  *   density?: string,
  *   stickyStart?: string,
  *   stickyEnd?: string,
@@ -118,14 +119,23 @@ function persist(slug, partial) {
  *   storageKey: string,
  *   columnOptions: ReadonlyArray<{ key: string, isAlwaysVisible?: boolean }>,
  *   initialColumnKeys: string[],
+ *   columnScope?: string,
  *   defaultStickyStart: 'none' | 'one' | 'two',
  *   defaultStickyEnd: 'none' | 'one' | 'two',
  * }} args
+ *
+ * `columnScope` keeps a separate column list per scope — `AdvanceTable`
+ * passes its active view preset ("Cơ bản" / "Tài chính" …), so a reload
+ * shows the default preset with *its* columns (and any edits made to it)
+ * instead of the columns of whichever preset was picked last (user
+ * request, 2026-09-24: "default khi F5 là tab cơ bản"). Density and
+ * sticky edges stay shared across scopes.
  */
 export function usePersistedTableViewOptions({
   storageKey,
   columnOptions,
   initialColumnKeys,
+  columnScope,
   defaultStickyStart,
   defaultStickyEnd,
 }) {
@@ -157,18 +167,21 @@ export function usePersistedTableViewOptions({
     getServerSnapshot,
   );
 
+  const storedColumnKeys =
+    columnScope === undefined
+      ? stored?.activeColumnKeys
+      : stored?.columnKeysByScope?.[columnScope];
+
   const activeColumnKeys = useMemo(() => {
-    if (!Array.isArray(stored?.activeColumnKeys)) return initialColumnKeys;
+    if (!Array.isArray(storedColumnKeys)) return initialColumnKeys;
     const knownKeys = new Set(columnOptions.map((column) => column.key));
-    const filtered = stored.activeColumnKeys.filter((key) =>
-      knownKeys.has(key),
-    );
+    const filtered = storedColumnKeys.filter((key) => knownKeys.has(key));
     const alwaysVisibleKeys = columnOptions
       .filter((column) => column.isAlwaysVisible)
       .map((column) => column.key)
       .filter((key) => !filtered.includes(key));
     return [...filtered, ...alwaysVisibleKeys];
-  }, [stored, columnOptions, initialColumnKeys]);
+  }, [storedColumnKeys, columnOptions, initialColumnKeys]);
 
   const density =
     /** @type {import('@astryxdesign/core/Table').TableDensity} */ (
@@ -184,8 +197,16 @@ export function usePersistedTableViewOptions({
   );
 
   const setActiveColumnKeys = useCallback(
-    (/** @type {string[]} */ keys) => persist(slug, { activeColumnKeys: keys }),
-    [slug],
+    (/** @type {string[]} */ keys) =>
+      columnScope === undefined
+        ? persist(slug, { activeColumnKeys: keys })
+        : persist(slug, {
+            columnKeysByScope: {
+              ...getSnapshot(slug)?.columnKeysByScope,
+              [columnScope]: keys,
+            },
+          }),
+    [slug, columnScope],
   );
   const setDensity = useCallback(
     (/** @type {import('@astryxdesign/core/Table').TableDensity} */ value) =>
