@@ -8,8 +8,7 @@ import { CommissionPaymentFields } from './commission-payment-fields.jsx';
 
 /**
  * "Thêm nhanh" — appends one payment to a Commission's "Lịch sử thanh
- * toán" without opening the full `CommissionFormDialog`, same idiom as
- * `CommissionAnnexFormDialog`'s standalone "Thêm phụ lục". Requires the
+ * toán" without opening the full commission drawer. Requires the
  * full `commission` (not just its id) since the update it sends resends
  * every other field unchanged — see `useCommissionPaymentQuickAddForm`.
  * @param {{

@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-09-25 — Commission annexes edited inline in the drawer
+
+- `CommissionAnnexesSection`: "Thêm phụ lục" / "Sửa" open an editor card in
+  place (one at a time) — Loại | Số tiền (USD) | Ngày ký, the two framed
+  "đã ký" checkboxes, Huỷ / Thêm phụ lục (Lưu phụ lục) — over
+  `useCommissionAnnexForm`. No nested `<form>`: Enter in an input is caught
+  on the card and saves the annex instead of submitting the commission.
+- `CommissionAnnexFormDialog` and `CommissionAnnexFields` deleted (no caller
+  left); the drawer no longer holds annex dialog state.
+- Checked in Chrome on 26KCT14 (view mode): edit AN-01 → 800, Bên bán đã ký,
+  Enter → saved (+800.00 USD, "Sau phụ lục: 10,800.00 USD"), drawer stayed
+  in view mode; new annex with empty fields → Loại / Số tiền / Ngày ký
+  errors; Huỷ closes the editor.
+- verify.sh passed (`harness/runs/20260925-031511-450375/`).
+
 ## 2026-09-25 — Commission annexes in the Meta drawer
 
 - New `CommissionAnnexesSection` ("Phụ lục Commission", existing

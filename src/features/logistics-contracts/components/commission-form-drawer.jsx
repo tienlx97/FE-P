@@ -41,7 +41,6 @@ import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 import { labelForContractType } from '../config/contract-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { useCommissionForm } from '../hooks/use-commission-form.js';
-import { CommissionAnnexFormDialog } from './commission-annex-form-dialog.jsx';
 import { CommissionAnnexesSection } from './commission-annexes-section.jsx';
 import { CommissionPaymentHistoryCards } from './commission-payment-history-cards.jsx';
 import { PaymentTermsFields } from './payment-terms-fields.jsx';
@@ -146,11 +145,6 @@ export function CommissionFormDrawer({
   const toast = useAppToast();
   const [isPickingBroker, setIsPickingBroker] = useState(false);
   const [isConfirmingDiscard, setIsConfirmingDiscard] = useState(false);
-  const [annexDialog, setAnnexDialog] = useState(
-    /** @type {{ annex?: import('../types/index.js').CommissionAnnex } | null} */ (
-      null
-    ),
-  );
   const form = useCommissionForm({
     contractId: contract.id,
     commission,
@@ -553,8 +547,6 @@ export function CommissionFormDrawer({
                       contractId={contract.id}
                       commissionValue={values.value}
                       currency={currency}
-                      onAdd={() => setAnnexDialog({})}
-                      onEdit={(annex) => setAnnexDialog({ annex })}
                     />
                   ) : null}
                 </VStack>
@@ -627,19 +619,6 @@ export function CommissionFormDrawer({
           }
         />
       </Drawer>
-
-      {annexDialog ? (
-        <CommissionAnnexFormDialog
-          key={annexDialog.annex?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setAnnexDialog(null);
-          }}
-          contractId={contract.id}
-          annex={annexDialog.annex}
-          onSuccess={() => setAnnexDialog(null)}
-        />
-      ) : null}
 
       <CommonDialog
         isOpen={isConfirmingDiscard}
