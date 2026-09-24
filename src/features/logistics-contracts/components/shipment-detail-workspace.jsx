@@ -43,8 +43,8 @@ import { useShipmentVgmsQuery } from '../hooks/use-shipment-vgms-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { ShipmentCostPanel } from './shipment-cost-panel.jsx';
+import { ShipmentEditDrawer } from './shipment-edit-drawer.jsx';
 import { ShipmentEmptyReturnDialog } from './shipment-empty-return-dialog.jsx';
-import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 import { ShipmentMilestoneDialog } from './shipment-milestone-dialog.jsx';
 import { ShipmentOverviewPanel } from './shipment-overview-panel.jsx';
 import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
@@ -525,17 +525,10 @@ function ShipmentDetailBody({
       {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
         {isEditing ? (
-          <ShipmentFormDialog
-            isOpen
-            initialMode="edit"
-            onOpenChange={(open) => {
-              if (!open) setIsEditing(false);
-            }}
-            contractId={contract.id}
+          <ShipmentEditDrawer
             contract={contract}
             shipment={shipment}
-            closeLabel="Quay lại lô hàng"
-            onSuccess={() => setIsEditing(false)}
+            onClose={() => setIsEditing(false)}
           />
         ) : null}
         {selectedMilestone ? (

@@ -1,5 +1,34 @@
 # Progress Log
 
+## 2026-09-24 — Shipment detail "Chỉnh sửa" drawer (Stitch cab96b6c…)
+
+- New `ShipmentEditDrawer` (960px Meta drawer, Stitch "Chỉnh sửa Shipment",
+  prompt `.stitch/prompts/meta-shipment-edit-drawer.md`) replaces the
+  fullscreen `ShipmentFormDialog` on the shipment detail page ("Chỉnh
+  sửa"); the dialog still serves the lists. Header: ship tile, code •
+  type pill • status pill. Three boxed, numbered sections on the muted
+  canvas: 1 Thông tin lô hàng (name + locked Loại hình, payment / L/C,
+  status shown as its tone pill via `renderOption` / `renderValue`,
+  invoice no., invoice / declaration value + currency, rate / quantity
+  (Cont / Kiện) / weight), 2 Booking & vận chuyển (forwarder + quick-create
+  "+", brokers / trucking, booking / B/L, line / vessel, voyage / SI date
+  + time, service term / routing as a segmented control, ETD / ETA with a
+  "Dự kiến transit: N ngày" note, empty-return deadline, POL / POD),
+  3 Hải quan & C/O (C/O no. / form / dates, declaration no., channel with
+  dot pills, date, "Bị kiểm hoá" tile). Footer: unsaved hint, Huỷ bỏ,
+  Lưu thay đổi; discard confirmation.
+- Same data / rules as the dialog: `useShipmentForm` (validation,
+  update, suppliers; cost lines resent unchanged). Errors are detached
+  under each field and the body scrolls to the first invalid one.
+- Not done from the design: the per-field "changed" dot, the C/O Form D
+  info strip / "Xem preview C/O" (no such data), pills inside the status
+  dropdown are Meta pills (not an exact copy).
+- Checked in Chrome on 26KCT34/LOT-01: opens at 960px with the saved
+  values; clearing "Số booking" + Lưu → "Vui lòng nhập số booking" under
+  the field, scrolled into view, nothing sent; Huỷ bỏ → confirmation →
+  discarded, page unchanged. A real save was not exercised.
+- verify.sh passed (`harness/runs/20260924-163316-1245/`).
+
 ## 2026-09-24 — Contract / shipment lists open on "Cơ bản" after reload
 
 - `ContractsList` now defaults to the "Cơ bản" view preset (was
