@@ -19,9 +19,12 @@ import * as stylex from '@stylexjs/stylex';
  *   meta?: import('react').ReactNode,
  *   action?: import('react').ReactNode,
  *   isBoxed?: boolean,
+ *   isTitleUppercase?: boolean,
  *   children: import('react').ReactNode,
  * }} props
  *
+ * `isTitleUppercase={false}` keeps the title as written (Figma 125:11995,
+ * the cost drawer's "Phân loại" / "Khoản chi phí").
  * `isBoxed` puts the section on its own white card (Figma 104:5399, the
  * "Tạo Commission" drawer, whose body is a muted canvas of section cards).
  */
@@ -31,6 +34,7 @@ export function MetaFormSection({
   meta,
   action,
   isBoxed = false,
+  isTitleUppercase = true,
   children,
 }) {
   const section = (
@@ -49,7 +53,7 @@ export function MetaFormSection({
             size="base"
             weight="bold"
             color="primary"
-            xstyle={styles.title}
+            xstyle={isTitleUppercase && styles.title}
           >
             {index === undefined ? title : `${index}. ${title}`}
           </Text>

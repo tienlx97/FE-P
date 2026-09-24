@@ -364,13 +364,7 @@ function ShipmentDetailBody({
   onOpenContract,
 }) {
   const panelId = useId();
-  // Which editor request is open: the header's "Chỉnh sửa", or the cost
-  // grid's "Thêm chi phí" / group "+" (opens on the cost tab, one new line).
-  const [editRequest, setEditRequest] = useState(
-    /** @type {{ key: number, tab: 'info' | 'costs', addCostLine: { costCategoryId?: string } | null } | null} */ (
-      null
-    ),
-  );
+  const [isEditing, setIsEditing] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState(
     /** @type {import('../types/index.js').ShipmentJourneyStep | null} */ (
       null
@@ -454,9 +448,7 @@ function ShipmentDetailBody({
           journeySummary={journey?.summary}
           isJourneyLoading={journeyQuery.isLoading}
           onPrint={() => window.print()}
-          onEdit={() =>
-            setEditRequest({ key: Date.now(), tab: 'info', addCostLine: null })
-          }
+          onEdit={() => setIsEditing(true)}
           moreItems={[
             {
               id: 'contract',
@@ -524,13 +516,7 @@ function ShipmentDetailBody({
               costCategoriesById={costCategoriesById}
               isCategoriesLoading={costCategoriesQuery.isLoading}
               customersById={customersById}
-              onAddCostLine={(costCategoryId) =>
-                setEditRequest({
-                  key: Date.now(),
-                  tab: 'costs',
-                  addCostLine: { costCategoryId },
-                })
-              }
+              incotermLabel={`${contract.incoterm} ${contract.incotermYear}`}
             />
           ) : null}
         </section>
@@ -538,21 +524,18 @@ function ShipmentDetailBody({
 
       {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
-        {editRequest ? (
+        {isEditing ? (
           <ShipmentFormDialog
-            key={editRequest.key}
             isOpen
             initialMode="edit"
-            initialTab={editRequest.tab}
-            addCostLine={editRequest.addCostLine}
             onOpenChange={(open) => {
-              if (!open) setEditRequest(null);
+              if (!open) setIsEditing(false);
             }}
             contractId={contract.id}
             contract={contract}
             shipment={shipment}
             closeLabel="Quay lại lô hàng"
-            onSuccess={() => setEditRequest(null)}
+            onSuccess={() => setIsEditing(false)}
           />
         ) : null}
         {selectedMilestone ? (

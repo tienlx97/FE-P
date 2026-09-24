@@ -19,7 +19,7 @@ import { Heading, Text } from '@astryxdesign/core/Text';
 import { VisuallyHidden } from '@astryxdesign/core/VisuallyHidden';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { Info, Plus, Trash2 } from 'lucide-react';
+import { Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Fragment } from 'react';
 
 import { MetaCountBadge } from './count-badge.jsx';
@@ -86,6 +86,7 @@ const COLUMNS = /** @type {const} */ ([
  *   isReadOnly?: boolean,
  *   onCreate?: () => void,
  *   onCreateInGroup?: (groupId: string) => void,
+ *   onEdit?: (id: string) => void,
  *   onDelete?: (id: string) => void,
  * }} props
  */
@@ -100,6 +101,7 @@ export function MetaCostPanel({
   isReadOnly = false,
   onCreate,
   onCreateInGroup,
+  onEdit,
   onDelete,
 }) {
   return (
@@ -302,17 +304,35 @@ export function MetaCostPanel({
                         <OptionalText value={row.invoiceNumber} isCode />
                       </TableCell>
                       <TableCell xstyle={[styles.cell, alignStyles.center]}>
-                        {onDelete ? (
-                          <IconButton
-                            isDisabled={isReadOnly}
-                            label={`Xoá chi phí ${row.name}`}
-                            tooltip="Xoá"
-                            icon={<Icon icon={Trash2} size="sm" />}
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onDelete(row.id)}
-                          />
-                        ) : null}
+                        <HStack
+                          gap={1}
+                          vAlign="center"
+                          hAlign="center"
+                          wrap="nowrap"
+                        >
+                          {onEdit ? (
+                            <IconButton
+                              isDisabled={isReadOnly}
+                              label={`Sửa chi phí ${row.name}`}
+                              tooltip="Sửa"
+                              icon={<Icon icon={Pencil} size="sm" />}
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onEdit(row.id)}
+                            />
+                          ) : null}
+                          {onDelete ? (
+                            <IconButton
+                              isDisabled={isReadOnly}
+                              label={`Xoá chi phí ${row.name}`}
+                              tooltip="Xoá"
+                              icon={<Icon icon={Trash2} size="sm" />}
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onDelete(row.id)}
+                            />
+                          ) : null}
+                        </HStack>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -496,8 +516,8 @@ const columnWidths = stylex.create({
   name: { width: '12%' },
   amount: { width: '10%' },
   nature: { width: '9%' },
-  note: { width: '17%' },
+  note: { width: '15%' },
   provider: { width: '16%' },
   invoice: { width: '10%' },
-  actions: { width: '3%' },
+  actions: { width: '5%' },
 });

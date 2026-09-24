@@ -13,7 +13,7 @@ import { SHIPMENT_TYPES } from './shipment-types.js';
  * hoá đơn") are both optional — not every cost line has a known provider
  * or invoice yet. `costNature` is Standard or Abnormal (incident cost).
  */
-const shipmentCostLineSchema = z.object({
+export const shipmentCostLineSchema = z.object({
   costCategoryId: z.string().trim().min(1, 'Vui lòng chọn nhóm chi phí'),
   name: z
     .string()
@@ -106,7 +106,7 @@ export const shipmentSchema = z
     coForm: z.string().trim().max(20, 'Tối đa 20 ký tự'),
     customsChannel: z.union([z.enum(SHIPMENT_CUSTOMS_CHANNELS), z.literal('')]),
     letterOfCreditNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
-  emptyReturnDeadline: z.string(),
+    emptyReturnDeadline: z.string(),
   })
   .superRefine((values, context) => {
     // "Hạn nộp SI / VGM" is one date-time on the backend: a time alone has

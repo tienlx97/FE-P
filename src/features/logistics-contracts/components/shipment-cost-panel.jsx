@@ -10,7 +10,11 @@ import {
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { formatVndAmount } from '../config/currencies.js';
-import { useRemoveShipmentCostLine } from '../hooks/use-remove-shipment-cost-line.js';
+import {
+  costLineFormValues,
+  useSaveShipmentCostLines,
+} from '../hooks/use-save-shipment-cost-lines.js';
+import { ShipmentCostLineDrawer } from './shipment-cost-line-drawer.jsx';
 
 const money = formatVndAmount;
 
@@ -18,8 +22,9 @@ const money = formatVndAmount;
  * Shipment detail "Chi phí logistics" tab (Figma 124:9667): groups the
  * shipment's cost lines under the fixed LOG-01 … LOG-08 categories (all
  * eight, so each group's "+" is always there) and feeds `MetaCostPanel`.
- * Adding opens the shipment editor on its cost tab (`onAddCostLine`);
- * deleting a line resends the shipment without it.
+ * "Thêm chi phí", a group's "+" (group pre-selected) and a line's edit
+ * open `ShipmentCostLineDrawer` (Figma 125:11995); deleting a line
+ * resends the shipment without it.
  *
  * @param {{
  *   contractId: string,
@@ -27,7 +32,7 @@ const money = formatVndAmount;
  *   costCategoriesById: Map<string, import('../types/index.js').ShipmentCostCategory>,
  *   isCategoriesLoading: boolean,
  *   customersById: Map<string, import('../types/index.js').Customer>,
- *   onAddCostLine: (costCategoryId?: string) => void,
+ *   incotermLabel: string,
  * }} props
  */
 export function ShipmentCostPanel({
@@ -36,12 +41,18 @@ export function ShipmentCostPanel({
   costCategoriesById,
   isCategoriesLoading,
   customersById,
-  onAddCostLine,
+  incotermLabel,
 }) {
+  /** Open drawer: a new line (optionally in a group) or an existing one. */
+  const [drawer, setDrawer] = useState(
+    /** @type {{ costLine: import('../types/index.js').ShipmentCostLine | null, costCategoryId?: string } | null} */ (
+      null
+    ),
+  );
   const [deletingCost, setDeletingCost] = useState(
     /** @type {import('../types/index.js').ShipmentCostLine | null} */ (null),
   );
-  const { removeCostLine } = useRemoveShipmentCostLine(contractId);
+  const { saveCostLines } = useSaveShipmentCostLines(contractId);
   const toast = useAppToast();
 
   const categories = [...costCategoriesById.values()].sort((a, b) =>
@@ -106,7 +117,12 @@ export function ShipmentCostPanel({
 
   async function handleConfirmDelete() {
     if (!deletingCost) return;
-    const result = await removeCostLine(shipment, deletingCost.id);
+    const result = await saveCostLines(
+      shipment,
+      shipment.costs
+        .filter((cost) => cost.id !== deletingCost.id)
+        .map(costLineFormValues),
+    );
     setDeletingCost(null);
     toast({
       body: result.success ? 'Đã xoá khoản chi phí.' : result.message,
@@ -133,14 +149,35 @@ export function ShipmentCostPanel({
         }
         shipmentCode={shipment.shipmentCode}
         isLoading={isCategoriesLoading}
-        onCreate={() => onAddCostLine()}
+        onCreate={() => setDrawer({ costLine: null })}
         onCreateInGroup={(groupId) =>
-          onAddCostLine(groupId === 'uncategorized' ? undefined : groupId)
+          setDrawer({
+            costLine: null,
+            costCategoryId: groupId === 'uncategorized' ? undefined : groupId,
+          })
+        }
+        onEdit={(id) =>
+          setDrawer({
+            costLine: shipment.costs.find((cost) => cost.id === id) ?? null,
+          })
         }
         onDelete={(id) =>
           setDeletingCost(shipment.costs.find((cost) => cost.id === id) ?? null)
         }
       />
+
+      {drawer ? (
+        <ShipmentCostLineDrawer
+          contractId={contractId}
+          shipment={shipment}
+          costLine={drawer.costLine}
+          initialCostCategoryId={drawer.costCategoryId}
+          incotermLabel={incotermLabel}
+          costCategories={categories}
+          providers={[...customersById.values()]}
+          onClose={() => setDrawer(null)}
+        />
+      ) : null}
 
       {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>

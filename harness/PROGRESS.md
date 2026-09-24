@@ -1,5 +1,41 @@
 # Progress Log
 
+## 2026-09-24 — Shipment cost drawer "Thêm / Sửa chi phí logistics" (Figma 125:11995)
+
+- New `ShipmentCostLineDrawer` (640px Meta drawer, same frame as the
+  commission drawer): header (receipt tile, title, shipment code • incoterm
+  pill); muted canvas with two boxed sections — "Phân loại" (8 LOG groups
+  as `SelectableCard`s in 2 columns, selected = cobalt tint + code chip +
+  check; Cost Nature as two option cards, Abnormal selected = amber) and
+  "Khoản chi phí" (name with 0/200 counter and template suggestion
+  `Token`s, amount with "đ" + "Chỉ ghi nhận bằng VNĐ", invoice number,
+  searchable clearable provider, note with 0/500 counter); a live "after
+  saving" preview (group total, shipment total, Abnormal); footer with the
+  unsaved-changes hint, "Huỷ bỏ" and "Thêm chi phí" / "Lưu thay đổi".
+  Closing with changes asks "Bỏ thay đổi chưa lưu?".
+- Opened from the cost tab: "Thêm chi phí", a group's "+" (group
+  pre-selected) and a new per-line edit (pencil) button. Replaces last
+  commit's "open the shipment editor" path; `ShipmentFormDialog` is back
+  to its previous props.
+- Data: `useShipmentCostLineForm` validates with the now-exported
+  `shipmentCostLineSchema`; `useSaveShipmentCostLines` (was
+  `use-remove-shipment-cost-line.js`) resends the shipment with the new
+  list — used for add / edit / delete. `MetaFormSection` got
+  `isTitleUppercase` (default true) for the sentence-case titles.
+- Differences from Figma: no suggestion chips show today — the template
+  catalog (`GET /shipment-cost-item-templates`) is empty on the backend,
+  so the caption reads "Chưa có gợi ý cho LOG-03."; field errors use the
+  Astryx detached status block; the amount input keeps the shared
+  "0.00" placeholder and left alignment; required "*" is `meta-danger`.
+- Checked in Chrome on 26KCT02/LOT-01: "+" of LOG-03 opens with LOG-03
+  selected; empty submit shows "Vui lòng nhập tên khoản chi phí" / "Vui
+  lòng nhập số tiền" (nothing sent); Abnormal + name + 4,500,000 → preview
+  13,219,939.78 / 48,229,636.82 / Abnormal 4,500,000 đ; "Huỷ bỏ" asked
+  and discarded; edit on "Seal" prefilled LOG-03 / Standard / Seal /
+  526,400 and closed without asking. Nothing saved (still 13 lines).
+  Saving itself was not exercised against the backend.
+- verify.sh passed (`harness/runs/20260924-150940-1185/`).
+
 ## 2026-09-24 — Shipment detail page, tab "Chi phí logistics" (Figma 124:9667)
 
 - The tab is now one full-width Meta card, `MetaCostPanel` (new shared
