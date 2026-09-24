@@ -17,7 +17,6 @@ import {
   CircleCheck,
   CirclePlus,
   ClipboardClock,
-  Clock,
   Download,
   Eye,
   Hourglass,
@@ -45,7 +44,6 @@ import { MetaPill } from './pill.jsx';
  *   annexPercent: number,
  *   contractLabel: string,
  *   annexLabel?: string,
- *   annexCount: number,
  * }} MetaSettlementBreakdown
  */
 
@@ -70,8 +68,10 @@ const AMOUNT_COLOR = {
 
 /**
  * "Meta" contract-detail "Tiến độ thanh toán" tab — Figma node 94:1936:
- * three KPI cards (Tổng giá trị hợp đồng / Đã thu / Còn thu, each with a
- * progress line and a footnote) above a "Tiến độ thanh toán chi tiết"
+ * three KPI cards (Giá trị quyết toán / Đã thu / Còn thu, each with a
+ * progress line; below a divider, Giá trị quyết toán shows the original /
+ * annex values with no "HĐ gốc:" / "Phụ lục:" titles, the other two have
+ * nothing) above a "Tiến độ thanh toán chi tiết"
  * table card (header with "+ Thêm đợt thanh toán", one row per payment,
  * "Tổng đã thu" footer). `isLoading` swaps
  * figures and rows for `Skeleton`s. Composed from Astryx `Card` / `Grid` /
@@ -236,7 +236,7 @@ export function MetaPaymentProgressPanel({
         xstyle={styles.kpiGrid}
       >
         <KpiCard
-          label="TỔNG GIÁ TRỊ HỢP ĐỒNG"
+          label="GIÁ TRỊ QUYẾT TOÁN"
           icon={Banknote}
           iconTone="accent"
           value={totalValue}
@@ -253,33 +253,19 @@ export function MetaPaymentProgressPanel({
             <HStack gap={3} vAlign="center" wrap="wrap">
               <HStack gap={1.5} vAlign="center" wrap="nowrap">
                 <HStack as="span" xstyle={[styles.dot, dotTones.accent]} />
-                <Text color="secondary">
-                  HĐ gốc:{' '}
-                  <Text
-                    as="span"
-                    type="inherit"
-                    weight="bold"
-                    color="primary"
-                    hasTabularNumbers
-                  >
-                    {settlementBreakdown.contractLabel}
-                  </Text>
+                <Text weight="bold" hasTabularNumbers>
+                  {settlementBreakdown.contractLabel}
                 </Text>
               </HStack>
               {settlementBreakdown.annexLabel ? (
                 <HStack gap={1.5} vAlign="center" wrap="nowrap">
                   <HStack as="span" xstyle={[styles.dot, dotTones.success]} />
-                  <Text color="secondary">
-                    {`${settlementBreakdown.annexCount} Phụ lục: `}
-                    <Text
-                      as="span"
-                      type="inherit"
-                      weight="bold"
-                      color={/** @type {any} */ ('meta-success')}
-                      hasTabularNumbers
-                    >
-                      {settlementBreakdown.annexLabel}
-                    </Text>
+                  <Text
+                    weight="bold"
+                    color={/** @type {any} */ ('meta-success')}
+                    hasTabularNumbers
+                  >
+                    {settlementBreakdown.annexLabel}
                   </Text>
                 </HStack>
               ) : null}
@@ -302,14 +288,6 @@ export function MetaPaymentProgressPanel({
           progressTone="success"
           segments={[{ percent: paidPercent, tone: 'success' }]}
           isLoading={isLoading}
-          footer={
-            // Figma 94:1937 (updated): icon only, no footnote text.
-            <Icon
-              icon={Landmark}
-              size="md"
-              color={/** @type {any} */ ('meta-success')}
-            />
-          }
         />
 
         <KpiCard
@@ -329,7 +307,6 @@ export function MetaPaymentProgressPanel({
           progressTone="primary"
           segments={[{ percent: remainingPercent, tone: 'amber' }]}
           isLoading={isLoading}
-          footer={<Icon icon={Clock} size="md" color="secondary" />}
         />
       </Grid>
 
@@ -484,7 +461,7 @@ export function MetaPaymentProgressPanel({
  *   progressValue: string,
  *   progressTone: 'accent' | 'success' | 'primary',
  *   segments: Array<{ percent: number, tone: 'accent' | 'success' | 'amber' }>,
- *   footer: import('react').ReactNode,
+ *   footer?: import('react').ReactNode,
  *   isLoading: boolean,
  * }} props
  */
@@ -600,7 +577,9 @@ function KpiCard({
               </HStack>
             </VStack>
 
-            <HStack xstyle={styles.kpiFooter}>{footer}</HStack>
+            {footer ? (
+              <HStack xstyle={styles.kpiFooter}>{footer}</HStack>
+            ) : null}
           </VStack>
         )}
       </VStack>

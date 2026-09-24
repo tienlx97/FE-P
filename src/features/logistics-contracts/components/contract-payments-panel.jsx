@@ -68,7 +68,6 @@ export function ContractPaymentsPanel({ contract }) {
       annexes.length > 0
         ? `${annexesTotal >= 0 ? '+' : '-'}${formatMoney(Math.abs(annexesTotal), contract.currency)}`
         : undefined,
-    annexCount: annexes.length,
   };
 
   const paidSchedules = schedules.filter((schedule) =>

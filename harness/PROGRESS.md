@@ -1,5 +1,16 @@
 # Progress Log
 
+## 2026-09-25 — Payments tab KPI cards: renamed, no titles below the divider
+
+- `MetaPaymentProgressPanel`: "TỔNG GIÁ TRỊ HỢP ĐỒNG" → "GIÁ TRỊ QUYẾT
+  TOÁN". Below the divider it shows only the dotted values (no "HĐ gốc:" /
+  "N Phụ lục:"; `annexCount` dropped from `MetaSettlementBreakdown`). Đã
+  thu / Còn thu lose their footer icons and divider (`footer` optional).
+  Progress-row labels unchanged.
+- Checked in Chrome on 26KCT14: "750,000.00 USD · +5,620.00 USD" under the
+  first card; Đã thu / Còn thu end at their bars.
+- verify.sh passed (`harness/runs/20260925-014751-303059/`).
+
 ## 2026-09-25 — Payments tab progress bars match the overview
 
 - `MetaPaymentProgressPanel` KPI bars now use the overview metric track:
