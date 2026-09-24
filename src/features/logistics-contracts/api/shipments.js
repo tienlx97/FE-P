@@ -44,6 +44,24 @@ function toCostsRequestBody(costLines) {
 }
 
 /**
+ * Whole list of (role, supplier) pairs — several suppliers per role
+ * allowed (`docs/api/Shipments.md`, BE-kt-xnk).
+ * @param {import('../types/index.js').ShipmentFormValues} values
+ */
+function toServiceProvidersRequestBody(values) {
+  return [
+    ...values.customsBrokerIds.map((supplierId) => ({
+      Role: 'CustomsBroker',
+      SupplierId: supplierId,
+    })),
+    ...values.truckingIds.map((supplierId) => ({
+      Role: 'Trucking',
+      SupplierId: supplierId,
+    })),
+  ];
+}
+
+/**
  * `QuantityUnit` is derived from `Type` on the backend now (LCL is always
  * Kiện, FCL always Cont) — never sent, on create or update.
  * @param {import('../types/index.js').ShipmentFormValues} values
@@ -78,6 +96,7 @@ function toCreateRequestBody(values, costLines) {
     CustomsInspected: values.customsInspected,
     Costs: toCostsRequestBody(costLines),
     Status: values.status,
+    ServiceProviders: toServiceProvidersRequestBody(values),
   };
 }
 
@@ -115,6 +134,7 @@ function toUpdateRequestBody(values, costLines) {
     CustomsInspected: values.customsInspected,
     Costs: toCostsRequestBody(costLines),
     Status: values.status,
+    ServiceProviders: toServiceProvidersRequestBody(values),
   };
 }
 
@@ -256,6 +276,7 @@ export async function searchAllShipments({
  *   coCount: number,
  *   statusCounts: Partial<Record<import('../types/index.js').ShipmentStatus, number>>,
  *   costTotalsByCategory: { costCategoryId: string, code: string, name: string, totalAmount: number }[],
+ *   servicePartnerCount: number,
  * }} ShipmentListSummary
  */
 
@@ -281,6 +302,7 @@ function toListSummary(summary) {
       ),
     ),
     costTotalsByCategory: summary?.costTotalsByCategory ?? [],
+    servicePartnerCount: summary?.servicePartnerCount ?? 0,
   };
 }
 

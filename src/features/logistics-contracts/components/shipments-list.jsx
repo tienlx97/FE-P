@@ -11,6 +11,8 @@
  *   incoterm: string,
  *   logisticsCost: number,
  *   costsByCode: Record<string, number>,
+ *   customsBrokerNames: string[],
+ *   truckerNames: string[],
  * }} ShipmentListRow
  */
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
@@ -395,6 +397,8 @@ function renderFilterValue(caption) {
  */
 export function ShipmentsList() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  // Only the "Nhà cung cấp" view adds the partner count to the Σ caption.
+  const [viewPresetKey, setViewPresetKey] = useState('basic');
   const [pageIndex, setPageIndex] = useState(1);
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
@@ -647,6 +651,20 @@ export function ShipmentsList() {
     ];
   }, [suppliers]);
 
+  /**
+   * Supplier names for one service role, in the order they were assigned.
+   * @param {import('../types/index.js').Shipment} shipment
+   * @param {import('../types/index.js').ShipmentServiceRole} role
+   */
+  function providerNames(shipment, role) {
+    return (shipment.serviceProviders ?? [])
+      .filter((provider) => provider.role === role)
+      .map(
+        (provider) =>
+          customersById.get(provider.supplierId)?.companyName ?? '—',
+      );
+  }
+
   /** @param {import('../types/index.js').Shipment[]} rawShipments */
   function enrichShipments(rawShipments) {
     return rawShipments.map((shipment) => {
@@ -665,6 +683,8 @@ export function ShipmentsList() {
           (sum, total) => sum + total.totalAmount,
           0,
         ),
+        customsBrokerNames: providerNames(shipment, 'CustomsBroker'),
+        truckerNames: providerNames(shipment, 'Trucking'),
         costsByCode: Object.fromEntries(
           shipment.costTotalsByCategory.map((total) => [
             costCodeById.get(total.costCategoryId) ?? total.costCategoryId,
@@ -722,6 +742,12 @@ export function ShipmentsList() {
     } else {
       toast({ body: result.message, type: 'error' });
     }
+  }
+
+  /** @param {string[]} names */
+  function providerListCell(names) {
+    if (names.length === 0) return '—';
+    return <Text maxLines={2}>{names.join(', ')}</Text>;
   }
 
   /** @param {import('react').ReactNode} content */
@@ -908,14 +934,42 @@ export function ShipmentsList() {
     },
     {
       key: 'supplier',
-      header: 'Forwarder',
+      header: 'Booking (Forwarder)',
       width: proportional(1),
       // No `filter` on this column (not part of the header-filter set), so
       // the BE-kt-xnk wire sort field (`supplierName`) needs stating
       // explicitly — it doesn't match this column's own `key`.
       sortField: 'supplierName',
-      renderCell: (row) => orDash(row.supplierName),
+      renderCell: (row) => primaryText(orDash(row.supplierName)),
       exportValue: (row) => row.supplierName,
+    },
+    {
+      key: 'shippingLine',
+      header: 'Hãng tàu',
+      width: proportional(1, { minWidth: 180 }),
+      renderCell: (row) =>
+        row.shippingLine ? (
+          <MetaPill label={row.shippingLine} tone="muted" size="md" />
+        ) : (
+          '—'
+        ),
+      exportValue: (row) => row.shippingLine ?? '',
+    },
+    {
+      key: 'customsBrokers',
+      header: 'Đại lý hải quan',
+      width: proportional(1, { minWidth: 200 }),
+      // Several suppliers can share a task — joined, clamped to two lines
+      // with the full list in the truncation tooltip.
+      renderCell: (row) => providerListCell(row.customsBrokerNames),
+      exportValue: (row) => row.customsBrokerNames.join('; '),
+    },
+    {
+      key: 'truckers',
+      header: 'Đơn vị trucking',
+      width: proportional(1, { minWidth: 200 }),
+      renderCell: (row) => providerListCell(row.truckerNames),
+      exportValue: (row) => row.truckerNames.join('; '),
     },
     {
       key: 'invoiceValue',
@@ -1191,6 +1245,7 @@ export function ShipmentsList() {
           initialColumnKeys={DEFAULT_COLUMN_KEYS}
           defaultColumnKeys={DEFAULT_COLUMN_KEYS}
           initialViewPresetKey="basic"
+          onViewPresetChange={setViewPresetKey}
           viewPresets={VIEW_PRESETS.map((preset) => ({
             ...preset,
             icon: (
@@ -1220,7 +1275,11 @@ export function ShipmentsList() {
                 color="accent"
                 xstyle={[styles.nowrap, styles.totalsCaption]}
               >
-                {`TỔNG CỘNG (${totalShipments} LÔ HÀNG${row.isMultiCurrency ? ` · ${row.currency}` : ''})`}
+                {`TỔNG CỘNG (${totalShipments} LÔ HÀNG${
+                  viewPresetKey === 'supplier' && summary
+                    ? ` · ${summary.servicePartnerCount} ĐỐI TÁC DỊCH VỤ`
+                    : ''
+                }${row.isMultiCurrency ? ` · ${row.currency}` : ''})`}
               </Text>
             </HStack>
           )}

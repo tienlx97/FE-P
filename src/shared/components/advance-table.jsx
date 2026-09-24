@@ -259,6 +259,7 @@ const styles = stylex.create({
  *   initialColumnKeys?: string[],
  *   defaultColumnKeys?: string[],
  *   viewPresets?: ReadonlyArray<AdvanceTableViewPreset>,
+ *   onViewPresetChange?: (key: string) => void,
  *   initialViewPresetKey?: string,
  *   fixedEndColumnKeys?: string[],
  *   tableColumns: AdvanceTableColumn<T>[],
@@ -321,6 +322,7 @@ export function AdvanceTable({
   initialColumnKeys,
   defaultColumnKeys,
   viewPresets,
+  onViewPresetChange,
   initialViewPresetKey,
   fixedEndColumnKeys = [],
   tableColumns,
@@ -991,6 +993,7 @@ export function AdvanceTable({
         value={activePresetKey}
         onChange={(key) => {
           setActivePresetKey(key);
+          onViewPresetChange?.(key);
           const preset = viewPresets.find((candidate) => candidate.key === key);
           if (preset) setActiveColumnKeys([...preset.columnKeys]);
         }}

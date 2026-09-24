@@ -715,11 +715,25 @@ export {};
  * @property {ShipmentCostTotal[]} costTotalsByCategory - computed at read time, never stored
  * @property {ShipmentStatus} status
  * @property {number} vgmCount - number of `ShipmentVgm` records, computed at read time, never stored (BE-kt-xnk `add-shipment-vgm-count`)
+ * @property {ShipmentServiceProvider[]} [serviceProviders] - customs brokers / trucking companies, several per role allowed (BE-kt-xnk `add-shipment-service-providers`)
+ */
+
+/**
+ * @typedef {'CustomsBroker' | 'Trucking'} ShipmentServiceRole
+ */
+
+/**
+ * One supplier doing one service task on a shipment.
+ * @typedef {Object} ShipmentServiceProvider
+ * @property {ShipmentServiceRole} role
+ * @property {string} supplierId
  */
 
 /**
  * @typedef {Object} ShipmentFormValues
  * @property {string} supplierCustomerId
+ * @property {string[]} customsBrokerIds - "Đại lý hải quan", several allowed
+ * @property {string[]} truckingIds - "Đơn vị trucking", several allowed
  * @property {string} bookingNumber
  * @property {string} billOfLadingNumber
  * @property {string} shippingLine

@@ -1,5 +1,28 @@
 # Progress Log
 
+## 2026-09-24 — "Nhà cung cấp" view (Figma 110:7496) + service providers
+
+- BE-kt-xnk `add-shipment-service-providers`: customs brokers and trucking
+  companies per shipment, several per role; `summary.servicePartnerCount`.
+- Shipment form "Thông tin Book": "Đại lý hải quan" / "Đơn vị trucking"
+  `MultiSelector`s (search, badges) under Forwarder; sent as
+  `ServiceProviders` on create / update.
+- List "Nhà cung cấp" preset: Mã, Số hợp đồng, Booking (Forwarder), Hãng
+  tàu (muted pill), Đại lý hải quan, Đơn vị trucking (names joined, two
+  lines + tooltip), actions. Σ caption adds "· N ĐỐI TÁC DỊCH VỤ" in this
+  view only (`AdvanceTable` gained `onViewPresetChange`).
+- Differences from Figma: header "Mã" (not "MÃ LÔ", shared with the other
+  views); every shipping line uses one muted pill (Figma alternates blue /
+  grey with no rule in the data); list sorted by Ngày khai HQ as in the
+  other views (Figma arrow on Mã lô, which the backend cannot sort).
+- Checked in Chrome: view renders with dev data (Σ "47 LÔ HÀNG · 9 ĐỐI TÁC
+  DỊCH VỤ"; no dev shipment has providers yet, so those columns show "—");
+  form shows both multi-selects, trucking dropdown opens with search and
+  checkboxes; closed without saving.
+- `contract-shipments-table.jsx` and `.stitch/prompts/meta-shipment-detail.md`
+  have unrelated uncommitted changes from someone else — left untouched.
+- verify.sh passed (`harness/runs/20260924-081757-11/`). Not committed.
+
 ## 2026-09-24 — LOG cost groups + "Giá trị & Chi phí" view (Figma 109:6632)
 
 - BE-kt-xnk `add-shipment-cost-log-groups` (user request): cost groups are

@@ -25,6 +25,8 @@ import { useSuppliersQuery } from './use-suppliers-query.js';
 function emptyValues(contract = null) {
   return {
     supplierCustomerId: '',
+    customsBrokerIds: [],
+    truckingIds: [],
     bookingNumber: '',
     billOfLadingNumber: '',
     shippingLine: '',
@@ -59,6 +61,12 @@ function emptyValues(contract = null) {
 function valuesFromShipment(shipment) {
   return {
     supplierCustomerId: shipment.supplierCustomerId,
+    customsBrokerIds: (shipment.serviceProviders ?? [])
+      .filter((provider) => provider.role === 'CustomsBroker')
+      .map((provider) => provider.supplierId),
+    truckingIds: (shipment.serviceProviders ?? [])
+      .filter((provider) => provider.role === 'Trucking')
+      .map((provider) => provider.supplierId),
     bookingNumber: shipment.bookingNumber,
     billOfLadingNumber: shipment.billOfLadingNumber ?? '',
     shippingLine: shipment.shippingLine ?? '',

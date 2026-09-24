@@ -5,6 +5,7 @@ import { DateInput } from '@astryxdesign/core/DateInput';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
@@ -34,6 +35,10 @@ export function ShipmentBookingFields({
   isReadOnly = false,
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+  const supplierOptions = customers.map((customer) => ({
+    value: customer.id,
+    label: customer.companyName,
+  }));
 
   return (
     <FormSection value="book" title="Thông tin Book">
@@ -46,10 +51,7 @@ export function ShipmentBookingFields({
               placeholder={isReadOnly ? '—' : 'Chọn forwarder'}
               value={values.supplierCustomerId}
               onChange={(value) => setField('supplierCustomerId', value ?? '')}
-              options={customers.map((customer) => ({
-                value: customer.id,
-                label: customer.companyName,
-              }))}
+              options={supplierOptions}
               isRequired
               status={fieldStatuses.supplierCustomerId}
               statusVariant="tooltip"
@@ -73,6 +75,35 @@ export function ShipmentBookingFields({
         onOpenChange={setIsQuickCreateOpen}
         onCreated={(supplier) => setField('supplierCustomerId', supplier.id)}
       />
+
+      {/* Several suppliers per task allowed (e.g. three trucking
+          companies) — BE-kt-xnk `add-shipment-service-providers`. */}
+      <FormGrid>
+        <StackItem size="fill">
+          <MultiSelector
+            label="Đại lý hải quan"
+            hasSearch
+            triggerDisplay="badges"
+            placeholder={isReadOnly ? '—' : 'Chọn một hoặc nhiều nhà cung cấp'}
+            value={values.customsBrokerIds}
+            onChange={(value) => setField('customsBrokerIds', value)}
+            options={supplierOptions}
+            isReadOnly={isReadOnly}
+          />
+        </StackItem>
+        <StackItem size="fill">
+          <MultiSelector
+            label="Đơn vị trucking"
+            hasSearch
+            triggerDisplay="badges"
+            placeholder={isReadOnly ? '—' : 'Chọn một hoặc nhiều nhà cung cấp'}
+            value={values.truckingIds}
+            onChange={(value) => setField('truckingIds', value)}
+            options={supplierOptions}
+            isReadOnly={isReadOnly}
+          />
+        </StackItem>
+      </FormGrid>
 
       <FormGrid>
         <StackItem size="fill">

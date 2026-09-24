@@ -95,7 +95,10 @@ export const COLUMN_OPTIONS = [
   { key: 'placeOfDischarge', label: 'Cảng đến' },
   { key: 'customsDeclarationNumber', label: 'Số tờ khai' },
   { key: 'coNumber', label: 'Số C/O' },
-  { key: 'supplier', label: 'Forwarder' },
+  { key: 'supplier', label: 'Booking (Forwarder)' },
+  { key: 'shippingLine', label: 'Hãng tàu' },
+  { key: 'customsBrokers', label: 'Đại lý hải quan' },
+  { key: 'truckers', label: 'Đơn vị trucking' },
   { key: 'invoiceValue', label: 'Giá trị invoice' },
   { key: 'declarationValue', label: 'Giá trị tờ khai' },
   { key: 'declarationValueVnd', label: 'Giá trị tờ khai (VNĐ)' },
@@ -139,18 +142,15 @@ export const VALUE_COLUMN_KEYS = [
   'actions',
 ];
 
-// "Nhà cung cấp" — forwarder and booking context. No Figma frame yet.
+// "Nhà cung cấp" — Figma 110:7496: forwarder, shipping line, customs
+// brokers and trucking companies (several per task allowed).
 export const SUPPLIER_COLUMN_KEYS = [
-  'customsDeclarationDate',
   'shipmentCode',
   'contractNumber',
-  'projectName',
-  'name',
   'supplier',
-  'bookingNumber',
-  'billOfLadingNumber',
-  'placeOfDischarge',
-  'status',
+  'shippingLine',
+  'customsBrokers',
+  'truckers',
   'actions',
 ];
 

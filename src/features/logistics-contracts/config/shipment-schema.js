@@ -43,6 +43,8 @@ const shipmentCostLineSchema = z.object({
  */
 export const shipmentSchema = z.object({
   supplierCustomerId: z.string().trim().min(1, 'Vui lòng chọn forwarder'),
+  customsBrokerIds: z.array(z.string()),
+  truckingIds: z.array(z.string()),
   bookingNumber: z
     .string()
     .trim()

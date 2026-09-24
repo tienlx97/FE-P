@@ -49,6 +49,7 @@ test('parses full-set Shipment money, quantity, cost, and VGM totals', async () 
       coCount: 2,
       statusCounts: { Booked: 1, Completed: 2 },
       costTotalsByCategory: [],
+      servicePartnerCount: 0,
     });
   } finally {
     globalThis.fetch = originalFetch;
