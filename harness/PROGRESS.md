@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-09-25 — Commission drawer: framed sign checkboxes, payment history cards
+
+- `CommissionFormDrawer`: "Bên bán ký" / "Bên môi giới ký" tiles are white
+  with the emphasized border, field radius and height (were tinted
+  `surface-container-low` on the white section). Unused `onAddPayment` prop
+  dropped.
+- New `CommissionPaymentHistoryCards` replaces the `PaymentHistoryFields`
+  grid in the drawer (the grid was 868px in a ~720px section, clipped
+  "THAO TÁC", small inputs with a detached "USD", duplicate paid total): one
+  card per payment like the payment-term steps — "01 Lần thanh toán 1",
+  amount + delete, Ngày thanh toán | Giá trị, Ghi chú / Chứng từ — and the
+  same dashed "Thêm lần thanh toán" button. The commission dialog keeps the
+  grid.
+- Checked in Chrome on 26KCT14 "Tạo Commission": checkboxes framed like
+  inputs; added 2 payments, typed 5,000 → card + header "Đã giải ngân"
+  update, delete removes a card; discarded, nothing saved.
+- verify.sh passed (`harness/runs/20260925-021933-357431/`).
+
 ## 2026-09-25 — Shipment cards: no "Điều kiện TT", short ETD / ETA labels
 
 - Contract shipments tab, Dạng thẻ: the Booking partner card no longer

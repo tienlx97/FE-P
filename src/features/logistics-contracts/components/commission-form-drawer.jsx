@@ -40,7 +40,7 @@ import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 import { labelForContractType } from '../config/contract-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { useCommissionForm } from '../hooks/use-commission-form.js';
-import { PaymentHistoryFields } from './payment-history-fields.jsx';
+import { CommissionPaymentHistoryCards } from './commission-payment-history-cards.jsx';
 import { PaymentTermsFields } from './payment-terms-fields.jsx';
 
 // Figma 104:5399 drawer width.
@@ -70,10 +70,15 @@ const styles = stylex.create({
     // eslint-disable-next-line @stylexjs/valid-styles
     '--meta-field-radius': 'var(--meta-radius-inset)',
   },
+  // Framed like the inputs around it (white, emphasized border, field
+  // height / radius) instead of a tinted tile on the white section card.
   checkTile: {
-    backgroundColor: 'var(--meta-surface-container-low)',
-    borderRadius: 'var(--radius-element)',
-    paddingBlock: 'var(--spacing-2)',
+    backgroundColor: 'var(--color-background-surface)',
+    borderColor: 'var(--color-border-emphasized)',
+    borderRadius: 'var(--meta-field-radius)',
+    borderStyle: 'solid',
+    borderWidth: 'var(--border-width)',
+    minHeight: 'var(--meta-field-height)',
     paddingInline: 'var(--spacing-3)',
   },
   splitPanel: {
@@ -119,7 +124,6 @@ const styles = stylex.create({
  *   commission?: import('../types/index.js').Commission | null,
  *   onClose: () => void,
  *   onSuccess?: (commission: import('../types/index.js').Commission) => void,
- *   onAddPayment?: () => void,
  * }} props
  */
 export function CommissionFormDrawer({
@@ -127,7 +131,6 @@ export function CommissionFormDrawer({
   commission = null,
   onClose,
   onSuccess,
-  onAddPayment,
 }) {
   const formId = useId();
   const toast = useAppToast();
@@ -492,8 +495,7 @@ export function CommissionFormDrawer({
                       </Text>
                     }
                   >
-                    <PaymentHistoryFields
-                      onQuickAdd={onAddPayment}
+                    <CommissionPaymentHistoryCards
                       rows={form.paymentHistoryRows.rows}
                       status={fieldStatuses.paymentHistory}
                       currency={currency}
