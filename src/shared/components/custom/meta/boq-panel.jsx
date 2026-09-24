@@ -276,7 +276,6 @@ function MetaBoqKeyValue({ row }) {
         {row.label}
       </Text>
       <Text
-        size={row.isTotal ? 'base' : 'sm'}
         weight={row.isTotal ? 'bold' : 'semibold'}
         color={row.isTotal ? 'accent' : 'primary'}
         hasTabularNumbers

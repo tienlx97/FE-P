@@ -50,7 +50,6 @@ export function MetaFormSection({
           <HStack as="span" xstyle={styles.bar} />
           <Text
             as="span"
-            size="base"
             weight="bold"
             color="primary"
             xstyle={isTitleUppercase && styles.title}

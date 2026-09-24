@@ -41,6 +41,7 @@ SRC_FILE_COUNT=$(find src -type f \( -name '*.ts' -o -name '*.tsx' -o -name '*.j
 step "project-readiness" ./harness/checks/project-readiness.sh
 step "memory-secrets" ./harness/checks/memory-secrets.sh
 step "tanstack-table-only" ./harness/checks/tanstack-table-only.sh
+step "logistics-font-sizes" node harness/checks/logistics-font-sizes.mjs
 
 # ── 0. Generated sources ──────────────────────────────────────────
 # src/shared/components/kt-xnk.{js,d.ts} + theme.built.css are `astryx theme

@@ -568,7 +568,7 @@ function BankCard({ bank, isLoading }) {
               <Grid columns={2} gap={2} xstyle={styles.bankNumbers}>
                 <VStack gap={0}>
                   <Text
-                    size="xsm"
+                    size="sm"
                     weight="medium"
                     color="secondary"
                     xstyle={styles.caps}
@@ -581,7 +581,7 @@ function BankCard({ bank, isLoading }) {
                 </VStack>
                 <VStack gap={0}>
                   <Text
-                    size="xsm"
+                    size="sm"
                     weight="medium"
                     color="secondary"
                     xstyle={styles.caps}

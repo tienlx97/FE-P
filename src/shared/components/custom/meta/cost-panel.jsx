@@ -237,7 +237,6 @@ export function MetaCostPanel({
                     <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={[styles.cell, alignStyles.end]}>
                       <Text
-                        size="sm"
                         weight="bold"
                         color={group.rows.length ? 'primary' : 'secondary'}
                         hasTabularNumbers
@@ -254,29 +253,18 @@ export function MetaCostPanel({
                   {group.rows.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell xstyle={[styles.cell, alignStyles.center]}>
-                        <Text
-                          size="sm"
-                          type="code"
-                          color="secondary"
-                          hasTabularNumbers
-                        >
+                        <Text type="code" color="secondary" hasTabularNumbers>
                           {row.no}
                         </Text>
                       </TableCell>
                       <TableCell xstyle={styles.cell}>
-                        <Text size="sm" color="secondary">
-                          {row.groupName}
-                        </Text>
+                        <Text color="secondary">{row.groupName}</Text>
                       </TableCell>
                       <TableCell xstyle={styles.cell}>
-                        <Text size="sm" weight="medium">
-                          {row.name}
-                        </Text>
+                        <Text weight="medium">{row.name}</Text>
                       </TableCell>
                       <TableCell xstyle={[styles.cell, alignStyles.end]}>
-                        <Text size="sm" hasTabularNumbers>
-                          {row.amount}
-                        </Text>
+                        <Text hasTabularNumbers>{row.amount}</Text>
                       </TableCell>
                       <TableCell xstyle={styles.cell}>
                         <MetaPill
@@ -407,13 +395,9 @@ export function MetaCostPanel({
  */
 function OptionalText({ value, isCode = false }) {
   return value ? (
-    <Text size="sm" type={isCode ? 'code' : undefined}>
-      {value}
-    </Text>
+    <Text type={isCode ? 'code' : undefined}>{value}</Text>
   ) : (
-    <Text size="sm" color={/** @type {any} */ ('meta-subtle')}>
-      —
-    </Text>
+    <Text color={/** @type {any} */ ('meta-subtle')}>—</Text>
   );
 }
 

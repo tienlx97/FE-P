@@ -113,7 +113,6 @@ export function MetaPaymentSplitBar({
               Tổng tỷ lệ:
             </Text>
             <Text
-              size="base"
               weight="bold"
               color={isBalanced ? 'meta-success' : 'inherit'}
               hasTabularNumbers

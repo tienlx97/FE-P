@@ -85,7 +85,6 @@ export function MetaShipmentKpiCard({
           </Text>
           {unit ? (
             <Text
-              size="base"
               weight="bold"
               type="code"
               color={/** @type {any} */ (TONE_TEXT[tone])}
@@ -102,7 +101,7 @@ export function MetaShipmentKpiCard({
           wrap="wrap"
           xstyle={styles.footer}
         >
-          <Text size="base" color="secondary">
+          <Text color="secondary">
             {footLabel}
             {footValue ? (
               <>
@@ -129,7 +128,6 @@ export function MetaShipmentKpiCard({
                 />
               ) : null}
               <Text
-                size="base"
                 weight="semibold"
                 color={/** @type {any} */ (TONE_TEXT[footStatus.tone])}
               >
@@ -312,11 +310,7 @@ export function MetaContainerCard({
         gap={2}
         xstyle={styles.sectionHeaderTight}
       >
-        <Text
-          size="base"
-          weight="bold"
-          color={/** @type {any} */ ('meta-subtle')}
-        >
+        <Text weight="bold" color={/** @type {any} */ ('meta-subtle')}>
           {indexLabel}
         </Text>
         <MetaPill label={typeLabel} tone="neutral" hasBorder />
@@ -328,7 +322,7 @@ export function MetaContainerCard({
         {sealNumber ? (
           <HStack gap={1} vAlign="center">
             <Icon icon={ShieldCheck} size="sm" color="secondary" />
-            <Text size="base" type="code" color="secondary">
+            <Text type="code" color="secondary">
               Seal:{' '}
               <Text as="span" type="inherit" weight="semibold" color="primary">
                 {sealNumber}
@@ -339,18 +333,14 @@ export function MetaContainerCard({
       </VStack>
       <VStack gap={2} hAlign="stretch" xstyle={styles.footer}>
         <HStack hAlign="between" vAlign="center" gap={2}>
-          <Text size="base" color="secondary">
-            {packingDateLabel}
-          </Text>
-          <Text size="base" weight="medium" hasTabularNumbers>
+          <Text color="secondary">{packingDateLabel}</Text>
+          <Text weight="medium" hasTabularNumbers>
             {packingDate}
           </Text>
         </HStack>
         <HStack hAlign="between" vAlign="center" gap={2}>
-          <Text size="base" color="secondary">
-            {vgmLabel}
-          </Text>
-          <Text size="base" weight="bold" type="code" hasTabularNumbers>
+          <Text color="secondary">{vgmLabel}</Text>
+          <Text weight="bold" type="code" hasTabularNumbers>
             {vgm}
           </Text>
         </HStack>

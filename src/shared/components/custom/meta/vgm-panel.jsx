@@ -247,17 +247,15 @@ export function MetaVgmPanel({
                 {rows.map((row) => (
                   <TableRow key={row.id}>
                     <TableCell xstyle={[styles.cell, alignStyles.center]}>
-                      <Text size="sm" color="secondary" hasTabularNumbers>
+                      <Text color="secondary" hasTabularNumbers>
                         {row.no}
                       </Text>
                     </TableCell>
                     <TableCell xstyle={[styles.cell, styles.wrapCell]}>
-                      <Text size="sm" weight="semibold">
-                        {row.carrier}
-                      </Text>
+                      <Text weight="semibold">{row.carrier}</Text>
                     </TableCell>
                     <TableCell xstyle={styles.cell}>
-                      <Text size="sm" type="code" color="secondary">
+                      <Text type="code" color="secondary">
                         {row.packingDate}
                       </Text>
                     </TableCell>
@@ -265,7 +263,7 @@ export function MetaVgmPanel({
                       <MetaPill label={row.typeLabel} tone="accent" size="sm" />
                     </TableCell>
                     <TableCell xstyle={styles.cell}>
-                      <Text size="sm" type="code" weight="bold">
+                      <Text type="code" weight="bold">
                         {row.containerNumber}
                       </Text>
                     </TableCell>
@@ -276,7 +274,7 @@ export function MetaVgmPanel({
                           size="xsm"
                           color={/** @type {any} */ ('meta-subtle')}
                         />
-                        <Text size="sm" type="code" color="secondary">
+                        <Text type="code" color="secondary">
                           {row.sealNumber}
                         </Text>
                       </HStack>
@@ -287,7 +285,7 @@ export function MetaVgmPanel({
                           key={index}
                           xstyle={[styles.cell, alignStyles.end]}
                         >
-                          <Text size="sm" type="code" hasTabularNumbers>
+                          <Text type="code" hasTabularNumbers>
                             {value}
                           </Text>
                         </TableCell>
@@ -295,7 +293,6 @@ export function MetaVgmPanel({
                     )}
                     <TableCell xstyle={[styles.cell, alignStyles.end]}>
                       <Text
-                        size="sm"
                         type="code"
                         weight="bold"
                         color="accent"
