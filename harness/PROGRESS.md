@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-09-25 — macOS font smoothing for the Inter scope
+
+- `globals.css`: `-webkit-font-smoothing: antialiased` +
+  `-moz-osx-font-smoothing: grayscale` on the `/admin` + `/logistics` Inter
+  scope, completing MISA's Inter stylesheet (macOS only; no effect on
+  Windows / Linux). ADR-0010 updated.
+- Checked in Chrome on /admin/users: body computes `antialiased`, features
+  `calt liga lnum tnum`, tabular lining numbers.
+- verify.sh passed (`harness/runs/20260925-005411-221435/`).
+
 ## 2026-09-25 — Inter on /admin + /logistics, Maritime theme deleted (ADR-0010)
 
 - Inter 4.1.1 variable (normal + italic, 100–900, opsz) self-hosted in
