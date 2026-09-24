@@ -1,5 +1,19 @@
 # Progress Log
 
+## 2026-09-25 — Payment-term steps as open cards when editable
+
+- `PaymentTermsFields` (commission drawer, contract edit drawer, contract
+  profile in edit mode): editable steps are always-open cards like the
+  commission payment-history cards — "01 Đợt thanh toán 1" + amount
+  (step tone) + delete; Tỷ lệ (%) | Số tiền tương ứng (ratio × value,
+  read-only); Điều kiện kích hoạt thanh toán (2 rows). The pencil / ✓
+  toggle, derived titles and the lone 160px ratio input are gone from edit
+  mode. Read-only keeps the `MetaPaymentTermRow` summary.
+- Checked in Chrome: commission drawer on 26KCT14 (10,000 USD, 30% →
+  3,000.00 USD; second step indigo; discarded) and contract edit drawer
+  (5% → 37,500, 25% → 187,500; closed unchanged).
+- verify.sh passed (`harness/runs/20260925-022935-373871/`).
+
 ## 2026-09-25 — Commission create labels, shorter annex headers
 
 - "+ Tạo Commission" → "Tạo Commission" (commission tab create button,

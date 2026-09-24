@@ -2,25 +2,75 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { Grid } from '@astryxdesign/core/Grid';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { CirclePlus } from 'lucide-react';
-import { useState } from 'react';
+import { CirclePlus, Trash2 } from 'lucide-react';
 
 import {
+  metaPaymentStepTone,
   MetaPaymentTermRow,
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
+import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { NumberInput } from '@/shared/components/number-input.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 
 import { formatMoney } from '../config/currencies.js';
 
-// Room for "100.00" plus the "%" unit.
-const RATIO_WIDTH = 160;
+const TWO_COLUMNS = { minWidth: 200, max: 2 };
+
+const rowTones = stylex.create({
+  accent: { borderColor: 'var(--color-border-emphasized)' },
+  indigo: { borderColor: 'var(--meta-indigo-border)' },
+  success: { borderColor: 'var(--meta-emerald-border)' },
+});
+
+const tileTones = stylex.create({
+  accent: {
+    backgroundColor: 'var(--meta-primary-fixed)',
+    color: 'var(--meta-primary-strong)',
+  },
+  indigo: {
+    backgroundColor: 'var(--meta-indigo-soft)',
+    color: 'var(--meta-indigo-deep)',
+  },
+  success: {
+    backgroundColor: 'var(--meta-emerald-wash)',
+    color: 'var(--meta-emerald-text)',
+  },
+});
+
+const amountTones = stylex.create({
+  accent: { color: 'var(--color-accent)' },
+  indigo: { color: 'var(--meta-indigo-deep)' },
+  success: { color: 'var(--meta-emerald-text)' },
+});
 
 const styles = stylex.create({
+  // Same card as the commission payment-history cards
+  // (`commission-payment-history-cards.jsx`); border / tile / amount take
+  // the step's tone so they match the split bar's "Đợt n" legend.
+  row: {
+    backgroundColor: 'var(--color-background-surface)',
+    borderRadius: 'var(--radius-element)',
+    borderStyle: 'solid',
+    borderWidth: 'var(--border-width)',
+    padding: 'var(--spacing-4)',
+  },
+  tile: {
+    borderRadius: 'var(--radius-element)',
+    flexShrink: 0,
+    height: 'var(--spacing-7)',
+    width: 'var(--spacing-7)',
+  },
+  amount: {
+    flexShrink: 0,
+  },
   // Figma 104:5399: dashed cobalt "Thêm mốc điều kiện thanh toán".
   addButton: {
     borderColor: 'var(--color-accent)',
@@ -51,13 +101,14 @@ function paymentMethod(condition) {
 }
 
 /**
- * Payment milestones as Meta step cards (`MetaPaymentTermRow`): a summary
- * line (derived title, ratio pill, amount) with the condition underneath;
- * the pencil opens the ratio (`NumberInput`, "%" unit) and a multi-line
- * condition in place — steps without a condition yet start open. The API
- * only persists ratio and condition, so the title is derived from the
- * condition text. Wrapped in `MetaThemeProvider` because it is also used by
- * the commission form outside the Meta contract pages.
+ * Payment milestones as Meta step cards. Editable: every step is an open
+ * card (like the commission payment-history cards) — header "01 Đợt thanh
+ * toán 1" with the step's amount and delete, then Tỷ lệ (%) | Số tiền tương
+ * ứng (ratio × contract value, read-only), then the trigger condition.
+ * Read-only: the compact `MetaPaymentTermRow` summary (derived title,
+ * ratio pill, amount, condition). The API only persists ratio and
+ * condition. Wrapped in `MetaThemeProvider` because it is also used by the
+ * commission form outside the Meta contract pages.
  * @param {{
  *   rows: import('../types/index.js').PaymentTermRow[],
  *   totalPercent?: number,
@@ -82,35 +133,8 @@ export function PaymentTermsFields({
   onRemoveRow,
   onUpdateRowField,
 }) {
-  const [openRowKeys, setOpenRowKeys] = useState(
-    () => /** @type {Set<string>} */ (new Set()),
-  );
   const hasValue =
     typeof contractValue === 'number' && !Number.isNaN(contractValue);
-
-  // A step without a condition opens its editor and keeps it open until the
-  // user closes it — deriving "open" from an empty condition alone would
-  // collapse the editor on the first typed character.
-  const newEmptyKeys = isReadOnly
-    ? []
-    : rows
-        .filter(
-          (row) => !row.paymentCondition.trim() && !openRowKeys.has(row.rowKey),
-        )
-        .map((row) => row.rowKey);
-  if (newEmptyKeys.length > 0) {
-    setOpenRowKeys(new Set([...openRowKeys, ...newEmptyKeys]));
-  }
-
-  /** @param {string} rowKey */
-  function toggleRow(rowKey) {
-    setOpenRowKeys((current) => {
-      const next = new Set(current);
-      if (next.has(rowKey)) next.delete(rowKey);
-      else next.add(rowKey);
-      return next;
-    });
-  }
 
   return (
     <MetaThemeProvider>
@@ -118,56 +142,119 @@ export function PaymentTermsFields({
         {rows.map((row, index) => {
           const sequence = index + 1;
           const ratio = row.paymentRatioPercent || 0;
+          const amount = hasValue ? (contractValue * ratio) / 100 : undefined;
           const condition = row.paymentCondition.trim();
 
+          if (isReadOnly) {
+            return (
+              <MetaPaymentTermRow
+                key={row.rowKey}
+                sequence={sequence}
+                title={paymentTermTitle(condition, sequence)}
+                subtitle={
+                  condition
+                    ? `Phương thức: ${paymentMethod(condition)}`
+                    : undefined
+                }
+                ratioLabel={`${ratio}%`}
+                amount={
+                  amount === undefined
+                    ? undefined
+                    : formatMoney(amount, currency ?? '')
+                }
+                description={condition || 'Chưa nhập điều kiện thanh toán'}
+                isReadOnly
+                isEditing={false}
+                onToggleEdit={() => {}}
+                onRemove={() => {}}
+                editor={null}
+              />
+            );
+          }
+
+          const tone = metaPaymentStepTone(index);
           return (
-            <MetaPaymentTermRow
+            <VStack
               key={row.rowKey}
-              sequence={sequence}
-              title={paymentTermTitle(condition, sequence)}
-              subtitle={
-                condition
-                  ? `Phương thức: ${paymentMethod(condition)}`
-                  : undefined
-              }
-              ratioLabel={`${ratio}%`}
-              amount={
-                hasValue
-                  ? formatMoney((contractValue * ratio) / 100, currency ?? '')
-                  : undefined
-              }
-              description={condition || 'Chưa nhập điều kiện thanh toán'}
-              isReadOnly={isReadOnly}
-              isEditing={!isReadOnly && openRowKeys.has(row.rowKey)}
-              onToggleEdit={() => toggleRow(row.rowKey)}
-              onRemove={() => onRemoveRow(row.rowKey)}
-              isRemoveDisabled={rows.length <= 1}
-              editor={
-                <>
-                  <NumberInput
-                    label="Tỷ lệ"
-                    value={row.paymentRatioPercent}
-                    onChange={(value) =>
-                      onUpdateRowField(row.rowKey, 'paymentRatioPercent', value)
-                    }
-                    units="%"
-                    min={0}
-                    max={100}
-                    width={RATIO_WIDTH}
+              gap={3}
+              hAlign="stretch"
+              xstyle={[styles.row, rowTones[tone]]}
+            >
+              <HStack hAlign="between" vAlign="center" gap={3} wrap="nowrap">
+                <HStack gap={3} vAlign="center" wrap="nowrap">
+                  <HStack
+                    as="span"
+                    hAlign="center"
+                    vAlign="center"
+                    xstyle={[styles.tile, tileTones[tone]]}
+                  >
+                    <Text
+                      as="span"
+                      size="sm"
+                      weight="bold"
+                      color="inherit"
+                      hasTabularNumbers
+                    >
+                      {String(sequence).padStart(2, '0')}
+                    </Text>
+                  </HStack>
+                  <Text weight="bold">Đợt thanh toán {sequence}</Text>
+                </HStack>
+                <HStack gap={2} vAlign="center" wrap="nowrap">
+                  {amount ? (
+                    <Text
+                      weight="bold"
+                      color="inherit"
+                      hasTabularNumbers
+                      xstyle={[styles.amount, amountTones[tone]]}
+                    >
+                      {formatMoney(amount, currency ?? '')}
+                    </Text>
+                  ) : null}
+                  <IconButton
+                    label={`Xoá đợt thanh toán ${sequence}`}
+                    tooltip="Xoá"
+                    icon={<Icon icon={Trash2} size="sm" />}
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    isDisabled={rows.length <= 1}
+                    onClick={() => onRemoveRow(row.rowKey)}
                   />
-                  <TextArea
-                    label="Điều kiện kích hoạt thanh toán"
-                    rows={3}
-                    value={row.paymentCondition}
-                    onChange={(value) =>
-                      onUpdateRowField(row.rowKey, 'paymentCondition', value)
-                    }
-                    placeholder="Ví dụ: T/T trong 07 ngày sau khi nghiệm thu hàng tại nhà máy..."
-                    width="100%"
-                  />
-                </>
-              }
-            />
+                </HStack>
+              </HStack>
+
+              <Grid columns={TWO_COLUMNS} gap={3}>
+                <NumberInput
+                  label="Tỷ lệ"
+                  value={row.paymentRatioPercent}
+                  onChange={(value) =>
+                    onUpdateRowField(row.rowKey, 'paymentRatioPercent', value)
+                  }
+                  units="%"
+                  min={0}
+                  max={100}
+                  width="100%"
+                />
+                <FormattedNumberTextInput
+                  label="Số tiền tương ứng"
+                  value={amount}
+                  onChange={() => {}}
+                  units={currency || undefined}
+                  isReadOnly
+                />
+              </Grid>
+              <TextArea
+                label="Điều kiện kích hoạt thanh toán"
+                rows={2}
+                value={row.paymentCondition}
+                onChange={(value) =>
+                  onUpdateRowField(row.rowKey, 'paymentCondition', value)
+                }
+                placeholder="Ví dụ: T/T trong 07 ngày sau khi nghiệm thu hàng tại nhà máy..."
+                width="100%"
+              />
+            </VStack>
           );
         })}
 
