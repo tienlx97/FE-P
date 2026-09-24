@@ -783,7 +783,7 @@ export function ShipmentsList() {
       renderCell: (row) => (
         <Link
           href={`/logistics/contract/${row.contractId}/shipment/${row.id}`}
-          xstyle={styles.recordLink}
+          xstyle={[styles.recordLink, styles.bold]}
           onClick={(event) => event.stopPropagation()}
         >
           {orDash(row.shipmentCode)}
@@ -1435,5 +1435,8 @@ const styles = stylex.create({
   },
   totalsCaption: {
     letterSpacing: '0.05em',
+  },
+  bold: {
+    fontWeight: 'var(--font-weight-bold)',
   },
 });
