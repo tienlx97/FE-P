@@ -107,6 +107,8 @@ export function ContractDrawerProfileFields({
     sellerExtraFieldRows,
     buyerExtraFieldRows,
     banks,
+    selectedSeller,
+    addSellerBankAccount,
     paymentTermRows,
     submitError,
     isCheckingContractNumber,
@@ -526,6 +528,8 @@ export function ContractDrawerProfileFields({
             selectedBankIds={values.bankIds}
             onBankIdsChange={setBankIds}
             bankStatus={fieldStatuses.bankIds}
+            sellerName={selectedSeller?.companyName}
+            onAddBankAccount={addSellerBankAccount}
           />
         </MetaFormSection>
 

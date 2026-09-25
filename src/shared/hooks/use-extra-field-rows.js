@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 
-/** @returns {import('../types/index.js').ExtraFieldRow} */
+/** @returns {{ rowKey: string, key: string, value: string }} */
 function emptyRow() {
   return { rowKey: generateRowKey(), key: '', value: '' };
 }
@@ -14,7 +14,7 @@ function emptyRow() {
  * shared by Party A/Customer/Bank field-sets. Same shape as
  * `use-bank-account-rows.js` (admin-users feature): the grid never talks to
  * the API itself, callers read `rows` on submit.
- * @param {import('../types/index.js').ExtraFieldRow[]} [initialRows]
+ * @param {{ rowKey: string, key: string, value: string }[]} [initialRows]
  */
 export function useExtraFieldRows(initialRows = []) {
   const [rows, setRows] = useState(initialRows);

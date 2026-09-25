@@ -13,13 +13,13 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
+import { ExtraFieldsEditor } from '@/shared/components/extra-fields-editor.jsx';
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { NumberInput } from '@/shared/components/number-input.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
-import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
 import { QuickCreatePartyGroupDialog } from './quick-create-party-group-dialog.jsx';
 
 const TABS = [

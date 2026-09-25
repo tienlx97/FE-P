@@ -12,20 +12,21 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { CirclePlus } from 'lucide-react';
 import { useState } from 'react';
 
+import { BankAccountDialog } from '@/shared/components/bank-accounts/bank-account-dialog.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 
-import { QuickCreateBankDialog } from './quick-create-bank-dialog.jsx';
 
 /**
- * Ngân hàng thụ hưởng: **at least 1** `ContractBank` catalog entry required,
- * referenced by id (not snapshotted — see `docs/api/ContractBanks.md`,
- * `docs/api/Contracts.md`, BE-kt-xnk).
+ * Ngân hàng thụ hưởng: **at least 1** bank account of the contract's catalog
+ * seller, referenced by id (BE-kt-xnk `unify-bank-accounts`).
  * @param {{
- *   banks: import('../types/index.js').ContractBank[],
+ *   banks: import('@/shared/api/bank-accounts.js').BankAccount[],
  *   selectedBankIds: string[],
  *   onChange: (bankIds: string[]) => void,
  *   status?: { type: 'error' | 'success', message: string },
  *   isReadOnly?: boolean,
+ *   sellerName?: string,
+ *   onAddBankAccount: (operation: { kind: 'add' | 'update', accountId?: string, account: any }) => Promise<{ success: boolean, message?: string }>,
  * }} props
  */
 export function ContractBanksFields({
@@ -34,6 +35,8 @@ export function ContractBanksFields({
   onChange,
   status,
   isReadOnly = false,
+  sellerName,
+  onAddBankAccount,
 }) {
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
@@ -53,15 +56,16 @@ export function ContractBanksFields({
             hasDividers
             width="100%"
           >
-            {banks.map((bank) => (
+            {banks.map((account) => (
               <CheckboxListItem
-                key={bank.id}
-                value={bank.id}
-                label={bank.bankName || 'Ngân hàng chưa đặt tên'}
+                key={account.id}
+                value={/** @type {string} */ (account.id)}
+                label={account.bankName}
                 description={[
-                  bank.beneficiary,
-                  bank.bankAccountNumber,
-                  bank.branchName,
+                  account.holder,
+                  account.accountNumber,
+                  account.branch,
+                  account.currency,
                 ]
                   .filter(Boolean)
                   .join(' · ')}
@@ -70,12 +74,16 @@ export function ContractBanksFields({
           </CheckboxList>
         </ReadOnlyLock>
       ) : (
-        <Text color="secondary">Chưa có ngân hàng nào trong danh mục.</Text>
+        <Text color="secondary">
+          {sellerName
+            ? 'Bên bán chưa có tài khoản ngân hàng.'
+            : 'Chọn bên bán trong danh mục để chọn tài khoản thụ hưởng.'}
+        </Text>
       )}
 
       <Button
-        isDisabled={isReadOnly}
-        label="Thêm ngân hàng thụ hưởng"
+        isDisabled={isReadOnly || !sellerName}
+        label="Thêm tài khoản cho bên bán"
         icon={<Icon icon={CirclePlus} size="md" />}
         type="button"
         variant="secondary"
@@ -84,11 +92,14 @@ export function ContractBanksFields({
         onClick={() => setIsQuickCreateOpen(true)}
       />
 
-      <QuickCreateBankDialog
-        isOpen={isQuickCreateOpen}
-        onOpenChange={setIsQuickCreateOpen}
-        onCreated={(bank) => onChange([...selectedBankIds, bank.id])}
-      />
+      {isQuickCreateOpen ? (
+        <BankAccountDialog
+          account={null}
+          holderDefault={sellerName ?? ''}
+          submit={onAddBankAccount}
+          onClose={() => setIsQuickCreateOpen(false)}
+        />
+      ) : null}
     </VStack>
   );
 }

@@ -30,7 +30,6 @@ import {
 import { useInheritedPermissionsQuery } from '../hooks/use-inherited-permissions-query.js';
 import {
   useBranchesQuery,
-  useVietnamBanksQuery,
 } from '../hooks/use-org-directory.js';
 import { useUserDetailQuery } from '../hooks/use-user-detail-query.js';
 import { UserPermissionsFields } from './user-permissions-fields.jsx';
@@ -105,10 +104,6 @@ export function UserExpandedDetails({
   const bankAccounts = bankAccountsQuery.data?.success
     ? bankAccountsQuery.data.bankAccounts
     : [];
-  const vietnamBanksQuery = useVietnamBanksQuery();
-  const vietnamBanksById = new Map(
-    (vietnamBanksQuery.data ?? []).map((bank) => [bank.id, bank]),
-  );
 
   const departmentId = user.departmentIds[0] ?? '';
   const inheritedPermissionsQuery = useInheritedPermissionsQuery(departmentId);
@@ -331,18 +326,20 @@ export function UserExpandedDetails({
           <Text color="secondary">Chưa có tài khoản ngân hàng</Text>
         ) : (
           <List hasDividers density="compact">
-            {bankAccounts.map((account) => {
-              const bank = vietnamBanksById.get(account.vietnamBankId);
-              return (
-                <ListItem
-                  key={account.id}
-                  label={`${bank?.shortName ?? bank?.name ?? account.vietnamBankId}${account.isPrimary ? ' · Chính' : ''}`}
-                  description={[account.accountNumber, account.branch]
-                    .filter(Boolean)
-                    .join(' · ')}
-                />
-              );
-            })}
+            {bankAccounts.map((account) => (
+              <ListItem
+                key={account.id}
+                label={`${account.bankName}${account.isDefault ? ' · Nhận lương' : ''}`}
+                description={[
+                  account.accountNumber,
+                  account.branch,
+                  account.currency,
+                  account.isActive === false ? 'Ngừng hoạt động' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              />
+            ))}
           </List>
         ))}
 

@@ -8,6 +8,7 @@ import { StackItem } from '@astryxdesign/core/Stack';
 import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 
+import { BankAccountDialog } from '@/shared/components/bank-accounts/bank-account-dialog.jsx';
 import {
   MetaFormCard,
   MetaPaymentSplitBar,
@@ -16,15 +17,19 @@ import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 
 import { formatMoney } from '../config/currencies.js';
 import { PaymentTermsFields } from './payment-terms-fields.jsx';
-import { QuickCreateBankDialog } from './quick-create-bank-dialog.jsx';
 
 const styles = stylex.create({
   minZero: { minWidth: 0 },
 });
 
-/** @param {import('../types/index.js').ContractBank} bank */
-function bankLabel(bank) {
-  return [bank.bankName || 'Ngân hàng chưa đặt tên', bank.bankAccountNumber]
+/** @param {import('@/shared/api/bank-accounts.js').BankAccount} account */
+function bankLabel(account) {
+  return [
+    account.bankName,
+    account.accountNumber,
+    account.currency,
+    account.isActive === false ? 'ngừng hoạt động' : '',
+  ]
     .filter(Boolean)
     .join(' · ');
 }
@@ -42,10 +47,12 @@ function bankLabel(bank) {
  *   currency?: string,
  *   onRemoveRow: (rowKey: string) => void,
  *   onUpdateRowField: (rowKey: string, field: 'paymentRatioPercent' | 'paymentCondition', value: number | string | undefined) => void,
- *   banks: import('../types/index.js').ContractBank[],
+ *   banks: import('@/shared/api/bank-accounts.js').BankAccount[],
  *   selectedBankIds: string[],
  *   onBankIdsChange: (bankIds: string[]) => void,
  *   bankStatus?: { type: 'error' | 'success', message: string },
+ *   sellerName?: string,
+ *   onAddBankAccount: (operation: { kind: 'add' | 'update', accountId?: string, account: any }) => Promise<{ success: boolean, message?: string }>,
  * }} props
  */
 export function ContractDrawerPaymentTerms({
@@ -60,6 +67,8 @@ export function ContractDrawerPaymentTerms({
   selectedBankIds,
   onBankIdsChange,
   bankStatus,
+  sellerName,
+  onAddBankAccount,
 }) {
   const [isQuickCreateBankOpen, setIsQuickCreateBankOpen] = useState(false);
   const hasValue =
@@ -72,14 +81,18 @@ export function ContractDrawerPaymentTerms({
         <StackItem size="fill" xstyle={styles.minZero}>
           <MultiSelector
             label="Tài khoản / Ngân hàng thụ hưởng chỉ định"
+            description="Tài khoản ngân hàng của bên bán"
             placeholder={
-              banks.length > 0
-                ? 'Chọn ngân hàng thụ hưởng'
-                : 'Chưa có ngân hàng nào trong danh mục'
+              !sellerName
+                ? 'Chọn bên bán trong danh mục trước'
+                : banks.length > 0
+                  ? 'Chọn tài khoản thụ hưởng'
+                  : 'Bên bán chưa có tài khoản — bấm +'
             }
-            options={banks.map((bank) => ({
-              value: bank.id,
-              label: bankLabel(bank),
+            isDisabled={!sellerName}
+            options={banks.map((account) => ({
+              value: /** @type {string} */ (account.id),
+              label: bankLabel(account),
             }))}
             value={selectedBankIds}
             onChange={onBankIdsChange}
@@ -92,8 +105,9 @@ export function ContractDrawerPaymentTerms({
           />
         </StackItem>
         <IconButton
-          label="Thêm ngân hàng"
-          tooltip="Thêm ngân hàng"
+          label="Thêm tài khoản cho bên bán"
+          tooltip="Thêm tài khoản cho bên bán"
+          isDisabled={!sellerName}
           icon={<Icon icon={IconPlus} size="sm" />}
           type="button"
           size="lg"
@@ -127,11 +141,14 @@ export function ContractDrawerPaymentTerms({
         onUpdateRowField={onUpdateRowField}
       />
 
-      <QuickCreateBankDialog
-        isOpen={isQuickCreateBankOpen}
-        onOpenChange={setIsQuickCreateBankOpen}
-        onCreated={(bank) => onBankIdsChange([...selectedBankIds, bank.id])}
-      />
+      {isQuickCreateBankOpen ? (
+        <BankAccountDialog
+          account={null}
+          holderDefault={sellerName ?? ''}
+          submit={onAddBankAccount}
+          onClose={() => setIsQuickCreateBankOpen(false)}
+        />
+      ) : null}
     </MetaFormCard>
   );
 }

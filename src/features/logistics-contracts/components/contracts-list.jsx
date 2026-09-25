@@ -50,7 +50,6 @@ import {
   VIEW_PRESETS,
 } from '../config/contracts-table.js';
 import { CURRENCY_CODES, formatMoney } from '../config/currencies.js';
-import { useContractBanksQuery } from '../hooks/use-contract-banks-query.js';
 import { useContractPrivateInfosListQuery } from '../hooks/use-contract-private-infos-list-query.js';
 import {
   useContractListTabCounts,
@@ -58,6 +57,7 @@ import {
 } from '../hooks/use-contracts-query.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
+import { useSellerBankAccountsById } from '../hooks/use-sellers-query.js';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
 import { CustomerDetailDialog } from './customer-detail-dialog.jsx';
 import { RecordActionsMenu } from './record-actions-menu.jsx';
@@ -711,17 +711,7 @@ export function ContractsList({
     [listResult],
   );
 
-  const banksQuery = useContractBanksQuery();
-  const banksById = useMemo(
-    () =>
-      new Map(
-        (banksQuery.data?.success ? banksQuery.data.banks : []).map((bank) => [
-          bank.id,
-          bank,
-        ]),
-      ),
-    [banksQuery.data],
-  );
+  const banksById = useSellerBankAccountsById();
 
   // `ContractResponse` only carries `countryId`, no denormalized country
   // name (confirmed in `docs/api/Contracts.md`, BE-kt-xnk), so the display

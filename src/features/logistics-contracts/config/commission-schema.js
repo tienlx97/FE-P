@@ -32,6 +32,8 @@ export const commissionSchema = z.object({
     .max(100, 'Tối đa 100 ký tự'),
   signedDate: z.string().trim().min(1, 'Vui lòng chọn ngày ký'),
   partyCustomerId: z.string().trim().min(1, 'Vui lòng chọn bên nhận hoa hồng'),
+  // One of the recipient's bank accounts; '' → BE uses its default account.
+  bankAccountId: z.string(),
   value: z
     .number({ error: 'Vui lòng nhập giá trị' })
     .positive('Giá trị phải lớn hơn 0'),

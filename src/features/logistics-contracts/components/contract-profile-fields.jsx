@@ -36,6 +36,8 @@ export function ContractProfileFields({
     setBankIds,
     fieldStatuses,
     banks,
+    selectedSeller,
+    addSellerBankAccount,
     paymentTermRows,
     submitError,
   } = form;
@@ -85,6 +87,8 @@ export function ContractProfileFields({
                 selectedBankIds={values.bankIds}
                 onChange={setBankIds}
                 status={fieldStatuses.bankIds}
+                sellerName={selectedSeller?.companyName}
+                onAddBankAccount={addSellerBankAccount}
                 isReadOnly={!isEditing}
               />
             </FormSection>

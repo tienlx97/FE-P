@@ -17,7 +17,7 @@ import { TextInput } from '@/shared/components/text-input.jsx';
  * (`docs/api/Customers.md` etc., BE-kt-xnk). Purely a controlled view over
  * `useExtraFieldRows`'s state, same shape as `bank-accounts-fields.jsx`.
  * @param {{
- *   rows: import('../types/index.js').ExtraFieldRow[],
+ *   rows: { rowKey: string, key: string, value: string }[],
  *   isReadOnly?: boolean,
  *   onAddRow: () => void,
  *   onRemoveRow: (rowKey: string) => void,
@@ -31,7 +31,7 @@ export function ExtraFieldsEditor({
   onRemoveRow,
   onUpdateRowField,
 }) {
-  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ExtraFieldRow & Record<string, unknown>>[]} */
+  /** @type {import('@astryxdesign/core/Table').TableColumn<{ rowKey: string, key: string, value: string } & Record<string, unknown>>[]} */
   const columns = [
     {
       key: 'key',

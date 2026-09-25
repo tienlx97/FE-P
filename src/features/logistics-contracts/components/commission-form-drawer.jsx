@@ -171,7 +171,13 @@ export function CommissionFormDrawer({
   const broker = brokers.find(
     (customer) => customer.id === values.partyCustomerId,
   );
-  const bankAccount = broker?.bankAccounts?.[0];
+  const brokerAccounts = broker?.bankAccounts ?? [];
+  // The chosen receiving account; '' (new / recipient changed) falls back
+  // to the recipient's default account, as the BE does.
+  const bankAccount =
+    brokerAccounts.find((account) => account.id === values.bankAccountId) ??
+    brokerAccounts.find((account) => account.isDefault) ??
+    brokerAccounts[0];
   const ratioOfContract =
     typeof values.value === 'number' && contract.contractValue > 0
       ? (values.value / contract.contractValue) * 100
@@ -201,6 +207,8 @@ export function CommissionFormDrawer({
       value={values.partyCustomerId}
       onChange={(value) => {
         setField('partyCustomerId', value ?? '');
+        // A new recipient → its default account (BE fills it when '').
+        setField('bankAccountId', '');
         if (value) setIsPickingBroker(false);
       }}
       options={brokers.map((customer) => ({
@@ -372,7 +380,31 @@ export function CommissionFormDrawer({
 
                     {broker ? (
                       <MetaBankAccountCard
-                        title="Tài khoản ngân hàng thụ hưởng"
+                        title="Tài khoản nhận hoa hồng"
+                        action={
+                          brokerAccounts.length > 1 ? (
+                            <Selector
+                              label="Chọn tài khoản nhận"
+                              isLabelHidden
+                              size="sm"
+                              value={bankAccount?.id ?? ''}
+                              onChange={(value) =>
+                                setField('bankAccountId', value)
+                              }
+                              options={brokerAccounts.map((account) => ({
+                                value: /** @type {string} */ (account.id),
+                                label: [
+                                  account.bankName,
+                                  account.accountNumber,
+                                  account.currency,
+                                  account.isDefault ? 'mặc định' : '',
+                                ]
+                                  .filter(Boolean)
+                                  .join(' · '),
+                              }))}
+                            />
+                          ) : undefined
+                        }
                         account={
                           bankAccount
                             ? {
@@ -384,8 +416,9 @@ export function CommissionFormDrawer({
                                   .filter(Boolean)
                                   .join(', '),
                                 accountNumber: bankAccount.accountNumber,
-                                holder:
-                                  broker.companyName.toLocaleUpperCase('vi'),
+                                holder: (
+                                  bankAccount.holder || broker.companyName
+                                ).toLocaleUpperCase('vi'),
                               }
                             : null
                         }

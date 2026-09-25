@@ -22,10 +22,10 @@ import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
-import { useContractBanksQuery } from '../hooks/use-contract-banks-query.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
+import { useSellerBankAccountsById } from '../hooks/use-sellers-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 
 /** @param {string | null | undefined} value */
@@ -48,7 +48,7 @@ function roundTo2(value) {
  * "Tổng quan & Tiến độ" — the Contract detail page's first tab
  * (`openspec/changes/add-contract-detail-page/`), a read-only dashboard
  * built entirely from fields already on `Contract`/`PaymentSchedule`/
- * `ContractAnnex`/`Shipment`/`ContractBank` (per user's explicit choice,
+ * `ContractAnnex`/`Shipment`/seller bank accounts (per user's explicit choice,
  * 2026-09-17: only existing fields, no new BE work). Reuses the same query
  * hooks the other tabs fire, so no extra requests once they're visited.
  *
@@ -126,18 +126,12 @@ export function ContractOverviewPanel({
   const unexportedPercent = roundTo2(Math.max(0, 100 - exportedPercent));
   const shipmentCountHint = `(${shipments.length} lô hàng)`;
 
-  const banksQuery = useContractBanksQuery();
-  const banks = useMemo(() => {
-    const banksById = new Map(
-      (banksQuery.data?.success ? banksQuery.data.banks : []).map((bank) => [
-        bank.id,
-        bank,
-      ]),
-    );
-    return contract.bankIds
-      .map((bankId) => banksById.get(bankId))
-      .filter((bank) => bank != null);
-  }, [banksQuery.data, contract.bankIds]);
+  const bankAccountsById = useSellerBankAccountsById();
+  // Seller accounts arrive with the sellers list.
+  const sellersLoading = bankAccountsById.size === 0 && contract.bankIds.length > 0;
+  const banks = contract.bankIds
+    .map((bankId) => bankAccountsById.get(bankId))
+    .filter((account) => account != null);
 
   const countriesQuery = useCountriesQuery();
   const countryName = (
@@ -413,33 +407,31 @@ export function ContractOverviewPanel({
             /** @type {MetaInfoRow[]} */
             const rows = [
               { label: 'Ngân hàng:', value: item.bankName, weight: 'semibold' },
-              ...(item.beneficiary
-                ? [{ label: 'Người thụ hưởng:', value: item.beneficiary }]
+              ...(item.holder
+                ? [{ label: 'Người thụ hưởng:', value: item.holder }]
                 : []),
-              ...(item.branchName
+              ...(item.branch
                 ? [
                     {
                       label: 'Chi nhánh:',
-                      value: item.branchName,
+                      value: [item.branch, item.province].filter(Boolean).join(', '),
                       weight: /** @type {const} */ ('semibold'),
                     },
                   ]
                 : []),
               {
                 label: 'Số tài khoản:',
-                value: orDash(item.bankAccountNumber),
+                value: orDash(item.accountNumber),
                 weight: 'bold',
               },
-              ...(item.bankAddress
-                ? [{ label: 'Địa chỉ:', value: item.bankAddress }]
-                : []),
+              { label: 'Loại tiền:', value: item.currency ?? 'VND' },
               {
                 label: 'Mã SWIFT:',
                 value: orDash(item.swiftCode),
                 weight: 'bold',
                 tone: 'accent',
               },
-              ...extraRows(item.extraFields),
+              ...extraRows(item.extraFields ?? []),
             ];
             return {
               title: banks.length > 1 ? `NGÂN HÀNG ${index + 1}` : undefined,
@@ -553,7 +545,7 @@ export function ContractOverviewPanel({
         onViewCommission={onViewCommission}
         loading={{
           cargo: shipmentsQuery.isLoading,
-          bank: banksQuery.isLoading,
+          bank: sellersLoading,
           annexes: annexesQuery.isLoading,
           commission: commissionQuery.isLoading || customersQuery.isLoading,
         }}

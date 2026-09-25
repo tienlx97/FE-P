@@ -1,4 +1,5 @@
 import { apiRequest } from '@/shared/api/api-client.js';
+import { toBankAccountBody } from '@/shared/api/bank-accounts.js';
 
 const LIST_ERROR = 'Không thể tải danh sách nhà cung cấp';
 
@@ -143,59 +144,6 @@ function buildSupplierBody(
     Profile: { ...body.Profile, GroupId: null },
     GroupIds: values.groupIds ?? [],
   };
-}
-
-/**
- * One bank account as BE-kt-xnk `PartyBankAccountDto`. Every field is sent
- * so a full partner save keeps holder / currency / SWIFT / status / default.
- * @param {any} account
- */
-export function toBankAccountBody(account) {
-  return {
-    AccountNumber: account.accountNumber,
-    BankName: account.bankName,
-    Branch: account.branch ?? '',
-    Province: account.province ?? '',
-    Holder: account.holder || null,
-    Currency: account.currency || 'VND',
-    SwiftCode: account.swiftCode || null,
-    IsActive: account.isActive ?? true,
-    IsDefault: account.isDefault ?? false,
-    ExtraFields: (account.extraFields ?? [])
-      .filter((/** @type {any} */ field) => field.key?.trim())
-      .map((/** @type {any} */ field) => ({
-        Key: field.key.trim(),
-        Value: field.value ?? '',
-      })),
-  };
-}
-
-/**
- * Supplier per-account endpoints (BE-kt-xnk `party-bank-account-details`).
- * Each returns the whole updated supplier.
- * @param {string} supplierId
- * @param {{ method: 'POST' | 'PUT' | 'DELETE', accountId?: string, action?: 'default', account?: any, errorMessage: string }} options
- * @returns {Promise<{ success: true, supplier: import('../types/index.js').Supplier } | { success: false, message: string }>}
- */
-export async function changeSupplierBankAccount(
-  supplierId,
-  { method, accountId, action, account, errorMessage },
-) {
-  const path = [
-    `/api/v1/suppliers/${supplierId}/bank-accounts`,
-    accountId,
-    action,
-  ]
-    .filter(Boolean)
-    .join('/');
-  const result = await apiRequest(path, {
-    method,
-    errorMessage,
-    body: account ? toBankAccountBody(account) : undefined,
-  });
-  return result.success
-    ? { success: true, supplier: result.data }
-    : { success: false, message: result.message };
 }
 
 /** @param {any} values @param {any[]} [extraFieldRows] @param {any[]} [bankAccounts] @param {any[]} [deliveryAddresses] */

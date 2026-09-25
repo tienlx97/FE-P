@@ -14,25 +14,26 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Landmark, Plus, Save } from 'lucide-react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
-import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
-import { FormGrid } from '@/shared/components/form-grid.jsx';
-import { MetaFormDialog } from '@/shared/components/meta-form-dialog.jsx';
-import { TextInput } from '@/shared/components/text-input.jsx';
-
-import { currencyOptions } from '../config/currencies.js';
-import { FOREIGN_BANK_FIELD_SUGGESTIONS } from '../config/party-bank-account-schema.js';
 import {
-  useSupplierBankAccountForm,
-  useVietnamBanksQuery,
-} from '../hooks/use-supplier-bank-accounts.js';
-import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
+  BANK_CURRENCY_OPTIONS as currencyOptions,
+  FOREIGN_BANK_FIELD_SUGGESTIONS,
+} from '@/shared/config/bank-account-schema.js';
+import { useBankAccountForm } from '@/shared/hooks/use-bank-account-form.js';
+import { useVietnamBanksQuery } from '@/shared/hooks/use-vietnam-banks-query.js';
+
+import { MetaFormSection } from '../custom/meta/index.js';
+import { ExtraFieldsEditor } from '../extra-fields-editor.jsx';
+import { FormGrid } from '../form-grid.jsx';
+import { MetaFormDialog } from '../meta-form-dialog.jsx';
+import { TextInput } from '../text-input.jsx';
 
 /** @typedef {'domestic' | 'foreign'} BankKind */
 
 /**
- * Add / edit one supplier bank account (supplier detail "Tài khoản ngân
- * hàng" tab).
+ * Add / edit one bank account — shared by every owner (supplier / customer /
+ * seller / employee; BE-kt-xnk `unify-bank-accounts`).
  * - "Trong nước": bank from the Vietnam bank catalog (stored by short name).
  * - "Nước ngoài": free-text bank name, city / country, SWIFT/BIC.
  * - "Thông tin bổ sung": free name/value rows ("Thêm trường") for whatever
@@ -42,15 +43,17 @@ import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
  * catalog. The default flag is only offered when adding — an existing
  * account becomes default through the table's star.
  * @param {{
- *   supplier: import('../types/index.js').Supplier,
- *   account: import('../types/index.js').PartyBankAccount | null,
+ *   account: import('@/shared/api/bank-accounts.js').BankAccount | null,
+ *   holderDefault: string,
+ *   submit: Parameters<typeof useBankAccountForm>[0]['submit'],
  *   onClose: () => void,
  * }} props
  */
-export function SupplierBankAccountDialog({ supplier, account, onClose }) {
-  const form = useSupplierBankAccountForm({
-    supplier,
+export function BankAccountDialog({ account, holderDefault, submit, onClose }) {
+  const form = useBankAccountForm({
     account,
+    holderDefault,
+    submit,
     onSuccess: onClose,
   });
   const banksQuery = useVietnamBanksQuery();
@@ -89,7 +92,12 @@ export function SupplierBankAccountDialog({ supplier, account, onClose }) {
     (key) => !usedKeys.has(key),
   );
 
-  return (
+  // Portaled to <body>: the dialog often opens from inside another form
+  // (contract drawer, employee dialog) and Astryx renders <dialog> in place
+  // — a nested <form> in the DOM made the browser submit and reload the
+  // page. React events still bubble through the portal; MetaFormDialog stops
+  // its submit from reaching the outer form.
+  return createPortal(
     <MetaFormDialog
       isOpen
       onOpenChange={(isOpen) => {
@@ -251,6 +259,7 @@ export function SupplierBankAccountDialog({ supplier, account, onClose }) {
           />
         )}
       </VStack>
-    </MetaFormDialog>
+    </MetaFormDialog>,
+    document.body,
   );
 }

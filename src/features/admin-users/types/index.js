@@ -182,29 +182,10 @@
  */
 
 /**
- * Shape of `GET .../bank-accounts` items — `BankAccountResponse`
- * (BE-kt-xnk, `CompanyManagement.Contracts/BankAccounts/BankAccountResponse.cs`).
- * @typedef {Object} BankAccountApiItem
- * @property {string} id
- * @property {string} vietnamBankId
- * @property {string} accountNumber
- * @property {string | null} branch
- * @property {boolean} isPrimary
+ * `GET .../bank-accounts` items — the shared model (BE-kt-xnk `unify-bank-accounts`).
+ * @typedef {import('@/shared/api/bank-accounts.js').BankAccount} BankAccountApiItem
  */
 
-/**
- * @typedef {Object} BankAccountSuccess
- * @property {true} success
- * @property {BankAccountApiItem} bankAccount
- */
-
-/**
- * @typedef {Object} BankAccountFailure
- * @property {false} success
- * @property {string} message
- */
-
-/** @typedef {BankAccountSuccess | BankAccountFailure} BankAccountResult */
 
 /**
  * @typedef {Object} BankAccountListSuccess
@@ -212,7 +193,7 @@
  * @property {BankAccountApiItem[]} bankAccounts
  */
 
-/** @typedef {BankAccountListSuccess | BankAccountFailure} BankAccountListResult */
+/** @typedef {BankAccountListSuccess | { success: false, message: string }} BankAccountListResult */
 
 export {};
 
@@ -255,12 +236,13 @@ export {};
  * @property {{ code: string, name: string }[]} oldWards
  * @property {{ code: string, name: string }[]} newProvinces
  * @property {{ code: string, name: string }[]} newWards
- * @property {BankAccountRow[]} bankAccountRows
- * @property {() => void} addBankAccountRow
- * @property {(rowKey: string) => void} removeBankAccountRow
- * @property {() => void} clearBankAccountRows
- * @property {(rowKey: string, field: 'vietnamBankId' | 'accountNumber' | 'branch', value: string) => void} updateBankAccountRowField
- * @property {(rowKey: string) => void} setPrimaryBankAccountRow
+ * @property {BankAccountRow[]} [bankAccountRows] Create mode: rows posted after the user exists.
+ * @property {Omit<import('react').ComponentProps<typeof import('@/shared/components/bank-accounts/bank-accounts-panel.jsx').BankAccountsPanel>, 'title' | 'subtitle'>} [bankAccountsPanelProps] Edit mode: the shared live panel.
+ * @property {() => void} [addBankAccountRow]
+ * @property {(rowKey: string) => void} [removeBankAccountRow]
+ * @property {() => void} [clearBankAccountRows]
+ * @property {(rowKey: string, field: 'vietnamBankId' | 'accountNumber' | 'branch', value: string) => void} [updateBankAccountRowField]
+ * @property {(rowKey: string) => void} [setPrimaryBankAccountRow]
  * @property {{ userId: string, extraPermissions: string[], isLoading: boolean } | null} permissionsFieldsProps
  *   Edit only — granting a permission to an account that doesn't exist yet is
  *   meaningless, so the create flow leaves this `null` and the card doesn't render.

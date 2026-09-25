@@ -97,16 +97,17 @@ function applyFieldChange(values, field, value) {
  * must be preserved.
  * @param {string} userId
  * @param {import('../types/index.js').BankAccountRow[]} rows
+ * @param {import('../types/index.js').VietnamBank[]} vietnamBanks
  * @returns {Promise<string[]>} human-readable messages for rows that failed to save
  */
-async function addFilledBankAccountRows(userId, rows) {
+async function addFilledBankAccountRows(userId, rows, vietnamBanks) {
   /** @type {string[]} */
   const failures = [];
 
   for (const row of rows) {
     if (!row.vietnamBankId || !row.accountNumber.trim()) continue;
 
-    const result = await adminAddBankAccount(userId, row);
+    const result = await adminAddBankAccount(userId, row, vietnamBanks);
     if (!result.success) {
       failures.push(`${row.accountNumber}: ${result.message}`);
     }
@@ -205,6 +206,7 @@ export function useCreateUserForm({ onSuccess } = {}) {
     const bankAccountFailures = await addFilledBankAccountRows(
       createResult.id,
       bankAccountRows.rows,
+      vietnamBanksQuery.data ?? [],
     );
 
     // The Admin must hand both of these to the new employee to log in —

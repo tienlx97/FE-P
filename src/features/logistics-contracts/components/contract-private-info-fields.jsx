@@ -9,12 +9,11 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 
+import { ExtraFieldsEditor } from '@/shared/components/extra-fields-editor.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { NumberInput } from '@/shared/components/number-input.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
-
-import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
 
 /** @param {import('../types/index.js').ContractPrivateInfo} privateInfo */
 export function isPrivateInfoEntirelyEmpty(privateInfo) {
@@ -68,7 +67,7 @@ function Section({ title, children }) {
  *   fieldStatuses: Record<string, { type: 'error', message: string } | undefined>,
  *   logisticsTotal: number | null,
  *   volumeDeclaration: number,
- *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
+ *   extraFieldRows: ReturnType<typeof import('@/shared/hooks/use-extra-field-rows.js').useExtraFieldRows>,
  * }} props
  */
 export function ContractPrivateInfoFields({

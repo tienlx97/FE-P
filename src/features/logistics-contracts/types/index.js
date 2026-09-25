@@ -124,21 +124,7 @@ export {};
  * @property {string | null} representativeTitle
  * @property {string | null} address
  * @property {ExtraField[]} extraFields
- */
-
-/**
- * `bankAddress`/`swiftCode` are not yet on the backend response (see
- * `config/contract-bank-schema.js`) — typed here ahead of it, always
- * `null` until BE-kt-xnk adds them.
- * @typedef {Object} ContractBank
- * @property {string} id
- * @property {string} bankName
- * @property {string | null} beneficiary
- * @property {string | null} bankAccountNumber
- * @property {string | null} branchName
- * @property {string | null} bankAddress
- * @property {string | null} swiftCode
- * @property {ExtraField[]} extraFields
+ * @property {import('@/shared/api/bank-accounts.js').BankAccount[]} [bankAccounts] Contract beneficiary banks are picked from these.
  */
 
 /**
@@ -280,6 +266,7 @@ export {};
  * @property {string} code
  * @property {string} signedDate - ISO date (YYYY-MM-DD)
  * @property {string} partyCustomerId - FK into the {@link Customer} catalog — the commission recipient
+ * @property {string | null} [bankAccountId] - the recipient's bank account it is paid to (BE `unify-bank-accounts`)
  * @property {number} value
  * @property {boolean} sellerSigned
  * @property {boolean} partySigned
@@ -292,6 +279,7 @@ export {};
  * @property {string} code
  * @property {string} signedDate - ISO date (YYYY-MM-DD)
  * @property {string} partyCustomerId
+ * @property {string} bankAccountId - '' = the recipient's default account
  * @property {number | undefined} value
  * @property {boolean} sellerSigned
  * @property {boolean} partySigned
@@ -496,16 +484,6 @@ export {};
  * @property {string} representativeName
  * @property {string} representativeTitle
  * @property {string} address
- */
-
-/**
- * @typedef {Object} ContractBankFormValues
- * @property {string} bankName
- * @property {string} beneficiary
- * @property {string} bankAccountNumber
- * @property {string} branchName
- * @property {string} bankAddress
- * @property {string} swiftCode
  */
 
 /**

@@ -36,7 +36,7 @@ import { QuickCreateCustomerDialog } from './quick-create-customer-dialog.jsx';
  *   onSelectExisting: (customerId: string, knownCustomer?: import('../types/index.js').Customer) => void,
  *   onSwitchToInline: () => void,
  *   onInlineFieldChange: (field: keyof import('../types/index.js').CustomerFormValues, value: string) => void,
- *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
+ *   extraFieldRows: ReturnType<typeof import('@/shared/hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   isReadOnly?: boolean,
  *   isDetailsCollapsible?: boolean,
  *   actionSize?: 'md' | 'lg',

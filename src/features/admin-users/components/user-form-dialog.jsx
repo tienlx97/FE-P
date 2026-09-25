@@ -7,6 +7,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
+import { BankAccountsPanel } from '@/shared/components/bank-accounts/bank-accounts-panel.jsx';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormSection } from '@/shared/components/form-section.jsx';
 
@@ -19,6 +20,10 @@ import { UserIdentityFields } from './user-identity-fields.jsx';
 import { UserOrgFields } from './user-org-fields.jsx';
 import { UserPermissionsFields } from './user-permissions-fields.jsx';
 import { UserSessionFields } from './user-session-fields.jsx';
+
+
+/** Create mode always supplies the grid handlers; edit mode shows the panel. */
+function noop() {}
 
 /**
  * The v2 create/edit dialog. Replaces v1's tab strip with a stack of cards:
@@ -68,6 +73,7 @@ function UserFormDialogShell({ isOpen, onOpenChange, controller }) {
     clearBankAccountRows,
     updateBankAccountRowField,
     setPrimaryBankAccountRow,
+    bankAccountsPanelProps,
     permissionsFieldsProps,
     createPermissionsFieldsProps,
     concurrentSessionsProps,
@@ -155,15 +161,25 @@ function UserFormDialogShell({ isOpen, onOpenChange, controller }) {
               </FormSection>
 
               <FormSection value="bank" title="Thông tin ngân hàng">
-                <BankAccountsFields
-                  rows={bankAccountRows}
-                  vietnamBanks={vietnamBanks}
-                  onAddRow={addBankAccountRow}
-                  onRemoveRow={removeBankAccountRow}
-                  onClearRows={clearBankAccountRows}
-                  onUpdateRowField={updateBankAccountRowField}
-                  onSetPrimaryRow={setPrimaryBankAccountRow}
-                />
+                {bankAccountsPanelProps ? (
+                  // Existing user: the shared bank-accounts panel, saved per
+                  // account right away (BE-kt-xnk `unify-bank-accounts`).
+                  <BankAccountsPanel
+                    {...bankAccountsPanelProps}
+                    title="Tài khoản ngân hàng"
+                    subtitle="Tài khoản mặc định (ưu tiên 1) là tài khoản nhận lương"
+                  />
+                ) : (
+                  <BankAccountsFields
+                    rows={bankAccountRows ?? []}
+                    vietnamBanks={vietnamBanks}
+                    onAddRow={addBankAccountRow ?? noop}
+                    onRemoveRow={removeBankAccountRow ?? noop}
+                    onClearRows={clearBankAccountRows ?? noop}
+                    onUpdateRowField={updateBankAccountRowField ?? noop}
+                    onSetPrimaryRow={setPrimaryBankAccountRow ?? noop}
+                  />
+                )}
               </FormSection>
 
               <FormSection value="employee" title="Thông tin nhân viên">

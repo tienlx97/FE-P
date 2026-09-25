@@ -2,15 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import {
-  adminAddBankAccount,
-  adminRemoveBankAccount,
-  adminSetPrimaryBankAccount,
-  adminUpdateBankAccount,
-} from '../api/bank-accounts.js';
+import { userBankAccountEndpoint } from '@/shared/api/bank-accounts.js';
+
 import { updateUserSchema } from '../config/update-user-schema.js';
 import { useAdminBankAccountsQuery } from './use-admin-bank-accounts-query.js';
-import { useBankAccountRows } from './use-bank-account-rows.js';
 import {
   useBranchesQuery,
   useCompaniesQuery,
@@ -123,97 +118,6 @@ function toFormValues(user) {
 }
 
 /**
- * @param {import('../types/index.js').BankAccountApiItem} account
- * @returns {import('../types/index.js').BankAccountRow}
- */
-function toBankAccountRow(account) {
-  return {
-    rowKey: account.id,
-    bankAccountId: account.id,
-    vietnamBankId: account.vietnamBankId,
-    accountNumber: account.accountNumber,
-    branch: account.branch ?? '',
-    isPrimary: account.isPrimary,
-  };
-}
-
-/**
- * Persists the bank accounts grid's edits against the snapshot it was
- * loaded with: new rows (no `bankAccountId`) are added, changed existing
- * rows are updated, a newly-checked primary is set, and rows present in
- * the original snapshot but missing from `rows` are removed. Every step
- * that can fail is collected into the returned messages instead of
- * aborting partway — `UpdateUser` itself already succeeded by the time
- * this runs, so a bank account failure shouldn't look like the whole save
- * failed.
- * @param {string} userId
- * @param {import('../types/index.js').BankAccountRow[]} rows
- * @param {import('../types/index.js').BankAccountApiItem[]} originalAccounts
- * @returns {Promise<string[]>}
- */
-async function persistBankAccountRowChanges(userId, rows, originalAccounts) {
-  /** @type {string[]} */
-  const failures = [];
-  const originalById = new Map(
-    originalAccounts.map((account) => [account.id, account]),
-  );
-  const remainingIds = new Set(originalAccounts.map((account) => account.id));
-
-  for (const row of rows) {
-    if (!row.bankAccountId) {
-      if (!row.vietnamBankId || !row.accountNumber.trim()) continue;
-
-      const result = await adminAddBankAccount(userId, row);
-      if (!result.success) {
-        failures.push(`${row.accountNumber}: ${result.message}`);
-      }
-      continue;
-    }
-
-    remainingIds.delete(row.bankAccountId);
-    const original = originalById.get(row.bankAccountId);
-
-    if (
-      original &&
-      (original.vietnamBankId !== row.vietnamBankId ||
-        original.accountNumber !== row.accountNumber ||
-        (original.branch ?? '') !== row.branch)
-    ) {
-      const result = await adminUpdateBankAccount(
-        userId,
-        row.bankAccountId,
-        row,
-      );
-      if (!result.success) {
-        failures.push(`${row.accountNumber}: ${result.message}`);
-      }
-    }
-
-    if (row.isPrimary && !original?.isPrimary) {
-      const result = await adminSetPrimaryBankAccount(
-        userId,
-        row.bankAccountId,
-      );
-      if (!result.success) {
-        failures.push(`${row.accountNumber}: ${result.message}`);
-      }
-    }
-  }
-
-  for (const removedId of remainingIds) {
-    const result = await adminRemoveBankAccount(userId, removedId);
-    if (!result.success) {
-      const removedAccount = originalById.get(removedId);
-      failures.push(
-        `${removedAccount?.accountNumber ?? removedId}: ${result.message}`,
-      );
-    }
-  }
-
-  return failures;
-}
-
-/**
  * @param {import('../types/index.js').UserListItem} user The list row that was
  *   clicked. Only its `id` is used — the form values come from the detail
  *   endpoint, because the row is a slim projection (see below).
@@ -256,10 +160,8 @@ export function useEditUserForm(user, { onSuccess } = {}) {
   const userDetailQuery = useUserDetailQuery(user.id);
   const hasSeededFromDetailRef = useRef(false);
   const [detailSeeded, setDetailSeeded] = useState(false);
-  const [banksSeeded, setBanksSeeded] = useState(false);
-  // Readiness follows both seeded snapshots so loaded defaults are never
-  // mistaken for user edits and saving cannot erase unhydrated bank rows.
-  const isLoadingUser = !detailSeeded || !banksSeeded;
+  // Bank accounts are edited live in the shared panel, not on save.
+  const isLoadingUser = !detailSeeded;
   const loadError =
     (userDetailQuery.data && !userDetailQuery.data.success
       ? userDetailQuery.data.message
@@ -322,35 +224,6 @@ export function useEditUserForm(user, { onSuccess } = {}) {
     newAddressQuery.data,
   );
 
-  const {
-    rows: bankAccountRowsState,
-    setRows: setBankAccountRows,
-    addRow: addBankAccountRow,
-    removeRow: removeBankAccountRow,
-    clearRows: clearBankAccountRows,
-    updateRowField: updateBankAccountRowField,
-    setPrimaryRow: setPrimaryBankAccountRow,
-  } = useBankAccountRows();
-
-  // The grid is seeded from the server exactly once, the first time the
-  // list query resolves — re-seeding on every background refetch would
-  // wipe out whatever the Admin is mid-editing in the grid.
-  const hasSeededBankAccountRowsRef = useRef(false);
-  const originalBankAccountsRef = useRef(
-    /** @type {import('../types/index.js').BankAccountApiItem[]} */ ([]),
-  );
-
-  useEffect(() => {
-    if (hasSeededBankAccountRowsRef.current || !bankAccountsQuery.data?.success)
-      return;
-
-    originalBankAccountsRef.current = bankAccountsQuery.data.bankAccounts;
-    setBankAccountRows(
-      bankAccountsQuery.data.bankAccounts.map(toBankAccountRow),
-    );
-    hasSeededBankAccountRowsRef.current = true;
-    setBanksSeeded(true);
-  }, [bankAccountsQuery.data, setBankAccountRows]);
 
   /**
    * @param {string} field
@@ -400,18 +273,6 @@ export function useEditUserForm(user, { onSuccess } = {}) {
       return;
     }
 
-    const bankAccountFailures = await persistBankAccountRowChanges(
-      user.id,
-      bankAccountRowsState,
-      originalBankAccountsRef.current,
-    );
-
-    if (bankAccountFailures.length > 0) {
-      setSubmitSuccess(
-        `Đã cập nhật người dùng, nhưng ${bankAccountFailures.length} tài khoản ngân hàng lưu thất bại: ${bankAccountFailures.join('; ')}`,
-      );
-    }
-
     onSuccess?.();
   }
 
@@ -459,12 +320,16 @@ export function useEditUserForm(user, { onSuccess } = {}) {
     oldWards,
     newProvinces,
     newWards,
-    bankAccountRows: bankAccountRowsState,
-    addBankAccountRow,
-    removeBankAccountRow,
-    clearBankAccountRows,
-    updateBankAccountRowField,
-    setPrimaryBankAccountRow,
+    bankAccountsPanelProps: {
+      accounts: bankAccountsQuery.data?.success
+        ? bankAccountsQuery.data.bankAccounts
+        : [],
+      endpoint: userBankAccountEndpoint(user.id),
+      onChanged: () => {
+        bankAccountsQuery.refetch();
+      },
+      holderDefault: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+    },
     extraPermissions: userDetailQuery.data?.success
       ? userDetailQuery.data.user.extraPermissions
       : [],

@@ -3,10 +3,10 @@
 import { useState } from 'react';
 
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
+import { useExtraFieldRows } from '@/shared/hooks/use-extra-field-rows.js';
 
 import { contractPrivateInfoSchema } from '../config/contract-private-info-schema.js';
 import { useUpsertContractPrivateInfoMutation } from './use-contract-private-info-query.js';
-import { useExtraFieldRows } from './use-extra-field-rows.js';
 
 /** @returns {import('../types/index.js').ContractPrivateInfoFormValues} */
 function emptyValues() {

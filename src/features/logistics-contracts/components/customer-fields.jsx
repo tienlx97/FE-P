@@ -8,10 +8,9 @@ import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useId } from 'react';
 
+import { ExtraFieldsEditor } from '@/shared/components/extra-fields-editor.jsx';
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
-
-import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
 
 const styles = stylex.create({
   chevron: {
@@ -32,7 +31,7 @@ const styles = stylex.create({
  *   values: import('../types/index.js').CustomerFormValues,
  *   setField: (field: 'companyName' | 'representativeName' | 'representativeTitle' | 'address', value: string) => void,
  *   fieldStatuses: Record<string, { type: 'error', message: string } | undefined>,
- *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
+ *   extraFieldRows: ReturnType<typeof import('@/shared/hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   showCompanyName?: boolean,
  *   isCollapsible?: boolean,
  *   isExpandDisabled?: boolean,

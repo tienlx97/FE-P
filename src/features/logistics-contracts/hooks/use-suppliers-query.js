@@ -41,6 +41,23 @@ export function useSupplierQuery(supplierId) {
 }
 
 /**
+ * `BankAccountsPanel.onChanged` for a supplier: the per-account endpoints
+ * return the whole supplier — written into the detail query — then the
+ * supplier lists refetch.
+ * @param {string} supplierId
+ */
+export function useSupplierBankAccountsChanged(supplierId) {
+  const queryClient = useQueryClient();
+  return (/** @type {{ data: any }} */ { data }) => {
+    queryClient.setQueryData([...QUERY_KEY, supplierId], {
+      success: true,
+      supplier: data,
+    });
+    queryClient.invalidateQueries({ queryKey: SEARCH_KEY });
+  };
+}
+
+/**
  * Shipment / Commission tab counts on the supplier detail page: a
  * one-row search per list, reading `totalCount` (BE-kt-xnk
  * `supplier-detail-api` filters). `undefined` while loading or on error.

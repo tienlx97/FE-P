@@ -1,10 +1,11 @@
 import { z } from 'zod';
 
 /**
- * One partner bank account — mirrors BE-kt-xnk
+ * One bank account on the shared model (customers, suppliers, sellers,
+ * employees — BE-kt-xnk `unify-bank-accounts`); mirrors
  * `PartyBankAccountInputValidator`.
  */
-export const partyBankAccountSchema = z.object({
+export const bankAccountSchema = z.object({
   bankName: z.string().trim().min(1, 'Vui lòng chọn ngân hàng').max(200),
   branch: z.string().trim().max(200),
   province: z.string().trim().max(200),
@@ -40,7 +41,7 @@ export const partyBankAccountSchema = z.object({
 
 /**
  * Quick-add names for a foreign bank's usual parameters (the "Thêm trường"
- * suggestions in `SupplierBankAccountDialog`).
+ * suggestions in `BankAccountDialog`).
  */
 export const FOREIGN_BANK_FIELD_SUGGESTIONS = [
   'IBAN',
@@ -50,3 +51,8 @@ export const FOREIGN_BANK_FIELD_SUGGESTIONS = [
   'Địa chỉ ngân hàng',
   'Ngân hàng trung gian',
 ];
+
+/** Currency shortlist for the account form (BE accepts any ISO-4217 code). */
+export const BANK_CURRENCY_OPTIONS = ['VND', 'USD', 'EUR', 'CNY', 'JPY', 'GBP'].map(
+  (code) => ({ value: code, label: code }),
+);

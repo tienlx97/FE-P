@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
+import { useExtraFieldRows } from '@/shared/hooks/use-extra-field-rows.js';
 
 import { contractSchema } from '../config/contract-schema.js';
 import { CONTRACT_STATUSES } from '../config/contract-status.js';
@@ -10,7 +11,6 @@ import { CONTRACT_TYPES } from '../config/contract-types.js';
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
 import { requiresPlaceOfDelivery } from '../config/incoterms.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
-import { useContractBanksQuery } from './use-contract-banks-query.js';
 import { useContractNumberExistsQuery } from './use-contract-number-exists-query.js';
 import {
   useCreateContractMutation,
@@ -18,11 +18,13 @@ import {
 } from './use-contracts-query.js';
 import { useCountriesQuery } from './use-countries-query.js';
 import { useCustomersQuery } from './use-customers-query.js';
-import { useExtraFieldRows } from './use-extra-field-rows.js';
 import { useCompaniesQuery } from './use-org-directory.js';
 import { usePaymentTermRows } from './use-payment-term-rows.js';
 import { usePlacesQuery } from './use-places-query.js';
-import { useSellersQuery } from './use-sellers-query.js';
+import {
+  useChangeSellerBankAccount,
+  useSellersQuery,
+} from './use-sellers-query.js';
 
 const TODAY_ISO = new Date().toISOString().slice(0, 10);
 // Every contract to date has used the Incoterms 2010 rulebook — default to
@@ -192,7 +194,6 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   const companiesQuery = useCompaniesQuery();
   const sellersQuery = useSellersQuery();
   const customersQuery = useCustomersQuery();
-  const banksQuery = useContractBanksQuery();
   const countriesQuery = useCountriesQuery();
 
   // "Nơi xếp hàng" is always sourced from Vietnam's `Place` catalog —
@@ -315,16 +316,27 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     const seller =
       knownSeller ?? sellers.find((candidate) => candidate.id === sellerId);
 
-    setValues((current) => ({
-      ...current,
-      sourceSellerId: sellerId,
-      sellerInline: {
+    // Beneficiary banks are the seller's own accounts: keep the ones that
+    // belong to it, else preselect its default account.
+    const accountIds = (seller?.bankAccounts ?? []).map((account) => account.id);
+    const defaultAccountId = (seller?.bankAccounts ?? []).find(
+      (account) => account.isDefault,
+    )?.id;
+    setValues((current) => {
+      const kept = current.bankIds.filter((id) => accountIds.includes(id));
+      return {
+        ...current,
+        sourceSellerId: sellerId,
+        bankIds:
+          kept.length > 0 || !defaultAccountId ? kept : [defaultAccountId],
+        sellerInline: {
         companyName: '',
         representativeName: seller?.representativeName ?? '',
         representativeTitle: seller?.representativeTitle ?? '',
         address: seller?.address ?? '',
-      },
-    }));
+        },
+      };
+    });
     sellerExtraFieldRows.setRows(
       (seller?.extraFields ?? []).map((field) => ({
         rowKey: generateRowKey(),
@@ -335,7 +347,34 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   }
 
   function switchToInlineSeller() {
-    setValues((current) => ({ ...current, sourceSellerId: '' }));
+    // An inline seller has no accounts to pick from.
+    setValues((current) => ({ ...current, sourceSellerId: '', bankIds: [] }));
+  }
+
+  const changeSellerBankAccount = useChangeSellerBankAccount();
+
+  /**
+   * "+" next to the bank picker: adds an account to the selected seller
+   * and selects it.
+   * @param {{ kind: 'add' | 'update', accountId?: string, account: any }} operation
+   */
+  async function addSellerBankAccount(operation) {
+    const sellerId = values.sourceSellerId;
+    if (!sellerId) {
+      return { success: false, message: 'Chọn bên bán trước' };
+    }
+    const before = new Set(sellerBankAccounts.map((account) => account.id));
+    const result = await changeSellerBankAccount(sellerId, operation);
+    if (result.success) {
+      const added = result.accounts.find((account) => !before.has(account.id));
+      if (added?.id) {
+        setValues((current) => ({
+          ...current,
+          bankIds: [...current.bankIds, /** @type {string} */ (added.id)],
+        }));
+      }
+    }
+    return result;
   }
 
   /**
@@ -390,6 +429,14 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   function switchToInlineBuyer() {
     setValues((current) => ({ ...current, sourceCustomerId: '' }));
   }
+
+  const selectedSeller = values.sourceSellerId
+    ? (sellersQuery.data?.success ? sellersQuery.data.sellers : []).find(
+        (seller) => seller.id === values.sourceSellerId,
+      )
+    : undefined;
+  /** @type {import('@/shared/api/bank-accounts.js').BankAccount[]} */
+  const sellerBankAccounts = selectedSeller?.bankAccounts ?? [];
 
   /** @param {string[]} bankIds */
   function setBankIds(bankIds) {
@@ -557,7 +604,9 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
         ? dischargePlacesQuery.data.places
         : [],
     ),
-    banks: banksQuery.data?.success ? banksQuery.data.banks : [],
+    banks: sellerBankAccounts,
+    selectedSeller,
+    addSellerBankAccount,
     paymentTermRows,
     sellerExtraFieldRows,
     buyerExtraFieldRows,

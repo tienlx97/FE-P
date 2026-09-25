@@ -2,8 +2,9 @@
 
 import { useState } from 'react';
 
+import { useExtraFieldRows } from '@/shared/hooks/use-extra-field-rows.js';
+
 import { sellerSchema } from '../config/seller-schema.js';
-import { useExtraFieldRows } from './use-extra-field-rows.js';
 import { useCreateSellerMutation } from './use-sellers-query.js';
 
 /** @returns {import('../types/index.js').SellerFormValues} */

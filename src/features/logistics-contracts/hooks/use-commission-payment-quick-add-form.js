@@ -81,6 +81,8 @@ export function useCommissionPaymentQuickAddForm({
         code: commission.code,
         signedDate: commission.signedDate,
         partyCustomerId: commission.partyCustomerId,
+        // Keep the chosen receiving account ('' would reset it to the default).
+        bankAccountId: commission.bankAccountId ?? '',
         value: commission.value,
         sellerSigned: commission.sellerSigned,
         partySigned: commission.partySigned,

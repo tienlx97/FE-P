@@ -1,7 +1,10 @@
 import { apiRequest } from '@/shared/api/api-client.js';
+import {
+  changeBankAccount,
+  userBankAccountEndpoint,
+} from '@/shared/api/bank-accounts.js';
 import { listVietnamBanks as listSharedVietnamBanks } from '@/shared/api/vietnam-banks.js';
 
-const GENERIC_ERROR_MESSAGE = 'Không thể lưu tài khoản ngân hàng';
 const GENERIC_LIST_ERROR_MESSAGE = 'Không thể tải danh sách tài khoản ngân hàng';
 
 /**
@@ -18,7 +21,8 @@ export async function listVietnamBanks() {
 }
 
 /**
- * Admin-only endpoint.
+ * Admin-only. The user's accounts on the shared model (BE-kt-xnk
+ * `unify-bank-accounts`); edits go through the shared `BankAccountsPanel`.
  * @param {string} userId
  * @returns {Promise<import('../types/index.js').BankAccountListResult>}
  */
@@ -36,92 +40,24 @@ export async function adminListBankAccounts(userId) {
 }
 
 /**
- * Admin-only endpoint.
+ * Admin-only. Adds one row of the create-user grid (the user exists now):
+ * the grid picks a catalog bank; it is stored by its short name.
  * @param {string} userId
  * @param {import('../types/index.js').BankAccountRow} row
- * @returns {Promise<import('../types/index.js').BankAccountResult>}
- */
-export async function adminAddBankAccount(userId, row) {
-  return sendBankAccountRequest(
-    `/api/v1/users/${userId}/bank-accounts`,
-    'POST',
-    {
-      VietnamBankId: row.vietnamBankId,
-      AccountNumber: row.accountNumber,
-      Branch: row.branch || null,
-      IsPrimary: row.isPrimary,
-    },
-  );
-}
-
-/**
- * Admin-only endpoint.
- * @param {string} userId
- * @param {string} bankAccountId
- * @param {import('../types/index.js').BankAccountRow} row
- * @returns {Promise<import('../types/index.js').BankAccountResult>}
- */
-export async function adminUpdateBankAccount(userId, bankAccountId, row) {
-  return sendBankAccountRequest(
-    `/api/v1/users/${userId}/bank-accounts/${bankAccountId}`,
-    'PUT',
-    {
-      VietnamBankId: row.vietnamBankId,
-      AccountNumber: row.accountNumber,
-      Branch: row.branch || null,
-    },
-  );
-}
-
-/**
- * Admin-only endpoint.
- * @param {string} userId
- * @param {string} bankAccountId
- * @returns {Promise<import('../types/index.js').BankAccountResult>}
- */
-export async function adminSetPrimaryBankAccount(userId, bankAccountId) {
-  return sendBankAccountRequest(
-    `/api/v1/users/${userId}/bank-accounts/${bankAccountId}/primary`,
-    'PUT',
-    undefined,
-  );
-}
-
-/**
- * Admin-only endpoint.
- * @param {string} userId
- * @param {string} bankAccountId
+ * @param {import('../types/index.js').VietnamBank[]} vietnamBanks
  * @returns {Promise<{ success: true } | { success: false, message: string }>}
  */
-export async function adminRemoveBankAccount(userId, bankAccountId) {
-  const result = await apiRequest(
-    `/api/v1/users/${userId}/bank-accounts/${bankAccountId}`,
-    { method: 'DELETE', errorMessage: GENERIC_ERROR_MESSAGE },
-  );
-
-  if (!result.success) {
-    return { success: false, message: result.message };
-  }
-
-  return { success: true };
-}
-
-/**
- * @param {string} url
- * @param {'POST' | 'PUT'} method
- * @param {Record<string, unknown> | undefined} body
- * @returns {Promise<import('../types/index.js').BankAccountResult>}
- */
-async function sendBankAccountRequest(url, method, body) {
-  const result = await apiRequest(url, {
-    method,
-    body,
-    errorMessage: GENERIC_ERROR_MESSAGE,
+export async function adminAddBankAccount(userId, row, vietnamBanks) {
+  const bank = vietnamBanks.find((item) => item.id === row.vietnamBankId);
+  const result = await changeBankAccount(userBankAccountEndpoint(userId), {
+    kind: 'add',
+    account: {
+      bankName: bank?.shortName ?? bank?.name ?? '',
+      accountNumber: row.accountNumber.trim(),
+      branch: row.branch ?? '',
+      province: '',
+      isDefault: row.isPrimary,
+    },
   });
-
-  if (!result.success) {
-    return { success: false, message: result.message };
-  }
-
-  return { success: true, bankAccount: result.data };
+  return result.success ? { success: true } : result;
 }

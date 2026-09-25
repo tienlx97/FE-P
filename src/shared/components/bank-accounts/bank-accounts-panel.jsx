@@ -14,6 +14,7 @@ import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
+import { useMutation } from '@tanstack/react-query';
 import {
   Check,
   CircleCheck,
@@ -29,19 +30,17 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 
+import { changeBankAccount } from '@/shared/api/bank-accounts.js';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
+import { useVietnamBanksQuery } from '@/shared/hooks/use-vietnam-banks-query.js';
+
 import {
   MetaPill,
   MetaShipmentSection,
   MetaThemeProvider,
-} from '@/shared/components/custom/meta/index.js';
-import { TanStackDataTable } from '@/shared/components/tanstack-data-table.jsx';
-import { useAppToast } from '@/shared/hooks/use-app-toast.js';
-
-import {
-  useSupplierBankAccountMutation,
-  useVietnamBanksQuery,
-} from '../hooks/use-supplier-bank-accounts.js';
-import { SupplierBankAccountDialog } from './supplier-bank-account-dialog.jsx';
+} from '../custom/meta/index.js';
+import { TanStackDataTable } from '../tanstack-data-table.jsx';
+import { BankAccountDialog } from './bank-account-dialog.jsx';
 
 const ALL = 'all';
 
@@ -86,26 +85,48 @@ function findBank(banks, bankName) {
 }
 
 /**
- * Supplier detail "Tài khoản ngân hàng" tab (Figma "Danh sách tài khoản
- * ngân hàng"): header with active-account count, currency filter and
- * "Thêm tài khoản ngân hàng"; table of accounts with the default ("Ưu
- * tiên 1") star, bank + branch + SWIFT, copyable number, holder, currency,
- * status and Sửa / Xoá. Changes go through the per-account endpoints.
- * @param {{ supplier: import('../types/index.js').Supplier }} props
+ * Bank accounts card (Figma "Danh sách tài khoản ngân hàng") shared by every
+ * owner — supplier detail tab, seller accounts, employees (BE-kt-xnk
+ * `unify-bank-accounts`): active-account count, currency filter, "Thêm tài
+ * khoản ngân hàng"; table with the default ("Ưu tiên 1") star, bank +
+ * branch + SWIFT + extra fields, copyable number, holder, currency, status,
+ * Sửa / Xoá. Changes go through the owner's per-account `endpoint`;
+ * `onChanged` receives each successful result (to refresh caches).
+ * @param {{
+ *   accounts: import('@/shared/api/bank-accounts.js').BankAccount[],
+ *   endpoint: import('@/shared/api/bank-accounts.js').BankAccountEndpoint,
+ *   onChanged: (result: { data: any, accounts: import('@/shared/api/bank-accounts.js').BankAccount[] }) => void,
+ *   holderDefault: string,
+ *   title?: string,
+ *   subtitle?: string,
+ * }} props
  */
-export function SupplierBankAccountsPanel({ supplier }) {
+export function BankAccountsPanel({
+  accounts,
+  endpoint,
+  onChanged,
+  holderDefault,
+  title = 'Danh sách tài khoản ngân hàng',
+  subtitle = 'Quản lý tài khoản thụ hưởng phục vụ chi trả hoa hồng, thanh toán BOQ & đối soát',
+}) {
   const toast = useAppToast();
-  const accounts = supplier.bankAccounts ?? [];
   const [currency, setCurrency] = useState(ALL);
   const [editing, setEditing] = useState(
-    /** @type {import('../types/index.js').PartyBankAccount | null | undefined} */ (
+    /** @type {import('@/shared/api/bank-accounts.js').BankAccount | null | undefined} */ (
       undefined
     ),
   );
   const [deleting, setDeleting] = useState(
-    /** @type {import('../types/index.js').PartyBankAccount | null} */ (null),
+    /** @type {import('@/shared/api/bank-accounts.js').BankAccount | null} */ (null),
   );
-  const mutation = useSupplierBankAccountMutation(supplier.id);
+  const mutation = useMutation({
+    mutationFn: (
+      /** @type {Parameters<typeof changeBankAccount>[1]} */ operation,
+    ) => changeBankAccount(endpoint, operation),
+    onSuccess: (result) => {
+      if (result.success) onChanged(result);
+    },
+  });
   const banks = useVietnamBanksQuery().data ?? [];
 
   const currencies = [
@@ -159,12 +180,7 @@ export function SupplierBankAccountsPanel({ supplier }) {
             isDisabled={mutation.isPending}
             onClick={() =>
               run(
-                {
-                  method: 'POST',
-                  accountId: account.id,
-                  action: 'default',
-                  errorMessage: 'Không thể đặt tài khoản mặc định',
-                },
+                { kind: 'default', accountId: account.id },
                 `Đã đặt ${account.accountNumber} làm tài khoản mặc định.`,
               )
             }
@@ -316,8 +332,8 @@ export function SupplierBankAccountsPanel({ supplier }) {
     <>
       <MetaShipmentSection
         icon={Landmark}
-        title="Danh sách tài khoản ngân hàng"
-        subtitle="Quản lý tài khoản thụ hưởng phục vụ chi trả hoa hồng, thanh toán BOQ & đối soát"
+        title={title}
+        subtitle={subtitle}
         pill={{ label: `${activeCount} tài khoản hoạt động` }}
         actions={
           <HStack gap={3} vAlign="center" wrap="wrap">
@@ -364,9 +380,10 @@ export function SupplierBankAccountsPanel({ supplier }) {
       {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
         {editing !== undefined ? (
-          <SupplierBankAccountDialog
-            supplier={supplier}
+          <BankAccountDialog
             account={editing}
+            holderDefault={holderDefault}
+            submit={(operation) => mutation.mutateAsync(operation)}
             onClose={() => setEditing(undefined)}
           />
         ) : null}
@@ -386,11 +403,7 @@ export function SupplierBankAccountsPanel({ supplier }) {
           onAction={async () => {
             if (!deleting?.id) return;
             await run(
-              {
-                method: 'DELETE',
-                accountId: deleting.id,
-                errorMessage: 'Không thể xoá tài khoản ngân hàng',
-              },
+              { kind: 'delete', accountId: deleting.id },
               `Đã xoá tài khoản ${deleting.accountNumber}.`,
             );
             setDeleting(null);

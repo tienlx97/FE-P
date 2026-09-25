@@ -35,7 +35,7 @@ import { SellerFields } from './seller-fields.jsx';
  *   onSelectExisting: (sellerId: string, knownSeller?: import('../types/index.js').Seller) => void,
  *   onSwitchToInline: () => void,
  *   onInlineFieldChange: (field: keyof import('../types/index.js').SellerFormValues, value: string) => void,
- *   extraFieldRows: ReturnType<typeof import('../hooks/use-extra-field-rows.js').useExtraFieldRows>,
+ *   extraFieldRows: ReturnType<typeof import('@/shared/hooks/use-extra-field-rows.js').useExtraFieldRows>,
  *   isReadOnly?: boolean,
  *   isDetailsCollapsible?: boolean,
  *   actionSize?: 'md' | 'lg',

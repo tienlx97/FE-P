@@ -1,5 +1,46 @@
 # Progress Log
 
+## 2026-09-25 — Unify bank accounts (kt-xnk side of BE-kt-xnk `unify-bank-accounts`)
+
+- User: contracts, suppliers, commissions (and employees) should use one
+  bank-account model. BE tasks 1–5 (`17067c5`…`a7171e6`); dev API rebuilt,
+  migrations checked on the dev DB (2 ContractBanks → the seller's accounts,
+  same ids; 36 contracts untouched).
+- Shared module: `src/shared/api/bank-accounts.js` (body builder, generic
+  per-account call for owner/user endpoints), `shared/config/bank-account-schema.js`,
+  `shared/hooks/use-bank-account-form.js` + `use-vietnam-banks-query.js`,
+  `shared/components/bank-accounts/{bank-accounts-panel,bank-account-dialog}.jsx`;
+  `ExtraFieldsEditor` / `useExtraFieldRows` moved to shared. Supplier-only
+  copies removed.
+- Supplier detail bank tab → shared panel. Contract form: beneficiary banks
+  = accounts of the selected catalog seller (sellers list carries them);
+  picking a seller keeps its accounts / preselects the default; inline
+  seller clears them; "+" adds an account to the seller (shared dialog) and
+  selects it; list + overview read names from seller accounts.
+  `ContractBanks` FE code removed.
+- Commission drawer: "Tài khoản nhận hoa hồng" selector (recipient's
+  accounts, default preselected; new recipient → its default); quick-add
+  payment keeps `bankAccountId` (it re-PUTs the commission).
+- Admin users: edit dialog uses the shared panel on `/users/{id}/bank-accounts`
+  (live, no diff sync); create dialog keeps the row grid and posts rows in
+  the shared shape; expanded details show the new fields. Dead v1
+  `CreateUserForm` / `EditUserForm` / `UserFormTabs` removed.
+- Bug found in Chrome: Astryx renders `<dialog>` in place, so the account
+  dialog was a DOM-nested `<form>` inside the contract drawer / employee
+  dialog — saving reloaded the page. `BankAccountDialog` now portals to
+  `<body>` (MetaFormDialog still stops submit propagation).
+- Checked in Chrome: supplier bank tab, contract drawer picker (seller's 2
+  migrated accounts, current one selected) + "+" dialog (holder = seller),
+  contract overview bank card, employee dialog add → default → delete.
+- Dev server: stale StyleX file list after deleting components needed
+  `.next/dev` cleared and a restart.
+- verify.sh passed (`harness/runs/20260925-163126-1275/`).
+
+### Discovered
+- Users store Họ/Tên such that `${firstName} ${lastName}` shows
+  "Hương Lê Thị Thu" (not Vietnamese order) — the app uses that order
+  everywhere; employee account holder follows it.
+
 ## 2026-09-25 — Bank account dialog: foreign banks + "Thêm trường"
 
 - User: foreign banks have different parameters; "thêm trường" is

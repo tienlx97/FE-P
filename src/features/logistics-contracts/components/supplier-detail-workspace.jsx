@@ -19,6 +19,8 @@ import {
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useId, useState } from 'react';
 
+import { partyBankAccountEndpoint } from '@/shared/api/bank-accounts.js';
+import { BankAccountsPanel } from '@/shared/components/bank-accounts/bank-accounts-panel.jsx';
 import {
   MetaContractBreadcrumb,
   MetaPartyHeaderCard,
@@ -33,10 +35,10 @@ import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 import { usePartyLookupsQuery } from '../hooks/use-party-lookups-query.js';
 import {
   useDeleteSupplierMutation,
+  useSupplierBankAccountsChanged,
   useSupplierQuery,
   useSupplierRelatedCounts,
 } from '../hooks/use-suppliers-query.js';
-import { SupplierBankAccountsPanel } from './supplier-bank-accounts-panel.jsx';
 import { SupplierFormDialog } from './supplier-form-dialog.jsx';
 import { SupplierOverviewPanel } from './supplier-overview-panel.jsx';
 
@@ -140,6 +142,7 @@ function SupplierDetailBody({
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const deleteMutation = useDeleteSupplierMutation();
+  const onBankAccountsChanged = useSupplierBankAccountsChanged(supplier.id);
   const { groups, paymentTerms } = usePartyLookupsQuery('supplier');
   const { shipmentCount, commissionCount } = useSupplierRelatedCounts(
     supplier.id,
@@ -229,7 +232,12 @@ function SupplierDetailBody({
             />
           ) : null}
           {activeTab === 'banks' ? (
-            <SupplierBankAccountsPanel supplier={supplier} />
+            <BankAccountsPanel
+              accounts={bankAccounts}
+              endpoint={partyBankAccountEndpoint('suppliers', supplier.id)}
+              onChanged={onBankAccountsChanged}
+              holderDefault={supplier.companyName}
+            />
           ) : null}
           {activeTab === 'shipments' ? (
             <RelatedPlaceholder

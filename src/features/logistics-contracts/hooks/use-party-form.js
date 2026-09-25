@@ -3,13 +3,13 @@
 import { useState } from 'react';
 
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
+import { useExtraFieldRows } from '@/shared/hooks/use-extra-field-rows.js';
 
 import { customerSchema } from '../config/customer-schema.js';
 import {
   useCreateCustomerMutation,
   useUpdateCustomerMutation,
 } from './use-customers-query.js';
-import { useExtraFieldRows } from './use-extra-field-rows.js';
 import { usePartyLookupsQuery } from './use-party-lookups-query.js';
 import {
   useCreateSupplierMutation,
