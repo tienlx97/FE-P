@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-09-25 — Commission detail: "Thêm lần chi" on the payment history card
+
+- Commission detail → Tiến độ thanh toán: "Thêm lần chi" moves from the
+  "Đợt chi hoa hồng" card to the "Lịch sử thanh toán" header (new
+  `onCreate` prop on `CommissionPaymentHistoryCard`, beside the "n lần •
+  total" pill); the tracking card no longer gets `onCreate`.
+- Not checked in a browser: the Chrome extension was disconnected this
+  session. lint + typecheck + verify only.
+- verify.sh passed (`harness/runs/20260925-074313-26067/`).
+
 ## 2026-09-25 — Commission detail page (`add-commission-detail-page`)
 
 - New `/logistics/contract/[id]/commission` → `CommissionDetailWorkspace`:

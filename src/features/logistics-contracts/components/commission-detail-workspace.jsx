@@ -246,13 +246,13 @@ function CommissionDetailBody({ contract, activeTab, onActiveTabChange }) {
               totals={view.totals}
               hasReceiptDownload={false}
               isLoading={isLoading}
-              onCreate={() => setDialog('payment')}
               onView={() => setDialog('view')}
               onAction={() => setDialog('edit')}
             />
             <CommissionPaymentHistoryCard
               payments={commission.paymentHistory}
               currency={currency}
+              onCreate={() => setDialog('payment')}
             />
           </VStack>
         ) : null}

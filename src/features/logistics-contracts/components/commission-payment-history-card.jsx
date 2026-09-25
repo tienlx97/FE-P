@@ -1,11 +1,14 @@
 'use client';
 
+import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
 import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
+import { CirclePlus } from 'lucide-react';
 
 import { MetaPill } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
@@ -44,15 +47,17 @@ const styles = stylex.create({
  */
 
 /**
- * "Lịch sử thanh toán" on the contract Commission tab — every payment
- * actually made (oldest first), read-only; adding goes through "Thêm lần
- * chi" and editing through the commission drawer.
+ * "Lịch sử thanh toán" (commission detail → Tiến độ thanh toán) — every
+ * payment actually made (oldest first), read-only; `onCreate` adds the
+ * header's "Thêm lần chi" (quick payment dialog), editing goes through the
+ * commission drawer.
  * @param {{
  *   payments: import('../types/index.js').CommissionPayment[],
  *   currency: string,
+ *   onCreate?: () => void,
  * }} props
  */
-export function CommissionPaymentHistoryCard({ payments, currency }) {
+export function CommissionPaymentHistoryCard({ payments, currency, onCreate }) {
   const rows = [...payments]
     .sort((a, b) => a.paymentDate.localeCompare(b.paymentDate))
     .map((payment, index) => ({
@@ -122,12 +127,22 @@ export function CommissionPaymentHistoryCard({ payments, currency }) {
           xstyle={styles.header}
         >
           <Heading level={3}>Lịch sử thanh toán</Heading>
-          {rows.length > 0 ? (
-            <MetaPill
-              label={`${rows.length} lần • ${formatMoney(total, currency)}`}
-              tone="green"
-            />
-          ) : null}
+          <HStack gap={2} vAlign="center" wrap="wrap">
+            {rows.length > 0 ? (
+              <MetaPill
+                label={`${rows.length} lần • ${formatMoney(total, currency)}`}
+                tone="green"
+              />
+            ) : null}
+            {onCreate ? (
+              <Button
+                label="Thêm lần chi"
+                variant="primary"
+                icon={<Icon icon={CirclePlus} size="sm" />}
+                onClick={onCreate}
+              />
+            ) : null}
+          </HStack>
         </HStack>
         {rows.length === 0 ? (
           <HStack hAlign="center" xstyle={styles.empty}>
