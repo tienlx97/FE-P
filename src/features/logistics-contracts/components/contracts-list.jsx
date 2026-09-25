@@ -972,7 +972,7 @@ export function ContractsList({
     },
     {
       key: 'exportedValue',
-      // Sum of every Shipment's `declarationValue` ("Giá trị tờ khai")
+      // Sum of every Shipment's `invoiceValue` ("Giá trị INV")
       // recorded against this contract (BE `ContractSettlement.ExportedValue`).
       header: 'ĐÃ XUẤT',
       width: proportional(1, { minWidth: moneyMinWidth }),
@@ -984,7 +984,7 @@ export function ContractsList({
     },
     {
       key: 'exportedValueVnd',
-      // Always VNĐ (`declarationValue * declarationExchangeRate` summed
+      // Always VNĐ (`invoiceValue * declarationExchangeRate` summed
       // across the contract's Shipments) — no `contract.currency` suffix,
       // same "đ" convention `logisticsCost` uses on the Shipment list.
       header: 'ĐÃ XUẤT VNĐ',
