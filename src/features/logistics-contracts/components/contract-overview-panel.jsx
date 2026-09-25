@@ -327,10 +327,20 @@ export function ContractOverviewPanel({
       weight: 'semibold',
     },
     {
-      label: 'Nơi dỡ hàng:',
+      label: 'Cảng đến:',
       value: orDash(contract.placeOfDischarge),
       weight: 'semibold',
     },
+    // DDP only: the seller delivers on to the buyer's site.
+    ...(contract.incoterm === 'DDP'
+      ? [
+          {
+            label: 'Nơi giao hàng:',
+            value: orDash(contract.placeOfDelivery),
+            weight: /** @type {const} */ ('semibold'),
+          },
+        ]
+      : []),
     { label: 'Nước xuất khẩu:', value: orDash(countryName) },
     {
       label: 'Ngày báo giá:',

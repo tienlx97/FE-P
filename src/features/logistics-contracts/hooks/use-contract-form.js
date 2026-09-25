@@ -8,7 +8,7 @@ import { contractSchema } from '../config/contract-schema.js';
 import { CONTRACT_STATUSES } from '../config/contract-status.js';
 import { CONTRACT_TYPES } from '../config/contract-types.js';
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
-import { requiresPlaceOfDischarge } from '../config/incoterms.js';
+import { requiresPlaceOfDelivery } from '../config/incoterms.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
 import { useContractBanksQuery } from './use-contract-banks-query.js';
 import { useContractNumberExistsQuery } from './use-contract-number-exists-query.js';
@@ -72,6 +72,7 @@ function emptyValues() {
     countryId: '',
     placeOfLoading: '',
     placeOfDischarge: '',
+    placeOfDelivery: '',
     contractValue: undefined,
     currency: DEFAULT_CURRENCY,
     incoterm: '',
@@ -116,11 +117,12 @@ function valuesFromContract(contract) {
     category: contract.category,
     countryId: contract.countryId,
     placeOfLoading: contract.placeOfLoading,
-    // null for EXW/FOB (BE-kt-xnk sends it that way — see
-    // requiresPlaceOfDischarge()) — normalize like every other nullable
-    // snapshot field here, or the form's own "must be empty for EXW/FOB"
-    // refine throws calling .length on null.
+    // Older EXW/FOB contracts were saved without a destination port (it's
+    // required for every Incoterm now) and non-DDP contracts have no
+    // delivery place — normalize nulls like every other nullable snapshot
+    // field here, or the schema's refines throw calling .length on null.
     placeOfDischarge: contract.placeOfDischarge ?? '',
+    placeOfDelivery: contract.placeOfDelivery ?? '',
     contractValue: contract.contractValue,
     currency: contract.currency,
     incoterm: contract.incoterm,
@@ -207,10 +209,8 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     countryId: vietnamCountryId,
     enabled: Boolean(vietnamCountryId),
   });
-  // "Cảng/nơi đến" is sourced from the selected export country's `Place`
-  // catalog, only meaningful for DDP/CIF (see `requiresPlaceOfDischarge`).
-  // Fetched whenever a country is picked (not gated on incoterm too) so
-  // the list is already warm if the user switches into DDP/CIF.
+  // "Cảng đến" is sourced from the selected export country's `Place`
+  // catalog, fetched whenever a country is picked.
   const dischargePlacesQuery = usePlacesQuery({
     countryId: values.countryId,
     enabled: Boolean(values.countryId),
@@ -264,25 +264,27 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   function setField(field, value) {
     setValues((current) => {
       const next = { ...current, [field]: value };
-      // "Cảng/nơi đến" only applies to DDP/CIF (see
-      // `requiresPlaceOfDischarge`) and is scoped to the export country's
-      // `Place` catalog — clear it whenever either stops holding, so a
-      // stale value from a different Incoterm/country can't slip through.
-      if (
-        (field === 'incoterm' &&
-          !requiresPlaceOfDischarge(
-            /** @type {import('../types/index.js').Incoterm | ''} */ (
-              next.incoterm
-            ),
-          )) ||
-        field === 'countryId'
-      ) {
+      // "Cảng đến" is scoped to the export country's `Place` catalog —
+      // clear it when the country changes so a stale port can't slip
+      // through.
+      if (field === 'countryId') {
         next.placeOfDischarge = '';
+      }
+      // "Nơi giao hàng" only applies to DDP (`requiresPlaceOfDelivery`).
+      if (
+        field === 'incoterm' &&
+        !requiresPlaceOfDelivery(
+          /** @type {import('../types/index.js').Incoterm | ''} */ (
+            next.incoterm
+          ),
+        )
+      ) {
+        next.placeOfDelivery = '';
       }
       // "Ngày hoàn thành dự án" only applies once the contract is actually
       // marked "Đã hoàn thành" — clear it whenever status moves away from
       // that, so a stale value from an earlier Completed state can't slip
-      // through (same convention as placeOfDischarge above).
+      // through (same convention as placeOfDelivery above).
       if (field === 'status' && value !== 'Completed') {
         next.projectCompletionDate = '';
       }
@@ -549,7 +551,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     loadingPlaces: dedupePlacesByName(
       loadingPlacesQuery.data?.success ? loadingPlacesQuery.data.places : [],
     ),
-    isPlaceOfDischargeApplicable: requiresPlaceOfDischarge(values.incoterm),
+    isPlaceOfDeliveryApplicable: requiresPlaceOfDelivery(values.incoterm),
     dischargePlaces: dedupePlacesByName(
       dischargePlacesQuery.data?.success
         ? dischargePlacesQuery.data.places

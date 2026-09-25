@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { CONTRACT_STATUSES } from './contract-status.js';
 import { CONTRACT_TYPES } from './contract-types.js';
 import { CURRENCY_CODES } from './currencies.js';
-import { INCOTERM_CODES, requiresPlaceOfDischarge } from './incoterms.js';
+import { INCOTERM_CODES, requiresPlaceOfDelivery } from './incoterms.js';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -49,10 +49,15 @@ export const contractSchema = z
       .trim()
       .min(1, 'Vui lòng nhập cảng xếp hàng')
       .max(200, 'Tối đa 200 ký tự'),
-    // Required or blank depending on `incoterm` — see the cross-field
-    // refine below (FOB/EXW end at origin, so `placeOfDischarge` must stay
-    // empty; DDP/CIF carry through to a destination, so it's required).
-    placeOfDischarge: z.string().trim().max(200, 'Tối đa 200 ký tự'),
+    // Every Incoterm has a destination port.
+    placeOfDischarge: z
+      .string()
+      .trim()
+      .min(1, 'Vui lòng chọn cảng đến')
+      .max(200, 'Tối đa 200 ký tự'),
+    // DDP only (required there, empty otherwise) — see the cross-field
+    // refine below.
+    placeOfDelivery: z.string().trim().max(500, 'Tối đa 500 ký tự'),
     contractValue: z
       .number({ error: 'Vui lòng nhập giá trị hợp đồng' })
       .positive('Giá trị hợp đồng phải lớn hơn 0'),
@@ -151,16 +156,14 @@ export const contractSchema = z
   )
   .refine(
     (values) =>
-      requiresPlaceOfDischarge(values.incoterm)
-        ? values.placeOfDischarge.length > 0
-        : values.placeOfDischarge.length === 0,
+      requiresPlaceOfDelivery(values.incoterm)
+        ? values.placeOfDelivery.length > 0
+        : values.placeOfDelivery.length === 0,
     {
-      // `ContractFormDialog` disables and clears `placeOfDischarge` for
-      // FOB/EXW and requires it for DDP/CIF — this mirrors that rule
-      // server-side-shaped so a stale value can't slip through if the UI
-      // state and `incoterm` ever get out of sync (e.g. programmatic
-      // submission, a bug in the clearing logic).
-      message: 'Vui lòng chọn cảng/nơi đến',
-      path: ['placeOfDischarge'],
+      // The form hides and clears `placeOfDelivery` outside DDP — this
+      // mirrors the backend rule so a stale value can't slip through if
+      // the UI state and `incoterm` ever get out of sync.
+      message: 'Vui lòng nhập nơi giao hàng',
+      path: ['placeOfDelivery'],
     },
   );

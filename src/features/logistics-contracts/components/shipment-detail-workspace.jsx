@@ -211,8 +211,13 @@ function journeyFor({
           ),
         };
       default:
+        // DDP ends at the buyer's site ("Nơi giao hàng"), the others at
+        // the destination port.
         return {
-          title: contract.placeOfDischarge ?? label,
+          title:
+            (isSellerImport ? contract.placeOfDelivery : null) ??
+            contract.placeOfDischarge ??
+            label,
           footLabel: 'Giao hàng',
           footValue: shipment.status === 'Completed' ? 'Hoàn tất' : '—',
         };

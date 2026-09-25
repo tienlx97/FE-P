@@ -194,7 +194,8 @@ export {};
  * @property {string} category
  * @property {string} countryId - FK into the {@link Country} catalog (was the free-text `exportCountry`)
  * @property {string} placeOfLoading - was `portOfLoading`
- * @property {string | null} placeOfDischarge - was `portOrPlaceOfDestination`; free text, not constrained to the {@link Place} catalog. `null` for Incoterm EXW/FOB (BE-kt-xnk requires it null for those, required non-null for CIF/DDP — see `requiresPlaceOfDischarge()`)
+ * @property {string | null} placeOfDischarge - "Cảng đến", was `portOrPlaceOfDestination`; free text, not constrained to the {@link Place} catalog. Required for every Incoterm; `null` only on older EXW/FOB contracts saved before that rule
+ * @property {string | null} placeOfDelivery - "Nơi giao hàng" (e.g. the buyer's construction site); DDP only, `null` otherwise — see `requiresPlaceOfDelivery()`
  * @property {number} contractValue
  * @property {string} currency - 3-letter uppercase ISO 4217 code, e.g. "USD"
  * @property {Incoterm} incoterm
@@ -512,6 +513,7 @@ export {};
  * @property {string} countryId - FK into the {@link Country} catalog (was the free-text `exportCountry`)
  * @property {string} placeOfLoading - was `portOfLoading`
  * @property {string} placeOfDischarge - was `portOrPlaceOfDestination`; free text
+ * @property {string} placeOfDelivery - DDP only, '' otherwise
  * @property {number | undefined} contractValue
  * @property {string} currency - 3-letter uppercase ISO 4217 code
  * @property {Incoterm | ''} incoterm

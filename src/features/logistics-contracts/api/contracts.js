@@ -236,9 +236,9 @@ function buildContractBody(
     Category: values.category,
     CountryId: values.countryId,
     PlaceOfLoading: values.placeOfLoading,
-    // '' for FOB/EXW (no destination leg) — see
-    // `requiresPlaceOfDischarge()`, `config/incoterms.js`.
     PlaceOfDischarge: values.placeOfDischarge || null,
+    // DDP only — '' otherwise (`requiresPlaceOfDelivery()`).
+    PlaceOfDelivery: values.placeOfDelivery || null,
     ContractValue: values.contractValue,
     Currency: values.currency,
     Incoterm: values.incoterm,

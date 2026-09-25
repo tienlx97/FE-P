@@ -1108,10 +1108,20 @@ export function ContractsList({
     },
     {
       key: 'placeOfDischarge',
-      header: 'Nơi dỡ hàng',
+      header: 'Cảng đến',
       width: pixel(140),
       filter: 'placeOfDischarge',
       renderCell: (contract) => orDash(contract.placeOfDischarge),
+    },
+    {
+      // DDP only — "—" for the other Incoterms.
+      key: 'placeOfDelivery',
+      header: 'Nơi giao hàng',
+      width: pixel(200),
+      filter: 'placeOfDelivery',
+      renderCell: (contract) => (
+        <Text maxLines={2}>{orDash(contract.placeOfDelivery)}</Text>
+      ),
     },
     {
       // Was already a `COLUMN_OPTIONS` entry with no matching column here —

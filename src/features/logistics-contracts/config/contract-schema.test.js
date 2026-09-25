@@ -16,6 +16,7 @@ function baseCandidate() {
     countryId: 'country-1',
     placeOfLoading: 'Cảng Hải Phòng',
     placeOfDischarge: 'Cảng Rotterdam',
+    placeOfDelivery: '',
     contractValue: 1000,
     currency: 'USD',
     incoterm: 'CIF',
@@ -198,42 +199,51 @@ test('requires companyId', () => {
   }
 });
 
-test('requires placeOfDischarge for DDP/CIF', () => {
-  for (const incoterm of ['DDP', 'CIF']) {
-    const result = contractSchema.safeParse({
-      ...baseCandidate(),
-      incoterm,
-      placeOfDischarge: '',
-    });
-    assert.equal(result.success, false, `expected ${incoterm} to require it`);
-    if (!result.success) {
-      const issue = result.error.issues.find(
-        (candidate) => candidate.path.join('.') === 'placeOfDischarge',
+/**
+ * @param {Record<string, unknown>} overrides
+ * @param {string} path
+ */
+function issueOn(overrides, path) {
+  const result = contractSchema.safeParse({ ...baseCandidate(), ...overrides });
+  return result.success
+    ? undefined
+    : result.error.issues.find(
+        (candidate) => candidate.path.join('.') === path,
       );
-      assert.ok(issue, `expected an issue on placeOfDischarge for ${incoterm}`);
-    }
+}
+
+test('requires placeOfDischarge for every Incoterm', () => {
+  for (const incoterm of ['EXW', 'FOB', 'CIF', 'DDP']) {
+    assert.ok(
+      issueOn({ incoterm, placeOfDischarge: '' }, 'placeOfDischarge'),
+      `expected ${incoterm} to require it`,
+    );
   }
 });
 
-test('rejects a non-empty placeOfDischarge for FOB/EXW', () => {
-  for (const incoterm of ['FOB', 'EXW']) {
-    const result = contractSchema.safeParse({
-      ...baseCandidate(),
-      incoterm,
-      placeOfDischarge: 'Cảng Rotterdam',
-    });
-    assert.equal(result.success, false, `expected ${incoterm} to reject it`);
-  }
+test('requires placeOfDelivery for DDP', () => {
+  assert.ok(
+    issueOn({ incoterm: 'DDP', placeOfDelivery: '' }, 'placeOfDelivery'),
+  );
+  assert.equal(
+    issueOn(
+      { incoterm: 'DDP', placeOfDelivery: 'Công trình ABC' },
+      'placeOfDelivery',
+    ),
+    undefined,
+  );
 });
 
-test('accepts an empty placeOfDischarge for FOB/EXW', () => {
-  for (const incoterm of ['FOB', 'EXW']) {
-    const result = contractSchema.safeParse({
-      ...baseCandidate(),
-      incoterm,
-      placeOfDischarge: '',
-    });
-    assert.equal(result.success, true, `expected ${incoterm} to accept it`);
+test('rejects placeOfDelivery outside DDP', () => {
+  for (const incoterm of ['EXW', 'FOB', 'CIF']) {
+    assert.ok(
+      issueOn({ incoterm, placeOfDelivery: 'Công trình ABC' }, 'placeOfDelivery'),
+      `expected ${incoterm} to reject it`,
+    );
+    assert.equal(
+      issueOn({ incoterm, placeOfDelivery: '' }, 'placeOfDelivery'),
+      undefined,
+    );
   }
 });
 

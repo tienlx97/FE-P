@@ -79,7 +79,7 @@ export function ContractGeneralFields({ form, isReadOnly = false }) {
     countries,
     vietnamCountryId,
     loadingPlaces,
-    isPlaceOfDischargeApplicable,
+    isPlaceOfDeliveryApplicable,
     dischargePlaces,
     sellerExtraFieldRows,
     buyerExtraFieldRows,
@@ -320,20 +320,15 @@ export function ContractGeneralFields({ form, isReadOnly = false }) {
           <StackItem size="fill">
             <ReadOnlyLock isActive={isReadOnly}>
               <Selector
-                label="Cảng/nơi đến"
+                label="Cảng đến"
                 hasSearch
-                placeholder={isReadOnly ? '—' : 'Chọn cảng/nơi đến'}
+                placeholder={isReadOnly ? '—' : 'Chọn cảng đến'}
                 disabledMessage={
-                  !isPlaceOfDischargeApplicable
-                    ? 'Không áp dụng cho Incoterm EXW/FOB'
-                    : !values.countryId
-                      ? 'Vui lòng chọn nước xuất khẩu trước'
-                      : undefined
+                  !values.countryId
+                    ? 'Vui lòng chọn nước xuất khẩu trước'
+                    : undefined
                 }
-                isDisabled={
-                  !isReadOnly &&
-                  (!isPlaceOfDischargeApplicable || !values.countryId)
-                }
+                isDisabled={!isReadOnly && !values.countryId}
                 value={values.placeOfDischarge}
                 onChange={(value) => setField('placeOfDischarge', value ?? '')}
                 options={withSavedOption(
@@ -343,7 +338,7 @@ export function ContractGeneralFields({ form, isReadOnly = false }) {
                   })),
                   values.placeOfDischarge,
                 )}
-                isRequired={isPlaceOfDischargeApplicable}
+                isRequired
                 status={fieldStatuses.placeOfDischarge}
                 statusVariant="tooltip"
                 width="100%"
@@ -356,12 +351,24 @@ export function ContractGeneralFields({ form, isReadOnly = false }) {
             icon={<Icon icon={IconPlus} size="sm" />}
             type="button"
             variant="secondary"
-            isDisabled={
-              isReadOnly || !isPlaceOfDischargeApplicable || !values.countryId
-            }
+            isDisabled={isReadOnly || !values.countryId}
             onClick={() => setIsQuickCreateDischargePlaceOpen(true)}
           />
         </HStack>
+
+        {/* DDP delivers on from the port to the buyer's site. */}
+        {isPlaceOfDeliveryApplicable ? (
+          <TextInput
+            label="Nơi giao hàng"
+            placeholder={isReadOnly ? '—' : 'VD: Công trình ABC, địa chỉ…'}
+            value={values.placeOfDelivery}
+            onChange={(value) => setField('placeOfDelivery', value)}
+            isReadOnly={isReadOnly}
+            isRequired
+            status={fieldStatuses.placeOfDelivery}
+            statusVariant="tooltip"
+          />
+        ) : null}
       </Grid>
 
       {isReadOnly ? null : (

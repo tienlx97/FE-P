@@ -13,16 +13,15 @@ export const incotermOptions = INCOTERM_CODES.map((code) => ({
 }));
 
 /**
- * Incoterms whose place of discharge is meaningful: DDP/CIF carry the
- * seller's obligation through to a destination in the export country, so
- * `Contract.placeOfDischarge` is picked from that country's `Place`
- * catalog and required. FOB/EXW end at origin — the buyer arranges
- * carriage onward, so `placeOfDischarge` is always sent as `null` for
- * them (see `ContractFormDialog`, which disables and clears the field for
- * these two).
+ * Every Incoterm names a destination port (`Contract.placeOfDischarge`,
+ * always required — user request, 2026-09-25). DDP alone also delivers on
+ * from the port to the buyer's site (e.g. the construction site), so only
+ * DDP carries `Contract.placeOfDelivery` — required there, cleared and
+ * sent as `null` otherwise. Mirrors BE-kt-xnk
+ * `ContractRules.RequiresPlaceOfDelivery`.
  * @param {import('../types/index.js').Incoterm | ''} incoterm
  * @returns {boolean}
  */
-export function requiresPlaceOfDischarge(incoterm) {
-  return incoterm === 'DDP' || incoterm === 'CIF';
+export function requiresPlaceOfDelivery(incoterm) {
+  return incoterm === 'DDP';
 }

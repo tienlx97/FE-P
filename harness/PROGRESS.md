@@ -1,5 +1,19 @@
 # Progress Log
 
+## 2026-09-25 — Contract: cảng đến for every Incoterm, nơi giao hàng for DDP
+
+- `requiresPlaceOfDischarge` → `requiresPlaceOfDelivery` (DDP only).
+  Contract schema: `placeOfDischarge` always required; new
+  `placeOfDelivery` (≤500) required for DDP, empty otherwise, cleared when
+  the Incoterm leaves DDP. Sent as `PlaceOfDelivery` (BE-kt-xnk).
+- Forms (Meta drawer + dialog): "Cảng đến" always enabled/required (still
+  needs the export country); "Nơi giao hàng" text input shown for DDP only.
+- Views: contract overview "Cảng đến" + (DDP) "Nơi giao hàng"; contracts
+  list "Cảng đến" / new "Nơi giao hàng" column + filter; shipment journey's
+  last step shows the delivery place for DDP.
+- Not checked in a browser: the dev API needs the BE migration first.
+- verify.sh passed (`harness/runs/20260925-104758-607/`).
+
 ## 2026-09-25 — Remove `ShipmentFormDialog`
 
 - Danh sách Shipment: row "Xem" → shipment page, "Sửa" →

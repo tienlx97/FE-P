@@ -102,7 +102,7 @@ export function ContractDrawerProfileFields({
     countries,
     vietnamCountryId,
     loadingPlaces,
-    isPlaceOfDischargeApplicable,
+    isPlaceOfDeliveryApplicable,
     dischargePlaces,
     sellerExtraFieldRows,
     buyerExtraFieldRows,
@@ -386,17 +386,15 @@ export function ContractDrawerProfileFields({
           <HStack gap={2} vAlign="end">
             <StackItem size="fill">
               <Selector
-                label="Nơi dỡ hàng / Cảng đến (Place of Discharge)"
+                label="Cảng đến (Place of Discharge)"
                 hasSearch
-                placeholder="Chọn cảng / nơi đến"
+                placeholder="Chọn cảng đến"
                 disabledMessage={
-                  !isPlaceOfDischargeApplicable
-                    ? 'Không áp dụng cho Incoterm EXW/FOB'
-                    : !values.countryId
-                      ? 'Vui lòng chọn nước xuất khẩu trước'
-                      : undefined
+                  !values.countryId
+                    ? 'Vui lòng chọn nước xuất khẩu trước'
+                    : undefined
                 }
-                isDisabled={!isPlaceOfDischargeApplicable || !values.countryId}
+                isDisabled={!values.countryId}
                 value={values.placeOfDischarge}
                 onChange={(value) => setField('placeOfDischarge', value ?? '')}
                 options={withSavedOption(
@@ -406,7 +404,7 @@ export function ContractDrawerProfileFields({
                   })),
                   values.placeOfDischarge,
                 )}
-                isRequired={isPlaceOfDischargeApplicable}
+                isRequired
                 status={fieldStatuses.placeOfDischarge}
                 statusVariant="tooltip"
                 width="100%"
@@ -419,10 +417,22 @@ export function ContractDrawerProfileFields({
               type="button"
               size="lg"
               variant="secondary"
-              isDisabled={!isPlaceOfDischargeApplicable || !values.countryId}
+              isDisabled={!values.countryId}
               onClick={() => setIsQuickCreateDischargePlaceOpen(true)}
             />
           </HStack>
+          {/* DDP delivers on from the port to the buyer's site. */}
+          {isPlaceOfDeliveryApplicable ? (
+            <TextInput
+              label="Nơi giao hàng (Place of Delivery)"
+              placeholder="VD: Công trình ABC, địa chỉ…"
+              value={values.placeOfDelivery}
+              onChange={(value) => setField('placeOfDelivery', value)}
+              isRequired
+              status={fieldStatuses.placeOfDelivery}
+              statusVariant="tooltip"
+            />
+          ) : null}
         </MetaFormSection>
 
         <MetaFormSection index={3} title="Các bên tham gia hợp đồng">

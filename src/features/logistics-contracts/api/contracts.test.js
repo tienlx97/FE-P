@@ -17,6 +17,7 @@ const BASE_VALUES = {
   countryId: 'country-1',
   placeOfLoading: 'Cảng Hải Phòng',
   placeOfDischarge: 'Cảng Rotterdam',
+  placeOfDelivery: '',
   contractValue: 100000,
   currency: 'USD',
   incoterm: 'CIF',
@@ -187,7 +188,7 @@ test('sends Note when set, and null when blank', async () => {
   }
 });
 
-test('sends PlaceOfDischarge as null when blank (FOB/EXW), a string otherwise', async () => {
+test('sends PlaceOfDelivery as null when blank (non-DDP), a string for DDP', async () => {
   const originalFetch = globalThis.fetch;
   /** @type {{ init?: RequestInit }} */
   const captured = {};
@@ -198,17 +199,19 @@ test('sends PlaceOfDischarge as null when blank (FOB/EXW), a string otherwise', 
 
   try {
     await createContract(
-      { ...BASE_VALUES, incoterm: 'FOB', placeOfDischarge: '' },
+      { ...BASE_VALUES, incoterm: 'FOB' },
       { paymentTerms: [{ paymentRatioPercent: 100, paymentCondition: 'T/T' }] },
     );
     const body = JSON.parse(String(captured.init?.body));
-    assert.equal(body.PlaceOfDischarge, null);
+    assert.equal(body.PlaceOfDischarge, 'Cảng Rotterdam');
+    assert.equal(body.PlaceOfDelivery, null);
 
-    await createContract(BASE_VALUES, {
-      paymentTerms: [{ paymentRatioPercent: 100, paymentCondition: 'T/T' }],
-    });
+    await createContract(
+      { ...BASE_VALUES, incoterm: 'DDP', placeOfDelivery: 'Công trình ABC' },
+      { paymentTerms: [{ paymentRatioPercent: 100, paymentCondition: 'T/T' }] },
+    );
     const secondBody = JSON.parse(String(captured.init?.body));
-    assert.equal(secondBody.PlaceOfDischarge, 'Cảng Rotterdam');
+    assert.equal(secondBody.PlaceOfDelivery, 'Công trình ABC');
   } finally {
     globalThis.fetch = originalFetch;
   }
