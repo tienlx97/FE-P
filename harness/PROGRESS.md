@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-09-25 — Quick-create customer / supplier as Meta drawers
+
+- `PartyFormDrawer` shell (Meta header, muted canvas, Huỷ bỏ / submit;
+  submit `stopPropagation`s so a nested quick-create never submits the
+  parent form) now backs `Customer/SupplierFormDrawer` and the quick-create
+  "Thêm nhanh khách hàng" (contract buyer) / "Thêm nhanh nhà cung cấp"
+  (shipment) — 560px drawers with one boxed "Thông tin chung" section.
+  Component names `QuickCreate*Dialog` kept (callers unchanged).
+- Checked in Chrome: contract drawer → "+" beside Khách hàng opens the quick
+  drawer over it; Huỷ bỏ closes only the quick drawer. Save not exercised.
+- verify.sh passed (`harness/runs/20260925-234041-175110/`).
+
 ## 2026-09-25 — Customer form: dialog → Meta drawer
 
 - `CustomerFormDrawer` (same as `SupplierFormDrawer`, `layout="sections"`)

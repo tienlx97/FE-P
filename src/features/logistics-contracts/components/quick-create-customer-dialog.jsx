@@ -1,12 +1,19 @@
 'use client';
 
-import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { Building2 } from 'lucide-react';
+
+import {
+  MetaFormSection,
+  MetaPill,
+} from '@/shared/components/custom/meta/index.js';
 
 import { useCustomerForm } from '../hooks/use-customer-form.js';
 import { CustomerFields } from './customer-fields.jsx';
+import { PartyFormDrawer } from './party-form-drawer.jsx';
 
 /**
- * Quick-create Customer from a contract picker. FormDialog portals an independent form and isolates submission from the parent.
+ * Quick-create Customer from a contract picker, as a narrow Meta drawer
+ * over the contract drawer (its submit never reaches the parent form).
  * @param {{
  *   isOpen: boolean,
  *   onOpenChange: (isOpen: boolean) => void,
@@ -21,31 +28,35 @@ export function QuickCreateCustomerDialog({ isOpen, onOpenChange, onCreated }) {
     },
   });
 
-  /** @param {boolean} nextIsOpen */
-  function handleOpenChange(nextIsOpen) {
-    if (!nextIsOpen) form.reset();
-    onOpenChange(nextIsOpen);
+  function close() {
+    form.reset();
+    onOpenChange(false);
   }
 
   return (
-    <FormDialog
+    <PartyFormDrawer
       isOpen={isOpen}
-      onOpenChange={handleOpenChange}
-      title="Thêm khách hàng"
-      submitLabel="Thêm"
-      width={600}
-      draft={{ values: form.values, extraFieldRows: form.extraFieldRows.rows }}
-      isSubmitting={form.isSubmitting}
+      onClose={close}
+      title="Thêm nhanh khách hàng"
+      icon={Building2}
+      width={560}
+      submitLabel="Thêm khách hàng"
       submitError={form.submitError}
-      fieldStatuses={form.fieldStatuses}
+      isSubmitting={form.isSubmitting}
       onSubmit={form.handleSubmit}
     >
-      <CustomerFields
-        values={form.values}
-        setField={form.setField}
-        fieldStatuses={form.fieldStatuses}
-        extraFieldRows={form.extraFieldRows}
-      />
-    </FormDialog>
+      <MetaFormSection
+        isBoxed
+        title="Thông tin chung"
+        meta={<MetaPill label="Bắt buộc" tone="accent" />}
+      >
+        <CustomerFields
+          values={form.values}
+          setField={form.setField}
+          fieldStatuses={form.fieldStatuses}
+          extraFieldRows={form.extraFieldRows}
+        />
+      </MetaFormSection>
+    </PartyFormDrawer>
   );
 }

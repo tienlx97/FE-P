@@ -1,11 +1,21 @@
 'use client';
 
-import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { Truck } from 'lucide-react';
+
+import {
+  MetaFormSection,
+  MetaPill,
+} from '@/shared/components/custom/meta/index.js';
 
 import { useSupplierForm } from '../hooks/use-supplier-form.js';
+import { PartyFormDrawer } from './party-form-drawer.jsx';
 import { PartyFormFields } from './party-form-fields.jsx';
 
-/** @param {{isOpen: boolean, onOpenChange: (open: boolean) => void, onCreated: (supplier: any) => void}} props */
+/**
+ * Quick-create Supplier from a shipment picker, as a narrow Meta drawer
+ * over the shipment drawer (its submit never reaches the parent form).
+ * @param {{isOpen: boolean, onOpenChange: (open: boolean) => void, onCreated: (supplier: any) => void}} props
+ */
 export function QuickCreateSupplierDialog({ isOpen, onOpenChange, onCreated }) {
   const form = useSupplierForm({
     onSuccess: (supplier) => {
@@ -13,20 +23,31 @@ export function QuickCreateSupplierDialog({ isOpen, onOpenChange, onCreated }) {
       onOpenChange(false);
     },
   });
+
+  function close() {
+    form.reset();
+    onOpenChange(false);
+  }
+
   return (
-    <FormDialog
+    <PartyFormDrawer
       isOpen={isOpen}
-      onOpenChange={onOpenChange}
-      title="Thêm nhà cung cấp"
-      submitLabel="Thêm"
-      width={600}
-      draft={{ values: form.values }}
-      isSubmitting={form.isSubmitting}
+      onClose={close}
+      title="Thêm nhanh nhà cung cấp"
+      icon={Truck}
+      width={560}
+      submitLabel="Thêm nhà cung cấp"
       submitError={form.submitError}
-      fieldStatuses={form.fieldStatuses}
+      isSubmitting={form.isSubmitting}
       onSubmit={form.handleSubmit}
     >
-      <PartyFormFields kind="supplier" form={form} compact />
-    </FormDialog>
+      <MetaFormSection
+        isBoxed
+        title="Thông tin chung"
+        meta={<MetaPill label="Bắt buộc" tone="accent" />}
+      >
+        <PartyFormFields kind="supplier" form={form} compact />
+      </MetaFormSection>
+    </PartyFormDrawer>
   );
 }
