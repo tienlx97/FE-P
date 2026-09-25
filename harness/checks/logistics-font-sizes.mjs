@@ -7,8 +7,9 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-process.chdir(path.join(path.dirname(new URL(import.meta.url).pathname), '../..'));
+process.chdir(path.join(path.dirname(fileURLToPath(import.meta.url)), '../..'));
 
 const files = execSync(
   "git ls-files 'src/features/logistics*/**/*.jsx' 'src/shared/components/custom/meta/*.jsx' src/shared/components/meta-form-dialog.jsx",

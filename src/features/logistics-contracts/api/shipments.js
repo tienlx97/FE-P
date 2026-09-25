@@ -235,13 +235,14 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
  * shipment — always VNĐ, no currency grouping (`ShipmentCost.Amount` has no
  * currency field, and `declarationValueVndTotal` is `declarationValue *
  * declarationExchangeRate` summed, mirroring each row's own
- * `declarationValueVnd`). All cover every matching shipment (not just this
+ * `declarationValueVnd`); `invoiceValueVndTotal` is the same with
+ * `invoiceValue` (the list's "Giá trị INV (VNĐ)"). All cover every matching shipment (not just this
  * page), backing the list's per-column totals row. `summary` holds the
  * record counts of the same set (FCL / LCL, completed, with customs
  * declaration / C/O number) and per-status tab counts computed without the
  * `status` conditions; an older backend without it yields all zeros.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
- * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number, declarationValue: number }[], logisticsCostTotal: number, declarationValueVndTotal: number, quantityTotals: { unit: import('../types/index.js').ShipmentQuantityUnit, amount: number }[], vgmCountTotal: number, summary: ShipmentListSummary } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number, declarationValue: number }[], logisticsCostTotal: number, declarationValueVndTotal: number, invoiceValueVndTotal: number, quantityTotals: { unit: import('../types/index.js').ShipmentQuantityUnit, amount: number }[], vgmCountTotal: number, summary: ShipmentListSummary } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchAllShipments({
   page = 1,
@@ -284,6 +285,7 @@ export async function searchAllShipments({
     totals: result.data?.totals ?? [],
     logisticsCostTotal: result.data?.logisticsCostTotal ?? 0,
     declarationValueVndTotal: result.data?.declarationValueVndTotal ?? 0,
+    invoiceValueVndTotal: result.data?.invoiceValueVndTotal ?? 0,
     quantityTotals: result.data?.quantityTotals ?? [],
     vgmCountTotal: result.data?.vgmCountTotal ?? 0,
     summary: toListSummary(result.data?.summary),

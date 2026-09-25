@@ -1,5 +1,18 @@
 # Progress Log
 
+## 2026-09-25 — Shipments list "Giá trị & Chi phí": Giá trị INV columns
+
+- "Giá trị tờ khai" → "Giá trị INV" (= invoiceValue, invoice currency;
+  filter now `invoiceValue`); "Giá trị tờ khai (VNĐ)" → "Giá trị INV (VNĐ)"
+  (= invoiceValue × declarationExchangeRate). Column keys stay
+  `declarationValue`/`declarationValueVnd` so saved per-preset column lists
+  keep them. Totals row uses the per-currency invoice totals and the new BE
+  `invoiceValueVndTotal` (BE-kt-xnk; an older API yields 0).
+- Harness fix: `logistics-font-sizes.mjs` resolved its dir with
+  `URL.pathname` (`/D:/…`), crashing on Windows; now `fileURLToPath`.
+- Not checked in a browser: the local API (localhost:8081) wasn't running.
+- verify.sh passed (`harness/runs/20260925-084159-375/`).
+
 ## 2026-09-25 — Commission KPI cards use the contract overview design
 
 - New `MetaMetricsCard` (the top block of `MetaOverviewSummaryCard`: titled

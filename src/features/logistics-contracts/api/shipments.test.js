@@ -11,6 +11,7 @@ test('parses full-set Shipment money, quantity, cost, and VGM totals', async () 
       totals: [{ currency: 'USD', invoiceValue: 10, declarationValue: 20 }],
       logisticsCostTotal: 30,
       declarationValueVndTotal: 40,
+      invoiceValueVndTotal: 50,
       quantityTotals: [
         { unit: 'Cont', amount: 2 },
         { unit: 'Kien', amount: 5 },
@@ -40,6 +41,7 @@ test('parses full-set Shipment money, quantity, cost, and VGM totals', async () 
     ]);
     assert.equal(result.logisticsCostTotal, 30);
     assert.equal(result.declarationValueVndTotal, 40);
+    assert.equal(result.invoiceValueVndTotal, 50);
     assert.equal(result.vgmCountTotal, 4);
     assert.deepEqual(result.summary, {
       fclCount: 3,

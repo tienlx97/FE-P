@@ -100,8 +100,8 @@ export const COLUMN_OPTIONS = [
   { key: 'customsBrokers', label: 'Đại lý hải quan' },
   { key: 'truckers', label: 'Đơn vị trucking' },
   { key: 'invoiceValue', label: 'Giá trị invoice' },
-  { key: 'declarationValue', label: 'Giá trị tờ khai' },
-  { key: 'declarationValueVnd', label: 'Giá trị tờ khai (VNĐ)' },
+  { key: 'declarationValue', label: 'Giá trị INV' },
+  { key: 'declarationValueVnd', label: 'Giá trị INV (VNĐ)' },
   { key: 'logisticsCost', label: 'Logistics (tổng chi phí)' },
   ...COST_GROUP_COLUMNS.map((group) => ({
     key: group.key,
@@ -129,7 +129,7 @@ export const DEFAULT_COLUMN_KEYS = [
   'actions',
 ];
 
-// "Giá trị & Chi phí" — Figma 109:6632: declaration values under "GIÁ TRỊ",
+// "Giá trị & Chi phí" — Figma 109:6632: invoice values under "GIÁ TRỊ",
 // then one column per LOG cost group under "CHI PHÍ LOGISTICS".
 export const VALUE_COLUMN_KEYS = [
   'shipmentCode',

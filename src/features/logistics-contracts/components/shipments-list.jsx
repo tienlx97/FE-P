@@ -116,7 +116,7 @@ function orDash(value) {
  *   currency: string,
  *   invoiceValue: number,
  *   declarationValue: number,
- *   declarationValueVnd?: number,
+ *   invoiceValueVnd?: number,
  *   logisticsCost?: number,
  *   quantity: string | null,
  *   vgmCount?: number,
@@ -192,21 +192,22 @@ const TOTALS_ROW_CELL_RENDERERS = {
       {formatMoney(row.invoiceValue, row.currency)}
     </Text>
   ),
-  // Figma 109:6632: "GIÁ TRỊ" totals in bold cobalt.
+  // Figma 109:6632: "GIÁ TRỊ" totals in bold cobalt. Both columns now
+  // show invoice figures ("Giá trị INV"), see the column definitions.
   declarationValue: (row) => (
     <Text weight="bold" color="accent" hasTabularNumbers xstyle={styles.nowrap}>
-      {formatMoney(row.declarationValue, row.currency)}
+      {formatMoney(row.invoiceValue, row.currency)}
     </Text>
   ),
   declarationValueVnd: (row) =>
-    row.declarationValueVnd == null ? null : (
+    row.invoiceValueVnd == null ? null : (
       <Text
         weight="bold"
         color="accent"
         hasTabularNumbers
         xstyle={styles.nowrap}
       >
-        {formatMoney(row.declarationValueVnd)} đ
+        {formatMoney(row.invoiceValueVnd)} đ
       </Text>
     ),
   // Figma 109:6632: per-LOG-group totals in bold amber.
@@ -274,7 +275,7 @@ const DEFAULT_SORT = /** @type {const} */ ({
   direction: 'Descending',
 });
 
-// Figma 109:6632 two-row header: the declaration values under a cobalt
+// Figma 109:6632 two-row header: the invoice values under a cobalt
 // "GIÁ TRỊ" band, the eight LOG groups under "CHI PHÍ LOGISTICS".
 const HEADER_GROUPS = [
   {
@@ -580,8 +581,8 @@ export function ShipmentsList() {
       currency: total.currency,
       invoiceValue: total.invoiceValue,
       declarationValue: total.declarationValue,
-      declarationValueVnd:
-        index === 0 ? listResult.declarationValueVndTotal : undefined,
+      invoiceValueVnd:
+        index === 0 ? listResult.invoiceValueVndTotal : undefined,
       logisticsCost: index === 0 ? listResult.logisticsCostTotal : undefined,
       quantity:
         index === 0
@@ -988,35 +989,41 @@ export function ShipmentsList() {
       renderCell: (row) => formatMoney(row.invoiceValue, row.invoiceCurrency),
     },
     {
+      // Key kept from when this showed the declaration value, so saved
+      // column views still include it — it now shows the invoice value
+      // (user request, 2026-09-25: "Giá trị INV = Giá trị invoice").
       key: 'declarationValue',
       header: (
         <Text as="span" type="inherit" color="accent">
-          Giá trị tờ khai
+          Giá trị INV
         </Text>
       ),
       width: pixel(190),
       align: 'end',
-      filter: 'declarationValue',
+      filter: 'invoiceValue',
       renderCell: (row) =>
-        primaryText(formatMoney(row.declarationValue, row.declarationCurrency)),
+        primaryText(formatMoney(row.invoiceValue, row.invoiceCurrency)),
+      exportValue: (row) => row.invoiceValue,
     },
     {
+      // Same kept key as above: invoice value × tỷ giá, not the
+      // declaration value.
       key: 'declarationValueVnd',
       header: (
         <Text as="span" type="inherit" color="accent">
-          Giá trị tờ khai (VNĐ)
+          Giá trị INV (VNĐ)
         </Text>
       ),
       width: pixel(220),
       align: 'end',
       // No `filter` key — BE has no matching search field for this
-      // computed value (declarationValue * declarationExchangeRate).
+      // computed value (invoiceValue * declarationExchangeRate).
       renderCell: (row) => (
         <Text color="secondary" hasTabularNumbers xstyle={styles.nowrap}>
-          {formatMoney(row.declarationValueVnd)} đ
+          {formatMoney(row.invoiceValue * row.declarationExchangeRate)} đ
         </Text>
       ),
-      exportValue: (row) => row.declarationValueVnd,
+      exportValue: (row) => row.invoiceValue * row.declarationExchangeRate,
     },
     {
       key: 'logisticsCost',
