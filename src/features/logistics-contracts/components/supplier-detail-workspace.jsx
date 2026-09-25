@@ -12,7 +12,6 @@ import {
   Banknote,
   Building2,
   NotebookText,
-  Ship,
   Trash2,
   User,
 } from 'lucide-react';
@@ -41,6 +40,7 @@ import {
 } from '../hooks/use-suppliers-query.js';
 import { SupplierFormDialog } from './supplier-form-dialog.jsx';
 import { SupplierOverviewPanel } from './supplier-overview-panel.jsx';
+import { SupplierShipmentsPanel } from './supplier-shipments-panel.jsx';
 
 /** @typedef {'overview' | 'banks' | 'shipments' | 'commissions' | 'notes'} SupplierTab */
 
@@ -57,8 +57,9 @@ const TAB_VALUES = /** @type {SupplierTab[]} */ (Object.keys(TAB_LABELS));
 /**
  * `/logistics/suppliers/[id]` — supplier detail page (Figma "CHI TIẾT NHÀ
  * CUNG CẤP", node 141:4). "Tổng quan" and "Tài khoản ngân hàng" follow
- * their Figma frames; Ghi chú lists the supplier's own data; Shipment and
- * Commission show their counts until their lists are designed.
+ * their Figma frames, as does Shipment (node 145:740); Ghi chú lists the
+ * supplier's own data; Commission shows its count until its list is
+ * designed.
  * @param {{ supplierId: string }} props
  */
 export function SupplierDetailWorkspace({ supplierId }) {
@@ -240,11 +241,9 @@ function SupplierDetailBody({
             />
           ) : null}
           {activeTab === 'shipments' ? (
-            <RelatedPlaceholder
-              icon={Ship}
-              title="Shipment"
-              count={shipmentCount}
-              unit="lô hàng liên quan (forwarder, nhà cung cấp chi phí hoặc dịch vụ)"
+            <SupplierShipmentsPanel
+              supplierId={supplier.id}
+              supplierName={supplier.companyName}
             />
           ) : null}
           {activeTab === 'commissions' ? (
@@ -317,7 +316,7 @@ function SupplierDetailBody({
 }
 
 /**
- * Shipment / Commission tab until their supplier-scoped lists exist.
+ * Commission tab until its supplier-scoped list exists.
  * @param {{ icon: import('react').ComponentType, title: string, count?: number, unit: string }} props
  */
 function RelatedPlaceholder({ icon, title, count, unit }) {

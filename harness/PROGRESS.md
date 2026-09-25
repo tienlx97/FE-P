@@ -1,5 +1,29 @@
 # Progress Log
 
+## 2026-09-25 — Supplier detail: tab Shipment (Figma "TAB CONTENT - SHIPMENT ACTIVE", 145:740)
+
+- No BE change: the existing `involvedSupplierId` search filter gives the
+  rows; role and cost come from each shipment's own data.
+- `SupplierShipmentsPanel` (`MetaShipmentSection` + `TanStackDataTable`):
+  Mã shipment (→ shipment detail), Hợp đồng (→ contract), Vai trò pills
+  (Forwarder / Đơn vị trucking / Đại lý hải quan; "Nhà cung cấp chi phí"
+  when it only bills cost lines), ETD, ETA, status pill, Chi phí = the
+  supplier's own cost lines (lines with no provider are unassigned, not
+  the forwarder's → "—"), Xem. Bottom totals row "Tổng cộng (n/N shipment
+  hiển thị)" sums the rows shown (as in Figma); `MetaPagination`, 10/page.
+- Search "Tìm mã lô, booking…" (debounced 300 ms in
+  `useSupplierShipmentsQuery`): booking OR contract number OR lot name,
+  then AND supplier — the BE folds conditions left to right, so the OR
+  group goes first. A full code "26KCT34/LOT-01" searches its contract part.
+- "Xuất Excel" pages through every match (BE caps pageSize at 100).
+- The table bleeds into the card padding, so the pagination footer needs
+  `gap={10}` to clear the totals row.
+- Checked in Chrome (dev server on :3000): SUPER CARGO (3), VANLOG (5),
+  search "25KCT42/LOT" → 3 rows. The dev data has no supplier as a service
+  provider or cost-line provider, so those roles and a non-zero cost were
+  not seen live.
+- verify.sh passed (`harness/runs/20260925-164528-954/`).
+
 ## 2026-09-25 — Unify bank accounts (kt-xnk side of BE-kt-xnk `unify-bank-accounts`)
 
 - User: contracts, suppliers, commissions (and employees) should use one

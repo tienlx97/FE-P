@@ -1,6 +1,12 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 
 import { searchCommissions } from '../api/commissions.js';
 import { searchAllShipments } from '../api/shipments.js';
@@ -101,6 +107,84 @@ export function useSupplierRelatedCounts(supplierId) {
       ? commissions.data.totalCount
       : undefined,
   };
+}
+
+/**
+ * `involvedSupplierId` plus, when `search` is set, "booking / contract
+ * number / lot name contains" OR-ed together. The backend folds conditions
+ * left to right, so the OR group goes first and the supplier condition
+ * last: `(booking OR contract OR name) AND supplier`. A full shipment code
+ * ("26KCT34/LOT-01") is not filterable — its contract part is searched.
+ * @param {string} supplierId
+ * @param {string} search
+ */
+export function supplierShipmentConditions(supplierId, search) {
+  const term = search.trim();
+  /** @param {string} field @param {string} value @param {'And' | 'Or'} connector */
+  const contains = (field, value, connector) => ({
+    id: `${field}-${value}`,
+    field,
+    operator: 'Contains',
+    value,
+    valueTo: '',
+    connector,
+  });
+  const contractPart = term.includes('/') ? term.split('/')[0] : term;
+  return [
+    ...(term
+      ? [
+          contains('bookingNumber', term, 'And'),
+          contains('contractNumber', contractPart, 'Or'),
+          contains('name', term, 'Or'),
+        ]
+      : []),
+    {
+      id: 'involvedSupplierId',
+      field: 'involvedSupplierId',
+      operator: 'Equals',
+      value: supplierId,
+      valueTo: '',
+      connector: /** @type {'And'} */ ('And'),
+    },
+  ];
+}
+
+/**
+ * Supplier detail "Shipment" tab: one page of the shipments the supplier
+ * takes part in (forwarder, service provider or cost provider). `search`
+ * is debounced here so typing doesn't fire a request per key.
+ * @param {string} supplierId
+ * @param {{ page: number, pageSize: number, search: string }} params
+ */
+export function useSupplierShipmentsQuery(
+  supplierId,
+  { page, pageSize, search },
+) {
+  const trimmed = search.trim();
+  const [debounced, setDebounced] = useState(trimmed);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(trimmed), 300);
+    return () => clearTimeout(timer);
+  }, [trimmed]);
+
+  const query = useQuery({
+    queryKey: [
+      'logistics-contracts',
+      'supplier-shipments',
+      supplierId,
+      page,
+      pageSize,
+      debounced,
+    ],
+    queryFn: () =>
+      searchAllShipments({
+        page,
+        pageSize,
+        conditions: supplierShipmentConditions(supplierId, debounced),
+      }),
+    placeholderData: keepPreviousData,
+  });
+  return { ...query, search: debounced };
 }
 
 /** @param {(value: any) => Promise<any>} mutationFn */
