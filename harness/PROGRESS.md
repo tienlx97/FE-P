@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-09-25 — Chi phí logistics: nhóm in hoa, "Số tiền" full width
+
+- Table "Nhóm chi phí" (group rows + line column, incl. "CHƯA PHÂN NHÓM")
+  and the drawer's category cards show names with `toLocaleUpperCase('vi')`.
+- Drawer "Khoản chi phí": "Tên khoản chi phí" was already 100%; the narrow
+  field was "Số tiền" (alone in a 2-col grid) → now its own full-width row.
+- Checked in Chrome on 26KCT27/LOT-01: both fields 709px, names upper-case.
+- verify.sh passed (`harness/runs/20260925-222307-62744/`).
+
 ## 2026-09-25 — Breadcrumbs config + smarter "Quay lại"
 
 - Trails for the detail pages now live in `src/shared/config/breadcrumbs.js`

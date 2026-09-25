@@ -254,7 +254,7 @@ export function ShipmentCostLineDrawer({
                                   color={isSelected ? 'accent' : 'primary'}
                                   maxLines={2}
                                 >
-                                  {category.name}
+                                  {category.name.toLocaleUpperCase('vi')}
                                 </Text>
                               </VStack>
                             </SelectableCard>
@@ -393,29 +393,27 @@ export function ShipmentCostLineDrawer({
                       </VStack>
                     </VStack>
 
-                    <Grid columns={TWO_COLUMNS} gap={3}>
-                      <VStack gap={1} hAlign="stretch">
-                        <FieldLabel label="Số tiền" isRequired />
-                        <FormattedNumberTextInput
-                          label="Số tiền"
-                          isLabelHidden
-                          value={
-                            typeof values.amount === 'number'
-                              ? values.amount
-                              : undefined
-                          }
-                          onChange={(value) =>
-                            setField('amount', /** @type {number} */ (value))
-                          }
-                          units="đ"
-                          status={fieldStatuses.amount}
-                          statusVariant="detached"
-                        />
-                        <Text size="sm" color="meta-subtle">
-                          Chỉ ghi nhận bằng VNĐ
-                        </Text>
-                      </VStack>
-                    </Grid>
+                    <VStack gap={1} hAlign="stretch">
+                      <FieldLabel label="Số tiền" isRequired />
+                      <FormattedNumberTextInput
+                        label="Số tiền"
+                        isLabelHidden
+                        value={
+                          typeof values.amount === 'number'
+                            ? values.amount
+                            : undefined
+                        }
+                        onChange={(value) =>
+                          setField('amount', /** @type {number} */ (value))
+                        }
+                        units="đ"
+                        status={fieldStatuses.amount}
+                        statusVariant="detached"
+                      />
+                      <Text size="sm" color="meta-subtle">
+                        Chỉ ghi nhận bằng VNĐ
+                      </Text>
+                    </VStack>
 
                     <Grid columns={TWO_COLUMNS} gap={3}>
                       <VStack gap={1} hAlign="stretch">

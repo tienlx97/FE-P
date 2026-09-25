@@ -69,13 +69,13 @@ export function ShipmentCostPanel({
 
   const groupedCosts = categories.map((category) => ({
     id: category.id,
-    label: `${category.code} · ${category.name}`,
+    label: `${category.code} · ${category.name.toLocaleUpperCase('vi')}`,
     costs: shipment.costs.filter((cost) => cost.costCategoryId === category.id),
   }));
   if (orphanCosts.length > 0) {
     groupedCosts.push({
       id: 'uncategorized',
-      label: 'Chưa phân nhóm',
+      label: 'CHƯA PHÂN NHÓM',
       costs: orphanCosts,
     });
   }
@@ -93,7 +93,10 @@ export function ShipmentCostPanel({
     rows: group.costs.map((cost) => ({
       id: cost.id,
       no: numberById.get(cost.id) ?? '',
-      groupName: costCategoriesById.get(cost.costCategoryId)?.name ?? '—',
+      groupName:
+        costCategoriesById
+          .get(cost.costCategoryId)
+          ?.name.toLocaleUpperCase('vi') ?? '—',
       name: cost.name,
       amount: money(cost.amount),
       nature: cost.costNature ?? 'Standard',
