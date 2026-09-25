@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   createCustomer,
+  deleteCustomer,
+  getCustomer,
   listCustomers,
   searchCustomers,
   updateCustomer,
@@ -38,6 +40,52 @@ export function useSearchCustomersQuery({
   });
 }
 
+/**
+ * One customer by id — key under `QUERY_KEY`, so every customer mutation's
+ * `invalidateQueries({ queryKey: QUERY_KEY })` refreshes it too.
+ * @param {string} customerId
+ */
+export function useCustomerQuery(customerId) {
+  return useQuery({
+    queryKey: [...QUERY_KEY, customerId],
+    queryFn: () => getCustomer(customerId),
+  });
+}
+
+/**
+ * `BankAccountsPanel.onChanged` for a customer: the per-account endpoints
+ * return the whole customer — written into the detail query — then the
+ * customer lists refetch.
+ * @param {string} customerId
+ */
+export function useCustomerBankAccountsChanged(customerId) {
+  const queryClient = useQueryClient();
+  return (/** @type {{ data: any }} */ { data }) => {
+    queryClient.setQueryData([...QUERY_KEY, customerId], {
+      success: true,
+      customer: data,
+    });
+    queryClient.invalidateQueries({ queryKey: SEARCH_QUERY_KEY });
+  };
+}
+
+export function useDeleteCustomerMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (/** @type {string} */ customerId) => deleteCustomer(customerId),
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+        queryClient.invalidateQueries({ queryKey: SEARCH_QUERY_KEY });
+        queryClient.invalidateQueries({
+          queryKey: ['logistics-contracts', 'customer-groups'],
+        });
+      }
+    },
+  });
+}
+
 export function useCreateCustomerMutation() {
   const queryClient = useQueryClient();
 
@@ -55,6 +103,9 @@ export function useCreateCustomerMutation() {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
         queryClient.invalidateQueries({ queryKey: SEARCH_QUERY_KEY });
+        queryClient.invalidateQueries({
+          queryKey: ['logistics-contracts', 'customer-groups'],
+        });
       }
     },
   });
@@ -84,6 +135,9 @@ export function useUpdateCustomerMutation() {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
         queryClient.invalidateQueries({ queryKey: SEARCH_QUERY_KEY });
+        queryClient.invalidateQueries({
+          queryKey: ['logistics-contracts', 'customer-groups'],
+        });
       }
     },
   });

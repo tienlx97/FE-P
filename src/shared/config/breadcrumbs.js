@@ -16,6 +16,7 @@
 const LOGISTICS = { label: 'Logistics', href: '/logistics' };
 const CONTRACTS = { label: 'Hợp đồng', href: '/logistics/contracts' };
 const SUPPLIERS = { label: 'Nhà cung cấp', href: '/logistics/suppliers' };
+const CUSTOMERS = { label: 'Khách hàng', href: '/logistics/customers' };
 
 /** @param {string} contractId @param {string} [tab] */
 export function contractHref(contractId, tab) {
@@ -80,5 +81,16 @@ export function supplierTrail({ supplierCode }) {
   return {
     items: [LOGISTICS, SUPPLIERS, { label: supplierCode ?? '…' }],
     fallbackHref: SUPPLIERS.href,
+  };
+}
+
+/**
+ * @param {{ customerCode?: string }} params
+ * @returns {BreadcrumbTrail}
+ */
+export function customerTrail({ customerCode }) {
+  return {
+    items: [LOGISTICS, CUSTOMERS, { label: customerCode ?? '…' }],
+    fallbackHref: CUSTOMERS.href,
   };
 }

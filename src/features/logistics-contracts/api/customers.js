@@ -23,6 +23,41 @@ export async function listCustomers() {
 }
 
 /**
+ * @param {string} customerId
+ * @returns {Promise<{ success: true, customer: import('../types/index.js').Customer } | { success: false, message: string }>}
+ */
+export async function getCustomer(customerId) {
+  const result = await apiRequest(`/api/v1/customers/${customerId}`, {
+    errorMessage: 'Không thể tải khách hàng',
+  });
+  return result.success
+    ? { success: true, customer: result.data }
+    : { success: false, message: result.message };
+}
+
+/**
+ * Requires `logistics:contracts:manage`. Hard delete; BE-kt-xnk answers
+ * 409 while the customer is the buyer of any contract
+ * (`docs/api/Customers.md`, `customer-detail-api`).
+ * @param {string} customerId
+ * @returns {Promise<{ success: true } | { success: false, message: string }>}
+ */
+export async function deleteCustomer(customerId) {
+  const result = await apiRequest(`/api/v1/customers/${customerId}`, {
+    method: 'DELETE',
+    errorMessage: 'Không thể xoá khách hàng',
+  });
+  if (result.success) return { success: true };
+  return {
+    success: false,
+    message:
+      result.status === 409
+        ? 'Khách hàng đang là bên mua của hợp đồng nên không xoá được.'
+        : result.message,
+  };
+}
+
+/**
  * Same directory as `listCustomers`, but paginated and narrowed by
  * `conditions` (the advanced-search condition builder) — the backend
  * endpoint behind this one (`POST /api/v1/customers/search`, BE-kt-xnk)

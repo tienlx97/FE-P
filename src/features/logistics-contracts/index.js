@@ -4,6 +4,7 @@ export { ContractDetailWorkspace } from './components/contract-detail-workspace.
 export { ContractPrivateInfosList } from './components/contract-private-infos-list.jsx';
 export { ContractsList } from './components/contracts-list.jsx';
 export { CountriesList } from './components/countries-list.jsx';
+export { CustomerDetailWorkspace } from './components/customer-detail-workspace.jsx';
 export { CustomersList } from './components/customers-list.jsx';
 export { PlacesList } from './components/places-list.jsx';
 export { QuickSearchPalette } from './components/quick-search-palette.jsx';

@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import {
   commissionTrail,
   contractTrail,
+  customerTrail,
   shipmentTrail,
   supplierTrail,
 } from './breadcrumbs.js';
@@ -40,4 +41,13 @@ test('commission trail falls back to the contract commission tab', () => {
 test('trails show a placeholder while data loads', () => {
   assert.equal(supplierTrail({}).items.at(-1)?.label, '…');
   assert.equal(supplierTrail({}).fallbackHref, '/logistics/suppliers');
+});
+
+test('customer trail falls back to the customers list', () => {
+  const trail = customerTrail({ customerCode: 'KH-01' });
+  assert.deepEqual(
+    trail.items.map((item) => item.label),
+    ['Logistics', 'Khách hàng', 'KH-01'],
+  );
+  assert.equal(trail.fallbackHref, '/logistics/customers');
 });

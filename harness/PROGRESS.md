@@ -1,5 +1,27 @@
 # Progress Log
 
+## 2026-09-25 — Khách hàng redesign (like Nhà cung cấp) + customer detail page
+
+- Needs BE-kt-xnk `customer-detail-api` (`02a05cf`, dev API rebuilt, no
+  migration): GET/DELETE customer, search filters `groupId` /
+  `isOrganization` / `isInternal`, `customerCount` on customer groups.
+- `customers-list.jsx` now mirrors `suppliers-list.jsx`: group tabs with
+  counts, "Loại đối tượng" / "Nội bộ" filters + "Đặt lại", columns Mã KH /
+  Tên công ty (→ detail) / MST / Người đại diện (+ chức vụ) / Điện thoại /
+  Địa chỉ / Tùy ý / Thao tác (sửa, xoá). Sorting kept (customers have BE
+  sort). The old inline row expansion is gone — the detail page replaces it.
+- `/logistics/customers/[id]` (`CustomerDetailWorkspace`): same header card
+  and tabs as the supplier page — Tổng quan (reuses `SupplierOverviewPanel`
+  with `nameLabel` / `groupLabel`), Tài khoản ngân hàng (shared panel,
+  `customers` endpoints), Hợp đồng (`CustomerContractHistory`, count from
+  its query), Ghi chú & bổ sung. Delete → 409 message when the customer is
+  a contract's buyer. `customerTrail` in `shared/config/breadcrumbs.js`.
+- `CustomerDetailDialog` (from a contract's Buyer link) unchanged.
+- Checked in Chrome: list (20 customers; dev data has no customer groups, so
+  only "Tất cả"), BKN CHIANG MAI detail (overview, Hợp đồng tab = 25KCT47).
+  Delete was not exercised on dev data (covered by BE tests).
+- verify.sh passed (`harness/runs/20260925-224139-95841/`).
+
 ## 2026-09-25 — Chi phí logistics: nhóm in hoa, "Số tiền" full width
 
 - Table "Nhóm chi phí" (group rows + line column, incl. "CHƯA PHÂN NHÓM")

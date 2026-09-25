@@ -30,9 +30,11 @@ import { formatVndAmount } from '../config/currencies.js';
  * "Tổng quan" tab of the supplier detail page (Figma 141:76): Thông tin
  * chung + Điều khoản thanh toán & Công nợ on the left, Người liên hệ làm
  * việc + Tài khoản ngân hàng on the right (stacked below on narrow
- * screens).
+ * screens). The customer detail page reuses it with its own labels.
  * @param {{
  *   supplier: import('../types/index.js').Supplier,
+ *   nameLabel?: string,
+ *   groupLabel?: string,
  *   groupNames: string[],
  *   paymentTermName?: string,
  *   onViewBankAccounts: () => void,
@@ -40,6 +42,8 @@ import { formatVndAmount } from '../config/currencies.js';
  */
 export function SupplierOverviewPanel({
   supplier,
+  nameLabel = 'Tên nhà cung cấp',
+  groupLabel = 'Nhóm nhà cung cấp',
   groupNames,
   paymentTermName,
   onViewBankAccounts,
@@ -76,7 +80,7 @@ export function SupplierOverviewPanel({
           <VStack gap={3} hAlign="stretch">
             <Grid columns={{ minWidth: 220, max: 3 }} gap={3}>
               <MetaShipmentField
-                label="Tên nhà cung cấp"
+                label={nameLabel}
                 value={supplier.companyName.toLocaleUpperCase('vi')}
               />
               <MetaShipmentField
@@ -86,7 +90,7 @@ export function SupplierOverviewPanel({
                 }
               />
               <MetaShipmentField
-                label="Nhóm nhà cung cấp"
+                label={groupLabel}
                 value={
                   groupNames.length > 0 ? (
                     <HStack gap={1} wrap="wrap">

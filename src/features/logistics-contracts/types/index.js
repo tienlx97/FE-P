@@ -58,7 +58,7 @@ export {};
  * @property {string[]} [groupIds] Suppliers only — a supplier can be in several groups.
  */
 
-/** @typedef {{id: string, name: string, supplierCount?: number}} PartyLookup */
+/** @typedef {{id: string, name: string, supplierCount?: number, customerCount?: number}} PartyLookup */
 /**
  * `id` comes back on responses only. `isDefault` = "Ưu tiên 1" (exactly one
  * per partner when it has accounts); accounts come back in entry order.
