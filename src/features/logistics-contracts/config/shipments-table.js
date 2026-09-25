@@ -234,6 +234,7 @@ export const skeletonRows = Array.from(
     eta: null,
     placeOfLoading: null,
     placeOfDischarge: null,
+    placeOfDelivery: null,
     type: 'LCL',
     name: '',
     paymentCondition: 'TT',

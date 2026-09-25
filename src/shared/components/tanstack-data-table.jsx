@@ -543,6 +543,15 @@ export function TanStackDataTable({
       ) {
         labelSpan += 1;
       }
+      // A left-pinned label cell stays put while the rest scrolls, so it
+      // must not span past the pinned columns — it would slide over the
+      // scrolled columns' totals (e.g. SALE / Số cont on the contracts list).
+      if (cells[0]?.column.getIsPinned() === 'left') {
+        const pinnedCount = cells.findIndex(
+          (cell) => cell.column.getIsPinned() !== 'left',
+        );
+        if (pinnedCount > 0) labelSpan = Math.min(labelSpan, pinnedCount);
+      }
     }
     return (
       <TableRow

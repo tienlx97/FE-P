@@ -167,15 +167,6 @@ export {};
  */
 
 /**
- * "Nơi giao hàng" catalog entry — a factory / site / warehouse address in
- * one `Country`. Suggestion only for `Contract.placeOfDelivery` (free text).
- * @typedef {Object} DeliveryPlace
- * @property {string} id
- * @property {string} name
- * @property {string} countryId
- */
-
-/**
  * Seller (bên bán) as recorded on one specific contract — a snapshot copied
  * from the {@link Seller} catalog (or typed inline) at creation time.
  * Mirrors {@link PartyA}.
@@ -508,12 +499,6 @@ export {};
  */
 
 /**
- * @typedef {Object} DeliveryPlaceFormValues
- * @property {string} name
- * @property {string} countryId
- */
-
-/**
  * @typedef {Object} PortFormValues
  * @property {string} countryId
  * @property {string} code
@@ -718,6 +703,7 @@ export {};
  * @property {string | null} eta - ISO date, "ngày dự kiến đến"
  * @property {string | null} placeOfLoading - this shipment's own copy, not a live reference to `Contract.placeOfLoading` — defaults from it client-side on create only (see `use-shipment-form.js`)
  * @property {string | null} placeOfDischarge - this shipment's own copy, same default-once pattern as `placeOfLoading`
+ * @property {string | null} placeOfDelivery - "Nơi giao hàng", this shipment's own copy of the contract's (defaulted once, editable)
  * @property {ShipmentType} type
  * @property {string} name
  * @property {PaymentType} paymentCondition
@@ -824,6 +810,7 @@ export {};
  * @property {string} eta
  * @property {string} placeOfLoading
  * @property {string} placeOfDischarge
+ * @property {string} placeOfDelivery
  * @property {ShipmentType | ''} type
  * @property {string} name
  * @property {PaymentType | ''} paymentCondition

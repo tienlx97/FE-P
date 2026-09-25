@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-09-26 — Nơi giao hàng = text; shipment places; contracts list totals fixes
+
+- Needs BE-kt-xnk `shipment-place-of-delivery` (`c87eed8`; dev API rebuilt,
+  migration applied: DeliveryPlaces dropped, 14 shipments backfilled).
+- "Nơi giao hàng" catalog removed (list page, sidebar, route, modules,
+  types). Contract form: "Nơi giao hàng" back to a plain TextInput;
+  "Nơi xếp hàng" = Vietnamese ports only.
+- Shipment: `placeOfDelivery` (defaults from the contract like POL / POD,
+  editable) — drawer "Cảng đến (POD)" + "Nơi giao hàng" side by side
+  ("Mặc định theo hợp đồng"), overview + info section show it. Tracking:
+  POL / POD / last leg use the shipment's own values (last leg = its
+  delivery place, else its POD) instead of the contract's.
+- Contracts list "Giá trị & Dòng tiền": the docked totals label (left-
+  pinned) no longer spans past the pinned columns, so it doesn't slide over
+  SALE / Số cont totals when scrolling (`tanstack-data-table.jsx`);
+  "Ngày hoàn thành" framed column 150 → 176px (header was clipped).
+- Checked in Chrome: financial view scrolled (totals visible, header
+  full), 26KCT28/LOT-01 tracking shows its delivery place.
+- verify.sh passed (`harness/runs/20260926-011143-336387/`).
+
 ## 2026-09-26 — "Cảng / Nơi" → "Cảng đến" (UN/LOCODE) + "Nơi giao hàng"
 
 - Needs BE-kt-xnk `port-catalog-unlocode` (`4aa797a`, `3b72b22`; dev API

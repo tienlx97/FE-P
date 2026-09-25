@@ -61,6 +61,7 @@ export const shipmentSchema = z
     eta: z.string(),
     placeOfLoading: z.string().trim().max(200, 'Tối đa 200 ký tự'),
     placeOfDischarge: z.string().trim().max(200, 'Tối đa 200 ký tự'),
+    placeOfDelivery: z.string().trim().max(500, 'Tối đa 500 ký tự'),
     type: z.enum(SHIPMENT_TYPES, { error: 'Vui lòng chọn loại hình' }),
     name: z
       .string()

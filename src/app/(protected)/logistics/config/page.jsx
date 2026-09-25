@@ -19,11 +19,6 @@ const ITEMS = [
     description: 'Danh mục cảng theo mã UN/LOCODE dùng trong hợp đồng.',
     href: '/logistics/ports',
   },
-  {
-    title: 'Nơi giao hàng',
-    description: 'Nhà máy, công trình, kho… (Place of Delivery).',
-    href: '/logistics/delivery-places',
-  },
 ];
 
 /**
@@ -31,7 +26,7 @@ const ITEMS = [
  * enforced in middleware before this renders. Kept for backward
  * compatibility with existing bookmarks/links (task 4.1,
  * `openspec/changes/logistics-workspace-redesign/design.md` section 4) —
- * `sidebarLogistics.json` no longer links here; "Nước", "Cảng đến" and "Nơi giao hàng"
+ * `sidebarLogistics.json` no longer links here; "Nước" and "Cảng đến"
  * are now flat "Danh mục" sidebar entries pointing straight at their own
  * pages.
  */

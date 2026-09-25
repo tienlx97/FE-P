@@ -14,7 +14,7 @@ import {
 import { useSuppliersQuery } from './use-suppliers-query.js';
 
 /**
- * `placeOfLoading`/`placeOfDischarge` default from the parent Contract's
+ * `placeOfLoading`/`placeOfDischarge`/`placeOfDelivery` default from the parent Contract's
  * own fields (client-side only — see the type's own doc comment) so a new
  * shipment starts pre-filled with the contract's usual ports but can
  * diverge immediately; `contract` is optional purely so callers that
@@ -36,6 +36,7 @@ function emptyValues(contract = null) {
     eta: '',
     placeOfLoading: contract?.placeOfLoading ?? '',
     placeOfDischarge: contract?.placeOfDischarge ?? '',
+    placeOfDelivery: contract?.placeOfDelivery ?? '',
     type: '',
     name: '',
     paymentCondition: '',
@@ -91,6 +92,7 @@ export function valuesFromShipment(shipment) {
     eta: shipment.eta ?? '',
     placeOfLoading: shipment.placeOfLoading ?? '',
     placeOfDischarge: shipment.placeOfDischarge ?? '',
+    placeOfDelivery: shipment.placeOfDelivery ?? '',
     type: shipment.type,
     name: shipment.name,
     paymentCondition: shipment.paymentCondition,

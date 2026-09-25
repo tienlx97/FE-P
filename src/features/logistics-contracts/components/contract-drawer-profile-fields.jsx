@@ -35,7 +35,6 @@ import { incotermOptions } from '../config/incoterms.js';
 import { BuyerFields } from './buyer-fields.jsx';
 import { ContractDrawerPaymentTerms } from './contract-drawer-payment-terms.jsx';
 import { QuickCreateCountryDialog } from './quick-create-country-dialog.jsx';
-import { QuickCreateDeliveryPlaceDialog } from './quick-create-delivery-place-dialog.jsx';
 import { QuickCreatePortDialog } from './quick-create-port-dialog.jsx';
 import { SellerPickerFields } from './seller-picker-fields.jsx';
 
@@ -105,7 +104,6 @@ export function ContractDrawerProfileFields({
     loadingPlaces,
     isPlaceOfDeliveryApplicable,
     dischargePlaces,
-    deliveryPlaces,
     sellerExtraFieldRows,
     buyerExtraFieldRows,
     banks,
@@ -120,8 +118,6 @@ export function ContractDrawerProfileFields({
   const [isQuickCreateLoadingPlaceOpen, setIsQuickCreateLoadingPlaceOpen] =
     useState(false);
   const [isQuickCreateDischargePlaceOpen, setIsQuickCreateDischargePlaceOpen] =
-    useState(false);
-  const [isQuickCreateDeliveryPlaceOpen, setIsQuickCreateDeliveryPlaceOpen] =
     useState(false);
   /** @type {Record<string, { type: 'error', message: string } | undefined>} */
   const sellerFieldStatuses = {};
@@ -429,44 +425,15 @@ export function ContractDrawerProfileFields({
           </HStack>
           {/* DDP delivers on from the port to the buyer's site. */}
           {isPlaceOfDeliveryApplicable ? (
-            <HStack gap={2} vAlign="end">
-              <StackItem size="fill">
-                <Selector
-                  label="Nơi giao hàng (Place of Delivery)"
-                  hasSearch
-                  placeholder="Chọn nơi giao hàng"
-                  disabledMessage={
-                    !values.countryId
-                      ? 'Vui lòng chọn nước xuất khẩu trước'
-                      : undefined
-                  }
-                  isDisabled={!values.countryId}
-                  value={values.placeOfDelivery}
-                  onChange={(value) => setField('placeOfDelivery', value ?? '')}
-                  options={withSavedOption(
-                    deliveryPlaces.map((place) => ({
-                      value: place.name,
-                      label: place.label,
-                    })),
-                    values.placeOfDelivery,
-                  )}
-                  isRequired
-                  status={fieldStatuses.placeOfDelivery}
-                  statusVariant="tooltip"
-                  width="100%"
-                />
-              </StackItem>
-              <IconButton
-                label="Thêm nơi giao hàng"
-                tooltip="Thêm nơi giao hàng"
-                icon={<Icon icon={IconPlus} size="sm" />}
-                type="button"
-                size="lg"
-                variant="secondary"
-                isDisabled={!values.countryId}
-                onClick={() => setIsQuickCreateDeliveryPlaceOpen(true)}
-              />
-            </HStack>
+            <TextInput
+              label="Nơi giao hàng (Place of Delivery)"
+              placeholder="VD: Công trình ABC, địa chỉ…"
+              value={values.placeOfDelivery}
+              onChange={(value) => setField('placeOfDelivery', value)}
+              isRequired
+              status={fieldStatuses.placeOfDelivery}
+              statusVariant="tooltip"
+            />
           ) : null}
         </MetaFormSection>
 
@@ -600,13 +567,6 @@ export function ContractDrawerProfileFields({
           onCreated={(port) =>
             setField('placeOfDischarge', port.fullName || port.name)
           }
-        />
-        <QuickCreateDeliveryPlaceDialog
-          isOpen={isQuickCreateDeliveryPlaceOpen}
-          onOpenChange={setIsQuickCreateDeliveryPlaceOpen}
-          countries={countries}
-          countryId={values.countryId}
-          onCreated={(place) => setField('placeOfDelivery', place.name)}
         />
       </VStack>
     </form>

@@ -59,10 +59,6 @@ export const routeAccessRules = [
     pathPrefix: '/logistics/ports',
     allowedPermissions: ['logistics:contracts:view'],
   },
-  {
-    pathPrefix: '/logistics/delivery-places',
-    allowedPermissions: ['logistics:contracts:view'],
-  },
   // Old "Cảng / Nơi" URL — redirects to /logistics/ports.
   {
     pathPrefix: '/logistics/places',

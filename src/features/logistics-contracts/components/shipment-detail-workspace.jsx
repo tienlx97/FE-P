@@ -170,7 +170,7 @@ function journeyFor({
         };
       case 'OriginPort':
         return {
-          title: shipment.placeOfLoading ?? label,
+          title: shipment.placeOfLoading || label,
           footLabel: 'Khai hải quan',
           footValue: formatDisplayDate(shipment.customsDeclarationDate),
         };
@@ -191,7 +191,7 @@ function journeyFor({
         };
       case 'DestinationPort':
         return {
-          title: shipment.placeOfDischarge ?? label,
+          title: shipment.placeOfDischarge || label,
           footLabel: 'Đến cảng (ETA)',
           footValue: formatDisplayDate(shipment.eta),
         };
@@ -212,13 +212,11 @@ function journeyFor({
           ),
         };
       default:
-        // DDP ends at the buyer's site ("Nơi giao hàng"), the others at
-        // the destination port.
+        // Ends at the shipment's own "Nơi giao hàng" when it has one
+        // (defaulted from the contract, editable per shipment), else at its
+        // destination port.
         return {
-          title:
-            (isSellerImport ? contract.placeOfDelivery : null) ??
-            contract.placeOfDischarge ??
-            label,
+          title: shipment.placeOfDelivery || shipment.placeOfDischarge || label,
           footLabel: 'Giao hàng',
           footValue: shipment.status === 'Completed' ? 'Hoàn tất' : '—',
         };

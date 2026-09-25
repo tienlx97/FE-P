@@ -1070,7 +1070,9 @@ export function ContractsList({
     {
       key: 'projectCompletionDate',
       header: 'Ngày hoàn thành',
-      width: pixel(isFramed ? 150 : 142),
+      // Framed header is upper-case + letter-spaced with a sort icon:
+      // "NGÀY HOÀN THÀNH" needs ~170px or it gets clipped.
+      width: pixel(isFramed ? 176 : 142),
       // `null` while the project isn't finished yet (only fillable once
       // `status` is "Đã hoàn thành" — see `contract-general-fields.jsx`).
       renderCell: (contract) =>

@@ -91,6 +91,9 @@ export function ShipmentInfoSection({ shipment, supplierName }) {
         <MetadataListItem label="Cảng/nơi đến">
           {orDash(shipment.placeOfDischarge)}
         </MetadataListItem>
+        <MetadataListItem label="Nơi giao hàng">
+          {orDash(shipment.placeOfDelivery)}
+        </MetadataListItem>
         <MetadataListItem label="Mã C/O">
           {orDash(shipment.coNumber)}
         </MetadataListItem>

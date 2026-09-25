@@ -255,6 +255,14 @@ export function ShipmentOverviewPanel({
                 : undefined
             }
           />
+          {shipment.placeOfDelivery ? (
+            <MetaShipmentField
+              label="Nơi giao hàng"
+              value={shipment.placeOfDelivery}
+              icon={MapPin}
+              iconTone="success"
+            />
+          ) : null}
           <MetaShipmentField
             label="Phương thức vận chuyển"
             value={

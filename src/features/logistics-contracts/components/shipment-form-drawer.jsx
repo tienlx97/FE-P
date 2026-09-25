@@ -673,19 +673,32 @@ export function ShipmentFormDrawer({
                         width="100%"
                         {...statusOf('placeOfLoading')}
                       />
-                      <VStack hAlign="stretch" xstyle={styles.fullRow}>
-                        <TextInput
-                          label="Cảng/nơi đến (POD)"
-                          value={values.placeOfDischarge}
-                          onChange={(value) =>
-                            setField('placeOfDischarge', value)
-                          }
-                          isOptional
-                          isDisabled={isDisabled}
-                          width="100%"
-                          {...statusOf('placeOfDischarge')}
-                        />
-                      </VStack>
+                      {/* Both default from the contract (`useShipmentForm`)
+                          and stay editable per shipment; tracking shows
+                          these, not the contract's. */}
+                      <TextInput
+                        label="Cảng đến (POD)"
+                        description="Mặc định theo hợp đồng"
+                        value={values.placeOfDischarge}
+                        onChange={(value) =>
+                          setField('placeOfDischarge', value)
+                        }
+                        isOptional
+                        isDisabled={isDisabled}
+                        width="100%"
+                        {...statusOf('placeOfDischarge')}
+                      />
+                      <TextInput
+                        label="Nơi giao hàng (Place of Delivery)"
+                        description="Mặc định theo hợp đồng"
+                        placeholder="VD: Công trình ABC, địa chỉ…"
+                        value={values.placeOfDelivery}
+                        onChange={(value) => setField('placeOfDelivery', value)}
+                        isOptional
+                        isDisabled={isDisabled}
+                        width="100%"
+                        {...statusOf('placeOfDelivery')}
+                      />
                     </Grid>
                   </MetaFormSection>
 

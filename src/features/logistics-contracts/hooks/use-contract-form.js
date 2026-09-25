@@ -18,7 +18,6 @@ import {
 } from './use-contracts-query.js';
 import { useCountriesQuery } from './use-countries-query.js';
 import { useCustomersQuery } from './use-customers-query.js';
-import { useDeliveryPlacesQuery } from './use-delivery-places-query.js';
 import { useCompaniesQuery } from './use-org-directory.js';
 import { usePaymentTermRows } from './use-payment-term-rows.js';
 import { usePortsQuery } from './use-ports-query.js';
@@ -39,7 +38,7 @@ const DEFAULT_CATEGORY = 'STEEL STRUCTURE';
 
 /**
  * One option of the contract's place pickers. `placeOfLoading` /
- * `placeOfDischarge` / `placeOfDelivery` are plain strings on the wire, so
+ * `placeOfDischarge` are plain strings on the wire, so
  * the Selectors key options by the text they save (`name`), not an id.
  * @typedef {{ id: string, name: string, label: string }} PlaceOption
  */
@@ -56,14 +55,6 @@ function portOption(port) {
     name: port.fullName || port.name,
     label: `${port.name} (${port.code})`,
   };
-}
-
-/**
- * @param {import('../types/index.js').DeliveryPlace} place
- * @returns {PlaceOption}
- */
-function deliveryPlaceOption(place) {
-  return { id: place.id, name: place.name, label: place.name };
 }
 
 /**
@@ -229,23 +220,13 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     findVietnamCountry(
       countriesQuery.data?.success ? countriesQuery.data.countries : [],
     )?.id ?? '';
-  // Vietnamese ports plus Vietnamese delivery places (the factory an EXW
-  // contract loads at moved to "Nơi giao hàng" with the UN/LOCODE catalog).
   const loadingPortsQuery = usePortsQuery({
     countryId: vietnamCountryId,
     enabled: Boolean(vietnamCountryId),
   });
-  const loadingDeliveryPlacesQuery = useDeliveryPlacesQuery({
-    countryId: vietnamCountryId,
-    enabled: Boolean(vietnamCountryId),
-  });
-  // "Cảng đến" / "Nơi giao hàng" come from the selected export country's
-  // `Port` / `DeliveryPlace` catalogs, fetched whenever a country is picked.
+  // "Cảng đến" comes from the selected export country's `Port` catalog,
+  // fetched whenever a country is picked.
   const dischargePortsQuery = usePortsQuery({
-    countryId: values.countryId,
-    enabled: Boolean(values.countryId),
-  });
-  const deliveryPlacesQuery = useDeliveryPlacesQuery({
     countryId: values.countryId,
     enabled: Boolean(values.countryId),
   });
@@ -630,25 +611,15 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
       ? countriesQuery.data.countries
       : [],
     vietnamCountryId,
-    loadingPlaces: dedupePlacesByName([
-      ...(loadingPortsQuery.data?.success
+    loadingPlaces: dedupePlacesByName(
+      loadingPortsQuery.data?.success
         ? loadingPortsQuery.data.ports.map(portOption)
-        : []),
-      ...(loadingDeliveryPlacesQuery.data?.success
-        ? loadingDeliveryPlacesQuery.data.deliveryPlaces.map(
-            deliveryPlaceOption,
-          )
-        : []),
-    ]),
+        : [],
+    ),
     isPlaceOfDeliveryApplicable: requiresPlaceOfDelivery(values.incoterm),
     dischargePlaces: dedupePlacesByName(
       dischargePortsQuery.data?.success
         ? dischargePortsQuery.data.ports.map(portOption)
-        : [],
-    ),
-    deliveryPlaces: dedupePlacesByName(
-      deliveryPlacesQuery.data?.success
-        ? deliveryPlacesQuery.data.deliveryPlaces.map(deliveryPlaceOption)
         : [],
     ),
     banks: sellerBankAccounts,
