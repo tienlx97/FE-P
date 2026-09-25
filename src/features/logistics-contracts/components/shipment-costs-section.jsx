@@ -7,6 +7,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
 
@@ -76,6 +77,13 @@ export function ShipmentCostsSection({
       header: 'Số hoá đơn',
       width: pixel(160),
       renderCell: (cost) => orDash(cost.invoiceNumber),
+    },
+    {
+      key: 'invoiceDate',
+      header: 'Ngày xuất HĐ',
+      width: pixel(128),
+      renderCell: (cost) =>
+        orDash(cost.invoiceDate ? formatDisplayDate(cost.invoiceDate) : null),
     },
   ];
 

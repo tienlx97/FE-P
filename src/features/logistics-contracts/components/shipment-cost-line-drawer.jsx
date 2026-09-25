@@ -2,6 +2,7 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { DateInput } from '@astryxdesign/core/DateInput';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -32,6 +33,7 @@ import {
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
+import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { formatVndAmount } from '../config/currencies.js';
@@ -413,6 +415,9 @@ export function ShipmentCostLineDrawer({
                           Chỉ ghi nhận bằng VNĐ
                         </Text>
                       </VStack>
+                    </Grid>
+
+                    <Grid columns={TWO_COLUMNS} gap={3}>
                       <VStack gap={1} hAlign="stretch">
                         <FieldLabel label="Số hoá đơn" isOptional />
                         <TextInput
@@ -424,6 +429,23 @@ export function ShipmentCostLineDrawer({
                           status={fieldStatuses.invoiceNumber}
                           statusVariant="detached"
                           width="100%"
+                        />
+                      </VStack>
+                      <VStack gap={1} hAlign="stretch">
+                        <FieldLabel label="Ngày xuất hoá đơn" isOptional />
+                        <DateInput
+                          label="Ngày xuất hoá đơn"
+                          isLabelHidden
+                          value={
+                            /** @type {import('@astryxdesign/core/Calendar').ISODateString | undefined} */ (
+                              values.invoiceDate || undefined
+                            )
+                          }
+                          onChange={(value) =>
+                            setField('invoiceDate', value ?? '')
+                          }
+                          format={formatDateInputValue}
+                          placeholder="Chọn ngày"
                         />
                       </VStack>
                     </Grid>

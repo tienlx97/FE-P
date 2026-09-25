@@ -41,6 +41,7 @@ function toCostsRequestBody(costLines) {
     Note: cost.note || null,
     ProviderCustomerId: cost.providerCustomerId || null,
     InvoiceNumber: cost.invoiceNumber || null,
+    InvoiceDate: cost.invoiceDate || null,
     CostNature: cost.costNature ?? 'Standard',
   }));
 }

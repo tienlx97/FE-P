@@ -622,6 +622,7 @@ export {};
  * @property {string | null} note
  * @property {string | null} providerCustomerId
  * @property {string | null} invoiceNumber - "Số hoá đơn", optional
+ * @property {string | null} invoiceDate - ISO date, "Ngày xuất hoá đơn", optional
  * @property {ShipmentCostNature} costNature
  */
 
@@ -633,6 +634,7 @@ export {};
  * @property {string} note
  * @property {string} providerCustomerId
  * @property {string} invoiceNumber
+ * @property {string} invoiceDate - ISO date or ''
  * @property {ShipmentCostNature} costNature
  */
 
@@ -645,6 +647,7 @@ export {};
  * @property {string} note
  * @property {string} providerCustomerId
  * @property {string} invoiceNumber
+ * @property {string} invoiceDate - ISO date or ''
  * @property {ShipmentCostNature} costNature
  */
 

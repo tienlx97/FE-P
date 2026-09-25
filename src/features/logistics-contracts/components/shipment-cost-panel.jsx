@@ -7,6 +7,7 @@ import {
   MetaCostPanel,
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { formatVndAmount } from '../config/currencies.js';
@@ -101,6 +102,7 @@ export function ShipmentCostPanel({
         ? (customersById.get(cost.providerCustomerId)?.companyName ?? null)
         : null,
       invoiceNumber: cost.invoiceNumber || null,
+      invoiceDate: cost.invoiceDate ? formatDisplayDate(cost.invoiceDate) : null,
     })),
   }));
 

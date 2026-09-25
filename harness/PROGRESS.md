@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-09-25 — Shipment cost lines: "Ngày xuất hoá đơn" (optional)
+
+- Needs BE-kt-xnk `add-shipment-cost-invoice-date` (`eae1171`, dev API
+  rebuilt, migration applied).
+- `invoiceDate` (ISO date or '') threaded through every cost-line path —
+  the shipment PUT replaces the whole cost list, so a path that dropped it
+  would wipe the date: `costLineFormValues`, `useShipmentForm` rows +
+  submit, `useShipmentCostLineRows`, cost drawer form, schema, request body.
+- Cost drawer: "Số tiền" on its own row, then "Số hoá đơn | Ngày xuất hoá
+  đơn" (`DateInput`, "Chọn ngày"). Chi phí logistics table: column "Hoá
+  đơn" shows the number with "Ngày dd/mm/yyyy" under it. Contract full
+  view cost table: new "Ngày xuất HĐ" column.
+- Checked in Chrome on 26KCT10/LOT-03 (had no costs): added a line with
+  HD-TEST-01 + 22/09/2026 → shown in the table, reopened with the date
+  prefilled, then deleted (shipment back to 0 costs).
+- verify.sh passed (`harness/runs/20260925-165623-509/`).
+
 ## 2026-09-25 — Supplier detail: tab Shipment (Figma "TAB CONTENT - SHIPMENT ACTIVE", 145:740)
 
 - No BE change: the existing `involvedSupplierId` search filter gives the

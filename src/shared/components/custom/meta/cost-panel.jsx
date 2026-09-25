@@ -35,6 +35,7 @@ import { MetaPill } from './pill.jsx';
  *   note: string | null,
  *   provider: string | null,
  *   invoiceNumber: string | null,
+ *   invoiceDate: string | null,
  * }} MetaCostRow
  * @typedef {{
  *   id: string,
@@ -60,7 +61,7 @@ const COLUMNS = /** @type {const} */ ([
   ['nature', 'Cost Nature', 'start'],
   ['note', 'Ghi chú', 'start'],
   ['provider', 'Nhà cung cấp', 'start'],
-  ['invoice', 'Số hoá đơn', 'start'],
+  ['invoice', 'Hoá đơn', 'start'],
   ['actions', 'Thao tác', 'center'],
 ]);
 
@@ -283,7 +284,16 @@ export function MetaCostPanel({
                         <OptionalText value={row.provider} />
                       </TableCell>
                       <TableCell xstyle={styles.cell}>
-                        <OptionalText value={row.invoiceNumber} isCode />
+                        {row.invoiceDate ? (
+                          <VStack gap={0.5}>
+                            <OptionalText value={row.invoiceNumber} isCode />
+                            <Text size="sm" color="secondary">
+                              {`Ngày ${row.invoiceDate}`}
+                            </Text>
+                          </VStack>
+                        ) : (
+                          <OptionalText value={row.invoiceNumber} isCode />
+                        )}
                       </TableCell>
                       <TableCell
                         xstyle={[

@@ -166,6 +166,7 @@ export function useShipmentForm({
           note: cost.note ?? '',
           providerCustomerId: cost.providerCustomerId ?? '',
           invoiceNumber: cost.invoiceNumber ?? '',
+          invoiceDate: cost.invoiceDate ?? '',
           costNature: cost.costNature ?? 'Standard',
         }))
       : undefined,
@@ -195,6 +196,7 @@ export function useShipmentForm({
             note: cost.note ?? '',
             providerCustomerId: cost.providerCustomerId ?? '',
             invoiceNumber: cost.invoiceNumber ?? '',
+            invoiceDate: cost.invoiceDate ?? '',
             costNature: cost.costNature ?? 'Standard',
           }))
         : [],
@@ -215,6 +217,7 @@ export function useShipmentForm({
         note: row.note,
         providerCustomerId: row.providerCustomerId,
         invoiceNumber: row.invoiceNumber,
+        invoiceDate: row.invoiceDate,
         costNature: row.costNature,
       })),
     };

@@ -22,6 +22,7 @@ function emptyValues(costCategoryId = '') {
     note: '',
     providerCustomerId: '',
     invoiceNumber: '',
+    invoiceDate: '',
     costNature: 'Standard',
   };
 }

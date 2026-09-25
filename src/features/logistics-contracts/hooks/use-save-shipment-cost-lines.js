@@ -17,6 +17,7 @@ export function costLineFormValues(cost) {
     note: cost.note ?? '',
     providerCustomerId: cost.providerCustomerId ?? '',
     invoiceNumber: cost.invoiceNumber ?? '',
+    invoiceDate: cost.invoiceDate ?? '',
     costNature: cost.costNature ?? 'Standard',
   };
 }
