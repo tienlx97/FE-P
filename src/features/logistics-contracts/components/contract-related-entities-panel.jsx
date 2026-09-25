@@ -6,7 +6,7 @@ import { ContractAnnexFormDialog } from './contract-annex-form-dialog.jsx';
 import { ContractExpandedDetails } from './contract-expanded-details.jsx';
 import { ContractPrivateInfoDetailDialog } from './contract-private-info-detail-dialog.jsx';
 import { PaymentScheduleFormDialog } from './payment-schedule-form-dialog.jsx';
-import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
+import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 import { ShipmentVgmFormDialog } from './shipment-vgm-form-dialog.jsx';
 
 /**
@@ -128,21 +128,11 @@ export function ContractRelatedEntitiesPanel({
       ) : null}
 
       {shipmentDialog ? (
-        <ShipmentFormDialog
+        <ShipmentFormDrawer
           key={shipmentDialog.shipment?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setShipmentDialog(null);
-          }}
-          contractId={shipmentDialog.contractId}
           contract={shipmentDialog.contract}
-          shipment={shipmentDialog.shipment}
-          closeLabel="Quay lại Contract"
-          onSuccess={(saved) =>
-            setShipmentDialog((current) =>
-              current?.shipment ? { ...current, shipment: saved } : null,
-            )
-          }
+          shipment={shipmentDialog.shipment ?? null}
+          onClose={() => setShipmentDialog(null)}
         />
       ) : null}
 

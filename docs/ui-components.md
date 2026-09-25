@@ -55,7 +55,7 @@ through them.
   plain search box (disabled while active).
 - Shipment/Commission/BOQ share **one editor each** between Contract's
   "Liên quan" tab and their own standalone list —
-  `shipment-form-dialog.jsx`/`commission-form-dialog.jsx`/
+  `shipment-form-drawer.jsx`/`commission-form-dialog.jsx`/
   `contract-private-info-detail-dialog.jsx`. Opening one from "Liên quan"
   hides (not unmounts) `ContractFormDialog` underneath instead of stacking
   a second fullscreen `<dialog>` — Astryx's `Dialog` never unmounts
@@ -64,11 +64,10 @@ through them.
   don't lose state" — and returning re-shows Contract exactly where it was
   (same tab, same scroll). Short "quick-add" child dialogs (annex/payment/
   VGM) still stack on top deliberately; those are not full workspaces.
-- Shipment: `shipment-form-dialog.jsx` (create/view/edit) uses
-  `shipment-fields.jsx` → `shipment-booking-fields.jsx` /
-  `shipment-lot-fields.jsx` / VGM and cost editors, tabbed
-  (Thông tin/VGM/Chi phí Logistics). VGM is disabled until the Shipment
-  itself is saved.
+- Shipment: `shipment-form-drawer.jsx` (Meta drawer, create/edit). Viewing
+  is the shipment page (`/logistics/contract/[id]/shipment/[shipmentId]`),
+  where VGM and costs are managed. The old fullscreen
+  `ShipmentFormDialog` was removed (2026-09-25).
 - Commission: `commission-form-dialog.jsx` (create/view/edit); view content
   uses `commission-expanded-details.jsx` with related annex/payment
   actions. 1:1 with its Contract.
@@ -112,9 +111,8 @@ inside its children; the shell already portals an independent themed form and
 stops submit propagation. Reset/unmount controller state on confirmed close.
 
 `FormDialog.onCancelEdit` (optional): when the parent supplies it — only
-when an existing record is being edited, e.g. `ShipmentFormDialog`/
-`CommissionFormDialog` pass it conditionally on `shipment`/`commission`
-being non-null — "Hủy"/Escape on a non-dirty edit calls it instead of
+when an existing record is being edited, e.g. `CommissionFormDialog`
+passes it conditionally on `commission` being non-null — "Hủy"/Escape on a non-dirty edit calls it instead of
 closing the whole dialog, dropping back to Xem in place ("về Xem tại chỗ").
 Creating a new record has no Xem to return to, so it's left unset there and
 Hủy still closes. `ContractFormDialog`'s own bespoke shell implements the

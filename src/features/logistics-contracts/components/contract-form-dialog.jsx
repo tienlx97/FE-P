@@ -75,8 +75,7 @@ const TAB_LABELS = {
  * into `Hồ sơ · Phụ lục · Thanh toán · Liên quan`
  * (`openspec/changes/logistics-workspace-redesign/design.md` section 3,
  * task 3.1). Xem and Sửa share the same "Hồ sơ" tab layout — only
- * `isReadOnly` differs per field (mirrors `CommissionFields`/
- * `ShipmentFormDialog`); "Phụ lục"/"Thanh toán"/"Liên quan" have no edit
+ * `isReadOnly` differs per field (mirrors `CommissionFields`); "Phụ lục"/"Thanh toán"/"Liên quan" have no edit
  * mode of their own in this dialog — each row is edited via its own
  * `*FormDialog`, and "Liên quan" only ever shows a summary + a button that
  * opens Shipment/Commission/BOQ's own standalone dialog (never embeds

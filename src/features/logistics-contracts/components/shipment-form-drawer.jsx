@@ -77,12 +77,12 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /**
  * Meta drawer that creates a shipment under `contract`, or edits one
  * (`shipment`) — Stitch "Chỉnh sửa Shipment"
- * (`.stitch/prompts/meta-shipment-edit-drawer.md`). Replaces the
- * fullscreen `ShipmentFormDialog` on the Meta pages; VGM and costs are
- * managed on the shipment page after creating. Same data and rules as that
- * dialog — `useShipmentForm` (validation, create / update call, supplier
- * list, defaults such as the contract's ports; on edit the cost lines are
- * resent unchanged) — laid out as three boxed sections: "Thông tin lô
+ * (`.stitch/prompts/meta-shipment-edit-drawer.md`). The only Shipment
+ * editor (the fullscreen `ShipmentFormDialog` was removed); VGM and costs
+ * are managed on the shipment page after creating. Data and rules come
+ * from `useShipmentForm` (validation, create / update call, supplier list,
+ * defaults such as the contract's ports; on edit the cost lines are resent
+ * unchanged) — laid out as three boxed sections: "Thông tin lô
  * hàng", "Booking & vận chuyển", "Hải quan & C/O". Field errors sit under
  * each field (detached) and the body scrolls to the first one. Closing with
  * changes asks first. "Loại hình" is only editable when creating.

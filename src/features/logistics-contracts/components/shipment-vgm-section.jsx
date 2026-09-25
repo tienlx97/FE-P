@@ -33,9 +33,8 @@ function orDash(value) {
 
 /**
  * The VGM table + add/edit/delete affordances for one `Shipment`, factored
- * out of `ShipmentExpandedDetails` so `ShipmentFormDialog`'s own "VGM" tab
- * (per user request, 2026-09-05) can reuse the same table instead of
- * duplicating its columns.
+ * out of `ShipmentExpandedDetails` so other screens (the contract full
+ * view) can reuse the same table instead of duplicating its columns.
  *
  * Add/edit dialog ownership is conditional, mirroring the split that already
  * existed in `ShipmentExpandedDetails`: pass `onAddVgm`/`onEditVgm` when this
@@ -43,8 +42,8 @@ function orDash(value) {
  * "Selector popover stacking" note — a `*FormDialog` declared inside
  * `renderExpanded` breaks `Selector`'s popover positioning, so the caller
  * must render `ShipmentVgmFormDialog` itself, outside the table). Omit them
- * when this renders somewhere without that constraint (e.g.
- * `ShipmentFormDialog`'s own tab, which is not inside any table) and this
+ * when this renders somewhere without that constraint (not inside any
+ * table) and this
  * component owns the add/edit dialog locally. The delete confirmation has no
  * `Selector` field, so it's always owned locally either way.
  * @param {{

@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-09-25 — Remove `ShipmentFormDialog`
+
+- Danh sách Shipment: row "Xem" → shipment page, "Sửa" →
+  `ShipmentFormDrawer` (loads the contract when it's past the 100-item
+  catalog). Contract "Lô hàng" tab "Sửa" and the (unused)
+  `ContractRelatedEntitiesPanel` also use the drawer.
+- Deleted `shipment-form-dialog.jsx` and its dialog-only children
+  `shipment-fields`, `shipment-booking-fields`, `shipment-lot-fields`,
+  `shipment-cost-lines-fields`. Docs/comments updated.
+- Mid-task an outside save of `shipments-list.jsx` (header → "Σ Logistics")
+  overwrote these edits; re-applied on top, keeping "Σ Logistics".
+- Checked in Chrome on 26KCT27/LOT-01: Sửa opens the drawer, Xem opens the
+  shipment page.
+- verify.sh passed (`harness/runs/20260925-101857-1157/`).
+
 ## 2026-09-25 — Shipments list: cost-group headers wrap
 
 - "Giá trị & Chi phí" LOG cost headers could be clipped: measured

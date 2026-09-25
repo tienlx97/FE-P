@@ -16,7 +16,6 @@ import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { useShipmentsVgmsQueries } from '../hooks/use-shipments-vgms-queries.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { ContractShipmentsTable } from './contract-shipments-table.jsx';
-import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 
 // Fields the design calls for always render; a missing value shows this
@@ -46,7 +45,7 @@ function toneForShipmentStatus(status) {
 /**
  * "Lô hàng" tab body (`openspec/changes/apply-maritime-to-contract-detail/`,
  * step 6): `MetaShipmentListPanel` fed with the contract's real
- * `Shipment`s, plus the create/edit dialog it opens. Only what the Shipment
+ * `Shipment`s, plus the create/edit drawer it opens. Only what the Shipment
  * record actually carries is shown — booking/B-L/shipping-line/vessel,
  * customs declaration + C/O, declared value/weight/quantity, ETD/ETA and the
  * cost totals by category. There is no trucking/CFS partner data on a
@@ -403,26 +402,14 @@ export function ContractShipmentsPanel({ contract }) {
         )}
       />
 
-      {/* Creating uses the Meta drawer; viewing / editing an existing
-          shipment from this tab keeps the dialog (VGM / cost tabs). */}
-      {dialog && !dialog.shipment ? (
+      {/* Create and edit both use the Meta drawer; viewing is the
+          shipment page (`shipmentHref`). */}
+      {dialog ? (
         <ShipmentFormDrawer
-          contract={contract}
-          onClose={() => setDialog(null)}
-        />
-      ) : null}
-      {dialog?.shipment ? (
-        <ShipmentFormDialog
           key={dialog.shipment?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setDialog(null);
-          }}
-          contractId={contract.id}
           contract={contract}
           shipment={dialog.shipment}
-          closeLabel="Quay lại Contract"
-          onSuccess={() => setDialog(null)}
+          onClose={() => setDialog(null)}
         />
       ) : null}
     </>

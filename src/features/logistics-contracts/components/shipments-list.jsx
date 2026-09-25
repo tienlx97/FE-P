@@ -44,6 +44,7 @@ import {
   Trash2,
   Truck,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import {
@@ -91,12 +92,14 @@ import {
   skeletonRows,
   VIEW_PRESETS,
 } from '../config/shipments-table.js';
-import { useContractsQuery } from '../hooks/use-contracts-query.js';
+import {
+  useContractQuery,
+  useContractsQuery,
+} from '../hooks/use-contracts-query.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
 import { useShipmentsListQuery } from '../hooks/use-shipments-list-query.js';
 import { useDeleteShipmentMutation } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
-import { ShipmentFormDialog } from './shipment-form-dialog.jsx';
 import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 
 /** @param {string | null | undefined} value */
@@ -397,6 +400,7 @@ function renderFilterValue(caption) {
  * `MetaThemeProvider` the page wraps around this component.
  */
 export function ShipmentsList() {
+  const router = useRouter();
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   // Only the "Nhà cung cấp" view adds the partner count to the Σ caption.
   const [viewPresetKey, setViewPresetKey] = useState('basic');
@@ -528,8 +532,10 @@ export function ShipmentsList() {
   const [pickedContractId, setPickedContractId] = useState(
     /** @type {string | null} */ (null),
   );
+  // Create (after picking a contract) or edit (a row's "Sửa") — both in
+  // the Meta `ShipmentFormDrawer`.
   const [shipmentDialog, setShipmentDialog] = useState(
-    /** @type {{ mode?: 'view' | 'edit', contractId: string, contract?: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
+    /** @type {{ contractId: string, contract?: import('../types/index.js').Contract, shipment?: import('../types/index.js').Shipment } | null} */ (
       null
     ),
   );
@@ -711,15 +717,14 @@ export function ShipmentsList() {
     return result.success ? enrichShipments(result.shipments) : [];
   }
 
-  /**
-   * Shared by the "Mã" cell (design.md section 4: "Mã bản ghi mở Xem") and
-   * the row's own "Xem"/"Sửa" actions below.
-   * @param {ShipmentListRow} row
-   * @param {'view' | 'edit'} mode
-   */
-  function openShipment(row, mode) {
+  /** @param {ShipmentListRow} row */
+  function shipmentHref(row) {
+    return `/logistics/contract/${row.contractId}/shipment/${row.id}`;
+  }
+
+  /** @param {ShipmentListRow} row */
+  function editShipment(row) {
     setShipmentDialog({
-      mode,
       contractId: row.contractId,
       contract: contractsById.get(row.contractId),
       shipment: row,
@@ -783,11 +788,11 @@ export function ShipmentsList() {
       header: 'Mã',
       width: pixel(170),
       filter: 'shipmentCode',
-      // Opens the shipment detail page (Figma 111:7829); the row's "Xem"
-      // icon keeps the quick dialog.
+      // Opens the shipment detail page (Figma 111:7829), same as the row's
+      // "Xem" icon.
       renderCell: (row) => (
         <Link
-          href={`/logistics/contract/${row.contractId}/shipment/${row.id}`}
+          href={shipmentHref(row)}
           weight="bold"
           color="accent"
           xstyle={styles.nowrap}
@@ -1031,7 +1036,7 @@ export function ShipmentsList() {
       // sum of every LOG group on the shipment. VND only.
       header: (
         <Text as="span" type="inherit" color="primary">
-          Logistics
+          Σ Logistics
         </Text>
       ),
       width: pixel(190),
@@ -1105,7 +1110,7 @@ export function ShipmentsList() {
             icon={<Icon icon={Eye} size="sm" />}
             variant="ghost"
             size="sm"
-            onClick={() => openShipment(row, 'view')}
+            onClick={() => router.push(shipmentHref(row))}
           />
           <IconButton
             label={`Sửa ${row.shipmentCode}`}
@@ -1113,7 +1118,7 @@ export function ShipmentsList() {
             icon={<Icon icon={Pencil} size="sm" />}
             variant="ghost"
             size="sm"
-            onClick={() => openShipment(row, 'edit')}
+            onClick={() => editShipment(row)}
           />
           <IconButton
             label={`Xoá ${row.shipmentCode}`}
@@ -1195,9 +1200,18 @@ export function ShipmentsList() {
   const canContinuePickingContract =
     !!pickedContract && isContractEligibleForShipment(pickedContract);
 
-  const selectedShipment =
-    shipments.find((row) => row.id === shipmentDialog?.shipment?.id) ??
-    shipmentDialog?.shipment;
+  // The contracts catalog above stops at 100, so a row whose contract is
+  // past it loads that one contract before its edit drawer can open.
+  const dialogContractQuery = useContractQuery(
+    shipmentDialog && !shipmentDialog.contract
+      ? shipmentDialog.contractId
+      : null,
+  );
+  const dialogContract =
+    shipmentDialog?.contract ??
+    (dialogContractQuery.data?.success
+      ? dialogContractQuery.data.contract
+      : undefined);
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%" xstyle={styles.root}>
@@ -1406,27 +1420,12 @@ export function ShipmentsList() {
         </CommonDialog>
       ) : null}
 
-      {/* Creating (after picking a contract) uses the Meta drawer;
-          "Xem" / "Sửa" on a row keep the dialog (VGM / cost tabs). */}
-      {shipmentDialog && !shipmentDialog.shipment && shipmentDialog.contract ? (
+      {shipmentDialog && dialogContract ? (
         <ShipmentFormDrawer
-          contract={shipmentDialog.contract}
-          onClose={() => setShipmentDialog(null)}
-        />
-      ) : shipmentDialog ? (
-        <ShipmentFormDialog
           key={shipmentDialog.shipment?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setShipmentDialog(null);
-          }}
-          contractId={shipmentDialog.contractId}
-          contract={shipmentDialog.contract}
-          initialMode={shipmentDialog.mode}
-          shipment={selectedShipment}
-          onSuccess={() =>
-            setShipmentDialog((current) => (current?.shipment ? current : null))
-          }
+          contract={dialogContract}
+          shipment={shipmentDialog.shipment ?? null}
+          onClose={() => setShipmentDialog(null)}
         />
       ) : null}
 

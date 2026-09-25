@@ -52,7 +52,7 @@ function withSavedOption(options, value) {
  * `Contract` general field-set — single layout shared by both the Xem and
  * Sửa modes of `ContractFormDialog`; `isReadOnly` toggles each field's
  * interactivity instead of switching to a separate read-only component
- * (mirrors `CommissionFields`/`ShipmentFields`). Annexes have their own
+ * (mirrors `CommissionFields`). Annexes have their own
  * "Phụ lục" tab now (`ContractAnnexesPanel`, task 3.1) — this component no
  * longer renders them.
  * @param {{

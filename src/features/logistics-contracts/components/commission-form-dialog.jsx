@@ -58,7 +58,7 @@ export function CommissionFormDialog({
       toast({
         body: commission ? 'Đã cập nhật Commission.' : 'Đã tạo Commission.',
       });
-      // Same convention as `ShipmentFormDialog`: editing an existing
+      // Same convention as `FormDialog.onCancelEdit`: editing an existing
       // Commission goes back to Xem in place; creating one still closes,
       // since there is no record yet for the caller to keep the dialog
       // open on.

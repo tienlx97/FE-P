@@ -139,7 +139,7 @@ function FormDialogSession({
 
   // "Về Xem tại chỗ" (design.md section 1/task 1.2): cancelling an edit on
   // an existing record — `onCancelEdit` is only given when one exists, see
-  // `ShipmentFormDialog`/`CommissionFormDialog` — drops back to Xem in
+  // `CommissionFormDialog` — drops back to Xem in
   // place instead of closing the whole dialog, same as `ContractFormDialog`
   // (its own bespoke shell)'s `finish('cancel')`. Creating a new record has
   // no Xem to return to, so `onCancelEdit` stays unset there and this falls
