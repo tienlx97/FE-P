@@ -186,12 +186,12 @@ export function MetaPartyContactBody({
 }
 
 /**
- * "Tài khoản ngân hàng" body: the first account (number, bank · branch ·
- * province), then "+n tài khoản khác →". No "Mặc định" tag: BE-kt-xnk
- * keeps no account order or default flag yet.
+ * "Tài khoản ngân hàng" body: one account (number, bank · branch ·
+ * province) — tagged "Mặc định" when `account.isDefault` — then
+ * "+n tài khoản khác →".
  *
  * @param {{
- *   account?: { accountNumber: string, bankName: string, branch?: string, province?: string } | null,
+ *   account?: { accountNumber: string, bankName: string, branch?: string, province?: string, isDefault?: boolean } | null,
  *   moreCount: number,
  *   onViewAll?: () => void,
  *   emptyText: string,
@@ -213,9 +213,16 @@ export function MetaPartyBankBody({ account, moreCount, onViewAll, emptyText }) 
   return (
     <VStack gap={3} hAlign="stretch">
       <VStack gap={1.5} hAlign="stretch" xstyle={styles.inset}>
-        <Text size="sm" color="secondary">
-          Tài khoản thụ hưởng
-        </Text>
+        <HStack hAlign="between" vAlign="center" gap={2}>
+          <Text size="sm" color="secondary">
+            Tài khoản thụ hưởng
+          </Text>
+          {account.isDefault ? (
+            <Text size="sm" weight="bold" color="accent" xstyle={styles.caps}>
+              Mặc định
+            </Text>
+          ) : null}
+        </HStack>
         <HStack hAlign="between" vAlign="center" gap={2}>
           <Text size="lg" weight="bold" type="code" hasTabularNumbers>
             {account.accountNumber}
@@ -306,6 +313,10 @@ const styles = stylex.create({
     minWidth: 0,
   },
   uppercase: {
+    textTransform: 'uppercase',
+  },
+  caps: {
+    letterSpacing: '0.05em',
     textTransform: 'uppercase',
   },
   headerIcon: {

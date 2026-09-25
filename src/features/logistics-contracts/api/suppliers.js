@@ -145,6 +145,53 @@ function buildSupplierBody(
   };
 }
 
+/**
+ * One bank account as BE-kt-xnk `PartyBankAccountDto`. Every field is sent
+ * so a full partner save keeps holder / currency / SWIFT / status / default.
+ * @param {any} account
+ */
+export function toBankAccountBody(account) {
+  return {
+    AccountNumber: account.accountNumber,
+    BankName: account.bankName,
+    Branch: account.branch ?? '',
+    Province: account.province ?? '',
+    Holder: account.holder || null,
+    Currency: account.currency || 'VND',
+    SwiftCode: account.swiftCode || null,
+    IsActive: account.isActive ?? true,
+    IsDefault: account.isDefault ?? false,
+  };
+}
+
+/**
+ * Supplier per-account endpoints (BE-kt-xnk `party-bank-account-details`).
+ * Each returns the whole updated supplier.
+ * @param {string} supplierId
+ * @param {{ method: 'POST' | 'PUT' | 'DELETE', accountId?: string, action?: 'default', account?: any, errorMessage: string }} options
+ * @returns {Promise<{ success: true, supplier: import('../types/index.js').Supplier } | { success: false, message: string }>}
+ */
+export async function changeSupplierBankAccount(
+  supplierId,
+  { method, accountId, action, account, errorMessage },
+) {
+  const path = [
+    `/api/v1/suppliers/${supplierId}/bank-accounts`,
+    accountId,
+    action,
+  ]
+    .filter(Boolean)
+    .join('/');
+  const result = await apiRequest(path, {
+    method,
+    errorMessage,
+    body: account ? toBankAccountBody(account) : undefined,
+  });
+  return result.success
+    ? { success: true, supplier: result.data }
+    : { success: false, message: result.message };
+}
+
 /** @param {any} values @param {any[]} [extraFieldRows] @param {any[]} [bankAccounts] @param {any[]} [deliveryAddresses] */
 export function buildPartyBody(
   values,
@@ -187,12 +234,7 @@ export function buildPartyBody(
     },
     BankAccounts: bankAccounts
       .filter((row) => row.accountNumber.trim() || row.bankName.trim())
-      .map(({ accountNumber, bankName, branch, province }) => ({
-        AccountNumber: accountNumber,
-        BankName: bankName,
-        Branch: branch,
-        Province: province,
-      })),
+      .map(toBankAccountBody),
     DeliveryAddresses: values.deliveryAddressSameAsMain
       ? []
       : deliveryAddresses

@@ -59,7 +59,22 @@ export {};
  */
 
 /** @typedef {{id: string, name: string, supplierCount?: number}} PartyLookup */
-/** @typedef {{accountNumber: string, bankName: string, branch: string, province: string}} PartyBankAccount */
+/**
+ * `id` comes back on responses only. `isDefault` = "Ưu tiên 1" (exactly one
+ * per partner when it has accounts); accounts come back in entry order.
+ * @typedef {{
+ *   id?: string,
+ *   accountNumber: string,
+ *   bankName: string,
+ *   branch: string,
+ *   province: string,
+ *   holder?: string | null,
+ *   currency?: string,
+ *   swiftCode?: string | null,
+ *   isActive?: boolean,
+ *   isDefault?: boolean,
+ * }} PartyBankAccount
+ */
 /** @typedef {{address: string}} PartyDeliveryAddress */
 /**
  * @typedef {Object} PartyProfile

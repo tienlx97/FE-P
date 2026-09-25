@@ -1,4 +1,5 @@
 import { apiRequest } from '@/shared/api/api-client.js';
+import { listVietnamBanks as listSharedVietnamBanks } from '@/shared/api/vietnam-banks.js';
 
 const GENERIC_ERROR_MESSAGE = 'Không thể lưu tài khoản ngân hàng';
 const GENERIC_LIST_ERROR_MESSAGE = 'Không thể tải danh sách tài khoản ngân hàng';
@@ -11,8 +12,9 @@ const GENERIC_LIST_ERROR_MESSAGE = 'Không thể tải danh sách tài khoản n
  * @returns {Promise<import('../types/index.js').VietnamBank[]>}
  */
 export async function listVietnamBanks() {
-  const result = await apiRequest('/api/v1/vietnam-banks');
-  return result.success ? (result.data ?? []) : [];
+  return /** @type {Promise<import('../types/index.js').VietnamBank[]>} */ (
+    listSharedVietnamBanks()
+  );
 }
 
 /**

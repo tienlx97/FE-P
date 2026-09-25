@@ -11,7 +11,6 @@ import * as stylex from '@stylexjs/stylex';
 import {
   Banknote,
   Building2,
-  Landmark,
   NotebookText,
   Ship,
   Trash2,
@@ -37,6 +36,7 @@ import {
   useSupplierQuery,
   useSupplierRelatedCounts,
 } from '../hooks/use-suppliers-query.js';
+import { SupplierBankAccountsPanel } from './supplier-bank-accounts-panel.jsx';
 import { SupplierFormDialog } from './supplier-form-dialog.jsx';
 import { SupplierOverviewPanel } from './supplier-overview-panel.jsx';
 
@@ -54,8 +54,8 @@ const TAB_VALUES = /** @type {SupplierTab[]} */ (Object.keys(TAB_LABELS));
 
 /**
  * `/logistics/suppliers/[id]` — supplier detail page (Figma "CHI TIẾT NHÀ
- * CUNG CẤP", node 141:4). "Tổng quan" follows the Figma; the Tài khoản
- * ngân hàng and Ghi chú tabs list the supplier's own data; Shipment and
+ * CUNG CẤP", node 141:4). "Tổng quan" and "Tài khoản ngân hàng" follow
+ * their Figma frames; Ghi chú lists the supplier's own data; Shipment and
  * Commission show their counts until their lists are designed.
  * @param {{ supplierId: string }} props
  */
@@ -229,25 +229,7 @@ function SupplierDetailBody({
             />
           ) : null}
           {activeTab === 'banks' ? (
-            <MetaShipmentSection icon={Landmark} title="Tài khoản ngân hàng">
-              {bankAccounts.length === 0 ? (
-                <Text color="secondary">Chưa có tài khoản ngân hàng.</Text>
-              ) : (
-                <Grid columns={{ minWidth: 260, max: 3 }} gap={3}>
-                  {bankAccounts.map((account, index) => (
-                    <MetaShipmentField
-                      key={`${account.accountNumber}-${index}`}
-                      label={account.bankName}
-                      value={account.accountNumber}
-                      isCode
-                      caption={[account.branch, account.province]
-                        .filter(Boolean)
-                        .join(' · ')}
-                    />
-                  ))}
-                </Grid>
-              )}
-            </MetaShipmentSection>
+            <SupplierBankAccountsPanel supplier={supplier} />
           ) : null}
           {activeTab === 'shipments' ? (
             <RelatedPlaceholder

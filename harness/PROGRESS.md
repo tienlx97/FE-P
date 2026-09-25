@@ -1,5 +1,27 @@
 # Progress Log
 
+## 2026-09-25 — Supplier detail: tab Tài khoản ngân hàng (Figma "Danh sách tài khoản ngân hàng")
+
+- Needs BE-kt-xnk `party-bank-account-details` (`a817738`; dev API rebuilt).
+- `SupplierBankAccountsPanel`: header (active count pill, VND/USD/EUR…
+  `SegmentedControl` built from the accounts' currencies, "Thêm tài khoản
+  ngân hàng"), `TanStackDataTable` (golden rule #13): default star /
+  "Ưu tiên 1" (outline star sets default), bank code tile + catalog full
+  name + branch + SWIFT, copyable number, holder, currency pill, status
+  pill, Sửa / Xoá. `SupplierBankAccountDialog` (`MetaFormDialog`): bank from
+  the Vietnam bank catalog, number, branch, province, holder, currency,
+  SWIFT, active, default (add only). Per-account endpoints; responses
+  written straight into the supplier query.
+- `listVietnamBanks` moved to `src/shared/api/vietnam-banks.js` (admin-users
+  re-exports it). `MetaShipmentSection` gains `actions`; overview bank card
+  shows the default account with a "Mặc định" tag again.
+- `buildPartyBody` now sends every bank field (`toBankAccountBody`) so a
+  full supplier/customer save keeps holder/currency/SWIFT/status/default.
+- Checked in Chrome on a temporary supplier (then deleted): set default,
+  add (Techcombank EUR), EUR filter, edit → Ngừng hoạt động, delete the
+  default (moves to next), full form save keeps all bank fields.
+- verify.sh passed (`harness/runs/20260925-122233-2039/`).
+
 ## 2026-09-25 — Supplier detail page (`/logistics/suppliers/[id]`), tab Tổng quan
 
 - Figma "CHI TIẾT NHÀ CUNG CẤP" (node 141:4). Needs BE-kt-xnk

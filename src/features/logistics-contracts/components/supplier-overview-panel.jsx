@@ -187,7 +187,11 @@ export function SupplierOverviewPanel({
 
         <MetaShipmentSection icon={Landmark} title="Tài khoản ngân hàng">
           <MetaPartyBankBody
-            account={bankAccounts[0] ?? null}
+            account={
+              bankAccounts.find((account) => account.isDefault) ??
+              bankAccounts[0] ??
+              null
+            }
             moreCount={bankAccounts.length - 1}
             onViewAll={onViewBankAccounts}
             emptyText="Chưa có tài khoản ngân hàng."
