@@ -1,5 +1,26 @@
 # Progress Log
 
+## 2026-09-25 — Bank account dialog: foreign banks + "Thêm trường"
+
+- User: foreign banks have different parameters; "thêm trường" is
+  essential. Needs BE-kt-xnk `party-bank-account-details` task 2
+  (`312fbf1`, `extraFields` per account; dev API rebuilt).
+- `SupplierBankAccountDialog`: "Ngân hàng trong nước / nước ngoài"
+  switch — domestic picks from the Vietnam bank catalog, foreign types the
+  bank name ("Thành phố / Quốc gia", "Mã SWIFT / BIC", "Số tài khoản /
+  IBAN"). An edited account opens as foreign when its bank isn't in the
+  catalog. "Thông tin bổ sung": `ExtraFieldsEditor` rows ("Thêm trường") +
+  quick-add chips (IBAN, Routing / ABA, Sort code, BSB, Địa chỉ ngân hàng,
+  Ngân hàng trung gian); blank rows dropped, a value without a name is an
+  error, max 20.
+- Table: globe tile for banks outside the catalog; extra fields listed
+  under the bank. `toBankAccountBody` sends `ExtraFields`, so full partner
+  saves keep them.
+- Checked in Chrome on a temporary supplier (then deleted): added a
+  Deutsche Bank EUR account with IBAN + intermediary bank; edit reopens it
+  as foreign with its fields.
+- verify.sh passed (`harness/runs/20260925-123338-688/`).
+
 ## 2026-09-25 — Supplier detail: tab Tài khoản ngân hàng (Figma "Danh sách tài khoản ngân hàng")
 
 - Needs BE-kt-xnk `party-bank-account-details` (`a817738`; dev API rebuilt).

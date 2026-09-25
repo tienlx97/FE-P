@@ -1,26 +1,45 @@
 'use client';
 
+import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
+import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Landmark, Save } from 'lucide-react';
+import { Landmark, Plus, Save } from 'lucide-react';
+import { useState } from 'react';
 
+import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { MetaFormDialog } from '@/shared/components/meta-form-dialog.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { currencyOptions } from '../config/currencies.js';
+import { FOREIGN_BANK_FIELD_SUGGESTIONS } from '../config/party-bank-account-schema.js';
 import {
   useSupplierBankAccountForm,
   useVietnamBanksQuery,
 } from '../hooks/use-supplier-bank-accounts.js';
+import { ExtraFieldsEditor } from './extra-fields-editor.jsx';
+
+/** @typedef {'domestic' | 'foreign'} BankKind */
 
 /**
  * Add / edit one supplier bank account (supplier detail "Tài khoản ngân
- * hàng" tab). The bank is picked from the Vietnam bank catalog (stored by
- * short name); a name not in the catalog (an existing free-text one) stays
- * selectable. The default flag is only offered when adding — an existing
+ * hàng" tab).
+ * - "Trong nước": bank from the Vietnam bank catalog (stored by short name).
+ * - "Nước ngoài": free-text bank name, city / country, SWIFT/BIC.
+ * - "Thông tin bổ sung": free name/value rows ("Thêm trường") for whatever
+ *   else the bank needs — IBAN, routing / ABA, sort code, intermediary
+ *   bank… (quick-add suggestions for a foreign bank).
+ * An existing account opens as "Nước ngoài" when its bank isn't in the
+ * catalog. The default flag is only offered when adding — an existing
  * account becomes default through the table's star.
  * @param {{
  *   supplier: import('../types/index.js').Supplier,
@@ -34,29 +53,41 @@ export function SupplierBankAccountDialog({ supplier, account, onClose }) {
     account,
     onSuccess: onClose,
   });
-  const banks = useVietnamBanksQuery().data ?? [];
+  const banksQuery = useVietnamBanksQuery();
+  const banks = banksQuery.data ?? [];
+  const { values, setField, fieldStatuses, extraFieldRows } = form;
+
+  const isInCatalog = banks.some((bank) => bank.shortName === values.bankName);
+  // Until the user picks, follow the data: an edited account whose bank
+  // isn't in the (loaded) catalog is foreign.
+  const [chosenKind, setChosenKind] = useState(
+    /** @type {BankKind | null} */ (null),
+  );
+  const kind =
+    chosenKind ??
+    (account && banksQuery.isSuccess && !isInCatalog ? 'foreign' : 'domestic');
+
+  /** @param {string} next */
+  function changeKind(next) {
+    const nextKind = /** @type {BankKind} */ (next);
+    setChosenKind(nextKind);
+    // A catalog pick means nothing abroad, and vice versa.
+    if (nextKind !== kind) setField('bankName', '');
+  }
+
   const bankOptions = banks.map((bank) => ({
     value: bank.shortName,
     label: `${bank.shortName} — ${bank.name}`,
   }));
-  if (
-    form.values.bankName &&
-    !bankOptions.some((option) => option.value === form.values.bankName)
-  ) {
-    bankOptions.unshift({
-      value: form.values.bankName,
-      label: form.values.bankName,
-    });
-  }
   const currencies = currencyOptions.some(
-    (option) => option.value === form.values.currency,
+    (option) => option.value === values.currency,
   )
     ? currencyOptions
-    : [
-        { value: form.values.currency, label: form.values.currency },
-        ...currencyOptions,
-      ];
-  const { values, setField, fieldStatuses } = form;
+    : [{ value: values.currency, label: values.currency }, ...currencyOptions];
+  const usedKeys = new Set(extraFieldRows.rows.map((row) => row.key.trim()));
+  const suggestions = FOREIGN_BANK_FIELD_SUGGESTIONS.filter(
+    (key) => !usedKeys.has(key),
+  );
 
   return (
     <MetaFormDialog
@@ -66,8 +97,8 @@ export function SupplierBankAccountDialog({ supplier, account, onClose }) {
       }}
       icon={Landmark}
       title={account ? 'Sửa tài khoản ngân hàng' : 'Thêm tài khoản ngân hàng'}
-      width={720}
-      draft={values}
+      width={760}
+      draft={{ values, extraFields: extraFieldRows.rows }}
       submitLabel={account ? 'Lưu thay đổi' : 'Thêm tài khoản'}
       submitIcon={Save}
       isSubmitting={form.isSubmitting}
@@ -75,23 +106,44 @@ export function SupplierBankAccountDialog({ supplier, account, onClose }) {
       onSubmit={form.handleSubmit}
     >
       <VStack gap={4} hAlign="stretch">
+        <SegmentedControl
+          label="Loại ngân hàng"
+          value={kind}
+          onChange={changeKind}
+        >
+          <SegmentedControlItem value="domestic" label="Ngân hàng trong nước" />
+          <SegmentedControlItem value="foreign" label="Ngân hàng nước ngoài" />
+        </SegmentedControl>
+
         <FormGrid>
           <StackItem size="fill">
-            <Selector
-              label="Ngân hàng"
-              isRequired
-              hasSearch
-              hasClear
-              value={values.bankName || null}
-              onChange={(value) => setField('bankName', value ?? '')}
-              options={bankOptions}
-              status={fieldStatuses.bankName}
-              width="100%"
-            />
+            {kind === 'domestic' ? (
+              <Selector
+                label="Ngân hàng"
+                isRequired
+                hasSearch
+                hasClear
+                value={isInCatalog ? values.bankName : null}
+                onChange={(value) => setField('bankName', value ?? '')}
+                options={bankOptions}
+                status={fieldStatuses.bankName}
+                width="100%"
+              />
+            ) : (
+              <TextInput
+                label="Tên ngân hàng"
+                isRequired
+                placeholder="Ví dụ: Deutsche Bank AG"
+                value={values.bankName}
+                onChange={(value) => setField('bankName', value)}
+                status={fieldStatuses.bankName}
+                statusVariant="tooltip"
+              />
+            )}
           </StackItem>
           <StackItem size="fill">
             <TextInput
-              label="Số tài khoản"
+              label={kind === 'foreign' ? 'Số tài khoản / IBAN' : 'Số tài khoản'}
               isRequired
               value={values.accountNumber}
               onChange={(value) => setField('accountNumber', value)}
@@ -112,7 +164,7 @@ export function SupplierBankAccountDialog({ supplier, account, onClose }) {
           </StackItem>
           <StackItem size="fill">
             <TextInput
-              label="Tỉnh/TP"
+              label={kind === 'foreign' ? 'Thành phố / Quốc gia' : 'Tỉnh/TP'}
               value={values.province}
               onChange={(value) => setField('province', value)}
               status={fieldStatuses.province}
@@ -140,7 +192,7 @@ export function SupplierBankAccountDialog({ supplier, account, onClose }) {
           </StackItem>
           <StackItem size="fill">
             <TextInput
-              label="Mã SWIFT"
+              label="Mã SWIFT / BIC"
               value={values.swiftCode}
               onChange={(value) => setField('swiftCode', value.toUpperCase())}
               status={fieldStatuses.swiftCode}
@@ -148,6 +200,44 @@ export function SupplierBankAccountDialog({ supplier, account, onClose }) {
             />
           </StackItem>
         </FormGrid>
+
+        <MetaFormSection
+          title="Thông tin bổ sung"
+          meta={
+            <Text size="sm" color="secondary">
+              {kind === 'foreign'
+                ? 'IBAN, Routing/ABA, Sort code, ngân hàng trung gian…'
+                : 'Các thông số khác của tài khoản'}
+            </Text>
+          }
+        >
+          <VStack gap={3} hAlign="stretch">
+            {suggestions.length > 0 ? (
+              <HStack gap={2} vAlign="center" wrap="wrap">
+                <Text size="sm" color="secondary">
+                  Gợi ý:
+                </Text>
+                {suggestions.map((key) => (
+                  <Button
+                    key={key}
+                    label={key}
+                    variant="secondary"
+                    size="sm"
+                    icon={<Icon icon={Plus} size="sm" />}
+                    onClick={() => form.addSuggestedField(key)}
+                  />
+                ))}
+              </HStack>
+            ) : null}
+            <ExtraFieldsEditor
+              rows={extraFieldRows.rows}
+              onAddRow={extraFieldRows.addRow}
+              onRemoveRow={extraFieldRows.removeRow}
+              onUpdateRowField={extraFieldRows.updateRowField}
+            />
+          </VStack>
+        </MetaFormSection>
+
         <CheckboxInput
           label="Đang hoạt động"
           value={values.isActive}

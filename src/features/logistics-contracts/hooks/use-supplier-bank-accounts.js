@@ -4,9 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 
 import { listVietnamBanks } from '@/shared/api/vietnam-banks.js';
+import { generateRowKey } from '@/shared/config/generate-row-key.js';
 
 import { changeSupplierBankAccount } from '../api/suppliers.js';
 import { partyBankAccountSchema } from '../config/party-bank-account-schema.js';
+import { useExtraFieldRows } from './use-extra-field-rows.js';
 
 /** Vietnamese bank catalog — short code tile + full name on bank rows. */
 export function useVietnamBanksQuery() {
@@ -77,6 +79,22 @@ export function useSupplierBankAccountForm({ supplier, account, onSuccess }) {
   );
   const [submitError, setSubmitError] = useState('');
   const mutation = useSupplierBankAccountMutation(supplier.id);
+  const extraFieldRows = useExtraFieldRows(
+    (account?.extraFields ?? []).map((field) => ({
+      rowKey: generateRowKey(),
+      key: field.key,
+      value: field.value,
+    })),
+  );
+
+  /** "Thêm trường" suggestion: adds `key` unless a row already has it. @param {string} key */
+  function addSuggestedField(key) {
+    if (extraFieldRows.rows.some((row) => row.key.trim() === key)) return;
+    extraFieldRows.setRows((rows) => [
+      ...rows.filter((row) => row.key.trim() || row.value.trim()),
+      { rowKey: generateRowKey(), key, value: '' },
+    ]);
+  }
 
   /** @param {keyof ReturnType<typeof initialValues>} field @param {any} value */
   function setField(field, value) {
@@ -87,13 +105,22 @@ export function useSupplierBankAccountForm({ supplier, account, onSuccess }) {
   async function handleSubmit(event) {
     event?.preventDefault();
     setSubmitError('');
-    const parsed = partyBankAccountSchema.safeParse(values);
+    const parsed = partyBankAccountSchema.safeParse({
+      ...values,
+      // Fully blank rows are dropped; a value without a name is an error.
+      extraFields: extraFieldRows.rows
+        .filter((row) => row.key.trim() || row.value.trim())
+        .map((row) => ({ key: row.key, value: row.value })),
+    });
     if (!parsed.success) {
       const errors = /** @type {Record<string, string>} */ ({});
       for (const issue of parsed.error.issues) {
         errors[String(issue.path[0])] ??= issue.message;
       }
       setFieldErrors(errors);
+      if (errors.extraFields) {
+        setSubmitError(`Thông tin bổ sung: ${errors.extraFields}`);
+      }
       return;
     }
     setFieldErrors({});
@@ -132,6 +159,8 @@ export function useSupplierBankAccountForm({ supplier, account, onSuccess }) {
     setField,
     fieldStatuses,
     submitError,
+    extraFieldRows,
+    addSuggestedField,
     isSubmitting: mutation.isPending,
     handleSubmit,
   };

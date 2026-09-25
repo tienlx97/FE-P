@@ -19,6 +19,7 @@ import {
   CircleCheck,
   CirclePause,
   Copy,
+  Globe,
   Landmark,
   MapPin,
   Pencil,
@@ -176,14 +177,19 @@ export function SupplierBankAccountsPanel({ supplier }) {
       width: proportional(2),
       renderCell: (account) => {
         const bank = findBank(banks, account.bankName);
-        // Catalog code ("VCB", "BIDV"), else the typed name's first letters.
-        const tileLabel = bank?.code ?? account.bankName.slice(0, 4);
+        // Catalog code ("VCB", "BIDV"); banks outside the catalog get a globe.
+        const tileLabel = bank?.code ?? '';
         return (
           <HStack gap={3} vAlign="center" wrap="nowrap">
             <HStack hAlign="center" vAlign="center" xstyle={styles.bankTile}>
-              <Text size="xsm" weight="bold" color="inherit" maxLines={1}>
-                {tileLabel.toUpperCase()}
-              </Text>
+              {bank ? (
+                <Text size="xsm" weight="bold" color="inherit" maxLines={1}>
+                  {tileLabel.toUpperCase()}
+                </Text>
+              ) : (
+                // Not in the Vietnam catalog — a foreign (or free-text) bank.
+                <Icon icon={Globe} size="sm" color="inherit" />
+              )}
             </HStack>
             <VStack gap={0.5} xstyle={styles.minZero}>
               <HStack gap={1} vAlign="center" wrap="wrap">
@@ -214,6 +220,16 @@ export function SupplierBankAccountsPanel({ supplier }) {
                   </Text>
                 ) : null}
               </HStack>
+              {(account.extraFields ?? []).length > 0 ? (
+                <Text size="sm" color="secondary" maxLines={2}>
+                  {account.extraFields
+                    .map(
+                      (/** @type {{ key: string, value: string }} */ field) =>
+                        `${field.key}: ${field.value}`,
+                    )
+                    .join('  ·  ')}
+                </Text>
+              ) : null}
             </VStack>
           </HStack>
         );

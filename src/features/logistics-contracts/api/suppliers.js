@@ -161,6 +161,12 @@ export function toBankAccountBody(account) {
     SwiftCode: account.swiftCode || null,
     IsActive: account.isActive ?? true,
     IsDefault: account.isDefault ?? false,
+    ExtraFields: (account.extraFields ?? [])
+      .filter((/** @type {any} */ field) => field.key?.trim())
+      .map((/** @type {any} */ field) => ({
+        Key: field.key.trim(),
+        Value: field.value ?? '',
+      })),
   };
 }
 

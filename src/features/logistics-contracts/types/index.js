@@ -73,6 +73,7 @@ export {};
  *   swiftCode?: string | null,
  *   isActive?: boolean,
  *   isDefault?: boolean,
+ *   extraFields?: { key: string, value: string }[],
  * }} PartyBankAccount
  */
 /** @typedef {{address: string}} PartyDeliveryAddress */
