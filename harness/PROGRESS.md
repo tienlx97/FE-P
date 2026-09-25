@@ -1,5 +1,32 @@
 # Progress Log
 
+## 2026-09-26 — "Cảng / Nơi" → "Cảng đến" (UN/LOCODE) + "Nơi giao hàng"
+
+- Needs BE-kt-xnk `port-catalog-unlocode` (`4aa797a`, `3b72b22`; dev API
+  rebuilt, migration applied — 17,520 ports, 249 coded countries, the 9 dev
+  ports matched, 7 addresses → delivery places; pre-migration dev DB dump in
+  the session scratchpad).
+- `/logistics/ports` "Cảng đến" (`PortsList`): server-paged
+  `POST /ports/search`, country pill, quick search = name OR code OR full
+  name sent to the server (`onContentSearchChange`; client filter key
+  `searchText`), advanced filter, export pages through all matches. Create
+  dialog: country, UN/LOCODE (prefix pre-filled from the country's ISO
+  code), short + full name. `/logistics/places` redirects here.
+- `/logistics/delivery-places` "Nơi giao hàng": the old place modules,
+  renamed (`DeliveryPlace*`, `/api/v1/delivery-places`).
+- Countries: `code` column + optional "Mã nước (ISO)" field.
+  `findVietnamCountry` prefers `code === 'VN'`.
+- Contract form (drawer + dialog field sets): loading = VN ports + VN
+  delivery places; discharge = export country's ports; option label
+  "Name (CODE)", saved text = full name || name. "Nơi giao hàng" (DDP) is now
+  a Selector over the country's delivery places with "+" quick create.
+- Sidebar / config hub / route-access updated.
+- Checked in Chrome: ports list (17,520, 701 pages, "cat lai" → VNCLI,
+  VNOCL), delivery places (7), contract loading picker options. The
+  Selector's own search is accent-sensitive ("Lai" doesn't find "Cát Lái";
+  code search works).
+- verify.sh passed (`harness/runs/20260926-004925-295014/`).
+
 ## 2026-09-25 — Fix: nested <form> from the quick-create drawers
 
 - The lab `Drawer` renders in place, so "Thêm nhanh khách hàng" inside the

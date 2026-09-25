@@ -50,8 +50,13 @@
       "allowedPermissions": ["logistics:contracts:view"]
     },
     {
-      "title": "Cảng / Nơi",
-      "path": "/logistics/places",
+      "title": "Cảng đến",
+      "path": "/logistics/ports",
+      "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
+      "title": "Nơi giao hàng",
+      "path": "/logistics/delivery-places",
       "allowedPermissions": ["logistics:contracts:view"]
     }
   ]

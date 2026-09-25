@@ -6,18 +6,18 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
 /**
- * `Place` catalog field-set — `Name` + a `CountryId` Selector reusing the
- * Country list. `Place` is a lookup/suggestion catalog only, unrelated to
- * `placeOfLoading`/`placeOfDischarge` validation on the Contract form.
+ * `DeliveryPlace` catalog field-set — `Name` + a `CountryId` Selector reusing the
+ * Country list. `DeliveryPlace` is a lookup/suggestion catalog only, unrelated to
+ * `placeOfDelivery` validation on the Contract form.
  * @param {{
- *   values: import('../types/index.js').PlaceFormValues,
- *   setField: (field: keyof import('../types/index.js').PlaceFormValues, value: string) => void,
+ *   values: import('../types/index.js').DeliveryPlaceFormValues,
+ *   setField: (field: keyof import('../types/index.js').DeliveryPlaceFormValues, value: string) => void,
  *   fieldStatuses: Record<string, { type: 'error', message: string } | undefined>,
  *   countries: import('../types/index.js').Country[],
  *   isCountryFixed?: boolean,
  * }} props
  */
-export function PlaceFields({
+export function DeliveryPlaceFields({
   values,
   setField,
   fieldStatuses,
@@ -27,7 +27,7 @@ export function PlaceFields({
   return (
     <VStack gap={3} hAlign="stretch">
       <TextInput
-        label="Tên cảng / nơi"
+        label="Tên nơi giao hàng"
         value={values.name}
         onChange={(value) => setField('name', value)}
         isRequired

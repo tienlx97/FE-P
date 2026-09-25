@@ -148,13 +148,28 @@ export {};
  * @typedef {Object} Country
  * @property {string} id
  * @property {string} name
+ * @property {string | null} code - ISO 3166-1 alpha-2 (e.g. "VN"); null for user-created countries without one
  */
 
 /**
- * Place catalog entry — lookup/suggestion only, scoped to one `Country`.
- * Does NOT constrain `Contract.placeOfLoading`/`placeOfDischarge`, which
- * stay free text.
- * @typedef {Object} Place
+ * "Cảng đến" catalog entry (BE-kt-xnk `port-catalog-unlocode`) — a
+ * UN/LOCODE port of one `Country`. Lookup / suggestion only: it does NOT
+ * constrain `Contract.placeOfLoading` / `placeOfDischarge`, which stay free text.
+ * @typedef {Object} Port
+ * @property {string} id
+ * @property {string} code - UN/LOCODE, e.g. "VNCLI"
+ * @property {string} name - short name, e.g. "Cát Lái"
+ * @property {string | null} fullName - long / display name
+ * @property {string | null} subdivision - ISO 3166-2 subdivision code without the country prefix
+ * @property {string | null} coordinates
+ * @property {string | null} function - UN/LOCODE function classifier
+ * @property {string} countryId
+ */
+
+/**
+ * "Nơi giao hàng" catalog entry — a factory / site / warehouse address in
+ * one `Country`. Suggestion only for `Contract.placeOfDelivery` (free text).
+ * @typedef {Object} DeliveryPlace
  * @property {string} id
  * @property {string} name
  * @property {string} countryId
@@ -197,7 +212,7 @@ export {};
  * @property {string} category
  * @property {string} countryId - FK into the {@link Country} catalog (was the free-text `exportCountry`)
  * @property {string} placeOfLoading - was `portOfLoading`
- * @property {string | null} placeOfDischarge - "Cảng đến", was `portOrPlaceOfDestination`; free text, not constrained to the {@link Place} catalog. Required for every Incoterm; `null` only on older EXW/FOB contracts saved before that rule
+ * @property {string | null} placeOfDischarge - "Cảng đến", was `portOrPlaceOfDestination`; free text, suggested from (not constrained to) the {@link Port} catalog. Required for every Incoterm; `null` only on older EXW/FOB contracts saved before that rule
  * @property {string | null} placeOfDelivery - "Nơi giao hàng" (e.g. the buyer's construction site); DDP only, `null` otherwise — see `requiresPlaceOfDelivery()`
  * @property {number} contractValue
  * @property {string} currency - 3-letter uppercase ISO 4217 code, e.g. "USD"
@@ -489,12 +504,21 @@ export {};
 /**
  * @typedef {Object} CountryFormValues
  * @property {string} name
+ * @property {string} code
  */
 
 /**
- * @typedef {Object} PlaceFormValues
+ * @typedef {Object} DeliveryPlaceFormValues
  * @property {string} name
  * @property {string} countryId
+ */
+
+/**
+ * @typedef {Object} PortFormValues
+ * @property {string} countryId
+ * @property {string} code
+ * @property {string} name
+ * @property {string} fullName
  */
 
 /**

@@ -2,31 +2,32 @@
 
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
-import { usePlaceForm } from '../hooks/use-place-form.js';
-import { PlaceFields } from './place-fields.jsx';
+import { usePortForm } from '../hooks/use-port-form.js';
+import { PortFields } from './port-fields.jsx';
 
 /**
- * Quick-create Place from contract pickers. Seeds the selected country on every opening and uses an independent child form.
+ * Quick-create a port from the contract port pickers. Seeds the selected country on every opening and uses an independent child form.
  * @param {{
  *   isOpen: boolean,
  *   onOpenChange: (isOpen: boolean) => void,
  *   countries: import('../types/index.js').Country[],
  *   countryId?: string,
- *   onCreated: (place: import('../types/index.js').Place) => void,
+ *   onCreated: (place: import('../types/index.js').Port) => void,
  * }} props
  */
-export function QuickCreatePlaceDialog({
+export function QuickCreatePortDialog({
   isOpen,
   onOpenChange,
   countries,
   countryId,
   onCreated,
 }) {
-  const form = usePlaceForm({
+  const form = usePortForm({
     countryId,
+    countries,
     // Re-seeds `values.countryId` from the latest `countryId` prop every
     // time this dialog opens — see the `isOpen` param's doc comment in
-    // `usePlaceForm`. This dialog stays mounted and is opened by its
+    // `usePortForm`. This dialog stays mounted and is opened by its
     // caller flipping `isOpen` directly (an IconButton's onClick), which
     // never touches this hook, so without this the Country selector would
     // stay stuck on whatever `countryId` was true the first time this
@@ -48,16 +49,16 @@ export function QuickCreatePlaceDialog({
     <FormDialog
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
-      title="Thêm cảng / nơi đến"
+      title="Thêm cảng"
       submitLabel="Thêm"
-      width={480}
+      width={560}
       draft={{ values: form.values }}
       isSubmitting={form.isSubmitting}
       submitError={form.submitError}
       fieldStatuses={form.fieldStatuses}
       onSubmit={form.handleSubmit}
     >
-      <PlaceFields
+      <PortFields
         values={form.values}
         setField={form.setField}
         fieldStatuses={form.fieldStatuses}

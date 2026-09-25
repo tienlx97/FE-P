@@ -2,11 +2,11 @@
 
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
-import { usePlaceForm } from '../hooks/use-place-form.js';
-import { PlaceFields } from './place-fields.jsx';
+import { useDeliveryPlaceForm } from '../hooks/use-delivery-place-form.js';
+import { DeliveryPlaceFields } from './delivery-place-fields.jsx';
 
 /**
- * Create a Place from the reference-data page using the same shared frame and field set as quick creation.
+ * Create a delivery place from the reference-data page using the same shared frame and field set as quick creation.
  * @param {{
  *   isOpen: boolean,
  *   onOpenChange: (isOpen: boolean) => void,
@@ -14,13 +14,13 @@ import { PlaceFields } from './place-fields.jsx';
  *   onSuccess?: () => void,
  * }} props
  */
-export function PlaceFormDialog({
+export function DeliveryPlaceFormDialog({
   isOpen,
   onOpenChange,
   countries,
   onSuccess,
 }) {
-  const form = usePlaceForm({
+  const form = useDeliveryPlaceForm({
     onSuccess: () => {
       onOpenChange(false);
       onSuccess?.();
@@ -37,7 +37,7 @@ export function PlaceFormDialog({
     <FormDialog
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
-      title="Thêm cảng / nơi đến"
+      title="Thêm nơi giao hàng"
       submitLabel="Thêm"
       width={480}
       draft={{ values: form.values }}
@@ -46,7 +46,7 @@ export function PlaceFormDialog({
       fieldStatuses={form.fieldStatuses}
       onSubmit={form.handleSubmit}
     >
-      <PlaceFields
+      <DeliveryPlaceFields
         values={form.values}
         setField={form.setField}
         fieldStatuses={form.fieldStatuses}

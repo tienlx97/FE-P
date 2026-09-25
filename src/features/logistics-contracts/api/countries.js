@@ -30,6 +30,7 @@ export async function createCountry(values) {
     errorMessage: GENERIC_CREATE_ERROR,
     body: {
       Name: values.name,
+      Code: values.code || null,
     },
   });
 

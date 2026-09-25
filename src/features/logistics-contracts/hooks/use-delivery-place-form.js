@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 
-import { placeSchema } from '../config/place-schema.js';
-import { useCreatePlaceMutation } from './use-places-query.js';
+import { deliveryPlaceSchema } from '../config/delivery-place-schema.js';
+import { useCreateDeliveryPlaceMutation } from './use-delivery-places-query.js';
 
 /**
  * @param {string} [countryId]
- * @returns {import('../types/index.js').PlaceFormValues}
+ * @returns {import('../types/index.js').DeliveryPlaceFormValues}
  */
 function emptyValues(countryId) {
   return { name: '', countryId: countryId ?? '' };
@@ -19,22 +19,22 @@ function fieldStatus(message) {
 }
 
 /**
- * Form state for creating a `Place` (per-country lookup catalog) — mirrors
- * `useCustomerForm`. Used by `quick-create-place-dialog.jsx`. `Place` is only
+ * Form state for creating a `DeliveryPlace` (per-country lookup catalog) — mirrors
+ * `useCustomerForm`. Used by `quick-create-delivery-place-dialog.jsx`. `DeliveryPlace` is only
  * a lookup/suggestion catalog — it does not constrain
- * `placeOfLoading`/`placeOfDischarge` on the Contract form.
- * @param {{ countryId?: string, isOpen?: boolean, onSuccess?: (place: import('../types/index.js').Place) => void }} [options]
+ * `placeOfDelivery` on the Contract form.
+ * @param {{ countryId?: string, isOpen?: boolean, onSuccess?: (place: import('../types/index.js').DeliveryPlace) => void }} [options]
  */
-export function usePlaceForm({ countryId, isOpen, onSuccess } = {}) {
+export function useDeliveryPlaceForm({ countryId, isOpen, onSuccess } = {}) {
   const [values, setValues] = useState(emptyValues(countryId));
   const [fieldErrors, setFieldErrors] = useState(
     /** @type {Record<string, string>} */ ({}),
   );
   const [submitError, setSubmitError] = useState('');
 
-  const createMutation = useCreatePlaceMutation();
+  const createMutation = useCreateDeliveryPlaceMutation();
 
-  // `QuickCreatePlaceDialog` stays mounted and is opened by its caller
+  // `QuickCreateDeliveryPlaceDialog` stays mounted and is opened by its caller
   // setting `isOpen` directly (e.g. an IconButton's onClick), never by
   // calling this hook's `reset()` — so a `countryId` prop change (the
   // caller's currently selected export country) picked up between opens
@@ -42,7 +42,7 @@ export function usePlaceForm({ countryId, isOpen, onSuccess } = {}) {
   // via `useState(emptyValues(countryId))` at mount. Re-seeding whenever
   // `isOpen` flips true keeps the form in sync with the latest `countryId`
   // every time it opens. No-op when `isOpen` isn't passed at all (e.g.
-  // `place-form-dialog.jsx`, which has no such prop to go stale).
+  // `delivery-place-form-dialog.jsx`, which has no such prop to go stale).
   //
   // Done as a render-phase state adjustment (comparing against a
   // `prevIsOpen` state mirror), not a `useEffect` — the lint rule
@@ -60,7 +60,7 @@ export function usePlaceForm({ countryId, isOpen, onSuccess } = {}) {
   }
 
   /**
-   * @param {keyof import('../types/index.js').PlaceFormValues} field
+   * @param {keyof import('../types/index.js').DeliveryPlaceFormValues} field
    * @param {string} value
    */
   function setField(field, value) {
@@ -78,7 +78,7 @@ export function usePlaceForm({ countryId, isOpen, onSuccess } = {}) {
     event?.preventDefault();
     setSubmitError('');
 
-    const result = placeSchema.safeParse(values);
+    const result = deliveryPlaceSchema.safeParse(values);
     if (!result.success) {
       /** @type {Record<string, string>} */
       const nextFieldErrors = {};
@@ -99,7 +99,7 @@ export function usePlaceForm({ countryId, isOpen, onSuccess } = {}) {
       return;
     }
 
-    onSuccess?.(createResult.place);
+    onSuccess?.(createResult.deliveryPlace);
     reset();
   }
 

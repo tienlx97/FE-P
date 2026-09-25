@@ -1,7 +1,7 @@
 /**
- * `Country` (see `types/index.js`) has no ISO code — it's a plain
- * user-managed `{id, name}` catalog (`docs/api/Countries.md`, BE-kt-xnk),
- * so "which country is Vietnam" can only be answered by matching `name`.
+ * Matches "Việt Nam" by name — the fallback of `findVietnamCountry`, which
+ * prefers the ISO code (`code === 'VN'`, BE-kt-xnk `port-catalog-unlocode`)
+ * but still finds an uncoded, user-created row.
  * Normalizes away case, surrounding whitespace, and diacritics so "Việt
  * Nam", "viet nam", "VIỆT NAM" all match; confirmed against the actual
  * seeded catalog (`Việt Nam`) via the running app on 2026-09-01.
@@ -22,5 +22,8 @@ export function isVietnamCountryName(name) {
  * @returns {import('../types/index.js').Country | undefined}
  */
 export function findVietnamCountry(countries) {
-  return countries.find((country) => isVietnamCountryName(country.name));
+  return (
+    countries.find((country) => country.code === 'VN') ??
+    countries.find((country) => isVietnamCountryName(country.name))
+  );
 }

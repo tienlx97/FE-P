@@ -2,7 +2,8 @@
 
 import { Icon } from '@astryxdesign/core/Icon';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { proportional } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
@@ -12,6 +13,7 @@ import {
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
 import {
+  MetaCellText,
   MetaListTitle,
   MetaPrimaryCell,
 } from '@/shared/components/custom/meta/list-parts.jsx';
@@ -20,9 +22,13 @@ import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { CountryFormDialog } from './country-form-dialog.jsx';
 
 /** @satisfies {ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>} */
-const SEARCH_FIELD_DEFS = [{ key: 'name', type: 'string', label: 'Tên nước' }];
+const SEARCH_FIELD_DEFS = [
+  { key: 'name', type: 'string', label: 'Tên nước' },
+  { key: 'code', type: 'string', label: 'Mã ISO' },
+];
 
 const COLUMN_OPTIONS = [
+  { key: 'code', label: 'Mã ISO' },
   { key: 'name', label: 'Tên nước', isAlwaysVisible: true },
 ];
 
@@ -31,6 +37,7 @@ const SKELETON_ROW_COUNT = 6;
 const skeletonRows = Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => ({
   id: `skeleton-${index}`,
   name: '',
+  code: null,
 }));
 
 export function CountriesList() {
@@ -43,6 +50,17 @@ export function CountriesList() {
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Country & Record<string, unknown>>[]} */
   const columns = [
+    {
+      key: 'code',
+      header: 'Mã ISO',
+      width: pixel(96),
+      filter: 'code',
+      renderCell: (country) => (
+        <Text weight="medium">
+          <MetaCellText value={country.code} />
+        </Text>
+      ),
+    },
     {
       key: 'name',
       header: 'Tên nước',

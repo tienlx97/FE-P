@@ -2,9 +2,12 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createPlace, listPlaces } from '../api/places.js';
+import {
+  createDeliveryPlace,
+  listDeliveryPlaces,
+} from '../api/delivery-places.js';
 
-const QUERY_KEY = ['logistics-contracts', 'places'];
+const QUERY_KEY = ['logistics-contracts', 'delivery-places'];
 
 /**
  * @param {{ countryId?: string, enabled?: boolean }} [options] Filter to
@@ -13,23 +16,23 @@ const QUERY_KEY = ['logistics-contracts', 'places'];
  *   country-scoped list — never the unfiltered one — skip fetching until
  *   `countryId` is known, mirroring `useBranchesQuery(companyId)`.
  */
-export function usePlacesQuery({ countryId, enabled = true } = {}) {
+export function useDeliveryPlacesQuery({ countryId, enabled = true } = {}) {
   return useQuery({
     queryKey: [...QUERY_KEY, countryId ?? null],
-    queryFn: () => listPlaces({ countryId }),
+    queryFn: () => listDeliveryPlaces({ countryId }),
     enabled,
   });
 }
 
-export function useCreatePlaceMutation() {
+export function useCreateDeliveryPlaceMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (
-      /** @type {{ values: import('../types/index.js').PlaceFormValues }} */ {
+      /** @type {{ values: import('../types/index.js').DeliveryPlaceFormValues }} */ {
         values,
       },
-    ) => createPlace(values),
+    ) => createDeliveryPlace(values),
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });

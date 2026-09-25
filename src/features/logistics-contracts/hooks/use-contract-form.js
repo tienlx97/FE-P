@@ -18,9 +18,10 @@ import {
 } from './use-contracts-query.js';
 import { useCountriesQuery } from './use-countries-query.js';
 import { useCustomersQuery } from './use-customers-query.js';
+import { useDeliveryPlacesQuery } from './use-delivery-places-query.js';
 import { useCompaniesQuery } from './use-org-directory.js';
 import { usePaymentTermRows } from './use-payment-term-rows.js';
-import { usePlacesQuery } from './use-places-query.js';
+import { usePortsQuery } from './use-ports-query.js';
 import {
   useChangeSellerBankAccount,
   useSellersQuery,
@@ -37,24 +38,46 @@ const DEFAULT_INCOTERM_YEAR = 2010;
 const DEFAULT_CATEGORY = 'STEEL STRUCTURE';
 
 /**
- * `placeOfLoading`/`placeOfDischarge` are plain strings on the wire (see
- * `types/index.js`), so the Selectors backing them in
- * `ContractFormDialog` key their options by `Place.name`, not `Place.id`.
- * The `Place` catalog has no uniqueness constraint on `name` (two entries
- * for the same country can share a name — e.g. created twice by mistake),
- * which would otherwise surface as a "two children with the same key"
- * React warning/crash in the Selector's option list. Collapsing to one
- * option per distinct name here (first occurrence wins) keeps every
- * consumer of `loadingPlaces`/`dischargePlaces` safe without each having
- * to know why.
- * @param {import('../types/index.js').Place[]} places
- * @returns {import('../types/index.js').Place[]}
+ * One option of the contract's place pickers. `placeOfLoading` /
+ * `placeOfDischarge` / `placeOfDelivery` are plain strings on the wire, so
+ * the Selectors key options by the text they save (`name`), not an id.
+ * @typedef {{ id: string, name: string, label: string }} PlaceOption
  */
-function dedupePlacesByName(places) {
+
+/**
+ * A port saves its long name when it has one ("Cảng Cát Lái, TP. Hồ Chí
+ * Minh"), else its short name; the option shows "Short name (UN/LOCODE)".
+ * @param {import('../types/index.js').Port} port
+ * @returns {PlaceOption}
+ */
+function portOption(port) {
+  return {
+    id: port.id,
+    name: port.fullName || port.name,
+    label: `${port.name} (${port.code})`,
+  };
+}
+
+/**
+ * @param {import('../types/index.js').DeliveryPlace} place
+ * @returns {PlaceOption}
+ */
+function deliveryPlaceOption(place) {
+  return { id: place.id, name: place.name, label: place.name };
+}
+
+/**
+ * Collapses options that would save the same text (first wins) — two
+ * catalog rows can share a name, which would otherwise surface as a "two
+ * children with the same key" React warning in the Selector's option list.
+ * @param {PlaceOption[]} options
+ * @returns {PlaceOption[]}
+ */
+function dedupePlacesByName(options) {
   const seen = new Set();
-  return places.filter((place) => {
-    if (seen.has(place.name)) return false;
-    seen.add(place.name);
+  return options.filter((option) => {
+    if (seen.has(option.name)) return false;
+    seen.add(option.name);
     return true;
   });
 }
@@ -196,23 +219,33 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   const customersQuery = useCustomersQuery();
   const countriesQuery = useCountriesQuery();
 
-  // "Nơi xếp hàng" is always sourced from Vietnam's `Place` catalog —
+  // "Nơi xếp hàng" is always sourced from Vietnam's catalogs —
   // every Incoterm here (EXW/FOB/CIF/DDP) starts the seller's leg
   // domestically. `vietnamCountryId` is '' until `countriesQuery` resolves
-  // (or if no country named "Việt Nam" exists in the catalog yet), in
+  // (or if no country coded "VN" / named "Việt Nam" exists yet), in
   // which case the loading-place picker below stays disabled/empty rather
   // than fetching the unfiltered (every-country) place list.
   const vietnamCountryId =
     findVietnamCountry(
       countriesQuery.data?.success ? countriesQuery.data.countries : [],
     )?.id ?? '';
-  const loadingPlacesQuery = usePlacesQuery({
+  // Vietnamese ports plus Vietnamese delivery places (the factory an EXW
+  // contract loads at moved to "Nơi giao hàng" with the UN/LOCODE catalog).
+  const loadingPortsQuery = usePortsQuery({
     countryId: vietnamCountryId,
     enabled: Boolean(vietnamCountryId),
   });
-  // "Cảng đến" is sourced from the selected export country's `Place`
-  // catalog, fetched whenever a country is picked.
-  const dischargePlacesQuery = usePlacesQuery({
+  const loadingDeliveryPlacesQuery = useDeliveryPlacesQuery({
+    countryId: vietnamCountryId,
+    enabled: Boolean(vietnamCountryId),
+  });
+  // "Cảng đến" / "Nơi giao hàng" come from the selected export country's
+  // `Port` / `DeliveryPlace` catalogs, fetched whenever a country is picked.
+  const dischargePortsQuery = usePortsQuery({
+    countryId: values.countryId,
+    enabled: Boolean(values.countryId),
+  });
+  const deliveryPlacesQuery = useDeliveryPlacesQuery({
     countryId: values.countryId,
     enabled: Boolean(values.countryId),
   });
@@ -265,7 +298,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   function setField(field, value) {
     setValues((current) => {
       const next = { ...current, [field]: value };
-      // "Cảng đến" is scoped to the export country's `Place` catalog —
+      // "Cảng đến" is scoped to the export country's `Port` catalog —
       // clear it when the country changes so a stale port can't slip
       // through.
       if (field === 'countryId') {
@@ -318,7 +351,9 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
 
     // Beneficiary banks are the seller's own accounts: keep the ones that
     // belong to it, else preselect its default account.
-    const accountIds = (seller?.bankAccounts ?? []).map((account) => account.id);
+    const accountIds = (seller?.bankAccounts ?? []).map(
+      (account) => account.id,
+    );
     const defaultAccountId = (seller?.bankAccounts ?? []).find(
       (account) => account.isDefault,
     )?.id;
@@ -330,10 +365,10 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
         bankIds:
           kept.length > 0 || !defaultAccountId ? kept : [defaultAccountId],
         sellerInline: {
-        companyName: '',
-        representativeName: seller?.representativeName ?? '',
-        representativeTitle: seller?.representativeTitle ?? '',
-        address: seller?.address ?? '',
+          companyName: '',
+          representativeName: seller?.representativeName ?? '',
+          representativeTitle: seller?.representativeTitle ?? '',
+          address: seller?.address ?? '',
         },
       };
     });
@@ -595,13 +630,25 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
       ? countriesQuery.data.countries
       : [],
     vietnamCountryId,
-    loadingPlaces: dedupePlacesByName(
-      loadingPlacesQuery.data?.success ? loadingPlacesQuery.data.places : [],
-    ),
+    loadingPlaces: dedupePlacesByName([
+      ...(loadingPortsQuery.data?.success
+        ? loadingPortsQuery.data.ports.map(portOption)
+        : []),
+      ...(loadingDeliveryPlacesQuery.data?.success
+        ? loadingDeliveryPlacesQuery.data.deliveryPlaces.map(
+            deliveryPlaceOption,
+          )
+        : []),
+    ]),
     isPlaceOfDeliveryApplicable: requiresPlaceOfDelivery(values.incoterm),
     dischargePlaces: dedupePlacesByName(
-      dischargePlacesQuery.data?.success
-        ? dischargePlacesQuery.data.places
+      dischargePortsQuery.data?.success
+        ? dischargePortsQuery.data.ports.map(portOption)
+        : [],
+    ),
+    deliveryPlaces: dedupePlacesByName(
+      deliveryPlacesQuery.data?.success
+        ? deliveryPlacesQuery.data.deliveryPlaces.map(deliveryPlaceOption)
         : [],
     ),
     banks: sellerBankAccounts,

@@ -7,7 +7,7 @@ import { useCreateCountryMutation } from './use-countries-query.js';
 
 /** @returns {import('../types/index.js').CountryFormValues} */
 function emptyValues() {
-  return { name: '' };
+  return { name: '', code: '' };
 }
 
 /** @param {string} [message] @returns {{ type: 'error', message: string } | undefined} */

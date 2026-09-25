@@ -21,17 +21,17 @@ import {
 } from '@/shared/components/custom/meta/list-parts.jsx';
 
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
-import { usePlacesQuery } from '../hooks/use-places-query.js';
-import { PlaceFormDialog } from './place-form-dialog.jsx';
+import { useDeliveryPlacesQuery } from '../hooks/use-delivery-places-query.js';
+import { DeliveryPlaceFormDialog } from './delivery-place-form-dialog.jsx';
 
 /** @satisfies {ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>} */
 const SEARCH_FIELD_DEFS = [
-  { key: 'name', type: 'string', label: 'Tên cảng / nơi' },
+  { key: 'name', type: 'string', label: 'Tên nơi giao hàng' },
   { key: 'countryName', type: 'string', label: 'Nước' },
 ];
 
 const COLUMN_OPTIONS = [
-  { key: 'name', label: 'Tên cảng / nơi', isAlwaysVisible: true },
+  { key: 'name', label: 'Tên nơi giao hàng', isAlwaysVisible: true },
   { key: 'countryName', label: 'Nước' },
 ];
 
@@ -44,7 +44,7 @@ const skeletonRows = Array.from({ length: SKELETON_ROW_COUNT }, (_, index) => ({
   countryName: '',
 }));
 
-export function PlacesList() {
+export function DeliveryPlacesList() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [hasOpenedCreate, setHasOpenedCreate] = useState(false);
   const [countryFilter, setCountryFilter] = useState('');
@@ -60,19 +60,21 @@ export function PlacesList() {
     [countries],
   );
 
-  const placesQuery = usePlacesQuery({ countryId: countryFilter || undefined });
+  const placesQuery = useDeliveryPlacesQuery({
+    countryId: countryFilter || undefined,
+  });
   const listResult = placesQuery.data;
-  const places = listResult?.success ? listResult.places : [];
+  const places = listResult?.success ? listResult.deliveryPlaces : [];
   const searchablePlaces = places.map((place) => ({
     ...place,
     countryName: countriesById.get(place.countryId)?.name ?? '',
   }));
 
-  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Place & Record<string, unknown>>[]} */
+  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').DeliveryPlace & Record<string, unknown>>[]} */
   const columns = [
     {
       key: 'name',
-      header: 'Tên cảng / nơi',
+      header: 'Tên nơi giao hàng',
       width: proportional(1.2),
       filter: 'name',
       renderCell: (place) => <MetaPrimaryCell>{place.name}</MetaPrimaryCell>,
@@ -130,9 +132,9 @@ export function PlacesList() {
         <AdvanceTable
           title={
             <MetaListTitle
-              title="Danh sách cảng / nơi"
+              title="Danh sách nơi giao hàng"
               count={listResult?.success ? places.length : undefined}
-              unit="cảng / nơi"
+              unit="nơi giao hàng"
             />
           }
           isFramed
@@ -140,18 +142,18 @@ export function PlacesList() {
           dividers="rows"
           toolbarFilters={countryFilterPill}
           primaryAction={{
-            label: 'Thêm cảng / nơi đến',
+            label: 'Thêm nơi giao hàng',
             icon: <Icon icon={Plus} size="sm" />,
             onClick: () => {
               setHasOpenedCreate(true);
               setIsCreateOpen(true);
             },
           }}
-          toolbarLabel="Thao tác danh sách cảng"
+          toolbarLabel="Thao tác danh sách nơi giao hàng"
           searchFieldDefs={SEARCH_FIELD_DEFS}
-          entityLabel="Cảng / Nơi"
+          entityLabel="Nơi giao hàng"
           contentSearchFieldKey="name"
-          searchPlaceholder="Tìm tên cảng..."
+          searchPlaceholder="Tìm nơi giao hàng..."
           columnOptions={COLUMN_OPTIONS}
           tableColumns={columns}
           data={searchablePlaces}
@@ -165,7 +167,7 @@ export function PlacesList() {
       </StackItem>
 
       {hasOpenedCreate ? (
-        <PlaceFormDialog
+        <DeliveryPlaceFormDialog
           isOpen={isCreateOpen}
           onOpenChange={setIsCreateOpen}
           countries={countries}

@@ -32,3 +32,11 @@ test('findVietnamCountry returns the matching entry from a mixed list', () => {
 test('findVietnamCountry returns undefined when no match exists', () => {
   assert.equal(findVietnamCountry([{ id: '1', name: 'Australia' }]), undefined);
 });
+
+test('findVietnamCountry prefers the ISO code over the name', () => {
+  const countries = [
+    { id: '1', name: 'Việt Nam (cũ)', code: null },
+    { id: '2', name: 'Viet Nam', code: 'VN' },
+  ];
+  assert.equal(findVietnamCountry(countries)?.id, '2');
+});
