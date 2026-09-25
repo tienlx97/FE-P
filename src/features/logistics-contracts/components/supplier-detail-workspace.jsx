@@ -39,7 +39,7 @@ import {
   useSupplierQuery,
   useSupplierRelatedCounts,
 } from '../hooks/use-suppliers-query.js';
-import { SupplierFormDialog } from './supplier-form-dialog.jsx';
+import { SupplierFormDrawer } from './supplier-form-drawer.jsx';
 import { SupplierOverviewPanel } from './supplier-overview-panel.jsx';
 import { SupplierShipmentsPanel } from './supplier-shipments-panel.jsx';
 
@@ -290,7 +290,7 @@ function SupplierDetailBody({
       {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
         {isEditing ? (
-          <SupplierFormDialog
+          <SupplierFormDrawer
             isOpen
             onOpenChange={(isOpen) => {
               if (!isOpen) setIsEditing(false);

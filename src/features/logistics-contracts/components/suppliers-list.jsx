@@ -44,7 +44,7 @@ import {
   useSearchSuppliersQuery,
 } from '../hooks/use-suppliers-query.js';
 import { renderFilterValue } from './filter-value.jsx';
-import { SupplierFormDialog } from './supplier-form-dialog.jsx';
+import { SupplierFormDrawer } from './supplier-form-drawer.jsx';
 
 const ALL = 'all';
 
@@ -451,7 +451,7 @@ export function SuppliersList() {
       </StackItem>
 
       {hasOpenedCreate ? (
-        <SupplierFormDialog
+        <SupplierFormDrawer
           isOpen={isCreateOpen}
           onOpenChange={setIsCreateOpen}
           onSuccess={() => setIsCreateOpen(false)}
@@ -459,7 +459,7 @@ export function SuppliersList() {
       ) : null}
 
       {editingSupplier ? (
-        <SupplierFormDialog
+        <SupplierFormDrawer
           key={editingSupplier.id}
           isOpen
           onOpenChange={(isOpen) => {

@@ -13,6 +13,10 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
+import {
+  MetaFormSection,
+  MetaPill,
+} from '@/shared/components/custom/meta/index.js';
 import { ExtraFieldsEditor } from '@/shared/components/extra-fields-editor.jsx';
 import { FormGrid } from '@/shared/components/form-grid.jsx';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
@@ -42,8 +46,17 @@ const input = (label, field, values, setField, statuses, options = {}) => (
   />
 );
 
-/** @param {{kind: 'customer' | 'supplier', form: any, compact?: boolean}} props */
-export function PartyFormFields({ kind, form, compact = false }) {
+/**
+ * `layout="sections"` (the Meta drawers) shows every group as its own boxed
+ * card instead of the tab strip.
+ * @param {{kind: 'customer' | 'supplier', form: any, compact?: boolean, layout?: 'tabs' | 'sections'}} props
+ */
+export function PartyFormFields({
+  kind,
+  form,
+  compact = false,
+  layout = 'tabs',
+}) {
   const [activeTab, setActiveTab] = useState('contact');
   const [isGroupDialogOpen, setIsGroupDialogOpen] = useState(false);
   const noun = kind === 'customer' ? 'khách hàng' : 'nhà cung cấp';
@@ -78,48 +91,292 @@ export function PartyFormFields({ kind, form, compact = false }) {
       </VStack>
     );
   }
-  return (
-    <VStack gap={4} hAlign="stretch">
-      <FormGrid>
-        <StackItem size="fill">
+  /** @param {string} tab */
+  const renderTabBody = (tab) => (
+    <>
+      {tab === 'contact' ? (
+        <>
+          <FormGrid>
+            <StackItem size="fill">
+              {input(
+                'Xưng hô',
+                'contactSalutation',
+                values,
+                setField,
+                fieldStatuses,
+              )}
+            </StackItem>
+            <StackItem size="fill">
+              {input(
+                'Họ và tên',
+                'contactName',
+                values,
+                setField,
+                fieldStatuses,
+              )}
+            </StackItem>
+          </FormGrid>
+          <FormGrid>
+            <StackItem size="fill">
+              {input('Email', 'contactEmail', values, setField, fieldStatuses, {
+                type: 'email',
+              })}
+            </StackItem>
+            <StackItem size="fill">
+              {input(
+                'Số điện thoại',
+                'contactPhone',
+                values,
+                setField,
+                fieldStatuses,
+              )}
+            </StackItem>
+          </FormGrid>
+          <FormGrid>
+            <StackItem size="fill">
+              {input(
+                'Đại diện theo pháp luật',
+                'representativeName',
+                values,
+                setField,
+                fieldStatuses,
+              )}
+            </StackItem>
+            <StackItem size="fill">
+              {input(
+                'Chức vụ',
+                'representativeTitle',
+                values,
+                setField,
+                fieldStatuses,
+              )}
+            </StackItem>
+          </FormGrid>
+          <FormGrid>
+            <StackItem size="fill">
+              {input(
+                'Người nhận hóa đơn điện tử',
+                'invoiceRecipientName',
+                values,
+                setField,
+                fieldStatuses,
+              )}
+            </StackItem>
+            <StackItem size="fill">
+              {input(
+                'Số điện thoại nhận hóa đơn',
+                'invoiceRecipientPhone',
+                values,
+                setField,
+                fieldStatuses,
+              )}
+            </StackItem>
+          </FormGrid>
           {input(
-            'Mã số thuế/CCCD chủ hộ',
-            'taxCode',
+            'Email nhận hóa đơn (ngăn cách bằng dấu ;)',
+            'invoiceRecipientEmails',
             values,
             setField,
             fieldStatuses,
           )}
-        </StackItem>
-        <StackItem size="fill">
-          {input(
-            'Mã số ĐVQHNS',
-            'budgetUnitCode',
-            values,
-            setField,
-            fieldStatuses,
-          )}
-        </StackItem>
-      </FormGrid>
-      <FormGrid>
-        <StackItem size="fill">
-          <Selector
-            label="Loại đối tượng"
-            value={values.isOrganization ? 'organization' : 'person'}
-            onChange={(value) => setField('isOrganization', value !== 'person')}
-            options={[
-              { value: 'organization', label: 'Tổ chức' },
-              { value: 'person', label: 'Cá nhân' },
-            ]}
-            width="100%"
+        </>
+      ) : null}
+      {tab === 'payment' ? (
+        <FormGrid>
+          <StackItem size="fill">
+            <Selector
+              label="Điều khoản thanh toán"
+              hasSearch
+              hasClear
+              value={values.paymentTermId || null}
+              onChange={(value) => setField('paymentTermId', value ?? '')}
+              options={form.lookups.paymentTerms.map(
+                (/** @type {any} */ item) => ({
+                  value: item.id,
+                  label: item.name,
+                }),
+              )}
+              width="100%"
+            />
+          </StackItem>
+          <StackItem size="fill">
+            <NumberInput
+              label="Số ngày được nợ"
+              value={values.dueDays}
+              onChange={(value) => setField('dueDays', value)}
+              status={fieldStatuses.dueDays}
+            />
+          </StackItem>
+          <StackItem size="fill">
+            <NumberInput
+              label="Số nợ tối đa"
+              value={values.creditLimit}
+              onChange={(value) => setField('creditLimit', value)}
+              status={fieldStatuses.creditLimit}
+            />
+          </StackItem>
+          <StackItem size="fill">
+            {input(
+              'Tài khoản công nợ phải trả/thu',
+              'debtAccount',
+              values,
+              setField,
+              fieldStatuses,
+            )}
+          </StackItem>
+        </FormGrid>
+      ) : null}
+      {tab === 'banks' ? (
+        <>
+          {form.bankAccounts.map((/** @type {any} */ row) => (
+            <HStack key={row.rowKey} gap={2} vAlign="end">
+              <StackItem size="fill">
+                {input(
+                  'Số tài khoản',
+                  'accountNumber',
+                  row,
+                  (field, value) =>
+                    form.updateBankAccount(row.rowKey, field, value),
+                  {},
+                )}
+              </StackItem>
+              <StackItem size="fill">
+                {input(
+                  'Tên ngân hàng',
+                  'bankName',
+                  row,
+                  (field, value) =>
+                    form.updateBankAccount(row.rowKey, field, value),
+                  {},
+                )}
+              </StackItem>
+              <StackItem size="fill">
+                {input(
+                  'Chi nhánh',
+                  'branch',
+                  row,
+                  (field, value) =>
+                    form.updateBankAccount(row.rowKey, field, value),
+                  {},
+                )}
+              </StackItem>
+              <StackItem size="fill">
+                {input(
+                  'Tỉnh/TP của ngân hàng',
+                  'province',
+                  row,
+                  (field, value) =>
+                    form.updateBankAccount(row.rowKey, field, value),
+                  {},
+                )}
+              </StackItem>
+              <Button
+                type="button"
+                label="Xóa"
+                variant="ghost"
+                icon={<Icon icon={Trash2} />}
+                onClick={() => form.removeBankAccount(row.rowKey)}
+              />
+            </HStack>
+          ))}
+          <HStack gap={2}>
+            <Button
+              type="button"
+              label="Thêm dòng"
+              variant="secondary"
+              size="sm"
+              icon={<Icon icon={Plus} />}
+              onClick={form.addBankAccount}
+            />
+          </HStack>
+        </>
+      ) : null}
+      {tab === 'addresses' ? (
+        <>
+          <FormGrid>
+            <StackItem size="fill">
+              {input('Quốc gia', 'country', values, setField, fieldStatuses)}
+            </StackItem>
+            <StackItem size="fill">
+              {input(
+                'Tỉnh/Thành phố',
+                'province',
+                values,
+                setField,
+                fieldStatuses,
+              )}
+            </StackItem>
+          </FormGrid>
+          <FormGrid>
+            <StackItem size="fill">
+              {input('Quận/Huyện', 'district', values, setField, fieldStatuses)}
+            </StackItem>
+            <StackItem size="fill">
+              {input('Xã/Phường', 'ward', values, setField, fieldStatuses)}
+            </StackItem>
+          </FormGrid>
+          <CheckboxInput
+            label={`Địa chỉ giao hàng giống địa chỉ ${noun}`}
+            value={values.deliveryAddressSameAsMain}
+            onChange={(value) => setField('deliveryAddressSameAsMain', value)}
           />
-        </StackItem>
-        <StackItem size="fill">
-          {input('Điện thoại', 'phone', values, setField, fieldStatuses)}
-        </StackItem>
-        <StackItem size="fill">
-          {input('Website', 'website', values, setField, fieldStatuses)}
-        </StackItem>
-      </FormGrid>
+          {!values.deliveryAddressSameAsMain
+            ? form.deliveryAddresses.map((/** @type {any} */ row) => (
+                <HStack key={row.rowKey} gap={2} vAlign="end">
+                  <StackItem size="fill">
+                    {input(
+                      'Địa chỉ giao hàng',
+                      'address',
+                      row,
+                      (/** @type {any} */ _, /** @type {any} */ value) =>
+                        form.updateDeliveryAddress(row.rowKey, value),
+                      {},
+                    )}
+                  </StackItem>
+                  <Button
+                    type="button"
+                    label="Xóa"
+                    variant="ghost"
+                    icon={<Icon icon={Trash2} />}
+                    onClick={() => form.removeDeliveryAddress(row.rowKey)}
+                  />
+                </HStack>
+              ))
+            : null}
+          {!values.deliveryAddressSameAsMain ? (
+            <HStack gap={2}>
+              <Button
+                type="button"
+                label="Thêm dòng"
+                variant="secondary"
+                size="sm"
+                icon={<Icon icon={Plus} />}
+                onClick={form.addDeliveryAddress}
+              />
+            </HStack>
+          ) : null}
+        </>
+      ) : null}
+      {tab === 'notes' ? (
+        <TextArea
+          label="Ghi chú"
+          value={values.notes}
+          onChange={(value) => setField('notes', value)}
+        />
+      ) : null}
+      {tab === 'extra' ? (
+        <ExtraFieldsEditor
+          rows={form.extraFieldRows.rows}
+          onAddRow={form.extraFieldRows.addRow}
+          onRemoveRow={form.extraFieldRows.removeRow}
+          onUpdateRowField={form.extraFieldRows.updateRowField}
+        />
+      ) : null}
+    </>
+  );
+
+  const general = (
+    <>
       <FormGrid>
         <StackItem size="fill">
           {input(
@@ -178,6 +435,46 @@ export function PartyFormFields({ kind, form, compact = false }) {
           </HStack>
         </StackItem>
       </FormGrid>
+      <FormGrid>
+        <StackItem size="fill">
+          {input(
+            'Mã số thuế/CCCD chủ hộ',
+            'taxCode',
+            values,
+            setField,
+            fieldStatuses,
+          )}
+        </StackItem>
+        <StackItem size="fill">
+          {input(
+            'Mã số ĐVQHNS',
+            'budgetUnitCode',
+            values,
+            setField,
+            fieldStatuses,
+          )}
+        </StackItem>
+      </FormGrid>
+      <FormGrid>
+        <StackItem size="fill">
+          <Selector
+            label="Loại đối tượng"
+            value={values.isOrganization ? 'organization' : 'person'}
+            onChange={(value) => setField('isOrganization', value !== 'person')}
+            options={[
+              { value: 'organization', label: 'Tổ chức' },
+              { value: 'person', label: 'Cá nhân' },
+            ]}
+            width="100%"
+          />
+        </StackItem>
+        <StackItem size="fill">
+          {input('Điện thoại', 'phone', values, setField, fieldStatuses)}
+        </StackItem>
+        <StackItem size="fill">
+          {input('Website', 'website', values, setField, fieldStatuses)}
+        </StackItem>
+      </FormGrid>
 
       <QuickCreatePartyGroupDialog
         kind={kind}
@@ -199,7 +496,35 @@ export function PartyFormFields({ kind, form, compact = false }) {
         value={values.isInternal}
         onChange={(value) => setField('isInternal', value)}
       />
+    </>
+  );
 
+  if (layout === 'sections') {
+    return (
+      <VStack gap={5} hAlign="stretch">
+        <MetaFormSection
+          isBoxed
+          title="Thông tin chung"
+          meta={<MetaPill label="Bắt buộc" tone="accent" />}
+        >
+          <VStack gap={4} hAlign="stretch">
+            {general}
+          </VStack>
+        </MetaFormSection>
+        {TABS.map(([value, label]) => (
+          <MetaFormSection key={value} isBoxed title={label}>
+            <VStack gap={3} hAlign="stretch">
+              {renderTabBody(value)}
+            </VStack>
+          </MetaFormSection>
+        ))}
+      </VStack>
+    );
+  }
+
+  return (
+    <VStack gap={4} hAlign="stretch">
+      {general}
       <TabList
         value={activeTab}
         onChange={setActiveTab}
@@ -223,295 +548,7 @@ export function PartyFormFields({ kind, form, compact = false }) {
         id={`party-${activeTab}`}
         role="tabpanel"
       >
-        {activeTab === 'contact' ? (
-          <>
-            <FormGrid>
-              <StackItem size="fill">
-                {input(
-                  'Xưng hô',
-                  'contactSalutation',
-                  values,
-                  setField,
-                  fieldStatuses,
-                )}
-              </StackItem>
-              <StackItem size="fill">
-                {input(
-                  'Họ và tên',
-                  'contactName',
-                  values,
-                  setField,
-                  fieldStatuses,
-                )}
-              </StackItem>
-            </FormGrid>
-            <FormGrid>
-              <StackItem size="fill">
-                {input(
-                  'Email',
-                  'contactEmail',
-                  values,
-                  setField,
-                  fieldStatuses,
-                  { type: 'email' },
-                )}
-              </StackItem>
-              <StackItem size="fill">
-                {input(
-                  'Số điện thoại',
-                  'contactPhone',
-                  values,
-                  setField,
-                  fieldStatuses,
-                )}
-              </StackItem>
-            </FormGrid>
-            <FormGrid>
-              <StackItem size="fill">
-                {input(
-                  'Đại diện theo pháp luật',
-                  'representativeName',
-                  values,
-                  setField,
-                  fieldStatuses,
-                )}
-              </StackItem>
-              <StackItem size="fill">
-                {input(
-                  'Chức vụ',
-                  'representativeTitle',
-                  values,
-                  setField,
-                  fieldStatuses,
-                )}
-              </StackItem>
-            </FormGrid>
-            <FormGrid>
-              <StackItem size="fill">
-                {input(
-                  'Người nhận hóa đơn điện tử',
-                  'invoiceRecipientName',
-                  values,
-                  setField,
-                  fieldStatuses,
-                )}
-              </StackItem>
-              <StackItem size="fill">
-                {input(
-                  'Số điện thoại nhận hóa đơn',
-                  'invoiceRecipientPhone',
-                  values,
-                  setField,
-                  fieldStatuses,
-                )}
-              </StackItem>
-            </FormGrid>
-            {input(
-              'Email nhận hóa đơn (ngăn cách bằng dấu ;)',
-              'invoiceRecipientEmails',
-              values,
-              setField,
-              fieldStatuses,
-            )}
-          </>
-        ) : null}
-        {activeTab === 'payment' ? (
-          <FormGrid>
-            <StackItem size="fill">
-              <Selector
-                label="Điều khoản thanh toán"
-                hasSearch
-                hasClear
-                value={values.paymentTermId || null}
-                onChange={(value) => setField('paymentTermId', value ?? '')}
-                options={form.lookups.paymentTerms.map(
-                  (/** @type {any} */ item) => ({
-                    value: item.id,
-                    label: item.name,
-                  }),
-                )}
-                width="100%"
-              />
-            </StackItem>
-            <StackItem size="fill">
-              <NumberInput
-                label="Số ngày được nợ"
-                value={values.dueDays}
-                onChange={(value) => setField('dueDays', value)}
-                status={fieldStatuses.dueDays}
-              />
-            </StackItem>
-            <StackItem size="fill">
-              <NumberInput
-                label="Số nợ tối đa"
-                value={values.creditLimit}
-                onChange={(value) => setField('creditLimit', value)}
-                status={fieldStatuses.creditLimit}
-              />
-            </StackItem>
-            <StackItem size="fill">
-              {input(
-                'Tài khoản công nợ phải trả/thu',
-                'debtAccount',
-                values,
-                setField,
-                fieldStatuses,
-              )}
-            </StackItem>
-          </FormGrid>
-        ) : null}
-        {activeTab === 'banks' ? (
-          <>
-            {form.bankAccounts.map((/** @type {any} */ row) => (
-              <HStack key={row.rowKey} gap={2} vAlign="end">
-                <StackItem size="fill">
-                  {input(
-                    'Số tài khoản',
-                    'accountNumber',
-                    row,
-                    (field, value) =>
-                      form.updateBankAccount(row.rowKey, field, value),
-                    {},
-                  )}
-                </StackItem>
-                <StackItem size="fill">
-                  {input(
-                    'Tên ngân hàng',
-                    'bankName',
-                    row,
-                    (field, value) =>
-                      form.updateBankAccount(row.rowKey, field, value),
-                    {},
-                  )}
-                </StackItem>
-                <StackItem size="fill">
-                  {input(
-                    'Chi nhánh',
-                    'branch',
-                    row,
-                    (field, value) =>
-                      form.updateBankAccount(row.rowKey, field, value),
-                    {},
-                  )}
-                </StackItem>
-                <StackItem size="fill">
-                  {input(
-                    'Tỉnh/TP của ngân hàng',
-                    'province',
-                    row,
-                    (field, value) =>
-                      form.updateBankAccount(row.rowKey, field, value),
-                    {},
-                  )}
-                </StackItem>
-                <Button
-                  type="button"
-                  label="Xóa"
-                  variant="ghost"
-                  icon={<Icon icon={Trash2} />}
-                  onClick={() => form.removeBankAccount(row.rowKey)}
-                />
-              </HStack>
-            ))}
-            <HStack gap={2}>
-              <Button
-                type="button"
-                label="Thêm dòng"
-                variant="secondary"
-                size="sm"
-                icon={<Icon icon={Plus} />}
-                onClick={form.addBankAccount}
-              />
-            </HStack>
-          </>
-        ) : null}
-        {activeTab === 'addresses' ? (
-          <>
-            <FormGrid>
-              <StackItem size="fill">
-                {input('Quốc gia', 'country', values, setField, fieldStatuses)}
-              </StackItem>
-              <StackItem size="fill">
-                {input(
-                  'Tỉnh/Thành phố',
-                  'province',
-                  values,
-                  setField,
-                  fieldStatuses,
-                )}
-              </StackItem>
-            </FormGrid>
-            <FormGrid>
-              <StackItem size="fill">
-                {input(
-                  'Quận/Huyện',
-                  'district',
-                  values,
-                  setField,
-                  fieldStatuses,
-                )}
-              </StackItem>
-              <StackItem size="fill">
-                {input('Xã/Phường', 'ward', values, setField, fieldStatuses)}
-              </StackItem>
-            </FormGrid>
-            <CheckboxInput
-              label={`Địa chỉ giao hàng giống địa chỉ ${noun}`}
-              value={values.deliveryAddressSameAsMain}
-              onChange={(value) => setField('deliveryAddressSameAsMain', value)}
-            />
-            {!values.deliveryAddressSameAsMain
-              ? form.deliveryAddresses.map((/** @type {any} */ row) => (
-                  <HStack key={row.rowKey} gap={2} vAlign="end">
-                    <StackItem size="fill">
-                      {input(
-                        'Địa chỉ giao hàng',
-                        'address',
-                        row,
-                        (/** @type {any} */ _, /** @type {any} */ value) =>
-                          form.updateDeliveryAddress(row.rowKey, value),
-                        {},
-                      )}
-                    </StackItem>
-                    <Button
-                      type="button"
-                      label="Xóa"
-                      variant="ghost"
-                      icon={<Icon icon={Trash2} />}
-                      onClick={() => form.removeDeliveryAddress(row.rowKey)}
-                    />
-                  </HStack>
-                ))
-              : null}
-            {!values.deliveryAddressSameAsMain ? (
-              <HStack gap={2}>
-                <Button
-                  type="button"
-                  label="Thêm dòng"
-                  variant="secondary"
-                  size="sm"
-                  icon={<Icon icon={Plus} />}
-                  onClick={form.addDeliveryAddress}
-                />
-              </HStack>
-            ) : null}
-          </>
-        ) : null}
-        {activeTab === 'notes' ? (
-          <TextArea
-            label="Ghi chú"
-            value={values.notes}
-            onChange={(value) => setField('notes', value)}
-          />
-        ) : null}
-        {activeTab === 'extra' ? (
-          <ExtraFieldsEditor
-            rows={form.extraFieldRows.rows}
-            onAddRow={form.extraFieldRows.addRow}
-            onRemoveRow={form.extraFieldRows.removeRow}
-            onUpdateRowField={form.extraFieldRows.updateRowField}
-          />
-        ) : null}
+        {renderTabBody(activeTab)}
       </VStack>
     </VStack>
   );

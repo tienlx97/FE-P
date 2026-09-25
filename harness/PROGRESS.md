@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-09-25 — Supplier form: dialog → Meta drawer
+
+- `SupplierFormDrawer` (Commission-drawer style: 960px, `MetaDrawerHeader`,
+  muted canvas, footer Huỷ bỏ / submit) replaces `SupplierFormDialog`
+  (deleted) on the suppliers list and supplier detail page.
+- `PartyFormFields layout="sections"`: each group (Thông tin chung + the
+  former tabs) is a boxed `MetaFormSection`; tab layout unchanged for the
+  customer dialog. Both layouts now start with Tên + Nhóm.
+- No unsaved-changes confirm (the party form hook has no `isDirty`).
+- Checked in Chrome: "Thêm nhà cung cấp" opens the drawer.
+- verify.sh passed (`harness/runs/20260925-232847-156978/`).
+
 ## 2026-09-25 — Khách hàng redesign (like Nhà cung cấp) + customer detail page
 
 - Needs BE-kt-xnk `customer-detail-api` (`02a05cf`, dev API rebuilt, no
