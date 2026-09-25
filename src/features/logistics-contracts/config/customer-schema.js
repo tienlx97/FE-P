@@ -13,6 +13,8 @@ export const customerSchema = z.object({
   phone: z.string().trim().max(50),
   website: z.string().trim().max(500),
   groupId: z.string(),
+  // Suppliers only — a supplier can be in several groups (BE `groupIds`).
+  groupIds: z.array(z.string()),
   employeeId: z.string(),
   isInternal: z.boolean(),
   representativeName: z.string().trim(),

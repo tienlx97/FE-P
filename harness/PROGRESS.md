@@ -1,5 +1,27 @@
 # Progress Log
 
+## 2026-09-25 — Nhà cung cấp: several groups per supplier, group tabs + filters
+
+- Needs BE-kt-xnk `supplier-multi-group-filters` (`801ce29`; dev API on
+  :8081 rebuilt, migration applied).
+- Form: supplier "Nhóm nhà cung cấp" is a `MultiSelector` (`groupIds`);
+  quick-create "+" adds the new group to the selection. Customers keep the
+  single `Selector`. `buildSupplierBody` sends `GroupIds` and always
+  `Profile.GroupId: null` (BE rejects it on suppliers with 400).
+- List (Figma 137:2): group tabs in the card header ("Tất cả" = all
+  suppliers, each group its `supplierCount`; counts ignore the other
+  filters) and a filter band "Loại đối tượng" / "Nội bộ" / "Đặt lại",
+  appended as `And` conditions (`groupId`, `isOrganization`,
+  `isInternal`) after the advanced filter; export uses the same
+  conditions. Supplier saves/deletes refresh the group counts.
+- `renderFilterValue` moved from shipments-list to `filter-value.jsx`
+  (shared by both lists).
+- Checked in Chrome on the dev API: created groups Forwarder + Trucking
+  from the form, saved ALISPED in both (tabs 1 / 1), Trucking tab → 1 row,
+  + Cá nhân → 0 rows, Đặt lại → 10. Sample data was not re-imported (it
+  deletes users/companies).
+- verify.sh passed (`harness/runs/20260925-113521-1458/`).
+
 ## 2026-09-25 — Nhà cung cấp list follows Figma "DANH SÁCH NHÀ CUNG CẤP"
 
 - Columns (Figma node 137:2): Mã NCC (`profile.code`, one line) · Tên

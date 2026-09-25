@@ -100,6 +100,7 @@ import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categ
 import { useShipmentsListQuery } from '../hooks/use-shipments-list-query.js';
 import { useDeleteShipmentMutation } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
+import { renderFilterValue } from './filter-value.jsx';
 import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 
 /** @param {string | null | undefined} value */
@@ -371,27 +372,6 @@ const DECLARATION_DATE_OPTIONS = [
   { value: 'last30Days', label: '30 ngày qua' },
   { value: 'thisYear', label: 'Năm nay' },
 ];
-
-/**
- * Figma filter pill: muted "Loại hình:" caption, bold current value.
- * @param {string} caption
- */
-function renderFilterValue(caption) {
-  return function FilterValue(
-    /** @type {{ label?: import('react').ReactNode }} */ option,
-  ) {
-    return (
-      <HStack as="span" gap={1} vAlign="center" wrap="nowrap">
-        <Text as="span" type="supporting" weight="medium">
-          {caption}
-        </Text>
-        <Text as="span" type="supporting" weight="semibold" color="primary">
-          {option.label}
-        </Text>
-      </HStack>
-    );
-  };
-}
 
 /**
  * Meta "Danh sách Shipment" (Figma 108:5920, "Chế độ bảng: Cơ bản"):

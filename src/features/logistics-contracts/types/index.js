@@ -55,9 +55,10 @@ export {};
  * @property {PartyBankAccount[]} [bankAccounts]
  * @property {PartyDeliveryAddress[]} [deliveryAddresses]
  * @property {ExtraField[]} extraFields
+ * @property {string[]} [groupIds] Suppliers only — a supplier can be in several groups.
  */
 
-/** @typedef {{id: string, name: string}} PartyLookup */
+/** @typedef {{id: string, name: string, supplierCount?: number}} PartyLookup */
 /** @typedef {{accountNumber: string, bankName: string, branch: string, province: string}} PartyBankAccount */
 /** @typedef {{address: string}} PartyDeliveryAddress */
 /**
@@ -439,6 +440,7 @@ export {};
  * @property {string} phone
  * @property {string} website
  * @property {string} groupId
+ * @property {string[]} groupIds
  * @property {string} employeeId
  * @property {boolean} isInternal
  * @property {string} representativeName

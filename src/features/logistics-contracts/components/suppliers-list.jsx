@@ -1,13 +1,18 @@
 'use client';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
+import { Button } from '@astryxdesign/core/Button';
+import { Carousel } from '@astryxdesign/core/Carousel';
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
+import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
 import { Tooltip } from '@astryxdesign/core/Tooltip';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { Plus } from 'lucide-react';
+import { Plus, RotateCcw } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -32,13 +37,58 @@ import {
   SEARCH_FIELD_DEFS,
   skeletonRows,
 } from '../config/suppliers-table.js';
+import { usePartyLookupsQuery } from '../hooks/use-party-lookups-query.js';
 import {
   useDeleteSupplierMutation,
   useSearchSuppliersQuery,
 } from '../hooks/use-suppliers-query.js';
+import { renderFilterValue } from './filter-value.jsx';
 import { SupplierFormDialog } from './supplier-form-dialog.jsx';
 
+const ALL = 'all';
+
+const ORGANIZATION_OPTIONS = [
+  { value: ALL, label: 'Tất cả' },
+  { value: 'true', label: 'Tổ chức' },
+  { value: 'false', label: 'Cá nhân' },
+];
+
+const INTERNAL_OPTIONS = [
+  { value: ALL, label: 'Tất cả' },
+  { value: 'true', label: 'Nội bộ' },
+  { value: 'false', label: 'Bên ngoài' },
+];
+
+/**
+ * Group tab + "Loại đối tượng" / "Nội bộ" → BE search conditions
+ * (BE-kt-xnk `supplier-multi-group-filters`). `groupId` matches suppliers
+ * in that group, even if they are in others too.
+ * @param {{ groupId: string, isOrganization: string, isInternal: string }} filters
+ * @returns {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]}
+ */
+function quickFilterConditions({ groupId, isOrganization, isInternal }) {
+  return [
+    ['groupId', groupId],
+    ['isOrganization', isOrganization],
+    ['isInternal', isInternal],
+  ]
+    .filter(([, value]) => value !== ALL)
+    .map(([field, value]) => ({
+      id: `quick-${field}`,
+      field,
+      operator: 'Equals',
+      value,
+      valueTo: '',
+      connector: 'And',
+    }));
+}
+
 const styles = stylex.create({
+  groupCarousel: {
+    flexGrow: 1,
+    maxWidth: 'calc(var(--spacing-10) * 18)',
+    minWidth: 0,
+  },
   companyName: {
     textTransform: 'uppercase',
   },
@@ -62,6 +112,25 @@ export function SuppliersList() {
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
   );
+  const [quickFilters, setQuickFilters] = useState({
+    groupId: ALL,
+    isOrganization: ALL,
+    isInternal: ALL,
+  });
+  const { groups } = usePartyLookupsQuery('supplier');
+
+  /** @param {Partial<typeof quickFilters>} change */
+  function changeQuickFilters(change) {
+    setQuickFilters((current) => ({ ...current, ...change }));
+    setPageIndex(1);
+  }
+
+  // Appended after the advanced-filter conditions: BE folds connectors
+  // left to right, so a trailing `And` narrows the whole advanced filter.
+  const searchConditions = [
+    ...filterConditions,
+    ...quickFilterConditions(quickFilters),
+  ];
 
   const toast = useAppToast();
   const deleteMutation = useDeleteSupplierMutation();
@@ -85,8 +154,17 @@ export function SuppliersList() {
   const suppliersQuery = useSearchSuppliersQuery({
     page: pageIndex,
     pageSize,
-    conditions: filterConditions,
+    conditions: searchConditions,
   });
+  // "Tất cả" tab count — every supplier, whatever filter is active.
+  const allSuppliersQuery = useSearchSuppliersQuery({
+    page: 1,
+    pageSize: 1,
+    conditions: [],
+  });
+  const allSuppliersCount = allSuppliersQuery.data?.success
+    ? allSuppliersQuery.data.totalCount
+    : undefined;
   const listResult = suppliersQuery.data;
   const suppliers = listResult?.success ? listResult.suppliers : [];
   const totalSuppliers = listResult?.success ? listResult.totalCount : 0;
@@ -117,7 +195,7 @@ export function SuppliersList() {
       pageSize: listResult?.success
         ? Math.max(1, listResult.totalCount)
         : pageSize,
-      conditions: filterConditions,
+      conditions: searchConditions,
     });
     return result.success ? enrichSuppliers(result.suppliers) : [];
   }
@@ -224,6 +302,89 @@ export function SuppliersList() {
     },
   ];
 
+  // Tab counts: "Tất cả" is every supplier; a group's `supplierCount` counts
+  // each supplier in every group it belongs to. Neither follows the
+  // "Loại đối tượng" / "Nội bộ" filters.
+  const groupTabs = [
+    { value: ALL, label: 'Tất cả', count: allSuppliersCount },
+    ...groups.map((/** @type {import('../types/index.js').PartyLookup} */ group) => ({
+      value: group.id,
+      label: group.name,
+      count: group.supplierCount,
+    })),
+  ];
+
+  const groupTabList = (
+    <Carousel
+      aria-label="Nhóm nhà cung cấp"
+      gap={0}
+      xstyle={styles.groupCarousel}
+    >
+      <TabList
+        role="tablist"
+        size="md"
+        overflow="visible"
+        value={quickFilters.groupId}
+        onChange={(value) => changeQuickFilters({ groupId: value })}
+      >
+        {groupTabs.map((tab) => (
+          <Tab
+            key={tab.value}
+            value={tab.value}
+            label={tab.label}
+            panelId="suppliers-table"
+            endContent={
+              tab.count == null ? undefined : (
+                <MetaCountBadge
+                  value={tab.count}
+                  tone={
+                    tab.value === quickFilters.groupId ? 'on-accent' : 'neutral'
+                  }
+                />
+              )
+            }
+          />
+        ))}
+      </TabList>
+    </Carousel>
+  );
+
+  const filterBand = (
+    <HStack gap={2} vAlign="center" wrap="nowrap">
+      <Selector
+        label="Loại đối tượng"
+        isLabelHidden
+        size="lg"
+        value={quickFilters.isOrganization}
+        options={ORGANIZATION_OPTIONS}
+        renderValue={renderFilterValue('Loại đối tượng:')}
+        onChange={(value) => changeQuickFilters({ isOrganization: value })}
+      />
+      <Selector
+        label="Nội bộ"
+        isLabelHidden
+        size="lg"
+        value={quickFilters.isInternal}
+        options={INTERNAL_OPTIONS}
+        renderValue={renderFilterValue('Nội bộ:')}
+        onChange={(value) => changeQuickFilters({ isInternal: value })}
+      />
+      <Button
+        label="Đặt lại"
+        icon={<Icon icon={RotateCcw} size="sm" />}
+        variant="ghost"
+        size="lg"
+        onClick={() =>
+          changeQuickFilters({
+            groupId: ALL,
+            isOrganization: ALL,
+            isInternal: ALL,
+          })
+        }
+      />
+    </HStack>
+  );
+
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
       {listResult && !listResult.success ? (
@@ -241,7 +402,9 @@ export function SuppliersList() {
               unit="nhà cung cấp"
             />
           }
+          headerContent={groupTabList}
           isFramed
+          toolbarFilters={filterBand}
           dividers="rows"
           primaryAction={{
             label: 'Thêm nhà cung cấp',

@@ -5,6 +5,7 @@ import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
@@ -133,18 +134,38 @@ export function PartyFormFields({ kind, form, compact = false }) {
         <StackItem size="fill">
           <HStack gap={2} vAlign="end">
             <StackItem size="fill">
-              <Selector
-                label={`Nhóm ${noun}`}
-                hasSearch
-                hasClear
-                value={values.groupId || null}
-                onChange={(value) => setField('groupId', value ?? '')}
-                options={form.lookups.groups.map((/** @type {any} */ item) => ({
-                  value: item.id,
-                  label: item.name,
-                }))}
-                width="100%"
-              />
+              {kind === 'supplier' ? (
+                // A supplier can be in several groups (Forwarder + Trucking…).
+                <MultiSelector
+                  label={`Nhóm ${noun}`}
+                  hasSearch
+                  triggerDisplay="labels"
+                  placeholder="Chọn nhóm"
+                  value={values.groupIds}
+                  onChange={(value) => setField('groupIds', value)}
+                  options={form.lookups.groups.map(
+                    (/** @type {any} */ item) => ({
+                      value: item.id,
+                      label: item.name,
+                    }),
+                  )}
+                />
+              ) : (
+                <Selector
+                  label={`Nhóm ${noun}`}
+                  hasSearch
+                  hasClear
+                  value={values.groupId || null}
+                  onChange={(value) => setField('groupId', value ?? '')}
+                  options={form.lookups.groups.map(
+                    (/** @type {any} */ item) => ({
+                      value: item.id,
+                      label: item.name,
+                    }),
+                  )}
+                  width="100%"
+                />
+              )}
             </StackItem>
             <IconButton
               label={`Thêm nhóm ${noun}`}
@@ -162,7 +183,11 @@ export function PartyFormFields({ kind, form, compact = false }) {
         kind={kind}
         isOpen={isGroupDialogOpen}
         onOpenChange={setIsGroupDialogOpen}
-        onCreated={(group) => setField('groupId', group.id)}
+        onCreated={(group) =>
+          kind === 'supplier'
+            ? setField('groupIds', [...values.groupIds, group.id])
+            : setField('groupId', group.id)
+        }
       />
       <TextArea
         label="Địa chỉ"

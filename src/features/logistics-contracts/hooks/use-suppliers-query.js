@@ -34,6 +34,10 @@ function useSupplierMutation(mutationFn) {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: QUERY_KEY });
         queryClient.invalidateQueries({ queryKey: SEARCH_KEY });
+        // Group tab counts (`supplierCount`) change with every save/delete.
+        queryClient.invalidateQueries({
+          queryKey: ['logistics-contracts', 'supplier-groups'],
+        });
       }
     },
   });

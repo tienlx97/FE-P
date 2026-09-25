@@ -54,7 +54,7 @@ export async function createSupplier(
   const result = await apiRequest('/api/v1/suppliers', {
     method: 'POST',
     errorMessage: 'Không thể thêm nhà cung cấp',
-    body: buildPartyBody(
+    body: buildSupplierBody(
       values,
       extraFieldRows,
       bankAccounts,
@@ -77,7 +77,7 @@ export async function updateSupplier(
   const result = await apiRequest(`/api/v1/suppliers/${supplierId}`, {
     method: 'PUT',
     errorMessage: 'Không thể sửa nhà cung cấp',
-    body: buildPartyBody(
+    body: buildSupplierBody(
       values,
       extraFieldRows,
       bankAccounts,
@@ -106,6 +106,30 @@ export async function deleteSupplier(supplierId) {
   return result.success
     ? { success: true }
     : { success: false, message: result.message };
+}
+
+/**
+ * Suppliers can be in several groups: BE-kt-xnk takes them as top-level
+ * `GroupIds` and rejects `Profile.GroupId` (customer-only) with a 400.
+ * @param {any} values @param {any[]} [extraFieldRows] @param {any[]} [bankAccounts] @param {any[]} [deliveryAddresses]
+ */
+function buildSupplierBody(
+  values,
+  extraFieldRows = [],
+  bankAccounts = [],
+  deliveryAddresses = [],
+) {
+  const body = buildPartyBody(
+    values,
+    extraFieldRows,
+    bankAccounts,
+    deliveryAddresses,
+  );
+  return {
+    ...body,
+    Profile: { ...body.Profile, GroupId: null },
+    GroupIds: values.groupIds ?? [],
+  };
 }
 
 /** @param {any} values @param {any[]} [extraFieldRows] @param {any[]} [bankAccounts] @param {any[]} [deliveryAddresses] */
