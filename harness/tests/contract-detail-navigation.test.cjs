@@ -21,10 +21,17 @@ test('contract detail provides back navigation and closes its edit drawer on can
     'utf8',
   );
 
+  const breadcrumbSource = fs.readFileSync(
+    path.join(root, 'src/shared/components/custom/meta/contract-header-card.jsx'),
+    'utf8',
+  );
+
   // Back navigation lives in the Meta breadcrumb's back link (Figma
-  // node 89:1065) and still goes back in history, not to a fixed URL.
+  // node 89:1065): history back when the previous page is in the app,
+  // else the trail's parent (`useBackNavigation`), never a dead end.
   assert.match(workspaceSource, /<MetaContractBreadcrumb/);
-  assert.match(workspaceSource, /onBack=\{\(\) => router\.back\(\)\}/);
+  assert.match(workspaceSource, /trail=\{contractTrail\(/);
+  assert.match(breadcrumbSource, /useBackNavigation\(trail\.fallbackHref\)/);
   assert.match(workspaceSource, /initialMode="edit"\s+closeOnCancel/);
   assert.match(dialogSource, /closeOnCancel \|\| !contract \? 'close' : 'cancel'/);
 });

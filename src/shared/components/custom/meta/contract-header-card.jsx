@@ -21,57 +21,52 @@ import {
   SquarePen,
 } from 'lucide-react';
 
+import { useBackNavigation } from '@/shared/hooks/use-back-navigation.js';
+
 import { MetaPill } from './pill.jsx';
 
 /**
- * "Meta" contract-detail breadcrumb — Figma node 89:1065 ("1. BREADCRUMB"):
- * a back-arrow link to the list, then the current contract number in bold.
- * Astryx `Breadcrumbs` owns the separators and `aria-current`. `onBack`
- * (e.g. `router.back()`, keeping the list's filters/scroll) runs instead of
- * following `backHref`; `backHref` stays the link target for new-tab /
- * no-JS navigation. `parentLabel` + `parentHref` add a linked crumb between
- * the back link and the current page (e.g. the shipment detail's
- * "← Quay lại / Hợp đồng … / Lô hàng").
+ * "Meta" detail-page breadcrumb — Figma node 89:1065 ("1. BREADCRUMB"):
+ * a "← Quay lại" link, then the page's trail from
+ * `shared/config/breadcrumbs.js` with the current page in bold. Astryx
+ * `Breadcrumbs` owns the separators and `aria-current`.
+ *
+ * "Quay lại" runs `useBackNavigation(trail.fallbackHref)`: browser back
+ * when the previous page is in the app (keeps the list's filters/scroll),
+ * else the parent page. Its `href` stays the fallback for new-tab /
+ * middle-click.
  *
  * @param {{
+ *   trail: import('@/shared/config/breadcrumbs.js').BreadcrumbTrail,
  *   backLabel?: string,
- *   backHref: string,
- *   onBack?: () => void,
- *   parentLabel?: string,
- *   parentHref?: string,
- *   currentLabel: string,
  * }} props
  */
-export function MetaContractBreadcrumb({
-  backLabel = 'Quay lại',
-  backHref,
-  onBack,
-  parentLabel,
-  parentHref,
-  currentLabel,
-}) {
+export function MetaContractBreadcrumb({ trail, backLabel = 'Quay lại' }) {
+  const onBack = useBackNavigation(trail.fallbackHref);
+  const current = trail.items.at(-1);
+
   return (
     <Breadcrumbs variant="supporting">
       <BreadcrumbItem
-        href={backHref}
-        onClick={
-          onBack
-            ? (event) => {
-                event.preventDefault();
-                onBack();
-              }
-            : undefined
-        }
+        href={trail.fallbackHref}
+        onClick={(event) => {
+          // Let modified clicks (new tab / window) follow the href.
+          if (event.metaKey || event.ctrlKey || event.shiftKey) return;
+          event.preventDefault();
+          onBack();
+        }}
         startIcon={<Icon icon={ArrowLeft} size="xsm" color="inherit" />}
       >
         {backLabel}
       </BreadcrumbItem>
-      {parentLabel ? (
-        <BreadcrumbItem href={parentHref}>{parentLabel}</BreadcrumbItem>
-      ) : null}
+      {trail.items.slice(0, -1).map((item) => (
+        <BreadcrumbItem key={item.href ?? item.label} href={item.href}>
+          {item.label}
+        </BreadcrumbItem>
+      ))}
       <BreadcrumbItem isCurrent>
         <Text as="span" type="inherit" weight="bold">
-          {currentLabel}
+          {current?.label}
         </Text>
       </BreadcrumbItem>
     </Breadcrumbs>

@@ -12,6 +12,7 @@ import { Minimize2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
+import { useNavigationHistoryTracker } from '@/shared/hooks/use-back-navigation.js';
 import { useLayoutPreferences } from '@/shared/hooks/use-layout-preferences.js';
 
 import { isNavLinkActive } from '../api/nav.js';
@@ -168,6 +169,7 @@ export function ProtectedAppShell({
   site,
 }) {
   const pathname = usePathname();
+  useNavigationHistoryTracker();
   const [openMobileNavPathname, setOpenMobileNavPathname] = useState(
     /** @type {string | null} */ (null),
   );

@@ -29,6 +29,7 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
+import { supplierTrail } from '@/shared/config/breadcrumbs.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { usePartyLookupsQuery } from '../hooks/use-party-lookups-query.js';
@@ -88,10 +89,7 @@ export function SupplierDetailWorkspace({ supplierId }) {
       <PageContentShell isFullWidth>
         <VStack gap={4} hAlign="stretch">
           <MetaContractBreadcrumb
-            backLabel="Nhà cung cấp"
-            backHref="/logistics/suppliers"
-            onBack={() => router.push('/logistics/suppliers')}
-            currentLabel={supplier?.profile?.code ?? '…'}
+            trail={supplierTrail({ supplierCode: supplier?.profile?.code })}
           />
 
           {supplierQuery.isLoading ? (

@@ -26,6 +26,7 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
+import { commissionTrail } from '@/shared/config/breadcrumbs.js';
 
 import { useCommissionView } from '../hooks/use-commission-view.js';
 import { useContractQuery } from '../hooks/use-contracts-query.js';
@@ -139,11 +140,11 @@ function CommissionDetailBody({ contract, activeTab, onActiveTabChange }) {
 
   const breadcrumb = (
     <MetaContractBreadcrumb
-      backLabel="Quay lại"
-      backHref={`${contractHref}?tab=commission`}
-      parentLabel={`Hợp đồng ${contract.contractNumber}`}
-      parentHref={`${contractHref}?tab=commission`}
-      currentLabel={commission?.code ?? 'Commission'}
+      trail={commissionTrail({
+        contractId: contract.id,
+        contractNumber: contract.contractNumber,
+        commissionCode: commission?.code,
+      })}
     />
   );
 

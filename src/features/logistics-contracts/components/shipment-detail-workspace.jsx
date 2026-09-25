@@ -29,6 +29,7 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
+import { shipmentTrail } from '@/shared/config/breadcrumbs.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import {
@@ -324,13 +325,11 @@ export function ShipmentDetailWorkspace({ contractId, shipmentId }) {
       <PageContentShell isFullWidth>
         <VStack gap={4} hAlign="stretch">
           <MetaContractBreadcrumb
-            backLabel="Quay lại"
-            backHref="/logistics/shipments"
-            parentLabel={
-              contract ? `Hợp đồng ${contract.contractNumber}` : 'Hợp đồng'
-            }
-            parentHref={`/logistics/contract/${contractId}?tab=shipments`}
-            currentLabel={shipment?.shipmentCode ?? '…'}
+            trail={shipmentTrail({
+              contractId,
+              contractNumber: contract?.contractNumber,
+              shipmentCode: shipment?.shipmentCode,
+            })}
           />
 
           {contractQuery.isLoading || shipmentsQuery.isLoading ? (

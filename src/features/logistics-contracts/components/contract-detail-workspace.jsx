@@ -26,6 +26,7 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
+import { contractTrail } from '@/shared/config/breadcrumbs.js';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
 import {
@@ -161,9 +162,7 @@ export function ContractDetailWorkspace({ contractId }) {
       <PageContentShell isFullWidth>
         <VStack gap={4} hAlign="stretch">
           <MetaContractBreadcrumb
-            backHref="/logistics/contracts"
-            onBack={() => router.back()}
-            currentLabel={contract?.contractNumber ?? '…'}
+            trail={contractTrail({ contractNumber: contract?.contractNumber })}
           />
 
           {contractQuery.isLoading ? (

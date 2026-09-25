@@ -1,5 +1,24 @@
 # Progress Log
 
+## 2026-09-25 — Breadcrumbs config + smarter "Quay lại"
+
+- Trails for the detail pages now live in `src/shared/config/breadcrumbs.js`
+  (`contractTrail`, `shipmentTrail`, `commissionTrail`, `supplierTrail`):
+  Logistics › list › (contract) › current, plus a `fallbackHref` = the
+  page's real parent. `MetaContractBreadcrumb` takes `trail` instead of
+  back/parent/current props.
+- "Quay lại" = `useBackNavigation(fallbackHref)`
+  (`shared/hooks/use-back-navigation.js`): `router.back()` only when an
+  in-app page came before (tracked by `useNavigationHistoryTracker` in
+  `ProtectedAppShell`; tab switches don't count), otherwise push the parent.
+  Fixes: contract deep link/new tab used to leave the app; shipment went to
+  the shipments list even when opened from a contract; commission/supplier
+  back ignored where the user came from. Ctrl/Cmd/Shift-click still opens
+  the fallback href.
+- `harness/tests/contract-detail-navigation.test.cjs` updated to the new
+  pattern. Not checked in Chrome (dev server was being restarted).
+- verify.sh passed (`harness/runs/20260925-221641-48936/`).
+
 ## 2026-09-25 — Shipment cost lines: "Ngày xuất hoá đơn" (optional)
 
 - Needs BE-kt-xnk `add-shipment-cost-invoice-date` (`eae1171`, dev API
