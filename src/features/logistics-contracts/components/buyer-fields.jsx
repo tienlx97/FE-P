@@ -99,12 +99,13 @@ export function BuyerFields({
       </HStack>
 
       {selectedCustomer ? (
-        <VStack gap={3} hAlign="stretch">
-          <Text type="supporting" color="secondary">
-            Tên công ty: {selectedCustomer.companyName} (theo danh mục, không
-            sửa được ở đây)
-          </Text>
-        </VStack>
+        // <VStack gap={3} hAlign="stretch">
+        //   <Text type="supporting" color="secondary">
+        //     Tên công ty: {selectedCustomer.companyName} (theo danh mục, không
+        //     sửa được ở đây)
+        //   </Text>
+        // </VStack>
+        <></>
       ) : inlineValues.companyName ? (
         // Editing a contract whose Buyer was saved without a catalog
         // link (a typed CompanyName, no SourceCustomerId — the backend
