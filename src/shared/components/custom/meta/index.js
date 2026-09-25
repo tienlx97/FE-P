@@ -19,7 +19,6 @@ export { MetaBoqPanel } from './boq-panel.jsx';
 export {
   MetaCommissionEmptyState,
   MetaCommissionParties,
-  MetaCommissionSummaryCards,
   MetaCommissionTrackingCard,
 } from './commission-panel.jsx';
 export { MetaContractDetailSkeleton } from './contract-detail-skeleton.jsx';
@@ -43,7 +42,10 @@ export {
   MetaRowActions,
   MetaTotalsLabel,
 } from './list-parts.jsx';
-export { MetaOverviewSummaryCard } from './overview-summary-card.jsx';
+export {
+  MetaMetricsCard,
+  MetaOverviewSummaryCard,
+} from './overview-summary-card.jsx';
 export { MetaPagination } from './pagination.jsx';
 export { MetaBankAccountCard, MetaPartySummary } from './party-summary.jsx';
 export { MetaPaymentProgressPanel } from './payment-progress-panel.jsx';

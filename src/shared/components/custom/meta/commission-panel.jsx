@@ -13,11 +13,9 @@ import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import {
-  Banknote,
   CalendarDays,
   CircleCheck,
   CirclePlus,
-  ClipboardClock,
   Clock,
   Download,
   Eye,
@@ -34,7 +32,6 @@ import { MetaPill } from './pill.jsx';
  * @typedef {[string, string, ('code' | 'accent')?]} MetaKeyValue
  *   `[label, value, emphasis]` — `code`/`accent` render the value bold in
  *   cobalt (tax code, reference numbers).
- * @typedef {{ label: string, value: string, note: string, tone: 'neutral' | 'success' | 'accent' }} MetaCommissionSummary
  * @typedef {{ label: string, signedLabel: string, isSigned: boolean, code: string, name: string, rows: MetaKeyValue[] }} MetaCommissionBroker
  * @typedef {{ title: string, status?: string, shortName: string, fullName: string, account: string, swift: string, rows: MetaKeyValue[], note?: string, emptyMessage?: string }} MetaCommissionBank
  *   `emptyMessage` replaces the whole body (no account on file).
@@ -43,69 +40,16 @@ import { MetaPill } from './pill.jsx';
  *   amount — the table has no separate status column.
  */
 
-const SUMMARY_ICONS = [Banknote, CircleCheck, ClipboardClock];
-
-const SUMMARY_TONES = /** @type {const} */ ({
-  neutral: {
-    label: 'meta-subtle',
-    value: 'primary',
-    note: 'secondary',
-    bubble: 'accent',
-  },
-  success: {
-    label: 'meta-green',
-    value: 'meta-green',
-    note: 'meta-green',
-    bubble: 'green',
-  },
-  accent: {
-    label: 'accent',
-    value: 'accent',
-    note: 'secondary',
-    bubble: 'accent',
-  },
-});
-
 /**
  * "Meta" commission cards (Figma 102:4272), composed by the contract
- * Commission tab and the commission detail page: `MetaCommissionSummaryCards`
- * (3 KPI cards), `MetaCommissionParties` (broker card, plus the
- * beneficiary-bank card when `bank` is given) and `MetaCommissionTrackingCard`
- * ("Đợt chi hoa hồng": one row per installment and a totals band).
- * `isLoading` swaps figures and rows for `Skeleton`s. Composed from Astryx
- * `Card` / `Grid` / `Table` / `Button` / `IconButton` / `Skeleton` +
- * `MetaPill` (golden rule #15).
- *
- * @param {{
- *   currency: string,
- *   summary: MetaCommissionSummary[],
- *   isLoading?: boolean,
- * }} props
+ * Commission tab and the commission detail page (their KPI cards use the
+ * contract overview's `MetaMetricsCard`): `MetaCommissionParties` (broker
+ * card, plus the beneficiary-bank card when `bank` is given) and
+ * `MetaCommissionTrackingCard` ("Đợt chi hoa hồng"). `isLoading` swaps
+ * figures and rows for `Skeleton`s. Composed from Astryx `Card` / `Grid` /
+ * `Table` / `Button` / `IconButton` / `Skeleton` + `MetaPill` (golden rule
+ * #15).
  */
-export function MetaCommissionSummaryCards({
-  currency,
-  summary,
-  isLoading = false,
-}) {
-  return (
-    <Grid
-      columns={{ minWidth: 300, max: 3 }}
-      maxWidth="calc(3 * var(--meta-panel-card-max) + 2 * var(--spacing-4))"
-      gap={4}
-      xstyle={styles.responsiveGrid}
-    >
-      {summary.map((item, index) => (
-        <SummaryCard
-          key={item.label}
-          {...item}
-          icon={SUMMARY_ICONS[index] ?? Banknote}
-          unit={currency}
-          isLoading={isLoading}
-        />
-      ))}
-    </Grid>
-  );
-}
 
 /**
  * Broker card, with the beneficiary-bank card beside it when `bank` is
@@ -400,80 +344,6 @@ export function MetaCommissionTrackingCard({
 }
 
 /**
- * @param {MetaCommissionSummary & {
- *   icon: import('react').ComponentType,
- *   unit: string,
- *   isLoading: boolean,
- * }} props
- */
-function SummaryCard({ label, value, note, tone, icon, unit, isLoading }) {
-  const colors = SUMMARY_TONES[tone];
-  return (
-    <Card padding={5} xstyle={styles.card}>
-      <VStack gap={3} hAlign="stretch">
-        <HStack hAlign="between" vAlign="center" gap={2} wrap="nowrap">
-          <HStack gap={1.5} vAlign="center" wrap="nowrap">
-            {tone !== 'neutral' ? (
-              <HStack
-                as="span"
-                xstyle={[
-                  styles.dot,
-                  tone === 'success' ? dotTones.green : dotTones.accent,
-                ]}
-              />
-            ) : null}
-            <Text
-              weight="bold"
-              color={/** @type {any} */ (colors.label)}
-              xstyle={styles.caps}
-            >
-              {label}
-            </Text>
-          </HStack>
-          <HStack
-            as="span"
-            hAlign="center"
-            vAlign="center"
-            xstyle={[styles.bubble, bubbleTones[colors.bubble]]}
-          >
-            <Icon icon={icon} size="md" color="inherit" />
-          </HStack>
-        </HStack>
-        {isLoading ? (
-          <VStack gap={2} hAlign="stretch">
-            <Skeleton width="55%" height="var(--spacing-8)" radius={2} />
-            <Skeleton width="45%" height="var(--spacing-4)" radius={2} />
-          </VStack>
-        ) : (
-          <VStack gap={1} hAlign="stretch">
-            <HStack gap={1.5} wrap="wrap" xstyle={styles.baseline}>
-              <Text
-                size="3xl"
-                weight="bold"
-                color={/** @type {any} */ (colors.value)}
-                hasTabularNumbers
-                xstyle={styles.value}
-              >
-                {value}
-              </Text>
-              <Text
-                weight="semibold"
-                color={/** @type {any} */ ('meta-subtle')}
-              >
-                {unit}
-              </Text>
-            </HStack>
-            <Text weight="medium" color={/** @type {any} */ (colors.note)}>
-              {note}
-            </Text>
-          </VStack>
-        )}
-      </VStack>
-    </Card>
-  );
-}
-
-/**
  * The Commission tab before a commission exists: one centered empty state
  * with the create action, instead of the full layout filled with blanks.
  * @param {{ createLabel?: string, onCreate?: () => void, isLoading?: boolean }} props
@@ -717,30 +587,12 @@ const styles = stylex.create({
   caps: {
     letterSpacing: '0.05em',
   },
-  dot: {
-    borderRadius: 'var(--radius-full)',
-    flexShrink: 0,
-    height: 'var(--spacing-2)',
-    width: 'var(--spacing-2)',
-  },
-  bubble: {
-    borderRadius: 'var(--radius-full)',
-    flexShrink: 0,
-    height: 'var(--spacing-8)',
-    width: 'var(--spacing-8)',
-  },
   numberBubble: {
     borderRadius: 'var(--radius-full)',
     flexShrink: 0,
     fontSize: 'var(--font-size-sm)',
     height: 'var(--spacing-7)',
     width: 'var(--spacing-7)',
-  },
-  baseline: {
-    alignItems: 'baseline',
-  },
-  value: {
-    lineHeight: 1,
   },
   cardHeader: {
     borderBottomColor: 'var(--color-border)',
@@ -824,11 +676,6 @@ const styles = stylex.create({
   emptyRow: {
     paddingBlock: 'var(--spacing-8)',
   },
-});
-
-const dotTones = stylex.create({
-  green: { backgroundColor: 'var(--meta-green)' },
-  accent: { backgroundColor: 'var(--color-accent)' },
 });
 
 const bubbleTones = stylex.create({

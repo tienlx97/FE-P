@@ -11,7 +11,7 @@ import { useState } from 'react';
 import {
   MetaCommissionEmptyState,
   MetaCommissionParties,
-  MetaCommissionSummaryCards,
+  MetaMetricsCard,
 } from '@/shared/components/custom/meta/index.js';
 
 import { commissionDetailHref } from '../config/commission-routes.js';
@@ -28,7 +28,7 @@ import { CommissionFormDrawer } from './commission-form-drawer.jsx';
  */
 export function ContractCommissionPanel({ contract }) {
   const [isCreating, setIsCreating] = useState(false);
-  const { commissionQuery, commission, currency, isLoading, view } =
+  const { commissionQuery, commission, isLoading, view } =
     useCommissionView(contract);
 
   if (!commission || !view) {
@@ -59,9 +59,10 @@ export function ContractCommissionPanel({ contract }) {
           endContent={<Icon icon={ArrowRight} size="sm" />}
         />
       </HStack>
-      <MetaCommissionSummaryCards
-        currency={currency}
-        summary={view.summary}
+      <MetaMetricsCard
+        title="GIÁ TRỊ & TIẾN ĐỘ HOA HỒNG"
+        metrics={view.metrics}
+        maxColumns={3}
         isLoading={isLoading}
       />
       <MetaCommissionParties broker={view.broker} isLoading={isLoading} />

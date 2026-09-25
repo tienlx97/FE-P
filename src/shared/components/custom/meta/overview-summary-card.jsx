@@ -226,6 +226,49 @@ export function MetaOverviewSummaryCard({
 
 const SKELETON_CHIPS = [0, 1, 2, 3];
 
+/**
+ * The top block of `MetaOverviewSummaryCard` on its own: titled card over a
+ * grid of the same metric cards (value, note row, thin progress bar pinned
+ * to the bottom) — reused by the commission tab / page so their KPI cards
+ * read exactly like the contract overview's.
+ * @param {{
+ *   title: string,
+ *   icon?: import('react').ComponentType,
+ *   metrics: MetaMetric[],
+ *   maxColumns?: number,
+ *   isLoading?: boolean,
+ * }} props
+ */
+export function MetaMetricsCard({
+  title,
+  icon = CircleDollarSign,
+  metrics,
+  maxColumns = 4,
+  isLoading = false,
+}) {
+  return (
+    <Card padding={6} xstyle={styles.card}>
+      <VStack gap={5} hAlign="stretch">
+        <HStack gap={2} vAlign="center" xstyle={styles.titleRow}>
+          <Icon icon={icon} size="md" color="accent" />
+          <Heading level={3} accessibilityLevel={2}>
+            {title}
+          </Heading>
+        </HStack>
+        <Grid
+          columns={{ minWidth: 280, max: maxColumns }}
+          gap={4}
+          xstyle={styles.metricGrid}
+        >
+          {metrics.map((metric) => (
+            <MetricCard key={metric.id} {...metric} isLoading={isLoading} />
+          ))}
+        </Grid>
+      </VStack>
+    </Card>
+  );
+}
+
 /** @param {{ index: number }} props */
 function InstallmentSkeleton({ index }) {
   return (

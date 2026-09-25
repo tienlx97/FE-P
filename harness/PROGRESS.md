@@ -1,5 +1,18 @@
 # Progress Log
 
+## 2026-09-25 — Commission KPI cards use the contract overview design
+
+- New `MetaMetricsCard` (the top block of `MetaOverviewSummaryCard`: titled
+  card over `MetricCard`s with the note row and bottom-pinned progress bar).
+  The commission tab and detail page render "GIÁ TRỊ & TIẾN ĐỘ HOA HỒNG"
+  with 3 metrics from `useCommissionView().metrics`: Hoa hồng quyết toán
+  (Gốc / +n PL, accent + green split bar), Đã chi trả (Tiến độ %, n/m đợt,
+  green bar), Còn phải chi (Còn lại %, n đợt, accent bar).
+  `MetaCommissionSummaryCards` / `SummaryCard` removed.
+- Not checked in a browser (Chrome extension disconnected); lint +
+  typecheck + verify only.
+- verify.sh passed (`harness/runs/20260925-075246-39199/`).
+
 ## 2026-09-25 — Commission detail: "Thêm lần chi" on the payment history card
 
 - Commission detail → Tiến độ thanh toán: "Thêm lần chi" moves from the
@@ -109,6 +122,14 @@
   dialog over the drawer → saved; card "+ 500.00 USD", header "Sau phụ
   lục: 10,500.00 USD", drawer stayed in view mode (not submitted).
 - verify.sh passed (`harness/runs/20260925-030406-433695/`).
+
+## 2026-09-25 — Stitch prompts: suppliers (Meta theme)
+
+- New `.stitch/prompts/meta-suppliers.md`: shared Meta shell + prompts for
+  the supplier list, a supplier detail page and a "Thêm nhà cung cấp"
+  drawer, built from `suppliers-list.jsx`, `party-form-fields.jsx` and the
+  existing Meta prompts. The detail page, drawer, group tabs and stat strip
+  are new designs (not in the code). Not run in Stitch yet.
 
 ## 2026-09-25 — Commission "Xem" opens the Meta drawer read-only
 

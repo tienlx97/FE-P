@@ -1,5 +1,7 @@
 'use client';
 
+import { CircleCheck, ClipboardClock, Clock, FileCheck2 } from 'lucide-react';
+
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { allocateCommissionPayments } from '../config/commission-payment-allocation.js';
@@ -41,7 +43,8 @@ function annexAdjustment(annexes) {
  * A contract's `Commission` (at most one) plus everything the Meta
  * commission cards show — shared by the contract Commission tab and the
  * commission detail page:
- * - `summary`: "Hoa hồng quyết toán" (value ± commission annexes,
+ * - `metrics` (for `MetaMetricsCard`): "Hoa hồng quyết toán" (value ±
+ *   commission annexes, Gốc / PL split bar,
  *   display-only like the overview's "Quyết toán" — annexes never change
  *   the stored value, `docs/api/Commissions.md`; % of the contract's own
  *   settlement), "Đã chi trả", "Còn phải chi".
@@ -135,28 +138,78 @@ export function useCommissionView(contract) {
       ? Math.round((settledTotal / contractSettlement) * 10000) / 100
       : 0;
 
-  /** @type {import('@/shared/components/custom/meta/commission-panel.jsx').MetaCommissionSummary[]} */
-  const summary = [
+  // Same metric cards as the contract overview (`MetaMetricsCard`): value,
+  // a note row, and a thin progress bar pinned to the bottom.
+  const basePercent =
+    settledTotal > 0 && adjustment > 0
+      ? Math.round((total / settledTotal) * 10000) / 100
+      : 100;
+  const paidPercent = pct(paidValue);
+  const remainingPercent = Math.max(
+    0,
+    Math.round((100 - paidPercent) * 10) / 10,
+  );
+
+  /** @type {import('@/shared/components/custom/meta/overview-summary-card.jsx').MetaMetric[]} */
+  const metrics = [
     {
+      id: 'settled',
       label: `HOA HỒNG QUYẾT TOÁN (${percentOfSettlement}%)`,
+      icon: FileCheck2,
       value: formatMoney(settledTotal),
-      note:
+      unit: currency,
+      start: {
+        dotTone: 'accent',
+        label: `Gốc: ${formatMoney(total)}`,
+        tooltip:
+          adjustment > 0 ? `${basePercent}% hoa hồng quyết toán` : undefined,
+      },
+      end:
         commissionAnnexes.length > 0
-          ? `Gốc ${formatMoney(total)} ${adjustment < 0 ? '−' : '+'} ${commissionAnnexes.length} PL ${formatMoney(Math.abs(adjustment))}`
-          : `${rowCount} đợt thanh toán`,
-      tone: 'neutral',
+          ? {
+              dotTone: 'success',
+              value: `${adjustment >= 0 ? '+' : '-'}${commissionAnnexes.length} PL: ${formatMoney(Math.abs(adjustment))}`,
+              tone: 'success',
+            }
+          : { hint: `(${rowCount} đợt)` },
+      segments: [
+        { percent: basePercent, tone: 'accent' },
+        { percent: 100 - basePercent, tone: 'success' },
+      ],
     },
     {
+      id: 'paid',
       label: 'ĐÃ CHI TRẢ',
-      value: formatMoney(paidValue),
-      note: `Đã chi ${paidCount}/${rowCount} đợt (${pct(paidValue)}%)`,
+      icon: CircleCheck,
+      iconTone: 'success',
       tone: 'success',
+      value: formatMoney(paidValue),
+      unit: currency,
+      start: {
+        icon: CircleCheck,
+        label: 'Tiến độ:',
+        value: `${paidPercent}%`,
+        tone: 'success',
+      },
+      end: { hint: `(${paidCount}/${rowCount} đợt)` },
+      segments: [{ percent: Math.min(100, paidPercent), tone: 'success' }],
     },
     {
+      id: 'remaining',
       label: 'CÒN PHẢI CHI',
-      value: formatMoney(remainingValue),
-      note: `Còn ${rowCount - paidCount} đợt (${pct(remainingValue)}%)`,
+      hasLabelDot: true,
+      icon: ClipboardClock,
       tone: 'accent',
+      value: formatMoney(remainingValue),
+      unit: currency,
+      start: {
+        icon: Clock,
+        label: 'Còn lại:',
+        value: `${remainingPercent}%`,
+        tone: 'accent',
+      },
+      end: { hint: `(${rowCount - paidCount} đợt)` },
+      segments: [{ percent: remainingPercent, tone: 'accent' }],
     },
   ];
 
@@ -213,7 +266,7 @@ export function useCommissionView(contract) {
     currency,
     isLoading,
     view: {
-      summary,
+      metrics,
       broker,
       bank,
       rows,

@@ -17,11 +17,11 @@ import { useId, useState } from 'react';
 import {
   MetaCommissionEmptyState,
   MetaCommissionParties,
-  MetaCommissionSummaryCards,
   MetaCommissionTrackingCard,
   MetaContractBreadcrumb,
   MetaContractDetailSkeleton,
   MetaContractHeaderCard,
+  MetaMetricsCard,
   MetaTabNav,
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
@@ -226,9 +226,10 @@ function CommissionDetailBody({ contract, activeTab, onActiveTabChange }) {
       <section id={panelId} role="tabpanel" aria-label={TAB_LABELS[activeTab]}>
         {activeTab === 'overview' ? (
           <VStack gap={5} hAlign="stretch">
-            <MetaCommissionSummaryCards
-              currency={currency}
-              summary={view.summary}
+            <MetaMetricsCard
+              title="GIÁ TRỊ & TIẾN ĐỘ HOA HỒNG"
+              metrics={view.metrics}
+              maxColumns={3}
               isLoading={isLoading}
             />
             <MetaCommissionParties
