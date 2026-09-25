@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-25 — Customer form: dialog → Meta drawer
+
+- `CustomerFormDrawer` (same as `SupplierFormDrawer`, `layout="sections"`)
+  replaces `CustomerFormDialog` (deleted) on the customers list and customer
+  detail page. Quick-create dialogs inside other forms are unchanged.
+- Checked in Chrome: "Thêm khách hàng" opens the drawer.
+- verify.sh passed (`harness/runs/20260925-233600-167703/`).
+
 ## 2026-09-25 — Supplier form: dialog → Meta drawer
 
 - `SupplierFormDrawer` (Commission-drawer style: 960px, `MetaDrawerHeader`,

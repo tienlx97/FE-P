@@ -39,7 +39,7 @@ import {
 } from '../hooks/use-customers-query.js';
 import { usePartyLookupsQuery } from '../hooks/use-party-lookups-query.js';
 import { CustomerContractHistory } from './customer-contract-history.jsx';
-import { CustomerFormDialog } from './customer-form-dialog.jsx';
+import { CustomerFormDrawer } from './customer-form-drawer.jsx';
 import { SupplierOverviewPanel } from './supplier-overview-panel.jsx';
 
 /** @typedef {'overview' | 'banks' | 'contracts' | 'notes'} CustomerTab */
@@ -289,7 +289,7 @@ function CustomerDetailBody({
       {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
         {isEditing ? (
-          <CustomerFormDialog
+          <CustomerFormDrawer
             isOpen
             onOpenChange={(isOpen) => {
               if (!isOpen) setIsEditing(false);

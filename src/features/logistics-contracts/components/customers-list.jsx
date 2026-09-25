@@ -43,7 +43,7 @@ import {
   useSearchCustomersQuery,
 } from '../hooks/use-customers-query.js';
 import { usePartyLookupsQuery } from '../hooks/use-party-lookups-query.js';
-import { CustomerFormDialog } from './customer-form-dialog.jsx';
+import { CustomerFormDrawer } from './customer-form-drawer.jsx';
 import { renderFilterValue } from './filter-value.jsx';
 
 const ALL = 'all';
@@ -478,7 +478,7 @@ export function CustomersList() {
       </StackItem>
 
       {hasOpenedCreate ? (
-        <CustomerFormDialog
+        <CustomerFormDrawer
           isOpen={isCreateOpen}
           onOpenChange={setIsCreateOpen}
           onSuccess={() => setIsCreateOpen(false)}
@@ -486,7 +486,7 @@ export function CustomersList() {
       ) : null}
 
       {editingCustomer ? (
-        <CustomerFormDialog
+        <CustomerFormDrawer
           key={editingCustomer.id}
           isOpen
           onOpenChange={(isOpen) => {

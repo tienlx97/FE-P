@@ -8,8 +8,7 @@ import { CountryFields } from './country-fields.jsx';
 /**
  * Standalone create dialog for the Countries page (`countries-list.jsx`) —
  * same field-set as `quick-create-country-dialog.jsx`, but with its own
- * `<form>` since it is not nested inside another dialog's form. Mirrors
- * `CustomerFormDialog`.
+ * `<form>` since it is not nested inside another dialog's form.
  * @param {{ isOpen: boolean, onOpenChange: (isOpen: boolean) => void, onSuccess?: () => void }} props
  */
 export function CountryFormDialog({ isOpen, onOpenChange, onSuccess }) {
