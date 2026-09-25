@@ -1,5 +1,16 @@
 # Progress Log
 
+## 2026-09-25 — Shipments list: cost-group headers wrap
+
+- "Giá trị & Chi phí" LOG cost headers could be clipped: measured
+  "INLAND TRANS. (ORIGIN)" 176px in a 165px cell and "IMPORT CUSTOM
+  CLEARANCE" 212px in 175px. They now wrap (`whiteSpace: normal`,
+  right-aligned) inside the existing widths; header row height unchanged
+  (57px, already two rows for the group band).
+- Checked in Chrome: all 8 headers fully visible. The local API is the old
+  build, so Σ Giá trị INV (VNĐ) still reads 0 until BE `983d6cd` is deployed.
+- verify.sh passed.
+
 ## 2026-09-25 — Shipments list "Giá trị & Chi phí": Giá trị INV columns
 
 - "Giá trị tờ khai" → "Giá trị INV" (= invoiceValue, invoice currency;

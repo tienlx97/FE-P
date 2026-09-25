@@ -1053,8 +1053,16 @@ export function ShipmentsList() {
       (group) =>
         /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<ShipmentListRow>} */ ({
           key: group.key,
+          // Wraps instead of the header cell's single line: the longer
+          // names ("Import Custom Clearance", "Inland Trans. (Origin)")
+          // were clipped at these widths (user report, 2026-09-25).
           header: (
-            <Text as="span" type="inherit" color="primary">
+            <Text
+              as="span"
+              type="inherit"
+              color="primary"
+              xstyle={styles.wrapHeader}
+            >
               {group.header}
             </Text>
           ),
@@ -1452,6 +1460,10 @@ const styles = stylex.create({
   },
   nowrap: {
     whiteSpace: 'nowrap',
+  },
+  wrapHeader: {
+    textAlign: 'end',
+    whiteSpace: 'normal',
   },
   totalsCaption: {
     letterSpacing: '0.05em',
