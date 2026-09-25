@@ -143,7 +143,7 @@ export function MetaShipmentKpiCard({
 
 /**
  * "Meta" shipment-detail content card ("Section - Container Thẻ Độc
- * Lập"): tinted icon tile + 16px bold title, an optional pill on the
+ * Lập"): tinted icon tile + 16px bold title (+ optional subtitle), an optional pill on the
  * right, a hairline, then the body (usually a grid of
  * `MetaShipmentField`s).
  *
@@ -151,6 +151,7 @@ export function MetaShipmentKpiCard({
  *   icon: import('react').ComponentType,
  *   tone?: 'accent' | 'warning',
  *   title: string,
+ *   subtitle?: string,
  *   pill?: MetaBlockPill,
  *   children: import('react').ReactNode,
  * }} props
@@ -159,6 +160,7 @@ export function MetaShipmentSection({
   icon,
   tone = 'accent',
   title,
+  subtitle,
   pill,
   children,
 }) {
@@ -174,9 +176,16 @@ export function MetaShipmentSection({
         >
           <HStack gap={3} vAlign="center">
             <IconTile icon={icon} tone={tone} size="lg" />
-            <Heading level={3} accessibilityLevel={2}>
-              {title}
-            </Heading>
+            <VStack gap={0.5}>
+              <Heading level={3} accessibilityLevel={2}>
+                {title}
+              </Heading>
+              {subtitle ? (
+                <Text size="sm" color="secondary">
+                  {subtitle}
+                </Text>
+              ) : null}
+            </VStack>
           </HStack>
           {pill ? (
             <MetaPill

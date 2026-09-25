@@ -1,5 +1,35 @@
 # Progress Log
 
+## 2026-09-25 — Supplier detail page (`/logistics/suppliers/[id]`), tab Tổng quan
+
+- Figma "CHI TIẾT NHÀ CUNG CẤP" (node 141:4). Needs BE-kt-xnk
+  `supplier-detail-api` (`173144c`: GET supplier by id, shipments
+  `involvedSupplierId`, commissions `partyCustomerId`); dev API rebuilt.
+- New Meta pieces (`party-detail.jsx`): `MetaPartyHeaderCard` (icon tile,
+  name + copy, pills, code • MST, In / Chỉnh sửa / "…" → Xoá),
+  `MetaPartyContactBody`, `MetaPartyBankBody`, `MetaWebsiteLink`;
+  `MetaShipmentSection` gains an optional `subtitle`.
+- `SupplierDetailWorkspace`: breadcrumb, header, `MetaTabNav` with counts
+  (bank accounts, shipments, commissions). Tổng quan
+  (`SupplierOverviewPanel`): Thông tin chung + Điều khoản thanh toán &
+  Công nợ | Người liên hệ + Tài khoản ngân hàng (one column < 1100px).
+  Tài khoản ngân hàng / Ghi chú & bổ sung tabs list the supplier's data;
+  Shipment / Commission tabs show only their count for now.
+- List: company name links to the detail page.
+- Adjusted vs Figma: Meta pill tabs and boxed field tiles (as on the
+  contract/shipment detail pages); no "Mặc định" bank tag — BE keeps no
+  bank-account order/default (Discovered).
+- Checked in Chrome: ALISPED / QUANTERM, and a temporary fully-filled
+  supplier (created via the API, checked on every tab, then deleted from
+  the page's "…" → Xoá, which returns to the list).
+- verify.sh passed (`harness/runs/20260925-120024-359/`; the first run
+  failed fetching Google Fonts during `next build`, re-run passed).
+
+### Discovered
+- Supplier bank accounts come back in random order (owned rows keyed by
+  GUID, no position column) — needs a BE order/default flag before a
+  "Mặc định" account can be shown.
+
 ## 2026-09-25 — Nhà cung cấp: several groups per supplier, group tabs + filters
 
 - Needs BE-kt-xnk `supplier-multi-group-filters` (`801ce29`; dev API on

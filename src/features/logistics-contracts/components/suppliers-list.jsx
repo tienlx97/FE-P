@@ -4,6 +4,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Carousel } from '@astryxdesign/core/Carousel';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { Link } from '@astryxdesign/core/Link';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
@@ -222,9 +223,14 @@ export function SuppliersList() {
       width: proportional(1.6),
       filter: 'companyName',
       renderCell: (supplier) => (
-        <Text weight="bold" xstyle={styles.companyName}>
+        <Link
+          href={`/logistics/suppliers/${supplier.id}`}
+          weight="bold"
+          color="accent"
+          xstyle={styles.companyName}
+        >
           {supplier.companyName}
-        </Text>
+        </Link>
       ),
     },
     {

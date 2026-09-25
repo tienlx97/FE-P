@@ -11,6 +11,19 @@ export async function listSuppliers() {
     : { success: false, message: result.message };
 }
 
+/**
+ * @param {string} supplierId
+ * @returns {Promise<{ success: true, supplier: import('../types/index.js').Supplier } | { success: false, message: string }>}
+ */
+export async function getSupplier(supplierId) {
+  const result = await apiRequest(`/api/v1/suppliers/${supplierId}`, {
+    errorMessage: 'Không thể tải nhà cung cấp',
+  });
+  return result.success
+    ? { success: true, supplier: result.data }
+    : { success: false, message: result.message };
+}
+
 /** @param {{page?: number, pageSize?: number, conditions?: any[]}} [options] */
 export async function searchSuppliers({
   page = 1,

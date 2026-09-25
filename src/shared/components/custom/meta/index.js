@@ -48,6 +48,12 @@ export {
   MetaOverviewSummaryCard,
 } from './overview-summary-card.jsx';
 export { MetaPagination } from './pagination.jsx';
+export {
+  MetaPartyBankBody,
+  MetaPartyContactBody,
+  MetaPartyHeaderCard,
+  MetaWebsiteLink,
+} from './party-detail.jsx';
 export { MetaBankAccountCard, MetaPartySummary } from './party-summary.jsx';
 export { MetaPaymentProgressPanel } from './payment-progress-panel.jsx';
 export {

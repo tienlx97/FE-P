@@ -9,4 +9,5 @@ export { PlacesList } from './components/places-list.jsx';
 export { QuickSearchPalette } from './components/quick-search-palette.jsx';
 export { ShipmentDetailWorkspace } from './components/shipment-detail-workspace.jsx';
 export { ShipmentsList } from './components/shipments-list.jsx';
+export { SupplierDetailWorkspace } from './components/supplier-detail-workspace.jsx';
 export { SuppliersList } from './components/suppliers-list.jsx';

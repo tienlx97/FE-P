@@ -19,10 +19,13 @@ export function usePartyLookupsQuery(kind) {
     queryKey: ['logistics-contracts', 'payment-terms'],
     queryFn: () => listPartyLookups('payment-terms', 'điều khoản thanh toán'),
   });
-  return {
-    groups: groups.data?.success ? groups.data.items : [],
-    paymentTerms: paymentTerms.data?.success ? paymentTerms.data.items : [],
-  };
+  /** @type {import('../types/index.js').PartyLookup[]} */
+  const groupItems = groups.data?.success ? groups.data.items : [];
+  /** @type {import('../types/index.js').PartyLookup[]} */
+  const paymentTermItems = paymentTerms.data?.success
+    ? paymentTerms.data.items
+    : [];
+  return { groups: groupItems, paymentTerms: paymentTermItems };
 }
 
 /** @param {'customer' | 'supplier'} kind */
