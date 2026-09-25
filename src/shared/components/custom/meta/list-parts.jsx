@@ -4,6 +4,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Eye, Pencil, Trash2 } from 'lucide-react';
 
@@ -64,6 +65,26 @@ export function MetaPrimaryCell({ children }) {
 }
 
 /**
+ * Two-line cell — a name over a muted caption ("Nguyễn Văn An" / "Giám
+ * đốc"), a muted "—" when there is no name. The caption line is dropped
+ * when empty.
+ * @param {{ primary: string | null | undefined, secondary?: string | null }} props
+ */
+export function MetaStackedCell({ primary, secondary }) {
+  if (primary == null || primary === '') return <MetaCellText value={null} />;
+  return (
+    <VStack gap={0.5}>
+      <Text weight="medium">{primary}</Text>
+      {secondary ? (
+        <Text type="supporting" color="secondary">
+          {secondary}
+        </Text>
+      ) : null}
+    </VStack>
+  );
+}
+
+/**
  * Cell text, or a muted "—" when empty.
  * @param {{ value: import('react').ReactNode }} props
  */
@@ -78,9 +99,10 @@ export function MetaCellText({ value }) {
 /**
  * "Thao tác" column cell — ghost icon buttons (Xem / Sửa / Xoá) like the
  * Shipment list, instead of a "Chức năng" menu. Clicks don't reach the row.
+ * Xem and Xoá are optional (the Nhà cung cấp list shows only Sửa / Xoá).
  * @param {{
  *   recordLabel: string,
- *   onView: () => void,
+ *   onView?: () => void,
  *   onEdit: () => void,
  *   onDelete?: () => void,
  * }} props
@@ -95,14 +117,16 @@ export function MetaRowActions({ recordLabel, onView, onEdit, onDelete }) {
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
-      <IconButton
-        label={`Xem ${recordLabel}`}
-        tooltip="Xem"
-        icon={<Icon icon={Eye} size="sm" />}
-        variant="ghost"
-        size="sm"
-        onClick={onView}
-      />
+      {onView ? (
+        <IconButton
+          label={`Xem ${recordLabel}`}
+          tooltip="Xem"
+          icon={<Icon icon={Eye} size="sm" />}
+          variant="ghost"
+          size="sm"
+          onClick={onView}
+        />
+      ) : null}
       <IconButton
         label={`Sửa ${recordLabel}`}
         tooltip="Sửa"

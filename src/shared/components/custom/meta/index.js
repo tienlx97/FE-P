@@ -40,6 +40,7 @@ export {
   MetaListTitle,
   MetaPrimaryCell,
   MetaRowActions,
+  MetaStackedCell,
   MetaTotalsLabel,
 } from './list-parts.jsx';
 export {

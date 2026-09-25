@@ -1,31 +1,26 @@
 'use client';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
-import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
-import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { MetadataList } from '@astryxdesign/core/MetadataList';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { proportional } from '@astryxdesign/core/Table';
-import { Heading, Text } from '@astryxdesign/core/Text';
+import { pixel, proportional } from '@astryxdesign/core/Table';
+import { Text } from '@astryxdesign/core/Text';
+import { Tooltip } from '@astryxdesign/core/Tooltip';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { Building2, Pencil, Plus, Printer, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
+import { MetaCountBadge } from '@/shared/components/custom/meta/count-badge.jsx';
 import {
   MetaCellText,
   MetaListTitle,
-  MetaPrimaryCell,
+  MetaRowActions,
+  MetaStackedCell,
 } from '@/shared/components/custom/meta/list-parts.jsx';
-import {
-  expandableRowStyles,
-  UnderlinedMetadataListItem as MetadataListItem,
-} from '@/shared/components/expandable-row-styles.jsx';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { searchSuppliers } from '../api/suppliers.js';
@@ -43,158 +38,21 @@ import {
 } from '../hooks/use-suppliers-query.js';
 import { SupplierFormDialog } from './supplier-form-dialog.jsx';
 
-/** @param {string | null | undefined} value */
-function orDash(value) {
-  return value == null || value === '' ? '—' : value;
-}
-
 const styles = stylex.create({
-  companyNameHeading: {
+  companyName: {
     textTransform: 'uppercase',
   },
+  // Auto-generated codes ("NCC-1789371175139") read as one token.
+  nowrap: {
+    whiteSpace: 'nowrap',
+  },
 });
-
-/** @param {unknown} value */
-function escapeHtml(value) {
-  return String(value ?? '').replace(
-    /[&<>]/g,
-    (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[char] ?? char,
-  );
-}
-
-/**
- * Opens a print-ready window for one supplier's profile — same
- * new-window + `window.print()` approach as `AdvanceTable`'s table-level
- * print export (`buildExportTable`'s doc comment), just for a single
- * record's fields instead of a table of rows.
- * @param {import('../types/index.js').Supplier} supplier
- */
-function printSupplier(supplier) {
-  const printWindow = window.open('', '_blank');
-  if (!printWindow) return;
-  const fields = [
-    ['Tên công ty', supplier.companyName],
-    ['Người đại diện', orDash(supplier.representativeName)],
-    ['Chức vụ', orDash(supplier.representativeTitle)],
-    ['Địa chỉ', orDash(supplier.address)],
-    ...supplier.extraFields.map(
-      (field) =>
-        /** @type {[string, string]} */ ([field.key, orDash(field.value)]),
-    ),
-  ];
-  printWindow.document.write(`<!doctype html>
-<html lang="vi"><head><meta charset="utf-8"><title>${escapeHtml(supplier.companyName)}</title>
-<style>
-  body { font-family: Arial, sans-serif; font-size: 13px; }
-  h1 { font-size: 18px; margin-bottom: 24px; }
-  dl { display: grid; grid-template-columns: 200px 1fr; row-gap: 10px; }
-  dt { font-weight: bold; color: dimgray; }
-  dd { margin: 0; }
-</style></head><body>
-<h1>${escapeHtml(supplier.companyName)}</h1>
-<dl>${fields
-    .map(
-      ([label, value]) =>
-        `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`,
-    )
-    .join('')}</dl>
-</body></html>`);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.onload = () => printWindow.print();
-}
-
-/**
- * @param {object} props
- * @param {import('../types/index.js').Supplier} props.supplier
- * @param {() => void} props.onEdit
- * @param {() => void} props.onDeleteRequest
- */
-function SupplierExpandedDetails({ supplier, onEdit, onDeleteRequest }) {
-  return (
-    <VStack gap={4} hAlign="stretch" xstyle={expandableRowStyles.expandedPanel}>
-      <HStack gap={3} vAlign="center">
-        <HStack
-          vAlign="center"
-          hAlign="center"
-          xstyle={expandableRowStyles.expandedIcon}
-        >
-          <Icon icon={Building2} size="md" />
-        </HStack>
-        <VStack gap={1}>
-          <Heading level={3} xstyle={styles.companyNameHeading}>
-            {supplier.companyName}
-          </Heading>
-          {supplier.representativeName ? (
-            <Text color="secondary">
-              {supplier.representativeName}
-              {supplier.representativeTitle
-                ? ` · ${supplier.representativeTitle}`
-                : ''}
-            </Text>
-          ) : null}
-        </VStack>
-      </HStack>
-
-      <MetadataList columns={4} label={{ position: 'top' }}>
-        <MetadataListItem label="Tên công ty">
-          {supplier.companyName}
-        </MetadataListItem>
-        <MetadataListItem label="Người đại diện">
-          {orDash(supplier.representativeName)}
-        </MetadataListItem>
-        <MetadataListItem label="Chức vụ">
-          {orDash(supplier.representativeTitle)}
-        </MetadataListItem>
-        <MetadataListItem label="Địa chỉ">
-          {orDash(supplier.address)}
-        </MetadataListItem>
-        {supplier.extraFields.map((field) => (
-          <MetadataListItem key={field.key} label={field.key}>
-            {orDash(field.value)}
-          </MetadataListItem>
-        ))}
-      </MetadataList>
-
-      <Divider />
-
-      <HStack hAlign="between" vAlign="center">
-        <Button
-          label="Xoá"
-          variant="ghost"
-          size="sm"
-          icon={<Icon icon={Trash2} />}
-          onClick={onDeleteRequest}
-        />
-        <HStack gap={2}>
-          <Button
-            label="In"
-            variant="secondary"
-            size="sm"
-            icon={<Icon icon={Printer} />}
-            onClick={() => printSupplier(supplier)}
-          />
-          <Button
-            label="Sửa nhà cung cấp"
-            variant="primary"
-            size="sm"
-            icon={<Icon icon={Pencil} />}
-            onClick={onEdit}
-          />
-        </HStack>
-      </HStack>
-    </VStack>
-  );
-}
 
 export function SuppliersList() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [hasOpenedCreate, setHasOpenedCreate] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState(
     /** @type {import('../types/index.js').Supplier | null} */ (null),
-  );
-  const [expandedSupplierId, setExpandedSupplierId] = useState(
-    /** @type {string | null} */ (null),
   );
   const [deletingSupplier, setDeletingSupplier] = useState(
     /** @type {import('../types/index.js').Supplier | null} */ (null),
@@ -218,9 +76,6 @@ export function SuppliersList() {
     const result = await deleteMutation.mutateAsync(deletingSupplier.id);
     setDeletingSupplier(null);
     if (result.success) {
-      setExpandedSupplierId((current) =>
-        current === deletingSupplier.id ? null : current,
-      );
       toast({ body: `Đã xoá nhà cung cấp "${deletingSupplier.companyName}".` });
     } else {
       toast({ body: result.message, type: 'error' });
@@ -244,6 +99,7 @@ export function SuppliersList() {
   function enrichSuppliers(rawSuppliers) {
     return rawSuppliers.map((supplier) => ({
       ...supplier,
+      code: supplier.profile?.code ?? '',
       taxCode: supplier.profile?.taxCode ?? '',
       phone: supplier.profile?.phone ?? '',
       representativeName: supplier.representativeName ?? '',
@@ -269,12 +125,39 @@ export function SuppliersList() {
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Supplier & Record<string, unknown>>[]} */
   const columns = [
     {
+      key: 'code',
+      header: 'Mã NCC',
+      width: pixel(176),
+      filter: 'code',
+      renderCell: (supplier) =>
+        supplier.code ? (
+          <Text weight="medium" hasTabularNumbers xstyle={styles.nowrap}>
+            {String(supplier.code)}
+          </Text>
+        ) : (
+          <MetaCellText value={null} />
+        ),
+    },
+    {
       key: 'companyName',
       header: 'Tên công ty',
-      width: proportional(1.4),
+      width: proportional(1.6),
       filter: 'companyName',
       renderCell: (supplier) => (
-        <MetaPrimaryCell>{supplier.companyName}</MetaPrimaryCell>
+        <Text weight="bold" xstyle={styles.companyName}>
+          {supplier.companyName}
+        </Text>
+      ),
+    },
+    {
+      key: 'taxCode',
+      header: 'Mã số thuế / CCCD',
+      width: pixel(168),
+      filter: 'taxCode',
+      renderCell: (supplier) => (
+        <Text color="secondary" hasTabularNumbers>
+          <MetaCellText value={String(supplier.taxCode ?? '')} />
+        </Text>
       ),
     },
     {
@@ -283,16 +166,21 @@ export function SuppliersList() {
       width: proportional(1),
       filter: 'representativeName',
       renderCell: (supplier) => (
-        <MetaCellText value={supplier.representativeName} />
+        <MetaStackedCell
+          primary={supplier.representativeName}
+          secondary={supplier.representativeTitle}
+        />
       ),
     },
     {
-      key: 'representativeTitle',
-      header: 'Chức vụ',
-      width: proportional(0.8),
-      filter: 'representativeTitle',
+      key: 'phone',
+      header: 'Điện thoại',
+      width: pixel(128),
+      filter: 'phone',
       renderCell: (supplier) => (
-        <MetaCellText value={supplier.representativeTitle} />
+        <Text hasTabularNumbers>
+          <MetaCellText value={String(supplier.phone ?? '')} />
+        </Text>
       ),
     },
     {
@@ -304,43 +192,37 @@ export function SuppliersList() {
     },
     {
       key: 'extraFields',
-      header: 'Trường tùy ý',
-      width: proportional(1),
-      renderCell: (supplier) => (
-        <MetaCellText
-          value={supplier.extraFields
-            .map((field) => `${field.key}: ${field.value}`)
-            .join(', ')}
-        />
-      ),
+      header: 'Tùy ý',
+      width: pixel(80),
+      align: 'center',
+      renderCell: (supplier) =>
+        supplier.extraFields.length === 0 ? (
+          <MetaCellText value={null} />
+        ) : (
+          <Tooltip
+            content={supplier.extraFields
+              .map((field) => `${field.key}: ${field.value}`)
+              .join(' · ')}
+          >
+            <MetaCountBadge value={`+${supplier.extraFields.length}`} />
+          </Tooltip>
+        ),
+    },
+    {
+      key: 'actions',
+      header: 'Thao tác',
+      width: pixel(96),
+      align: 'center',
+      renderCell: (supplier) =>
+        supplier.id.startsWith('skeleton-') ? null : (
+          <MetaRowActions
+            recordLabel={supplier.companyName}
+            onEdit={() => setEditingSupplier(supplier)}
+            onDelete={() => setDeletingSupplier(supplier)}
+          />
+        ),
     },
   ];
-
-  const expandedIds = useMemo(
-    () => new Set(expandedSupplierId ? [expandedSupplierId] : []),
-    [expandedSupplierId],
-  );
-  const rowExpansion = {
-    expandedIds,
-    onToggle: (/** @type {string} */ supplierId) =>
-      setExpandedSupplierId((current) =>
-        current === supplierId ? null : supplierId,
-      ),
-    getRowKey: (/** @type {import('../types/index.js').Supplier} */ supplier) =>
-      supplier.id,
-    isExpandable: (
-      /** @type {import('../types/index.js').Supplier} */ supplier,
-    ) => !supplier.id.startsWith('skeleton-'),
-    renderExpanded: (
-      /** @type {import('../types/index.js').Supplier} */ supplier,
-    ) => (
-      <SupplierExpandedDetails
-        supplier={supplier}
-        onEdit={() => setEditingSupplier(supplier)}
-        onDeleteRequest={() => setDeletingSupplier(supplier)}
-      />
-    ),
-  };
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%">
@@ -360,7 +242,6 @@ export function SuppliersList() {
             />
           }
           isFramed
-          isStriped
           dividers="rows"
           primaryAction={{
             label: 'Thêm nhà cung cấp',
@@ -374,7 +255,7 @@ export function SuppliersList() {
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Nhà cung cấp"
           contentSearchFieldKey="companyName"
-          searchPlaceholder="Tìm công ty, địa chỉ..."
+          searchPlaceholder="Tìm tên công ty..."
           filterFieldDefs={FILTER_FIELD_DEFS}
           advancedFilterConditions={filterConditions}
           onAdvancedFilterChange={setFilterConditions}
@@ -384,11 +265,10 @@ export function SuppliersList() {
           idKey="id"
           isLoading={suppliersQuery.isLoading}
           skeletonRows={skeletonRows}
-          rowExpansion={rowExpansion}
           fetchAllRows={fetchAllSuppliers}
           onRefresh={() => suppliersQuery.refetch()}
           isRefreshing={suppliersQuery.isFetching}
-          defaultStickyEnd="none"
+          fixedEndColumnKeys={['actions']}
           pagination={{
             pageIndex,
             pageSize,

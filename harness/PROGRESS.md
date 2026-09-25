@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-09-25 — Nhà cung cấp list follows Figma "DANH SÁCH NHÀ CUNG CẤP"
+
+- Columns (Figma node 137:2): Mã NCC (`profile.code`, one line) · Tên
+  công ty (bold, uppercase) · Mã số thuế / CCCD · Người đại diện (name over
+  chức vụ — the separate Chức vụ column is gone) · Điện thoại · Địa chỉ ·
+  Tùy ý (`+n` count pill, fields in a tooltip) · Thao tác (Sửa / Xoá,
+  pinned end). No stripes. `code`/`actions` are `isAlwaysVisible` so saved
+  column lists still get them.
+- Row expansion (and its per-supplier print) removed — a supplier detail
+  page comes later (user request).
+- Shared: `MetaStackedCell` (two-line cell); `MetaRowActions.onView` optional.
+- Not built — BE supplier search has only string filters: the group pill
+  tabs with counts, "Loại đối tượng" and "Nội bộ" dropdowns. Needs BE
+  `groupId`/`isOrganization`/`isInternal` filters + per-group counts.
+- Harness fix: AGENTS.md said `pnpm dev -- -p 3001`, which fails (Next
+  reads `-p` as the project dir); now `pnpm dev -p 3001`.
+- Checked in Chrome against the Figma screenshot (10 suppliers); Sửa opens
+  the edit dialog.
+- verify.sh passed (`harness/runs/20260925-110737-61/`).
+
 ## 2026-09-25 — Contract: cảng đến for every Incoterm, nơi giao hàng for DDP
 
 - `requiresPlaceOfDischarge` → `requiresPlaceOfDelivery` (DDP only).
