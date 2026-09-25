@@ -14,12 +14,18 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
 import { BadgeCheck } from 'lucide-react';
-import { useId } from 'react';
+import { useId, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   MetaDrawerHeader,
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
+import { ThemeProvider } from '@/shared/components/theme-provider.jsx';
+
+const subscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 const styles = stylex.create({
   surface: {
@@ -47,8 +53,10 @@ const styles = stylex.create({
  * Meta drawer shell for the customer / supplier forms (full create / edit
  * and the quick-create ones opened from contract / shipment drawers):
  * `MetaDrawerHeader`, muted canvas, footer Huỷ bỏ / submit. The submit
- * handler stops propagation, so a quick-create opened inside another form
- * never submits that parent form (same isolation as `FormDialog`).
+ * drawer is portaled to `document.body` (the lab `Drawer` renders in place,
+ * so a quick-create opened inside the contract / shipment drawer would
+ * otherwise nest its `<form>` in theirs), and the submit handler stops
+ * propagation so it never submits that parent form — both as `FormDialog`.
  * @param {{
  *   isOpen: boolean,
  *   onClose: () => void,
@@ -77,81 +85,90 @@ export function PartyFormDrawer({
   children,
 }) {
   const formId = useId();
+  const isClient = useSyncExternalStore(
+    subscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
+  if (!isOpen || !isClient) return null;
 
-  return (
-    <MetaThemeProvider>
-      <Drawer
-        isOpen={isOpen}
-        onOpenChange={(open) => {
-          if (!open) onClose();
-        }}
-        side="end"
-        width={width}
-        isFullWidthOnMobile
-        label={title}
-        hasCloseButton={false}
-        xstyle={styles.surface}
-      >
-        <Layout
-          defaultHasDividers
-          xstyle={styles.layout}
-          header={
-            <LayoutHeader padding={4}>
-              <MetaDrawerHeader
-                icon={icon}
-                title={title}
-                code={code}
-                onClose={onClose}
-              />
-            </LayoutHeader>
-          }
-          content={
-            <LayoutContent padding={6} xstyle={styles.canvas}>
-              <form
-                id={formId}
-                onSubmit={(event) => {
-                  event.stopPropagation();
-                  onSubmit(event);
-                }}
-                {...stylex.props(styles.fields)}
-              >
-                <VStack gap={5} hAlign="stretch">
-                  {submitError ? (
-                    <Banner
-                      status="error"
-                      title={submitError}
-                      container="card"
-                    />
-                  ) : null}
-                  {children}
-                </VStack>
-              </form>
-            </LayoutContent>
-          }
-          footer={
-            <LayoutFooter padding={4}>
-              <HStack hAlign="end" gap={2}>
-                <Button
-                  label="Huỷ bỏ"
-                  variant="secondary"
-                  size="lg"
-                  isDisabled={isSubmitting}
-                  onClick={onClose}
+  return createPortal(
+    <ThemeProvider>
+      <MetaThemeProvider>
+        <Drawer
+          isOpen={isOpen}
+          onOpenChange={(open) => {
+            if (!open) onClose();
+          }}
+          side="end"
+          width={width}
+          isFullWidthOnMobile
+          label={title}
+          hasCloseButton={false}
+          xstyle={styles.surface}
+        >
+          <Layout
+            defaultHasDividers
+            xstyle={styles.layout}
+            header={
+              <LayoutHeader padding={4}>
+                <MetaDrawerHeader
+                  icon={icon}
+                  title={title}
+                  code={code}
+                  onClose={onClose}
                 />
-                <Button
-                  label={submitLabel}
-                  type="submit"
-                  form={formId}
-                  variant="primary"
-                  size="lg"
-                  icon={<Icon icon={BadgeCheck} size="sm" />}
-                  isLoading={isSubmitting}
-                />
-              </HStack>
-            </LayoutFooter>
-          }
-        />
-      </Drawer>
-    </MetaThemeProvider>
+              </LayoutHeader>
+            }
+            content={
+              <LayoutContent padding={6} xstyle={styles.canvas}>
+                <form
+                  id={formId}
+                  onSubmit={(event) => {
+                    event.stopPropagation();
+                    onSubmit(event);
+                  }}
+                  {...stylex.props(styles.fields)}
+                >
+                  <VStack gap={5} hAlign="stretch">
+                    {submitError ? (
+                      <Banner
+                        status="error"
+                        title={submitError}
+                        container="card"
+                      />
+                    ) : null}
+                    {children}
+                  </VStack>
+                </form>
+              </LayoutContent>
+            }
+            footer={
+              <LayoutFooter padding={4}>
+                <HStack hAlign="end" gap={2}>
+                  <Button
+                    label="Huỷ bỏ"
+                    variant="secondary"
+                    size="lg"
+                    isDisabled={isSubmitting}
+                    onClick={onClose}
+                  />
+                  <Button
+                    label={submitLabel}
+                    type="submit"
+                    form={formId}
+                    variant="primary"
+                    size="lg"
+                    icon={<Icon icon={BadgeCheck} size="sm" />}
+                    isLoading={isSubmitting}
+                  />
+                </HStack>
+              </LayoutFooter>
+            }
+          />
+        </Drawer>
+      </MetaThemeProvider>
+    </ThemeProvider>,
+    document.body,
   );
 }

@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-09-25 — Fix: nested <form> from the quick-create drawers
+
+- The lab `Drawer` renders in place, so "Thêm nhanh khách hàng" inside the
+  contract drawer nested its `<form>` in the contract's → React "In HTML,
+  <form> cannot be a descendant of <form>" (hydration error overlay).
+  `PartyFormDrawer` now portals to `document.body` inside `ThemeProvider`
+  (as `FormDialog` does) and renders only while open.
+- Checked in Chrome: same flow, no console errors.
+- verify.sh passed (`harness/runs/20260925-234421-181571/`).
+
 ## 2026-09-25 — Quick-create customer / supplier as Meta drawers
 
 - `PartyFormDrawer` shell (Meta header, muted canvas, Huỷ bỏ / submit;
