@@ -115,7 +115,7 @@ export function freeTimeSummary(freeTime) {
 }
 
 /** @type {Record<import('../types/index.js').FreeTimeKind, string>} */
-const KIND_LABELS = { Dem: 'DEM', Det: 'DET', Combined: 'DEM/DET' };
+const KIND_LABELS = { Dem: 'DEM', Det: 'DET', Combined: 'DEM/DET (combined)' };
 
 /** @type {Record<import('../types/index.js').FreeTimeSide, string>} */
 const SIDE_LABELS = { Origin: 'đầu xuất', Destination: 'đầu đích' };

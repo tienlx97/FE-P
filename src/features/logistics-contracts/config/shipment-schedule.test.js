@@ -99,7 +99,7 @@ test('alert messages', () => {
       kind: 'FreeTimeOverdue', severity: 'Danger', dueOn: '2026-10-19', days: 1,
       containerNumber: 'TCLU1234567', side: 'Destination', freeTimeKind: 'Combined', containerCount: null,
     }),
-    'Cont TCLU1234567: DEM/DET đầu đích quá 1 ngày (hết 19/10/2026)',
+    'Cont TCLU1234567: DEM/DET (combined) đầu đích quá 1 ngày (hết 19/10/2026)',
   );
   assert.equal(
     alertMessage({
