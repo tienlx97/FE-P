@@ -161,6 +161,9 @@ export function alertMessage(alert) {
       ? freeTimeClockLabel(alert.side, alert.freeTimeKind)
       : 'free time';
   const cont = alert.containerCount ? `, còn ${alert.containerCount} cont chưa hạ bãi` : '';
+  const noVgm = alert.containerCount
+    ? `còn ${alert.containerCount} cont chưa khai VGM`
+    : 'chưa có container';
   switch (alert.kind) {
     case 'FreeTimeDueSoon':
       return alert.days === 0
@@ -169,9 +172,9 @@ export function alertMessage(alert) {
     case 'FreeTimeOverdue':
       return `${container}${clock} quá ${alert.days} ngày (hết ${due})`;
     case 'SiCutoffSoon':
-      return `Cut-off SI / VGM ${due} (còn ${alert.days} ngày), chưa có VGM`;
+      return `Cut-off SI / VGM ${due} (còn ${alert.days} ngày), ${noVgm}`;
     case 'SiCutoffPassed':
-      return `Đã qua cut-off SI / VGM ${due} (${alert.days} ngày), chưa có VGM`;
+      return `Đã qua cut-off SI / VGM ${due} (${alert.days} ngày), ${noVgm}`;
     case 'CyCutoffSoon':
       return `Cut-off hạ bãi ${due} (còn ${alert.days} ngày)${cont || ', chưa có cont'}`;
     case 'CyCutoffPassed':

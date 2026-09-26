@@ -82,7 +82,9 @@ function buildSearchHaystack(shipment, supplierName, vgms, customersById) {
     ...vgms.flatMap((vgm) => [
       vgm.containerNumber,
       vgm.sealNumber,
-      customersById.get(vgm.carrierCustomerId)?.companyName,
+      vgm.carrierCustomerId
+        ? customersById.get(vgm.carrierCustomerId)?.companyName
+        : undefined,
     ]),
   ];
   return parts
@@ -138,7 +140,7 @@ function fieldValues(shipment, vgms, customersById, fieldKey) {
     case 'containerNumber':
       return vgms.map((vgm) => vgm.containerNumber);
     case 'sealNumber':
-      return vgms.map((vgm) => vgm.sealNumber);
+      return vgms.map((vgm) => vgm.sealNumber ?? '');
     case 'costName':
       return shipment.costs.map((cost) => cost.name);
     case 'invoiceNumber':

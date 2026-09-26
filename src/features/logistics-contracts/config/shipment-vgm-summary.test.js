@@ -39,6 +39,23 @@ test('sums weights and counts container types, largest group first', () => {
   assert.equal(summary.declaredRatio, 0.75);
 });
 
+test('containers without VGM count as undeclared and add no weight', () => {
+  const summary = summarizeShipmentVgms(
+    [
+      vgm({}),
+      vgm({
+        sealNumber: null, maxGross: null, tare: null, grossWeight: null, vgm: null,
+      }),
+    ],
+    { quantityAmount: 2, quantityUnit: 'Cont' },
+  );
+  assert.equal(summary.containerCount, 2);
+  assert.equal(summary.sealCount, 1);
+  assert.equal(summary.vgm, 24200);
+  assert.equal(summary.declaredCount, 1);
+  assert.equal(summary.declaredRatio, 0.5);
+});
+
 test('declared ratio needs a container plan and ignores zero VGM', () => {
   const lcl = summarizeShipmentVgms([vgm({})], {
     quantityAmount: 12,

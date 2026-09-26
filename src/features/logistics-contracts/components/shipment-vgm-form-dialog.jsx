@@ -46,7 +46,7 @@ export function ShipmentVgmFormDialog({
     shipmentId,
     vgm,
     onSuccess: (savedVgm) => {
-      toast({ body: vgm ? 'Đã cập nhật VGM.' : 'Đã thêm VGM.' });
+      toast({ body: vgm ? 'Đã cập nhật container.' : 'Đã thêm container.' });
       onOpenChange(false);
       onSuccess?.(savedVgm);
     },
@@ -62,8 +62,8 @@ export function ShipmentVgmFormDialog({
     <FormDialog
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
-      title={vgm ? `Sửa VGM ${vgm.containerNumber}` : 'Thêm VGM'}
-      submitLabel={vgm ? 'Lưu thay đổi' : 'Thêm VGM'}
+      title={vgm ? `Sửa container ${vgm.containerNumber}` : 'Thêm container'}
+      submitLabel={vgm ? 'Lưu thay đổi' : 'Thêm container'}
       width={SHIPMENT_VGM_FORM_DIALOG_WIDTH}
       draft={form.values}
       isSubmitting={form.isSubmitting}
@@ -81,7 +81,7 @@ export function ShipmentVgmFormDialog({
         }
       >
         <VStack gap={3} hAlign="stretch">
-          <FormSection value="main" title="Thông tin container">
+          <FormSection value="main" title="Container & VGM">
             <ShipmentVgmFields
               values={form.values}
               setField={form.setField}

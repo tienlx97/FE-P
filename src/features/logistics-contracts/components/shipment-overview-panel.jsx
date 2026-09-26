@@ -129,8 +129,8 @@ export function ShipmentOverviewPanel({
         10
       : null;
   const isMatched = matchPercent === 100;
-  const grossTotal = vgms.reduce((total, vgm) => total + vgm.grossWeight, 0);
-  const netTotal = vgms.reduce((total, vgm) => total + vgm.netWeight, 0);
+  const grossTotal = vgms.reduce((total, vgm) => total + (vgm.grossWeight ?? 0), 0);
+  const netTotal = vgms.reduce((total, vgm) => total + (vgm.netWeight ?? 0), 0);
   const quantityLabel = `${shipment.quantityAmount} ${labelForShipmentQuantityUnit(shipment.quantityUnit)}`;
   const vesselLabel = [shipment.vesselName, details?.voyageNumber]
     .filter(Boolean)
@@ -430,9 +430,9 @@ export function ShipmentOverviewPanel({
                   indexLabel={`CONT #${index + 1}`}
                   typeLabel={labelForShipmentContainerType(vgm.containerType)}
                   containerNumber={vgm.containerNumber}
-                  sealNumber={vgm.sealNumber}
-                  packingDate={formatDisplayDate(vgm.packingDate)}
-                  vgm={formatKg(vgm.vgm)}
+                  sealNumber={vgm.sealNumber ?? undefined}
+                  packingDate={formatDisplayDate(vgm.packingDate ?? undefined)}
+                  vgm={vgm.vgm === null ? 'Chưa khai VGM' : formatKg(vgm.vgm)}
                 />
               ))}
             </Grid>

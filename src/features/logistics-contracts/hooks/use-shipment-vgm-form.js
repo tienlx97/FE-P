@@ -33,18 +33,18 @@ function emptyValues() {
 function valuesFromVgm(vgm) {
   return {
     containerNumber: vgm.containerNumber,
-    sealNumber: vgm.sealNumber,
+    sealNumber: vgm.sealNumber ?? '',
     containerType: vgm.containerType,
-    tare: vgm.tare,
-    payload: vgm.payload,
-    maxGross: vgm.maxGross,
-    netWeight: vgm.netWeight,
-    packagingWeight: vgm.packagingWeight,
-    packingDate: vgm.packingDate,
+    tare: vgm.tare ?? undefined,
+    payload: vgm.payload ?? undefined,
+    maxGross: vgm.maxGross ?? undefined,
+    netWeight: vgm.netWeight ?? undefined,
+    packagingWeight: vgm.packagingWeight ?? undefined,
+    packingDate: vgm.packingDate ?? '',
     plannedPackingTime: vgm.plannedPackingTime ?? '',
     actualPackingTime: vgm.actualPackingTime ?? '',
     truckArrivalTime: vgm.truckArrivalTime ?? '',
-    carrierCustomerId: vgm.carrierCustomerId,
+    carrierCustomerId: vgm.carrierCustomerId ?? '',
     note: vgm.note ?? '',
   };
 }

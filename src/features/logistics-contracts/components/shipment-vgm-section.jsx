@@ -84,10 +84,10 @@ export function ShipmentVgmSection({
       ? {
           id: '__totals__',
           __isTotalsRow: true,
-          maxGross: vgms.reduce((sum, vgm) => sum + vgm.maxGross, 0),
-          tare: vgms.reduce((sum, vgm) => sum + vgm.tare, 0),
-          grossWeight: vgms.reduce((sum, vgm) => sum + vgm.grossWeight, 0),
-          vgm: vgms.reduce((sum, vgm) => sum + vgm.vgm, 0),
+          maxGross: vgms.reduce((sum, vgm) => sum + (vgm.maxGross ?? 0), 0),
+          tare: vgms.reduce((sum, vgm) => sum + (vgm.tare ?? 0), 0),
+          grossWeight: vgms.reduce((sum, vgm) => sum + (vgm.grossWeight ?? 0), 0),
+          vgm: vgms.reduce((sum, vgm) => sum + (vgm.vgm ?? 0), 0),
         }
       : null;
   const tableData = /** @type {import('../types/index.js').ShipmentVgm[]} */ (
@@ -118,7 +118,11 @@ export function ShipmentVgmSection({
       header: 'Nhà vận chuyển',
       width: proportional(1, { minWidth: 160 }),
       renderCell: (vgm) =>
-        orDash(customersById.get(vgm.carrierCustomerId)?.companyName),
+        orDash(
+          vgm.carrierCustomerId
+            ? customersById.get(vgm.carrierCustomerId)?.companyName
+            : undefined,
+        ),
     },
     {
       key: 'packingDate',
@@ -142,31 +146,31 @@ export function ShipmentVgmSection({
       key: 'sealNumber',
       header: 'Tên seal',
       width: proportional(1),
-      renderCell: (vgm) => vgm.sealNumber,
+      renderCell: (vgm) => orDash(vgm.sealNumber ?? undefined),
     },
     {
       key: 'maxGross',
       header: 'Max gross (kg)',
       width: proportional(1, { minWidth: 150 }),
-      renderCell: (vgm) => vgm.maxGross.toFixed(2),
+      renderCell: (vgm) => orDash(vgm.maxGross?.toFixed(2)),
     },
     {
       key: 'tare',
       header: 'Tare (kg)',
       width: pixel(110),
-      renderCell: (vgm) => vgm.tare.toFixed(2),
+      renderCell: (vgm) => orDash(vgm.tare?.toFixed(2)),
     },
     {
       key: 'grossWeight',
       header: 'G.W (kg)',
       width: proportional(1, { minWidth: 170 }),
-      renderCell: (vgm) => vgm.grossWeight.toFixed(2),
+      renderCell: (vgm) => orDash(vgm.grossWeight?.toFixed(2)),
     },
     {
       key: 'vgm',
       header: 'VGM (kg)',
       width: proportional(1),
-      renderCell: (vgm) => vgm.vgm.toFixed(2),
+      renderCell: (vgm) => vgm.vgm?.toFixed(2) ?? 'Chưa khai',
     },
   ];
 

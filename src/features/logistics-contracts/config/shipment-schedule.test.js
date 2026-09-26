@@ -129,6 +129,17 @@ test('B/L and transshipment alert messages', () => {
   );
 });
 
+test('SI / VGM cut-off alerts count the containers without VGM', () => {
+  /** @param {number | null} containerCount */
+  const message = (containerCount) =>
+    alertMessage({
+      kind: 'SiCutoffSoon', severity: 'Warning', dueOn: '2026-10-01', days: 1,
+      containerNumber: null, side: null, freeTimeKind: null, containerCount, port: null,
+    });
+  assert.equal(message(2), 'Cut-off SI / VGM 01/10/2026 (còn 1 ngày), còn 2 cont chưa khai VGM');
+  assert.equal(message(null), 'Cut-off SI / VGM 01/10/2026 (còn 1 ngày), chưa có container');
+});
+
 test('schedule date label shows the delay', () => {
   assert.equal(scheduleDateLabel(null, '2026-10-13', 3), '13/10/2026 · trễ 3 ngày');
   assert.equal(scheduleDateLabel('2026-10-14', '2026-10-13', 0), '14/10/2026');

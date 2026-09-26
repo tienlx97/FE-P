@@ -938,6 +938,7 @@ export {};
  * @property {number} gatedInCount
  * @property {number} destinationGatedOutCount
  * @property {number} returnedCount
+ * @property {number} [vgmDeclaredCount]
  */
 
 /**
@@ -1093,20 +1094,21 @@ export {};
  * @property {string} shipmentId
  * @property {number} sequenceNumber
  * @property {string} containerNumber
- * @property {string} sealNumber
+ * @property {string | null} sealNumber - optional until the seal is known
  * @property {ShipmentContainerType} containerType
- * @property {number} tare
- * @property {number} payload
- * @property {number} maxGross
- * @property {number} netWeight
- * @property {number} packagingWeight
- * @property {number} grossWeight
- * @property {number} vgm
- * @property {string} packingDate
+ * @property {number | null} tare - VGM weights: null until the VGM is declared (all or none)
+ * @property {number | null} payload
+ * @property {number | null} maxGross
+ * @property {number | null} netWeight
+ * @property {number | null} packagingWeight
+ * @property {number | null} grossWeight
+ * @property {number | null} vgm
+ * @property {boolean} [isVgmDeclared] - the VGM weights are entered
+ * @property {string | null} packingDate
  * @property {string | null} plannedPackingTime
  * @property {string | null} actualPackingTime
  * @property {string | null} truckArrivalTime
- * @property {string} carrierCustomerId
+ * @property {string | null} carrierCustomerId
  * @property {string | null} note
  * @property {string | null} [emptyReturnedOn] - ISO date the empty container went back; null = not yet
  * @property {string | null} [emptyReturnDepot]
@@ -1132,11 +1134,11 @@ export {};
  * @property {string} containerNumber
  * @property {string} sealNumber
  * @property {ShipmentContainerType | ''} containerType
- * @property {number | undefined} tare
- * @property {number | undefined} payload
- * @property {number | undefined} maxGross
- * @property {number | undefined} netWeight
- * @property {number | undefined} packagingWeight
+ * @property {number} [tare] - the five VGM weights: all or none
+ * @property {number} [payload]
+ * @property {number} [maxGross]
+ * @property {number} [netWeight]
+ * @property {number} [packagingWeight]
  * @property {string} packingDate
  * @property {string} plannedPackingTime
  * @property {string} actualPackingTime

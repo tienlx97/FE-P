@@ -20,14 +20,14 @@ function withSeconds(value) {
 function toRequestBody(values) {
   return {
     ContainerNumber: values.containerNumber,
-    SealNumber: values.sealNumber,
+    SealNumber: values.sealNumber || null,
     ContainerType: values.containerType,
-    Tare: values.tare,
-    Payload: values.payload,
-    MaxGross: values.maxGross,
-    NetWeight: values.netWeight,
-    PackagingWeight: values.packagingWeight,
-    PackingDate: values.packingDate,
+    Tare: values.tare ?? null,
+    Payload: values.payload ?? null,
+    MaxGross: values.maxGross ?? null,
+    NetWeight: values.netWeight ?? null,
+    PackagingWeight: values.packagingWeight ?? null,
+    PackingDate: values.packingDate || null,
     PlannedPackingTime: values.plannedPackingTime
       ? withSeconds(values.plannedPackingTime)
       : null,
@@ -37,7 +37,7 @@ function toRequestBody(values) {
     TruckArrivalTime: values.truckArrivalTime
       ? withSeconds(values.truckArrivalTime)
       : null,
-    CarrierCustomerId: values.carrierCustomerId,
+    CarrierCustomerId: values.carrierCustomerId || null,
     Note: values.note || null,
   };
 }

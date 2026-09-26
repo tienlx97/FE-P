@@ -36,7 +36,7 @@ export function summarizeShipmentVgms(vgms, shipment) {
           SHIPMENT_CONTAINER_TYPES.indexOf(b.type),
     );
 
-  const declaredCount = vgms.filter((vgm) => vgm.vgm > 0).length;
+  const declaredCount = vgms.filter((vgm) => (vgm.vgm ?? 0) > 0).length;
   const plannedContainerCount =
     shipment.quantityUnit === 'Cont' && shipment.quantityAmount > 0
       ? shipment.quantityAmount
@@ -45,7 +45,7 @@ export function summarizeShipmentVgms(vgms, shipment) {
   return {
     containerCount: vgms.length,
     typeCounts,
-    sealCount: vgms.filter((vgm) => vgm.sealNumber.trim() !== '').length,
+    sealCount: vgms.filter((vgm) => (vgm.sealNumber ?? '').trim() !== '').length,
     maxGross: sum(vgms, 'maxGross'),
     tare: sum(vgms, 'tare'),
     grossWeight: sum(vgms, 'grossWeight'),
@@ -64,5 +64,5 @@ export function summarizeShipmentVgms(vgms, shipment) {
  * @param {'maxGross' | 'tare' | 'grossWeight' | 'vgm'} key
  */
 function sum(vgms, key) {
-  return vgms.reduce((total, vgm) => total + vgm[key], 0);
+  return vgms.reduce((total, vgm) => total + (vgm[key] ?? 0), 0);
 }

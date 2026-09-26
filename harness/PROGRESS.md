@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-09-27 — "Container & VGM": container first, VGM later
+
+- BE-kt-xnk d28183f. Tab "VGM" → "Container & VGM"; `MetaVgmPanel` title /
+  "Thêm container" / undeclared rows show a "Chưa khai VGM" pill with "—"
+  weights. Form: container (number + type required, seal optional) then
+  "Khai VGM" (packing date, carrier, 5 weights — all or none,
+  `shipmentVgmSchema` superRefine); gross / VGM shown once declared.
+- Null-safe sums / cells in the contract shipments panel, full view,
+  overview container cards, expanded VGM section, VGM summary, Excel
+  export (+ "Đã khai VGM" column). SI / VGM alert text: "còn n cont chưa
+  khai VGM" / "chưa có container".
+- Tests: `shipment-vgm-schema.test.js` (3), summary with undeclared
+  containers, alert text.
+- verify.sh passed (`harness/runs/20260927-003912-1293/`). Chrome check
+  not done — the tab kept freezing on login; flow verified via the dev
+  API (26KCT06: container-only → 201, partial weights → 400, alert counts
+  1 container without VGM).
+
 ## 2026-09-27 — B/L documents, transshipment legs, time-based progress
 
 - BE-kt-xnk 177f463 (`add-shipment-bl-transshipment`), 5cb20f7 (old

@@ -319,6 +319,13 @@ Nhập theo **từng lô, từng đầu**, chọn cách tính:
 
 ### 4.3 Ngày theo từng container
 
+**Container trước, VGM sau** (2026-09-27): tab **"Container & VGM"**, mỗi
+cont một dòng. Container tạo được ngay khi lấy rỗng, chỉ cần **số cont +
+loại cont** (seal nhập sau cũng được). Phần **khai VGM** (ngày đóng hàng,
+nhà vận chuyển, 5 khối lượng: max gross, tare, payload, net weight, bao bì)
+điền sau khi đóng hàng — đủ cả 5 hoặc để trống cả 5. Cont chưa khai hiện
+"Chưa khai VGM"; cảnh báo cut-off SI / VGM đếm các cont chưa khai.
+
 Thêm vào mỗi container (bản ghi VGM), nhập **hàng loạt** (một ngày cho các
 cont cùng ngày, sửa riêng cont khác ngày):
 
@@ -420,3 +427,4 @@ liệu mốc con ở backend).
 | 2026-09-26 | Thêm mục 4 (đề xuất): lịch tàu có lịch sử khi hãng tàu báo delay, free time DEM / DET tách riêng hoặc gộp, ngày theo từng container, cảnh báo | Claude |
 | 2026-09-26 | Triển khai mục 4 (giai đoạn 1–3); thêm mốc Empty Pickup (FOB / CIF / DDP), nguyên tắc 7 (dữ liệu đẩy tiến độ), chân thẻ dùng ATD / ATA + số ngày trễ, hạn trả rỗng tính từ free time | Claude |
 | 2026-09-27 | Thêm 4.6 chứng từ B/L, 4.7 chuyển tải, 4.8 thanh tiến độ theo thời gian; "Ngày container" thành drawer | Claude |
+| 2026-09-27 | Container trước, VGM sau: tab "Container & VGM", khai VGM tuỳ chọn (đủ 5 khối lượng hoặc không), cảnh báo SI / VGM đếm cont chưa khai | Claude |

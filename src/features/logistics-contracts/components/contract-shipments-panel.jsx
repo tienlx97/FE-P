@@ -112,7 +112,7 @@ export function ContractShipmentsPanel({ contract }) {
   );
   const totalVgmKg = [...vgmsByShipmentId.values()].reduce(
     (total, records) =>
-      total + records.reduce((sum, record) => sum + record.vgm, 0),
+      total + records.reduce((sum, record) => sum + (record.vgm ?? 0), 0),
     0,
   );
   const fclCount = shipments.filter((s) => s.type === 'FCL').length;
@@ -178,10 +178,12 @@ export function ContractShipmentsPanel({ contract }) {
     };
 
     const vgms = vgmsByShipmentId.get(s.id) ?? [];
-    const vgmTotal = vgms.reduce((total, vgm) => total + vgm.vgm, 0);
+    const vgmTotal = vgms.reduce((total, vgm) => total + (vgm.vgm ?? 0), 0);
     /** @type {Map<string, number>} */
     const contsByCarrier = new Map();
     for (const vgm of vgms) {
+      // A container without VGM may not have its carrier yet.
+      if (!vgm.carrierCustomerId) continue;
       contsByCarrier.set(
         vgm.carrierCustomerId,
         (contsByCarrier.get(vgm.carrierCustomerId) ?? 0) + 1,

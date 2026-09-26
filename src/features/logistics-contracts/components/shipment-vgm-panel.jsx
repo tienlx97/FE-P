@@ -23,7 +23,7 @@ const TONNE_FORMATTER = new Intl.NumberFormat('en-US', {
 });
 
 /**
- * Shipment detail "VGM" tab (Figma 120:9075): feeds `MetaVgmPanel` from
+ * Shipment detail "Container & VGM" tab (Figma 120:9075): feeds `MetaVgmPanel` from
  * the shipment's VGM records and owns the add / edit / delete dialogs and
  * the Excel export. `vgms` comes from the workspace's own query (already
  * sorted by sequence number) so the tab count and this table agree.
@@ -65,9 +65,11 @@ export function ShipmentVgmPanel({
 
   /** @param {string} id */
   const vgmById = (id) => vgms.find((vgm) => vgm.id === id) ?? null;
-  /** @param {string} customerId */
+  /** @param {string | null} customerId */
   const carrierName = (customerId) =>
-    customersById.get(customerId)?.companyName ?? '—';
+    (customerId && customersById.get(customerId)?.companyName) || '—';
+  /** @param {number | null} value */
+  const weight = (value) => (value === null ? '—' : WEIGHT_FORMATTER.format(value));
 
   async function handleConfirmDelete() {
     if (!deletingVgm) return;
@@ -84,7 +86,8 @@ export function ShipmentVgmPanel({
         'Ngày đóng': formatDisplayDate(vgm.packingDate),
         'Loại cont': labelForShipmentContainerType(vgm.containerType),
         'Số container': vgm.containerNumber,
-        'Số seal': vgm.sealNumber,
+        'Số seal': vgm.sealNumber ?? '',
+        'Đã khai VGM': vgm.isVgmDeclared ? 'Có' : 'Chưa',
         'Max gross (kg)': vgm.maxGross,
         'Tare (kg)': vgm.tare,
         'G.W (kg)': vgm.grossWeight,
@@ -127,11 +130,12 @@ export function ShipmentVgmPanel({
           packingDate: formatDisplayDate(vgm.packingDate),
           typeLabel: labelForShipmentContainerType(vgm.containerType),
           containerNumber: vgm.containerNumber,
-          sealNumber: vgm.sealNumber,
-          maxGross: WEIGHT_FORMATTER.format(vgm.maxGross),
-          tare: WEIGHT_FORMATTER.format(vgm.tare),
-          grossWeight: WEIGHT_FORMATTER.format(vgm.grossWeight),
-          vgm: WEIGHT_FORMATTER.format(vgm.vgm),
+          sealNumber: vgm.sealNumber || '—',
+          maxGross: weight(vgm.maxGross),
+          tare: weight(vgm.tare),
+          grossWeight: weight(vgm.grossWeight),
+          vgm: weight(vgm.vgm),
+          isVgmDeclared: vgm.isVgmDeclared ?? vgm.vgm !== null,
         }))}
         totals={
           vgms.length > 0

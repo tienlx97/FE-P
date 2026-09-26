@@ -76,7 +76,7 @@ import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
 const TAB_LABELS = {
   overview: 'Tổng quan',
   schedule: 'Lịch tàu & Free time',
-  vgm: 'VGM',
+  vgm: 'Container & VGM',
   costs: 'Chi phí logistics',
 };
 

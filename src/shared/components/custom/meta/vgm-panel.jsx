@@ -48,6 +48,7 @@ import { MetaPill } from './pill.jsx';
  *   tare: string,
  *   grossWeight: string,
  *   vgm: string,
+ *   isVgmDeclared?: boolean,
  * }} MetaVgmRow
  * @typedef {{
  *   label: string,
@@ -131,7 +132,7 @@ export function MetaVgmPanel({
           <HStack gap={3} vAlign="center">
             <HStack as="span" xstyle={styles.titleBar} />
             <Heading level={3} accessibilityLevel={2}>
-              VGM
+              Container &amp; VGM
             </Heading>
             <MetaCountBadge value={count} />
           </HStack>
@@ -156,7 +157,7 @@ export function MetaVgmPanel({
             ) : null}
             {onCreate ? (
               <Button
-                label="Thêm VGM"
+                label="Thêm container"
                 variant="primary"
                 isDisabled={isReadOnly}
                 icon={<Icon icon={Plus} size="sm" />}
@@ -212,7 +213,7 @@ export function MetaVgmPanel({
           ))
         ) : rows.length === 0 ? (
           <HStack hAlign="center" xstyle={styles.emptyRow}>
-            <Text color="secondary">Chưa có bản ghi VGM nào.</Text>
+            <Text color="secondary">Chưa có container nào.</Text>
           </HStack>
         ) : (
           <>
@@ -292,14 +293,18 @@ export function MetaVgmPanel({
                       ),
                     )}
                     <TableCell xstyle={[styles.cell, alignStyles.end]}>
-                      <Text
-                        type="code"
-                        weight="bold"
-                        color="accent"
-                        hasTabularNumbers
-                      >
-                        {row.vgm}
-                      </Text>
+                      {row.isVgmDeclared === false ? (
+                        <MetaPill label="Chưa khai VGM" tone="warning" size="sm" />
+                      ) : (
+                        <Text
+                          type="code"
+                          weight="bold"
+                          color="accent"
+                          hasTabularNumbers
+                        >
+                          {row.vgm}
+                        </Text>
+                      )}
                     </TableCell>
                     <TableCell xstyle={[styles.cell, alignStyles.center]}>
                       <HStack
@@ -310,7 +315,7 @@ export function MetaVgmPanel({
                       >
                         <IconButton
                           isDisabled={isReadOnly}
-                          label={`Sửa VGM ${row.containerNumber}`}
+                          label={`Sửa container ${row.containerNumber}`}
                           tooltip="Sửa"
                           icon={<Icon icon={Pencil} size="sm" />}
                           variant="ghost"
@@ -319,7 +324,7 @@ export function MetaVgmPanel({
                         />
                         <IconButton
                           isDisabled={isReadOnly}
-                          label={`Xoá VGM ${row.containerNumber}`}
+                          label={`Xoá container ${row.containerNumber}`}
                           tooltip="Xoá"
                           icon={<Icon icon={Trash2} size="sm" />}
                           variant="ghost"
