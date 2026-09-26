@@ -32,6 +32,7 @@ import { contractStatusOptions } from '../config/contract-status.js';
 import { contractTypeOptions } from '../config/contract-types.js';
 import { currencyOptions } from '../config/currencies.js';
 import { incotermOptions } from '../config/incoterms.js';
+import { withSavedOption } from '../config/place-options.js';
 import { BuyerFields } from './buyer-fields.jsx';
 import { ContractDrawerPaymentTerms } from './contract-drawer-payment-terms.jsx';
 import { QuickCreateCountryDialog } from './quick-create-country-dialog.jsx';
@@ -56,13 +57,6 @@ const styles = stylex.create({
     '--meta-field-radius': 'var(--meta-radius-inset)',
   },
 });
-
-/** @param {{value: string, label: string}[]} options @param {string} value */
-function withSavedOption(options, value) {
-  return value && !options.some((option) => option.value === value)
-    ? [...options, { value, label: value }]
-    : options;
-}
 
 /**
  * Contract profile laid out as the Meta "Chỉnh sửa hợp đồng" drawer (Figma

@@ -44,6 +44,7 @@ import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { currencyOptions } from '../config/currencies.js';
 import { paymentTypeOptions } from '../config/payment-schedule-types.js';
+import { withSavedOption } from '../config/place-options.js';
 import {
   metaToneForCustomsChannel,
   shipmentCustomsChannelOptions,
@@ -63,6 +64,7 @@ import {
   shipmentTypeOptions,
 } from '../config/shipment-types.js';
 import { useShipmentForm } from '../hooks/use-shipment-form.js';
+import { QuickCreatePortDialog } from './quick-create-port-dialog.jsx';
 import { QuickCreateSupplierDialog } from './quick-create-supplier-dialog.jsx';
 
 // Stitch "Chỉnh sửa Shipment" (project 6957224641630765183, screen
@@ -107,6 +109,9 @@ export function ShipmentFormDrawer({
   const toast = useAppToast();
   const [isConfirmingDiscard, setIsConfirmingDiscard] = useState(false);
   const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
+  const [quickCreatePlace, setQuickCreatePlace] = useState(
+    /** @type {'placeOfLoading' | 'placeOfDischarge' | null} */ (null),
+  );
   const form = useShipmentForm({
     contractId: contract.id,
     contract,
@@ -664,30 +669,85 @@ export function ShipmentFormDrawer({
                         isDisabled={isDisabled}
                         {...statusOf('emptyReturnDeadline')}
                       />
-                      <TextInput
-                        label="Cảng/nơi xếp hàng (POL)"
-                        value={values.placeOfLoading}
-                        onChange={(value) => setField('placeOfLoading', value)}
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                        {...statusOf('placeOfLoading')}
-                      />
-                      {/* Both default from the contract (`useShipmentForm`)
-                          and stay editable per shipment; tracking shows
-                          these, not the contract's. */}
-                      <TextInput
-                        label="Cảng đến (POD)"
-                        description="Mặc định theo hợp đồng"
-                        value={values.placeOfDischarge}
-                        onChange={(value) =>
-                          setField('placeOfDischarge', value)
-                        }
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                        {...statusOf('placeOfDischarge')}
-                      />
+                      {/* All three default from the contract
+                          (`useShipmentForm`) and stay editable per
+                          shipment; tracking shows these, not the
+                          contract's. POL / POD pick from the same port
+                          catalogs as the contract form. */}
+                      <HStack gap={2} vAlign="start" wrap="nowrap">
+                        <StackItem size="fill">
+                          <Selector
+                            label="Cảng/nơi xếp hàng (POL)"
+                            hasSearch
+                            placeholder="Chọn nơi xếp hàng"
+                            value={values.placeOfLoading || null}
+                            onChange={(value) =>
+                              setField('placeOfLoading', value ?? '')
+                            }
+                            options={withSavedOption(
+                              form.loadingPlaces.map((place) => ({
+                                value: place.name,
+                                label: place.label,
+                              })),
+                              values.placeOfLoading,
+                            )}
+                            hasClear
+                            isOptional
+                            isDisabled={isDisabled}
+                            width="100%"
+                            {...statusOf('placeOfLoading')}
+                          />
+                        </StackItem>
+                        <VStack xstyle={styles.alignWithField}>
+                          <IconButton
+                            label="Thêm nơi xếp hàng"
+                            tooltip="Thêm nơi xếp hàng"
+                            icon={<Icon icon={Plus} size="sm" />}
+                            type="button"
+                            variant="secondary"
+                            isDisabled={isDisabled || !form.vietnamCountryId}
+                            onClick={() => setQuickCreatePlace('placeOfLoading')}
+                          />
+                        </VStack>
+                      </HStack>
+                      <HStack gap={2} vAlign="start" wrap="nowrap">
+                        <StackItem size="fill">
+                          <Selector
+                            label="Cảng đến (POD)"
+                            hasSearch
+                            placeholder="Chọn cảng đến"
+                            value={values.placeOfDischarge || null}
+                            onChange={(value) =>
+                              setField('placeOfDischarge', value ?? '')
+                            }
+                            options={withSavedOption(
+                              form.dischargePlaces.map((place) => ({
+                                value: place.name,
+                                label: place.label,
+                              })),
+                              values.placeOfDischarge,
+                            )}
+                            hasClear
+                            isOptional
+                            isDisabled={isDisabled}
+                            width="100%"
+                            {...statusOf('placeOfDischarge')}
+                          />
+                        </StackItem>
+                        <VStack xstyle={styles.alignWithField}>
+                          <IconButton
+                            label="Thêm cảng đến"
+                            tooltip="Thêm cảng đến"
+                            icon={<Icon icon={Plus} size="sm" />}
+                            type="button"
+                            variant="secondary"
+                            isDisabled={isDisabled || !form.dischargeCountryId}
+                            onClick={() =>
+                              setQuickCreatePlace('placeOfDischarge')
+                            }
+                          />
+                        </VStack>
+                      </HStack>
                       <TextInput
                         label="Nơi giao hàng (Place of Delivery)"
                         description="Mặc định theo hợp đồng"
@@ -902,6 +962,23 @@ export function ShipmentFormDrawer({
         onOpenChange={setIsQuickCreateOpen}
         onCreated={(supplier) => setField('supplierCustomerId', supplier.id)}
       />
+      <QuickCreatePortDialog
+        isOpen={quickCreatePlace !== null}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setQuickCreatePlace(null);
+        }}
+        countries={form.countries}
+        countryId={
+          quickCreatePlace === 'placeOfLoading'
+            ? form.vietnamCountryId
+            : form.dischargeCountryId
+        }
+        onCreated={(port) => {
+          if (quickCreatePlace) {
+            setField(quickCreatePlace, port.fullName || port.name);
+          }
+        }}
+      />
 
       <CommonDialog
         isOpen={isConfirmingDiscard}
@@ -1028,7 +1105,9 @@ const styles = stylex.create({
   // A label-less control beside a labelled field: drop it by one label
   // line so the two controls line up.
   alignWithField: {
-    paddingTop: 'calc(var(--spacing-5) + var(--spacing-1-5))',
+    // Field label line (label size × leading) + Field's label gap.
+    paddingTop:
+      'calc(var(--text-label-size) * var(--text-label-leading) + var(--spacing-1))',
   },
   fullRow: {
     gridColumn: '1 / -1',

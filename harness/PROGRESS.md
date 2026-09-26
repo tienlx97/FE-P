@@ -1,5 +1,24 @@
 # Progress Log
 
+## 2026-09-26 — Shipment drawer: POL / POD pickers, SI / VGM time field
+
+- "Cảng/nơi xếp hàng (POL)" / "Cảng đến (POD)" in the shipment drawer are
+  now the contract form's Selectors: POL from Vietnam's ports + factories,
+  POD from the contract's export country, each with the quick-create port
+  "+". Values still default from the contract; a saved value missing from
+  the catalog stays selectable. "Nơi giao hàng" stays free text (it is on
+  the contract too). POD's "Mặc định theo hợp đồng" description dropped
+  (it pushed the field below the "+" button).
+- `config/place-options.js`: `portOption` / `dedupePlacesByName` /
+  `withSavedOption` shared by `useContractForm`, both contract field
+  components and `useShipmentForm` (was copied 3×).
+- Meta theme: `time-input` gets the same surface / radius / height as
+  `date-input` (it kept Astryx's default, so "Hạn nộp SI / VGM"'s time box
+  looked off). `alignWithField` = label size × leading + label gap (was
+  hard-coded 26px, 2px too low).
+- verify.sh passed (`harness/runs/20260926-165531-381/`). Not checked in
+  Chrome.
+
 ## 2026-09-26 — Fix: GitHub CI typecheck for port list skeleton
 
 - The factory/warehouse port change added required `Port.kind`, but the

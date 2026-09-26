@@ -562,6 +562,16 @@
     height: var(--meta-field-height, var(--spacing-8));
   }
 
+  .astryx-time-input {
+    background-color: var(--color-background-surface);
+    border-color: var(--color-border);
+    border-radius: var(--meta-field-radius, var(--radius-element));
+  }
+
+  .astryx-time-input[data-size="md"] {
+    height: var(--meta-field-height, var(--spacing-8));
+  }
+
   .astryx-number-input {
     background-color: var(--color-background-surface);
     border-color: var(--color-border);

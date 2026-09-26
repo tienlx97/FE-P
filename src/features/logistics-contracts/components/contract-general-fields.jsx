@@ -26,6 +26,7 @@ import { contractStatusOptions } from '../config/contract-status.js';
 import { contractTypeOptions } from '../config/contract-types.js';
 import { currencyOptions } from '../config/currencies.js';
 import { incotermOptions } from '../config/incoterms.js';
+import { withSavedOption } from '../config/place-options.js';
 import { BuyerFields } from './buyer-fields.jsx';
 import { QuickCreateCountryDialog } from './quick-create-country-dialog.jsx';
 import { QuickCreatePortDialog } from './quick-create-port-dialog.jsx';
@@ -37,16 +38,6 @@ const GENERAL_FIELD_COLUMNS = { minWidth: 220, max: 3 };
 // Fixed-width side column so the two dates read as one grouped block,
 // stacked next to the main field grid (see UX reference).
 const DATE_COLUMN_WIDTH = 280;
-
-/** Preserve a saved value while its lookup is loading or unavailable.
- * @param {{value: string, label: string}[]} options
- * @param {string} value
- */
-function withSavedOption(options, value) {
-  return value && !options.some((option) => option.value === value)
-    ? [...options, { value, label: value }]
-    : options;
-}
 
 /**
  * `Contract` general field-set — single layout shared by both the Xem and

@@ -339,6 +339,18 @@ export const metaTheme = defineTheme({
         height: 'var(--meta-field-height, var(--spacing-8))',
       },
     },
+    // Paired beside `date-input` for date-time fields (e.g. "Hạn nộp
+    // SI / VGM") — must share its surface, corner and height.
+    'time-input': {
+      base: {
+        backgroundColor: 'var(--color-background-surface)',
+        borderColor: 'var(--color-border)',
+        borderRadius: 'var(--meta-field-radius, var(--radius-element))',
+      },
+      'size:md': {
+        height: 'var(--meta-field-height, var(--spacing-8))',
+      },
+    },
     'number-input': {
       base: {
         backgroundColor: 'var(--color-background-surface)',

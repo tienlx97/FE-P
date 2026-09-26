@@ -3,9 +3,13 @@
 import { useState } from 'react';
 
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
+import { dedupePlacesByName, portOption } from '../config/place-options.js';
 import { splitSiCutoff } from '../config/shipment-operational-details.js';
 import { shipmentSchema } from '../config/shipment-schema.js';
 import { SHIPMENT_STATUSES } from '../config/shipment-status.js';
+import { findVietnamCountry } from '../config/vietnam-country.js';
+import { useCountriesQuery } from './use-countries-query.js';
+import { usePortsQuery } from './use-ports-query.js';
 import { useShipmentCostLineRows } from './use-shipment-cost-line-rows.js';
 import {
   useCreateShipmentMutation,
@@ -155,6 +159,22 @@ export function useShipmentForm({
   const [submitError, setSubmitError] = useState('');
 
   const suppliersQuery = useSuppliersQuery();
+  // Same place catalogs as the contract form (`useContractForm`): POL from
+  // Vietnam's ports/factories, POD from the contract's export country.
+  const countriesQuery = useCountriesQuery();
+  const countries = countriesQuery.data?.success
+    ? countriesQuery.data.countries
+    : [];
+  const vietnamCountryId = findVietnamCountry(countries)?.id ?? '';
+  const dischargeCountryId = contract?.countryId ?? '';
+  const loadingPortsQuery = usePortsQuery({
+    countryId: vietnamCountryId,
+    enabled: Boolean(vietnamCountryId),
+  });
+  const dischargePortsQuery = usePortsQuery({
+    countryId: dischargeCountryId,
+    enabled: Boolean(dischargeCountryId),
+  });
   const createMutation = useCreateShipmentMutation(contractId);
   const updateMutation = useUpdateShipmentMutation(contractId);
 
@@ -279,6 +299,19 @@ export function useShipmentForm({
     customers: suppliersQuery.data?.success
       ? suppliersQuery.data.suppliers
       : [],
+    countries,
+    vietnamCountryId,
+    dischargeCountryId,
+    loadingPlaces: dedupePlacesByName(
+      loadingPortsQuery.data?.success
+        ? loadingPortsQuery.data.ports.map(portOption)
+        : [],
+    ),
+    dischargePlaces: dedupePlacesByName(
+      dischargePortsQuery.data?.success
+        ? dischargePortsQuery.data.ports.map(portOption)
+        : [],
+    ),
     costLineRows,
     submitError,
     isSubmitting: createMutation.isPending || updateMutation.isPending,

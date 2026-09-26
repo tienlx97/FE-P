@@ -472,6 +472,16 @@ export const metaTheme = {
         "height": "var(--meta-field-height, var(--spacing-8))"
       }
     },
+    "time-input": {
+      "base": {
+        "backgroundColor": "var(--color-background-surface)",
+        "borderColor": "var(--color-border)",
+        "borderRadius": "var(--meta-field-radius, var(--radius-element))"
+      },
+      "size:md": {
+        "height": "var(--meta-field-height, var(--spacing-8))"
+      }
+    },
     "number-input": {
       "base": {
         "backgroundColor": "var(--color-background-surface)",

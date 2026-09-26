@@ -10,6 +10,7 @@ import { CONTRACT_STATUSES } from '../config/contract-status.js';
 import { CONTRACT_TYPES } from '../config/contract-types.js';
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
 import { requiresPlaceOfDelivery } from '../config/incoterms.js';
+import { dedupePlacesByName, portOption } from '../config/place-options.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
 import { useContractNumberExistsQuery } from './use-contract-number-exists-query.js';
 import {
@@ -35,45 +36,6 @@ const DEFAULT_INCOTERM_YEAR = 2010;
 // instead of making every user retype the same value (still freely editable
 // for the day a different category shows up).
 const DEFAULT_CATEGORY = 'STEEL STRUCTURE';
-
-/**
- * One option of the contract's place pickers. `placeOfLoading` /
- * `placeOfDischarge` are plain strings on the wire, so
- * the Selectors key options by the text they save (`name`), not an id.
- * @typedef {{ id: string, name: string, label: string }} PlaceOption
- */
-
-/**
- * A port saves its long name when it has one ("Cảng Cát Lái, TP. Hồ Chí
- * Minh"), else its short name; the option shows "Short name (UN/LOCODE)".
- * @param {import('../types/index.js').Port} port
- * @returns {PlaceOption}
- */
-function portOption(port) {
-  return {
-    id: port.id,
-    name: port.fullName || port.name,
-    label: port.code
-      ? `${port.name} (${port.code})`
-      : `${port.name} (Nhà máy / Kho)`,
-  };
-}
-
-/**
- * Collapses options that would save the same text (first wins) — two
- * catalog rows can share a name, which would otherwise surface as a "two
- * children with the same key" React warning in the Selector's option list.
- * @param {PlaceOption[]} options
- * @returns {PlaceOption[]}
- */
-function dedupePlacesByName(options) {
-  const seen = new Set();
-  return options.filter((option) => {
-    if (seen.has(option.name)) return false;
-    seen.add(option.name);
-    return true;
-  });
-}
 
 /** @returns {import('../types/index.js').ContractFormValues} */
 function emptyValues() {
