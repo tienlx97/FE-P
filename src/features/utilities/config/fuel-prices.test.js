@@ -6,7 +6,9 @@ import {
   formatPeriodDate,
   formatPriceChange,
   productsIn,
+  productStatuses,
   toPriceRows,
+  weekdayLabel,
 } from './fuel-prices.js';
 
 /**
@@ -67,4 +69,53 @@ test('formats prices, changes and dates', () => {
   assert.equal(formatPriceChange(1450), '+1.450');
   assert.equal(formatPriceChange(-1450), '−1.450');
   assert.equal(formatPriceChange(0), '0');
+});
+
+test('productStatuses splits still-sold products from stopped ones', () => {
+  const rows = toPriceRows([
+    period('2026-05-21', [
+      ['RON95_III', 25540],
+      ['E5_RON92_II', 24340],
+    ]),
+    period('2026-05-28', [
+      ['RON95_III', 24150],
+      ['E5_RON92_II', 23250],
+    ]),
+    period('2026-06-04', [['E5_RON92_II', 21780]]),
+    period('2026-06-11', [
+      ['E5_RON92_II', 21330],
+      ['E10_RON95_III', 22060],
+    ]),
+  ]);
+  const { active, stopped } = productStatuses(rows, [
+    { code: 'E10_RON95_III', label: 'E10' },
+    { code: 'RON95_III', label: 'RON 95-III' },
+    { code: 'E5_RON92_II', label: 'E5' },
+  ]);
+  assert.deepEqual(
+    active.map((status) => [
+      status.code,
+      status.price,
+      status.change,
+      status.previousOn,
+    ]),
+    [
+      ['E10_RON95_III', 22060, undefined, undefined],
+      ['E5_RON92_II', 21330, -450, '2026-06-04'],
+    ],
+  );
+  assert.deepEqual(
+    stopped.map((status) => [
+      status.code,
+      status.price,
+      status.pricedOn,
+      status.stoppedFrom,
+    ]),
+    [['RON95_III', 24150, '2026-05-28', '2026-06-04']],
+  );
+});
+
+test('weekdayLabel', () => {
+  assert.equal(weekdayLabel('2026-09-24'), 'Thứ 5');
+  assert.equal(weekdayLabel('2026-09-27'), 'CN');
 });

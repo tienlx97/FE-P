@@ -3,29 +3,24 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
-import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
-import { pixel, proportional, Table } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Fuel, History, Plus, RefreshCw } from 'lucide-react';
+import { Fuel, Plus, RefreshCw } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import {
   MetaInfoNote,
-  MetaPagination,
   MetaPill,
-  MetaRowActions,
   MetaUtilityCard,
 } from '@/shared/components/custom/meta/index.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import {
-  formatFuelPrice,
   formatPeriodDate,
   FUEL_PRODUCTS,
   productsIn,
@@ -37,14 +32,12 @@ import {
   useFuelPriceSourceCheckQuery,
   useSyncFuelPricesMutation,
 } from '../hooks/use-fuel-prices.js';
+import { FuelCurrentPrices } from './fuel-current-prices.jsx';
 import { FuelPriceChart } from './fuel-price-chart.jsx';
-import { PriceChangePill, PriceWithChange } from './fuel-price-parts.jsx';
+import { FuelPriceHistory } from './fuel-price-history.jsx';
 import { FuelPricePeriodDrawer } from './fuel-price-period-drawer.jsx';
 
 /** @typedef {import('../config/fuel-prices.js').FuelPriceRow} FuelPriceRow */
-
-/** History rows per page (newest first). */
-const HISTORY_PAGE_SIZE = 20;
 
 /** The drawer's products when the market has no period yet. */
 const DEFAULT_PRODUCTS = FUEL_PRODUCTS.filter((product) => product.isDefault);
@@ -106,140 +99,6 @@ function SourceUpdateBanner({ market, hasPeriods }) {
 }
 
 /**
- * "Giá hiện hành": the latest price of every product + change pill.
- * @param {{
- *   latest: FuelPriceRow,
- *   products: Array<{ code: string, label: string }>,
- * }} props
- */
-function CurrentPrices({ latest, products }) {
-  return (
-    <MetaUtilityCard
-      icon={Fuel}
-      title="Giá hiện hành"
-      tag={`Kỳ ${latest.label}`}
-      description="Giá bán lẻ (đ/lít) và mức thay đổi so với kỳ trước."
-    >
-      <Grid columns={{ minWidth: 180, max: 4 }} gap={4}>
-        {products
-          .filter(({ code }) => latest.prices[code] !== undefined)
-          .map(({ code, label }) => (
-            <VStack key={code} gap={1} hAlign="start">
-              <Text as="span" size="sm" color="secondary">
-                {label}
-              </Text>
-              <HStack gap={2} vAlign="center">
-                <Text as="span" size="2xl" weight="bold">
-                  {formatFuelPrice(/** @type {number} */ (latest.prices[code]))}
-                </Text>
-                <PriceChangePill change={latest.changes[code]} />
-              </HStack>
-            </VStack>
-          ))}
-      </Grid>
-    </MetaUtilityCard>
-  );
-}
-
-/**
- * "Lịch sử điều chỉnh": every period newest first, with edit / delete.
- * @param {{
- *   rows: FuelPriceRow[],
- *   products: Array<{ code: string, label: string }>,
- *   onAdd: () => void,
- *   onEdit: (row: FuelPriceRow) => void,
- *   onDelete: (row: FuelPriceRow) => void,
- * }} props
- */
-function PriceHistory({ rows, products, onAdd, onEdit, onDelete }) {
-  const [page, setPage] = useState(1);
-  const newestFirst = [...rows].reverse();
-  const totalPages = Math.max(1, Math.ceil(rows.length / HISTORY_PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const pageRows = newestFirst.slice(
-    (currentPage - 1) * HISTORY_PAGE_SIZE,
-    currentPage * HISTORY_PAGE_SIZE,
-  );
-  const columns = [
-    {
-      key: 'label',
-      header: 'Kỳ điều chỉnh',
-      width: pixel(184),
-      renderCell: (/** @type {FuelPriceRow} */ row) => (
-        <VStack gap={0.5} hAlign="start">
-          <Text as="span" weight="semibold">
-            {row.label}
-          </Text>
-          <Text as="span" size="sm" color="secondary">
-            {row.source === 'manual' ? 'Nhập tay' : row.source}
-          </Text>
-        </VStack>
-      ),
-    },
-    ...products.map(({ code, label }) => ({
-      key: code,
-      header: label,
-      width: proportional(1),
-      align: /** @type {const} */ ('end'),
-      renderCell: (/** @type {FuelPriceRow} */ row) => (
-        <PriceWithChange price={row.prices[code]} change={row.changes[code]} />
-      ),
-    })),
-    {
-      key: 'actions',
-      header: '',
-      width: pixel(96),
-      align: /** @type {const} */ ('end'),
-      renderCell: (/** @type {FuelPriceRow} */ row) => (
-        <MetaRowActions
-          recordLabel={`kỳ ${row.label}`}
-          onEdit={() => onEdit(row)}
-          onDelete={() => onDelete(row)}
-        />
-      ),
-    },
-  ];
-
-  return (
-    <MetaUtilityCard
-      icon={History}
-      title="Lịch sử điều chỉnh"
-      tag={`${rows.length} kỳ`}
-      description="Giá từng kỳ và mức tăng (đỏ) / giảm (xanh) so với kỳ liền trước."
-    >
-      <VStack gap={3} hAlign="stretch">
-        <HStack hAlign="end">
-          <Button
-            label="Nhập giá kỳ mới"
-            variant="secondary"
-            size="sm"
-            icon={<Icon icon={Plus} size="sm" />}
-            onClick={onAdd}
-          />
-        </HStack>
-        <Table
-          data={pageRows}
-          columns={columns}
-          idKey="date"
-          density="compact"
-          hasHover
-        />
-        {totalPages > 1 ? (
-          <MetaPagination
-            page={currentPage}
-            pageSize={HISTORY_PAGE_SIZE}
-            totalCount={rows.length}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            itemLabel="kỳ"
-          />
-        ) : null}
-      </VStack>
-    </MetaUtilityCard>
-  );
-}
-
-/**
  * One market tab: update suggestion, current prices, chart, history and
  * the manual-input drawer.
  * @param {{ market: FuelMarket }} props
@@ -293,14 +152,14 @@ export function FuelMarketPanel({ market }) {
 
       {latest ? (
         <>
-          <CurrentPrices latest={latest} products={products} />
+          <FuelCurrentPrices rows={rows} products={products} />
           <FuelPriceChart
             // Re-seed the product selection when the product set changes.
             key={products.map(({ code }) => code).join()}
             rows={rows}
             products={products}
           />
-          <PriceHistory
+          <FuelPriceHistory
             rows={rows}
             products={products}
             onAdd={() => setEditing({})}
@@ -330,7 +189,7 @@ export function FuelMarketPanel({ market }) {
         {market.sourceLabel ? (
           <>
             {' '}
-            Nguồn đồng bộ: <MetaPill label={market.sourceLabel} size="sm" />
+            <MetaPill label={market.sourceLabel} size="sm" />.
           </>
         ) : null}
       </MetaInfoNote>

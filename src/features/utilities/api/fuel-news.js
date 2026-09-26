@@ -6,7 +6,8 @@
 
 const FEED_URL =
   'https://news.google.com/rss/search?q=gi%C3%A1+x%C4%83ng+d%E1%BA%A7u&hl=vi&gl=VN&ceid=VN:vi';
-const MAX_ARTICLES = 6;
+// 1 featured + 6 in the 3-column grid.
+const MAX_ARTICLES = 7;
 
 /**
  * @typedef {{ title: string, url: string, source: string, publishedAt: string }} FuelNewsArticle

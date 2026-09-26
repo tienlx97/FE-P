@@ -1,5 +1,24 @@
 # Progress Log
 
+## 2026-09-26 — Xăng dầu: KPI current prices, redesigned history, news cards
+
+- "Giá hiện hành" (`fuel-current-prices.jsx`): `MetaShipmentKpiCard` per
+  product still sold, grouped Xăng / Dầu (price đ/lít, "So với <its
+  previous priced period>", ▲/▼ status). Products the latest period no
+  longer lists get a "Ngưng niêm yết" row: last price + since which
+  period (RON 95-III: last 28/05/2026, gone from 04/06/2026; note from
+  `FUEL_PRODUCTS[].stoppedNote`). `productStatuses` / `weekdayLabel`
+  in config, tested.
+- "Lịch sử điều chỉnh" (`fuel-price-history.jsx`): year filter, pages
+  of 20 / 50 / 100 (`MetaPagination`), only products priced on the page
+  get a column, price over a ▲/▼ change line, weekday + "Mới nhất" pill,
+  striped rows.
+- News: newest article featured, the rest in a 3-column grid of
+  `ClickableCard`s (source pill, "x giờ trước", "Đọc bài"); 7 articles.
+- Market note now names PVOIL as the data source.
+- Checked in Chrome, no console errors. verify.sh passed
+  (`harness/runs/20260926-134118-1998/`).
+
 ## 2026-09-26 — Xăng dầu: 8 years of PVOIL data, multi-year presets, paged history
 
 - BE now holds 305 VN periods 2018-08-22 → 2026-09-24 from PVOIL
