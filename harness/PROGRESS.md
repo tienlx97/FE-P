@@ -1,5 +1,18 @@
 # Progress Log
 
+## 2026-09-26 — Tiện ích › Xăng dầu: giá xăng dầu theo kỳ + chart (astryx-lab)
+
+- `/logistics/utilities/fuel` replaces the placeholder: "Giá hiện hành"
+  (latest price per product + change vs previous period), "Biến động giá"
+  (`@astryxdesign/lab` Chart: one ChartLine per product, legend, tooltip
+  with price + change), "Lịch sử điều chỉnh" (Table, newest first, red /
+  green Token for tăng / giảm).
+- Data is static FE config (`features/utilities/config/fuel-prices.js`,
+  Petrolimex vùng 1, 10 periods 23/07–24/09/2026, source
+  giaxanghomnay.com). New period = append one row. No BE/API yet.
+- Checked in Chrome (dev :3000): chart + tooltip render, no console errors.
+- verify.sh passed (`harness/runs/20260926-121407-413/`).
+
 ## 2026-09-26 — Tiện ích › Giá trị: Meta design from Figma 156:2
 
 - New Meta pieces (`custom/meta/utility-card.jsx`): `MetaUtilityCard`
