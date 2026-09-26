@@ -310,7 +310,7 @@ export function MetaInstallmentItem({
               {String(index + 1).padStart(2, '0')}
             </Text>
           </HStack>
-          <Text as="h3" size="base" weight="bold">
+          <Text as="h3" weight="bold">
             {title}
           </Text>
         </HStack>
