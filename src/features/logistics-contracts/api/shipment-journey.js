@@ -22,7 +22,6 @@ const MILESTONE_LABELS = {
 
 /** @type {Record<string, string>} */
 const INCOTERM_LABELS = {
-  'Vận chuyển ra cảng': 'Pre-carriage',
   'Buyer nhận hàng': 'Buyer Pickup',
   'Thông quan nhập khẩu': 'Import Clearance',
   'Buyer nhận hàng & nhập khẩu': 'Buyer Pickup & Import',

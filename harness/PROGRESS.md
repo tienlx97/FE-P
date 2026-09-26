@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-09-26 — Shipment journey: dates from the shipment, not hand confirmation
+
+- User decision: Shipped on Board / Ocean Freight / POD dates are edited on
+  the shipment (ETD / ETA are entered as actual dates); Packing can span
+  several days; Pre-carriage is dropped. Spec:
+  `docs/shipment-journey-incoterms.md` principle 6 + FOB table.
+- `config/shipment-journey.js` (tested): `isConfirmableMilestone` (only
+  `ImportClearance` / `Site`, mirrors BE `IncotermJourneys.IsConfirmable`)
+  and `packingDateRange` (first – last VGM packing date).
+- Journey cards: "Xác nhận mốc" only on confirmable milestones; Packing
+  foot shows "10/10/2026 – 14/10/2026" when containers were packed on
+  different days; foot labels "Rời cảng" / "Transit" / "Đến cảng" (no
+  "(ETD)", "(ETA)", "Dự kiến"). "Vận chuyển ra cảng" label mapping removed.
+- BE-kt-xnk 76b36d7: FOB without `OriginInland`; PUT milestone rejects
+  data-driven milestones; legacy confirmations ignored.
+- verify.sh passed (`harness/runs/20260926-175201-898/`). Not checked in
+  Chrome (dev stack API not rebuilt with the BE change).
+
 ## 2026-09-26 — log-cost-item-recommendations: LOG fees in "Thêm chi phí"
 
 - BE `log-cost-item-catalog` (BE-kt-xnk 3d2fcb2) serves the workbook's 106

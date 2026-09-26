@@ -10,7 +10,7 @@ lô hàng (`/logistics/contract/[id]/shipment/[shipmentId]`, Figma 115:8469).
   Khi đổi nghiệp vụ, đồng bộ tài liệu với backend rồi chạy bộ kiểm tra của
   cả hai dự án.
 
-Cập nhật lần cuối: 2026-09-24.
+Cập nhật lần cuối: 2026-09-26.
 
 ---
 
@@ -34,6 +34,19 @@ Cập nhật lần cuối: 2026-09-24.
    hiển thị viền đứt nét + badge "Phạm vi Buyer".
 5. Nếu trạng thái trỏ tới một mốc mà Incoterm không hiển thị → lấy **mốc
    hiển thị gần nhất phía trước** trong Master Journey.
+6. **Xác nhận mốc bằng tay chỉ dành cho mốc chưa có dữ liệu trên lô
+   hàng**: `import-clearance` và `site`. Hộp thoại "Xác nhận mốc" ghi
+   **Ngày hoàn thành thực tế** (ngày việc đó thật sự xong) + ghi chú.
+   Tiến độ = mốc xa hơn giữa Tình trạng và mốc xác nhận tay cuối cùng.
+   Các mốc còn lại **không có nút xác nhận**, ngày lấy từ dữ liệu lô hàng:
+   | Mốc | Nguồn ngày |
+   |---|---|
+   | Packing | Ngày đóng hàng của từng container (tab VGM) |
+   | POL | Ngày khai hải quan của lô hàng |
+   | Shipped on Board / Ocean Freight / POD | ETD / ETA sửa trong lô hàng (nhập ngày thực tế) |
+   | Empty Return | Ngày trả rỗng của từng container (tab VGM) |
+
+   Xác nhận tay đã lưu trước đây cho các mốc này bị bỏ qua.
 
 ---
 
@@ -41,18 +54,22 @@ Cập nhật lần cuối: 2026-09-24.
 
 | # | Mã mốc | Nhãn hiển thị | Tiêu đề trên thẻ | Ngày / thông số ở chân thẻ | Nhóm chi phí liên quan |
 |--:|---|---|---|---|---|
-| 01 | `cargo-ready` | Packing | Tên lô hàng | Đóng hàng = Đóng hàng ngày nào, hoặc đóng hàng từ ngày nào đến ngày nào | LOG-01 |
-| 02 | `origin-inland` | Pre-carriage | Đơn vị trucking (tên) | Hạn SI / VGM + thời gian | LOG-02 |
+| 01 | `cargo-ready` | Packing | Tên lô hàng | Đóng hàng = một ngày, hoặc "từ – đến" khi các cont đóng khác ngày (ngày đóng sớm nhất – muộn nhất trong VGM) | LOG-01 |
+| 02 | `origin-inland` | Buyer Pickup *(chỉ EXW)* | Đơn vị trucking (tên) | Hạn SI / VGM + thời gian | LOG-02 |
 | 03 | `origin-port` | POL | Cảng xếp hàng (POL) | Khai hải quan = ngày khai tờ khai | LOG-03 |
-| 04 | `on-board` | Shipped on Board | {tên tàu} | Rời cảng (ETD) | LOG-03 → LOG-04 |
-| 05 | `ocean` | Ocean Freight | {POL} → {POD} | Dự kiến transit = ETA − ETD (ngày) | LOG-04 |
-| 06 | `destination-port` | POD | Cảng dỡ hàng (POD) | Đến cảng (ETA) | LOG-05 |
+| 04 | `on-board` | Shipped on Board | {tên tàu} | Rời cảng = ETD | LOG-03 → LOG-04 |
+| 05 | `ocean` | Ocean Freight | {POL} → {POD} | Transit = ETA − ETD (ngày) | LOG-04 |
+| 06 | `destination-port` | POD | Cảng dỡ hàng (POD) | Đến cảng = ETA | LOG-05 |
 | 07 | `import-clearance` | Import Clearance | (nhãn mốc) | Phụ trách: Seller / Buyer | LOG-07 |
 | 08 | `destination-inland` | On-carriage | — (chưa dùng) | — | LOG-06 |
 | 09 | `site` | Site Delivery | Nơi đến theo hợp đồng | Giao hàng: Hoàn tất / — | — |
 | 10 | `empty-return` | Empty Return | Đã trả {n}/{tổng} cont | Hạn trả rỗng (hết free time) | LOG-05 (DEM/DET) |
 
 Mốc `empty-return` có trong hành trình CIF và lấy tiến độ từ các bản ghi VGM.
+
+Không Incoterm đang cấu hình nào dùng mốc **Pre-carriage** (chặng xe kéo cont từ xưởng ra
+cảng): chặng này kết thúc khi hạ bãi, trùng với POL. `origin-inland` chỉ còn
+dùng cho EXW ("Buyer Pickup").
 
 Thẻ chỉ giữ thông số tracking: nhãn mốc, tiêu đề (cắt "…" + tooltip khi
 dài), badge trạng thái + marker, và **một** ngày / thông số ở chân thẻ.
@@ -96,11 +113,10 @@ Ký hiệu: **S** = Seller, **B** = Buyer, ★ = marker.
 | Mốc | Nhãn | Phạm vi | Marker |
 |--:|---|---|---|
 | 01 | Packing | S | |
-| 02 | Pre-carriage | S | |
-| 03 | POL | S | |
-| 04 | Shipped on Board | S | ★ Chuyển rủi ro |
-| 05 | Ocean Freight | B | |
-| 06 | POD | B | |
+| 02 | POL | S | |
+| 03 | Shipped on Board | S | ★ Chuyển rủi ro |
+| 04 | Ocean Freight | B | |
+| 05 | POD | B | |
 
 | Tình trạng | Mốc hiện tại |
 |---|---|
@@ -224,3 +240,4 @@ liệu mốc con ở backend).
 | 2026-09-24 | Tạo tài liệu từ cấu hình đang chạy (EXW / FOB / CIF / DDP) | Claude |
 | 2026-09-24 | CIF: thêm mốc 07 "Trả cont rỗng" (đã trả hết cont chưa), mốc chuẩn `empty-return`, dữ liệu cần bổ sung — chưa triển khai | Claude |
 | 2026-09-24 | BE-kt-xnk triển khai hành trình, xác nhận mốc và trả cont rỗng; frontend dùng endpoint hành trình | Codex |
+| 2026-09-26 | Xác nhận tay chỉ còn ở Import Clearance / Site Delivery (nguyên tắc 6); Packing hiện khoảng ngày đóng; bỏ "(ETD)", "(ETA)", "Dự kiến" ở chân thẻ vì ETD / ETA nhập ngày thực tế; FOB bỏ Pre-carriage | Claude |

@@ -33,6 +33,10 @@ import { shipmentTrail } from '@/shared/config/breadcrumbs.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import {
+  isConfirmableMilestone,
+  packingDateRange,
+} from '../config/shipment-journey.js';
+import {
   labelForShipmentStatus,
   metaToneForShipmentStatus,
 } from '../config/shipment-status.js';
@@ -128,11 +132,7 @@ function journeyFor({
 }) {
   const { summary, steps, emptyReturn } = journey;
   const details = shipment.operationalDetails;
-  const lastPacking = vgms
-    .map((vgm) => vgm.packingDate)
-    .filter(Boolean)
-    .sort()
-    .at(-1);
+  const packing = packingDateRange(vgms);
   const transitDays =
     shipment.etd && shipment.eta
       ? Math.round(
@@ -160,7 +160,11 @@ function journeyFor({
         return {
           title: shipment.name,
           footLabel: 'Đóng hàng',
-          footValue: formatDisplayDate(lastPacking),
+          // Packing can take several days: first – last container.
+          footValue:
+            packing && packing.from !== packing.to
+              ? `${formatDisplayDate(packing.from)} – ${formatDisplayDate(packing.to)}`
+              : formatDisplayDate(packing?.from),
         };
       case 'OriginInland':
         return {
@@ -177,7 +181,7 @@ function journeyFor({
       case 'OnBoard':
         return {
           title: shipment.vesselName || label,
-          footLabel: 'Rời cảng (ETD)',
+          footLabel: 'Rời cảng',
           footValue: formatDisplayDate(shipment.etd),
         };
       case 'Ocean':
@@ -186,13 +190,13 @@ function journeyFor({
             loadingCode && dischargeCode
               ? `${loadingCode} → ${dischargeCode}`
               : label,
-          footLabel: 'Dự kiến transit',
+          footLabel: 'Transit',
           footValue: transitDays === null ? '—' : `~ ${transitDays} ngày`,
         };
       case 'DestinationPort':
         return {
           title: shipment.placeOfDischarge || label,
-          footLabel: 'Đến cảng (ETA)',
+          footLabel: 'Đến cảng',
           footValue: formatDisplayDate(shipment.eta),
         };
       case 'ImportClearance':
@@ -221,6 +225,29 @@ function journeyFor({
           footValue: shipment.status === 'Completed' ? 'Hoàn tất' : '—',
         };
     }
+  }
+
+  /**
+   * The card's action: record empty returns, or confirm by hand the
+   * milestones that have no shipment data of their own. The others follow
+   * the status / shipment fields and have none.
+   * @param {import('../types/index.js').ShipmentJourneyStep} step
+   * @returns {{ actionLabel?: string, onAction?: () => void }}
+   */
+  function stepAction(step) {
+    if (step.milestone === 'EmptyReturn') {
+      return canEditEmptyReturn
+        ? {
+            actionLabel: 'Ghi nhận trả cont rỗng',
+            onAction: () => onStepAction(step),
+          }
+        : {};
+    }
+    if (!isConfirmableMilestone(step.milestone)) return {};
+    return {
+      actionLabel: step.isConfirmed ? 'Sửa xác nhận mốc' : 'Xác nhận mốc',
+      onAction: () => onStepAction(step),
+    };
   }
 
   return {
@@ -257,18 +284,7 @@ function journeyFor({
       markerTone: step.marker ? MARKER_TONES[step.marker] : undefined,
       label: step.label,
       liveLabel: step.milestone === 'EmptyReturn' ? 'TRẢ CONT RỖNG' : undefined,
-      actionLabel:
-        step.milestone === 'EmptyReturn'
-          ? canEditEmptyReturn
-            ? 'Ghi nhận trả cont rỗng'
-            : undefined
-          : step.isConfirmed
-            ? 'Sửa xác nhận mốc'
-            : 'Xác nhận mốc',
-      onAction:
-        step.milestone === 'EmptyReturn' && !canEditEmptyReturn
-          ? undefined
-          : () => onStepAction(step),
+      ...stepAction(step),
       ...content(step.milestone, step.label),
     })),
   };
