@@ -1,5 +1,27 @@
 # Progress Log
 
+## 2026-09-26 — "Ngày container" as a drawer; draft data checked end to end
+
+- `ShipmentContainerDatesDrawer` (960px Meta drawer, like the shipment
+  drawer: header pills per date, "Nhập nhanh", "Từng container" as a
+  `MetaCompactTable` with inline date inputs + depot, unsaved hint,
+  discard confirmation) replaces the dialog (user request).
+- Draft data on the dev DB (user OK, draft data), via the API
+  (`harness/fixtures/seed-shipment-schedule-dev.py`, dates relative to
+  today, needs KTX_ID / KTX_PW): 26KCT03/LOT-01 (CIF, 2 delays, both free
+  times, 3/5 returned, 5 days overdue), 26KCT02/LOT-01 (CIF, back to
+  "Đang đóng hàng", ETD +3, CY cut-off in 2 days, combined origin free
+  time ends today), 26KCT06/LOT-01 (DDP, booked, SI cut-off passed).
+  Every alert kind came back from `/shipments/alerts`.
+- Chrome: list "3 lô hàng cần chú ý · 2 có mục quá hạn" expands with the
+  right lines; 26KCT02 journey (Hạ bãi 1/2 → saved 2/2 in the drawer →
+  POL current, CY alert gone), clocks, history row; 26KCT03 "Đã lấy 5/5".
+- `db/sample-data.sql` NOT re-imported on the dev DB: it deletes the
+  seeder admin (NationalId 000000000000, other Id) then stops at the
+  Companies guard (the dev company has contracts). Clean-DB import is
+  covered by BE MySql.IntegrationTests (17/17 in verify).
+- verify.sh passed (`harness/runs/20260926-234412-328/`).
+
 ## 2026-09-26 — Schedule / free time: follow-up checks
 
 - Chrome (26KCT03/LOT-01, CIF, 5 cont, user's login): "Lịch tàu & Free

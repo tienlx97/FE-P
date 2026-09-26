@@ -54,7 +54,7 @@ import { useShipmentVgmsQuery } from '../hooks/use-shipment-vgms-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { ShipmentAlertsBanner } from './shipment-alerts-banner.jsx';
-import { ShipmentContainerDatesDialog } from './shipment-container-dates-dialog.jsx';
+import { ShipmentContainerDatesDrawer } from './shipment-container-dates-drawer.jsx';
 import { ShipmentCostPanel } from './shipment-cost-panel.jsx';
 import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 import { ShipmentMilestoneDialog } from './shipment-milestone-dialog.jsx';
@@ -692,16 +692,12 @@ function ShipmentDetailBody({
           />
         ) : null}
         {isContainerDatesOpen ? (
-          <ShipmentContainerDatesDialog
-            isOpen
-            onOpenChange={setIsContainerDatesOpen}
+          <ShipmentContainerDatesDrawer
             contractId={contract.id}
-            shipmentId={shipment.id}
+            shipment={shipment}
             incoterm={contract.incoterm}
-            destinationFreeTime={
-              shipment.operationalDetails?.destinationFreeTime
-            }
             containers={vgms}
+            onClose={() => setIsContainerDatesOpen(false)}
           />
         ) : null}
         {isScheduleOpen && schedule ? (
