@@ -10,6 +10,7 @@ const GENERIC_REOPEN_ERROR = 'Không thể bỏ xác nhận mốc hành trình';
 // translated per label so that distinction survives.
 /** @type {Partial<Record<import('../types/index.js').ShipmentMilestone, string>>} */
 const MILESTONE_LABELS = {
+  EmptyPickup: 'Empty Pickup',
   CargoReady: 'Packing',
   OriginPort: 'POL',
   OnBoard: 'Shipped on Board',

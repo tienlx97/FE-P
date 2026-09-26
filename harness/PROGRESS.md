@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-09-26 — Shipment schedule history, DEM / DET free time, container dates, alerts
+
+- BE-kt-xnk `add-shipment-schedule-free-time` (395c363, 695a30f, 5e106e2).
+- Detail page: tab "Lịch tàu & Free time" (original / current / ATD-ATA,
+  per-container clocks, revision history), dialogs "Cập nhật lịch tàu"
+  and "Ngày container" (bulk, replaces the empty-return dialog), alert
+  banner under the header; Empty Pickup card; POL / on board / POD feet
+  use gate-in counts and ATD / ATA + delay. Drawer: CY cut-off + free
+  time. Shipment list: "Lô hàng cần chú ý".
+- Config tested: `shipment-schedule.js`, `shipment-container-dates.js`.
+- verify.sh passed (`harness/runs/20260926-193700-1774/`). Chrome: tab and
+  schedule dialog render on 26KCT27/LOT-01 (layout fixed: cut-offs full
+  row, free time stacked); nothing saved. Not checked: container-dates
+  dialog, alerts with real data, number inputs show "0.00" placeholder.
+- Dev stack API rebuilt, both migrations applied.
+
 ## 2026-09-26 — Shipment journey: dates from the shipment, not hand confirmation
 
 - User decision: Shipped on Board / Ocean Freight / POD dates are edited on

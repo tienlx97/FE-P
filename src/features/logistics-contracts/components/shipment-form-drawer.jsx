@@ -55,6 +55,10 @@ import {
   quantityUnitForShipmentType,
 } from '../config/shipment-quantity-units.js';
 import {
+  tracksDestinationFreeTime,
+  tracksOriginFreeTime,
+} from '../config/shipment-schedule.js';
+import {
   labelForShipmentStatus,
   metaToneForShipmentStatus,
   shipmentStatusOptions,
@@ -66,6 +70,7 @@ import {
 import { useShipmentForm } from '../hooks/use-shipment-form.js';
 import { QuickCreatePortDialog } from './quick-create-port-dialog.jsx';
 import { QuickCreateSupplierDialog } from './quick-create-supplier-dialog.jsx';
+import { ShipmentFreeTimeFields } from './shipment-free-time-fields.jsx';
 
 // Stitch "Chỉnh sửa Shipment" (project 6957224641630765183, screen
 // cab96b6c…) drawer width.
@@ -166,6 +171,15 @@ export function ShipmentFormDrawer({
   const statusOf = (key) => ({
     status: fieldStatuses[key],
     statusVariant: /** @type {const} */ ('detached'),
+  });
+
+  const hasOriginFreeTime = tracksOriginFreeTime(contract.incoterm);
+  const hasDestinationFreeTime = tracksDestinationFreeTime(contract.incoterm);
+  /** @param {'originFreeTime' | 'destinationFreeTime'} side */
+  const freeTimeStatuses = (side) => ({
+    demDays: fieldStatuses[`${side}.demDays`],
+    detDays: fieldStatuses[`${side}.detDays`],
+    combinedDays: fieldStatuses[`${side}.combinedDays`],
   });
 
   /** @param {keyof typeof values} key */
@@ -589,6 +603,37 @@ export function ShipmentFormDrawer({
                           />
                         </VStack>
                       </HStack>
+                      <HStack gap={2} vAlign="start" wrap="nowrap">
+                        <StackItem size="fill">
+                          <DateInput
+                            label="Cut-off hạ bãi (CY)"
+                            value={dateValue('cyCutoffDate')}
+                            onChange={(value) =>
+                              setField('cyCutoffDate', value ?? '')
+                            }
+                            format={formatDateInputValue}
+                            isOptional
+                            isDisabled={isDisabled}
+                            {...statusOf('cyCutoffDate')}
+                          />
+                        </StackItem>
+                        <VStack xstyle={styles.alignWithField}>
+                          <TimeInput
+                            label="Giờ cut-off hạ bãi"
+                            isLabelHidden
+                            value={
+                              /** @type {import('@astryxdesign/core/TimeInput').ISOTimeString} */ (
+                                values.cyCutoffTime || undefined
+                              )
+                            }
+                            onChange={(value) =>
+                              setField('cyCutoffTime', value ?? '')
+                            }
+                            hourFormat="24h"
+                            isDisabled={isDisabled}
+                          />
+                        </VStack>
+                      </HStack>
                       <Selector
                         label="Điều kiện giao nhận"
                         placeholder="CY/CY, CFS/CFS…"
@@ -651,24 +696,45 @@ export function ShipmentFormDrawer({
                         {...statusOf('eta')}
                       />
                     </Grid>
-                    {transitDays !== null && transitDays >= 0 ? (
-                      <Text size="sm" color="meta-subtle">
-                        Dự kiến transit: {transitDays} ngày
-                      </Text>
+                    <Text size="sm" color="meta-subtle">
+                      {transitDays !== null && transitDays >= 0
+                        ? `Transit: ${transitDays} ngày. `
+                        : ''}
+                      Đổi ETD / ETA / cut-off / tàu đã có được lưu vào lịch
+                      sử lịch tàu; khi hãng tàu báo trễ, dùng “Cập nhật lịch
+                      tàu” trên trang lô hàng.
+                    </Text>
+
+                    {hasOriginFreeTime || hasDestinationFreeTime ? (
+                      <Grid columns={TWO_COLUMNS} gap={4}>
+                        {hasOriginFreeTime ? (
+                          <ShipmentFreeTimeFields
+                            label="Free time đầu xuất"
+                            description="DET: lấy rỗng → hạ bãi · DEM: hạ bãi → xếp tàu"
+                            value={values.originFreeTime}
+                            onChange={(value) =>
+                              setField('originFreeTime', value)
+                            }
+                            statuses={freeTimeStatuses('originFreeTime')}
+                            isDisabled={isDisabled}
+                          />
+                        ) : null}
+                        {hasDestinationFreeTime ? (
+                          <ShipmentFreeTimeFields
+                            label="Free time đầu đích"
+                            description="DEM: dỡ hàng → lấy hàng ra · DET: lấy hàng ra → trả rỗng"
+                            value={values.destinationFreeTime}
+                            onChange={(value) =>
+                              setField('destinationFreeTime', value)
+                            }
+                            statuses={freeTimeStatuses('destinationFreeTime')}
+                            isDisabled={isDisabled}
+                          />
+                        ) : null}
+                      </Grid>
                     ) : null}
 
                     <Grid columns={TWO_COLUMNS} gap={4}>
-                      <DateInput
-                        label="Hạn trả cont rỗng (Demurrage/Detention)"
-                        value={dateValue('emptyReturnDeadline')}
-                        onChange={(value) =>
-                          setField('emptyReturnDeadline', value ?? '')
-                        }
-                        format={formatDateInputValue}
-                        isOptional
-                        isDisabled={isDisabled}
-                        {...statusOf('emptyReturnDeadline')}
-                      />
                       {/* All three default from the contract
                           (`useShipmentForm`) and stay editable per
                           shipment; tracking shows these, not the

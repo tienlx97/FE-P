@@ -21,6 +21,7 @@ export {
   MetaCommissionParties,
   MetaCommissionTrackingCard,
 } from './commission-panel.jsx';
+export { MetaCompactTable } from './compact-table.jsx';
 export { MetaContractDetailSkeleton } from './contract-detail-skeleton.jsx';
 export {
   MetaContractBreadcrumb,

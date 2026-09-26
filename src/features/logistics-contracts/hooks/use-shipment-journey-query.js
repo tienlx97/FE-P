@@ -15,6 +15,29 @@ export const SHIPMENT_JOURNEY_QUERY_PREFIX = [
   'shipment-journey',
 ];
 
+/** Prefix shared by every shipment's schedule (history, free time). */
+export const SHIPMENT_SCHEDULE_QUERY_PREFIX = [
+  'logistics-contracts',
+  'shipment-schedule',
+];
+
+/** The cross-shipment alert list. */
+export const SHIPMENT_ALERTS_QUERY_KEY = ['logistics-contracts', 'shipment-alerts'];
+
+/**
+ * Refreshes everything computed from a shipment's tracking data — the
+ * journey, the schedule and the alerts — after a shipment, its containers
+ * or its schedule change.
+ * @param {import('@tanstack/react-query').QueryClient} queryClient
+ */
+export function invalidateShipmentTracking(queryClient) {
+  return Promise.all([
+    queryClient.invalidateQueries({ queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX }),
+    queryClient.invalidateQueries({ queryKey: SHIPMENT_SCHEDULE_QUERY_PREFIX }),
+    queryClient.invalidateQueries({ queryKey: SHIPMENT_ALERTS_QUERY_KEY }),
+  ]);
+}
+
 /** @param {string} shipmentId */
 const queryKey = (shipmentId) => [...SHIPMENT_JOURNEY_QUERY_PREFIX, shipmentId];
 
@@ -43,6 +66,7 @@ export function useShipmentMilestoneMutations(contractId, shipmentId) {
   const store = (result) => {
     if (result.success) {
       queryClient.setQueryData(queryKey(shipmentId), result);
+      queryClient.invalidateQueries({ queryKey: SHIPMENT_ALERTS_QUERY_KEY });
     }
   };
 

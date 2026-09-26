@@ -1,3 +1,5 @@
+import { dateRange } from './shipment-container-dates.js';
+
 /**
  * Milestones confirmed by hand with their actual date (BE
  * `IncotermJourneys.IsConfirmable`). Every other milestone comes from
@@ -20,9 +22,5 @@ export function isConfirmableMilestone(milestone) {
  * @returns {{ from: string, to: string } | null}
  */
 export function packingDateRange(vgms) {
-  const dates = vgms
-    .map((vgm) => vgm.packingDate)
-    .filter(Boolean)
-    .sort();
-  return dates.length > 0 ? { from: dates[0], to: dates.at(-1) ?? dates[0] } : null;
+  return dateRange(vgms.map((vgm) => vgm.packingDate));
 }

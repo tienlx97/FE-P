@@ -5,6 +5,10 @@ import { useState } from 'react';
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
 import { dedupePlacesByName, portOption } from '../config/place-options.js';
 import { splitSiCutoff } from '../config/shipment-operational-details.js';
+import {
+  EMPTY_FREE_TIME,
+  freeTimeFormValues,
+} from '../config/shipment-schedule.js';
 import { shipmentSchema } from '../config/shipment-schema.js';
 import { SHIPMENT_STATUSES } from '../config/shipment-status.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
@@ -70,6 +74,12 @@ function emptyValues(contract = null) {
     customsChannel: '',
     letterOfCreditNumber: '',
     emptyReturnDeadline: '',
+    cyCutoffDate: '',
+    cyCutoffTime: '',
+    actualDeparture: '',
+    actualArrival: '',
+    originFreeTime: EMPTY_FREE_TIME,
+    destinationFreeTime: EMPTY_FREE_TIME,
   };
 }
 
@@ -80,6 +90,7 @@ function emptyValues(contract = null) {
 export function valuesFromShipment(shipment) {
   const details = shipment.operationalDetails;
   const siCutoff = splitSiCutoff(details?.siCutoff);
+  const cyCutoff = splitSiCutoff(details?.cyCutoff);
   return {
     supplierCustomerId: shipment.supplierCustomerId,
     customsBrokerIds: (shipment.serviceProviders ?? [])
@@ -124,6 +135,12 @@ export function valuesFromShipment(shipment) {
     customsChannel: details?.customsChannel ?? '',
     letterOfCreditNumber: details?.letterOfCreditNumber ?? '',
     emptyReturnDeadline: details?.emptyReturnDeadline ?? '',
+    cyCutoffDate: cyCutoff.date,
+    cyCutoffTime: cyCutoff.time,
+    actualDeparture: details?.actualDeparture ?? '',
+    actualArrival: details?.actualArrival ?? '',
+    originFreeTime: freeTimeFormValues(details?.originFreeTime),
+    destinationFreeTime: freeTimeFormValues(details?.destinationFreeTime),
   };
 }
 

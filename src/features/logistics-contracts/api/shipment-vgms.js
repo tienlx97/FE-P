@@ -137,34 +137,35 @@ export async function deleteShipmentVgm(contractId, shipmentId, vgmId) {
 }
 
 /**
- * Records (or clears, with an empty date) one container's empty return —
- * the CIF journey's "Trả cont rỗng" step reads these. Requires
- * `logistics:contracts:manage`.
+ * "Ngày container": event dates of several containers at once (empty
+ * pickup, gate-in, destination gate-out, empty return). Every listed
+ * container gets all its dates; returns every VGM record of the shipment.
+ * Requires `logistics:contracts:manage`.
  * @param {string} contractId
  * @param {string} shipmentId
- * @param {string} vgmId
- * @param {{ returnedOn: string, depot: string }} values
- * @returns {Promise<{ success: true, vgm: import('../types/index.js').ShipmentVgm } | { success: false, message: string }>}
+ * @param {import('../types/index.js').ContainerDatesFormRow[]} rows
+ * @returns {Promise<{ success: true, vgms: import('../types/index.js').ShipmentVgm[] } | { success: false, message: string }>}
  */
-export async function recordShipmentVgmEmptyReturn(
-  contractId,
-  shipmentId,
-  vgmId,
-  values,
-) {
+export async function recordShipmentContainerDates(contractId, shipmentId, rows) {
   const result = await apiRequest(
-    `/api/v1/contracts/${contractId}/shipments/${shipmentId}/vgm/${vgmId}/empty-return`,
+    `/api/v1/contracts/${contractId}/shipments/${shipmentId}/vgm/container-dates`,
     {
       method: 'PUT',
-      errorMessage: 'Không thể ghi nhận trả cont rỗng',
+      errorMessage: 'Không thể lưu ngày container',
       body: {
-        ReturnedOn: values.returnedOn || null,
-        Depot: values.depot || null,
+        Containers: rows.map((row) => ({
+          VgmId: row.vgmId,
+          EmptyPickedUpOn: row.emptyPickedUpOn || null,
+          GatedInOn: row.gatedInOn || null,
+          DestinationGatedOutOn: row.destinationGatedOutOn || null,
+          EmptyReturnedOn: row.emptyReturnedOn || null,
+          EmptyReturnDepot: row.emptyReturnedOn ? row.emptyReturnDepot || null : null,
+        })),
       },
     },
   );
 
   return result.success
-    ? { success: true, vgm: result.data }
+    ? { success: true, vgms: result.data ?? [] }
     : { success: false, message: result.message };
 }

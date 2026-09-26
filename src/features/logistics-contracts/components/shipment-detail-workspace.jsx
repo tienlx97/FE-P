@@ -5,6 +5,9 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { VStack } from '@astryxdesign/core/VStack';
 import {
   Anchor,
+  CalendarClock,
+  CalendarRange,
+  Container,
   Factory,
   FileCheck2,
   FileText,
@@ -32,10 +35,12 @@ import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
 import { shipmentTrail } from '@/shared/config/breadcrumbs.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import { dateRange } from '../config/shipment-container-dates.js';
 import {
   isConfirmableMilestone,
   packingDateRange,
 } from '../config/shipment-journey.js';
+import { scheduleDateLabel } from '../config/shipment-schedule.js';
 import {
   labelForShipmentStatus,
   metaToneForShipmentStatus,
@@ -44,28 +49,34 @@ import { labelForShipmentType } from '../config/shipment-types.js';
 import { useContractQuery } from '../hooks/use-contracts-query.js';
 import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categories-query.js';
 import { useShipmentJourneyQuery } from '../hooks/use-shipment-journey-query.js';
+import { useShipmentScheduleQuery } from '../hooks/use-shipment-schedule-query.js';
 import { useShipmentVgmsQuery } from '../hooks/use-shipment-vgms-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
+import { ShipmentAlertsBanner } from './shipment-alerts-banner.jsx';
+import { ShipmentContainerDatesDialog } from './shipment-container-dates-dialog.jsx';
 import { ShipmentCostPanel } from './shipment-cost-panel.jsx';
-import { ShipmentEmptyReturnDialog } from './shipment-empty-return-dialog.jsx';
 import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 import { ShipmentMilestoneDialog } from './shipment-milestone-dialog.jsx';
 import { ShipmentOverviewPanel } from './shipment-overview-panel.jsx';
+import { ShipmentScheduleDialog } from './shipment-schedule-dialog.jsx';
+import { ShipmentSchedulePanel } from './shipment-schedule-panel.jsx';
 import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
 
-/** @typedef {'overview' | 'vgm' | 'costs'} ShipmentDetailTab */
+/** @typedef {'overview' | 'schedule' | 'vgm' | 'costs'} ShipmentDetailTab */
 
 // Figma 111:7829 tab bar. "Chứng từ đính kèm" is left out: there is no
 // document storage for shipments yet.
 const TAB_LABELS = {
   overview: 'Tổng quan',
+  schedule: 'Lịch tàu & Free time',
   vgm: 'VGM',
   costs: 'Chi phí logistics',
 };
 
 const TAB_ICONS = {
   overview: LayoutGrid,
+  schedule: CalendarClock,
   vgm: Weight,
   costs: ReceiptText,
 };
@@ -74,6 +85,7 @@ const TAB_VALUES = /** @type {ShipmentDetailTab[]} */ (Object.keys(TAB_LABELS));
 
 /** @type {Record<import('../types/index.js').ShipmentMilestone, import('react').ComponentType>} */
 const MILESTONE_ICONS = {
+  EmptyPickup: Container,
   CargoReady: Factory,
   OriginInland: Truck,
   OriginPort: Anchor,
@@ -108,6 +120,23 @@ function portCode(place) {
 }
 
 /**
+ * "3/5 cont · 01/10/2026 – 03/10/2026" for a container event (just the
+ * date(s) for a one-container lot, "—" before any container has it).
+ * @param {number} done
+ * @param {number} total
+ * @param {Array<string | null | undefined>} dates
+ */
+function containerEventLabel(done, total, dates) {
+  const range = dateRange(dates);
+  const when = !range
+    ? '—'
+    : range.from === range.to
+      ? formatDisplayDate(range.from)
+      : `${formatDisplayDate(range.from)} – ${formatDisplayDate(range.to)}`;
+  return total > 1 ? `${done}/${total} cont · ${when}` : when;
+}
+
+/**
  * Journey cards for the header: legs, scopes and markers from the
  * backend journey, filled with this
  * shipment's places, vessel, dates and providers.
@@ -132,12 +161,15 @@ function journeyFor({
 }) {
   const { summary, steps, emptyReturn } = journey;
   const details = shipment.operationalDetails;
+  const delays = shipment.scheduleSummary;
   const packing = packingDateRange(vgms);
+  const containerCount = vgms.length;
+  // ATD / ATA when known, else the current ETD / ETA.
+  const sailedOn = details?.actualDeparture || shipment.etd;
+  const arrivedOn = details?.actualArrival || shipment.eta;
   const transitDays =
-    shipment.etd && shipment.eta
-      ? Math.round(
-          (Date.parse(shipment.eta) - Date.parse(shipment.etd)) / 86_400_000,
-        )
+    sailedOn && arrivedOn
+      ? Math.round((Date.parse(arrivedOn) - Date.parse(sailedOn)) / 86_400_000)
       : null;
   const truckingNames = (shipment.serviceProviders ?? [])
     .filter((provider) => provider.role === 'Trucking')
@@ -156,6 +188,19 @@ function journeyFor({
    */
   function content(milestone, label) {
     switch (milestone) {
+      case 'EmptyPickup':
+        return {
+          title:
+            containerCount > 0
+              ? `Đã lấy ${vgms.filter((vgm) => vgm.emptyPickedUpOn).length}/${containerCount} cont`
+              : 'Chưa có container',
+          footLabel: 'Lấy rỗng',
+          footValue: containerEventLabel(
+            vgms.filter((vgm) => vgm.emptyPickedUpOn).length,
+            containerCount,
+            vgms.map((vgm) => vgm.emptyPickedUpOn),
+          ),
+        };
       case 'CargoReady':
         return {
           title: shipment.name,
@@ -173,16 +218,31 @@ function journeyFor({
           footValue: formatDisplayDate(details?.siCutoff?.slice(0, 10)),
         };
       case 'OriginPort':
-        return {
-          title: shipment.placeOfLoading || label,
-          footLabel: 'Khai hải quan',
-          footValue: formatDisplayDate(shipment.customsDeclarationDate),
-        };
+        // Gate-in once containers are recorded, else the customs date.
+        return vgms.some((vgm) => vgm.gatedInOn)
+          ? {
+              title: shipment.placeOfLoading || label,
+              footLabel: 'Hạ bãi',
+              footValue: containerEventLabel(
+                vgms.filter((vgm) => vgm.gatedInOn).length,
+                containerCount,
+                vgms.map((vgm) => vgm.gatedInOn),
+              ),
+            }
+          : {
+              title: shipment.placeOfLoading || label,
+              footLabel: 'Khai hải quan',
+              footValue: formatDisplayDate(shipment.customsDeclarationDate),
+            };
       case 'OnBoard':
         return {
           title: shipment.vesselName || label,
-          footLabel: 'Rời cảng',
-          footValue: formatDisplayDate(shipment.etd),
+          footLabel: details?.actualDeparture ? 'Rời cảng (ATD)' : 'Rời cảng',
+          footValue: scheduleDateLabel(
+            details?.actualDeparture,
+            shipment.etd,
+            delays?.departureDelayDays,
+          ),
         };
       case 'Ocean':
         return {
@@ -196,8 +256,12 @@ function journeyFor({
       case 'DestinationPort':
         return {
           title: shipment.placeOfDischarge || label,
-          footLabel: 'Đến cảng',
-          footValue: formatDisplayDate(shipment.eta),
+          footLabel: details?.actualArrival ? 'Đến cảng (ATA)' : 'Đến cảng',
+          footValue: scheduleDateLabel(
+            details?.actualArrival,
+            shipment.eta,
+            delays?.arrivalDelayDays,
+          ),
         };
       case 'ImportClearance':
         return {
@@ -235,13 +299,22 @@ function journeyFor({
    * @returns {{ actionLabel?: string, onAction?: () => void }}
    */
   function stepAction(step) {
-    if (step.milestone === 'EmptyReturn') {
+    if (step.milestone === 'EmptyReturn' || step.milestone === 'EmptyPickup') {
       return canEditEmptyReturn
         ? {
-            actionLabel: 'Ghi nhận trả cont rỗng',
+            actionLabel:
+              step.milestone === 'EmptyReturn'
+                ? 'Ghi nhận trả cont rỗng'
+                : 'Ghi nhận lấy rỗng',
             onAction: () => onStepAction(step),
           }
         : {};
+    }
+    if (step.milestone === 'OnBoard' || step.milestone === 'DestinationPort') {
+      return {
+        actionLabel: 'Cập nhật lịch tàu',
+        onAction: () => onStepAction(step),
+      };
     }
     if (!isConfirmableMilestone(step.milestone)) return {};
     return {
@@ -390,10 +463,15 @@ function ShipmentDetailBody({
       null
     ),
   );
-  const [isEmptyReturnOpen, setIsEmptyReturnOpen] = useState(false);
+  const [isContainerDatesOpen, setIsContainerDatesOpen] = useState(false);
+  const [isScheduleOpen, setIsScheduleOpen] = useState(false);
 
   const vgmsQuery = useShipmentVgmsQuery(contract.id, shipment.id);
   const journeyQuery = useShipmentJourneyQuery(contract.id, shipment.id);
+  const scheduleQuery = useShipmentScheduleQuery(contract.id, shipment.id);
+  const schedule = scheduleQuery.data?.success
+    ? scheduleQuery.data.schedule
+    : null;
   const suppliersQuery = useSuppliersQuery();
   const costCategoriesQuery = useShipmentCostCategoriesQuery();
 
@@ -438,8 +516,19 @@ function ShipmentDetailBody({
         journey: journeyQuery.data.journey,
         canEditEmptyReturn: vgmsQuery.data?.success === true,
         onStepAction: (step) => {
-          if (step.milestone === 'EmptyReturn') setIsEmptyReturnOpen(true);
-          else setSelectedMilestone(step);
+          if (
+            step.milestone === 'EmptyReturn' ||
+            step.milestone === 'EmptyPickup'
+          ) {
+            setIsContainerDatesOpen(true);
+          } else if (
+            step.milestone === 'OnBoard' ||
+            step.milestone === 'DestinationPort'
+          ) {
+            setIsScheduleOpen(true);
+          } else {
+            setSelectedMilestone(step);
+          }
         },
       })
     : null;
@@ -465,6 +554,26 @@ function ShipmentDetailBody({
           onPrint={() => window.print()}
           onEdit={() => setIsEditing(true)}
           moreItems={[
+            ...(schedule
+              ? [
+                  {
+                    id: 'schedule',
+                    label: 'Cập nhật lịch tàu',
+                    icon: <Icon icon={CalendarClock} size="sm" />,
+                    onClick: () => setIsScheduleOpen(true),
+                  },
+                ]
+              : []),
+            ...(vgmsQuery.data?.success
+              ? [
+                  {
+                    id: 'container-dates',
+                    label: 'Ngày container',
+                    icon: <Icon icon={CalendarRange} size="sm" />,
+                    onClick: () => setIsContainerDatesOpen(true),
+                  },
+                ]
+              : []),
             {
               id: 'contract',
               label: `Mở hợp đồng ${contract.contractNumber}`,
@@ -474,6 +583,11 @@ function ShipmentDetailBody({
           ]}
         />
 
+        {journeyQuery.data?.success ? (
+          <ShipmentAlertsBanner
+            alerts={journeyQuery.data.journey.alerts ?? []}
+          />
+        ) : null}
         {journeyQuery.data && !journeyQuery.data.success ? (
           <Banner
             status="error"
@@ -513,6 +627,24 @@ function ShipmentDetailBody({
               vgms={vgms}
               isVgmsLoading={vgmsQuery.isLoading}
               onViewVgms={() => onActiveTabChange('vgm')}
+            />
+          ) : null}
+          {activeTab === 'schedule' ? (
+            <ShipmentSchedulePanel
+              incoterm={contract.incoterm}
+              schedule={schedule}
+              scheduleError={
+                scheduleQuery.data && !scheduleQuery.data.success
+                  ? scheduleQuery.data.message
+                  : null
+              }
+              isScheduleLoading={scheduleQuery.isLoading}
+              journey={
+                journeyQuery.data?.success ? journeyQuery.data.journey : null
+              }
+              canEdit={vgmsQuery.data?.success === true}
+              onUpdateSchedule={() => setIsScheduleOpen(true)}
+              onEditContainerDates={() => setIsContainerDatesOpen(true)}
             />
           ) : null}
           {activeTab === 'vgm' ? (
@@ -558,18 +690,28 @@ function ShipmentDetailBody({
             step={selectedMilestone}
           />
         ) : null}
-        {isEmptyReturnOpen ? (
-          <ShipmentEmptyReturnDialog
+        {isContainerDatesOpen ? (
+          <ShipmentContainerDatesDialog
             isOpen
-            onOpenChange={setIsEmptyReturnOpen}
+            onOpenChange={setIsContainerDatesOpen}
             contractId={contract.id}
             shipmentId={shipment.id}
-            containers={vgms}
-            deadline={
-              journeyQuery.data?.success
-                ? (journeyQuery.data.journey.emptyReturn?.deadline ?? null)
-                : null
+            incoterm={contract.incoterm}
+            destinationFreeTime={
+              shipment.operationalDetails?.destinationFreeTime
             }
+            containers={vgms}
+          />
+        ) : null}
+        {isScheduleOpen && schedule ? (
+          <ShipmentScheduleDialog
+            key={schedule.version}
+            isOpen
+            onOpenChange={setIsScheduleOpen}
+            contractId={contract.id}
+            shipmentId={shipment.id}
+            incoterm={contract.incoterm}
+            schedule={schedule}
           />
         ) : null}
       </MetaThemeProvider>

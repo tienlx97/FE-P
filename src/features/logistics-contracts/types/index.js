@@ -742,6 +742,98 @@ export {};
  * @property {number} vgmCount - number of `ShipmentVgm` records, computed at read time, never stored (BE-kt-xnk `add-shipment-vgm-count`)
  * @property {ShipmentServiceProvider[]} [serviceProviders] - customs brokers / trucking companies, several per role allowed (BE-kt-xnk `add-shipment-service-providers`)
  * @property {ShipmentOperationalDetails} [operationalDetails] - booking / customs facts for the detail page (BE-kt-xnk `add-shipment-operational-details`); missing on older backends
+ * @property {ShipmentScheduleSummary | null} [scheduleSummary] - original vs latest ETD / ETA (BE-kt-xnk `add-shipment-schedule-free-time`)
+ */
+
+/**
+ * @typedef {'Separate' | 'Combined'} FreeTimeMode
+ */
+
+/**
+ * Free time at one side, calendar days, the start event's day = day 1.
+ * `Separate` uses `demDays` + `detDays`, `Combined` uses `combinedDays`.
+ * @typedef {Object} ContainerFreeTime
+ * @property {FreeTimeMode} mode
+ * @property {number | null} demDays
+ * @property {number | null} detDays
+ * @property {number | null} combinedDays
+ */
+
+/**
+ * @typedef {'Edited' | 'CarrierDelay' | 'VesselChange' | 'PortCongestion' | 'Other'} ScheduleChangeReason
+ */
+
+/**
+ * @typedef {Object} ShipmentScheduleSummary
+ * @property {string | null} originalEtd
+ * @property {string | null} originalEta
+ * @property {number} etdChangeCount
+ * @property {number} etaChangeCount
+ * @property {number | null} departureDelayDays - (ATD, else current ETD) − original ETD
+ * @property {number | null} arrivalDelayDays - (ATA, else current ETA) − original ETA
+ */
+
+/**
+ * @typedef {Object} ShipmentScheduleValues
+ * @property {string | null} etd
+ * @property {string | null} eta
+ * @property {string | null} siCutoff - local date-time
+ * @property {string | null} cyCutoff - local date-time
+ * @property {string | null} vesselName
+ * @property {string | null} voyageNumber
+ */
+
+/**
+ * @typedef {Object} ShipmentScheduleRevision
+ * @property {string} id
+ * @property {string} noticeOn
+ * @property {ScheduleChangeReason} reason
+ * @property {string | null} note
+ * @property {string} recordedAt
+ * @property {ShipmentScheduleValues} previous
+ * @property {ShipmentScheduleValues} next
+ */
+
+/**
+ * A shipment's schedule with its history (BE-kt-xnk `GET …/schedule`).
+ * @typedef {Object} ShipmentSchedule
+ * @property {number} version
+ * @property {ShipmentScheduleValues} current
+ * @property {string | null} actualDeparture
+ * @property {string | null} actualArrival
+ * @property {ContainerFreeTime | null} originFreeTime
+ * @property {ContainerFreeTime | null} destinationFreeTime
+ * @property {ShipmentScheduleSummary} summary
+ * @property {ShipmentScheduleRevision[]} revisions - newest first
+ */
+
+/**
+ * Free time as edited in a form: '' mode = none agreed.
+ * @typedef {Object} FreeTimeFormValues
+ * @property {FreeTimeMode | ''} mode
+ * @property {number} [demDays]
+ * @property {number} [detDays]
+ * @property {number} [combinedDays]
+ */
+
+/**
+ * "Cập nhật lịch tàu" form.
+ * @typedef {Object} ShipmentScheduleFormValues
+ * @property {string} etd
+ * @property {string} eta
+ * @property {string} siCutoffDate
+ * @property {string} siCutoffTime
+ * @property {string} cyCutoffDate
+ * @property {string} cyCutoffTime
+ * @property {string} vesselName
+ * @property {string} voyageNumber
+ * @property {string} actualDeparture
+ * @property {string} actualArrival
+ * @property {ScheduleChangeReason | ''} reason
+ * @property {string} noticeOn
+ * @property {string} note
+ * @property {FreeTimeFormValues} originFreeTime
+ * @property {FreeTimeFormValues} destinationFreeTime
  */
 
 /**
@@ -760,11 +852,16 @@ export {};
  * @property {string | null} coForm - "Form D", "Form E"…
  * @property {ShipmentCustomsChannel | null} customsChannel - "Luồng" tờ khai
  * @property {string | null} letterOfCreditNumber - "Số L/C"
- * @property {string | null} [emptyReturnDeadline] - ISO date, "Hạn trả cont rỗng" (end of free time)
+ * @property {string | null} [emptyReturnDeadline] - ISO date, hand-entered "Hạn trả cont rỗng"; only a fallback once destination free time exists
+ * @property {string | null} [cyCutoff] - local date-time, "Cut-off hạ bãi"
+ * @property {string | null} [actualDeparture] - ATD
+ * @property {string | null} [actualArrival] - ATA
+ * @property {ContainerFreeTime | null} [originFreeTime]
+ * @property {ContainerFreeTime | null} [destinationFreeTime]
  */
 
 /**
- * @typedef {'CargoReady' | 'OriginInland' | 'OriginPort' | 'OnBoard' | 'Ocean' | 'DestinationPort' | 'ImportClearance' | 'DestinationInland' | 'Site' | 'EmptyReturn'} ShipmentMilestone
+ * @typedef {'EmptyPickup' | 'CargoReady' | 'OriginInland' | 'OriginPort' | 'OnBoard' | 'Ocean' | 'DestinationPort' | 'ImportClearance' | 'DestinationInland' | 'Site' | 'EmptyReturn'} ShipmentMilestone
  */
 
 /**
@@ -793,11 +890,85 @@ export {};
  */
 
 /**
+ * @typedef {Object} ShipmentContainerProgress
+ * @property {number} containerCount
+ * @property {number} pickedUpCount
+ * @property {number} gatedInCount
+ * @property {number} destinationGatedOutCount
+ * @property {number} returnedCount
+ */
+
+/**
+ * @typedef {'Origin' | 'Destination'} FreeTimeSide
+ */
+
+/**
+ * @typedef {'Dem' | 'Det' | 'Combined'} FreeTimeKind
+ */
+
+/**
+ * One free-time allowance of one container (start event → end event).
+ * @typedef {Object} FreeTimeClock
+ * @property {FreeTimeSide} side
+ * @property {FreeTimeKind} kind
+ * @property {number} days
+ * @property {string | null} startOn
+ * @property {string | null} endOn
+ * @property {string | null} lastFreeDay
+ * @property {number | null} daysLeft - running clocks: 0 = last free day is today, negative = overdue
+ * @property {number} overdueDays
+ * @property {'NotStarted' | 'Running' | 'Stopped'} state
+ */
+
+/**
+ * @typedef {Object} ContainerFreeTimeStatus
+ * @property {string} containerId
+ * @property {string} containerNumber
+ * @property {string | null} emptyPickedUpOn
+ * @property {string | null} gatedInOn
+ * @property {string | null} destinationGatedOutOn
+ * @property {string | null} emptyReturnedOn
+ * @property {FreeTimeClock[]} clocks
+ */
+
+/**
+ * @typedef {'FreeTimeDueSoon' | 'FreeTimeOverdue' | 'SiCutoffSoon' | 'SiCutoffPassed' | 'CyCutoffSoon' | 'CyCutoffPassed' | 'DepartureDelayed' | 'ArrivalDelayed'} ShipmentAlertKind
+ */
+
+/**
+ * `days`: left (…Soon), overdue / passed (…Overdue, …Passed) or of delay
+ * (…Delayed). `dueOn`: the deadline or the delayed date.
+ * @typedef {Object} ShipmentAlert
+ * @property {ShipmentAlertKind} kind
+ * @property {'Warning' | 'Danger'} severity
+ * @property {string | null} dueOn
+ * @property {number} days
+ * @property {string | null} containerNumber
+ * @property {FreeTimeSide | null} side
+ * @property {FreeTimeKind | null} freeTimeKind
+ * @property {number | null} containerCount - CY cut-off: containers not gated in
+ */
+
+/**
+ * A shipment with its alerts (`GET /api/v1/shipments/alerts`).
+ * @typedef {Object} ShipmentAlertsRow
+ * @property {string} contractId
+ * @property {string} contractNumber
+ * @property {string} shipmentId
+ * @property {string} shipmentCode
+ * @property {string} shipmentName
+ * @property {ShipmentAlert[]} alerts
+ */
+
+/**
  * @typedef {Object} ShipmentJourney
  * @property {string} incoterm
  * @property {string} summary
  * @property {ShipmentJourneyStep[]} steps
  * @property {ShipmentEmptyReturnProgress | null} emptyReturn - CIF only
+ * @property {ShipmentContainerProgress} [containers]
+ * @property {ContainerFreeTimeStatus[]} [containerFreeTime]
+ * @property {ShipmentAlert[]} [alerts]
  */
 
 /**
@@ -851,7 +1022,13 @@ export {};
  * @property {string} coForm
  * @property {ShipmentCustomsChannel | ''} customsChannel
  * @property {string} letterOfCreditNumber
- * @property {string} emptyReturnDeadline
+ * @property {string} emptyReturnDeadline - kept as loaded (fallback, no input)
+ * @property {string} cyCutoffDate - ISO date part of `cyCutoff`
+ * @property {string} cyCutoffTime - "HH:mm" part of `cyCutoff`
+ * @property {string} actualDeparture - kept as loaded (edited in "Cập nhật lịch tàu")
+ * @property {string} actualArrival - kept as loaded
+ * @property {FreeTimeFormValues} originFreeTime
+ * @property {FreeTimeFormValues} destinationFreeTime
  */
 
 /**
@@ -890,6 +1067,21 @@ export {};
  * @property {string | null} note
  * @property {string | null} [emptyReturnedOn] - ISO date the empty container went back; null = not yet
  * @property {string | null} [emptyReturnDepot]
+ * @property {string | null} [emptyPickedUpOn] - empty picked up at the origin depot
+ * @property {string | null} [gatedInOn] - gated in full at the port of loading
+ * @property {string | null} [destinationGatedOutOn] - gated out full at the destination port
+ */
+
+/**
+ * One row of the "Ngày container" dialog.
+ * @typedef {Object} ContainerDatesFormRow
+ * @property {string} vgmId
+ * @property {string} containerNumber
+ * @property {string} emptyPickedUpOn
+ * @property {string} gatedInOn
+ * @property {string} destinationGatedOutOn
+ * @property {string} emptyReturnedOn
+ * @property {string} emptyReturnDepot
  */
 
 /**

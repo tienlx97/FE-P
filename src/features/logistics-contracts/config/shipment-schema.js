@@ -3,8 +3,29 @@ import { z } from 'zod';
 import { CURRENCY_CODES } from './currencies.js';
 import { PAYMENT_TYPES } from './payment-schedule-types.js';
 import { SHIPMENT_CUSTOMS_CHANNELS } from './shipment-operational-details.js';
+import { freeTimeErrors } from './shipment-schedule.js';
 import { SHIPMENT_STATUSES } from './shipment-status.js';
 import { SHIPMENT_TYPES } from './shipment-types.js';
+
+/** One side's free time as edited ('' mode = none agreed). */
+export const freeTimeFormSchema = z.object({
+  mode: z.union([z.enum(['Separate', 'Combined']), z.literal('')]),
+  demDays: z.number().optional(),
+  detDays: z.number().optional(),
+  combinedDays: z.number().optional(),
+});
+
+/**
+ * Adds the free-time errors of one side at `<field>.<days field>`.
+ * @param {import('../types/index.js').FreeTimeFormValues} values
+ * @param {string} field
+ * @param {import('zod').RefinementCtx} context
+ */
+export function addFreeTimeIssues(values, field, context) {
+  for (const [key, message] of Object.entries(freeTimeErrors(values))) {
+    context.addIssue({ code: 'custom', path: [field, key], message });
+  }
+}
 
 /**
  * Mirrors the backend's `ShipmentCost` validation (BE-kt-xnk):
@@ -110,6 +131,12 @@ export const shipmentSchema = z
     customsChannel: z.union([z.enum(SHIPMENT_CUSTOMS_CHANNELS), z.literal('')]),
     letterOfCreditNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
     emptyReturnDeadline: z.string(),
+    cyCutoffDate: z.string(),
+    cyCutoffTime: z.string(),
+    actualDeparture: z.string(),
+    actualArrival: z.string(),
+    originFreeTime: freeTimeFormSchema,
+    destinationFreeTime: freeTimeFormSchema,
   })
   .superRefine((values, context) => {
     // "Hạn nộp SI / VGM" is one date-time on the backend: a time alone has
@@ -121,4 +148,13 @@ export const shipmentSchema = z
         message: 'Vui lòng chọn ngày',
       });
     }
+    if (values.cyCutoffTime && !values.cyCutoffDate) {
+      context.addIssue({
+        code: 'custom',
+        path: ['cyCutoffDate'],
+        message: 'Vui lòng chọn ngày',
+      });
+    }
+    addFreeTimeIssues(values.originFreeTime, 'originFreeTime', context);
+    addFreeTimeIssues(values.destinationFreeTime, 'destinationFreeTime', context);
   });

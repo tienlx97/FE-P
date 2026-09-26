@@ -101,6 +101,7 @@ import { useShipmentsListQuery } from '../hooks/use-shipments-list-query.js';
 import { useDeleteShipmentMutation } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { renderFilterValue } from './filter-value.jsx';
+import { ShipmentAlertsSummary } from './shipment-alerts-summary.jsx';
 import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 
 /** @param {string | null | undefined} value */
@@ -1195,6 +1196,7 @@ export function ShipmentsList() {
 
   return (
     <VStack gap={4} hAlign="stretch" height="100%" xstyle={styles.root}>
+      <ShipmentAlertsSummary />
       {listResult && !listResult.success ? (
         <AdvanceTableErrorBanner message={listResult.message} />
       ) : null}

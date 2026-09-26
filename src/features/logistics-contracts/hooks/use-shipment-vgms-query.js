@@ -6,10 +6,10 @@ import {
   createShipmentVgm,
   deleteShipmentVgm,
   listShipmentVgms,
-  recordShipmentVgmEmptyReturn,
+  recordShipmentContainerDates,
   updateShipmentVgm,
 } from '../api/shipment-vgms.js';
-import { SHIPMENT_JOURNEY_QUERY_PREFIX } from './use-shipment-journey-query.js';
+import { invalidateShipmentTracking } from './use-shipment-journey-query.js';
 
 /** @param {string} shipmentId */
 const queryKey = (shipmentId) => [
@@ -44,9 +44,7 @@ export function useCreateShipmentVgmMutation(contractId, shipmentId) {
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKey(shipmentId) });
-        queryClient.invalidateQueries({
-          queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
-        });
+        invalidateShipmentTracking(queryClient);
       }
     },
   });
@@ -66,9 +64,7 @@ export function useUpdateShipmentVgmMutation(contractId, shipmentId) {
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKey(shipmentId) });
-        queryClient.invalidateQueries({
-          queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
-        });
+        invalidateShipmentTracking(queryClient);
       }
     },
   });
@@ -84,45 +80,30 @@ export function useDeleteShipmentVgmMutation(contractId, shipmentId) {
     onSuccess: (result) => {
       if (result.success) {
         queryClient.invalidateQueries({ queryKey: queryKey(shipmentId) });
-        queryClient.invalidateQueries({
-          queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
-        });
+        invalidateShipmentTracking(queryClient);
       }
     },
   });
 }
 
 /**
- * Record (or clear) one container's empty return; refreshes the VGM list
- * and the journey (CIF "Trả cont rỗng").
+ * "Ngày container": saves several containers' event dates; refreshes the
+ * VGM list, the journey and the alerts.
  * @param {string} contractId
  * @param {string} shipmentId
  */
-export function useRecordShipmentVgmEmptyReturnMutation(
-  contractId,
-  shipmentId,
-) {
+export function useRecordShipmentContainerDatesMutation(contractId, shipmentId) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (
-      /** @type {{ vgmId: string, returnedOn: string, depot: string }} */ {
-        vgmId,
-        returnedOn,
-        depot,
-      },
-    ) =>
-      recordShipmentVgmEmptyReturn(contractId, shipmentId, vgmId, {
-        returnedOn,
-        depot,
-      }),
+      /** @type {import('../types/index.js').ContainerDatesFormRow[]} */ rows,
+    ) => recordShipmentContainerDates(contractId, shipmentId, rows),
     onSuccess: (result) =>
       result.success
         ? Promise.all([
             queryClient.invalidateQueries({ queryKey: queryKey(shipmentId) }),
-            queryClient.invalidateQueries({
-              queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
-            }),
+            invalidateShipmentTracking(queryClient),
           ])
         : undefined,
   });

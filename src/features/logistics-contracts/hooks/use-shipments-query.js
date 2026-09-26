@@ -8,7 +8,7 @@ import {
   listShipments,
   updateShipment,
 } from '../api/shipments.js';
-import { SHIPMENT_JOURNEY_QUERY_PREFIX } from './use-shipment-journey-query.js';
+import { invalidateShipmentTracking } from './use-shipment-journey-query.js';
 
 /** @param {string} contractId */
 const queryKey = (contractId) => [
@@ -49,9 +49,7 @@ export function useCreateShipmentMutation(contractId) {
           queryClient.invalidateQueries({
             queryKey: ['logistics-contracts', 'shipments-list'],
           }),
-          queryClient.invalidateQueries({
-            queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
-          }),
+          invalidateShipmentTracking(queryClient),
         ]);
       }
     },
@@ -78,9 +76,7 @@ export function useUpdateShipmentMutation(contractId) {
           queryClient.invalidateQueries({
             queryKey: ['logistics-contracts', 'shipments-list'],
           }),
-          queryClient.invalidateQueries({
-            queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
-          }),
+          invalidateShipmentTracking(queryClient),
         ]);
       }
     },
@@ -109,9 +105,7 @@ export function useDeleteShipmentMutation(contractId) {
           queryClient.invalidateQueries({
             queryKey: ['logistics-contracts', 'shipments-list'],
           }),
-          queryClient.invalidateQueries({
-            queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX,
-          }),
+          invalidateShipmentTracking(queryClient),
         ]);
       }
     },

@@ -41,12 +41,17 @@ Cập nhật lần cuối: 2026-09-26.
    Các mốc còn lại **không có nút xác nhận**, ngày lấy từ dữ liệu lô hàng:
    | Mốc | Nguồn ngày |
    |---|---|
+   | Empty Pickup | Ngày lấy rỗng của từng container ("Ngày container") |
    | Packing | Ngày đóng hàng của từng container (tab VGM) |
-   | POL | Ngày khai hải quan của lô hàng |
-   | Shipped on Board / Ocean Freight / POD | ETD / ETA sửa trong lô hàng (nhập ngày thực tế) |
-   | Empty Return | Ngày trả rỗng của từng container (tab VGM) |
+   | POL | Ngày hạ bãi của từng container; chưa có thì ngày khai hải quan |
+   | Shipped on Board / Ocean Freight / POD | ATD / ATA ("Cập nhật lịch tàu"); chưa có thì ETD / ETA hiện tại + số ngày trễ so với ban đầu |
+   | Empty Return | Ngày trả rỗng của từng container ("Ngày container") |
 
    Xác nhận tay đã lưu trước đây cho các mốc này bị bỏ qua.
+7. **Dữ liệu đẩy tiến độ** (khi Tình trạng chưa vượt phạm vi Seller): mọi
+   container đã lấy rỗng → Packing; mọi container đã hạ bãi → POL; có ATD →
+   Ocean Freight; có ATA → POD. Tiến độ = mốc xa nhất giữa Tình trạng, xác
+   nhận tay và dữ liệu.
 
 ---
 
@@ -54,18 +59,22 @@ Cập nhật lần cuối: 2026-09-26.
 
 | # | Mã mốc | Nhãn hiển thị | Tiêu đề trên thẻ | Ngày / thông số ở chân thẻ | Nhóm chi phí liên quan |
 |--:|---|---|---|---|---|
+| 00 | `empty-pickup` | Empty Pickup | Đã lấy {n}/{tổng} cont | Lấy rỗng = "{n}/{tổng} cont · từ – đến" (lô 1 cont: chỉ ngày) | LOG-02 |
 | 01 | `cargo-ready` | Packing | Tên lô hàng | Đóng hàng = một ngày, hoặc "từ – đến" khi các cont đóng khác ngày (ngày đóng sớm nhất – muộn nhất trong VGM) | LOG-01 |
 | 02 | `origin-inland` | Buyer Pickup *(chỉ EXW)* | Đơn vị trucking (tên) | Hạn SI / VGM + thời gian | LOG-02 |
-| 03 | `origin-port` | POL | Cảng xếp hàng (POL) | Khai hải quan = ngày khai tờ khai | LOG-03 |
-| 04 | `on-board` | Shipped on Board | {tên tàu} | Rời cảng = ETD | LOG-03 → LOG-04 |
-| 05 | `ocean` | Ocean Freight | {POL} → {POD} | Transit = ETA − ETD (ngày) | LOG-04 |
-| 06 | `destination-port` | POD | Cảng dỡ hàng (POD) | Đến cảng = ETA | LOG-05 |
+| 03 | `origin-port` | POL | Cảng xếp hàng (POL) | Hạ bãi = "{n}/{tổng} cont · từ – đến"; chưa hạ bãi cont nào thì Khai hải quan = ngày khai tờ khai | LOG-03 |
+| 04 | `on-board` | Shipped on Board | {tên tàu} | Rời cảng = ATD, chưa có thì ETD hiện tại · "trễ {n} ngày" so với ETD ban đầu | LOG-03 → LOG-04 |
+| 05 | `ocean` | Ocean Freight | {POL} → {POD} | Transit = (ATA hoặc ETA) − (ATD hoặc ETD) (ngày) | LOG-04 |
+| 06 | `destination-port` | POD | Cảng dỡ hàng (POD) | Đến cảng = ATA, chưa có thì ETA hiện tại · "trễ {n} ngày" | LOG-05 |
 | 07 | `import-clearance` | Import Clearance | (nhãn mốc) | Phụ trách: Seller / Buyer | LOG-07 |
 | 08 | `destination-inland` | On-carriage | — (chưa dùng) | — | LOG-06 |
 | 09 | `site` | Site Delivery | Nơi đến theo hợp đồng | Giao hàng: Hoàn tất / — | — |
 | 10 | `empty-return` | Empty Return | Đã trả {n}/{tổng} cont | Hạn trả rỗng (hết free time) | LOG-05 (DEM/DET) |
 
 Mốc `empty-return` có trong hành trình CIF và lấy tiến độ từ các bản ghi VGM.
+Mốc `empty-pickup` có trong FOB / CIF / DDP (Seller lấy cont rỗng); tiến
+độ: "Đã book" → Empty Pickup, "Đang đóng hàng" → Packing, hoặc mọi cont đã
+lấy rỗng → Packing.
 
 Không Incoterm đang cấu hình nào dùng mốc **Pre-carriage** (chặng xe kéo cont từ xưởng ra
 cảng): chặng này kết thúc khi hạ bãi, trùng với POL. `origin-inland` chỉ còn
@@ -112,15 +121,17 @@ Ký hiệu: **S** = Seller, **B** = Buyer, ★ = marker.
 
 | Mốc | Nhãn | Phạm vi | Marker |
 |--:|---|---|---|
-| 01 | Packing | S | |
-| 02 | POL | S | |
-| 03 | Shipped on Board | S | ★ Chuyển rủi ro |
-| 04 | Ocean Freight | B | |
-| 05 | POD | B | |
+| 01 | Empty Pickup | S | |
+| 02 | Packing | S | |
+| 03 | POL | S | |
+| 04 | Shipped on Board | S | ★ Chuyển rủi ro |
+| 05 | Ocean Freight | B | |
+| 06 | POD | B | |
 
 | Tình trạng | Mốc hiện tại |
 |---|---|
-| Đã book, Đang đóng hàng | Packing |
+| Đã book | Empty Pickup |
+| Đang đóng hàng | Packing |
 | Hạ bãi chờ xuất | POL |
 | Đã giao đến cảng | Shipped on Board *(FOB: giao tại cảng xếp)* |
 | Shipping | Ocean Freight |
@@ -132,24 +143,26 @@ Ký hiệu: **S** = Seller, **B** = Buyer, ★ = marker.
 
 | Mốc | Nhãn | Phạm vi | Marker |
 |--:|---|---|---|
-| 01 | Packing | S | |
-| 02 | POL | S | |
-| 03 | Shipped on Board | S | ★ Chuyển rủi ro |
-| 04 | Ocean Freight | S | |
-| 05 | POD | S | ★ Hết cước & BH |
-| 06 | Buyer Pickup & Import *(mốc `import-clearance`)* | B | |
-| 07 | Empty Return *(mốc `empty-return`)* | S theo dõi | ★ Hoàn tất lô |
+| 01 | Empty Pickup | S | |
+| 02 | Packing | S | |
+| 03 | POL | S | |
+| 04 | Shipped on Board | S | ★ Chuyển rủi ro |
+| 05 | Ocean Freight | S | |
+| 06 | POD | S | ★ Hết cước & BH |
+| 07 | Buyer Pickup & Import *(mốc `import-clearance`)* | B | |
+| 08 | Empty Return *(mốc `empty-return`)* | S theo dõi | ★ Hoàn tất lô |
 
 | Tình trạng | Mốc hiện tại |
 |---|---|
-| Đã book, Đang đóng hàng | Packing |
+| Đã book | Empty Pickup |
+| Đang đóng hàng | Packing |
 | Hạ bãi chờ xuất | POL |
 | Shipping | Ocean Freight |
 | Đã giao đến cảng | POD |
 | Khai HQ, Trucking đến site | Buyer Pickup & Import |
 | Đã hoàn thành | Empty Return *(nếu chưa trả hết cont)* / `end` *(đã trả hết)* |
 
-**Mốc 07 — Empty Return (CIF)**
+**Mốc 08 — Empty Return (CIF)**
 
 - **Vì sao Seller theo dõi:** với CIF, Seller là người ký hợp đồng vận tải
   (booking đứng tên Seller/forwarder của Seller). Cont do Buyer lấy hàng
@@ -158,14 +171,16 @@ Ký hiệu: **S** = Seller, **B** = Buyer, ★ = marker.
 - **Tiến độ lấy từ dữ liệu container** (không lấy từ Tình trạng):
   | Điều kiện | Trạng thái thẻ |
   |---|---|
-  | Chưa tới mốc 06 | Kế hoạch |
-  | Mốc 06 xong / lô "Đã hoàn thành", còn cont chưa trả | **Chặng hiện tại** |
+  | Chưa tới mốc 07 | Kế hoạch |
+  | Mốc 07 xong / lô "Đã hoàn thành", còn cont chưa trả | **Chặng hiện tại** |
   | Tất cả cont đã trả rỗng | **Hoàn thành** |
   | Quá hạn trả rỗng mà chưa trả hết | Chặng hiện tại + cảnh báo đỏ "Quá hạn {n} ngày" |
 - **Thẻ hiển thị:**
   - Tiêu đề: `Đã trả {n}/{tổng} cont` (tổng = số bản ghi VGM của lô).
-  - Chân thẻ: `Hạn trả rỗng` = ngày hết free time; khi đã trả hết đổi thành
-    `Trả xong` = ngày trả cont cuối cùng.
+  - Chân thẻ: `Hạn trả rỗng` = ngày cuối free time sớm nhất (DET hoặc
+    combined đầu đích, mục 4.2) của cont chưa trả — lô chưa có free time đầu
+    đích thì dùng hạn nhập tay cũ; khi đã trả hết đổi thành `Trả xong` = ngày
+    trả cont cuối cùng.
 - **Lô chỉ được coi là hoàn tất phía Seller khi đã trả hết cont** — thanh
   "TIẾN ĐỘ LỘ TRÌNH" chưa đạt 100% khi còn cont chưa trả.
 
@@ -178,16 +193,18 @@ Ký hiệu: **S** = Seller, **B** = Buyer, ★ = marker.
 
 | Mốc | Nhãn | Phạm vi | Marker |
 |--:|---|---|---|
-| 01 | Packing | S | |
-| 02 | POL | S | |
-| 03 | Ocean Freight | S | |
-| 04 | POD | S | |
-| 05 | Import Clearance & Duties *(mốc `import-clearance`)* | S | |
-| 06 | Site Delivery | S | ★ Điểm giao |
+| 01 | Empty Pickup | S | |
+| 02 | Packing | S | |
+| 03 | POL | S | |
+| 04 | Ocean Freight | S | |
+| 05 | POD | S | |
+| 06 | Import Clearance & Duties *(mốc `import-clearance`)* | S | |
+| 07 | Site Delivery | S | ★ Điểm giao |
 
 | Tình trạng | Mốc hiện tại |
 |---|---|
-| Đã book, Đang đóng hàng | Packing |
+| Đã book | Empty Pickup |
+| Đang đóng hàng | Packing |
 | Hạ bãi chờ xuất | POL |
 | Shipping | Ocean Freight |
 | Đã giao đến cảng | POD |
@@ -215,9 +232,13 @@ cho phép nhập ngày trả rỗng và depot theo từng container.
 
 ---
 
-## 4. Lịch tàu, free time DEM / DET và cảnh báo (đề xuất, chưa triển khai)
+## 4. Lịch tàu, free time DEM / DET và cảnh báo
 
-Thống nhất với người dùng ngày 2026-09-26. Bối cảnh vận hành:
+Thống nhất với người dùng ngày 2026-09-26; triển khai cùng ngày (BE-kt-xnk
+`add-shipment-schedule-free-time`). Trên trang lô hàng: tab **"Lịch tàu &
+Free time"**, hộp thoại **"Cập nhật lịch tàu"** và **"Ngày container"** (menu
+"…" của thẻ lô hàng, nút trên thẻ mốc), dải cảnh báo dưới thẻ lô hàng; trang
+danh sách Shipment có khối **"Lô hàng cần chú ý"**. Bối cảnh vận hành:
 
 - Một lô có từ 1 đến 20 cont, tùy dự án.
 - Một người nhập liệu, vào các thời điểm: nhận booking từ forwarder, sau
@@ -323,20 +344,16 @@ Tính tự động, hiện trên danh sách lô hàng và trang chi tiết:
 
 ### 4.5 Giai đoạn
 
-1. Lịch tàu có lịch sử (4.1) + free time tách / gộp và hạn tự tính (4.2).
-2. Ngày theo từng container, nhập hàng loạt (4.3).
-3. Cảnh báo (4.4).
+1. ✅ Lịch tàu có lịch sử (4.1) + free time tách / gộp và hạn tự tính (4.2).
+2. ✅ Ngày theo từng container, nhập hàng loạt (4.3).
+3. ✅ Cảnh báo (4.4).
 4. Để sau: mốc B/L / telex release, chuyển tải, tiền DEM / DET, dữ liệu tự
-   động từ hãng tàu / cảng.
+   động từ hãng tàu / cảng, thanh "TIẾN ĐỘ LỘ TRÌNH" tính theo thời gian
+   (hiện vẫn tính theo số mốc).
 
-Thanh "TIẾN ĐỘ LỘ TRÌNH": nên tính theo thời gian (hôm nay nằm đâu giữa ngày
-bắt đầu và ETA) hoặc bỏ — quyết định khi làm giai đoạn 1.
-
-Câu hỏi mở:
-
-- Hãng tàu / forwarder tính free time **từ chính ngày sự kiện** (ngày 1 =
-  ngày lấy rỗng) hay **từ ngày hôm sau**? Có khác nhau theo hãng không?
-- Free time tính **ngày lịch** hay trừ Chủ nhật / ngày lễ?
+Đã chốt (2026-09-26): free time tính **từ chính ngày sự kiện** (ngày lấy
+rỗng = ngày 1) và theo **ngày lịch**. Hạn / cảnh báo "sắp hết" = còn ≤ 2
+ngày.
 
 ---
 
@@ -367,3 +384,4 @@ liệu mốc con ở backend).
 | 2026-09-24 | BE-kt-xnk triển khai hành trình, xác nhận mốc và trả cont rỗng; frontend dùng endpoint hành trình | Codex |
 | 2026-09-26 | Xác nhận tay chỉ còn ở Import Clearance / Site Delivery (nguyên tắc 6); Packing hiện khoảng ngày đóng; bỏ "(ETD)", "(ETA)", "Dự kiến" ở chân thẻ vì ETD / ETA nhập ngày thực tế; FOB bỏ Pre-carriage | Claude |
 | 2026-09-26 | Thêm mục 4 (đề xuất): lịch tàu có lịch sử khi hãng tàu báo delay, free time DEM / DET tách riêng hoặc gộp, ngày theo từng container, cảnh báo | Claude |
+| 2026-09-26 | Triển khai mục 4 (giai đoạn 1–3); thêm mốc Empty Pickup (FOB / CIF / DDP), nguyên tắc 7 (dữ liệu đẩy tiến độ), chân thẻ dùng ATD / ATA + số ngày trễ, hạn trả rỗng tính từ free time | Claude |

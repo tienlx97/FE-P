@@ -26,7 +26,7 @@ const TABLE_ROWS = [0, 1, 2, 3, 4];
  * blocks inside `Card` / `Grid` / stacks (golden rule #15).
  *
  * @param {{
- *   tab?: 'overview' | 'vgm' | 'costs',
+ *   tab?: 'overview' | 'schedule' | 'vgm' | 'costs',
  *   label?: string,
  * }} props
  */

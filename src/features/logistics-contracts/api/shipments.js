@@ -1,6 +1,7 @@
 import { apiRequest } from '@/shared/api/api-client.js';
 
 import { joinSiCutoff } from '../config/shipment-operational-details.js';
+import { freeTimeRequestBody } from '../config/shipment-schedule.js';
 
 const GENERIC_LIST_ERROR = 'Không thể tải danh sách lần xuất hàng';
 const GENERIC_LIST_ALL_ERROR = 'Không thể tải danh sách Shipment';
@@ -80,6 +81,11 @@ function toOperationalDetailsRequestBody(values) {
     CustomsChannel: values.customsChannel || null,
     LetterOfCreditNumber: values.letterOfCreditNumber || null,
     EmptyReturnDeadline: values.emptyReturnDeadline || null,
+    CyCutoff: joinSiCutoff(values.cyCutoffDate, values.cyCutoffTime),
+    ActualDeparture: values.actualDeparture || null,
+    ActualArrival: values.actualArrival || null,
+    OriginFreeTime: freeTimeRequestBody(values.originFreeTime),
+    DestinationFreeTime: freeTimeRequestBody(values.destinationFreeTime),
   };
 }
 
