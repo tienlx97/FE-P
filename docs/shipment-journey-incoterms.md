@@ -215,7 +215,132 @@ cho phép nhập ngày trả rỗng và depot theo từng container.
 
 ---
 
-## 4. Đề xuất bổ sung (chưa triển khai)
+## 4. Lịch tàu, free time DEM / DET và cảnh báo (đề xuất, chưa triển khai)
+
+Thống nhất với người dùng ngày 2026-09-26. Bối cảnh vận hành:
+
+- Một lô có từ 1 đến 20 cont, tùy dự án.
+- Một người nhập liệu, vào các thời điểm: nhận booking từ forwarder, sau
+  khi lấy cont, khi hãng tàu báo delay, khi tàu chạy / đến.
+- Free time DEM / DET khác nhau theo từng lô; có lô tính **tách riêng**, có
+  lô tính **gộp (combined)**.
+- Chưa gặp rớt cont → không xử lý rớt tàu / tách lô.
+
+Mục tiêu: **quản lý theo ngoại lệ**. Người dùng nhập ít nhất có thể; hệ
+thống tự tính hạn và cảnh báo lô / cont sắp có vấn đề.
+
+### 4.1 Lịch tàu có lịch sử
+
+Hãng tàu báo delay thì ETD, ETA, cut-off SI / VGM, cut-off CY (và có khi
+tàu / chuyến) đều đổi, có thể nhiều lần. Mỗi ngày trong lịch tàu có ba giá
+trị:
+
+| Giá trị | Ý nghĩa |
+|---|---|
+| Ban đầu | Giá trị lần nhập đầu tiên (lúc nhận booking) |
+| Dự kiến hiện tại | Giá trị theo thông báo mới nhất |
+| Thực tế | ATD / ATA — tàu thật sự chạy / đến |
+
+- Thao tác **"Cập nhật lịch tàu"** (hộp thoại): ETD, ETA, cut-off SI / VGM,
+  cut-off CY, tàu / chuyến, free time (xem 4.2), lý do (tàu trễ, đổi tàu,
+  ùn tắc cảng, khác), ghi chú. Mỗi lần lưu thành **một dòng lịch sử**
+  (ngày nhận thông báo, cũ → mới, lý do), không ghi đè.
+- Cut-off **không tự dời theo ETD** (do hãng tàu / cảng quyết định). Hộp
+  thoại đặt cut-off cạnh ETD để kiểm tra; có nút "Dời cut-off cùng số ngày
+  với ETD".
+- Số ngày trễ = (thực tế, nếu có, hoặc dự kiến hiện tại) − ban đầu. Thẻ mốc
+  hiển thị ví dụ: "Rời cảng 13/10 · trễ 3 ngày (dời 2 lần)".
+- Trang chi tiết lô hàng có mục **"Lịch sử lịch tàu"**.
+- Mọi hạn và cảnh báo tính theo giá trị **mới nhất**.
+
+### 4.2 Free time DEM / DET
+
+Thuật ngữ (đồng hồ chạy từ sự kiện bắt đầu đến sự kiện kết thúc):
+
+| Đầu | Loại | Container đang ở đâu | Bắt đầu | Kết thúc |
+|---|---|---|---|---|
+| Xuất | DET (lưu cont) | Ngoài cảng (ở xưởng / trên xe) | Lấy rỗng | Hạ bãi (gate-in) |
+| Xuất | DEM (lưu bãi) | Trong cảng | Hạ bãi | Xếp tàu (≈ ATD) |
+| Xuất | **Combined** | | Lấy rỗng | Xếp tàu (≈ ATD) |
+| Đích | DEM (lưu bãi) | Trong cảng | Dỡ hàng (≈ ATA) | Lấy hàng ra khỏi cảng (gate-out) |
+| Đích | DET (lưu cont) | Ngoài cảng | Gate-out | Trả rỗng |
+| Đích | **Combined** | | Dỡ hàng (≈ ATA) | Trả rỗng |
+
+Nhập theo **từng lô, từng đầu**, chọn cách tính:
+
+- **Tách riêng**: số ngày DEM + số ngày DET.
+- **Gộp**: một số ngày combined.
+
+Đầu nào áp dụng theo Incoterm:
+
+| Incoterm | Đầu xuất | Đầu đích |
+|---|---|---|
+| EXW | — (Buyer lấy cont) | — |
+| FOB | ✔ | — |
+| CIF | ✔ | ✔ (Seller đứng tên booking, xem mốc Empty Return) |
+| DDP | ✔ | ✔ |
+
+- Free time sửa được trong "Cập nhật lịch tàu" (khi forwarder xin được gia
+  hạn do lỗi hãng tàu).
+- Xếp tàu / dỡ hàng dùng ngày của cả lô (ATD / ATA, chưa có thì ETD / ETA
+  dự kiến hiện tại). Các sự kiện còn lại theo **từng cont**.
+- Hạn tự tính cho từng cont, ví dụ tách riêng đầu xuất:
+  hạn hạ bãi = lấy rỗng + DET (không muộn hơn cut-off CY);
+  hạn xếp tàu = hạ bãi + DEM. Gộp: hạn xếp tàu = lấy rỗng + combined.
+- **Delay làm DEM đầu xuất chạy**: cont đã hạ bãi mà ETD dời → cảnh báo
+  "ETD dời 3 ngày, 5/5 cont đã hạ bãi, còn 1 ngày free time".
+- Thay thế ô nhập tay "Hạn trả cont rỗng" hiện nay bằng hạn tự tính.
+- Chưa tính **tiền** DEM / DET (biểu phí theo bậc ngày) — để sau; khi phát
+  sinh thì ghi vào chi phí LOG-05.
+
+### 4.3 Ngày theo từng container
+
+Thêm vào mỗi container (bản ghi VGM), nhập **hàng loạt** (một ngày cho các
+cont cùng ngày, sửa riêng cont khác ngày):
+
+| Ngày | Khi nào cần |
+|---|---|
+| Lấy rỗng | Đầu xuất (mọi Incoterm trừ EXW) |
+| Đóng hàng | Đã có |
+| Hạ bãi (gate-in) | Đầu xuất |
+| Gate-out cảng đích | Chỉ khi đầu đích tính **tách riêng** DEM / DET |
+| Trả rỗng | Đã có |
+
+Hiển thị: lô 1 cont chỉ hiện ngày; lô nhiều cont hiện "Hạ bãi 3/5 cont",
+ngày từ cont đầu tiên đến cont cuối cùng. Mỗi cont hiện "Còn x ngày" /
+"Hết free time hôm nay" / "Quá y ngày".
+
+Hành trình thêm mốc **"Empty Pickup"** (lấy rỗng) trước Packing.
+
+### 4.4 Cảnh báo
+
+Tính tự động, hiện trên danh sách lô hàng và trang chi tiết:
+
+- Cont sắp hết / đã quá free time (mỗi loại DEM / DET / combined, mỗi đầu).
+- Sắp đến cut-off SI / VGM mà chưa có VGM; sắp đến cut-off CY mà còn cont
+  chưa hạ bãi.
+- ETD / ETA bị dời (số ngày trễ so với ban đầu).
+
+### 4.5 Giai đoạn
+
+1. Lịch tàu có lịch sử (4.1) + free time tách / gộp và hạn tự tính (4.2).
+2. Ngày theo từng container, nhập hàng loạt (4.3).
+3. Cảnh báo (4.4).
+4. Để sau: mốc B/L / telex release, chuyển tải, tiền DEM / DET, dữ liệu tự
+   động từ hãng tàu / cảng.
+
+Thanh "TIẾN ĐỘ LỘ TRÌNH": nên tính theo thời gian (hôm nay nằm đâu giữa ngày
+bắt đầu và ETA) hoặc bỏ — quyết định khi làm giai đoạn 1.
+
+Câu hỏi mở:
+
+- Hãng tàu / forwarder tính free time **từ chính ngày sự kiện** (ngày 1 =
+  ngày lấy rỗng) hay **từ ngày hôm sau**? Có khác nhau theo hãng không?
+- Free time tính **ngày lịch** hay trừ Chủ nhật / ngày lễ?
+
+---
+
+## 5. Incoterm khác (chưa triển khai)
 
 Điền bảng theo mẫu mục 3 khi cần thêm:
 
@@ -233,7 +358,7 @@ liệu mốc con ở backend).
 
 ---
 
-## 5. Nhật ký thay đổi
+## 6. Nhật ký thay đổi
 
 | Ngày | Nội dung | Người sửa |
 |---|---|---|
@@ -241,3 +366,4 @@ liệu mốc con ở backend).
 | 2026-09-24 | CIF: thêm mốc 07 "Trả cont rỗng" (đã trả hết cont chưa), mốc chuẩn `empty-return`, dữ liệu cần bổ sung — chưa triển khai | Claude |
 | 2026-09-24 | BE-kt-xnk triển khai hành trình, xác nhận mốc và trả cont rỗng; frontend dùng endpoint hành trình | Codex |
 | 2026-09-26 | Xác nhận tay chỉ còn ở Import Clearance / Site Delivery (nguyên tắc 6); Packing hiện khoảng ngày đóng; bỏ "(ETD)", "(ETA)", "Dự kiến" ở chân thẻ vì ETD / ETA nhập ngày thực tế; FOB bỏ Pre-carriage | Claude |
+| 2026-09-26 | Thêm mục 4 (đề xuất): lịch tàu có lịch sử khi hãng tàu báo delay, free time DEM / DET tách riêng hoặc gộp, ngày theo từng container, cảnh báo | Claude |
