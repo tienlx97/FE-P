@@ -79,6 +79,7 @@ export function ShipmentFreeTimeFields({
               value={value.demDays}
               onChange={(days) => set('demDays', days)}
               units="ngày"
+              placeholder="0"
               isRequired
               isDisabled={isDisabled}
               status={statuses.demDays}
@@ -90,6 +91,7 @@ export function ShipmentFreeTimeFields({
               value={value.detDays}
               onChange={(days) => set('detDays', days)}
               units="ngày"
+              placeholder="0"
               isRequired
               isDisabled={isDisabled}
               status={statuses.detDays}
@@ -103,6 +105,7 @@ export function ShipmentFreeTimeFields({
           value={value.combinedDays}
           onChange={(days) => set('combinedDays', days)}
           units="ngày"
+          placeholder="0"
           isRequired
           isDisabled={isDisabled}
           status={statuses.combinedDays}

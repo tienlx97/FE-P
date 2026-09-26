@@ -26,6 +26,7 @@ const styles = stylex.create({
  *   value: number | undefined,
  *   onChange: (value: number | undefined) => void,
  *   units?: string,
+ *   placeholder?: string,
  *   description?: string,
  *   isLabelHidden?: boolean,
  *   isRequired?: boolean,
@@ -41,6 +42,7 @@ export function FormattedNumberTextInput({
   value,
   onChange,
   units,
+  placeholder = '0.00',
   description,
   isLabelHidden = false,
   isRequired = false,
@@ -76,7 +78,7 @@ export function FormattedNumberTextInput({
       isLabelHidden={units ? true : isLabelHidden}
       value={draft}
       onChange={handleChange}
-      placeholder="0.00"
+      placeholder={placeholder}
       description={units ? undefined : description}
       isRequired={isRequired}
       isReadOnly={isReadOnly}
