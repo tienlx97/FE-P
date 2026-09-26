@@ -41,8 +41,8 @@ Cập nhật lần cuối: 2026-09-24.
 
 | # | Mã mốc | Nhãn hiển thị | Tiêu đề trên thẻ | Ngày / thông số ở chân thẻ | Nhóm chi phí liên quan |
 |--:|---|---|---|---|---|
-| 01 | `cargo-ready` | Packing | Tên lô hàng | Đóng hàng = ngày đóng hàng VGM mới nhất | LOG-01 |
-| 02 | `origin-inland` | Pre-carriage | Đơn vị trucking (tên) | Hạn SI / VGM | LOG-02 |
+| 01 | `cargo-ready` | Packing | Tên lô hàng | Đóng hàng = Đóng hàng ngày nào, hoặc đóng hàng từ ngày nào đến ngày nào | LOG-01 |
+| 02 | `origin-inland` | Pre-carriage | Đơn vị trucking (tên) | Hạn SI / VGM + thời gian | LOG-02 |
 | 03 | `origin-port` | POL | Cảng xếp hàng (POL) | Khai hải quan = ngày khai tờ khai | LOG-03 |
 | 04 | `on-board` | Shipped on Board | {tên tàu} | Rời cảng (ETD) | LOG-03 → LOG-04 |
 | 05 | `ocean` | Ocean Freight | {POL} → {POD} | Dự kiến transit = ETA − ETD (ngày) | LOG-04 |
