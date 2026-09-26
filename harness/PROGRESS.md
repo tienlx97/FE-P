@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-09-26 — Fix: GitHub CI typecheck for port list skeleton
+
+- The factory/warehouse port change added required `Port.kind`, but the
+  loading skeleton rows in `ports-list.jsx` did not include it. Added the
+  literal `kind: 'Port'` so skeleton data satisfies the table's `Port` type.
+- `pnpm typecheck` passes. GitHub run 36229520393 failed only at typecheck;
+  lint, structure, tests, and build passed. Full local `verify.sh` could not
+  run because the Windows Bash environment rejects CRLF shell scripts.
+
 ## 2026-09-26 — Xăng dầu: KPI current prices, redesigned history, news cards
 
 - "Giá hiện hành" (`fuel-current-prices.jsx`): `MetaShipmentKpiCard` per

@@ -57,6 +57,7 @@ const PAGE_SIZE_OPTIONS = ['25', '50', '100'];
 
 const skeletonRows = Array.from({ length: 6 }, (_, index) => ({
   id: `skeleton-${index}`,
+  kind: /** @type {const} */ ('Port'),
   code: '',
   name: '',
   fullName: null,
