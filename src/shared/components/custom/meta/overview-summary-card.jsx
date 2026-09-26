@@ -589,7 +589,9 @@ const styles = stylex.create({
   // Four equal cards on desktop, a single shrinkable column on phones.
   metricGrid: {
     gridTemplateColumns: {
-      default: null,
+      // Keep Grid's own template: in production StyleX hashes this key to
+      // the same one Grid uses, so `null` would drop Grid's columns.
+      default: 'var(--x-gridTemplateColumns)',
       '@media (max-width: 599px)': 'minmax(0, 1fr)',
     },
   },
