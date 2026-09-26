@@ -76,6 +76,7 @@ import { MetaPill } from './pill.jsx';
  *   onEdit?: () => void,
  *   moreLabel?: string,
  *   moreItems?: import('@astryxdesign/core/DropdownMenu').DropdownMenuOption[],
+ *   progress?: { percent: number, label: string } | null,
  * }} props
  */
 export function MetaShipmentHeaderCard({
@@ -94,6 +95,7 @@ export function MetaShipmentHeaderCard({
   onEdit,
   moreLabel = 'Thao tác khác',
   moreItems = [],
+  progress = null,
 }) {
   const { copy, isCopied } = useClipboard({
     announce: 'Đã sao chép mã lô hàng',
@@ -101,10 +103,13 @@ export function MetaShipmentHeaderCard({
   const doneCount = steps.filter((step) => step.state === 'done').length;
   const currentCount = steps.filter((step) => step.state === 'current').length;
   const upcomingCount = steps.length - doneCount - currentCount;
+  // The caller may pass a time-based progress; otherwise count the steps.
   const progressPercent =
-    steps.length === 0
+    progress?.percent ??
+    (steps.length === 0
       ? 0
-      : Math.round(((doneCount + currentCount * 0.5) / steps.length) * 100);
+      : Math.round(((doneCount + currentCount * 0.5) / steps.length) * 100));
+  const progressLabel = progress?.label ?? `${progressPercent}% hoàn thành`;
 
   return (
     <Card padding={6} xstyle={styles.card}>
@@ -252,7 +257,7 @@ export function MetaShipmentHeaderCard({
                   />
                 </HStack>
                 <Text size="sm" weight="bold" type="code" color="accent">
-                  {progressPercent}% hoàn thành
+                  {progressLabel}
                 </Text>
               </HStack>
               <HStack gap={4} vAlign="center" wrap="wrap">

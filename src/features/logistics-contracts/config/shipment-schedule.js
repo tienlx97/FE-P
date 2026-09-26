@@ -310,6 +310,40 @@ export function revisionChanges(revision) {
 }
 
 /**
+ * Time-based "TIẾN ĐỘ LỘ TRÌNH": where today falls between the first
+ * container event (empty pickup, else packing) and the arrival (ATA, else
+ * ETA). 100% only when every journey step is done (e.g. CIF empties back);
+ * otherwise capped at 99%. Null (fall back to counting steps) when either
+ * date is unknown.
+ * @param {{
+ *   startOn: string | null | undefined,
+ *   actualArrival: string | null | undefined,
+ *   eta: string | null | undefined,
+ *   isJourneyDone: boolean,
+ *   today: string,
+ * }} input
+ * @returns {{ percent: number, label: string } | null}
+ */
+export function shipmentTimeProgress({ startOn, actualArrival, eta, isJourneyDone, today }) {
+  if (isJourneyDone) return { percent: 100, label: '100% · hoàn tất' };
+  const end = actualArrival || eta;
+  const total = startOn && end ? daysBetween(startOn, end) : null;
+  if (!startOn || !end || total === null || total <= 0) return null;
+
+  const elapsed = /** @type {number} */ (daysBetween(startOn, today));
+  const percent = Math.min(99, Math.max(0, Math.round((elapsed / total) * 100)));
+  const left = /** @type {number} */ (daysBetween(today, end));
+  const label = actualArrival
+    ? `${percent}% · đã đến ${formatDisplayDate(actualArrival)}`
+    : left > 0
+      ? `${percent}% · còn ${left} ngày đến ETA`
+      : left === 0
+        ? `${percent}% · hôm nay đến ETA`
+        : `${percent}% · quá ETA ${-left} ngày`;
+  return { percent, label };
+}
+
+/**
  * Moves an ISO date by `days` (for "Dời cut-off cùng số ngày với ETD").
  * @param {string} isoDate
  * @param {number} days

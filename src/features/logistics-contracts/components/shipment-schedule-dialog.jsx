@@ -21,7 +21,7 @@ import {
 import { MetaFormDialog } from '@/shared/components/meta-form-dialog.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
-import { formatDateInputValue } from '@/shared/config/date-input-format.js';
+import { formatDateInputValue, todayIsoDate } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import {
@@ -37,14 +37,6 @@ import { useUpdateShipmentScheduleMutation } from '../hooks/use-shipment-schedul
 import { ShipmentFreeTimeFields } from './shipment-free-time-fields.jsx';
 
 const TWO_COLUMNS = { minWidth: 220, max: 2 };
-
-/** Local calendar date as ISO "YYYY-MM-DD". */
-function todayIso() {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
-}
 
 /**
  * "Cập nhật lịch tàu": a carrier notice revises ETD / ETA / cut-offs /
@@ -70,7 +62,7 @@ export function ShipmentScheduleDialog({
   const toast = useAppToast();
   const mutation = useUpdateShipmentScheduleMutation(contractId, shipmentId);
   const [values, setValues] = useState(() =>
-    scheduleFormValues(schedule, todayIso()),
+    scheduleFormValues(schedule, todayIsoDate()),
   );
   const [errors, setErrors] = useState(
     /** @type {Record<string, string>} */ ({}),

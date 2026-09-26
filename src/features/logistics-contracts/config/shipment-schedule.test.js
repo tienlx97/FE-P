@@ -15,6 +15,7 @@ import {
   scheduleFormErrors,
   scheduleFormValues,
   shiftIsoDate,
+  shipmentTimeProgress,
   tracksDestinationFreeTime,
   tracksOriginFreeTime,
 } from './shipment-schedule.js';
@@ -197,6 +198,28 @@ test('revisions: original values and the changes of each', () => {
   assert.equal(original.etd, '2026-10-10');
   assert.equal(original.siCutoff, '2026-10-09T17:00:00');
   assert.equal(original.eta, '2026-10-27');
+});
+
+test('time-based journey progress', () => {
+  const base = { startOn: '2026-10-01', actualArrival: null, eta: '2026-10-21', isJourneyDone: false };
+  assert.deepEqual(shipmentTimeProgress({ ...base, today: '2026-10-11' }), {
+    percent: 50,
+    label: '50% · còn 10 ngày đến ETA',
+  });
+  assert.deepEqual(shipmentTimeProgress({ ...base, today: '2026-10-25' }), {
+    percent: 99,
+    label: '99% · quá ETA 4 ngày',
+  });
+  assert.deepEqual(
+    shipmentTimeProgress({ ...base, actualArrival: '2026-10-20', today: '2026-10-22' }),
+    { percent: 99, label: '99% · đã đến 20/10/2026' },
+  );
+  assert.deepEqual(shipmentTimeProgress({ ...base, isJourneyDone: true, today: '2026-10-01' }), {
+    percent: 100,
+    label: '100% · hoàn tất',
+  });
+  assert.equal(shipmentTimeProgress({ ...base, startOn: null, today: '2026-10-11' }), null);
+  assert.equal(shipmentTimeProgress({ ...base, eta: null, today: '2026-10-11' }), null);
 });
 
 test('date helpers', () => {

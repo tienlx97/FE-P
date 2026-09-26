@@ -33,14 +33,17 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
 import { shipmentTrail } from '@/shared/config/breadcrumbs.js';
-import { formatDisplayDate } from '@/shared/config/date-input-format.js';
+import { formatDisplayDate, todayIsoDate } from '@/shared/config/date-input-format.js';
 
 import { dateRange } from '../config/shipment-container-dates.js';
 import {
   isConfirmableMilestone,
   packingDateRange,
 } from '../config/shipment-journey.js';
-import { scheduleDateLabel } from '../config/shipment-schedule.js';
+import {
+  scheduleDateLabel,
+  shipmentTimeProgress,
+} from '../config/shipment-schedule.js';
 import {
   labelForShipmentStatus,
   metaToneForShipmentStatus,
@@ -533,6 +536,20 @@ function ShipmentDetailBody({
         },
       })
     : null;
+  const journeyData = journeyQuery.data?.success
+    ? journeyQuery.data.journey
+    : null;
+  const progress = journeyData
+    ? shipmentTimeProgress({
+        startOn: dateRange(
+          vgms.flatMap((vgm) => [vgm.emptyPickedUpOn, vgm.packingDate]),
+        )?.from,
+        actualArrival: shipment.operationalDetails?.actualArrival,
+        eta: shipment.eta,
+        isJourneyDone: journeyData.steps.every((step) => step.state === 'Done'),
+        today: todayIsoDate(),
+      })
+    : null;
   // Plain tabs (no count pills), same as the contract detail tab bar.
   const tabs = TAB_VALUES.map((id) => ({
     id,
@@ -552,6 +569,7 @@ function ShipmentDetailBody({
           steps={journey?.steps ?? []}
           journeySummary={journey?.summary}
           isJourneyLoading={journeyQuery.isLoading}
+          progress={progress}
           onPrint={() => window.print()}
           onEdit={() => setIsEditing(true)}
           moreItems={[

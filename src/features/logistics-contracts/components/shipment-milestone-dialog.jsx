@@ -16,20 +16,12 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { MetaFormDialog } from '@/shared/components/meta-form-dialog.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
-import { formatDateInputValue } from '@/shared/config/date-input-format.js';
+import { formatDateInputValue, todayIsoDate } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { useShipmentMilestoneMutations } from '../hooks/use-shipment-journey-query.js';
 
 const NOTE_MAX = 500;
-
-/** Local calendar date as ISO "YYYY-MM-DD". */
-function todayIso() {
-  const now = new Date();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${now.getFullYear()}-${month}-${day}`;
-}
 
 /**
  * @param {import('../types/index.js').ShipmentJourneyStep} step
@@ -72,7 +64,7 @@ export function ShipmentMilestoneDialog({
     shipmentId,
   );
   const [values, setValues] = useState({
-    completedOn: step.completedOn ?? todayIso(),
+    completedOn: step.completedOn ?? todayIsoDate(),
     note: step.note ?? '',
   });
   const [dateError, setDateError] = useState('');
