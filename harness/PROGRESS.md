@@ -1,5 +1,18 @@
 # Progress Log
 
+## 2026-09-26 — Schedule / free time: follow-up checks
+
+- Chrome (26KCT03/LOT-01, CIF, 5 cont, user's login): "Lịch tàu & Free
+  time" tab and "Ngày container" dialog render (counts pills, quick entry,
+  one row per container + depot); closed without saving; no console
+  errors. Journey card foot "0/5 cont" when no date yet (was "0/5 cont · —").
+- Day inputs: placeholder "0" (`FormattedNumberTextInput` gains an
+  optional `placeholder`).
+- verify.sh passed (`harness/runs/20260926-214303-1364/`).
+- Not done: alerts seen with real data (no shipment has cut-offs / free
+  time yet; covered by BE API tests); `db/sample-data.sql` not re-imported
+  on the dev DB (known guard conflict, see BE PROGRESS).
+
 ## 2026-09-26 — Shipment schedule history, DEM / DET free time, container dates, alerts
 
 - BE-kt-xnk `add-shipment-schedule-free-time` (395c363, 695a30f, 5e106e2).
