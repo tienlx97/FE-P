@@ -6,7 +6,6 @@ import {
   formatPeriodDate,
   formatPriceChange,
   productsIn,
-  sliceRange,
   toPriceRows,
 } from './fuel-prices.js';
 
@@ -60,11 +59,6 @@ test('productsIn keeps known order, then unknown codes', () => {
     productsIn(PERIODS).map((product) => product.code),
     ['E10_RON95_III', 'KEROSENE_2K', 'ZZ'],
   );
-});
-
-test('sliceRange keeps the last n rows', () => {
-  assert.deepEqual(sliceRange([1, 2, 3], '2'), [2, 3]);
-  assert.deepEqual(sliceRange([1, 2, 3], 'all'), [1, 2, 3]);
 });
 
 test('formats prices, changes and dates', () => {

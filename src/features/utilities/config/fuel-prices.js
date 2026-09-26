@@ -130,20 +130,3 @@ export function formatPriceChange(change) {
   const sign = change > 0 ? '+' : '−';
   return `${sign}${priceFormatter.format(Math.abs(change))}`;
 }
-
-/** Chart range options: the last n periods, or all. */
-export const CHART_RANGES = [
-  { value: '8', label: '8 kỳ' },
-  { value: '16', label: '16 kỳ' },
-  { value: 'all', label: 'Tất cả' },
-];
-
-/**
- * @template T
- * @param {T[]} rows
- * @param {string} range a `CHART_RANGES` value
- * @returns {T[]}
- */
-export function sliceRange(rows, range) {
-  return range === 'all' ? rows : rows.slice(-Number(range));
-}

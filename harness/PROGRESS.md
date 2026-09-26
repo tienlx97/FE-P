@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-09-26 — Xăng dầu chart: time axis + range selection
+
+- x axis is real time (`time` = UTC ms of the period day, linear scale)
+  instead of one band per period — periods are irregular (extra ones in
+  the 03/2026 crisis), multi-year data stays proportional. Ticks dd/MM,
+  MM/yyyy past ~13 months (`config/fuel-chart-range.js`, tested).
+- Range: quick presets 3 / 6 tháng, Năm nay, 12 tháng, Tất cả (counted
+  from the latest period), "Tuỳ chọn" + `DateRangeInput` (min/max = data,
+  same presets inside), and an overview strip (whole history, the window
+  shaded by `FuelRangeHighlight`) with lab `ChartBrush` to drag a window.
+  `ChartBrush` is remounted after each drag so its own overlay clears.
+- A range starting between periods gets a carried point with the price
+  then in effect ("dd/MM/yyyy · giá kỳ …" in the tooltip).
+- Card tag shows "from – to · n kỳ". Chart rows carry only the shown
+  products as numbers (the lab tooltip snaps on every numeric key).
+- PVOIL (pvoil.com.vn/tin-gia-xang-dau) is behind a Cloudflare bot
+  challenge: not usable as a server-side source.
+- Checked in Chrome: 3 tháng → 24/06–24/09, brush → 01/06–15/08 (12 kỳ),
+  no console errors. verify.sh passed (`harness/runs/20260926-131417-572/`).
+
 ## 2026-09-26 — Tiện ích › Giá trị: Meta page header, module tabs, Meta fields
 
 - User picked: Meta inputs, Meta page header, tabs for the 2 modules.
