@@ -28,7 +28,7 @@ export const FUEL_MARKETS = [
 export const FUEL_PRODUCTS = [
   { code: 'E10_RON95_III', label: 'Xăng E10 RON 95-III', isDefault: true },
   { code: 'E10_RON95_V', label: 'Xăng E10 RON 95-V' },
-  { code: 'RON95_III', label: 'Xăng RON 95-III' },
+  { code: 'RON95_III', label: 'Xăng RON 95-III', isDefault: true },
   { code: 'RON95_V', label: 'Xăng RON 95-V' },
   { code: 'E5_RON92_II', label: 'Xăng E5 RON 92-II', isDefault: true },
   { code: 'DO_005S_II', label: 'Dầu DO 0,05S-II', isDefault: true },

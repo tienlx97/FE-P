@@ -1,5 +1,16 @@
 # Progress Log
 
+## 2026-09-26 — Xăng dầu chart: gaps for unpriced periods
+
+- BE now holds 49 VN periods since 31/12/2025 (BE-kt-xnk sample data).
+- Lab `ChartLine` draws a missing value as 0, so RON 95-III (until 05/2026)
+  / E10 (from 06/2026) / dầu hỏa gaps dove to the axis. New
+  `FuelPriceLine` (a `<Chart>` child on `useChart()`) breaks the line
+  instead. RON 95-III is shown by default next to E10.
+- Checked in Chrome ("Tất cả", 49 periods): continuous RON 95-III → E10,
+  no NaN paths, 12 ms frames. verify.sh passed
+  (`harness/runs/20260926-125559-1105/`).
+
 ## 2026-09-26 — Tiện ích › Xăng dầu: BE data, Việt Nam tab, chart filters, news
 
 - Needs BE-kt-xnk `fuel-price-periods` (`1213f0d`; dev API rebuilt,

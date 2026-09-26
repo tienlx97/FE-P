@@ -16,7 +16,6 @@ import {
   ChartAxis,
   ChartGrid,
   ChartLegend,
-  ChartLine,
   ChartTooltip,
   useChartColors,
 } from '@astryxdesign/lab';
@@ -30,6 +29,7 @@ import {
   formatFuelPrice,
   sliceRange,
 } from '../config/fuel-prices.js';
+import { FuelPriceLine } from './fuel-price-line.jsx';
 import { PriceWithChange } from './fuel-price-parts.jsx';
 
 /** @typedef {import('../config/fuel-prices.js').FuelPriceRow} FuelPriceRow */
@@ -120,11 +120,11 @@ export function FuelPriceChart({ rows, products }) {
             tickFormat={(value) => formatFuelPrice(Number(value))}
           />
           {visible.map(({ code }) => (
-            <ChartLine
+            <FuelPriceLine
               key={code}
               dataKey={code}
               color={colorOf(code)}
-              dots={data.length <= 20}
+              hasDots={data.length <= 24}
             />
           ))}
           <ChartTooltip
