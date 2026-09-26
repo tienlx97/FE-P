@@ -1,9 +1,11 @@
 'use client';
 
 import { VStack } from '@astryxdesign/core/VStack';
+import { Fuel } from 'lucide-react';
 import { useState } from 'react';
 
 import {
+  MetaPageHeader,
   MetaTabNav,
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
@@ -28,6 +30,16 @@ export function FuelPriceUtility({ articles }) {
   return (
     <MetaThemeProvider>
       <VStack gap={6} hAlign="stretch">
+        <MetaPageHeader
+          trail={[
+            { label: 'Logistics', href: '/logistics' },
+            { label: 'Tiện ích' },
+            { label: 'Xăng dầu' },
+          ]}
+          icon={Fuel}
+          title="Giá xăng dầu"
+          description="Giá bán lẻ qua từng kỳ điều hành, biểu đồ biến động và tin tức mới nhất."
+        />
         <MetaTabNav
           tabs={FUEL_MARKETS.map(({ id, label }) => ({ id, label }))}
           activeId={market.id}

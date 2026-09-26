@@ -47,6 +47,7 @@ export {
   MetaMetricsCard,
   MetaOverviewSummaryCard,
 } from './overview-summary-card.jsx';
+export { MetaPageHeader } from './page-header.jsx';
 export { MetaPagination } from './pagination.jsx';
 export {
   MetaPartyBankBody,

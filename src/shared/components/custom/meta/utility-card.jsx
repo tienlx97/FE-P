@@ -522,6 +522,10 @@ const styles = stylex.create({
     // its lint rule just doesn't know them.
     // eslint-disable-next-line @stylexjs/valid-styles
     '--meta-field-height': 'var(--spacing-10)',
+    // Meta form fields: the inset radius of the drawers' inputs, not
+    // Astryx's small element radius.
+    // eslint-disable-next-line @stylexjs/valid-styles
+    '--meta-field-radius': 'var(--meta-radius-inset)',
     borderColor: 'var(--color-border-emphasized)',
     borderRadius: 'var(--meta-radius-inset)',
     boxShadow: 'var(--meta-shadow-card)',

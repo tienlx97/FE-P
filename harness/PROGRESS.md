@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-09-26 — Tiện ích › Giá trị: Meta page header, module tabs, Meta fields
+
+- User picked: Meta inputs, Meta page header, tabs for the 2 modules.
+- New `MetaPageHeader` (`custom/meta/page-header.jsx`): supporting
+  breadcrumb (current page bold) + card with icon tile, h1, description,
+  optional pills. Used by /value and /fuel (header moved from the server
+  pages into the client utilities — icons can't cross the RSC boundary).
+- /value: `MetaTabNav` "Đọc số tiền bằng chữ" / "Chia đợt thanh toán";
+  both modules stay mounted (inactive one `display: none`) so input
+  survives a tab switch. VStack does not forward `hidden` — use xstyle.
+- `MetaUtilityCard` sets `--meta-field-radius: var(--meta-radius-inset)`:
+  inputs / unit boxes take the 12px Meta form radius like the drawers.
+- Checked in Chrome: tab switch keeps 10,000.25 + its words, input group
+  radius 12px, no console errors. verify.sh passed
+  (`harness/runs/20260926-130440-360/`).
+
 ## 2026-09-26 — Xăng dầu chart: gaps for unpriced periods
 
 - BE now holds 49 VN periods since 31/12/2025 (BE-kt-xnk sample data).
