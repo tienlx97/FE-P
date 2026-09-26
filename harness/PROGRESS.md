@@ -13,10 +13,13 @@
   occurrence point, "Abnormal" pill, ~8 rows then scroll). Picking fills
   name + Cost Nature; the picked fee's occurrence point + note sit under
   the name. Replaces the old name chips.
-- verify.sh passed (`harness/runs/20260926-170053-539/`). NOT checked in
-  Chrome: the dev DB's documented / seed accounts return "Invalid
-  credentials" (passwords changed locally), so the drawer could not be
-  opened.
+- verify.sh passed (`harness/runs/20260926-170053-539/`). Checked in
+  Chrome (26KCT27/LOT-01, test login from the user): group meanings on
+  the cards, LOG-03 lists 24/24 in workbook order, "demurrage" → 1/24,
+  picking it fills the name + Abnormal and shows "Origin port · Container
+  nằm trong cảng quá free time."; no console errors. Nothing saved. The
+  documented / seed dev accounts don't log in on this DB (passwords
+  changed locally).
 
 ## 2026-09-26 — Shipment drawer: POL / POD pickers, SI / VGM time field
 
