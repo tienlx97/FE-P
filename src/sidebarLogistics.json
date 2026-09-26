@@ -53,6 +53,20 @@
       "title": "Cảng đến",
       "path": "/logistics/ports",
       "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
+      "hasSectionHeader": true,
+      "sectionHeader": "TIỆN ÍCH"
+    },
+    {
+      "title": "Giá trị",
+      "path": "/logistics/utilities/value",
+      "allowedPermissions": ["logistics:view"]
+    },
+    {
+      "title": "Xăng dầu",
+      "path": "/logistics/utilities/fuel",
+      "allowedPermissions": ["logistics:view"]
     }
   ]
 }

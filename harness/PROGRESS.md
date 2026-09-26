@@ -1,5 +1,22 @@
 # Progress Log
 
+## 2026-09-26 — Sidebar "TIỆN ÍCH": Giá trị + Xăng dầu (FE only)
+
+- New feature `src/features/utilities/`. `/logistics/utilities/value`
+  "Giá trị": (1) amount + USD/VNĐ + Tiếng Việt/English → words
+  (`config/number-to-words.js`, digit-string based, ≤ 15 integer digits;
+  USD cents "xu"/"cents", VND no decimals); (2) total + installments, each
+  by "Tỷ lệ %" (value = total × %) or "Số tiền", with value + words, sum /
+  remaining + warning banner. When the split covers the total exactly, the
+  last installment takes the rounding remainder (30/70 of 10,000.25 →
+  3,000.08 + 7,000.17). Copy button on every words box.
+- `/logistics/utilities/fuel` "Xăng dầu": placeholder EmptyState — spec
+  not given yet.
+- Sidebar section "TIỆN ÍCH" (`logistics:view`, covered by the `/logistics`
+  route rule).
+- Checked in Chrome (dev :3000): vi/en words, 30/70 split, remaining 0.00.
+- verify.sh passed (`harness/runs/20260926-113053-80/`).
+
 ## 2026-09-26 — Nơi giao hàng = text; shipment places; contracts list totals fixes
 
 - Needs BE-kt-xnk `shipment-place-of-delivery` (`c87eed8`; dev API rebuilt,
