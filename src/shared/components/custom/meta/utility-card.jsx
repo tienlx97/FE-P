@@ -118,6 +118,7 @@ export function MetaSegmentedField({ label, value, onChange, options }) {
             key={option.value}
             value={option.value}
             label={option.label}
+            xstyle={styles.segmentedItem}
           />
         ))}
       </SegmentedControl>
@@ -548,11 +549,16 @@ const styles = stylex.create({
   segmented: {
     backgroundColor: 'var(--meta-surface-container-low)',
     borderColor: 'var(--color-border-emphasized)',
-    borderRadius: 'var(--meta-radius-inset)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',
     height: 'var(--meta-field-height, var(--spacing-10))',
+    padding: 'var(--spacing-1)',
     width: '100%',
+  },
+  // Fills the track, so the selected pill sits on an even inset all round
+  // (the theme keeps track and item pill-shaped, i.e. concentric).
+  segmentedItem: {
+    height: '100%',
   },
   wordsBox: {
     backgroundColor: 'var(--meta-surface-container-low)',
