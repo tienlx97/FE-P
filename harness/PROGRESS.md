@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-09-26 — Xăng dầu: 8 years of PVOIL data, multi-year presets, paged history
+
+- BE now holds 305 VN periods 2018-08-22 → 2026-09-24 from PVOIL
+  (BE-kt-xnk `fuel-price-periods`).
+- Range presets add "3 năm" / "5 năm" ("12 tháng" → "1 năm"); the overview
+  strip uses the exact data span as its x domain (the auto one ran past
+  the last period). History table pages 20 periods at a time
+  (`MetaPagination`).
+- Checked in Chrome: "Tất cả" = 22/08/2018 – 24/09/2026 · 305 kỳ, MM/yyyy
+  ticks, no update banner (PVOIL periods are protected from the sync), no
+  console errors. verify.sh passed (`harness/runs/20260926-133331-34/`).
+
 ## 2026-09-26 — Xăng dầu chart: time axis + range selection
 
 - x axis is real time (`time` = UTC ms of the period day, linear scale)

@@ -22,6 +22,10 @@ test('presetRange counts back from the latest period, clamped to the first', () 
     start: '2025-12-31',
     end: '2026-09-24',
   });
+  assert.deepEqual(presetRange('36m', '2018-08-22', '2026-09-24'), {
+    start: '2023-09-24',
+    end: '2026-09-24',
+  });
   assert.deepEqual(presetRange('all', '2025-12-31', '2026-09-24'), {
     start: '2025-12-31',
     end: '2026-09-24',

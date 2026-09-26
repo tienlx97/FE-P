@@ -269,6 +269,8 @@ export function FuelPriceChart({ rows, products }) {
             data={overview}
             xKey="time"
             yKeys={codes}
+            // Exact data span (the auto domain is "niced" past the last period).
+            xDomain={[isoToTime(firstIso), isoToTime(lastIso)]}
             height={88}
             margin={OVERVIEW_MARGIN}
             yBaseline="data"

@@ -17,6 +17,7 @@ import { useMemo, useState } from 'react';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import {
   MetaInfoNote,
+  MetaPagination,
   MetaPill,
   MetaRowActions,
   MetaUtilityCard,
@@ -41,6 +42,9 @@ import { PriceChangePill, PriceWithChange } from './fuel-price-parts.jsx';
 import { FuelPricePeriodDrawer } from './fuel-price-period-drawer.jsx';
 
 /** @typedef {import('../config/fuel-prices.js').FuelPriceRow} FuelPriceRow */
+
+/** History rows per page (newest first). */
+const HISTORY_PAGE_SIZE = 20;
 
 /** The drawer's products when the market has no period yet. */
 const DEFAULT_PRODUCTS = FUEL_PRODUCTS.filter((product) => product.isDefault);
@@ -148,6 +152,14 @@ function CurrentPrices({ latest, products }) {
  * }} props
  */
 function PriceHistory({ rows, products, onAdd, onEdit, onDelete }) {
+  const [page, setPage] = useState(1);
+  const newestFirst = [...rows].reverse();
+  const totalPages = Math.max(1, Math.ceil(rows.length / HISTORY_PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows = newestFirst.slice(
+    (currentPage - 1) * HISTORY_PAGE_SIZE,
+    currentPage * HISTORY_PAGE_SIZE,
+  );
   const columns = [
     {
       key: 'label',
@@ -206,12 +218,22 @@ function PriceHistory({ rows, products, onAdd, onEdit, onDelete }) {
           />
         </HStack>
         <Table
-          data={[...rows].reverse()}
+          data={pageRows}
           columns={columns}
           idKey="date"
           density="compact"
           hasHover
         />
+        {totalPages > 1 ? (
+          <MetaPagination
+            page={currentPage}
+            pageSize={HISTORY_PAGE_SIZE}
+            totalCount={rows.length}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            itemLabel="kỳ"
+          />
+        ) : null}
       </VStack>
     </MetaUtilityCard>
   );

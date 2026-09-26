@@ -15,7 +15,9 @@ export const RANGE_PRESETS = [
   { value: '3m', label: '3 tháng', months: 3 },
   { value: '6m', label: '6 tháng', months: 6 },
   { value: 'ytd', label: 'Năm nay' },
-  { value: '12m', label: '12 tháng', months: 12 },
+  { value: '12m', label: '1 năm', months: 12 },
+  { value: '36m', label: '3 năm', months: 36 },
+  { value: '60m', label: '5 năm', months: 60 },
   { value: 'all', label: 'Tất cả' },
 ];
 
