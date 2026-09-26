@@ -13,14 +13,14 @@ import {
   LayoutFooter,
   LayoutHeader,
 } from '@astryxdesign/core/Layout';
+import { List, ListItem } from '@astryxdesign/core/List';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
-import { Token } from '@astryxdesign/core/Token';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { Check, CircleCheck, Plus, ReceiptText } from 'lucide-react';
+import { Check, CircleCheck, Plus, ReceiptText, Search } from 'lucide-react';
 import { useId, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
@@ -36,6 +36,11 @@ import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
+import {
+  groupMeaning,
+  matchingFee,
+  recommendedFees,
+} from '../config/cost-item-templates.js';
 import { formatVndAmount } from '../config/currencies.js';
 import { useShipmentCostItemTemplatesQuery } from '../hooks/use-shipment-cost-item-templates-query.js';
 import { useShipmentCostLineForm } from '../hooks/use-shipment-cost-line-form.js';
@@ -65,8 +70,11 @@ const COST_NATURES = /** @type {const} */ ([
  * one (`costLine`) — Figma 125:11995 "Thêm chi phí logistics". Fixed
  * header (code + incoterm), a muted canvas with two boxed sections —
  * "Phân loại" (the 8 LOG groups as selectable cards, Cost Nature as two
- * option cards) and "Khoản chi phí" (name with template suggestion chips,
- * amount, invoice number, provider, note) — a live "after saving" preview,
+ * option cards; each group card shows its plain meaning) and "Khoản chi
+ * phí" (name, then the group's recommended fees — the LOG 01-08 catalog,
+ * searchable by Vietnamese name or invoice keyword; picking one fills the
+ * name and Cost Nature and shows where it occurs + its classification note
+ * — then amount, invoice number, provider, note) — a live "after saving" preview,
  * and a fixed footer with the unsaved-changes hint. Closing with changes
  * asks first. Saving resends the shipment's cost list
  * (`useShipmentCostLineForm`).
@@ -110,16 +118,27 @@ export function ShipmentCostLineDrawer({
   });
   const { values, setField, fieldStatuses } = form;
 
+  const [feeQuery, setFeeQuery] = useState('');
   const templatesQuery = useShipmentCostItemTemplatesQuery();
+  const templates = templatesQuery.data?.success
+    ? templatesQuery.data.costItemTemplates
+    : [];
   const selectedCategory = costCategories.find(
     (category) => category.id === values.costCategoryId,
   );
-  const suggestions = selectedCategory
-    ? (templatesQuery.data?.success
-        ? templatesQuery.data.costItemTemplates
-        : []
-      ).filter((template) => template.costCategoryId === selectedCategory.id)
+  const groupFeeCount = selectedCategory
+    ? recommendedFees(templates, selectedCategory.id).length
+    : 0;
+  const fees = selectedCategory
+    ? recommendedFees(templates, selectedCategory.id, feeQuery)
     : [];
+  const pickedFee = matchingFee(templates, values.costCategoryId, values.name);
+
+  /** @param {import('../types/index.js').ShipmentCostItemTemplate} fee */
+  function pickFee(fee) {
+    setField('name', fee.name.slice(0, NAME_MAX));
+    setField('costNature', fee.defaultCostNature);
+  }
 
   // "After saving" preview: the other lines + this one as it stands.
   const otherCosts = shipment.costs.filter((cost) => cost.id !== costLine?.id);
@@ -211,9 +230,10 @@ export function ShipmentCostLineDrawer({
                               key={category.id}
                               label={`${category.code} · ${category.name}`}
                               isSelected={isSelected}
-                              onChange={() =>
-                                setField('costCategoryId', category.id)
-                              }
+                              onChange={() => {
+                                setField('costCategoryId', category.id);
+                                setFeeQuery('');
+                              }}
                               padding={3}
                               xstyle={[
                                 styles.option,
@@ -256,6 +276,15 @@ export function ShipmentCostLineDrawer({
                                 >
                                   {category.name.toLocaleUpperCase('vi')}
                                 </Text>
+                                {category.note ? (
+                                  <Text
+                                    size="sm"
+                                    color="secondary"
+                                    maxLines={2}
+                                  >
+                                    {groupMeaning(category.note)}
+                                  </Text>
+                                ) : null}
                               </VStack>
                             </SelectableCard>
                           );
@@ -360,37 +389,89 @@ export function ShipmentCostLineDrawer({
                         onChange={(value) =>
                           setField('name', value.slice(0, NAME_MAX))
                         }
-                        placeholder="Ví dụ: O/F, THC xuất, D/O"
+                        placeholder="Chọn loại phí bên dưới hoặc tự nhập"
                         status={fieldStatuses.name}
                         statusVariant="detached"
                         width="100%"
                       />
-                      <VStack gap={1.5} hAlign="stretch" xstyle={styles.hints}>
+                      {pickedFee?.note || pickedFee?.occurrencePoint ? (
+                        <Text size="sm" color="secondary">
+                          {[pickedFee.occurrencePoint, pickedFee.note]
+                            .filter(Boolean)
+                            .join(' · ')}
+                        </Text>
+                      ) : null}
+                    </VStack>
+
+                    <VStack gap={2} hAlign="stretch">
+                      <FieldLabel
+                        label="Loại phí khuyến nghị"
+                        counter={
+                          selectedCategory && groupFeeCount > 0
+                            ? `${fees.length}/${groupFeeCount}`
+                            : undefined
+                        }
+                      />
+                      {!selectedCategory || groupFeeCount === 0 ? (
                         <Text size="sm" color="meta-subtle">
                           {!selectedCategory
-                            ? 'Chọn nhóm chi phí để xem gợi ý'
-                            : suggestions.length > 0
-                              ? `Gợi ý cho ${selectedCategory.code}:`
-                              : `Chưa có gợi ý cho ${selectedCategory.code}.`}
+                            ? 'Chọn nhóm chi phí để xem các loại phí khuyến nghị.'
+                            : `Chưa có loại phí khuyến nghị cho ${selectedCategory.code}.`}
                         </Text>
-                        {suggestions.length > 0 ? (
-                          <HStack gap={1.5} wrap="wrap">
-                            {suggestions.map((template) => (
-                              <Token
-                                key={template.id}
-                                label={template.name}
-                                size="md"
-                                xstyle={[
-                                  styles.chip,
-                                  template.name === values.name.trim() &&
-                                    styles.chipSelected,
-                                ]}
-                                onClick={() => setField('name', template.name)}
-                              />
-                            ))}
-                          </HStack>
-                        ) : null}
-                      </VStack>
+                      ) : (
+                        <>
+                          <TextInput
+                            label="Tìm loại phí"
+                            isLabelHidden
+                            startIcon={Search}
+                            hasClear
+                            value={feeQuery}
+                            onChange={setFeeQuery}
+                            placeholder="Tìm theo tên hoặc từ khóa invoice (THC, demurrage…)"
+                            width="100%"
+                          />
+                          {fees.length === 0 ? (
+                            <Text size="sm" color="meta-subtle">
+                              Không có loại phí nào khớp — có thể tự nhập tên ở
+                              trên.
+                            </Text>
+                          ) : (
+                            <List
+                              density="compact"
+                              hasDividers
+                              header={
+                                <Text size="sm" color="meta-subtle">
+                                  Chọn một loại phí để điền tên và Cost Nature
+                                </Text>
+                              }
+                              xstyle={styles.feeList}
+                            >
+                              {fees.map((fee) => (
+                                <ListItem
+                                  key={fee.id}
+                                  label={fee.name}
+                                  description={[fee.nameEn, fee.occurrencePoint]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                                  isSelected={fee.id === pickedFee?.id}
+                                  onClick={() => pickFee(fee)}
+                                  endContent={
+                                    fee.id === pickedFee?.id ? (
+                                      <Icon
+                                        icon={CircleCheck}
+                                        size="md"
+                                        color="accent"
+                                      />
+                                    ) : fee.defaultCostNature === 'Abnormal' ? (
+                                      <MetaPill label="Abnormal" tone="warning" />
+                                    ) : null
+                                  }
+                                />
+                              ))}
+                            </List>
+                          )}
+                        </>
+                      )}
                     </VStack>
 
                     <VStack gap={1} hAlign="stretch">
@@ -741,16 +822,15 @@ const styles = stylex.create({
     height: 'var(--spacing-2)',
     width: 'var(--spacing-2)',
   },
-  hints: {
-    paddingTop: 'var(--spacing-1)',
-  },
-  chip: {
-    cursor: 'pointer',
-  },
-  chipSelected: {
-    backgroundColor: 'var(--color-accent)',
-    borderColor: 'var(--color-accent)',
-    color: 'var(--color-on-accent)',
+  // LOG-03 has 24 fees: about eight rows show, the rest scroll.
+  feeList: {
+    backgroundColor: 'var(--color-background-card)',
+    borderColor: 'var(--color-border)',
+    borderRadius: 'var(--meta-radius-inset)',
+    borderStyle: 'solid',
+    borderWidth: 'var(--border-width)',
+    maxHeight: 'calc(var(--spacing-10) * 8)',
+    overflowY: 'auto',
   },
   preview: {
     backgroundColor: 'var(--meta-accent-tint-strong)',

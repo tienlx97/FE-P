@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-09-26 — log-cost-item-recommendations: LOG fees in "Thêm chi phí"
+
+- BE `log-cost-item-catalog` (BE-kt-xnk 3d2fcb2) serves the workbook's 106
+  fees with `nameEn` / `defaultCostNature` / `occurrencePoint` / `note` /
+  `sortOrder`, and a `note` per group. Type updated.
+- `config/cost-item-templates.js` (tested): `recommendedFees` (group +
+  dấu-insensitive search over name and invoice keyword), `matchingFee`,
+  `groupMeaning`.
+- `ShipmentCostLineDrawer`: group cards show the group's plain meaning;
+  "Loại phí khuyến nghị" = search + compact `List` (name, keyword ·
+  occurrence point, "Abnormal" pill, ~8 rows then scroll). Picking fills
+  name + Cost Nature; the picked fee's occurrence point + note sit under
+  the name. Replaces the old name chips.
+- verify.sh passed (`harness/runs/20260926-170053-539/`). NOT checked in
+  Chrome: the dev DB's documented / seed accounts return "Invalid
+  credentials" (passwords changed locally), so the drawer could not be
+  opened.
+
 ## 2026-09-26 — Shipment drawer: POL / POD pickers, SI / VGM time field
 
 - "Cảng/nơi xếp hàng (POL)" / "Cảng đến (POD)" in the shipment drawer are

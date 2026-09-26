@@ -609,13 +609,19 @@ export {};
  */
 
 /**
- * Autocomplete-suggestion catalog for `ShipmentCostLine.name` — lookup only,
- * does NOT constrain the free-text `name` on an actual cost line.
- * `costCategoryId` is the suggested default group for the suggestion.
+ * Recommended fee type ("loại phí khuyến nghị") of a cost group — the LOG
+ * 01-08 catalog (BE `log-cost-item-catalog`, 106 seeded fees). Picking one
+ * fills a cost line's `name` + `costNature`; lookup only, it does NOT
+ * constrain the free-text `name` on an actual cost line.
  * @typedef {Object} ShipmentCostItemTemplate
  * @property {string} id
  * @property {string} name
  * @property {string} costCategoryId
+ * @property {string | null} nameEn - English name / invoice keyword
+ * @property {ShipmentCostNature} defaultCostNature
+ * @property {string | null} occurrencePoint - where in the flow it occurs
+ * @property {string | null} note - classification rule / scope
+ * @property {number} sortOrder - position within the group (server-assigned)
  */
 
 /**
