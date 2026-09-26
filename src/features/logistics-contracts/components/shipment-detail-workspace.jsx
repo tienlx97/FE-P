@@ -133,7 +133,8 @@ function containerEventLabel(done, total, dates) {
     : range.from === range.to
       ? formatDisplayDate(range.from)
       : `${formatDisplayDate(range.from)} – ${formatDisplayDate(range.to)}`;
-  return total > 1 ? `${done}/${total} cont · ${when}` : when;
+  if (total <= 1) return when;
+  return range ? `${done}/${total} cont · ${when}` : `${done}/${total} cont`;
 }
 
 /**
