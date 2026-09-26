@@ -75,8 +75,9 @@ export async function createPort(values) {
     method: 'POST',
     errorMessage: GENERIC_CREATE_ERROR,
     body: {
+      Kind: values.kind,
       CountryId: values.countryId,
-      Code: values.code,
+      Code: values.kind === 'Port' ? values.code : null,
       Name: values.name,
       FullName: values.fullName || null,
     },

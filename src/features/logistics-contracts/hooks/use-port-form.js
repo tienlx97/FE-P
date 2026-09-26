@@ -12,6 +12,7 @@ import { useCreatePortMutation } from './use-ports-query.js';
  */
 function emptyValues(countryId, countryCode) {
   return {
+    kind: 'Port',
     countryId: countryId ?? '',
     code: countryCode ?? '',
     name: '',
@@ -73,6 +74,12 @@ export function usePortForm({
    */
   function setField(field, value) {
     setValues((current) => {
+      if (field === 'kind') {
+        return {
+          ...current,
+          kind: /** @type {import('../types/index.js').PortKind} */ (value),
+        };
+      }
       if (field === 'countryId' && current.code.length <= 2) {
         return { ...current, countryId: value, code: codeOf(value) };
       }

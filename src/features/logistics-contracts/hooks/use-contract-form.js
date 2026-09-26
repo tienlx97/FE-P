@@ -53,7 +53,9 @@ function portOption(port) {
   return {
     id: port.id,
     name: port.fullName || port.name,
-    label: `${port.name} (${port.code})`,
+    label: port.code
+      ? `${port.name} (${port.code})`
+      : `${port.name} (Nhà máy / Kho)`,
   };
 }
 

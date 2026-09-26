@@ -152,12 +152,19 @@ export {};
  */
 
 /**
+ * `Port` = UN/LOCODE port ("Cảng"); `Facility` = factory/warehouse
+ * ("Nhà máy / Kho", e.g. the EXW place of loading) with no UN/LOCODE.
+ * @typedef {'Port' | 'Facility'} PortKind
+ */
+
+/**
  * "Cảng đến" catalog entry (BE-kt-xnk `port-catalog-unlocode`) — a
  * UN/LOCODE port of one `Country`. Lookup / suggestion only: it does NOT
  * constrain `Contract.placeOfLoading` / `placeOfDischarge`, which stay free text.
  * @typedef {Object} Port
  * @property {string} id
- * @property {string} code - UN/LOCODE, e.g. "VNCLI"
+ * @property {string | null} code - UN/LOCODE, e.g. "VNCLI"; null for a factory/warehouse
+ * @property {PortKind} kind
  * @property {string} name - short name, e.g. "Cát Lái"
  * @property {string | null} fullName - long / display name
  * @property {string | null} subdivision - ISO 3166-2 subdivision code without the country prefix
@@ -500,6 +507,7 @@ export {};
 
 /**
  * @typedef {Object} PortFormValues
+ * @property {PortKind} kind
  * @property {string} countryId
  * @property {string} code
  * @property {string} name

@@ -192,7 +192,7 @@ export function PortsList() {
       filter: 'code',
       renderCell: (port) => (
         <Text weight="medium" hasTabularNumbers xstyle={styles.nowrap}>
-          {port.code}
+          {port.code ?? 'Nhà máy / Kho'}
         </Text>
       ),
     },

@@ -49,7 +49,7 @@ export function QuickCreatePortDialog({
     <FormDialog
       isOpen={isOpen}
       onOpenChange={handleOpenChange}
-      title="Thêm cảng"
+      title="Thêm cảng / nhà máy"
       submitLabel="Thêm"
       width={560}
       draft={{ values: form.values }}
