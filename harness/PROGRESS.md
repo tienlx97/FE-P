@@ -1,5 +1,28 @@
 # Progress Log
 
+## 2026-09-26 — Tiện ích › Xăng dầu: BE data, Việt Nam tab, chart filters, news
+
+- Needs BE-kt-xnk `fuel-price-periods` (`1213f0d`; dev API rebuilt,
+  migration applied, fuel sample data imported).
+- Prices now come from BE (`api/fuel-prices.js`, `hooks/use-fuel-prices.js`);
+  the static list is gone. Meta layout: `MetaTabNav` with one tab per
+  `FUEL_MARKETS` entry (only "Việt Nam" now), `MetaUtilityCard` sections,
+  `MetaPill` change pills (tăng = danger, giảm = success).
+- "Giá hôm nay đã thay đổi" banner: `source-check` (cached 30 min) → "Cập
+  nhật giá" runs `sync`. History table: edit / delete per period, "Nhập giá
+  kỳ mới" drawer (date + one price per product, PUT replaces the period).
+- Chart: product toggles (ToggleButtonGroup, ≥ 1 on), range 8 / 16 / all,
+  left margin 64 so y-axis prices are no longer cut off. `ChartLegend` moved
+  inside `<Chart>` — it is an SVG foreignObject; outside it React logged
+  "<foreignObject> is using incorrect casing" (also in the first version).
+- "Tin tức giá xăng dầu": page (server) fetches Google News RSS
+  (`api/fuel-news.js`, revalidate 1 h, 5 s timeout, http(s) links only),
+  newest 6; hidden when the feed fails.
+- Checked in Chrome: real sync added E10 RON 95-V / DO 0,001S-V to all 10
+  periods, single-product filter, drawer, news list; no console errors.
+- verify.sh passed (`harness/runs/20260926-123738-141/`; the run before
+  failed only on a Google Fonts download during build).
+
 ## 2026-09-26 — Tiện ích › Xăng dầu: giá xăng dầu theo kỳ + chart (astryx-lab)
 
 - `/logistics/utilities/fuel` replaces the placeholder: "Giá hiện hành"

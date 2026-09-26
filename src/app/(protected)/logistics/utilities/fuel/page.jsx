@@ -3,7 +3,7 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 
-import { FuelPriceUtility } from '@/features/utilities/index.js';
+import { fetchFuelNews, FuelPriceUtility } from '@/features/utilities/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
 
 export const metadata = {
@@ -11,7 +11,9 @@ export const metadata = {
 };
 
 /** Access: `/logistics` rule (`logistics:view`) in `routeAccessRules`. */
-export default function LogisticsFuelUtilityPage() {
+export default async function LogisticsFuelUtilityPage() {
+  const articles = await fetchFuelNews();
+
   return (
     <PageContentShell>
       <VStack gap={6} hAlign="stretch">
@@ -23,10 +25,11 @@ export default function LogisticsFuelUtilityPage() {
           </Breadcrumbs>
           <Heading level={1}>Giá xăng dầu</Heading>
           <Text as="p" color="secondary">
-            Giá bán lẻ xăng dầu trong nước qua từng kỳ điều hành.
+            Giá bán lẻ xăng dầu qua từng kỳ điều hành, biểu đồ biến động và tin
+            tức mới nhất.
           </Text>
         </VStack>
-        <FuelPriceUtility />
+        <FuelPriceUtility articles={articles} />
       </VStack>
     </PageContentShell>
   );

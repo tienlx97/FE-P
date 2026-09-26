@@ -1,106 +1,52 @@
 /**
- * Petrolimex retail prices (vùng 1, đ/lít), one entry per price-setting
- * period (the weekly Thursday cycle), oldest first. Source: the published
- * period table on giaxanghomnay.com/lich-su-gia-xang (checked 2026-09-26).
- * Add a new period by appending a row — every view derives from this list.
+ * "Tiện ích › Xăng dầu": markets (one tab each), known products and the
+ * period → table/chart row transform. Prices come from BE
+ * (`/api/v1/fuel-prices/{market}`).
  */
 
-/** @typedef {'e10Ron95' | 'e5Ron92' | 'diesel' | 'kerosene'} FuelProductKey */
+/** @typedef {import('../types/index.js').FuelPricePeriod} FuelPricePeriod */
 
-/** @type {ReadonlyArray<{ key: FuelProductKey, label: string }>} */
+/**
+ * One tab per market; `hasSource` = BE can sync it from a public page.
+ * @type {ReadonlyArray<{ id: string, label: string, market: string, sourceLabel?: string, note: string }>}
+ */
+export const FUEL_MARKETS = [
+  {
+    id: 'vn',
+    label: 'Việt Nam',
+    market: 'VN',
+    sourceLabel: 'giaxanghomnay.com',
+    note: 'Giá bán lẻ tối đa vùng 1 của Petrolimex (đ/lít), điều hành theo chu kỳ thứ Năm hằng tuần. Từ 01/06/2026 xăng E10 RON 95 thay xăng RON 95-III khoáng.',
+  },
+];
+
+/**
+ * Products in display order; `isDefault` ones are shown in the chart first.
+ * Codes BE's VN source produces — unknown codes still show, after these.
+ * @type {ReadonlyArray<{ code: string, label: string, isDefault?: boolean }>}
+ */
 export const FUEL_PRODUCTS = [
-  { key: 'e10Ron95', label: 'Xăng E10 RON 95-III' },
-  { key: 'e5Ron92', label: 'Xăng E5 RON 92-II' },
-  { key: 'diesel', label: 'Dầu DO 0,05S-II' },
-  { key: 'kerosene', label: 'Dầu hỏa 2-K' },
+  { code: 'E10_RON95_III', label: 'Xăng E10 RON 95-III', isDefault: true },
+  { code: 'E10_RON95_V', label: 'Xăng E10 RON 95-V' },
+  { code: 'RON95_III', label: 'Xăng RON 95-III' },
+  { code: 'RON95_V', label: 'Xăng RON 95-V' },
+  { code: 'E5_RON92_II', label: 'Xăng E5 RON 92-II', isDefault: true },
+  { code: 'DO_005S_II', label: 'Dầu DO 0,05S-II', isDefault: true },
+  { code: 'DO_0001S_V', label: 'Dầu DO 0,001S-V' },
+  { code: 'KEROSENE_2K', label: 'Dầu hỏa 2-K', isDefault: true },
 ];
 
 /**
- * @typedef {{ date: string } & Record<FuelProductKey, number>} FuelPricePeriod
- * `date` is ISO `YYYY-MM-DD` (the period's effective day).
- */
-
-/** @type {ReadonlyArray<FuelPricePeriod>} */
-export const FUEL_PRICE_PERIODS = [
-  {
-    date: '2026-07-23',
-    e10Ron95: 21430,
-    e5Ron92: 20880,
-    diesel: 25760,
-    kerosene: 26650,
-  },
-  {
-    date: '2026-07-30',
-    e10Ron95: 22850,
-    e5Ron92: 22380,
-    diesel: 27620,
-    kerosene: 27400,
-  },
-  {
-    date: '2026-08-06',
-    e10Ron95: 22320,
-    e5Ron92: 21720,
-    diesel: 27540,
-    kerosene: 26260,
-  },
-  {
-    date: '2026-08-13',
-    e10Ron95: 22110,
-    e5Ron92: 21230,
-    diesel: 27230,
-    kerosene: 26170,
-  },
-  {
-    date: '2026-08-20',
-    e10Ron95: 22660,
-    e5Ron92: 21830,
-    diesel: 28540,
-    kerosene: 27290,
-  },
-  {
-    date: '2026-08-27',
-    e10Ron95: 22600,
-    e5Ron92: 21760,
-    diesel: 28080,
-    kerosene: 26630,
-  },
-  {
-    date: '2026-09-03',
-    e10Ron95: 23270,
-    e5Ron92: 22480,
-    diesel: 27740,
-    kerosene: 26730,
-  },
-  {
-    date: '2026-09-10',
-    e10Ron95: 24230,
-    e5Ron92: 23740,
-    diesel: 28480,
-    kerosene: 28370,
-  },
-  {
-    date: '2026-09-17',
-    e10Ron95: 25630,
-    e5Ron92: 25130,
-    diesel: 29940,
-    kerosene: 31470,
-  },
-  {
-    date: '2026-09-24',
-    e10Ron95: 27080,
-    e5Ron92: 26390,
-    diesel: 30490,
-    kerosene: 30020,
-  },
-];
-
-/**
- * @typedef {FuelPricePeriod & {
+ * @typedef {{
+ *   date: string,
  *   label: string,
- *   changes: Record<FuelProductKey, number | undefined>,
- * }} FuelPriceRow
- * `label` is `dd/MM/yyyy`; `changes[key]` is the đ/lít change vs the
- * previous period (undefined for the first one).
+ *   source: string,
+ *   prices: Record<string, number | undefined>,
+ *   changes: Record<string, number | undefined>,
+ * } & Record<string, unknown>} FuelPriceRow
+ * One period: `label` dd/MM/yyyy, `prices[code]`, and `changes[code]` = the
+ * đ/lít change vs the previous period that priced the same product. Prices
+ * are also spread as `row[code]` for the chart's `yKeys`.
  */
 
 /** @param {string} isoDate */
@@ -110,23 +56,64 @@ export function formatPeriodDate(isoDate) {
 }
 
 /**
- * Periods (oldest first) with their display date and the per-product change
- * from the period before.
+ * The products present in `periods`: known ones in `FUEL_PRODUCTS` order,
+ * then unknown codes by name.
+ * @param {ReadonlyArray<FuelPricePeriod>} periods
+ * @returns {Array<{ code: string, label: string, isDefault: boolean }>}
+ */
+export function productsIn(periods) {
+  /** @type {Map<string, string>} */
+  const names = new Map();
+  for (const period of periods) {
+    for (const item of period.items) {
+      if (!names.has(item.productCode)) {
+        names.set(item.productCode, item.productName);
+      }
+    }
+  }
+  const known = FUEL_PRODUCTS.filter((product) => names.has(product.code)).map(
+    (product) => ({ ...product, isDefault: Boolean(product.isDefault) }),
+  );
+  const unknown = [...names]
+    .filter(([code]) => !FUEL_PRODUCTS.some((product) => product.code === code))
+    .map(([code, label]) => ({ code, label, isDefault: false }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'vi'));
+  return [...known, ...unknown];
+}
+
+/**
+ * Periods (oldest first) as rows with the change vs the previous price of
+ * each product.
  * @param {ReadonlyArray<FuelPricePeriod>} periods
  * @returns {FuelPriceRow[]}
  */
-export function withPriceChanges(periods) {
-  return periods.map((period, index) => {
-    const previous = index > 0 ? periods[index - 1] : undefined;
-    const changes = /** @type {Record<FuelProductKey, number | undefined>} */ (
-      Object.fromEntries(
-        FUEL_PRODUCTS.map(({ key }) => [
-          key,
-          previous ? period[key] - previous[key] : undefined,
-        ]),
-      )
-    );
-    return { ...period, label: formatPeriodDate(period.date), changes };
+export function toPriceRows(periods) {
+  const sorted = [...periods].sort((a, b) =>
+    a.effectiveDate.localeCompare(b.effectiveDate),
+  );
+  /** @type {Record<string, number>} */
+  const lastPrice = {};
+
+  return sorted.map((period) => {
+    /** @type {Record<string, number | undefined>} */
+    const prices = {};
+    /** @type {Record<string, number | undefined>} */
+    const changes = {};
+    for (const item of period.items) {
+      prices[item.productCode] = item.price;
+      const previous = lastPrice[item.productCode];
+      changes[item.productCode] =
+        previous === undefined ? undefined : item.price - previous;
+      lastPrice[item.productCode] = item.price;
+    }
+    return {
+      ...prices,
+      date: period.effectiveDate,
+      label: formatPeriodDate(period.effectiveDate),
+      source: period.source,
+      prices,
+      changes,
+    };
   });
 }
 
@@ -142,4 +129,21 @@ export function formatPriceChange(change) {
   if (change === 0) return '0';
   const sign = change > 0 ? '+' : '−';
   return `${sign}${priceFormatter.format(Math.abs(change))}`;
+}
+
+/** Chart range options: the last n periods, or all. */
+export const CHART_RANGES = [
+  { value: '8', label: '8 kỳ' },
+  { value: '16', label: '16 kỳ' },
+  { value: 'all', label: 'Tất cả' },
+];
+
+/**
+ * @template T
+ * @param {T[]} rows
+ * @param {string} range a `CHART_RANGES` value
+ * @returns {T[]}
+ */
+export function sliceRange(rows, range) {
+  return range === 'all' ? rows : rows.slice(-Number(range));
 }
