@@ -102,8 +102,8 @@ export function MetaUtilityCard({ icon, title, tag, description, children }) {
  */
 export function MetaSegmentedField({ label, value, onChange, options }) {
   return (
-    <VStack gap={1.5} hAlign="stretch">
-      <Text as="span" size="sm" weight="medium">
+    <VStack gap={1} hAlign="stretch">
+      <Text as="span" weight="medium">
         {label}
       </Text>
       <SegmentedControl
@@ -129,7 +129,7 @@ export function MetaSegmentedField({ label, value, onChange, options }) {
 /**
  * Tinted "Bằng chữ" box: optional uppercase caption over the words, and a
  * copy button. `isCompact` is the per-installment variant (no caption,
- * regular weight).
+ * medium weight, tighter padding).
  * @param {{
  *   words: string,
  *   placeholder: string,
@@ -182,7 +182,6 @@ export function MetaWordsBox({
           ) : null}
           <Text
             as="p"
-            size={isCompact ? 'sm' : undefined}
             weight={words ? (isCompact ? 'medium' : 'semibold') : 'normal'}
             color={words ? 'primary' : 'meta-subtle'}
           >
@@ -341,7 +340,7 @@ export function MetaValueFigure({ label, index, value, unit }) {
 
   return (
     <VStack gap={1} hAlign="stretch">
-      <Text as="span" size="sm" weight="medium">
+      <Text as="span" weight="medium">
         {label}
       </Text>
       <HStack gap={1.5} vAlign="end" wrap="nowrap" xstyle={styles.figure}>
