@@ -57,8 +57,8 @@ test('free time needs the days of its mode', () => {
 });
 
 test('free time summary', () => {
-  assert.equal(freeTimeSummary({ mode: 'Separate', demDays: 7, detDays: 5, combinedDays: null }), 'DEM 7 + DET 5 ngày');
-  assert.equal(freeTimeSummary({ mode: 'Combined', demDays: null, detDays: null, combinedDays: 14 }), 'Combined 14 ngày');
+  assert.equal(freeTimeSummary({ mode: 'Separate', demDays: 7, detDays: 5, combinedDays: null }), 'Chi tiết: DEM 7 · DET 5 ngày');
+  assert.equal(freeTimeSummary({ mode: 'Combined', demDays: null, detDays: null, combinedDays: 14 }), 'Combined: DEM + DET 14 ngày');
   assert.equal(freeTimeSummary(null), '—');
 });
 

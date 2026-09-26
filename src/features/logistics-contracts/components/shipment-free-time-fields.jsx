@@ -14,7 +14,8 @@ import { FormattedNumberTextInput } from '@/shared/components/formatted-number-t
 const NONE = 'none';
 
 /**
- * Free time of one side: none / separate DEM + DET / combined, in days
+ * Free time of one side: none / "Chi tiết" (DEM days and DET days, two
+ * clocks) / "Combined" (one DEM + DET total, one clock), in days
  * (calendar days, the start day = day 1). Used by the shipment drawer and
  * "Cập nhật lịch tàu".
  * @param {{
@@ -68,7 +69,7 @@ export function ShipmentFreeTimeFields({
         isDisabled={isDisabled}
       >
         <SegmentedControlItem value={NONE} label="Chưa có" />
-        <SegmentedControlItem value="Separate" label="DEM + DET" />
+        <SegmentedControlItem value="Separate" label="Chi tiết" />
         <SegmentedControlItem value="Combined" label="Combined" />
       </SegmentedControl>
       {value.mode === 'Separate' ? (
@@ -101,7 +102,7 @@ export function ShipmentFreeTimeFields({
       ) : null}
       {value.mode === 'Combined' ? (
         <FormattedNumberTextInput
-          label="Combined"
+          label="Combined (DEM + DET)"
           value={value.combinedDays}
           onChange={(days) => set('combinedDays', days)}
           units="ngày"

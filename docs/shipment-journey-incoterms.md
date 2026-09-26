@@ -243,8 +243,9 @@ danh sách Shipment có khối **"Lô hàng cần chú ý"**. Bối cảnh vận
 - Một lô có từ 1 đến 20 cont, tùy dự án.
 - Một người nhập liệu, vào các thời điểm: nhận booking từ forwarder, sau
   khi lấy cont, khi hãng tàu báo delay, khi tàu chạy / đến.
-- Free time DEM / DET khác nhau theo từng lô; có lô tính **tách riêng**, có
-  lô tính **gộp (combined)**.
+- Free time DEM / DET khác nhau theo từng lô, có hai loại: **chi tiết** (số
+  ngày DEM và số ngày DET rõ ràng, vd. 7 DEM / 10 DET) và **combined** (DEM +
+  DET = một số ngày, vd. 21 ngày).
 - Chưa gặp rớt cont → không xử lý rớt tàu / tách lô.
 
 Mục tiêu: **quản lý theo ngoại lệ**. Người dùng nhập ít nhất có thể; hệ
@@ -289,8 +290,10 @@ Thuật ngữ (đồng hồ chạy từ sự kiện bắt đầu đến sự ki�
 
 Nhập theo **từng lô, từng đầu**, chọn cách tính:
 
-- **Tách riêng**: số ngày DEM + số ngày DET.
-- **Gộp**: một số ngày combined.
+- **Chi tiết**: số ngày DEM và số ngày DET — hai đồng hồ riêng (vd. 7 DEM /
+  10 DET, 14 DEM / 7 DET).
+- **Combined**: DEM + DET = một số ngày — một đồng hồ (vd. 21 ngày: dùng 10
+  ngày trong cảng thì còn 11 ngày ngoài cảng).
 
 Đầu nào áp dụng theo Incoterm:
 
@@ -305,9 +308,9 @@ Nhập theo **từng lô, từng đầu**, chọn cách tính:
   hạn do lỗi hãng tàu).
 - Xếp tàu / dỡ hàng dùng ngày của cả lô (ATD / ATA, chưa có thì ETD / ETA
   dự kiến hiện tại). Các sự kiện còn lại theo **từng cont**.
-- Hạn tự tính cho từng cont, ví dụ tách riêng đầu xuất:
+- Hạn tự tính cho từng cont, ví dụ chi tiết đầu xuất:
   hạn hạ bãi = lấy rỗng + DET (không muộn hơn cut-off CY);
-  hạn xếp tàu = hạ bãi + DEM. Gộp: hạn xếp tàu = lấy rỗng + combined.
+  hạn xếp tàu = hạ bãi + DEM. Combined: hạn xếp tàu = lấy rỗng + combined.
 - **Delay làm DEM đầu xuất chạy**: cont đã hạ bãi mà ETD dời → cảnh báo
   "ETD dời 3 ngày, 5/5 cont đã hạ bãi, còn 1 ngày free time".
 - Thay thế ô nhập tay "Hạn trả cont rỗng" hiện nay bằng hạn tự tính.
@@ -324,7 +327,7 @@ cont cùng ngày, sửa riêng cont khác ngày):
 | Lấy rỗng | Đầu xuất (mọi Incoterm trừ EXW) |
 | Đóng hàng | Đã có |
 | Hạ bãi (gate-in) | Đầu xuất |
-| Gate-out cảng đích | Chỉ khi đầu đích tính **tách riêng** DEM / DET |
+| Gate-out cảng đích | Chỉ khi đầu đích tính **chi tiết** DEM / DET |
 | Trả rỗng | Đã có |
 
 Hiển thị: lô 1 cont chỉ hiện ngày; lô nhiều cont hiện "Hạ bãi 3/5 cont",

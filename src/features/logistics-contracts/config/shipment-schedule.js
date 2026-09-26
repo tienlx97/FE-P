@@ -104,14 +104,14 @@ export function freeTimeErrors(values) {
 }
 
 /**
- * "DEM 7 + DET 7 ngày" / "Combined 14 ngày" / "—".
+ * "Chi tiết: DEM 7 · DET 10 ngày" / "Combined: DEM + DET 21 ngày" / "—".
  * @param {import('../types/index.js').ContainerFreeTime | null | undefined} freeTime
  */
 export function freeTimeSummary(freeTime) {
   if (!freeTime) return '—';
   return freeTime.mode === 'Separate'
-    ? `DEM ${freeTime.demDays ?? 0} + DET ${freeTime.detDays ?? 0} ngày`
-    : `Combined ${freeTime.combinedDays ?? 0} ngày`;
+    ? `Chi tiết: DEM ${freeTime.demDays ?? 0} · DET ${freeTime.detDays ?? 0} ngày`
+    : `Combined: DEM + DET ${freeTime.combinedDays ?? 0} ngày`;
 }
 
 /** @type {Record<import('../types/index.js').FreeTimeKind, string>} */
