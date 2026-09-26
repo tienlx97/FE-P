@@ -180,6 +180,14 @@ export function alertMessage(alert) {
       return `ETD dời ${alert.days} ngày so với ban đầu (nay ${due})`;
     case 'ArrivalDelayed':
       return `ETA dời ${alert.days} ngày so với ban đầu (nay ${due})`;
+    case 'BlNotIssued':
+      return `Tàu chạy ${alert.days} ngày (ATD ${due}) mà chưa phát hành B/L`;
+    case 'BlNotReleased':
+      return alert.severity === 'Danger'
+        ? `Hàng đã đến ${due} (${alert.days} ngày) mà chưa giao chứng từ / telex release`
+        : `Còn ${alert.days} ngày hàng đến (${due}), chưa giao chứng từ / telex release`;
+    case 'TransshipmentOverdue':
+      return `Chuyển tải ${alert.port ?? ''}: quá ETD ${due} ${alert.days} ngày, chưa có ATD`;
     default:
       return alert.kind;
   }

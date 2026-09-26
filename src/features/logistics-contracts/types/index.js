@@ -805,6 +805,48 @@ export {};
  * @property {ContainerFreeTime | null} destinationFreeTime
  * @property {ShipmentScheduleSummary} summary
  * @property {ShipmentScheduleRevision[]} revisions - newest first
+ * @property {ShipmentDocuments} [documents]
+ * @property {TransshipmentLeg[]} [transshipmentLegs] - route order
+ */
+
+/**
+ * @typedef {'Original' | 'Surrendered' | 'SeawayBill'} BillOfLadingType
+ */
+
+/**
+ * B/L progress: draft received → issued → released (originals sent /
+ * presented, or telex release). Null dates = not yet.
+ * @typedef {Object} ShipmentDocuments
+ * @property {BillOfLadingType | null} billOfLadingType
+ * @property {string | null} blDraftReceivedOn
+ * @property {string | null} blIssuedOn
+ * @property {string | null} blReleasedOn
+ * @property {string | null} blReleaseReference
+ */
+
+/**
+ * One transshipment port, in route order.
+ * @typedef {Object} TransshipmentLeg
+ * @property {string} port
+ * @property {string | null} vesselName
+ * @property {string | null} voyageNumber
+ * @property {string | null} eta
+ * @property {string | null} ata
+ * @property {string | null} etd
+ * @property {string | null} atd
+ */
+
+/**
+ * One row of the transshipment editor (strings, '' = none).
+ * @typedef {Object} TransshipmentLegFormRow
+ * @property {string} rowKey
+ * @property {string} port
+ * @property {string} vesselName
+ * @property {string} voyageNumber
+ * @property {string} eta
+ * @property {string} ata
+ * @property {string} etd
+ * @property {string} atd
  */
 
 /**
@@ -932,7 +974,7 @@ export {};
  */
 
 /**
- * @typedef {'FreeTimeDueSoon' | 'FreeTimeOverdue' | 'SiCutoffSoon' | 'SiCutoffPassed' | 'CyCutoffSoon' | 'CyCutoffPassed' | 'DepartureDelayed' | 'ArrivalDelayed'} ShipmentAlertKind
+ * @typedef {'FreeTimeDueSoon' | 'FreeTimeOverdue' | 'SiCutoffSoon' | 'SiCutoffPassed' | 'CyCutoffSoon' | 'CyCutoffPassed' | 'DepartureDelayed' | 'ArrivalDelayed' | 'BlNotIssued' | 'BlNotReleased' | 'TransshipmentOverdue'} ShipmentAlertKind
  */
 
 /**
@@ -947,6 +989,7 @@ export {};
  * @property {FreeTimeSide | null} side
  * @property {FreeTimeKind | null} freeTimeKind
  * @property {number | null} containerCount - CY cut-off: containers not gated in
+ * @property {string | null} [port] - transshipment port
  */
 
 /**

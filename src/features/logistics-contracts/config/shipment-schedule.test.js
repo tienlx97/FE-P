@@ -110,6 +110,25 @@ test('alert messages', () => {
   );
 });
 
+test('B/L and transshipment alert messages', () => {
+  /** @param {Partial<import('../types/index.js').ShipmentAlert>} alert */
+  const message = (alert) =>
+    alertMessage({
+      kind: 'BlNotIssued', severity: 'Warning', dueOn: '2026-10-01', days: 3,
+      containerNumber: null, side: null, freeTimeKind: null, containerCount: null, port: null,
+      ...alert,
+    });
+  assert.equal(message({}), 'Tàu chạy 3 ngày (ATD 01/10/2026) mà chưa phát hành B/L');
+  assert.equal(
+    message({ kind: 'BlNotReleased', severity: 'Danger', days: 1 }),
+    'Hàng đã đến 01/10/2026 (1 ngày) mà chưa giao chứng từ / telex release',
+  );
+  assert.equal(
+    message({ kind: 'TransshipmentOverdue', days: 2, port: 'Singapore' }),
+    'Chuyển tải Singapore: quá ETD 01/10/2026 2 ngày, chưa có ATD',
+  );
+});
+
 test('schedule date label shows the delay', () => {
   assert.equal(scheduleDateLabel(null, '2026-10-13', 3), '13/10/2026 · trễ 3 ngày');
   assert.equal(scheduleDateLabel('2026-10-14', '2026-10-13', 0), '14/10/2026');

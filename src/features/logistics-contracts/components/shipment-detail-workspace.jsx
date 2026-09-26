@@ -36,6 +36,7 @@ import { shipmentTrail } from '@/shared/config/breadcrumbs.js';
 import { formatDisplayDate, todayIsoDate } from '@/shared/config/date-input-format.js';
 
 import { dateRange } from '../config/shipment-container-dates.js';
+import { transshipmentRoute } from '../config/shipment-documents.js';
 import {
   isConfirmableMilestone,
   packingDateRange,
@@ -59,11 +60,13 @@ import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { ShipmentAlertsBanner } from './shipment-alerts-banner.jsx';
 import { ShipmentContainerDatesDrawer } from './shipment-container-dates-drawer.jsx';
 import { ShipmentCostPanel } from './shipment-cost-panel.jsx';
+import { ShipmentDocumentsDialog } from './shipment-documents-dialog.jsx';
 import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
 import { ShipmentMilestoneDialog } from './shipment-milestone-dialog.jsx';
 import { ShipmentOverviewPanel } from './shipment-overview-panel.jsx';
 import { ShipmentScheduleDialog } from './shipment-schedule-dialog.jsx';
 import { ShipmentSchedulePanel } from './shipment-schedule-panel.jsx';
+import { ShipmentTransshipmentDrawer } from './shipment-transshipment-drawer.jsx';
 import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
 
 /** @typedef {'overview' | 'schedule' | 'vgm' | 'costs'} ShipmentDetailTab */
@@ -152,6 +155,7 @@ function containerEventLabel(done, total, dates) {
  *   journey: import('../types/index.js').ShipmentJourney,
  *   onStepAction: (step: import('../types/index.js').ShipmentJourneyStep) => void,
  *   canEditEmptyReturn: boolean,
+ *   transshipmentLegs?: import('../types/index.js').TransshipmentLeg[],
  * }} input
  */
 function journeyFor({
@@ -162,6 +166,7 @@ function journeyFor({
   journey,
   onStepAction,
   canEditEmptyReturn,
+  transshipmentLegs,
 }) {
   const { summary, steps, emptyReturn } = journey;
   const details = shipment.operationalDetails;
@@ -252,7 +257,7 @@ function journeyFor({
         return {
           title:
             loadingCode && dischargeCode
-              ? `${loadingCode} → ${dischargeCode}`
+              ? transshipmentRoute(loadingCode, transshipmentLegs, dischargeCode)
               : label,
           footLabel: 'Transit',
           footValue: transitDays === null ? '—' : `~ ${transitDays} ngày`,
@@ -469,6 +474,8 @@ function ShipmentDetailBody({
   );
   const [isContainerDatesOpen, setIsContainerDatesOpen] = useState(false);
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [isDocumentsOpen, setIsDocumentsOpen] = useState(false);
+  const [isTransshipmentOpen, setIsTransshipmentOpen] = useState(false);
 
   const vgmsQuery = useShipmentVgmsQuery(contract.id, shipment.id);
   const journeyQuery = useShipmentJourneyQuery(contract.id, shipment.id);
@@ -519,6 +526,7 @@ function ShipmentDetailBody({
         suppliersById: customersById,
         journey: journeyQuery.data.journey,
         canEditEmptyReturn: vgmsQuery.data?.success === true,
+        transshipmentLegs: schedule?.transshipmentLegs,
         onStepAction: (step) => {
           if (
             step.milestone === 'EmptyReturn' ||
@@ -664,6 +672,8 @@ function ShipmentDetailBody({
               canEdit={vgmsQuery.data?.success === true}
               onUpdateSchedule={() => setIsScheduleOpen(true)}
               onEditContainerDates={() => setIsContainerDatesOpen(true)}
+              onEditDocuments={() => setIsDocumentsOpen(true)}
+              onEditTransshipment={() => setIsTransshipmentOpen(true)}
             />
           ) : null}
           {activeTab === 'vgm' ? (
@@ -716,6 +726,23 @@ function ShipmentDetailBody({
             incoterm={contract.incoterm}
             containers={vgms}
             onClose={() => setIsContainerDatesOpen(false)}
+          />
+        ) : null}
+        {isDocumentsOpen && schedule ? (
+          <ShipmentDocumentsDialog
+            isOpen
+            onOpenChange={setIsDocumentsOpen}
+            contractId={contract.id}
+            shipmentId={shipment.id}
+            documents={schedule.documents}
+          />
+        ) : null}
+        {isTransshipmentOpen && schedule ? (
+          <ShipmentTransshipmentDrawer
+            contractId={contract.id}
+            shipment={shipment}
+            legs={schedule.transshipmentLegs}
+            onClose={() => setIsTransshipmentOpen(false)}
           />
         ) : null}
         {isScheduleOpen && schedule ? (

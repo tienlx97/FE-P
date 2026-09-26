@@ -5,6 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { listShipmentAlerts } from '../api/shipment-alerts.js';
 import {
   getShipmentSchedule,
+  replaceShipmentTransshipment,
+  updateShipmentDocuments,
   updateShipmentSchedule,
 } from '../api/shipment-schedule.js';
 import {
@@ -55,6 +57,40 @@ export function useUpdateShipmentScheduleMutation(contractId, shipmentId) {
           ])
         : undefined,
   });
+}
+
+/**
+ * B/L progress and transshipment legs; both answer with the schedule and
+ * change the alerts (and the routing flag on the shipment).
+ * @param {string} contractId
+ * @param {string} shipmentId
+ */
+export function useShipmentDocumentsMutations(contractId, shipmentId) {
+  const queryClient = useQueryClient();
+  const refresh = (/** @type {{ success: boolean }} */ result) =>
+    result.success
+      ? Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ['logistics-contracts', 'shipments', contractId],
+          }),
+          invalidateShipmentTracking(queryClient),
+        ])
+      : undefined;
+
+  const documents = useMutation({
+    mutationFn: (
+      /** @type {import('../types/index.js').ShipmentDocuments} */ values,
+    ) => updateShipmentDocuments(contractId, shipmentId, values),
+    onSuccess: refresh,
+  });
+  const transshipment = useMutation({
+    mutationFn: (
+      /** @type {import('../types/index.js').TransshipmentLegFormRow[]} */ rows,
+    ) => replaceShipmentTransshipment(contractId, shipmentId, rows),
+    onSuccess: refresh,
+  });
+
+  return { documents, transshipment };
 }
 
 /** Every visible shipment with alerts. */

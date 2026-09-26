@@ -1,5 +1,29 @@
 # Progress Log
 
+## 2026-09-27 — B/L documents, transshipment legs, time-based progress
+
+- BE-kt-xnk 177f463 (`add-shipment-bl-transshipment`), 5cb20f7 (old
+  empty-return endpoint dropped; both changes archived).
+- Schedule tab: "Chứng từ B/L" (type, 3 step pills, "Cập nhật B/L" →
+  `ShipmentDocumentsDialog`), "Chuyển tải" (legs table, "Sửa chuyển tải" →
+  `ShipmentTransshipmentDrawer`: one row per port, ETA/ATA and ETD/ATD
+  stacked, add / remove rows, blank rows dropped). Ocean card title runs
+  through the ports. Alert texts for BlNotIssued / BlNotReleased /
+  TransshipmentOverdue.
+- `MetaFormDrawer` (`src/shared/components/meta-form-drawer.jsx`): the
+  drawer twin of `MetaFormDialog`; "Ngày container" and "Chuyển tải" use it.
+- "TIẾN ĐỘ LỘ TRÌNH" time-based (606fbcb): first container event → ATA /
+  ETA, "còn n ngày đến ETA"; 100% only when every step is done.
+  `todayIsoDate()` shared (fuel-price drawer still has its own copy).
+- Config tested: `shipment-documents.js`, `shipment-schedule.js`.
+- Dev stack API rebuilt (migration `ShipmentBlTransshipment`); draft data
+  extended (`harness/fixtures/seed-shipment-schedule-dev.py`: 26KCT03 B/L
+  original sent + Singapore leg done, 26KCT02 telex draft + Port Klang
+  leg). Re-running the seed on a later day adds one "day shift" revision.
+- Chrome (26KCT02): B/L and transshipment sections render; drawer table
+  checked via the accessibility tree (window kept resizing).
+- verify.sh passed (`harness/runs/20260927-000753-1783/`).
+
 ## 2026-09-26 — "Ngày container" as a drawer; draft data checked end to end
 
 - `ShipmentContainerDatesDrawer` (960px Meta drawer, like the shipment

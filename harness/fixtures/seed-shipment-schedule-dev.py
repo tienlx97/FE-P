@@ -152,6 +152,22 @@ schedule(C_C, C_S, Etd=d(5), Eta=d(25), SiCutoff=t(-1, '17:00'), CyCutoff=t(1, '
          DestinationFreeTime={'Mode': 'Separate', 'DemDays': 5, 'DetDays': 7})
 print('C done')
 
+# ── B/L + transshipment (openspec add-shipment-bl-transshipment).
+# A: original B/L issued and sent; transshipped in Singapore (done).
+call('PUT', f'/contracts/{A_C}/shipments/{A_S}/documents', {
+    'BillOfLadingType': 'Original', 'BlDraftReceivedOn': d(-33), 'BlIssuedOn': d(-29),
+    'BlReleasedOn': d(-24), 'BlReleaseReference': 'DHL 7730012345'}, TOKEN)
+call('PUT', f'/contracts/{A_C}/shipments/{A_S}/transshipment', {'Legs': [
+    {'Port': 'Singapore', 'VesselName': 'PANCON VICTORY', 'VoyageNumber': '2602S',
+     'Eta': d(-26), 'Ata': d(-26), 'Etd': d(-24), 'Atd': d(-23)}]}, TOKEN)
+# B: telex release, draft only; connecting vessel in Port Klang not sailed.
+call('PUT', f'/contracts/{B_C}/shipments/{B_S}/documents', {
+    'BillOfLadingType': 'Surrendered', 'BlDraftReceivedOn': d(-1)}, TOKEN)
+call('PUT', f'/contracts/{B_C}/shipments/{B_S}/transshipment', {'Legs': [
+    {'Port': 'Port Klang', 'VesselName': 'WAN HAI 316', 'VoyageNumber': 'N024',
+     'Eta': d(10), 'Etd': d(12)}]}, TOKEN)
+print('B/L + transshipment done')
+
 alerts = call('GET', '/shipments/alerts', token=TOKEN)
 for row in alerts:
     print(row['shipmentCode'], [(a['kind'], a['days'], a.get('containerNumber')) for a in row['alerts']])

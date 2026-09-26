@@ -10,7 +10,7 @@ lô hàng (`/logistics/contract/[id]/shipment/[shipmentId]`, Figma 115:8469).
   Khi đổi nghiệp vụ, đồng bộ tài liệu với backend rồi chạy bộ kiểm tra của
   cả hai dự án.
 
-Cập nhật lần cuối: 2026-09-26.
+Cập nhật lần cuối: 2026-09-27.
 
 ---
 
@@ -345,15 +345,46 @@ Tính tự động, hiện trên danh sách lô hàng và trang chi tiết:
 ### 4.5 Giai đoạn
 
 1. ✅ Lịch tàu có lịch sử (4.1) + free time tách / gộp và hạn tự tính (4.2).
-2. ✅ Ngày theo từng container, nhập hàng loạt (4.3).
+2. ✅ Ngày theo từng container, nhập hàng loạt (4.3) — drawer "Ngày
+   container", bảng từng container.
 3. ✅ Cảnh báo (4.4).
-4. Để sau: mốc B/L / telex release, chuyển tải, tiền DEM / DET, dữ liệu tự
-   động từ hãng tàu / cảng, thanh "TIẾN ĐỘ LỘ TRÌNH" tính theo thời gian
-   (hiện vẫn tính theo số mốc).
+4. ✅ Chứng từ B/L (4.6), chuyển tải (4.7), thanh tiến độ theo thời gian
+   (4.8) — 2026-09-27.
+5. Để sau: tiền DEM / DET theo biểu phí, dữ liệu tự động từ hãng tàu / cảng.
 
 Đã chốt (2026-09-26): free time tính **từ chính ngày sự kiện** (ngày lấy
 rỗng = ngày 1) và theo **ngày lịch**. Hạn / cảnh báo "sắp hết" = còn ≤ 2
 ngày.
+
+### 4.6 Chứng từ B/L
+
+Với nhà xuất khẩu, giao B/L gắn với thu tiền. Mỗi lô: **loại B/L** (B/L gốc
+— gửi / xuất trình bộ gốc; Surrendered — telex release; Seaway bill — không
+cần release) và 3 bước: **Nhận B/L nháp → B/L phát hành → Giao bộ chứng từ
+gốc / Telex release** (Seaway bill chỉ 2 bước đầu) + số chuyển phát / telex.
+Nhập ở "Cập nhật B/L" (tab "Lịch tàu & Free time").
+
+Cảnh báo (không áp dụng lô "Đã hoàn thành"):
+
+- Tàu đã chạy (ATD) ≥ 3 ngày mà **chưa phát hành B/L**.
+- Còn ≤ 2 ngày đến cảng đích (ATA, không thì ETA) mà **chưa giao chứng từ /
+  telex release** (đỏ nếu hàng đã đến).
+
+### 4.7 Chuyển tải
+
+Danh sách **cảng chuyển tải** theo thứ tự tuyến: cảng, tàu / chuyến nối,
+ETA / ATA, ETD / ATD tại cảng đó (drawer "Chuyển tải", bảng từng chặng).
+Không có chặng = đi thẳng (tự cập nhật "Phương thức vận chuyển"). Thẻ
+Ocean Freight hiện tuyến qua các cảng: "VNSGN → Singapore → THBKK".
+Cảnh báo: chặng đã quá ETD mà chưa có ATD (tàu nối chuyến chưa chạy).
+
+### 4.8 Thanh "TIẾN ĐỘ LỘ TRÌNH"
+
+Tính theo **thời gian**: hôm nay nằm đâu giữa sự kiện container đầu tiên
+(lấy rỗng, không thì đóng hàng) và ngày đến (ATA, không thì ETA), kèm "còn
+n ngày đến ETA" / "quá ETA n ngày" / "đã đến …". 100% chỉ khi mọi mốc hoàn
+thành (vd. CIF đã trả hết cont); chưa xong thì tối đa 99%. Thiếu một trong
+hai ngày thì tính theo số mốc như cũ.
 
 ---
 
@@ -385,3 +416,4 @@ liệu mốc con ở backend).
 | 2026-09-26 | Xác nhận tay chỉ còn ở Import Clearance / Site Delivery (nguyên tắc 6); Packing hiện khoảng ngày đóng; bỏ "(ETD)", "(ETA)", "Dự kiến" ở chân thẻ vì ETD / ETA nhập ngày thực tế; FOB bỏ Pre-carriage | Claude |
 | 2026-09-26 | Thêm mục 4 (đề xuất): lịch tàu có lịch sử khi hãng tàu báo delay, free time DEM / DET tách riêng hoặc gộp, ngày theo từng container, cảnh báo | Claude |
 | 2026-09-26 | Triển khai mục 4 (giai đoạn 1–3); thêm mốc Empty Pickup (FOB / CIF / DDP), nguyên tắc 7 (dữ liệu đẩy tiến độ), chân thẻ dùng ATD / ATA + số ngày trễ, hạn trả rỗng tính từ free time | Claude |
+| 2026-09-27 | Thêm 4.6 chứng từ B/L, 4.7 chuyển tải, 4.8 thanh tiến độ theo thời gian; "Ngày container" thành drawer | Claude |

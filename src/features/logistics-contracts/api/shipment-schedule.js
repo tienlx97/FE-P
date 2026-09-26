@@ -29,6 +29,68 @@ export async function getShipmentSchedule(contractId, shipmentId) {
 }
 
 /**
+ * B/L progress; answers with the schedule. Requires
+ * `logistics:contracts:manage`.
+ * @param {string} contractId
+ * @param {string} shipmentId
+ * @param {import('../types/index.js').ShipmentDocuments} documents
+ * @returns {Promise<{ success: true, schedule: import('../types/index.js').ShipmentSchedule } | { success: false, message: string }>}
+ */
+export async function updateShipmentDocuments(contractId, shipmentId, documents) {
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/shipments/${shipmentId}/documents`,
+    {
+      method: 'PUT',
+      errorMessage: 'Không thể cập nhật B/L',
+      body: {
+        BillOfLadingType: documents.billOfLadingType,
+        BlDraftReceivedOn: documents.blDraftReceivedOn,
+        BlIssuedOn: documents.blIssuedOn,
+        BlReleasedOn: documents.blReleasedOn,
+        BlReleaseReference: documents.blReleaseReference,
+      },
+    },
+  );
+
+  return result.success
+    ? { success: true, schedule: result.data }
+    : { success: false, message: result.message };
+}
+
+/**
+ * Replaces every transshipment leg ([] = direct); answers with the
+ * schedule. Requires `logistics:contracts:manage`.
+ * @param {string} contractId
+ * @param {string} shipmentId
+ * @param {import('../types/index.js').TransshipmentLegFormRow[]} rows
+ * @returns {Promise<{ success: true, schedule: import('../types/index.js').ShipmentSchedule } | { success: false, message: string }>}
+ */
+export async function replaceShipmentTransshipment(contractId, shipmentId, rows) {
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/shipments/${shipmentId}/transshipment`,
+    {
+      method: 'PUT',
+      errorMessage: 'Không thể lưu chuyển tải',
+      body: {
+        Legs: rows.map((row) => ({
+          Port: row.port.trim(),
+          VesselName: row.vesselName || null,
+          VoyageNumber: row.voyageNumber || null,
+          Eta: row.eta || null,
+          Ata: row.ata || null,
+          Etd: row.etd || null,
+          Atd: row.atd || null,
+        })),
+      },
+    },
+  );
+
+  return result.success
+    ? { success: true, schedule: result.data }
+    : { success: false, message: result.message };
+}
+
+/**
  * "Cập nhật lịch tàu": the whole new schedule with why it changed (409 when
  * `version` is stale). Requires `logistics:contracts:manage`.
  * @param {string} contractId
