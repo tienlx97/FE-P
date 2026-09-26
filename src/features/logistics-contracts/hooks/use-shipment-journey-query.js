@@ -21,6 +21,13 @@ export const SHIPMENT_SCHEDULE_QUERY_PREFIX = [
   'shipment-schedule',
 ];
 
+/**
+ * Tracking data changes on user saves (which refresh it explicitly), not on
+ * its own: keep it fresh for 30 s so refocusing the window or remounting a
+ * tab does not refetch the journey, schedule and alerts every time.
+ */
+export const TRACKING_STALE_TIME = 30_000;
+
 /** The cross-shipment alert list. */
 export const SHIPMENT_ALERTS_QUERY_KEY = ['logistics-contracts', 'shipment-alerts'];
 
@@ -51,6 +58,7 @@ export function useShipmentJourneyQuery(contractId, shipmentId) {
     queryFn: () =>
       getShipmentJourney(contractId, /** @type {string} */ (shipmentId)),
     enabled: Boolean(shipmentId),
+    staleTime: TRACKING_STALE_TIME,
   });
 }
 

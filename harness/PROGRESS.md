@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-09-27 — Tracking queries stay fresh 30 s
+
+- Journey, schedule and alert queries get `staleTime` 30 s
+  (`TRACKING_STALE_TIME`): React Query defaults refetched all of them on
+  every window refocus / tab remount; saves already invalidate them.
+- BE-kt-xnk split-query fix (alerts 53 → 12.6 ms, list 51 → 17.5 ms with a
+  heavy draft shipment). Draft data: 26KCT02 now has 13 schedule
+  revisions and 5 transshipment legs (performance test).
+- verify.sh passed (`harness/runs/20260927-065320-89/`).
+
 ## 2026-09-27 — "Container & VGM": container first, VGM later
 
 - BE-kt-xnk d28183f. Tab "VGM" → "Container & VGM"; `MetaVgmPanel` title /

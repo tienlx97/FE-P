@@ -13,6 +13,7 @@ import {
   invalidateShipmentTracking,
   SHIPMENT_ALERTS_QUERY_KEY,
   SHIPMENT_SCHEDULE_QUERY_PREFIX,
+  TRACKING_STALE_TIME,
 } from './use-shipment-journey-query.js';
 
 /**
@@ -25,6 +26,7 @@ export function useShipmentScheduleQuery(contractId, shipmentId) {
     queryFn: () =>
       getShipmentSchedule(contractId, /** @type {string} */ (shipmentId)),
     enabled: Boolean(shipmentId),
+    staleTime: TRACKING_STALE_TIME,
   });
 }
 
@@ -98,5 +100,6 @@ export function useShipmentAlertsQuery() {
   return useQuery({
     queryKey: SHIPMENT_ALERTS_QUERY_KEY,
     queryFn: listShipmentAlerts,
+    staleTime: TRACKING_STALE_TIME,
   });
 }
