@@ -225,6 +225,10 @@ export const metaTheme = defineTheme({
       'color:meta-green': { color: 'var(--meta-green)' },
       // Figma 111:7829: "Luồng Đỏ" customs channel text.
       'color:meta-danger': { color: 'var(--color-error)' },
+      // Figma 156:2 ("Tiện ích › Giá trị"): installment value figures take
+      // the step tone — cobalt-strong, indigo.
+      'color:meta-accent-strong': { color: 'var(--meta-primary-strong)' },
+      'color:meta-indigo': { color: 'var(--meta-indigo)' },
     },
     icon: {
       'color:meta-success': { color: 'var(--meta-emerald-fill)' },

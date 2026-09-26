@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-09-26 — Tiện ích › Giá trị: Meta design from Figma 156:2
+
+- New Meta pieces (`custom/meta/utility-card.jsx`): `MetaUtilityCard`
+  (icon tile + title + "MODULE 0n" tag), `MetaSegmentedField` (tinted
+  track, field height), `MetaWordsBox` ("Bằng chữ" box + copy),
+  `MetaAllocationBar` (split bar + dot legend), `MetaInstallmentItem`,
+  `MetaValueFigure`, `MetaAllocationFooter` ("Còn lại" pill: emerald /
+  amber / red), `MetaInfoNote` + `MetaInlineCode`. Text variants
+  `meta-accent-strong`, `meta-indigo` added to `theme.js` (rebuilt).
+- `/logistics/utilities/value` rebuilt on them (page title, 2 module
+  cards, allocation bar, footer, format note). Old `words-output.jsx`
+  removed.
+- Adapted to Meta, not copied: Inter + tabular numbers instead of the
+  Figma mono fallback, Meta pill segmented controls, sizes on the
+  ADR-0009 scale. Left out: per-installment names ("Tạm ứng hợp đồng" …)
+  and the "Quy chuẩn đọc số →" link (no target page).
+- Checked in Chrome against the Figma screenshot (30/70 split of
+  10,000.25 USD, 100% đã phân bổ, Còn lại 0.00 USD); no console errors.
+- verify.sh passed (`harness/runs/20260926-115039-1094/`).
+
 ## 2026-09-26 — Sidebar "TIỆN ÍCH": Giá trị + Xăng dầu (FE only)
 
 - New feature `src/features/utilities/`. `/logistics/utilities/value`

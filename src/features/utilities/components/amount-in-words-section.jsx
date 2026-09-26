@@ -1,11 +1,13 @@
 'use client';
 
 import { Grid } from '@astryxdesign/core/Grid';
-import { Heading } from '@astryxdesign/core/Heading';
-import { Text } from '@astryxdesign/core/Text';
-import { VStack } from '@astryxdesign/core/VStack';
+import { SpellCheck2 } from 'lucide-react';
 import { useState } from 'react';
 
+import {
+  MetaUtilityCard,
+  MetaWordsBox,
+} from '@/shared/components/custom/meta/index.js';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 
 import { amountToWords, MAX_WORDS_AMOUNT } from '../config/number-to-words.js';
@@ -14,12 +16,11 @@ import {
   CurrencySegments,
   LanguageSegments,
 } from './money-options.jsx';
-import { WordsOutput } from './words-output.jsx';
 
 /** @typedef {import('../config/number-to-words.js').WordsCurrency} WordsCurrency */
 /** @typedef {import('../config/number-to-words.js').WordsLanguage} WordsLanguage */
 
-/** "Đọc số tiền": amount + currency + language → words. */
+/** "Đọc số tiền bằng chữ" (Figma 156:23): amount + currency + language → words. */
 export function AmountInWordsSection() {
   const [amount, setAmount] = useState(
     /** @type {number | undefined} */ (undefined),
@@ -31,16 +32,13 @@ export function AmountInWordsSection() {
   const isTooLarge = typeof amount === 'number' && amount > MAX_WORDS_AMOUNT;
 
   return (
-    <VStack gap={4} hAlign="stretch">
-      <VStack gap={1} hAlign="stretch">
-        <Heading level={2}>Đọc số tiền bằng chữ</Heading>
-        <Text as="p" color="secondary">
-          Nhập số tiền và đơn vị tính để xuất ra số tiền bằng chữ tiếng Việt
-          hoặc tiếng Anh.
-        </Text>
-      </VStack>
-
-      <Grid columns={{ minWidth: 220, max: 3 }} gap={4} align="end">
+    <MetaUtilityCard
+      icon={SpellCheck2}
+      title="Đọc số tiền bằng chữ"
+      tag="Module 01"
+      description="Nhập số tiền và đơn vị tính để xuất ra số tiền bằng chữ tiếng Việt hoặc tiếng Anh."
+    >
+      <Grid columns={{ minWidth: 240, max: 3 }} gap={4} align="end">
         <FormattedNumberTextInput
           label="Số tiền"
           value={amount}
@@ -56,7 +54,11 @@ export function AmountInWordsSection() {
         <LanguageSegments value={language} onChange={setLanguage} />
       </Grid>
 
-      <WordsOutput words={amountToWords(amount, currency, language)} />
-    </VStack>
+      <MetaWordsBox
+        caption="Bằng chữ"
+        words={amountToWords(amount, currency, language)}
+        placeholder="Nhập số tiền để xem bằng chữ"
+      />
+    </MetaUtilityCard>
   );
 }

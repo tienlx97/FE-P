@@ -77,6 +77,17 @@ export {
 export { MetaStatusBadge } from './status-badge.jsx';
 export { MetaTabNav } from './tab-nav.jsx';
 export { MetaThemeProvider } from './theme-provider.jsx';
+export {
+  MetaAllocationBar,
+  MetaAllocationFooter,
+  MetaInfoNote,
+  MetaInlineCode,
+  MetaInstallmentItem,
+  MetaSegmentedField,
+  MetaUtilityCard,
+  MetaValueFigure,
+  MetaWordsBox,
+} from './utility-card.jsx';
 export { MetaVgmPanel } from './vgm-panel.jsx';
 // The *built* theme (`meta.js`), same object `MetaThemeProvider` applies.
 export { metaTheme } from './meta.js';

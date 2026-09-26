@@ -99,3 +99,26 @@ export function summarizeInstallments(amounts, total, currency) {
 
   return { allocated, remaining };
 }
+
+/**
+ * Share of the total, in % (2 decimals); 0 when either side is missing.
+ * @param {number | undefined} amount
+ * @param {number | undefined} total
+ */
+export function shareOfTotal(amount, total) {
+  if (typeof amount !== 'number' || typeof total !== 'number' || total <= 0) {
+    return 0;
+  }
+  return Math.round((amount / total) * 10_000) / 100;
+}
+
+/**
+ * "balanced" when nothing is left, "under" while short (or no total yet),
+ * "over" past the total.
+ * @param {number | undefined} remaining
+ * @returns {'balanced' | 'under' | 'over'}
+ */
+export function allocationStatus(remaining) {
+  if (remaining === undefined || remaining > 0) return 'under';
+  return remaining < 0 ? 'over' : 'balanced';
+}

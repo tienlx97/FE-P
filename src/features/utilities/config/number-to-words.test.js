@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  allocationStatus,
   createInstallment,
   installmentAmount,
   installmentAmounts,
+  shareOfTotal,
   summarizeInstallments,
 } from './installments.js';
 import { amountToWords } from './number-to-words.js';
@@ -101,4 +103,12 @@ test('the last installment absorbs rounding when the split covers the total', ()
 
   const partial = [createInstallment({ mode: 'percent', value: 30 })];
   assert.deepEqual(installmentAmounts(partial, 10_000.25, 'USD'), [3_000.08]);
+});
+
+test('shareOfTotal and allocationStatus describe the split', () => {
+  assert.equal(shareOfTotal(3_000.08, 10_000.25), 30);
+  assert.equal(shareOfTotal(1, undefined), 0);
+  assert.equal(allocationStatus(undefined), 'under');
+  assert.equal(allocationStatus(0), 'balanced');
+  assert.equal(allocationStatus(-0.01), 'over');
 });
