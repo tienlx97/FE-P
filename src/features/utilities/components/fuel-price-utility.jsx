@@ -1,5 +1,6 @@
 'use client';
 
+import { HStack } from '@astryxdesign/core/HStack';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Fuel } from 'lucide-react';
 import { useState } from 'react';
@@ -13,6 +14,7 @@ import {
 import { FUEL_MARKETS } from '../config/fuel-prices.js';
 import { FuelMarketPanel } from './fuel-market-panel.jsx';
 import { FuelNewsSection } from './fuel-news-section.jsx';
+import { FuelSyncButton } from './fuel-sync-button.jsx';
 
 const PANEL_ID = 'fuel-market-panel';
 
@@ -40,13 +42,16 @@ export function FuelPriceUtility({ articles }) {
           title="Giá xăng dầu"
           description="Giá bán lẻ qua từng kỳ điều hành, biểu đồ biến động và tin tức mới nhất."
         />
-        <MetaTabNav
-          tabs={FUEL_MARKETS.map(({ id, label }) => ({ id, label }))}
-          activeId={market.id}
-          onChange={setActiveId}
-          panelId={PANEL_ID}
-          isSticky={false}
-        />
+        <HStack gap={3} hAlign="between" vAlign="center" wrap="wrap">
+          <MetaTabNav
+            tabs={FUEL_MARKETS.map(({ id, label }) => ({ id, label }))}
+            activeId={market.id}
+            onChange={setActiveId}
+            panelId={PANEL_ID}
+            isSticky={false}
+          />
+          <FuelSyncButton key={market.id} market={market} />
+        </HStack>
         <VStack id={PANEL_ID} role="tabpanel" gap={6} hAlign="stretch">
           <FuelMarketPanel key={market.id} market={market} />
         </VStack>

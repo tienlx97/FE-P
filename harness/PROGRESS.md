@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-09-27 — Xăng dầu: "Cập nhật giá" on every market tab
+
+- User: button on both VN and TH tabs. `FuelSyncButton` right of the
+  market tabs (active market; hidden for a market without a source,
+  tooltip names the source). Sync + toast moved to `useFuelPriceSync`
+  (hooks), shared with the update banner; loading shared through a
+  mutation key; the source check is invalidated after a sync. Nothing new
+  → "Giá đã là mới nhất, nguồn không có kỳ mới."
+- Chrome: VN and TH clicks → loading, then that toast (dev DB is up to
+  date); no console errors. verify.sh passed
+  (`harness/runs/20260927-165700-2489/`).
+
 ## 2026-09-27 — Xăng dầu Thái Lan: PTT OR source with history
 
 - User asked whether a Thai site has an API with history: PTT OR's public

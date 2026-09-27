@@ -29,7 +29,7 @@ import {
   useDeleteFuelPricePeriodMutation,
   useFuelPricePeriodsQuery,
   useFuelPriceSourceCheckQuery,
-  useSyncFuelPricesMutation,
+  useFuelPriceSync,
 } from '../hooks/use-fuel-prices.js';
 import { FuelCurrentPrices } from './fuel-current-prices.jsx';
 import { FuelPriceChart } from './fuel-price-chart.jsx';
@@ -46,12 +46,11 @@ import { FuelPricePeriodDrawer } from './fuel-price-period-drawer.jsx';
  * @param {{ market: FuelMarket, hasPeriods: boolean }} props
  */
 function SourceUpdateBanner({ market, hasPeriods }) {
-  const toast = useAppToast();
   const check = useFuelPriceSourceCheckQuery(
     market.market,
     Boolean(market.sourceLabel),
   );
-  const sync = useSyncFuelPricesMutation(market.market);
+  const { sync, isPending } = useFuelPriceSync(market.market);
   const pending = check.data?.success ? check.data.check.pending : [];
 
   if (!market.sourceLabel || !check.data?.success || pending.length === 0) {
@@ -65,17 +64,6 @@ function SourceUpdateBanner({ market, hasPeriods }) {
       ? `Giá xăng dầu đã thay đổi: kỳ ${formatPeriodDate(latest.effectiveDate)}`
       : `${market.sourceLabel} có ${pending.length} kỳ khác với dữ liệu đã lưu`;
 
-  async function handleSync() {
-    const result = await sync.mutateAsync();
-    if (!result.success) {
-      toast({ type: 'error', body: result.message });
-      return;
-    }
-    await check.refetch();
-    const { added, updated } = result.sync;
-    toast({ body: `Đã cập nhật: ${added} kỳ mới, ${updated} kỳ sửa giá.` });
-  }
-
   return (
     <Banner
       status="info"
@@ -87,8 +75,8 @@ function SourceUpdateBanner({ market, hasPeriods }) {
           variant="primary"
           size="sm"
           icon={<Icon icon={RefreshCw} size="sm" />}
-          isLoading={sync.isPending}
-          onClick={handleSync}
+          isLoading={isPending}
+          onClick={sync}
         />
       }
     />
