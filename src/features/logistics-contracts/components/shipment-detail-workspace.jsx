@@ -39,6 +39,7 @@ import { dateRange } from '../config/shipment-container-dates.js';
 import { transshipmentRoute } from '../config/shipment-documents.js';
 import {
   isConfirmableMilestone,
+  isSellerScopeDone,
   packingDateRange,
 } from '../config/shipment-journey.js';
 import {
@@ -280,7 +281,9 @@ function journeyFor({
         };
       case 'EmptyReturn':
         return {
-          title: `Đã trả ${emptyReturn?.returnedCount ?? 0}/${emptyReturn?.containerCount ?? 0} cont`,
+          title: emptyReturn?.containerCount
+            ? `Đã trả ${emptyReturn.returnedCount}/${emptyReturn.containerCount} cont`
+            : 'Chưa ghi nhận container',
           footLabel: emptyReturn?.isComplete ? 'Trả xong' : 'Hạn trả rỗng',
           footValue: formatDisplayDate(
             emptyReturn?.isComplete
@@ -554,7 +557,7 @@ function ShipmentDetailBody({
         )?.from,
         actualArrival: shipment.operationalDetails?.actualArrival,
         eta: shipment.eta,
-        isJourneyDone: journeyData.steps.every((step) => step.state === 'Done'),
+        isJourneyDone: isSellerScopeDone(journeyData),
         today: todayIsoDate(),
       })
     : null;

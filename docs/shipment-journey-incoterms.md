@@ -52,6 +52,15 @@ Cập nhật lần cuối: 2026-09-27.
    container đã lấy rỗng → Packing; mọi container đã hạ bãi → POL; có ATD →
    Ocean Freight; có ATA → POD. Tiến độ = mốc xa nhất giữa Tình trạng, xác
    nhận tay và dữ liệu.
+   Dữ liệu **chỉ đẩy trong các mốc Seller**: vượt qua mốc Seller cuối cùng
+   thì coi như Seller hoàn tất, không mốc Buyer nào thành "Chặng hiện tại"
+   (vd. EXW có ngày hạ bãi, FOB đã có ATD → Seller xong).
+8. **Lô LCL** không có container riêng: không hiện Empty Pickup / Empty
+   Return, không có free time theo container.
+9. **Chưa ghi nhận container nào** thì Empty Return không được theo dõi:
+   lô CIF "Đã hoàn thành" = Seller hoàn tất (không kẹt ở "Chặng hiện tại");
+   thẻ ghi "Chưa ghi nhận container". Thanh tiến độ đạt 100% khi mọi mốc
+   Seller xong (mốc Buyer và Empty Return không theo dõi không tính).
 
 ---
 
@@ -428,3 +437,4 @@ liệu mốc con ở backend).
 | 2026-09-26 | Triển khai mục 4 (giai đoạn 1–3); thêm mốc Empty Pickup (FOB / CIF / DDP), nguyên tắc 7 (dữ liệu đẩy tiến độ), chân thẻ dùng ATD / ATA + số ngày trễ, hạn trả rỗng tính từ free time | Claude |
 | 2026-09-27 | Thêm 4.6 chứng từ B/L, 4.7 chuyển tải, 4.8 thanh tiến độ theo thời gian; "Ngày container" thành drawer | Claude |
 | 2026-09-27 | Container trước, VGM sau: tab "Container & VGM", khai VGM tuỳ chọn (đủ 5 khối lượng hoặc không), cảnh báo SI / VGM đếm cont chưa khai | Claude |
+| 2026-09-27 | Kiểm tra luồng: dữ liệu chỉ đẩy trong mốc Seller (EXW / FOB sau ATD), LCL không có mốc container, CIF hoàn thành không có container không kẹt ở Empty Return (nguyên tắc 7–9) | Claude |

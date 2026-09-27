@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-09-27 — Journey flow check (frontend part)
+
+- BE fix (seller-scope data, LCL, no containers) — see BE PROGRESS.
+- `isSellerScopeDone` (config, tested): the progress bar reaches 100% once
+  every seller step is done (buyer legs and an untracked empty return
+  don't count) — FOB / CIF-without-containers never reached 100% before.
+  Empty Return card: "Chưa ghi nhận container" instead of "Đã trả 0/0 cont".
+- Doc: principles 7–9.
+- verify.sh passed (`harness/runs/20260927-070656-1780/`).
+
 ## 2026-09-27 — Tracking queries stay fresh 30 s
 
 - Journey, schedule and alert queries get `staleTime` 30 s
