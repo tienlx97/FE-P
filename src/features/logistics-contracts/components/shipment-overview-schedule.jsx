@@ -18,6 +18,7 @@ import * as stylex from '@stylexjs/stylex';
 import { List } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import { MetaThemeProvider } from '@/shared/components/custom/meta/index.js';
 import { todayIsoDate } from '@/shared/config/date-input-format.js';
 
 import {
@@ -42,7 +43,7 @@ const CATEGORIES = Object.values(OVERVIEW_CATEGORIES);
  * `/logistics` home: every shipment in progress on the Astryx lab
  * `Schedule`, filling the page (the page itself does not scroll). A bar =
  * departure → arrival, plus cut-off and free-time deadlines. More detail
- * opens in a drawer: "Lô hàng (n)" in the schedule header lists them all,
+ * opens in a drawer (all in the Meta theme, like the shipment pages): "Lô hàng (n)" in the schedule header lists them all,
  * and clicking an event opens its shipment.
  */
 export function ShipmentOverviewSchedule() {
@@ -131,15 +132,21 @@ export function ShipmentOverviewSchedule() {
   };
 
   if (query.isLoading) {
-    return <Skeleton width="100%" height="100%" />;
+    return (
+      <MetaThemeProvider>
+        <Skeleton width="100%" height="100%" />
+      </MetaThemeProvider>
+    );
   }
   if (!query.data?.success) {
     return (
-      <Banner
-        status="error"
-        title={query.data?.message ?? 'Không thể tải các lô hàng đang làm'}
-        container="card"
-      />
+      <MetaThemeProvider>
+        <Banner
+          status="error"
+          title={query.data?.message ?? 'Không thể tải các lô hàng đang làm'}
+          container="card"
+        />
+      </MetaThemeProvider>
     );
   }
 
@@ -148,7 +155,7 @@ export function ShipmentOverviewSchedule() {
     : null;
 
   return (
-    <>
+    <MetaThemeProvider>
       <Schedule
         view={view}
         events={events}
@@ -170,7 +177,7 @@ export function ShipmentOverviewSchedule() {
           onClose={() => setDrawer(null)}
         />
       ) : null}
-    </>
+    </MetaThemeProvider>
   );
 }
 

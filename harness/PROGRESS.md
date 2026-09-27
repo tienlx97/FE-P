@@ -23,6 +23,9 @@
   verify.sh for the default-view change passed on retry
   (`harness/runs/20260927-095128-1454/`); the first run failed only on the
   Google font download in `next build` (JetBrains Mono, network).
+- Meta theme (user request): the schedule page (schedule, skeleton, error)
+  is wrapped in `MetaThemeProvider` like the shipment pages; checked in
+  Chrome (Meta accent on the header buttons and today).
 
 ## 2026-09-27 — Carrier tracking: source "API" on the dates; plan §5 rewritten
 
