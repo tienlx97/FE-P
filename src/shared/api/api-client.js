@@ -87,6 +87,7 @@ async function handleSessionExpired(reason) {
  * @property {string} [errorMessage] Fallback shown when the backend sends no
  *   usable `detail`.
  * @property {boolean} [redirectOnSessionExpiry] Defaults to `true`.
+ * @property {'json' | 'blob'} [responseType] Defaults to `json`.
  */
 
 /**
@@ -108,6 +109,7 @@ export async function apiRequest(path, options = {}) {
     body,
     errorMessage = 'Đã xảy ra lỗi, vui lòng thử lại',
     redirectOnSessionExpiry = true,
+    responseType = 'json',
   } = options;
 
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
@@ -135,7 +137,7 @@ export async function apiRequest(path, options = {}) {
   }
 
   if (response.ok) {
-    return { success: true, data: await readJson(response) };
+    return { success: true, data: responseType === 'blob' ? await response.blob() : await readJson(response) };
   }
 
   if (response.status === 401) {

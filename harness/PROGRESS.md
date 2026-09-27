@@ -1,5 +1,25 @@
 # Progress Log
 
+## 2026-09-27 — Public fuel export per market
+
+- Export dialog now offers Xăng dầu Việt Nam, Xăng dầu Thái Lan, and Cảng nước.
+  Downloads use the API client so request failures appear in the dialog and
+  can be retried without leaving the page. The filenames identify the group.
+- Browser: three options rendered; selecting Việt Nam enabled submit; an API
+  500 showed “Không thể xuất dữ liệu public” in the dialog. Screenshots:
+  `harness/runs/20260927-public-export-market-browser/`. The running Next dev
+  worker failed after the build gate; restarting it restored the proxy. The
+  dev API image was stale and returned the full package for every selector;
+  after rebuilding it, authenticated HTTP responses were 200 with VN-only
+  (305 periods), TH-only (335 periods), and ports-only (249 countries,
+  17,520 ports). The dialog closed after successful VN/TH submit.
+- `verify.sh` passed (`harness/runs/20260927-190427-3645/`). Backend HTTP
+  integration evidence is in `BE-kt-xnk`.
+- Harness gap: the frontend has no automated browser check that captures a
+  successful authenticated file download; the API client has blob/error unit
+  coverage. A stale dev API image silently ignored the `section` selector;
+  the repo has no dev-stack image freshness check.
+
 ## 2026-09-27 — Public export group choice
 
 - “Xuất dữ liệu public” now opens a dialog with Xăng dầu and Cảng nước radio

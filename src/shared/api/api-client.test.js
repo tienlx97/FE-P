@@ -46,3 +46,32 @@ for (const { detail, expectedMessage } of SESSION_END_CASES) {
     }
   });
 }
+
+test('returns a blob for a successful file export', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response('{"version":1}', {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  try {
+    const result = await apiRequest('/api/v1/backups/public-data', { responseType: 'blob' });
+    assert.equal(result.success, true);
+    assert.equal(await result.data.text(), '{"version":1}');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('keeps API error details for a failed file export', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({ detail: 'Xuất dữ liệu thất bại.' }), {
+    status: 400,
+    headers: { 'Content-Type': 'application/json' },
+  });
+  try {
+    const result = await apiRequest('/api/v1/backups/public-data', { responseType: 'blob' });
+    assert.equal(result.success, false);
+    assert.equal(result.message, 'Xuất dữ liệu thất bại.');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

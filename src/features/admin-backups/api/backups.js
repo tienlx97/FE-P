@@ -109,10 +109,20 @@ export function downloadBackupUrl(fileName) {
 
 /**
  * Admin-only JSON export of one public data group.
- * @param {'fuel' | 'ports'} section
+ * @param {'fuel-vn' | 'fuel-th' | 'ports'} section
+ * @returns {Promise<{success: true, blob: Blob, fileName: string} | {success: false, message: string}>}
  */
-export function downloadPublicDataUrl(section) {
-  return `${API_PROXY_PREFIX}/api/v1/backups/public-data?section=${section}`;
+export async function exportPublicData(section) {
+  const result = await apiRequest(`/api/v1/backups/public-data?section=${section}`, {
+    responseType: 'blob',
+    errorMessage: 'Không thể xuất dữ liệu public',
+  });
+  if (!result.success) return result;
+  return {
+    success: true,
+    blob: /** @type {Blob} */ (result.data),
+    fileName: `kt-xnk-public-data-${section}-${new Date().toISOString().slice(0, 10).replaceAll('-', '')}.json`,
+  };
 }
 
 /**
