@@ -56,23 +56,43 @@ Theo chuẩn DCSA Track & Trace (aggregator cũng trả sự kiện tương đư
 4. Lưu **sự kiện gốc** (raw) để tra soát; hiển thị nguồn (Nhập tay / API).
 5. Lỗi hoặc hãng không hỗ trợ → hệ thống vẫn chạy như hiện nay (nhập tay).
 
-## 5. Thiết kế kỹ thuật (tóm tắt)
+## 5. Thiết kế kỹ thuật (đã triển khai, giai đoạn 1)
 
-- **Dữ liệu lô hàng:** hãng tàu (SCAC) + số booking / B/L để tra cứu
-  (kiểm tra model Shipment hiện có trước, bổ sung nếu thiếu).
-- **BE:** interface `ICarrierTrackingProvider` ở Application; các adapter ở
-  Infrastructure (`AggregatorTrackingProvider`, `DcsaTrackingProvider`).
-  Bảng `ShipmentTrackingSubscription` (lô, nguồn, trạng thái, lần đồng bộ cuối)
-  và `ShipmentTrackingEvent` (sự kiện gốc đã chuẩn hoá).
-- **Đồng bộ:** job nền định kỳ (hosted service) cho các lô chưa hoàn tất,
-  hoặc webhook nếu nhà cung cấp hỗ trợ; khoá API lưu trong cấu hình bí mật,
-  không commit.
-- **Áp dụng:** một bước "apply" map sự kiện → trường (mục 3) theo nguyên tắc
-  mục 4; tận dụng các command đã có (UpdateShipmentSchedule,
-  RecordShipmentContainerDates, ReplaceShipmentTransshipmentLegs).
-- **FE:** trạng thái đồng bộ trên tab "Lịch tàu & Free time"; danh sách
-  "Hãng tàu báo khác" để chấp nhận; nút "Đồng bộ ngay".
-- Quy trình repo: tạo change trong `openspec/` + ADR cho lựa chọn nhà cung cấp.
+Chi tiết cho người viết adapter: BE-kt-xnk `docs/carrier-tracking.md`; quyết
+định: ADR-0008; API: `docs/api/ShipmentTracking.md`.
+
+- **Nhận ra hãng tàu:** từ ô "Hãng tàu" (chữ tự do) của lô hàng, so khớp cả
+  từ với bí danh (`KMTC JAKARTA // 2604S` → KMTC). Mã nội bộ, không dùng
+  SCAC: `KMTC`, `HEUNGA`, `NAMSUNG`, `SITC`, `EVERGREEN`, `RCL`, `OOCL`,
+  `YANGMING`, `ONE`. Tra cứu bằng số booking, số B/L và số container của lô.
+- **Adapter theo hãng × version:** interface `ICarrierTrackingAdapter`
+  (Application); mỗi version là một class ở Infrastructure
+  (`Adapters/<Hãng>/<Hãng>TrackingAdapterV<n>`), tách `FetchAsync` (lấy
+  response thô: crawl hoặc API) và `Parse` (đúng định dạng của version đó →
+  sự kiện chuẩn kiểu DCSA). Định dạng đổi → thêm version mới, không sửa
+  version cũ. Registry chọn version ghim trong cấu hình
+  (`CarrierTracking:Carriers:<MÃ>:Version`), không ghim = version cao nhất;
+  đăng ký trùng version → lỗi khi khởi động.
+- **Dữ liệu:** `ShipmentTrackingSubscriptions` (hãng, version adapter, trạng
+  thái, lần thử / đồng bộ cuối, lỗi, ETD / ETA hãng báo lần trước, response
+  thô gần nhất), `ShipmentTrackingEvents` (sự kiện gốc đã chuẩn hoá, lưu một
+  lần theo dấu vân tay, kèm hãng + version, ô đã điền),
+  `ShipmentTrackingDiscrepancies` ("Hãng tàu báo khác").
+- **Áp dụng:** `TrackingReconciler` (Domain) map sự kiện → trường (mục 3)
+  theo nguyên tắc mục 4; ghi bằng các hàm Domain `Shipment.ApplyCarrierDate`
+  / `ApplyCarrierSchedule`, `ShipmentVgm.ApplyCarrierDate` (không qua các
+  command nhập tay, để không đụng kiểm tra version của form).
+- **Đồng bộ:** nút "Đồng bộ ngay" + job nền 6 giờ/lần
+  (`CarrierTracking:SyncIntervalInMinutes`) cho lô chưa hoàn tất, chỉ với
+  hãng có adapter đã cài đặt. Webhook: chưa có (thêm khi một hãng hỗ trợ).
+  Khoá API / tài khoản của hãng lưu trong cấu hình bí mật, không commit.
+- **FE (tab "Lịch tàu & Free time"):** mục "Theo dõi hãng tàu" (hãng,
+  version adapter, trạng thái, "Đồng bộ ngay", "Hãng tàu báo khác" để chấp
+  nhận / giữ giá trị), "Sự kiện từ hãng tàu", và nhãn **API** cạnh ATD /
+  ATA, ngày container, ATA / ATD chuyển tải do hãng tàu báo (nguyên tắc 4;
+  sửa tay sau đó thì nhãn mất).
+- Quy trình repo: openspec `add-carrier-tracking` (BE),
+  `add-carrier-tracking-panel` (FE); ADR-0008.
 
 ## 6. Lộ trình
 
@@ -94,14 +114,14 @@ Aggregator vẫn có thể thêm sau như một adapter cho bất kỳ hãng nà
 
 - [ ] Đăng ký cổng API: Evergreen (liên hệ sales, cần IP máy chủ), KMTC, ONE, Yang Ming.
 - [ ] Hỏi forwarder / hãng: SITC, Heung-A, Namsung, RCL có API hoặc EDI cho khách hàng không.
-- [ ] So sánh giá, độ phủ 9 hãng, điều khoản của ShipsGo / Vizion / Portcast (chưa xác minh — cần hỏi trực tiếp).
+- [ ] (Không bắt buộc — đã chọn tích hợp theo từng hãng) So sánh giá, độ phủ, điều khoản của ShipsGo / Vizion / Portcast nếu sau này cần aggregator cho hãng khó crawl.
 
 ## 8. Các hướng phát triển khác (đang chờ quyết định)
 
 - Tính **chi phí DEM / DET** (số ngày quá hạn × biểu phí).
 - Thêm Incoterm **CFR / FCA**.
 - Gửi **cảnh báo qua email / Zalo**.
-- Deploy 4 migration lên production (portal-ops) — backup DB trước.
+- Deploy 5 migration lên production (portal-ops), gồm `ShipmentCarrierTracking` — backup DB trước.
 - Đổi git remote sang BE-P / FE-P.
 
 ## Nguồn

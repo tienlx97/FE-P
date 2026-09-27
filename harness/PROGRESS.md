@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-09-27 — Carrier tracking: source "API" on the dates; plan §5 rewritten
+
+- Principle 4 "hiển thị nguồn": `carrierSourcedDates` (tested) — a date
+  shows an "API" tag when an event filled / supplied that field with that
+  same date (container by number, leg by port); a later hand edit drops it.
+  Tags on ATD / ATA, container dates, transshipment ATA / ATD; "Lịch tàu"
+  subtitle explains "API". BE: accepting a discrepancy now marks the
+  reporting event as applied.
+- `docs/carrier-tracking-integration-plan.md` §5 rewritten to match the
+  code (adapters per carrier × version, internal codes not SCAC, Domain
+  apply, no webhook yet), §7 aggregator item optional, §8 "5 migrations".
+- verify.sh passed (`harness/runs/20260927-090543-1192/`). Chrome: the page
+  was still loading when checked — tag not seen live (no dev shipment has
+  carrier data yet anyway; covered by the config test).
+
 ## 2026-09-27 — Carrier tracking: section "Theo dõi hãng tàu"
 
 - User decision: one tracking integration per shipping line (crawl or

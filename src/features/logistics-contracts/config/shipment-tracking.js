@@ -74,6 +74,43 @@ export function trackingEventLabel(event) {
   return event.classifier === 'Actual' ? label : `${label} (dự kiến)`;
 }
 
+/** @param {string | null | undefined} value */
+const lettersAndDigits = (value) => (value ?? '').toUpperCase().replace(/[^\p{L}\p{N}]/gu, '');
+
+/**
+ * Principle 4 "hiển thị nguồn": a predicate telling whether a date shown on
+ * the shipment came from the carrier — an event filled (or, accepted,
+ * supplied) that field with that same date. A date changed by hand
+ * afterwards no longer matches, so it reads as hand-entered again.
+ * Container fields match by container number, leg fields by port.
+ * @param {import('../types/index.js').ShipmentTrackingEvent[]} events
+ * @returns {(target: { field: import('../types/index.js').TrackedField, value: string | null | undefined, containerNumber?: string, port?: string }) => boolean}
+ */
+export function carrierSourcedDates(events) {
+  const applied = events.filter((event) => event.appliedTo);
+  return ({ field, value, containerNumber, port }) =>
+    Boolean(value) &&
+    applied.some((event) => {
+      if (event.appliedTo !== field || event.eventAt.slice(0, 10) !== value) return false;
+      if (containerNumber !== undefined && lettersAndDigits(event.containerNumber) !== lettersAndDigits(containerNumber)) {
+        return false;
+      }
+      if (port !== undefined) {
+        const [a, b] = [lettersAndDigits(event.locationName), lettersAndDigits(port)];
+        return a.length > 0 && b.length > 0 && (a.includes(b) || b.includes(a));
+      }
+      return true;
+    });
+}
+
+/** Container date key (VGM record) → tracked field. */
+export const CONTAINER_DATE_TRACKED_FIELD = /** @type {const} */ ({
+  emptyPickedUpOn: 'EmptyPickedUpOn',
+  gatedInOn: 'GatedInOn',
+  destinationGatedOutOn: 'DestinationGatedOutOn',
+  emptyReturnedOn: 'EmptyReturnedOn',
+});
+
 /**
  * The status pill and the explanation under it.
  * @param {import('../types/index.js').ShipmentTracking} tracking

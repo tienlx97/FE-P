@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  carrierSourcedDates,
   discrepancyTargetLabel,
   formatDateTime,
   trackingEventLabel,
@@ -99,4 +100,26 @@ test('events read like the plan table', () => {
     'Tàu rời cảng chuyển tải',
     'Tàu đến cảng (dự kiến)',
   ]);
+});
+
+test('a date is carrier-sourced only while it still equals the date an event filled', () => {
+  /** @param {Partial<import('../types/index.js').ShipmentTrackingEvent>} overrides */
+  const event = (overrides) => ({
+    id: '1', code: 'GateIn', classifier: 'Actual', eventAt: '2026-10-03T08:00:00', locationRole: 'PortOfLoading',
+    locationName: 'Hai Phong', containerNumber: 'TCLU 123456-7', isEmpty: false, vesselName: null, voyageNumber: null,
+    carrierCode: 'KMTC', adapterVersion: 'v1', receivedAt: '', appliedTo: 'GatedInOn', ...overrides,
+  });
+  const isFromCarrier = carrierSourcedDates(/** @type {import('../types/index.js').ShipmentTrackingEvent[]} */ ([
+    event({}),
+    event({ id: '2', code: 'Arrival', eventAt: '2026-10-08T06:00:00', locationName: 'SINGAPORE, SG', containerNumber: null, appliedTo: 'TransshipmentAta' }),
+    event({ id: '3', code: 'Departure', eventAt: '2026-10-05T20:00:00', appliedTo: null }),
+  ]));
+
+  assert.equal(isFromCarrier({ field: 'GatedInOn', value: '2026-10-03', containerNumber: 'TCLU1234567' }), true);
+  assert.equal(isFromCarrier({ field: 'GatedInOn', value: '2026-10-04', containerNumber: 'TCLU1234567' }), false, 'changed by hand');
+  assert.equal(isFromCarrier({ field: 'GatedInOn', value: '2026-10-03', containerNumber: 'MSCU0000000' }), false);
+  assert.equal(isFromCarrier({ field: 'TransshipmentAta', value: '2026-10-08', port: 'Singapore' }), true);
+  assert.equal(isFromCarrier({ field: 'TransshipmentAta', value: '2026-10-08', port: 'Port Klang' }), false);
+  assert.equal(isFromCarrier({ field: 'ActualDeparture', value: '2026-10-05' }), false, 'stored but filled nothing');
+  assert.equal(isFromCarrier({ field: 'ActualDeparture', value: null }), false);
 });

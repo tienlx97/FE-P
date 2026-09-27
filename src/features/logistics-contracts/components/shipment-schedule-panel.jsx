@@ -40,7 +40,17 @@ import {
   tracksDestinationFreeTime,
   tracksOriginFreeTime,
 } from '../config/shipment-schedule.js';
+import {
+  carrierSourcedDates,
+  CONTAINER_DATE_TRACKED_FIELD,
+} from '../config/shipment-tracking.js';
+import { useShipmentTrackingQuery } from '../hooks/use-shipment-tracking-query.js';
 import { ShipmentCarrierTrackingSection } from './shipment-carrier-tracking-section.jsx';
+
+/** Marks a date the carrier supplied (principle 4, "hiển thị nguồn"). */
+function CarrierSourceTag() {
+  return <MetaPill label="API" tone="accent" size="sm" />;
+}
 
 /**
  * Shipment detail "Lịch tàu & Free time" tab: the schedule (original /
@@ -76,6 +86,11 @@ export function ShipmentSchedulePanel({
   onEditDocuments,
   onEditTransshipment,
 }) {
+  const trackingQuery = useShipmentTrackingQuery(contractId, shipmentId);
+  const isFromCarrier = carrierSourcedDates(
+    trackingQuery.data?.success ? trackingQuery.data.tracking.events : [],
+  );
+
   if (isScheduleLoading) {
     return (
       <VStack gap={4} hAlign="stretch">
@@ -119,9 +134,17 @@ export function ShipmentSchedulePanel({
         ),
         actual:
           field === 'etd' || field === 'eta' ? (
-            <Text type="code" weight="bold">
-              {formatDisplayDate(actual[field] ?? undefined)}
-            </Text>
+            <HStack gap={1.5} vAlign="center">
+              <Text type="code" weight="bold">
+                {formatDisplayDate(actual[field] ?? undefined)}
+              </Text>
+              {isFromCarrier({
+                field: field === 'etd' ? 'ActualDeparture' : 'ActualArrival',
+                value: actual[field],
+              }) ? (
+                <CarrierSourceTag />
+              ) : null}
+            </HStack>
           ) : null,
       },
     };
@@ -139,9 +162,18 @@ export function ShipmentSchedulePanel({
       ...Object.fromEntries(
         dateFields.map((field) => [
           field.key,
-          <Text key={field.key} type="code" color="secondary">
-            {formatDisplayDate(container[field.key] ?? undefined)}
-          </Text>,
+          <HStack key={field.key} gap={1.5} vAlign="center">
+            <Text type="code" color="secondary">
+              {formatDisplayDate(container[field.key] ?? undefined)}
+            </Text>
+            {isFromCarrier({
+              field: CONTAINER_DATE_TRACKED_FIELD[field.key],
+              value: container[field.key],
+              containerNumber: container.containerNumber,
+            }) ? (
+              <CarrierSourceTag />
+            ) : null}
+          </HStack>,
         ]),
       ),
       clocks: (
@@ -195,17 +227,27 @@ export function ShipmentSchedulePanel({
       arrival: (
         <VStack gap={0.5}>
           {dateCell(leg.ata || leg.eta)}
-          <Text size="sm" color="meta-subtle">
-            {leg.ata ? 'ATA' : 'ETA'}
-          </Text>
+          <HStack gap={1.5} vAlign="center">
+            <Text size="sm" color="meta-subtle">
+              {leg.ata ? 'ATA' : 'ETA'}
+            </Text>
+            {isFromCarrier({ field: 'TransshipmentAta', value: leg.ata, port: leg.port }) ? (
+              <CarrierSourceTag />
+            ) : null}
+          </HStack>
         </VStack>
       ),
       departure: (
         <VStack gap={0.5}>
           {dateCell(leg.atd || leg.etd)}
-          <Text size="sm" color="meta-subtle">
-            {leg.atd ? 'ATD' : 'ETD'}
-          </Text>
+          <HStack gap={1.5} vAlign="center">
+            <Text size="sm" color="meta-subtle">
+              {leg.atd ? 'ATD' : 'ETD'}
+            </Text>
+            {isFromCarrier({ field: 'TransshipmentAtd', value: leg.atd, port: leg.port }) ? (
+              <CarrierSourceTag />
+            ) : null}
+          </HStack>
         </VStack>
       ),
     },
@@ -248,7 +290,7 @@ export function ShipmentSchedulePanel({
       <MetaShipmentSection
         icon={CalendarClock}
         title="Lịch tàu"
-        subtitle="Ban đầu = lúc nhận booking · Hiện tại = thông báo mới nhất"
+        subtitle="Ban đầu = lúc nhận booking · Hiện tại = thông báo mới nhất · API = do hãng tàu báo"
         pill={
           summary.departureDelayDays
             ? {
