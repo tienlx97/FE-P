@@ -27,6 +27,7 @@ import {
 } from '../config/shipment-overview-schedule.js';
 import { useShipmentOverviewQuery } from '../hooks/use-shipment-overview-query.js';
 import { ShipmentOverviewDrawer } from './shipment-overview-drawer.jsx';
+import { ShipmentOverviewPreview } from './shipment-overview-preview.jsx';
 
 /** @typedef {import('../config/shipment-overview-schedule.js').OverviewFilter} OverviewFilter */
 
@@ -37,7 +38,8 @@ import { ShipmentOverviewDrawer } from './shipment-overview-drawer.jsx';
  * cut-off, free-time end), the color says which kind (blue departs, green
  * arrives, amber deadline, red overdue) and the header filter doubles as
  * that color legend with counts. More detail opens in a drawer: "Lô hàng
- * (n)" lists them all, and clicking an item opens its shipment.
+ * (n)" lists them all, hovering (or focusing) an item shows the
+ * shipment's summary card, and clicking it opens the shipment.
  */
 export function ShipmentOverviewSchedule() {
   const query = useShipmentOverviewQuery();
@@ -67,6 +69,8 @@ export function ShipmentOverviewSchedule() {
     [events, filter],
   );
   const attentionCount = rows.filter(needsAttention).length;
+  const eventsById = useMemo(() => new Map(events.map((event) => [event.id, event])), [events]);
+  const rowsById = useMemo(() => new Map(rows.map((row) => [row.shipmentId, row])), [rows]);
 
   if (query.isLoading) {
     return (
@@ -102,8 +106,13 @@ export function ShipmentOverviewSchedule() {
         today={today}
         items={items}
         onItemClick={(item) => {
-          const event = events.find((candidate) => candidate.id === item.id);
+          const event = eventsById.get(item.id);
           if (event) setDrawer({ shipmentId: event.shipmentId });
+        }}
+        renderItemPreview={(item) => {
+          const event = eventsById.get(item.id);
+          const shipment = event ? rowsById.get(event.shipmentId) : undefined;
+          return event && shipment ? <ShipmentOverviewPreview event={event} shipment={shipment} /> : null;
         }}
         headerStart={
           <SegmentedControl

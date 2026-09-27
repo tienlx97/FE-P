@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-27 — Home schedule: hover card per item
+
+- `MetaSchedule` gains `renderItemPreview` (Astryx `HoverCard`, placement
+  end, flips at the edge); `ShipmentOverviewPreview` summarizes the
+  shipment (kind + date, buyer, route, carrier / vessel, ETD → ETA, status,
+  2 alerts + count). Chrome: hovering "Tàu chạy · 26KCT02/LOT-01" shows
+  the card (KMTC SINGAPORE // 2602S, 04/10 → 20/10, 2 alerts + 3 more).
+
 ## 2026-09-27 — MetaSchedule: the home schedule fully in the Meta theme
 
 - Lab `Schedule` cannot be themed below its root nor swizzled; user chose

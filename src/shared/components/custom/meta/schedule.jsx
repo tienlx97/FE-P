@@ -2,6 +2,7 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { Grid } from '@astryxdesign/core/Grid';
+import { HoverCard } from '@astryxdesign/core/HoverCard';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -44,7 +45,9 @@ const LIST_DAYS = 14;
  * a month grid whose week rows stretch to the card's height, or a 14-day
  * list. Items are one-day, clickable pills with a colored rail (`tone`);
  * past days keep their colors. A month day shows up to `maxPerDay` items,
- * then "+n mục" opens that day in the list view.
+ * then "+n mục" opens that day in the list view. `renderItemPreview`
+ * (optional) shows a hover card on each item — also opened by keyboard
+ * focus.
  * @param {{
  *   label: string,
  *   view: MetaScheduleView,
@@ -54,6 +57,7 @@ const LIST_DAYS = 14;
  *   today: string,
  *   items: MetaScheduleItem[],
  *   onItemClick?: (item: MetaScheduleItem) => void,
+ *   renderItemPreview?: (item: MetaScheduleItem) => import('react').ReactNode,
  *   headerStart?: import('react').ReactNode,
  *   headerEnd?: import('react').ReactNode,
  *   maxPerDay?: number,
@@ -68,6 +72,7 @@ export function MetaSchedule({
   today,
   items,
   onItemClick,
+  renderItemPreview,
   headerStart,
   headerEnd,
   maxPerDay = 3,
@@ -131,13 +136,20 @@ export function MetaSchedule({
           byDay={byDay}
           maxPerDay={maxPerDay}
           onItemClick={onItemClick}
+          renderItemPreview={renderItemPreview}
           onShowDay={(day) => {
             onAnchorChange(day);
             onViewChange('twoWeeks');
           }}
         />
       ) : (
-        <DayList days={listDays} today={today} byDay={byDay} onItemClick={onItemClick} />
+        <DayList
+          days={listDays}
+          today={today}
+          byDay={byDay}
+          onItemClick={onItemClick}
+          renderItemPreview={renderItemPreview}
+        />
       )}
     </VStack>
   );
@@ -150,10 +162,11 @@ export function MetaSchedule({
  *   byDay: Map<string, MetaScheduleItem[]>,
  *   maxPerDay: number,
  *   onItemClick?: (item: MetaScheduleItem) => void,
+ *   renderItemPreview?: (item: MetaScheduleItem) => import('react').ReactNode,
  *   onShowDay: (day: string) => void,
  * }} props
  */
-function MonthGrid({ anchor, today, byDay, maxPerDay, onItemClick, onShowDay }) {
+function MonthGrid({ anchor, today, byDay, maxPerDay, onItemClick, renderItemPreview, onShowDay }) {
   const weeks = monthWeeks(anchor);
 
   return (
@@ -179,7 +192,7 @@ function MonthGrid({ anchor, today, byDay, maxPerDay, onItemClick, onShowDay }) 
             >
               <DayNumber day={day} today={today} isMuted={isOutside} />
               {dayItems.slice(0, maxPerDay).map((item) => (
-                <ScheduleItem key={item.id} item={item} onClick={onItemClick} />
+                <ScheduleItem key={item.id} item={item} onClick={onItemClick} renderPreview={renderItemPreview} />
               ))}
               {hidden > 0 ? (
                 <Button
@@ -204,9 +217,10 @@ function MonthGrid({ anchor, today, byDay, maxPerDay, onItemClick, onShowDay }) 
  *   today: string,
  *   byDay: Map<string, MetaScheduleItem[]>,
  *   onItemClick?: (item: MetaScheduleItem) => void,
+ *   renderItemPreview?: (item: MetaScheduleItem) => import('react').ReactNode,
  * }} props
  */
-function DayList({ days, today, byDay, onItemClick }) {
+function DayList({ days, today, byDay, onItemClick, renderItemPreview }) {
   return (
     <ScrollableArea label="Các ngày" height="100%" xstyle={styles.fill}>
       <VStack gap={0} hAlign="stretch">
@@ -223,7 +237,13 @@ function DayList({ days, today, byDay, onItemClick }) {
               {dayItems.length > 0 ? (
                 <HStack gap={1.5} wrap="wrap" xstyle={styles.listItems}>
                   {dayItems.map((item) => (
-                    <ScheduleItem key={item.id} item={item} onClick={onItemClick} isWide />
+                    <ScheduleItem
+                      key={item.id}
+                      item={item}
+                      onClick={onItemClick}
+                      renderPreview={renderItemPreview}
+                      isWide
+                    />
                   ))}
                 </HStack>
               ) : (
@@ -258,11 +278,17 @@ function DayNumber({ day, today, isMuted = false }) {
 
 /**
  * One clickable item: colored rail + tint, text truncated in the month
- * grid, wrapping in the list.
- * @param {{ item: MetaScheduleItem, onClick?: (item: MetaScheduleItem) => void, isWide?: boolean }} props
+ * grid, wrapping in the list; wrapped in a hover card when `renderPreview`
+ * is given.
+ * @param {{
+ *   item: MetaScheduleItem,
+ *   onClick?: (item: MetaScheduleItem) => void,
+ *   renderPreview?: (item: MetaScheduleItem) => import('react').ReactNode,
+ *   isWide?: boolean,
+ * }} props
  */
-function ScheduleItem({ item, onClick, isWide = false }) {
-  return (
+function ScheduleItem({ item, onClick, renderPreview, isWide = false }) {
+  const trigger = (
     <HStack
       as="button"
       gap={0}
@@ -275,6 +301,19 @@ function ScheduleItem({ item, onClick, isWide = false }) {
         {item.title}
       </Text>
     </HStack>
+  );
+  if (!renderPreview) return trigger;
+
+  return (
+    <HoverCard
+      content={renderPreview(item)}
+      label={item.title}
+      placement="end"
+      alignment="start"
+      hasHoverIndication={false}
+    >
+      {trigger}
+    </HoverCard>
   );
 }
 

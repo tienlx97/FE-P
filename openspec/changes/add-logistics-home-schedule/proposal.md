@@ -61,6 +61,11 @@ could not follow the Meta theme. User picked "Tự dựng MetaSchedule":
   "+n mục" → that day in the list, past days keep their colors.
 - Calendar math in `src/shared/config/schedule-calendar.js` (tested).
 - The page keeps the filter-as-legend (solid swatches), drawer and data.
+- Hover card (user request): `MetaSchedule` `renderItemPreview` wraps each
+  item in Astryx `HoverCard` (hover or keyboard focus); the page renders
+  `ShipmentOverviewPreview` — kind + date, code, buyer · Incoterm · type,
+  route, carrier / vessel, departure → arrival (actual in bold), status,
+  first 2 alerts (+n more), "Bấm để xem chi tiết lô hàng".
 
 ## Known limits
 - (Lab Schedule limits no longer apply — see MetaSchedule above.)
