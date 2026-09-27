@@ -44,7 +44,7 @@ export function ShipmentOverviewPreview({ event, shipment }) {
       <HStack gap={2} vAlign="center">
         <MetaScheduleSwatch tone={category.tone} />
         <Text size="sm" weight="semibold">
-          {`${category.label} · ${formatDisplayDate(event.start)}`}
+          {`${event.term} · ${formatDisplayDate(event.start)}${event.category === 'overdue' ? ' · quá hạn' : ''}`}
         </Text>
       </HStack>
 

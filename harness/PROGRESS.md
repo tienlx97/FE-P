@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-09-27 — Home schedule: standard logistics terms
+
+- User: standard terms, no explanations. Items now "ETD / ATD / ETA / ATA
+  · code · …", "Cutoff SI/VGM", "Cutoff CY", "LFD"; overdue → "quá n ngày"
+  (on today, red); delays "trễ n ngày". Legend "ETD/ATD · ETA/ATA ·
+  Cutoff/LFD · Quá hạn"; hover card header = term · date; drawer labels
+  Cutoff SI/VGM, Cutoff CY, LFD, "ETD → ETA". Events carry `term`; tests
+  updated (8). Chrome checked.
+
 ## 2026-09-27 — Home schedule: full route with the delivery site; leaner hover card
 
 - Route = loading port → discharge port → place of delivery when it

@@ -67,6 +67,11 @@ could not follow the Meta theme. User picked "Tự dựng MetaSchedule":
   route, carrier / vessel, departure → arrival (actual in bold), status,
   first 2 alerts (+n more), "Bấm để xem chi tiết lô hàng".
 
+## Standard terms (2026-09-27, user request)
+Titles use logistics terms only: ETD / ATD, ETA / ATA, Cutoff SI/VGM,
+Cutoff CY, LFD (last free day); overdue adds "quá n ngày", delays
+"trễ n ngày". Legend: ETD/ATD · ETA/ATA · Cutoff/LFD · Quá hạn.
+
 ## Known limits
 - (Lab Schedule limits no longer apply — see MetaSchedule above.)
 - Items only show one-day milestones (no multi-day bars).

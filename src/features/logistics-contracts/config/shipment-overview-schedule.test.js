@@ -65,7 +65,7 @@ test('ports shorten to their first part without "Cảng"', () => {
   assert.equal(shortPlace(null), '?');
 });
 
-test('each day reads as verb + shipment: departure, arrival, deadlines, colored by kind', () => {
+test('each day reads as standard term + shipment: ETD, ETA, cutoffs, LFD', () => {
   const events = overviewEvents(
     [
       row({
@@ -80,23 +80,23 @@ test('each day reads as verb + shipment: departure, arrival, deadlines, colored 
     TODAY,
   );
   assert.deepEqual(
-    events.map((e) => [e.category, e.start, e.title]),
+    events.map((e) => [e.term, e.category, e.start, e.title]),
     [
-      ['departure', '2026-10-04', 'Tàu chạy · 26KCT03/LOT-01 · KMTC → Bangkok · trễ 4 ngày'],
-      ['arrival', '2026-10-20', 'Tàu đến · 26KCT03/LOT-01 · KMTC · tại Bangkok'],
-      ['deadline', '2026-10-01', 'Cut-off SI / VGM · 26KCT03/LOT-01 · 17:00'],
-      ['deadline', '2026-09-29', 'Cut-off hạ bãi · 26KCT03/LOT-01 · 12:00'],
-      ['deadline', '2026-09-27', 'Hết free time · 26KCT03/LOT-01'],
+      ['ETD', 'departure', '2026-10-04', 'ETD · 26KCT03/LOT-01 · KMTC → Bangkok · trễ 4 ngày'],
+      ['ETA', 'arrival', '2026-10-20', 'ETA · 26KCT03/LOT-01 · KMTC · Bangkok'],
+      ['Cutoff SI/VGM', 'deadline', '2026-10-01', 'Cutoff SI/VGM · 26KCT03/LOT-01 · 17:00'],
+      ['Cutoff CY', 'deadline', '2026-09-29', 'Cutoff CY · 26KCT03/LOT-01 · 12:00'],
+      ['LFD', 'deadline', '2026-09-27', 'LFD · 26KCT03/LOT-01'],
     ],
   );
 });
 
-test('without a carrier the arrow follows the shipment code', () => {
+test('without a carrier the route still shows', () => {
   const [departure] = overviewEvents([row({ shippingLine: null, etd: '2026-10-04' })], TODAY);
-  assert.equal(departure.title, 'Tàu chạy · 26KCT03/LOT-01 → Bangkok');
+  assert.equal(departure.title, 'ETD · 26KCT03/LOT-01 · → Bangkok');
 });
 
-test('red = overdue (deadline past, or ETD / ETA past without the actual), rolled onto today', () => {
+test('red = overdue (deadline past, or ETD / ETA past without the actual), on today with days', () => {
   const events = overviewEvents(
     [
       row({ etd: '2026-09-20', eta: '2026-09-25', cyCutoff: '2026-09-18T12:00:00', freeTimeLastDay: '2026-09-20' }),
@@ -107,12 +107,12 @@ test('red = overdue (deadline past, or ETD / ETA past without the actual), rolle
   assert.deepEqual(
     events.map((e) => [e.id, e.category, e.start, e.title]),
     [
-      ['dep:s1', 'overdue', TODAY, 'Quá ETD, chưa chạy · 26KCT03/LOT-01 · KMTC → Bangkok · ETD 20/09'],
-      ['arr:s1', 'overdue', TODAY, 'Quá ETA, chưa đến · 26KCT03/LOT-01 · KMTC · tại Bangkok · ETA 25/09'],
-      ['cy:s1', 'overdue', TODAY, 'Đã qua Cut-off hạ bãi · 26KCT03/LOT-01 · từ 18/09'],
-      ['ft:s1', 'overdue', TODAY, 'Quá hạn free time · 26KCT03/LOT-01 · từ 20/09'],
-      ['dep:s2', 'departure', '2026-09-20', 'Đã chạy · 26KCT03/LOT-02 · KMTC → Bangkok'],
-      ['arr:s2', 'arrival', '2026-09-25', 'Đã đến · 26KCT03/LOT-02 · KMTC · tại Bangkok'],
+      ['dep:s1', 'overdue', TODAY, 'ETD · 26KCT03/LOT-01 · KMTC → Bangkok · quá 7 ngày'],
+      ['arr:s1', 'overdue', TODAY, 'ETA · 26KCT03/LOT-01 · KMTC · Bangkok · quá 2 ngày'],
+      ['cy:s1', 'overdue', TODAY, 'Cutoff CY · 26KCT03/LOT-01 · quá 9 ngày'],
+      ['ft:s1', 'overdue', TODAY, 'LFD · 26KCT03/LOT-01 · quá 7 ngày'],
+      ['dep:s2', 'departure', '2026-09-20', 'ATD · 26KCT03/LOT-02 · KMTC → Bangkok'],
+      ['arr:s2', 'arrival', '2026-09-25', 'ATA · 26KCT03/LOT-02 · KMTC · Bangkok'],
     ],
   );
 });
@@ -126,9 +126,9 @@ test('the header legend counts each kind and filters events', () => {
     overviewFilters(events).map((f) => [f.label, f.count, f.tone]),
     [
       ['Tất cả', 3, null],
-      ['Tàu chạy', 1, 'accent'],
-      ['Tàu đến', 1, 'success'],
-      ['Hạn chót', 0, 'warning'],
+      ['ETD/ATD', 1, 'accent'],
+      ['ETA/ATA', 1, 'success'],
+      ['Cutoff/LFD', 0, 'warning'],
       ['Quá hạn', 1, 'danger'],
     ],
   );

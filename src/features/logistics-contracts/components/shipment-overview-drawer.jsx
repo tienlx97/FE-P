@@ -155,7 +155,7 @@ function ShipmentGroups({ rows, onSelect }) {
             columns={[
               { key: 'shipment', header: 'Lô hàng', isWrapping: true },
               { key: 'route', header: 'Hãng · tuyến', isWrapping: true },
-              { key: 'dates', header: 'Rời → đến' },
+              { key: 'dates', header: 'ETD → ETA' },
               { key: 'open', header: '', align: 'end' },
             ]}
             rows={group.rows.map((row) => ({
@@ -223,14 +223,14 @@ function ShipmentDetail({ shipment }) {
     ['ETA', <DateText key="eta" date={shipment.eta} />],
     ['ATA', <DateText key="ata" date={shipment.actualArrival} actual />],
     [
-      'Cut-off SI / VGM',
+      'Cutoff SI/VGM',
       <Text key="si" type="code">{formatScheduleValue('siCutoff', shipment.siCutoff)}</Text>,
     ],
     [
-      'Cut-off hạ bãi',
+      'Cutoff CY',
       <Text key="cy" type="code">{formatScheduleValue('cyCutoff', shipment.cyCutoff)}</Text>,
     ],
-    ['Hạn free time gần nhất', <DateText key="ft" date={shipment.freeTimeLastDay} actual />],
+    ['LFD', <DateText key="ft" date={shipment.freeTimeLastDay} actual />],
   ];
   /** @param {Array<[string, import('react').ReactNode]>} pairs */
   const toRows = (pairs) =>
@@ -270,7 +270,7 @@ function ShipmentDetail({ shipment }) {
         )}
       </MetaShipmentSection>
 
-      <MetaShipmentSection icon={Ship} title="Lịch tàu & hạn chót">
+      <MetaShipmentSection icon={Ship} title="Schedule & cutoff">
         <MetaCompactTable
           columns={[
             { key: 'label', header: 'Mốc' },

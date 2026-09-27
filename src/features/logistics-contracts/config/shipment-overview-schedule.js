@@ -1,13 +1,12 @@
 /**
  * `/logistics` home: shipments in progress on the Astryx lab `Schedule`
  * (BE-kt-xnk `GET /shipments/overview`), built to be read at a glance:
- * every view shows what happens on each day — a departure, an arrival or a
- * deadline (SI / CY cut-off until it sails, the earliest running free-time
- * day) — and the color says which kind (legend = the header filter):
- * blue departs, green arrives, amber deadline, red overdue (a deadline
- * past, or ETD / ETA past without ATD / ATA). Titles lead with the verb.
- * Overdue items roll forward onto today (with their own date in the
- * title): overdue is exactly what must be seen today.
+ * every view shows what happens on each day — ETD / ATD, ETA / ATA, Cutoff
+ * SI/VGM and Cutoff CY (until it sails), LFD (earliest running free-time
+ * day) — and the color says which kind (legend = the header filter): blue
+ * ETD/ATD, green ETA/ATA, amber Cutoff/LFD, red overdue. Titles lead with
+ * the standard term, no explanations. Overdue items roll forward onto
+ * today ("quá n ngày"): overdue is exactly what must be seen today.
  * Events are plain ISO descriptors here; the component turns them into
  * Schedule events.
  */
@@ -20,6 +19,7 @@
  * @typedef {Object} OverviewEvent
  * @property {string} id
  * @property {string} shipmentId
+ * @property {string} term - ETD, ATD, ETA, ATA, Cutoff SI/VGM, Cutoff CY, LFD
  * @property {string} title
  * @property {OverviewCategory} category
  * @property {string} start - YYYY-MM-DD
@@ -28,9 +28,9 @@
 
 /** Each kind's label and `MetaSchedule` tone (legend = the header filter). */
 export const OVERVIEW_CATEGORIES = /** @type {const} */ ({
-  departure: { label: 'Tàu chạy', tone: 'accent' },
-  arrival: { label: 'Tàu đến', tone: 'success' },
-  deadline: { label: 'Hạn chót', tone: 'warning' },
+  departure: { label: 'ETD/ATD', tone: 'accent' },
+  arrival: { label: 'ETA/ATA', tone: 'success' },
+  deadline: { label: 'Cutoff/LFD', tone: 'warning' },
   overdue: { label: 'Quá hạn', tone: 'danger' },
 });
 
@@ -107,9 +107,14 @@ function lateTag(days) {
   return days > 0 ? `trễ ${days} ngày` : null;
 }
 
-/** "2026-09-20" → "20/09". @param {string} date */
-function dayMonth(date) {
-  return `${date.slice(8, 10)}/${date.slice(5, 7)}`;
+/** Whole days from `date` to `today` (both YYYY-MM-DD). */
+function daysBetween(/** @type {string} */ date, /** @type {string} */ today) {
+  return Math.round((Date.parse(`${today}T00:00:00Z`) - Date.parse(`${date}T00:00:00Z`)) / 86_400_000);
+}
+
+/** "quá 3 ngày". @param {string} date @param {string} today */
+function overdueTag(date, today) {
+  return `quá ${daysBetween(date, today)} ngày`;
 }
 
 /** @param {Array<string | null | undefined>} parts */
@@ -118,9 +123,11 @@ function join(parts) {
 }
 
 /**
- * Every Schedule event of the shipments: departure (on ATD, else ETD),
- * arrival (ATA, else ETA), SI / CY cut-off while not sailed, the earliest
- * running free-time day. Overdue relative to `today` → red, shown on today.
+ * Every Schedule event of the shipments, titled with the standard term
+ * first — `ETD` / `ATD`, `ETA` / `ATA`, `Cutoff SI/VGM`, `Cutoff CY`, `LFD`
+ * (last free day) — then the shipment code and a short detail. Overdue
+ * relative to `today` (deadline past, ETD / ETA past without the actual)
+ * → red, shown on today with "quá n ngày".
  * @param {ShipmentOverview[]} rows
  * @param {string} today - YYYY-MM-DD, business day in Vietnam
  * @returns {OverviewEvent[]}
@@ -128,82 +135,61 @@ function join(parts) {
 export function overviewEvents(rows, today) {
   /** @type {OverviewEvent[]} */
   const events = [];
+  /**
+   * @param {string} id
+   * @param {ShipmentOverview} row
+   * @param {string} term
+   * @param {string} date
+   * @param {boolean} isOverdue
+   * @param {OverviewCategory} category - when not overdue
+   * @param {Array<string | null | undefined>} details
+   */
+  const push = (id, row, term, date, isOverdue, category, details) =>
+    events.push({
+      id: `${id}:${row.shipmentId}`,
+      shipmentId: row.shipmentId,
+      term,
+      title: join([term, row.shipmentCode, ...details, isOverdue ? overdueTag(date, today) : null]),
+      category: isOverdue ? 'overdue' : category,
+      start: isOverdue ? today : date,
+      end: isOverdue ? today : date,
+    });
+
   for (const row of rows) {
     const carrier = row.shippingLine;
+    const pod = shortPlace(row.placeOfDischarge);
     const departure = departureOf(row);
     const arrival = arrivalOf(row);
 
     if (departure) {
       const missed = !row.actualDeparture && departure < today;
-      events.push({
-        id: `dep:${row.shipmentId}`,
-        shipmentId: row.shipmentId,
-        title: join([
-          row.actualDeparture ? 'Đã chạy' : missed ? 'Quá ETD, chưa chạy' : 'Tàu chạy',
-          // "KMTC → Bangkok", or "26KCT06/LOT-01 → Bangkok" without a carrier.
-          carrier ? row.shipmentCode : `${row.shipmentCode} → ${shortPlace(row.placeOfDischarge)}`,
-          carrier ? `${carrier} → ${shortPlace(row.placeOfDischarge)}` : null,
-          missed ? `ETD ${dayMonth(departure)}` : lateTag(delayDays(row, 'DepartureDelayed')),
-        ]),
-        category: missed ? 'overdue' : 'departure',
-        start: missed ? today : departure,
-        end: missed ? today : departure,
-      });
+      push('dep', row, row.actualDeparture ? 'ATD' : 'ETD', departure, missed, 'departure', [
+        carrier ? `${carrier} → ${pod}` : `→ ${pod}`,
+        missed ? null : lateTag(delayDays(row, 'DepartureDelayed')),
+      ]);
     }
     if (arrival) {
       const missed = !row.actualArrival && arrival < today;
-      events.push({
-        id: `arr:${row.shipmentId}`,
-        shipmentId: row.shipmentId,
-        title: join([
-          row.actualArrival ? 'Đã đến' : missed ? 'Quá ETA, chưa đến' : 'Tàu đến',
-          row.shipmentCode,
-          carrier,
-          `tại ${shortPlace(row.placeOfDischarge)}`,
-          missed ? `ETA ${dayMonth(arrival)}` : lateTag(delayDays(row, 'ArrivalDelayed')),
-        ]),
-        category: missed ? 'overdue' : 'arrival',
-        start: missed ? today : arrival,
-        end: missed ? today : arrival,
-      });
+      push('arr', row, row.actualArrival ? 'ATA' : 'ETA', arrival, missed, 'arrival', [
+        carrier,
+        pod,
+        missed ? null : lateTag(delayDays(row, 'ArrivalDelayed')),
+      ]);
     }
     if (!row.actualDeparture) {
-      for (const [key, label, value] of /** @type {const} */ ([
-        ['si', 'Cut-off SI / VGM', row.siCutoff],
-        ['cy', 'Cut-off hạ bãi', row.cyCutoff],
+      for (const [id, term, value] of /** @type {const} */ ([
+        ['si', 'Cutoff SI/VGM', row.siCutoff],
+        ['cy', 'Cutoff CY', row.cyCutoff],
       ])) {
         if (value) {
           const day = value.slice(0, 10);
           const passed = day < today;
-          events.push({
-            id: `${key}:${row.shipmentId}`,
-            shipmentId: row.shipmentId,
-            title: join([
-              passed ? `Đã qua ${label}` : label,
-              row.shipmentCode,
-              passed ? `từ ${dayMonth(day)}` : value.slice(11, 16),
-            ]),
-            category: passed ? 'overdue' : 'deadline',
-            start: passed ? today : day,
-            end: passed ? today : day,
-          });
+          push(id, row, term, day, passed, 'deadline', [passed ? null : value.slice(11, 16)]);
         }
       }
     }
     if (row.freeTimeLastDay) {
-      const overdue = row.freeTimeLastDay < today;
-      events.push({
-        id: `ft:${row.shipmentId}`,
-        shipmentId: row.shipmentId,
-        title: join([
-          overdue ? 'Quá hạn free time' : 'Hết free time',
-          row.shipmentCode,
-          overdue ? `từ ${dayMonth(row.freeTimeLastDay)}` : null,
-        ]),
-        category: overdue ? 'overdue' : 'deadline',
-        start: overdue ? today : row.freeTimeLastDay,
-        end: overdue ? today : row.freeTimeLastDay,
-      });
+      push('ft', row, 'LFD', row.freeTimeLastDay, row.freeTimeLastDay < today, 'deadline', []);
     }
   }
   return events;
