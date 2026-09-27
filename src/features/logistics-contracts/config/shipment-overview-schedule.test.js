@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  filterRows,
   overviewEvents,
+  overviewFilters,
   overviewGroups,
   shipmentFromEventText,
   shipmentPhase,
@@ -99,4 +101,46 @@ test('drawer groups: attention first, unscheduled last, empty groups dropped', (
       ['Chưa có lịch tàu', ['b']],
     ],
   );
+});
+
+test('the day list shows departure and arrival as separate events, with delays', () => {
+  const delayed = /** @type {import('../types/index.js').ShipmentAlert} */ ({
+    kind: 'ArrivalDelayed', severity: 'Warning', dueOn: '2026-10-20', days: 4, containerNumber: null, side: null, freeTimeKind: null, containerCount: null,
+  });
+  const events = overviewEvents(
+    [row({
+      etd: '2026-10-10', actualDeparture: '2026-10-12', eta: '2026-10-20',
+      placeOfDischarge: 'Huayyang Subdistrict, Klaeng District, Rayong Province - Thailand',
+      alerts: [delayed],
+    })],
+    '2026-09-27',
+    'milestones',
+  );
+  assert.deepEqual(
+    events.map((e) => [e.id, e.start, e.title]),
+    [
+      ['dep:s1', '2026-10-12', '26KCT03/LOT-01 · Tàu đã chạy (ATD) · KMTC · Hai Phong → Huayyang Subdistrict'],
+      ['arr:s1', '2026-10-20', '26KCT03/LOT-01 · Tàu đến (ETA) · KMTC · Hai Phong → Huayyang Subdistrict · ETA trễ 4 ngày'],
+    ],
+  );
+  assert.match(overviewEvents([row({ etd: '2026-10-10', eta: '2026-10-20', alerts: [delayed] })], '2026-09-27')[0].title, /ETA trễ 4 ngày$/);
+});
+
+test('stage filters count and keep the matching shipments', () => {
+  const rows = [
+    row({ shipmentId: 'a', etd: '2026-10-10' }),
+    row({ shipmentId: 'b' }),
+    row({ shipmentId: 'c', actualDeparture: '2026-10-01', alerts: [danger] }),
+  ];
+  assert.deepEqual(
+    overviewFilters(rows).map((f) => [f.key, f.label, f.count]),
+    [
+      ['all', 'Tất cả', 3],
+      ['attention', 'Cần chú ý', 1],
+      ['waiting', 'Chờ tàu chạy', 1],
+      ['sailing', 'Đang trên tàu', 0],
+      ['arrived', 'Đã đến cảng', 0],
+    ],
+  );
+  assert.deepEqual(filterRows(rows, 'attention').map((r) => r.shipmentId), ['c']);
 });

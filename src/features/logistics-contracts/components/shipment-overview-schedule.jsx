@@ -4,6 +4,10 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@astryxdesign/core/SegmentedControl';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import {
   createEventFromISO,
@@ -22,9 +26,11 @@ import { MetaThemeProvider } from '@/shared/components/custom/meta/index.js';
 import { todayIsoDate } from '@/shared/config/date-input-format.js';
 
 import {
+  filterRows,
   needsAttention,
   OVERVIEW_CATEGORIES,
   overviewEvents,
+  overviewFilters,
   shipmentFromEventText,
 } from '../config/shipment-overview-schedule.js';
 import { useShipmentOverviewQuery } from '../hooks/use-shipment-overview-query.js';
@@ -41,9 +47,13 @@ const CATEGORIES = Object.values(OVERVIEW_CATEGORIES);
 
 /**
  * `/logistics` home: every shipment in progress on the Astryx lab
- * `Schedule`, filling the page (the page itself does not scroll). A bar =
- * departure → arrival, plus cut-off and free-time deadlines. More detail
- * opens in a drawer (all in the Meta theme, like the shipment pages): "Lô hàng (n)" in the schedule header lists them all,
+ * `Schedule`, filling the page (the page itself does not scroll), in the
+ * Meta theme like the shipment pages. Month / week show a bar per shipment
+ * (departure → arrival); the day list shows departure and arrival as
+ * separate events so a shipment at sea is not repeated daily; plus cut-off
+ * and free-time deadlines, with ETD / ETA delays in the titles. A stage
+ * filter with counts sits in the header (like a tracking dashboard's
+ * status bar). More detail opens in a drawer: "Lô hàng (n)" lists them all,
  * and clicking an event opens its shipment.
  */
 export function ShipmentOverviewSchedule() {
@@ -62,6 +72,9 @@ export function ShipmentOverviewSchedule() {
   // 128 px week rows and leaves the bottom of the page empty).
   const [view, setView] = useState(views.list);
   const [date, setDate] = useState(() => Date.now());
+  const [filter, setFilter] = useState(
+    /** @type {import('../config/shipment-overview-schedule.js').OverviewFilter} */ ('all'),
+  );
   const [drawer, setDrawer] = useState(
     /** @type {null | { shipmentId: string | null }} */ (null),
   );
@@ -70,9 +83,10 @@ export function ShipmentOverviewSchedule() {
     () => (query.data?.success ? query.data.shipments : []),
     [query.data],
   );
+  const mode = view === views.list ? 'milestones' : 'bars';
   const events = useMemo(
     () =>
-      overviewEvents(rows, todayIsoDate()).map((event) =>
+      overviewEvents(filterRows(rows, filter), todayIsoDate(), mode).map((event) =>
         createEventFromISO({
           id: event.id,
           title: event.title,
@@ -81,7 +95,7 @@ export function ShipmentOverviewSchedule() {
           end: event.end,
         }),
       ),
-    [rows],
+    [rows, filter, mode],
   );
   const attentionCount = rows.filter(needsAttention).length;
 
@@ -97,7 +111,27 @@ export function ShipmentOverviewSchedule() {
   /** @type {import('@astryxdesign/lab').SchedulePlugin} */
   const shipmentsButton = {
     renderHeader: (startContent, centerContent, endContent) => ({
-      startContent,
+      startContent: (
+        <HStack gap={3} vAlign="center">
+          {startContent}
+          <SegmentedControl
+            label="Lọc theo giai đoạn"
+            size="sm"
+            value={filter}
+            onChange={(value) =>
+              setFilter(/** @type {import('../config/shipment-overview-schedule.js').OverviewFilter} */ (value))
+            }
+          >
+            {overviewFilters(rows).map((option) => (
+              <SegmentedControlItem
+                key={option.key}
+                value={option.key}
+                label={`${option.label} ${option.count}`}
+              />
+            ))}
+          </SegmentedControl>
+        </HStack>
+      ),
       centerContent,
       endContent: (
         <HStack gap={2} vAlign="center">

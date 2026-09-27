@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-09-27 — Home schedule optimized after tracking dashboards
+
+- References: GoFreight tracking dashboard (stage status bar with counts,
+  click to filter; arrivals window; ETA-difference flag), Terminal49 (last
+  free day), Portcast (early delay warnings) — see the change proposal.
+- Header stage filter with counts (`overviewFilters` / `filterRows`);
+  "2 tuần" shows departure / arrival milestones (no daily repeat); delays
+  "ETD / ETA trễ n ngày" in titles; ports shortened (`shortPlace`). Tests
+  added (7 in `shipment-overview-schedule.test.js`).
+- verify.sh passed. Chrome: filter "Cần chú ý" keeps 26KCT06/LOT-01 only;
+  26KCT02 shows "Tàu chạy (ETD) · … · ETD trễ 4 ngày".
+
 ## 2026-09-27 — `/logistics` home: shipments in progress on the lab Schedule
 
 - User request: Astryx lab `Schedule`, full width / height, fixed; more
