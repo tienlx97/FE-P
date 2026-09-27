@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-09-27 — Public export group choice
+
+- “Xuất dữ liệu public” now opens a dialog with Xăng dầu and Cảng nước radio
+  options. Submit requests only the chosen group; Cảng nước includes countries
+  and ports so imported port references remain valid.
+- Browser preview: both choices render, submit is disabled until selection,
+  then enabled. Screenshot: `harness/runs/20260927-public-export-preview/export-dialog.png`.
+  The temporary preview page was removed. `verify.sh` passed
+  (`harness/runs/20260927-182949-3243/`).
+
 ## 2026-09-27 — Public data transfer in Backups
 
 - Added Admin controls to export a versioned JSON of countries, ports and fuel

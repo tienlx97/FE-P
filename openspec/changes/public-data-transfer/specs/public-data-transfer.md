@@ -2,7 +2,8 @@
 
 ## Xuất
 
-- Khi Admin chọn “Xuất dữ liệu public”, trình duyệt tải một file JSON gồm quốc gia, cảng đến và các kỳ giá xăng dầu của môi trường hiện tại.
+- Khi Admin chọn “Xuất dữ liệu public”, một hộp thoại mở để chọn Xăng dầu hoặc Cảng nước.
+- Chọn Xăng dầu chỉ tải các kỳ giá; chọn Cảng nước tải quốc gia và cảng đến. File JSON có tên theo nhóm đã chọn.
 - File xuất không chứa bản sao lưu SQL hay dữ liệu người dùng/hợp đồng.
 
 ## Nhập

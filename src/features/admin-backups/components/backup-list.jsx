@@ -18,9 +18,10 @@ import {
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconUpload } from '@/shared/components/icon/icon-upload.jsx';
 
-import { downloadBackupUrl, downloadPublicDataUrl } from '../api/backups.js';
+import { downloadBackupUrl } from '../api/backups.js';
 import { useBackupsQuery } from '../hooks/use-backups-query.js';
 import { useCreateBackupMutation } from '../hooks/use-create-backup-mutation.js';
+import { ExportPublicDataDialog } from './export-public-data-dialog.jsx';
 import { ImportPublicDataDialog } from './import-public-data-dialog.jsx';
 import { OperationsStatus } from './operations-status.jsx';
 import { RestoreBackupDialog } from './restore-backup-dialog.jsx';
@@ -78,6 +79,7 @@ export function BackupList() {
   );
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isPublicImportOpen, setIsPublicImportOpen] = useState(false);
+  const [isPublicExportOpen, setIsPublicExportOpen] = useState(false);
 
   const listResult = backupsQuery.data;
   const backups = listResult?.success ? listResult.backups : [];
@@ -167,7 +169,7 @@ export function BackupList() {
           <Button
             label="Xuất dữ liệu public"
             variant="secondary"
-            href={downloadPublicDataUrl()}
+            onClick={() => setIsPublicExportOpen(true)}
           />
           <Button
             label="Nhập dữ liệu public"
@@ -248,6 +250,10 @@ export function BackupList() {
       <ImportPublicDataDialog
         isOpen={isPublicImportOpen}
         onOpenChange={setIsPublicImportOpen}
+      />
+      <ExportPublicDataDialog
+        isOpen={isPublicExportOpen}
+        onOpenChange={setIsPublicExportOpen}
       />
     </VStack>
   );

@@ -107,9 +107,12 @@ export function downloadBackupUrl(fileName) {
   return `${API_PROXY_PREFIX}/api/v1/backups/${encodeURIComponent(fileName)}/download`;
 }
 
-/** Admin-only JSON export of countries, ports and fuel history. */
-export function downloadPublicDataUrl() {
-  return `${API_PROXY_PREFIX}/api/v1/backups/public-data`;
+/**
+ * Admin-only JSON export of one public data group.
+ * @param {'fuel' | 'ports'} section
+ */
+export function downloadPublicDataUrl(section) {
+  return `${API_PROXY_PREFIX}/api/v1/backups/public-data?section=${section}`;
 }
 
 /**
