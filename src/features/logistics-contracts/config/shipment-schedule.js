@@ -16,6 +16,7 @@ const REASON_LABELS = {
   VesselChange: 'Đổi tàu / chuyến',
   PortCongestion: 'Ùn tắc cảng',
   Other: 'Khác',
+  CarrierUpdate: 'Hãng tàu cập nhật',
 };
 
 /** Reasons offered in "Cập nhật lịch tàu" (`Edited` = the edit form). */

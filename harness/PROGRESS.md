@@ -1,5 +1,23 @@
 # Progress Log
 
+## 2026-09-27 — Carrier tracking: section "Theo dõi hãng tàu"
+
+- User decision: one tracking integration per shipping line (crawl or
+  public API, written later — every line treated as without public API for
+  now), API version managed per line in BE code. BE-kt-xnk
+  `add-carrier-tracking` (ADR-0008): 9 carriers, each a `v1` placeholder.
+- Schedule tab: `ShipmentCarrierTrackingSection` (status, "Đồng bộ ngay",
+  "Hãng tàu báo khác" accept / dismiss, carrier events with the field each
+  one filled). `config/shipment-tracking.js` tested; reason label
+  `CarrierUpdate` = "Hãng tàu cập nhật". Plan doc §6 rewritten (phase 1 done,
+  phase 2 = real fetch per carrier).
+- verify.sh passed (`harness/runs/20260927-082428-1860/`). Dev stack API
+  rebuilt (migration `ShipmentCarrierTracking` applied; 3 dev shipments have
+  "KMTC"). Chrome check NOT done: the browser only reaches the LAN address
+  and no test login was given — open 26KCT03/LOT-01 → "Lịch tàu & Free
+  time", expect "Chưa kết nối" + "adapter v1" and "Đồng bộ ngay" → status
+  stays "Chưa kết nối".
+
 ## 2026-09-27 — Journey flow check (frontend part)
 
 - BE fix (seller-scope data, LCL, no containers) — see BE PROGRESS.

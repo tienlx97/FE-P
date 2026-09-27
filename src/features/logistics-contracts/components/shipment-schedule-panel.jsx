@@ -40,12 +40,16 @@ import {
   tracksDestinationFreeTime,
   tracksOriginFreeTime,
 } from '../config/shipment-schedule.js';
+import { ShipmentCarrierTrackingSection } from './shipment-carrier-tracking-section.jsx';
 
 /**
  * Shipment detail "Lịch tàu & Free time" tab: the schedule (original /
  * current / actual), each container's event dates and free-time clocks,
- * and the schedule history. Spec `docs/shipment-journey-incoterms.md` §4.
+ * the carrier tracking, and the schedule history. Spec
+ * `docs/shipment-journey-incoterms.md` §4, `docs/carrier-tracking-integration-plan.md`.
  * @param {{
+ *   contractId: string,
+ *   shipmentId: string,
  *   incoterm: import('../types/index.js').Incoterm,
  *   schedule: import('../types/index.js').ShipmentSchedule | null,
  *   scheduleError: string | null,
@@ -59,6 +63,8 @@ import {
  * }} props
  */
 export function ShipmentSchedulePanel({
+  contractId,
+  shipmentId,
   incoterm,
   schedule,
   scheduleError,
@@ -274,6 +280,13 @@ export function ShipmentSchedulePanel({
           emptyLabel="Chưa có lịch tàu."
         />
       </MetaShipmentSection>
+
+      <ShipmentCarrierTrackingSection
+        contractId={contractId}
+        shipmentId={shipmentId}
+        legs={legs}
+        canEdit={canEdit}
+      />
 
       <MetaShipmentSection
         icon={FileText}

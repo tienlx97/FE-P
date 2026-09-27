@@ -760,7 +760,8 @@ export {};
  */
 
 /**
- * @typedef {'Edited' | 'CarrierDelay' | 'VesselChange' | 'PortCongestion' | 'Other'} ScheduleChangeReason
+ * `CarrierUpdate` = a new ETD / ETA from carrier tracking (set by the system).
+ * @typedef {'Edited' | 'CarrierDelay' | 'VesselChange' | 'PortCongestion' | 'Other' | 'CarrierUpdate'} ScheduleChangeReason
  */
 
 /**
@@ -1145,4 +1146,94 @@ export {};
  * @property {string} truckArrivalTime
  * @property {string} carrierCustomerId
  * @property {string} note
+ */
+
+// ── Carrier tracking (BE-kt-xnk `add-carrier-tracking`) ─────────────────
+
+/**
+ * @typedef {'Synced' | 'NotImplemented' | 'Failed' | 'Disabled'} TrackingSyncStatus
+ */
+
+/**
+ * @typedef {'EmptyPickedUpOn' | 'GatedInOn' | 'DestinationGatedOutOn' | 'EmptyReturnedOn' | 'ActualDeparture' | 'ActualArrival' | 'TransshipmentAta' | 'TransshipmentAtd'} TrackedField
+ */
+
+/**
+ * DCSA GTOT / GTIN / LOAD / DISC / DEPA / ARRI.
+ * @typedef {'GateOut' | 'GateIn' | 'Load' | 'Discharge' | 'Departure' | 'Arrival'} TrackingEventCode
+ */
+
+/** @typedef {'Actual' | 'Estimated' | 'Planned'} TrackingEventClassifier */
+
+/** @typedef {'Unknown' | 'Depot' | 'PortOfLoading' | 'Transshipment' | 'PortOfDischarge'} TrackingLocationRole */
+
+/**
+ * @typedef {Object} ShippingCarrier
+ * @property {string} code - KMTC, HEUNGA, NAMSUNG, SITC, EVERGREEN, RCL, OOCL, YANGMING, ONE
+ * @property {string} name
+ */
+
+/**
+ * A carrier's tracking adapters: every version written and the one in use.
+ * @typedef {Object} CarrierTrackingAdapter
+ * @property {ShippingCarrier} carrier
+ * @property {boolean} enabled
+ * @property {string | null} activeVersion
+ * @property {boolean} isImplemented - false = placeholder, hand entry
+ * @property {string | null} source
+ * @property {string[]} versions
+ */
+
+/**
+ * @typedef {Object} ShipmentTrackingSync
+ * @property {string} carrierCode
+ * @property {string | null} adapterVersion
+ * @property {TrackingSyncStatus | null} status
+ * @property {string | null} lastAttemptAt - UTC
+ * @property {string | null} lastSyncedAt - UTC
+ * @property {string | null} lastError
+ * @property {string | null} lastCarrierEtd
+ * @property {string | null} lastCarrierEta
+ */
+
+/**
+ * "Hãng tàu báo khác".
+ * @typedef {Object} ShipmentTrackingDiscrepancy
+ * @property {string} id
+ * @property {TrackedField} field
+ * @property {string | null} containerNumber
+ * @property {number | null} legSequence
+ * @property {string | null} currentValue
+ * @property {string} carrierValue
+ * @property {string | null} carrierDepot
+ * @property {string} detectedAt
+ */
+
+/**
+ * @typedef {Object} ShipmentTrackingEvent
+ * @property {string} id
+ * @property {TrackingEventCode} code
+ * @property {TrackingEventClassifier} classifier
+ * @property {string} eventAt - local date-time at the place
+ * @property {TrackingLocationRole} locationRole
+ * @property {string | null} locationName
+ * @property {string | null} containerNumber
+ * @property {boolean | null} isEmpty
+ * @property {string | null} vesselName
+ * @property {string | null} voyageNumber
+ * @property {string} carrierCode
+ * @property {string} adapterVersion
+ * @property {string} receivedAt
+ * @property {TrackedField | null} appliedTo - field it filled (source "API")
+ */
+
+/**
+ * `GET …/tracking`. `carrier` null = "Hãng tàu" not recognized; `sync` null =
+ * never synced.
+ * @typedef {Object} ShipmentTracking
+ * @property {ShippingCarrier | null} carrier
+ * @property {CarrierTrackingAdapter | null} adapter
+ * @property {ShipmentTrackingSync | null} sync
+ * @property {ShipmentTrackingDiscrepancy[]} discrepancies
+ * @property {ShipmentTrackingEvent[]} events
  */

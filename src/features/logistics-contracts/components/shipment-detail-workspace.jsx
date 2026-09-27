@@ -661,6 +661,8 @@ function ShipmentDetailBody({
           ) : null}
           {activeTab === 'schedule' ? (
             <ShipmentSchedulePanel
+              contractId={contract.id}
+              shipmentId={shipment.id}
               incoterm={contract.incoterm}
               schedule={schedule}
               scheduleError={

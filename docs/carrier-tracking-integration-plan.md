@@ -1,6 +1,6 @@
 # Kế hoạch tích hợp tracking hãng tàu
 
-> Trạng thái: **đề xuất** (2026-09-27), chưa triển khai.
+> Trạng thái: **giai đoạn 1 xong** (2026-09-27) — khung tracking theo hãng + version; chưa hãng nào lấy dữ liệu thật (mục 6).
 > Liên quan: [shipment-journey-incoterms.md](shipment-journey-incoterms.md) — mục 1b (luồng hoạt động), mục 4 (lịch tàu, free time, cảnh báo).
 
 ## 1. Mục tiêu
@@ -76,12 +76,19 @@ Theo chuẩn DCSA Track & Trace (aggregator cũng trả sự kiện tương đư
 
 ## 6. Lộ trình
 
-| Giai đoạn | Nội dung | Ghi chú |
+**Quyết định 2026-09-27 (người dùng):** mỗi hãng tàu một tích hợp riêng
+(crawl hoặc public API, viết sau; tạm coi như hãng không có public API),
+**quản lý version API của từng hãng trong code BE** vì dữ liệu crawl có thể
+đổi dạng. Thay cho hướng "một aggregator" ban đầu. BE: ADR-0008,
+`docs/carrier-tracking.md`, openspec `add-carrier-tracking`.
+
+| Giai đoạn | Nội dung | Trạng thái |
 |---|---|---|
-| 0. POC | Thử 1 aggregator trên 2–3 lô thật (ví dụ 1 lô ONE, 1 lô SITC); so sánh với dữ liệu nhập tay | Chọn aggregator theo độ phủ 9 hãng + giá |
-| 1. Aggregator | Một adapter cho cả 9 hãng; subscription, job đồng bộ, map sự kiện, "Hãng tàu báo khác" | Nhanh nhất, trả phí theo cont / lô |
-| 2. API chính thức | Adapter DCSA cho ONE, Evergreen, Yang Ming (+ KMTC nếu được duyệt); aggregator giữ cho các hãng còn lại | Giảm phí, dữ liệu gốc từ hãng |
-| 3. Lịch tàu (tuỳ chọn) | Lấy lịch tàu / cut-off từ API để gợi ý khi nhập booking | |
+| 1. Khung tracking | Danh mục 9 hãng (nhận ra từ ô "Hãng tàu"), adapter theo hãng × version (`Fetch` raw + `Parse` → sự kiện chuẩn DCSA), registry chọn version (ghim trong cấu hình, không ghim = cao nhất), map sự kiện (mục 3) theo nguyên tắc (mục 4), "Hãng tàu báo khác", lịch sử lịch tàu lý do "Hãng tàu cập nhật", lưu sự kiện gốc + raw, job đồng bộ 6 giờ, nút "Đồng bộ ngay" | ✅ Xong — mỗi hãng có `v1` **placeholder** (báo "Chưa kết nối", vẫn nhập tay) |
+| 2. Lấy dữ liệu từng hãng | Viết `Fetch` + `Parse` thật cho từng hãng (crawl / API), mỗi hãng kèm test parse trên response đã lưu; web đổi bố cục → thêm `v2`, giữ `v1` | ⏳ Người dùng code sau |
+| 3. Lịch tàu (tuỳ chọn) | Lấy lịch tàu / cut-off từ hãng để gợi ý khi nhập booking | Chưa làm |
+
+Aggregator vẫn có thể thêm sau như một adapter cho bất kỳ hãng nào.
 
 ## 7. Việc cần làm song song (người dùng)
 
