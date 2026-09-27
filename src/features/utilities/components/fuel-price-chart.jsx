@@ -44,8 +44,11 @@ import { PriceWithChange } from './fuel-price-parts.jsx';
 /** @typedef {import('@astryxdesign/core/Calendar').ISODateString} ISODateString */
 
 // Left: room for "30.000"-wide tick labels (drawn inside the margin).
-// Top: room for the legend, an SVG foreignObject just above the plot.
-const CHART_MARGIN = { top: 36, left: 64, right: 24 };
+// Top: room for the legend above the plot (see LEGEND_LIFT).
+const CHART_MARGIN = { top: 52, left: 64, right: 24 };
+// The lab legend is a foreignObject pinned 4px above the plot, where it sits
+// on the highest lines; lifted into the top margin instead.
+const LEGEND_LIFT = 'translate(0, -32)';
 // Overview strip: same left/right so its x lines up with the main chart.
 const OVERVIEW_MARGIN = { top: 4, left: 64, right: 24, bottom: 24 };
 const CUSTOM = 'custom';
@@ -211,12 +214,14 @@ export function FuelPriceChart({ market, rows, products }) {
           label="Biến động giá xăng dầu qua các kỳ điều hành"
         >
           <ChartGrid horizontal />
-          <ChartLegend
-            items={visible.map(({ code, label }) => ({
-              label,
-              color: colorOf(code),
-            }))}
-          />
+          <g transform={LEGEND_LIFT}>
+            <ChartLegend
+              items={visible.map(({ code, label }) => ({
+                label,
+                color: colorOf(code),
+              }))}
+            />
+          </g>
           <ChartAxis
             position="bottom"
             maxTicks={8}

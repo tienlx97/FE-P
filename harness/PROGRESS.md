@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-09-27 — Xăng dầu chart: legend above the plot
+
+- User: move the chart legend higher. The lab `ChartLegend` is a
+  foreignObject pinned at y = -4 of the plot (no prop), so it sat on the
+  highest lines (TH 2026 spike to ~50 ฿). Now wrapped in
+  `<g transform="translate(0, -32)">`, chart top margin 36 → 52.
+- Chrome (TH, "Tất cả"): legend ~28 px above the top grid line, clear of
+  the lines. verify.sh passed (`harness/runs/20260927-170020-2639/`).
+
 ## 2026-09-27 — Xăng dầu: "Cập nhật giá" on every market tab
 
 - User: button on both VN and TH tabs. `FuelSyncButton` right of the
