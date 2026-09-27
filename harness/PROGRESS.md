@@ -20,6 +20,9 @@
   not stretch to the page height (frame does); "Today" / "All day" labels
   are the lab's. Default view is therefore "2 tuần" (list, fills the
   height; a sailing shipment repeats on each day); Tháng / Tuần selectable.
+  verify.sh for the default-view change passed on retry
+  (`harness/runs/20260927-095128-1454/`); the first run failed only on the
+  Google font download in `next build` (JetBrains Mono, network).
 
 ## 2026-09-27 — Carrier tracking: source "API" on the dates; plan §5 rewritten
 
