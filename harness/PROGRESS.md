@@ -1,5 +1,24 @@
 # Progress Log
 
+## 2026-09-27 — `/logistics` home: shipments in progress on the lab Schedule
+
+- User request: Astryx lab `Schedule`, full width / height, fixed; more
+  detail in a drawer. `/logistics` (`logistics:contracts:view`) now renders
+  `ShipmentOverviewSchedule` in `PageContentShell fillHeight` instead of
+  redirecting to `/logistics/contracts`. BE-kt-xnk `add-shipment-overview`
+  (`GET /shipments/overview`).
+- Bars departure → arrival by phase, red "Cần chú ý" on danger alerts,
+  SI / CY cut-offs, earliest free-time day; views Tháng / Tuần / 2 tuần;
+  header button "Lô hàng (n)" → drawer list; clicking an event → that
+  shipment's drawer (matched by code; the lab gives events no handler).
+  `config/shipment-overview-schedule.js` tested.
+- verify.sh passed (`harness/runs/20260927-094212-1439/`). Chrome (dev
+  stack, user's login): 3 open shipments, cut-offs / free-time / bars
+  shown; event click opened 26KCT02/LOT-01 (5 alerts); list drawer groups
+  Cần chú ý / Chờ tàu chạy / Chưa có lịch tàu.
+- Known limit: the lab month grid rows are fixed 128 px, so the grid does
+  not stretch to the page height (frame does); "Today" label is the lab's.
+
 ## 2026-09-27 — Carrier tracking: source "API" on the dates; plan §5 rewritten
 
 - Principle 4 "hiển thị nguồn": `carrierSourcedDates` (tested) — a date

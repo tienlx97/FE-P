@@ -6,7 +6,7 @@ import { RouteHubList } from '@/shared/components/route-hub-list.jsx';
 
 /**
  * Landing page for the `logistics:view`-gated `/logistics` route, reached
- * only by a visitor `logistics/page.jsx` didn't already redirect past (no
+ * only by a visitor `logistics/page.jsx` didn't show the shipment schedule (no
  * `logistics:contracts:view`, so `/logistics/contracts` and everything
  * else under `routeAccessRules`' broad `logistics:contracts:view` rule
  * would 403) — task 4.1,

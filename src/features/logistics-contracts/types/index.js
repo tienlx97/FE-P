@@ -1237,3 +1237,35 @@ export {};
  * @property {ShipmentTrackingDiscrepancy[]} discrepancies
  * @property {ShipmentTrackingEvent[]} events
  */
+
+// ── Logistics home schedule (BE-kt-xnk `add-shipment-overview`) ─────────
+
+/**
+ * One shipment still in progress (`GET /shipments/overview`).
+ * @typedef {Object} ShipmentOverview
+ * @property {string} contractId
+ * @property {string} contractNumber
+ * @property {string} buyerName
+ * @property {Incoterm} incoterm
+ * @property {string} shipmentId
+ * @property {string} shipmentCode
+ * @property {string} shipmentName
+ * @property {'LCL' | 'FCL'} type
+ * @property {ShipmentStatus} status
+ * @property {string} journeySummary
+ * @property {string} bookingNumber
+ * @property {string | null} shippingLine
+ * @property {string | null} vesselName
+ * @property {string | null} voyageNumber
+ * @property {string | null} placeOfLoading
+ * @property {string | null} placeOfDischarge
+ * @property {string | null} etd
+ * @property {string | null} eta
+ * @property {string | null} actualDeparture
+ * @property {string | null} actualArrival
+ * @property {string | null} siCutoff - local date-time
+ * @property {string | null} cyCutoff - local date-time
+ * @property {string | null} freeTimeLastDay - earliest running free-time deadline
+ * @property {number} containerCount
+ * @property {ShipmentAlert[]} alerts
+ */

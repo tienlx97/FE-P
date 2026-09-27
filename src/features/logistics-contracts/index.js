@@ -9,6 +9,7 @@ export { CustomersList } from './components/customers-list.jsx';
 export { PortsList } from './components/ports-list.jsx';
 export { QuickSearchPalette } from './components/quick-search-palette.jsx';
 export { ShipmentDetailWorkspace } from './components/shipment-detail-workspace.jsx';
+export { ShipmentOverviewSchedule } from './components/shipment-overview-schedule.jsx';
 export { ShipmentsList } from './components/shipments-list.jsx';
 export { SupplierDetailWorkspace } from './components/supplier-detail-workspace.jsx';
 export { SuppliersList } from './components/suppliers-list.jsx';
