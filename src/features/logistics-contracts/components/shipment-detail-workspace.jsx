@@ -654,6 +654,7 @@ function ShipmentDetailBody({
                 customersById.get(shipment.supplierCustomerId)?.companyName ??
                 ''
               }
+              suppliersById={customersById}
               vgms={vgms}
               isVgmsLoading={vgmsQuery.isLoading}
               onViewVgms={() => onActiveTabChange('vgm')}

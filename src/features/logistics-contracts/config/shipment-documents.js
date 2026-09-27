@@ -4,6 +4,21 @@
  * §4.6–4.7).
  */
 
+export const MAX_TRANSSHIPMENT_LEGS = 10;
+
+/** @returns {import('../types/index.js').TransshipmentLeg} */
+export function blankTransshipmentLeg() {
+  return {
+    port: '',
+    vesselName: null,
+    voyageNumber: null,
+    eta: null,
+    ata: null,
+    etd: null,
+    atd: null,
+  };
+}
+
 /** @type {Record<import('../types/index.js').BillOfLadingType, string>} */
 const BL_TYPE_LABELS = {
   Original: 'B/L gốc (Original)',

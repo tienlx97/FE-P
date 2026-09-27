@@ -718,6 +718,7 @@ export {};
  * @property {string | null} placeOfLoading - this shipment's own copy, not a live reference to `Contract.placeOfLoading` — defaults from it client-side on create only (see `use-shipment-form.js`)
  * @property {string | null} placeOfDischarge - this shipment's own copy, same default-once pattern as `placeOfLoading`
  * @property {string | null} placeOfDelivery - "Nơi giao hàng", this shipment's own copy of the contract's (defaulted once, editable)
+ * @property {TransshipmentLeg[]} [transshipmentLegs] - ordered ports and connecting vessel details
  * @property {ShipmentType} type
  * @property {string} name
  * @property {PaymentType} paymentCondition
@@ -1064,10 +1065,11 @@ export {};
  * @property {string} siCutoffTime - "HH:mm" part of `siCutoff`
  * @property {string} serviceTerm
  * @property {boolean} isTransshipment
+ * @property {TransshipmentLeg[]} transshipmentLegs - route order; one or more when transshipping
  * @property {string} coForm
  * @property {ShipmentCustomsChannel | ''} customsChannel
  * @property {string} letterOfCreditNumber
- * @property {string} emptyReturnDeadline - kept as loaded (fallback, no input)
+ * @property {string} emptyReturnDeadline - editable fallback when destination free time is not configured
  * @property {string} cyCutoffDate - ISO date part of `cyCutoff`
  * @property {string} cyCutoffTime - "HH:mm" part of `cyCutoff`
  * @property {string} actualDeparture - kept as loaded (edited in "Cập nhật lịch tàu")

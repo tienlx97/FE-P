@@ -89,6 +89,21 @@ function toOperationalDetailsRequestBody(values) {
   };
 }
 
+/** @param {import('../types/index.js').ShipmentFormValues} values */
+function toTransshipmentLegsRequestBody(values) {
+  return values.isTransshipment
+    ? values.transshipmentLegs.map((leg) => ({
+        Port: leg.port.trim(),
+        VesselName: leg.vesselName || null,
+        VoyageNumber: leg.voyageNumber || null,
+        Eta: leg.eta || null,
+        Ata: leg.ata || null,
+        Etd: leg.etd || null,
+        Atd: leg.atd || null,
+      }))
+    : [];
+}
+
 /**
  * `QuantityUnit` is derived from `Type` on the backend now (LCL is always
  * Kiện, FCL always Cont) — never sent, on create or update.
@@ -127,6 +142,7 @@ function toCreateRequestBody(values, costLines) {
     Status: values.status,
     ServiceProviders: toServiceProvidersRequestBody(values),
     OperationalDetails: toOperationalDetailsRequestBody(values),
+    TransshipmentLegs: toTransshipmentLegsRequestBody(values),
   };
 }
 
@@ -167,6 +183,7 @@ function toUpdateRequestBody(values, costLines) {
     Status: values.status,
     ServiceProviders: toServiceProvidersRequestBody(values),
     OperationalDetails: toOperationalDetailsRequestBody(values),
+    TransshipmentLegs: toTransshipmentLegsRequestBody(values),
   };
 }
 

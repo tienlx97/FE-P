@@ -294,7 +294,7 @@ export function ShipmentScheduleDialog({
         </Grid>
         {/* Date + time side by side need the full row. */}
         {cutoffField('Cut-off SI / VGM', 'siCutoff')}
-        {cutoffField('Cut-off hạ bãi (CY)', 'cyCutoff')}
+        {cutoffField('Cut-off CY', 'cyCutoff')}
         {etdShift ? (
           <Text size="sm" color="meta-subtle">
             ETD {etdShift > 0 ? 'lùi' : 'sớm'} {Math.abs(etdShift)} ngày so với

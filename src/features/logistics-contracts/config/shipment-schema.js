@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { CURRENCY_CODES } from './currencies.js';
 import { PAYMENT_TYPES } from './payment-schedule-types.js';
+import { MAX_TRANSSHIPMENT_LEGS } from './shipment-documents.js';
 import { SHIPMENT_CUSTOMS_CHANNELS } from './shipment-operational-details.js';
 import { freeTimeErrors } from './shipment-schedule.js';
 import { SHIPMENT_STATUSES } from './shipment-status.js';
@@ -127,6 +128,19 @@ export const shipmentSchema = z
     siCutoffTime: z.string(),
     serviceTerm: z.string().trim().max(20, 'Tối đa 20 ký tự'),
     isTransshipment: z.boolean(),
+    transshipmentLegs: z
+      .array(
+        z.object({
+          port: z.string().trim().max(200, 'Tối đa 200 ký tự'),
+          vesselName: z.string().trim().max(200).nullable(),
+          voyageNumber: z.string().trim().max(50).nullable(),
+          eta: z.string().nullable(),
+          ata: z.string().nullable(),
+          etd: z.string().nullable(),
+          atd: z.string().nullable(),
+        }),
+      )
+      .max(MAX_TRANSSHIPMENT_LEGS, `Tối đa ${MAX_TRANSSHIPMENT_LEGS} cảng chuyển tải`),
     coForm: z.string().trim().max(20, 'Tối đa 20 ký tự'),
     customsChannel: z.union([z.enum(SHIPMENT_CUSTOMS_CHANNELS), z.literal('')]),
     letterOfCreditNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
@@ -139,6 +153,24 @@ export const shipmentSchema = z
     destinationFreeTime: freeTimeFormSchema,
   })
   .superRefine((values, context) => {
+    if (values.isTransshipment) {
+      if (values.transshipmentLegs.length === 0) {
+        context.addIssue({
+          code: 'custom',
+          path: ['transshipmentLegs'],
+          message: 'Vui lòng thêm ít nhất một cảng chuyển tải',
+        });
+      }
+      values.transshipmentLegs.forEach((leg, index) => {
+        if (!leg.port) {
+          context.addIssue({
+            code: 'custom',
+            path: ['transshipmentLegs', index, 'port'],
+            message: 'Vui lòng nhập cảng chuyển tải',
+          });
+        }
+      });
+    }
     // "Hạn nộp SI / VGM" is one date-time on the backend: a time alone has
     // nothing to attach to.
     if (values.siCutoffTime && !values.siCutoffDate) {

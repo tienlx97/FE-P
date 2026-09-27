@@ -5,6 +5,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
+import { Divider } from '@astryxdesign/core/Divider';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -22,12 +23,12 @@ import {
 } from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { ArrowRight, Plus, Save, ScanLine, Ship, Split } from 'lucide-react';
+import { ArrowRight, Plus, Save, ScanLine, Ship, Split, Trash2 } from 'lucide-react';
 import { useId, useRef, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
@@ -38,6 +39,7 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
@@ -45,6 +47,10 @@ import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 import { currencyOptions } from '../config/currencies.js';
 import { paymentTypeOptions } from '../config/payment-schedule-types.js';
 import { withSavedOption } from '../config/place-options.js';
+import {
+  blankTransshipmentLeg,
+  MAX_TRANSSHIPMENT_LEGS,
+} from '../config/shipment-documents.js';
 import {
   metaToneForCustomsChannel,
   shipmentCustomsChannelOptions,
@@ -175,6 +181,14 @@ export function ShipmentFormDrawer({
 
   const hasOriginFreeTime = tracksOriginFreeTime(contract.incoterm);
   const hasDestinationFreeTime = tracksDestinationFreeTime(contract.incoterm);
+  /** @param {number} index @param {string} port */
+  const setTransshipmentPort = (index, port) =>
+    setField(
+      'transshipmentLegs',
+      values.transshipmentLegs.map((leg, legIndex) =>
+        legIndex === index ? { ...leg, port } : leg,
+      ),
+    );
   /** @param {'originFreeTime' | 'destinationFreeTime'} side */
   const freeTimeStatuses = (side) => ({
     demDays: fieldStatuses[`${side}.demDays`],
@@ -465,367 +479,501 @@ export function ShipmentFormDrawer({
                     title="Booking & vận chuyển"
                     meta="Các trường dấu hoa thị là bắt buộc"
                   >
-                    <HStack gap={2} vAlign="start" wrap="nowrap">
-                      <StackItem size="fill">
-                        <Selector
-                          label="Forwarder"
+                    <VStack as="section" gap={4} hAlign="stretch">
+                      <Heading level={6} accessibilityLevel={4} weight="bold">
+                        Đơn vị tham gia
+                      </Heading>
+                      <HStack gap={2} vAlign="start" wrap="nowrap">
+                        <StackItem size="fill">
+                          <Selector
+                            label="Forwarder"
+                            hasSearch
+                            placeholder="Chọn forwarder"
+                            value={values.supplierCustomerId}
+                            onChange={(value) =>
+                              setField('supplierCustomerId', value ?? '')
+                            }
+                            options={supplierOptions}
+                            isRequired
+                            isDisabled={isDisabled}
+                            width="100%"
+                            {...statusOf('supplierCustomerId')}
+                          />
+                        </StackItem>
+                        <VStack xstyle={styles.alignWithField}>
+                          <IconButton
+                            label="Thêm nhà cung cấp"
+                            tooltip="Thêm nhà cung cấp"
+                            icon={<Icon icon={Plus} size="sm" />}
+                            type="button"
+                            variant="secondary"
+                            isDisabled={isDisabled}
+                            onClick={() => setIsQuickCreateOpen(true)}
+                          />
+                        </VStack>
+                      </HStack>
+
+                      {/* Several suppliers per task allowed (BE-kt-xnk
+                        `add-shipment-service-providers`). */}
+                      <Grid columns={TWO_COLUMNS} gap={4}>
+                        <MultiSelector
+                          label="Đại lý hải quan"
                           hasSearch
-                          placeholder="Chọn forwarder"
-                          value={values.supplierCustomerId}
+                          triggerDisplay="badges"
+                          placeholder="Chọn một hoặc nhiều nhà cung cấp"
+                          value={values.customsBrokerIds}
                           onChange={(value) =>
-                            setField('supplierCustomerId', value ?? '')
+                            setField('customsBrokerIds', value)
                           }
                           options={supplierOptions}
+                          isOptional
+                          isDisabled={isDisabled}
+                        />
+                        <MultiSelector
+                          label="Đơn vị trucking"
+                          hasSearch
+                          triggerDisplay="badges"
+                          placeholder="Chọn một hoặc nhiều nhà cung cấp"
+                          value={values.truckingIds}
+                          onChange={(value) => setField('truckingIds', value)}
+                          options={supplierOptions}
+                          isOptional
+                          isDisabled={isDisabled}
+                        />
+                      </Grid>
+                    </VStack>
+
+                    <Divider />
+                    <VStack as="section" gap={4} hAlign="stretch">
+                      <Heading level={6} accessibilityLevel={4} weight="bold">
+                        Booking & tàu
+                      </Heading>
+                      <Grid columns={TWO_COLUMNS} gap={4}>
+                        <TextInput
+                          label="Số booking"
+                          value={values.bookingNumber}
+                          onChange={(value) => setField('bookingNumber', value)}
                           isRequired
                           isDisabled={isDisabled}
                           width="100%"
-                          {...statusOf('supplierCustomerId')}
+                          {...statusOf('bookingNumber')}
                         />
-                      </StackItem>
-                      <VStack xstyle={styles.alignWithField}>
-                        <IconButton
-                          label="Thêm nhà cung cấp"
-                          tooltip="Thêm nhà cung cấp"
-                          icon={<Icon icon={Plus} size="sm" />}
-                          type="button"
-                          variant="secondary"
-                          isDisabled={isDisabled}
-                          onClick={() => setIsQuickCreateOpen(true)}
-                        />
-                      </VStack>
-                    </HStack>
-
-                    {/* Several suppliers per task allowed (BE-kt-xnk
-                        `add-shipment-service-providers`). */}
-                    <Grid columns={TWO_COLUMNS} gap={4}>
-                      <MultiSelector
-                        label="Đại lý hải quan"
-                        hasSearch
-                        triggerDisplay="badges"
-                        placeholder="Chọn một hoặc nhiều nhà cung cấp"
-                        value={values.customsBrokerIds}
-                        onChange={(value) =>
-                          setField('customsBrokerIds', value)
-                        }
-                        options={supplierOptions}
-                        isOptional
-                        isDisabled={isDisabled}
-                      />
-                      <MultiSelector
-                        label="Đơn vị trucking"
-                        hasSearch
-                        triggerDisplay="badges"
-                        placeholder="Chọn một hoặc nhiều nhà cung cấp"
-                        value={values.truckingIds}
-                        onChange={(value) => setField('truckingIds', value)}
-                        options={supplierOptions}
-                        isOptional
-                        isDisabled={isDisabled}
-                      />
-                      <TextInput
-                        label="Số booking"
-                        value={values.bookingNumber}
-                        onChange={(value) => setField('bookingNumber', value)}
-                        isRequired
-                        isDisabled={isDisabled}
-                        width="100%"
-                        {...statusOf('bookingNumber')}
-                      />
-                      <TextInput
-                        label="Số B/L"
-                        value={values.billOfLadingNumber}
-                        onChange={(value) =>
-                          setField('billOfLadingNumber', value)
-                        }
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                        {...statusOf('billOfLadingNumber')}
-                      />
-                      <TextInput
-                        label="Line tàu"
-                        placeholder="Ví dụ: KMTC, SITC"
-                        value={values.shippingLine}
-                        onChange={(value) => setField('shippingLine', value)}
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                        {...statusOf('shippingLine')}
-                      />
-                      <TextInput
-                        label="Tên tàu"
-                        placeholder="Ví dụ: KMTC JAKARTA // 2604S"
-                        value={values.vesselName}
-                        onChange={(value) => setField('vesselName', value)}
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                        {...statusOf('vesselName')}
-                      />
-                      <TextInput
-                        label="Số chuyến"
-                        placeholder="Ví dụ: 2604S"
-                        value={values.voyageNumber}
-                        onChange={(value) => setField('voyageNumber', value)}
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                        {...statusOf('voyageNumber')}
-                      />
-                      <HStack gap={2} vAlign="start" wrap="nowrap">
-                        <StackItem size="fill">
-                          <DateInput
-                            label="Hạn nộp SI / VGM"
-                            value={dateValue('siCutoffDate')}
-                            onChange={(value) =>
-                              setField('siCutoffDate', value ?? '')
-                            }
-                            format={formatDateInputValue}
-                            isOptional
-                            isDisabled={isDisabled}
-                            {...statusOf('siCutoffDate')}
-                          />
-                        </StackItem>
-                        <VStack xstyle={styles.alignWithField}>
-                          <TimeInput
-                            label="Giờ nộp SI / VGM"
-                            isLabelHidden
-                            value={
-                              /** @type {import('@astryxdesign/core/TimeInput').ISOTimeString} */ (
-                                values.siCutoffTime || undefined
-                              )
-                            }
-                            onChange={(value) =>
-                              setField('siCutoffTime', value ?? '')
-                            }
-                            hourFormat="24h"
-                            isDisabled={isDisabled}
-                          />
-                        </VStack>
-                      </HStack>
-                      <HStack gap={2} vAlign="start" wrap="nowrap">
-                        <StackItem size="fill">
-                          <DateInput
-                            label="Cut-off hạ bãi (CY)"
-                            value={dateValue('cyCutoffDate')}
-                            onChange={(value) =>
-                              setField('cyCutoffDate', value ?? '')
-                            }
-                            format={formatDateInputValue}
-                            isOptional
-                            isDisabled={isDisabled}
-                            {...statusOf('cyCutoffDate')}
-                          />
-                        </StackItem>
-                        <VStack xstyle={styles.alignWithField}>
-                          <TimeInput
-                            label="Giờ cut-off hạ bãi"
-                            isLabelHidden
-                            value={
-                              /** @type {import('@astryxdesign/core/TimeInput').ISOTimeString} */ (
-                                values.cyCutoffTime || undefined
-                              )
-                            }
-                            onChange={(value) =>
-                              setField('cyCutoffTime', value ?? '')
-                            }
-                            hourFormat="24h"
-                            isDisabled={isDisabled}
-                          />
-                        </VStack>
-                      </HStack>
-                      <Selector
-                        label="Điều kiện giao nhận"
-                        placeholder="CY/CY, CFS/CFS…"
-                        value={values.serviceTerm || null}
-                        onChange={(value) =>
-                          setField('serviceTerm', value ?? '')
-                        }
-                        options={shipmentServiceTermOptions}
-                        hasClear
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                      />
-                      <VStack gap={2} hAlign="stretch">
-                        <Text size="sm" weight="semibold">
-                          Phương thức vận chuyển
-                        </Text>
-                        <SegmentedControl
-                          label="Phương thức vận chuyển"
-                          layout="fill"
-                          value={
-                            values.isTransshipment ? 'transshipment' : 'direct'
-                          }
+                        <TextInput
+                          label="Số B/L"
+                          value={values.billOfLadingNumber}
                           onChange={(value) =>
-                            setField(
-                              'isTransshipment',
-                              value === 'transshipment',
-                            )
+                            setField('billOfLadingNumber', value)
                           }
+                          isOptional
                           isDisabled={isDisabled}
-                        >
-                          <SegmentedControlItem
-                            value="direct"
-                            label="Đi thẳng (Direct)"
-                            icon={<Icon icon={ArrowRight} size="sm" />}
-                          />
-                          <SegmentedControlItem
-                            value="transshipment"
-                            label="Chuyển tải"
-                            icon={<Icon icon={Split} size="sm" />}
-                          />
-                        </SegmentedControl>
-                      </VStack>
-                      <DateInput
-                        label="ETD (Ngày xuất hành)"
-                        value={dateValue('etd')}
-                        onChange={(value) => setField('etd', value ?? '')}
-                        format={formatDateInputValue}
-                        isOptional
-                        isDisabled={isDisabled}
-                        {...statusOf('etd')}
-                      />
-                      <DateInput
-                        label="ETA (Ngày dự kiến đến)"
-                        value={dateValue('eta')}
-                        onChange={(value) => setField('eta', value ?? '')}
-                        format={formatDateInputValue}
-                        isOptional
-                        isDisabled={isDisabled}
-                        {...statusOf('eta')}
-                      />
-                    </Grid>
-                    <Text size="sm" color="meta-subtle">
-                      {transitDays !== null && transitDays >= 0
-                        ? `Transit: ${transitDays} ngày. `
-                        : ''}
-                      Đổi ETD / ETA / cut-off / tàu đã có được lưu vào lịch
-                      sử lịch tàu; khi hãng tàu báo trễ, dùng “Cập nhật lịch
-                      tàu” trên trang lô hàng.
-                    </Text>
-
-                    {hasOriginFreeTime || hasDestinationFreeTime ? (
-                      <Grid columns={TWO_COLUMNS} gap={4}>
-                        {hasOriginFreeTime ? (
-                          <ShipmentFreeTimeFields
-                            label="Free time đầu xuất"
-                            description="DET: lấy rỗng → hạ bãi · DEM: hạ bãi → xếp tàu"
-                            value={values.originFreeTime}
-                            onChange={(value) =>
-                              setField('originFreeTime', value)
+                          width="100%"
+                          {...statusOf('billOfLadingNumber')}
+                        />
+                        <TextInput
+                          label="Line tàu"
+                          placeholder="Ví dụ: KMTC, SITC"
+                          value={values.shippingLine}
+                          onChange={(value) => setField('shippingLine', value)}
+                          isOptional
+                          isDisabled={isDisabled}
+                          width="100%"
+                          {...statusOf('shippingLine')}
+                        />
+                        <TextInput
+                          label="Tên tàu"
+                          placeholder="Ví dụ: KMTC JAKARTA // 2604S"
+                          value={values.vesselName}
+                          onChange={(value) => setField('vesselName', value)}
+                          isOptional
+                          isDisabled={isDisabled}
+                          width="100%"
+                          {...statusOf('vesselName')}
+                        />
+                        <TextInput
+                          label="Số chuyến"
+                          placeholder="Ví dụ: 2604S"
+                          value={values.voyageNumber}
+                          onChange={(value) => setField('voyageNumber', value)}
+                          isOptional
+                          isDisabled={isDisabled}
+                          width="100%"
+                          {...statusOf('voyageNumber')}
+                        />
+                        <Selector
+                          label="Điều kiện giao nhận"
+                          placeholder="CY/CY, CFS/CFS…"
+                          value={values.serviceTerm || null}
+                          onChange={(value) =>
+                            setField('serviceTerm', value ?? '')
+                          }
+                          options={shipmentServiceTermOptions}
+                          hasClear
+                          isOptional
+                          isDisabled={isDisabled}
+                          width="100%"
+                        />
+                        <VStack gap={2} hAlign="stretch" xstyle={styles.fullRow}>
+                          <Text size="sm" weight="semibold">
+                            Phương thức vận chuyển
+                          </Text>
+                          <SegmentedControl
+                            label="Phương thức vận chuyển"
+                            layout="fill"
+                            value={
+                              values.isTransshipment
+                                ? 'transshipment'
+                                : 'direct'
                             }
-                            statuses={freeTimeStatuses('originFreeTime')}
+                            onChange={(value) => {
+                              if (
+                                value === 'transshipment' &&
+                                values.transshipmentLegs.length === 0
+                              ) {
+                                setField('transshipmentLegs', [
+                                  blankTransshipmentLeg(),
+                                ]);
+                              }
+                              setField(
+                                'isTransshipment',
+                                value === 'transshipment',
+                              );
+                            }}
                             isDisabled={isDisabled}
-                          />
-                        ) : null}
-                        {hasDestinationFreeTime ? (
-                          <ShipmentFreeTimeFields
-                            label="Free time đầu đích"
-                            description="DEM: dỡ hàng → lấy hàng ra · DET: lấy hàng ra → trả rỗng"
-                            value={values.destinationFreeTime}
-                            onChange={(value) =>
-                              setField('destinationFreeTime', value)
-                            }
-                            statuses={freeTimeStatuses('destinationFreeTime')}
-                            isDisabled={isDisabled}
-                          />
+                          >
+                            <SegmentedControlItem
+                              value="direct"
+                              label="Đi thẳng"
+                              icon={<Icon icon={ArrowRight} size="sm" />}
+                            />
+                            <SegmentedControlItem
+                              value="transshipment"
+                              label="Chuyển tải"
+                              icon={<Icon icon={Split} size="sm" />}
+                            />
+                          </SegmentedControl>
+                        </VStack>
+                        {values.isTransshipment ? (
+                          <VStack gap={3} hAlign="stretch" xstyle={styles.fullRow}>
+                            <HStack hAlign="between" vAlign="center" gap={2} wrap="wrap">
+                              <Text size="sm" weight="semibold">
+                                Cảng chuyển tải theo thứ tự tuyến
+                              </Text>
+                              <Button
+                                label="Thêm cảng chuyển tải"
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                icon={<Icon icon={Plus} size="sm" />}
+                                isDisabled={
+                                  isDisabled ||
+                                  values.transshipmentLegs.length >=
+                                    MAX_TRANSSHIPMENT_LEGS
+                                }
+                                onClick={() =>
+                                  setField('transshipmentLegs', [
+                                    ...values.transshipmentLegs,
+                                    blankTransshipmentLeg(),
+                                  ])
+                                }
+                              />
+                            </HStack>
+                            {values.transshipmentLegs.map((leg, index) => (
+                              <HStack key={index} gap={2} vAlign="start" wrap="nowrap">
+                                <StackItem size="fill">
+                                  <TextInput
+                                    label={`Cảng chuyển tải ${index + 1}`}
+                                    placeholder="Ví dụ: Singapore"
+                                    value={leg.port}
+                                    onChange={(port) =>
+                                      setTransshipmentPort(index, port)
+                                    }
+                                    isRequired
+                                    isDisabled={isDisabled}
+                                    width="100%"
+                                    {...statusOf(`transshipmentLegs.${index}.port`)}
+                                  />
+                                </StackItem>
+                                <VStack xstyle={styles.alignWithField}>
+                                  <IconButton
+                                    label={`Xoá cảng chuyển tải ${index + 1}`}
+                                    tooltip="Xoá cảng chuyển tải"
+                                    icon={<Icon icon={Trash2} size="sm" />}
+                                    type="button"
+                                    variant="ghost"
+                                    isDisabled={
+                                      isDisabled ||
+                                      values.transshipmentLegs.length === 1
+                                    }
+                                    onClick={() =>
+                                      setField(
+                                        'transshipmentLegs',
+                                        values.transshipmentLegs.filter(
+                                          (_, legIndex) => legIndex !== index,
+                                        ),
+                                      )
+                                    }
+                                  />
+                                </VStack>
+                              </HStack>
+                            ))}
+                          </VStack>
                         ) : null}
                       </Grid>
-                    ) : null}
+                    </VStack>
 
-                    <Grid columns={TWO_COLUMNS} gap={4}>
-                      {/* All three default from the contract
+                    <Divider />
+                    <VStack as="section" gap={4} hAlign="stretch">
+                      <Heading level={6} accessibilityLevel={4} weight="bold">
+                        Lịch trình & cut-off
+                      </Heading>
+                      <Grid columns={TWO_COLUMNS} gap={4}>
+                        <HStack gap={2} vAlign="start" wrap="nowrap">
+                          <StackItem size="fill">
+                            <DateInput
+                              label="Cut-off SI / VGM"
+                              value={dateValue('siCutoffDate')}
+                              onChange={(value) =>
+                                setField('siCutoffDate', value ?? '')
+                              }
+                              format={formatDateInputValue}
+                              isOptional
+                              isDisabled={isDisabled}
+                              {...statusOf('siCutoffDate')}
+                            />
+                          </StackItem>
+                          <VStack xstyle={styles.alignWithField}>
+                            <TimeInput
+                              label="Giờ nộp SI / VGM"
+                              isLabelHidden
+                              value={
+                                /** @type {import('@astryxdesign/core/TimeInput').ISOTimeString} */ (
+                                  values.siCutoffTime || undefined
+                                )
+                              }
+                              onChange={(value) =>
+                                setField('siCutoffTime', value ?? '')
+                              }
+                              hourFormat="24h"
+                              width={132}
+                              isDisabled={isDisabled}
+                            />
+                          </VStack>
+                        </HStack>
+                        <HStack gap={2} vAlign="start" wrap="nowrap">
+                          <StackItem size="fill">
+                            <DateInput
+                              label="Cut-off CY"
+                              value={dateValue('cyCutoffDate')}
+                              onChange={(value) =>
+                                setField('cyCutoffDate', value ?? '')
+                              }
+                              format={formatDateInputValue}
+                              isOptional
+                              isDisabled={isDisabled}
+                              {...statusOf('cyCutoffDate')}
+                            />
+                          </StackItem>
+                          <VStack xstyle={styles.alignWithField}>
+                            <TimeInput
+                              label="Giờ cut-off hạ bãi"
+                              isLabelHidden
+                              value={
+                                /** @type {import('@astryxdesign/core/TimeInput').ISOTimeString} */ (
+                                  values.cyCutoffTime || undefined
+                                )
+                              }
+                              onChange={(value) =>
+                                setField('cyCutoffTime', value ?? '')
+                              }
+                              hourFormat="24h"
+                              width={132}
+                              isDisabled={isDisabled}
+                            />
+                          </VStack>
+                        </HStack>
+                        <DateInput
+                          label="ETD (Ngày xuất hành)"
+                          value={dateValue('etd')}
+                          onChange={(value) => setField('etd', value ?? '')}
+                          format={formatDateInputValue}
+                          isOptional
+                          isDisabled={isDisabled}
+                          {...statusOf('etd')}
+                        />
+                        <DateInput
+                          label="ETA (Ngày dự kiến đến)"
+                          value={dateValue('eta')}
+                          onChange={(value) => setField('eta', value ?? '')}
+                          format={formatDateInputValue}
+                          isOptional
+                          isDisabled={isDisabled}
+                          {...statusOf('eta')}
+                        />
+                      </Grid>
+                      <Text size="sm" color="meta-subtle">
+                        {transitDays !== null && transitDays >= 0
+                          ? `Transit: ${transitDays} ngày. `
+                          : ''}
+                        Đổi ETD / ETA / cut-off / tàu đã có được lưu vào lịch sử
+                        lịch tàu; khi hãng tàu báo trễ, dùng “Cập nhật lịch tàu”
+                        trên trang lô hàng.
+                      </Text>
+
+                      {hasOriginFreeTime || hasDestinationFreeTime ? (
+                        <Grid columns={TWO_COLUMNS} gap={4}>
+                          {hasOriginFreeTime ? (
+                            <ShipmentFreeTimeFields
+                              label="Free time đầu xuất"
+                              description="DET: lấy rỗng → hạ bãi · DEM: hạ bãi → xếp tàu"
+                              value={values.originFreeTime}
+                              onChange={(value) =>
+                                setField('originFreeTime', value)
+                              }
+                              statuses={freeTimeStatuses('originFreeTime')}
+                              isDisabled={isDisabled}
+                            />
+                          ) : null}
+                          {hasDestinationFreeTime ? (
+                            <ShipmentFreeTimeFields
+                              label="Free time đầu đích"
+                              description="DEM: dỡ hàng → lấy hàng ra · DET: lấy hàng ra → trả rỗng"
+                              value={values.destinationFreeTime}
+                              onChange={(value) =>
+                                setField('destinationFreeTime', value)
+                              }
+                              statuses={freeTimeStatuses('destinationFreeTime')}
+                              isDisabled={isDisabled}
+                            />
+                          ) : null}
+                        </Grid>
+                      ) : null}
+                      {values.type === 'FCL' &&
+                      hasDestinationFreeTime &&
+                      !values.destinationFreeTime.mode ? (
+                        <Grid columns={TWO_COLUMNS} gap={4}>
+                          <DateInput
+                            label="Hạn trả cont rỗng (nhập tay)"
+                            description="Dùng khi chưa có free time đầu đích"
+                            value={dateValue('emptyReturnDeadline')}
+                            onChange={(value) =>
+                              setField('emptyReturnDeadline', value ?? '')
+                            }
+                            format={formatDateInputValue}
+                            isOptional
+                            isDisabled={isDisabled}
+                            {...statusOf('emptyReturnDeadline')}
+                          />
+                        </Grid>
+                      ) : null}
+                    </VStack>
+
+                    <Divider />
+                    <VStack as="section" gap={4} hAlign="stretch">
+                      <Heading level={6} accessibilityLevel={4} weight="bold">
+                        Điểm xếp & giao hàng
+                      </Heading>
+                      <Grid columns={TWO_COLUMNS} gap={4}>
+                        {/* All three default from the contract
                           (`useShipmentForm`) and stay editable per
                           shipment; tracking shows these, not the
                           contract's. POL / POD pick from the same port
                           catalogs as the contract form. */}
-                      <HStack gap={2} vAlign="start" wrap="nowrap">
-                        <StackItem size="fill">
-                          <Selector
-                            label="Cảng/nơi xếp hàng (POL)"
-                            hasSearch
-                            placeholder="Chọn nơi xếp hàng"
-                            value={values.placeOfLoading || null}
+                        <HStack gap={2} vAlign="start" wrap="nowrap">
+                          <StackItem size="fill">
+                            <Selector
+                              label="Cảng/nơi xếp hàng (POL)"
+                              hasSearch
+                              placeholder="Chọn nơi xếp hàng"
+                              value={values.placeOfLoading || null}
+                              onChange={(value) =>
+                                setField('placeOfLoading', value ?? '')
+                              }
+                              options={withSavedOption(
+                                form.loadingPlaces.map((place) => ({
+                                  value: place.name,
+                                  label: place.label,
+                                })),
+                                values.placeOfLoading,
+                              )}
+                              hasClear
+                              isOptional
+                              isDisabled={isDisabled}
+                              width="100%"
+                              {...statusOf('placeOfLoading')}
+                            />
+                          </StackItem>
+                          <VStack xstyle={styles.alignWithField}>
+                            <IconButton
+                              label="Thêm nơi xếp hàng"
+                              tooltip="Thêm nơi xếp hàng"
+                              icon={<Icon icon={Plus} size="sm" />}
+                              type="button"
+                              variant="secondary"
+                              isDisabled={isDisabled || !form.vietnamCountryId}
+                              onClick={() =>
+                                setQuickCreatePlace('placeOfLoading')
+                              }
+                            />
+                          </VStack>
+                        </HStack>
+                        <HStack gap={2} vAlign="start" wrap="nowrap">
+                          <StackItem size="fill">
+                            <Selector
+                              label="Cảng đến (POD)"
+                              hasSearch
+                              placeholder="Chọn cảng đến"
+                              value={values.placeOfDischarge || null}
+                              onChange={(value) =>
+                                setField('placeOfDischarge', value ?? '')
+                              }
+                              options={withSavedOption(
+                                form.dischargePlaces.map((place) => ({
+                                  value: place.name,
+                                  label: place.label,
+                                })),
+                                values.placeOfDischarge,
+                              )}
+                              hasClear
+                              isOptional
+                              isDisabled={isDisabled}
+                              width="100%"
+                              {...statusOf('placeOfDischarge')}
+                            />
+                          </StackItem>
+                          <VStack xstyle={styles.alignWithField}>
+                            <IconButton
+                              label="Thêm cảng đến"
+                              tooltip="Thêm cảng đến"
+                              icon={<Icon icon={Plus} size="sm" />}
+                              type="button"
+                              variant="secondary"
+                              isDisabled={
+                                isDisabled || !form.dischargeCountryId
+                              }
+                              onClick={() =>
+                                setQuickCreatePlace('placeOfDischarge')
+                              }
+                            />
+                          </VStack>
+                        </HStack>
+                        <VStack hAlign="stretch" xstyle={styles.fullRow}>
+                          <TextArea
+                            label="Nơi giao hàng (Place of Delivery)"
+                            description="Mặc định theo hợp đồng"
+                            placeholder="VD: Công trình ABC, địa chỉ…"
+                            rows={3}
+                            value={values.placeOfDelivery}
                             onChange={(value) =>
-                              setField('placeOfLoading', value ?? '')
+                              setField('placeOfDelivery', value)
                             }
-                            options={withSavedOption(
-                              form.loadingPlaces.map((place) => ({
-                                value: place.name,
-                                label: place.label,
-                              })),
-                              values.placeOfLoading,
-                            )}
-                            hasClear
                             isOptional
                             isDisabled={isDisabled}
                             width="100%"
-                            {...statusOf('placeOfLoading')}
-                          />
-                        </StackItem>
-                        <VStack xstyle={styles.alignWithField}>
-                          <IconButton
-                            label="Thêm nơi xếp hàng"
-                            tooltip="Thêm nơi xếp hàng"
-                            icon={<Icon icon={Plus} size="sm" />}
-                            type="button"
-                            variant="secondary"
-                            isDisabled={isDisabled || !form.vietnamCountryId}
-                            onClick={() => setQuickCreatePlace('placeOfLoading')}
+                            {...statusOf('placeOfDelivery')}
                           />
                         </VStack>
-                      </HStack>
-                      <HStack gap={2} vAlign="start" wrap="nowrap">
-                        <StackItem size="fill">
-                          <Selector
-                            label="Cảng đến (POD)"
-                            hasSearch
-                            placeholder="Chọn cảng đến"
-                            value={values.placeOfDischarge || null}
-                            onChange={(value) =>
-                              setField('placeOfDischarge', value ?? '')
-                            }
-                            options={withSavedOption(
-                              form.dischargePlaces.map((place) => ({
-                                value: place.name,
-                                label: place.label,
-                              })),
-                              values.placeOfDischarge,
-                            )}
-                            hasClear
-                            isOptional
-                            isDisabled={isDisabled}
-                            width="100%"
-                            {...statusOf('placeOfDischarge')}
-                          />
-                        </StackItem>
-                        <VStack xstyle={styles.alignWithField}>
-                          <IconButton
-                            label="Thêm cảng đến"
-                            tooltip="Thêm cảng đến"
-                            icon={<Icon icon={Plus} size="sm" />}
-                            type="button"
-                            variant="secondary"
-                            isDisabled={isDisabled || !form.dischargeCountryId}
-                            onClick={() =>
-                              setQuickCreatePlace('placeOfDischarge')
-                            }
-                          />
-                        </VStack>
-                      </HStack>
-                      <TextInput
-                        label="Nơi giao hàng (Place of Delivery)"
-                        description="Mặc định theo hợp đồng"
-                        placeholder="VD: Công trình ABC, địa chỉ…"
-                        value={values.placeOfDelivery}
-                        onChange={(value) => setField('placeOfDelivery', value)}
-                        isOptional
-                        isDisabled={isDisabled}
-                        width="100%"
-                        {...statusOf('placeOfDelivery')}
-                      />
-                    </Grid>
+                      </Grid>
+                    </VStack>
                   </MetaFormSection>
 
                   <MetaFormSection

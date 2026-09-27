@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
 import { dedupePlacesByName, portOption } from '../config/place-options.js';
+import { blankTransshipmentLeg } from '../config/shipment-documents.js';
 import { splitSiCutoff } from '../config/shipment-operational-details.js';
 import {
   EMPTY_FREE_TIME,
@@ -70,6 +71,7 @@ function emptyValues(contract = null) {
     siCutoffTime: '',
     serviceTerm: '',
     isTransshipment: false,
+    transshipmentLegs: [],
     coForm: '',
     customsChannel: '',
     letterOfCreditNumber: '',
@@ -89,6 +91,7 @@ function emptyValues(contract = null) {
  */
 export function valuesFromShipment(shipment) {
   const details = shipment.operationalDetails;
+  const savedTransshipmentLegs = shipment.transshipmentLegs ?? [];
   const siCutoff = splitSiCutoff(details?.siCutoff);
   const cyCutoff = splitSiCutoff(details?.cyCutoff);
   return {
@@ -131,6 +134,10 @@ export function valuesFromShipment(shipment) {
     siCutoffTime: siCutoff.time,
     serviceTerm: details?.serviceTerm ?? '',
     isTransshipment: details?.isTransshipment ?? false,
+    transshipmentLegs:
+      details?.isTransshipment && savedTransshipmentLegs.length === 0
+        ? [blankTransshipmentLeg()]
+        : savedTransshipmentLegs.map((leg) => ({ ...leg })),
     coForm: details?.coForm ?? '',
     customsChannel: details?.customsChannel ?? '',
     letterOfCreditNumber: details?.letterOfCreditNumber ?? '',

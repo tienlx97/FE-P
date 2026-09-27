@@ -21,12 +21,11 @@ import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import {
   blankTransshipmentRow,
+  MAX_TRANSSHIPMENT_LEGS,
   transshipmentErrors,
   transshipmentRows,
 } from '../config/shipment-documents.js';
 import { useShipmentDocumentsMutations } from '../hooks/use-shipment-schedule-query.js';
-
-const MAX_LEGS = 10;
 
 /** Estimate above actual, per side of the port call. */
 /** @type {Array<{ key: string, header: string, fields: Array<['eta' | 'ata' | 'etd' | 'atd', string]> }>} */
@@ -232,7 +231,7 @@ export function ShipmentTransshipmentDrawer({
             variant="secondary"
             size="sm"
             icon={<Icon icon={Plus} size="sm" />}
-            isDisabled={rows.length >= MAX_LEGS}
+            isDisabled={rows.length >= MAX_TRANSSHIPMENT_LEGS}
             onClick={() => setRows((current) => [...current, blankTransshipmentRow()])}
           />
         }

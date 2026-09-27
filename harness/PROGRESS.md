@@ -1,5 +1,32 @@
 # Progress Log
 
+## 2026-09-27 — Complete Shipment overview and drawer fields
+
+- Compared Shipment API response, drawer fields and the detail overview. The overview now displays customs brokers, trucking providers, CY cut-off, ordered transshipment ports, ATD/ATA, configured free time, shipment type, declaration weight when VGM exists, and the manual empty-container return deadline when present. Delivery location shows an empty state instead of disappearing.
+- The main drawer now edits the manual empty-container return deadline for FCL shipments with destination free time tracked but not yet configured. Schedule revisions, detailed B/L progress, VGM and costs remain in their dedicated views.
+- `./harness/verify.sh` passed: `harness/runs/20260927-232620-541445/`. Browser screenshots at 390 px and 1280 px are in that run directory (`overview-mobile.png`, `overview-desktop.png`, `drawer-empty-return-mobile.png`).
+
+## 2026-09-27 — Group Shipment booking fields in the drawer
+
+- Card 2 now separates providers, booking and vessel details, schedule and
+  cut-offs, and loading/delivery locations with section headings and dividers.
+  The Direct option uses the shorter “Đi thẳng” label so it fits at 390px.
+  All existing form bindings and conditional free-time fields remain in place.
+- Authenticated browser screenshots at desktop and 390px mobile width:
+  `harness/runs/20260927-shipment-booking-groups/`.
+- Discovered: `./harness/verify.sh` passed lint, typecheck, structure,
+  harness tests, unit tests, build, and quality thresholds, but the full gate
+  initially failed on the `schedule.jsx:300` font-size rule; the follow-up
+  below resolves it.
+
+## 2026-09-27 — Shipment delivery location as a full-row textarea
+
+- “Nơi giao hàng” now uses the shared `TextArea` wrapper with three rows and
+  spans both columns in Card 2. The schedule item text uses `sm` to satisfy
+  the logistics font-size rule and restore the full gate.
+- Mobile screenshot: `harness/runs/20260927-shipment-booking-groups/place-of-delivery-mobile.png`.
+- `./harness/verify.sh` passed: `harness/runs/20260927-225537-482696/`.
+
 ## 2026-09-27 — Pause automatic GitHub CI
 
 - Commented out `push` and `pull_request` triggers in `.github/workflows/verify.yml`.
@@ -15722,3 +15749,7 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
   `contract-related-entities-panel.jsx`).
 - `./harness/verify.sh` passed: `harness/runs/20260925-000727-146152/`.
   Not browser-verified (automation session logged out).
+# 2026-09-27 — Shipment transshipment ports
+
+- Shipment drawer now requires at least one port when “Chuyển tải” is selected and supports up to ten ports in route order. It restores saved legs and retains vessel/voyage/date details while editing port names. Switching to direct service sends an empty list.
+- `./harness/verify.sh` passed: `harness/runs/20260927-231311-517028/`. Browser check at 390×844 showed two editable ports (“Singapore”, “Port Klang”), add/remove controls and the save action within the drawer. Screenshot: `harness/runs/20260927-231311-517028/shipment-transshipment-ports.png`.

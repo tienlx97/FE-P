@@ -297,7 +297,7 @@ function ScheduleItem({ item, onClick, renderPreview, isWide = false }) {
       onClick={() => onClick?.(item)}
       xstyle={[styles.item, tones[item.tone], isWide && styles.itemWide]}
     >
-      <Text size="xsm" weight="semibold" color="inherit" xstyle={isWide ? styles.itemTextWide : styles.itemText}>
+      <Text size="sm" weight="semibold" color="inherit" xstyle={isWide ? styles.itemTextWide : styles.itemText}>
         {item.title}
       </Text>
     </HStack>

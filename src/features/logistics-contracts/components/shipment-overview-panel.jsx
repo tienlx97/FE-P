@@ -42,6 +42,7 @@ import {
   splitSiCutoff,
 } from '../config/shipment-operational-details.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
+import { freeTimeSummary } from '../config/shipment-schedule.js';
 import {
   labelForShipmentStatus,
   metaToneForShipmentStatus,
@@ -86,13 +87,13 @@ function containerMixLabel(vgms) {
 }
 
 /**
- * SI / VGM cut-off as "17:00 • 30/09/2026", flagged closed once passed.
- * @param {string | null | undefined} siCutoff
+ * Cut-off as "17:00 • 30/09/2026", flagged closed once passed.
+ * @param {string | null | undefined} cutoff
  */
-function describeSiCutoff(siCutoff) {
-  if (!siCutoff) return null;
-  const { date, time } = splitSiCutoff(siCutoff);
-  const isClosed = new Date(siCutoff).getTime() < Date.now();
+function describeCutoff(cutoff) {
+  if (!cutoff) return null;
+  const { date, time } = splitSiCutoff(cutoff);
+  const isClosed = new Date(cutoff).getTime() < Date.now();
   return {
     label: `${time} • ${formatDisplayDate(date)}${isClosed ? ' (Đã đóng)' : ''}`,
     isClosed,
@@ -107,6 +108,7 @@ function describeSiCutoff(siCutoff) {
  * @param {{
  *   shipment: import('../types/index.js').Shipment,
  *   forwarderName: string,
+ *   suppliersById: Map<string, import('../types/index.js').Customer>,
  *   vgms: import('../types/index.js').ShipmentVgm[],
  *   isVgmsLoading: boolean,
  *   onViewVgms: () => void,
@@ -115,12 +117,21 @@ function describeSiCutoff(siCutoff) {
 export function ShipmentOverviewPanel({
   shipment,
   forwarderName,
+  suppliersById,
   vgms,
   isVgmsLoading,
   onViewVgms,
 }) {
   const details = shipment.operationalDetails;
-  const siCutoff = describeSiCutoff(details?.siCutoff);
+  const siCutoff = describeCutoff(details?.siCutoff);
+  const cyCutoff = describeCutoff(details?.cyCutoff);
+  /** @param {'CustomsBroker' | 'Trucking'} role */
+  const serviceProviderNames = (role) =>
+    (shipment.serviceProviders ?? [])
+      .filter((provider) => provider.role === role)
+      .map((provider) => suppliersById.get(provider.supplierId)?.companyName)
+      .filter(Boolean)
+      .join(', ');
   const sameCurrency =
     shipment.invoiceCurrency === shipment.declarationCurrency;
   const matchPercent =
@@ -205,6 +216,14 @@ export function ShipmentOverviewPanel({
         <Grid columns={FIELD_GRID_COLUMNS} gap={4}>
           <MetaShipmentField label="Forwarder" value={forwarderName} />
           <MetaShipmentField
+            label="Đại lý hải quan"
+            value={serviceProviderNames('CustomsBroker')}
+          />
+          <MetaShipmentField
+            label="Đơn vị trucking"
+            value={serviceProviderNames('Trucking')}
+          />
+          <MetaShipmentField
             label="Số booking"
             value={shipment.bookingNumber}
             isCode
@@ -233,6 +252,14 @@ export function ShipmentOverviewPanel({
             isCode
           />
           <MetaShipmentField
+            label="Cut-off CY"
+            value={cyCutoff?.label ?? ''}
+            icon={Clock}
+            iconTone={cyCutoff?.isClosed ? 'warning' : 'accent'}
+            valueTone={cyCutoff?.isClosed ? 'warning' : 'accent'}
+            isCode
+          />
+          <MetaShipmentField
             label="Cảng xếp hàng (POL)"
             value={shipment.placeOfLoading ?? ''}
             icon={Anchor}
@@ -255,14 +282,12 @@ export function ShipmentOverviewPanel({
                 : undefined
             }
           />
-          {shipment.placeOfDelivery ? (
-            <MetaShipmentField
-              label="Nơi giao hàng"
-              value={shipment.placeOfDelivery}
-              icon={MapPin}
-              iconTone="success"
-            />
-          ) : null}
+          <MetaShipmentField
+            label="Nơi giao hàng"
+            value={shipment.placeOfDelivery ?? ''}
+            icon={MapPin}
+            iconTone="success"
+          />
           <MetaShipmentField
             label="Phương thức vận chuyển"
             value={
@@ -273,6 +298,46 @@ export function ShipmentOverviewPanel({
             icon={Navigation}
             iconTone="success"
           />
+          {details?.isTransshipment
+            ? (shipment.transshipmentLegs ?? []).map((leg, index) => (
+                <MetaShipmentField
+                  key={index}
+                  label={`Cảng chuyển tải ${index + 1}`}
+                  value={leg.port}
+                  icon={Anchor}
+                  iconTone="accent"
+                />
+              ))
+            : null}
+          <MetaShipmentField
+            label="ATD (khởi hành thực tế)"
+            value={dateOrEmpty(details?.actualDeparture)}
+            isCode
+          />
+          <MetaShipmentField
+            label="ATA (đến thực tế)"
+            value={dateOrEmpty(details?.actualArrival)}
+            isCode
+          />
+          {details?.originFreeTime ? (
+            <MetaShipmentField
+              label="Free time đầu xuất"
+              value={freeTimeSummary(details.originFreeTime)}
+            />
+          ) : null}
+          {details?.destinationFreeTime ? (
+            <MetaShipmentField
+              label="Free time đầu đích"
+              value={freeTimeSummary(details.destinationFreeTime)}
+            />
+          ) : null}
+          {details?.emptyReturnDeadline ? (
+            <MetaShipmentField
+              label="Hạn trả cont rỗng (nhập tay)"
+              value={dateOrEmpty(details.emptyReturnDeadline)}
+              isCode
+            />
+          ) : null}
         </Grid>
       </MetaShipmentSection>
 
@@ -351,6 +416,7 @@ export function ShipmentOverviewPanel({
         }
       >
         <Grid columns={CARD_GRID_COLUMNS} gap={4}>
+          <MetaShipmentField label="Loại hình" value={shipment.type} />
           <MetaShipmentField
             label="Tên lô hàng"
             value={shipment.name}
@@ -383,6 +449,13 @@ export function ShipmentOverviewPanel({
               vgms.length > 0 ? `Net weight: ${formatKg(netTotal)}` : undefined
             }
           />
+          {vgms.length > 0 ? (
+            <MetaShipmentField
+              label="Khối lượng tờ khai"
+              value={formatKg(shipment.declarationWeightKg)}
+              isCode
+            />
+          ) : null}
           <MetaShipmentField
             label="Tình trạng lô hàng"
             value={
