@@ -13,10 +13,10 @@
   phase 2 = real fetch per carrier).
 - verify.sh passed (`harness/runs/20260927-082428-1860/`). Dev stack API
   rebuilt (migration `ShipmentCarrierTracking` applied; 3 dev shipments have
-  "KMTC"). Chrome check NOT done: the browser only reaches the LAN address
-  and no test login was given — open 26KCT03/LOT-01 → "Lịch tàu & Free
-  time", expect "Chưa kết nối" + "adapter v1" and "Đồng bộ ngay" → status
-  stays "Chưa kết nối".
+  "KMTC"). Chrome (26KCT03/LOT-01, user's login): section shows "KMTC ·
+  adapter v1", pill "Chưa kết nối", info hint; "Đồng bộ ngay" → POST 200,
+  subtitle "Thử lúc 27/09/2026 08:51", subscription stored NotImplemented;
+  no console errors.
 
 ## 2026-09-27 — Journey flow check (frontend part)
 
