@@ -17,7 +17,9 @@
   shown; event click opened 26KCT02/LOT-01 (5 alerts); list drawer groups
   Cần chú ý / Chờ tàu chạy / Chưa có lịch tàu.
 - Known limit: the lab month grid rows are fixed 128 px, so the grid does
-  not stretch to the page height (frame does); "Today" label is the lab's.
+  not stretch to the page height (frame does); "Today" / "All day" labels
+  are the lab's. Default view is therefore "2 tuần" (list, fills the
+  height; a sailing shipment repeats on each day); Tháng / Tuần selectable.
 
 ## 2026-09-27 — Carrier tracking: source "API" on the dates; plan §5 rewritten
 

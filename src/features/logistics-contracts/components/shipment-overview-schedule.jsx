@@ -57,7 +57,9 @@ export function ShipmentOverviewSchedule() {
     }),
     [],
   );
-  const [view, setView] = useState(views.month);
+  // "2 tuần" first: it fills the page height (the lab month grid has fixed
+  // 128 px week rows and leaves the bottom of the page empty).
+  const [view, setView] = useState(views.list);
   const [date, setDate] = useState(() => Date.now());
   const [drawer, setDrawer] = useState(
     /** @type {null | { shipmentId: string | null }} */ (null),
@@ -85,9 +87,9 @@ export function ShipmentOverviewSchedule() {
   const pagination = useSchedulePaginationPlugin();
   const viewSelector = useScheduleViewSelectorPlugin(
     [
+      { view: views.list, label: '2 tuần' },
       { view: views.month, label: 'Tháng' },
       { view: views.week, label: 'Tuần' },
-      { view: views.list, label: '2 tuần' },
     ],
     { onChangeView: setView },
   );

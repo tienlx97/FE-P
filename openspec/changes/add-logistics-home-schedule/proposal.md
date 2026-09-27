@@ -14,7 +14,8 @@ page (full width and height, fixed); more detail opens in a drawer.
   shipment departure → arrival (ATD / ATA first, else ETD / ETA), colored
   by phase (Chờ tàu chạy / Đang trên tàu / Đã đến cảng) or red "Cần chú ý"
   with a danger alert; one-day SI / CY cut-offs until it sails; earliest
-  running free-time day (red once past). Views: Tháng / Tuần / 2 tuần.
+  running free-time day (red once past). Views: 2 tuần (default — fills the
+  page height) / Tháng / Tuần.
 - Drawer (`ShipmentOverviewDrawer`): header button "Lô hàng (n)" lists
   every shipment grouped (Cần chú ý, phases, Chưa có lịch tàu); clicking an
   event (matched by its shipment code — the lab Schedule gives events no
