@@ -64,6 +64,41 @@ Cập nhật lần cuối: 2026-09-27.
 
 ---
 
+## 1b. Luồng hoạt động (người dùng)
+
+Một người nhập liệu, theo các thời điểm thực tế của lô hàng. Hệ thống tự
+tính tiến độ, hạn và cảnh báo từ dữ liệu này.
+
+| # | Khi nào | Người dùng làm | Ở đâu | Hệ thống tự làm |
+|--:|---|---|---|---|
+| 1 | Tạo lô hàng | Tạo Shipment từ hợp đồng (Incoterm lấy từ hợp đồng) | Hợp đồng → "Thêm Shipment" | Dựng hành trình theo Incoterm, Tình trạng "Đã book" |
+| 2 | Nhận booking từ forwarder | Nhập ETD, ETA, cut-off SI / VGM, cut-off CY, tàu / chuyến, **free time** từng đầu (Chi tiết DEM / DET hoặc Combined) | Lô hàng → "Chỉnh sửa" | Lưu làm ngày **ban đầu**; cảnh báo cut-off SI / CY khi còn ≤ 2 ngày |
+| 3 | Lấy cont rỗng | Thêm **container** (số cont + loại, seal nếu có) rồi ghi **ngày lấy rỗng** (nhập nhanh cho mọi cont) | Tab "Container & VGM" → "Thêm container"; "Ngày container" | Mốc Empty Pickup (x/y cont); đồng hồ DET / Combined đầu xuất bắt đầu chạy |
+| 4 | Đóng hàng, cân | **Khai VGM** từng cont: ngày đóng hàng, nhà vận chuyển, 5 khối lượng | Tab "Container & VGM" → sửa cont | Mốc Packing (từ – đến); cảnh báo cut-off SI / VGM đếm cont chưa khai |
+| 5 | Hạ bãi cảng | Ghi **ngày hạ bãi** (gate-in) | "Ngày container" | Đủ cont → mốc POL; DET đầu xuất dừng, DEM đầu xuất bắt đầu; cảnh báo cut-off CY tắt |
+| 6 | Hãng tàu báo trễ / đổi tàu | "**Cập nhật lịch tàu**": ETD / ETA / cut-off mới, lý do, ngày thông báo; gia hạn free time nếu có | Tab "Lịch tàu & Free time" | Lưu 1 dòng **lịch sử**; "trễ n ngày" trên thẻ; cảnh báo ETD / ETA bị dời |
+| 7 | Nhận B/L nháp → phát hành | "**Cập nhật B/L**": loại B/L, ngày nháp, ngày phát hành | Tab "Lịch tàu & Free time" | Cảnh báo tàu chạy ≥ 3 ngày chưa phát hành B/L |
+| 8 | Tàu chạy | Nhập **ATD** ("Cập nhật lịch tàu") | như 6 | Mốc Shipped on Board xong; DEM / Combined đầu xuất dừng. FOB: Seller hoàn tất |
+| 9 | Có chuyển tải | "**Sửa chuyển tải**": cảng, tàu nối, ETA / ATA, ETD / ATD | Tab "Lịch tàu & Free time" | Thẻ Ocean hiện tuyến qua các cảng; cảnh báo chặng quá ETD chưa ATD |
+| 10 | Giao chứng từ / telex | Ghi ngày **giao bộ gốc / telex release** | "Cập nhật B/L" | Tắt cảnh báo; nếu hàng sắp đến / đã đến mà chưa giao → cảnh báo (đỏ khi đã đến) |
+| 11 | Tàu đến | Nhập **ATA** | "Cập nhật lịch tàu" | Mốc POD; đồng hồ đầu đích (CIF / DDP) bắt đầu từ ngày dỡ hàng |
+| 12 | Thông quan / giao hàng (CIF Buyer, DDP Seller) | Cập nhật **Tình trạng**; DDP: "Xác nhận mốc" Import Clearance / Site Delivery (ngày thực tế) | Lô hàng | Mốc tương ứng xong |
+| 13 | Cont ra cảng đích / trả rỗng (CIF) | Ghi ngày **lấy hàng ra cảng** (nếu đầu đích Chi tiết) và **trả rỗng** + depot | "Ngày container" | Đồng hồ DEM / DET / Combined đầu đích; trả hết cont → Empty Return xong, lô CIF hoàn tất |
+| 14 | Hằng ngày | Xem **"Lô hàng cần chú ý"** | Danh sách Shipment | Gom mọi cảnh báo của các lô, đỏ trước |
+
+Ghi chú:
+
+- Tiến độ = mốc xa nhất giữa **Tình trạng**, **mốc xác nhận tay** (chỉ
+  Import Clearance / Site Delivery) và **dữ liệu** (cont lấy rỗng / hạ bãi,
+  ATD, ATA) — dữ liệu chỉ đẩy trong các mốc Seller (nguyên tắc 7).
+- Thanh "TIẾN ĐỘ LỘ TRÌNH" tính theo thời gian (mục 4.8), 100% khi mọi mốc
+  Seller xong.
+- Lô LCL bỏ bước 3, 5, 13 (không có container riêng).
+- Phạm vi theo Incoterm: EXW dừng ở Packing; FOB dừng khi tàu chạy; CIF
+  đến trả rỗng; DDP đến Site Delivery.
+
+---
+
 ## 2. Master Journey (mốc chuẩn)
 
 | # | Mã mốc | Nhãn hiển thị | Tiêu đề trên thẻ | Ngày / thông số ở chân thẻ | Nhóm chi phí liên quan |
@@ -143,8 +178,7 @@ Ký hiệu: **S** = Seller, **B** = Buyer, ★ = marker.
 | Đang đóng hàng | Packing |
 | Hạ bãi chờ xuất | POL |
 | Đã giao đến cảng | Shipped on Board *(FOB: giao tại cảng xếp)* |
-| Shipping | Ocean Freight |
-| Khai HQ, Trucking đến site, Đã hoàn thành | `end` |
+| Shipping, Khai HQ, Trucking đến site, Đã hoàn thành | `end` *(tàu chạy = đã qua điểm chuyển rủi ro, Ocean Freight là chặng của Buyer)* |
 
 ### 3.3 CIF — rủi ro lên tàu, cước & bảo hiểm đến cảng đích
 
@@ -199,6 +233,10 @@ Ký hiệu: **S** = Seller, **B** = Buyer, ★ = marker.
 ### 3.4 DDP — Seller lo toàn bộ
 
 > DDP: Seller lo toàn bộ hành trình, thông quan và thuế nhập khẩu đến điểm giao.
+
+DDP **không có mốc Empty Return** (quyết định 2026-09-27): hành trình kết
+thúc ở Site Delivery. Free time đầu đích vẫn được theo dõi theo từng cont
+(mục 4.2) để cảnh báo DEM / DET.
 
 | Mốc | Nhãn | Phạm vi | Marker |
 |--:|---|---|---|
@@ -438,3 +476,4 @@ liệu mốc con ở backend).
 | 2026-09-27 | Thêm 4.6 chứng từ B/L, 4.7 chuyển tải, 4.8 thanh tiến độ theo thời gian; "Ngày container" thành drawer | Claude |
 | 2026-09-27 | Container trước, VGM sau: tab "Container & VGM", khai VGM tuỳ chọn (đủ 5 khối lượng hoặc không), cảnh báo SI / VGM đếm cont chưa khai | Claude |
 | 2026-09-27 | Kiểm tra luồng: dữ liệu chỉ đẩy trong mốc Seller (EXW / FOB sau ATD), LCL không có mốc container, CIF hoàn thành không có container không kẹt ở Empty Return (nguyên tắc 7–9) | Claude |
+| 2026-09-27 | FOB "Shipping" = `end` (Seller hoàn tất khi tàu chạy); DDP không có mốc Empty Return; thêm mục 1b Luồng hoạt động | Claude |
