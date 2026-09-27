@@ -1,5 +1,16 @@
 # Progress Log
 
+## 2026-09-27 — Home schedule: full route with the delivery site; leaner hover card
+
+- Route = loading port → discharge port → place of delivery when it
+  differs (DDP site): "Cảng Cát Lái → Bangkok Port → Huayyang …"
+  (`shipmentRoute`, tested). BE-kt-xnk overview returns `placeOfDelivery`.
+- Hover card trimmed to what decides a click: kind · date, code, buyer,
+  route, carrier, ETD/ATD → ETA/ATA, most urgent alert + total.
+- Dev DB (draft data): 26KCT06/LOT-01 `PlaceOfDischarge` set to "Bangkok
+  Port" (was the delivery address); contract 26KCT06 left as is. Dev API
+  rebuilt. Chrome: hover on "Tàu chạy · 26KCT06/LOT-01" shows the new route.
+
 ## 2026-09-27 — Home schedule: hover card per item
 
 - `MetaSchedule` gains `renderItemPreview` (Astryx `HoverCard`, placement

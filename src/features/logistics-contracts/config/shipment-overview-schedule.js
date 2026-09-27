@@ -67,10 +67,18 @@ export function needsAttention(row) {
   return row.alerts.some((alert) => alert.severity === 'Danger');
 }
 
-/** "Hai Phong → Bangkok" (missing ports as "?"). @param {ShipmentOverview} row */
+/**
+ * "Cảng Cát Lái → Bangkok Port → Huayyang …": loading port → discharge
+ * port, then the place of delivery when it is somewhere else (DDP site).
+ * Missing ports read "?".
+ * @param {ShipmentOverview} row
+ */
 export function shipmentRoute(row) {
   if (!row.placeOfLoading && !row.placeOfDischarge) return '';
-  return `${row.placeOfLoading ?? '?'} → ${row.placeOfDischarge ?? '?'}`;
+  const legs = [row.placeOfLoading ?? '?', row.placeOfDischarge ?? '?'];
+  const delivery = row.placeOfDelivery?.trim();
+  if (delivery && delivery !== row.placeOfDischarge?.trim()) legs.push(delivery);
+  return legs.join(' → ');
 }
 
 /**

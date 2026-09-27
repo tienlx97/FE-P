@@ -7,6 +7,7 @@ import {
   overviewFilters,
   overviewGroups,
   shipmentPhase,
+  shipmentRoute,
   shortPlace,
 } from './shipment-overview-schedule.js';
 
@@ -29,6 +30,7 @@ function row(overrides = {}) {
     voyageNumber: null,
     placeOfLoading: 'Cảng Cát Lái',
     placeOfDischarge: 'Cảng Bangkok',
+    placeOfDelivery: null,
     etd: null,
     eta: null,
     actualDeparture: null,
@@ -148,4 +150,14 @@ test('drawer groups: attention first, unscheduled last, empty groups dropped', (
       ['Chưa có lịch tàu', ['b']],
     ],
   );
+});
+
+test('the route adds the place of delivery when it is not the discharge port', () => {
+  assert.equal(shipmentRoute(row()), 'Cảng Cát Lái → Cảng Bangkok');
+  assert.equal(
+    shipmentRoute(row({ placeOfDischarge: 'Bangkok Port', placeOfDelivery: 'Huayyang Subdistrict, Rayong' })),
+    'Cảng Cát Lái → Bangkok Port → Huayyang Subdistrict, Rayong',
+  );
+  assert.equal(shipmentRoute(row({ placeOfDelivery: ' Cảng Bangkok ' })), 'Cảng Cát Lái → Cảng Bangkok');
+  assert.equal(shipmentRoute(row({ placeOfLoading: null, placeOfDischarge: null })), '');
 });

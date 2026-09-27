@@ -1259,6 +1259,7 @@ export {};
  * @property {string | null} voyageNumber
  * @property {string | null} placeOfLoading
  * @property {string | null} placeOfDischarge
+ * @property {string | null} placeOfDelivery - "Nơi giao hàng" (DDP site)
  * @property {string | null} etd
  * @property {string | null} eta
  * @property {string | null} actualDeparture
