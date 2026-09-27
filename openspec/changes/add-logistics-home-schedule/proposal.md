@@ -33,7 +33,22 @@ Terminal49 (last free day first) and Portcast (early delay warnings):
 - ETD / ETA delay ("ETA trễ 4 ngày") in the titles; ports shortened to
   their first comma part.
 
+## Read at a glance (2026-09-27, user request)
+"Nhìn qua schedule là hiểu sơ bộ":
+- Every view shows day items only — no journey bars: departure (ATD else
+  ETD), arrival (ATA else ETA), SI / CY cut-off until it sails, earliest
+  free-time day. Title = verb first ("Tàu chạy · 26KCT02/LOT-01 · KMTC →
+  Bangkok · trễ 4 ngày", "Cut-off hạ bãi · … · 12:00", "Hết free time · …").
+- Color = kind: blue departs, green arrives, yellow deadline, red overdue
+  (deadline past, or ETD / ETA past without the actual). The header filter
+  is the color legend (StatusDot + count per kind).
+- Overdue items roll onto today with their own date in the title ("từ
+  20/09", "ETD 20/09"): the lab mutes past days' events.
+- Month is the default view again (the whole month at a glance); "2 tuần"
+  remains for a list that fills the height.
+
 ## Known limits
 - The lab month grid has fixed 128 px week rows (`grid-auto-rows`), so the
   grid does not stretch to the page height; no prop controls it.
-- Schedule labels "Today" etc. come from the lab component.
+- Schedule labels "Today", "All day" and the lowercase month title come
+  from the lab component; the pale event tints are the lab's too.

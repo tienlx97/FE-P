@@ -2,12 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  filterRows,
+  eventFromText,
+  filterEvents,
   overviewEvents,
   overviewFilters,
   overviewGroups,
-  shipmentFromEventText,
   shipmentPhase,
+  shortPlace,
 } from './shipment-overview-schedule.js';
 
 /** @returns {import('../types/index.js').ShipmentOverview} */
@@ -27,8 +28,8 @@ function row(overrides = {}) {
     shippingLine: 'KMTC',
     vesselName: null,
     voyageNumber: null,
-    placeOfLoading: 'Hai Phong',
-    placeOfDischarge: 'Bangkok',
+    placeOfLoading: 'Cảng Cát Lái',
+    placeOfDischarge: 'Cảng Bangkok',
     etd: null,
     eta: null,
     actualDeparture: null,
@@ -42,9 +43,13 @@ function row(overrides = {}) {
   };
 }
 
-const danger = /** @type {import('../types/index.js').ShipmentAlert} */ ({
-  kind: 'FreeTimeOverdue', severity: 'Danger', dueOn: '2026-10-01', days: 2, containerNumber: null, side: null, freeTimeKind: null, containerCount: null,
-});
+/** @param {'Warning' | 'Danger'} severity @param {string} kind @param {number} days */
+const alert = (severity, kind, days) =>
+  /** @type {import('../types/index.js').ShipmentAlert} */ ({
+    kind, severity, dueOn: null, days, containerNumber: null, side: null, freeTimeKind: null, containerCount: null,
+  });
+
+const TODAY = '2026-09-27';
 
 test('phase follows actual, then estimated dates', () => {
   assert.equal(shipmentPhase(row()), 'unscheduled');
@@ -53,45 +58,89 @@ test('phase follows actual, then estimated dates', () => {
   assert.equal(shipmentPhase(row({ actualDeparture: '2026-10-12', actualArrival: '2026-10-26' })), 'arrived');
 });
 
-test('a bar runs from departure to arrival, actual first; deadlines are one-day events', () => {
+test('ports shorten to their first part without "Cảng"', () => {
+  assert.equal(shortPlace('Cảng Bangkok'), 'Bangkok');
+  assert.equal(shortPlace('Huayyang Subdistrict, Klaeng District, Rayong Province - Thailand'), 'Huayyang Subdistrict');
+  assert.equal(shortPlace(null), '?');
+});
+
+test('each day reads as verb + shipment: departure, arrival, deadlines, colored by kind', () => {
   const events = overviewEvents(
     [
-      row({ etd: '2026-10-10', eta: '2026-10-25', actualDeparture: '2026-10-12', siCutoff: '2026-10-07T17:00:00', freeTimeLastDay: '2026-10-20' }),
-      row({ shipmentId: 's2', shipmentCode: '26KCT03/LOT-02', etd: '2026-10-15', eta: '2026-10-05', cyCutoff: '2026-10-13T12:00:00', freeTimeLastDay: '2026-09-20' }),
-      row({ shipmentId: 's3', shipmentCode: '26KCT03/LOT-03' }),
+      row({
+        etd: '2026-10-04',
+        eta: '2026-10-20',
+        siCutoff: '2026-10-01T17:00:00',
+        cyCutoff: '2026-09-29T12:00:00',
+        freeTimeLastDay: '2026-09-27',
+        alerts: [alert('Warning', 'DepartureDelayed', 4)],
+      }),
     ],
-    '2026-09-27',
+    TODAY,
   );
   assert.deepEqual(
-    events.map((e) => [e.id, e.category, e.start, e.end]),
+    events.map((e) => [e.category, e.start, e.title]),
     [
-      ['ship:s1', 'sailing', '2026-10-12', '2026-10-25'],
-      ['ft:s1', 'freeTime', '2026-10-20', '2026-10-20'],
-      ['ship:s2', 'waiting', '2026-10-15', '2026-10-15'],
-      ['cy:s2', 'cutoff', '2026-10-13', '2026-10-13'],
-      ['ft:s2', 'attention', '2026-09-20', '2026-09-20'],
+      ['departure', '2026-10-04', 'Tàu chạy · 26KCT03/LOT-01 · KMTC → Bangkok · trễ 4 ngày'],
+      ['arrival', '2026-10-20', 'Tàu đến · 26KCT03/LOT-01 · KMTC · tại Bangkok'],
+      ['deadline', '2026-10-01', 'Cut-off SI / VGM · 26KCT03/LOT-01 · 17:00'],
+      ['deadline', '2026-09-29', 'Cut-off hạ bãi · 26KCT03/LOT-01 · 12:00'],
+      ['deadline', '2026-09-27', 'Hết free time · 26KCT03/LOT-01'],
     ],
   );
-  assert.equal(events[0].title, '26KCT03/LOT-01 · KMTC · Hai Phong → Bangkok');
-  assert.equal(events[3].title, '26KCT03/LOT-02 · Cut-off hạ bãi');
 });
 
-test('a shipment with a danger alert is drawn as "Cần chú ý"', () => {
-  assert.equal(overviewEvents([row({ etd: '2026-10-10', alerts: [danger] })], '2026-09-27')[0].category, 'attention');
+test('red = overdue (deadline past, or ETD / ETA past without the actual), rolled onto today', () => {
+  const events = overviewEvents(
+    [
+      row({ etd: '2026-09-20', eta: '2026-09-25', cyCutoff: '2026-09-18T12:00:00', freeTimeLastDay: '2026-09-20' }),
+      row({ shipmentId: 's2', shipmentCode: '26KCT03/LOT-02', actualDeparture: '2026-09-20', actualArrival: '2026-09-25' }),
+    ],
+    TODAY,
+  );
+  assert.deepEqual(
+    events.map((e) => [e.id, e.category, e.start, e.title]),
+    [
+      ['dep:s1', 'overdue', TODAY, 'Quá ETD, chưa chạy · 26KCT03/LOT-01 · KMTC → Bangkok · ETD 20/09'],
+      ['arr:s1', 'overdue', TODAY, 'Quá ETA, chưa đến · 26KCT03/LOT-01 · KMTC · tại Bangkok · ETA 25/09'],
+      ['cy:s1', 'overdue', TODAY, 'Đã qua Cut-off hạ bãi · 26KCT03/LOT-01 · từ 18/09'],
+      ['ft:s1', 'overdue', TODAY, 'Quá hạn free time · 26KCT03/LOT-01 · từ 20/09'],
+      ['dep:s2', 'departure', '2026-09-20', 'Đã chạy · 26KCT03/LOT-02 · KMTC → Bangkok'],
+      ['arr:s2', 'arrival', '2026-09-25', 'Đã đến · 26KCT03/LOT-02 · KMTC · tại Bangkok'],
+    ],
+  );
 });
 
-test('a clicked event maps back to its shipment by code, longest code first', () => {
-  const rows = [row({ shipmentCode: '26KCT03/LOT-01' }), row({ shipmentId: 's10', shipmentCode: '26KCT03/LOT-010' })];
-  assert.equal(shipmentFromEventText('26KCT03/LOT-010 · KMTC', rows)?.shipmentId, 's10');
-  assert.equal(shipmentFromEventText('26KCT03/LOT-01 · Hết free time', rows)?.shipmentId, 's1');
-  assert.equal(shipmentFromEventText('Tháng 10', rows), null);
+test('the header legend counts each kind and filters events', () => {
+  const events = overviewEvents(
+    [row({ etd: '2026-10-04', eta: '2026-10-20', freeTimeLastDay: '2026-09-20' })],
+    TODAY,
+  );
+  assert.deepEqual(
+    overviewFilters(events).map((f) => [f.label, f.count, f.dot]),
+    [
+      ['Tất cả', 3, null],
+      ['Tàu chạy', 1, 'accent'],
+      ['Tàu đến', 1, 'success'],
+      ['Hạn chót', 0, 'warning'],
+      ['Quá hạn', 1, 'error'],
+    ],
+  );
+  assert.deepEqual(filterEvents(events, 'overdue').map((e) => e.id), ['ft:s1']);
+  assert.equal(filterEvents(events, 'all').length, 3);
+});
+
+test('a clicked element maps to its event by exact title', () => {
+  const events = overviewEvents([row({ etd: '2026-10-04' })], TODAY);
+  assert.equal(eventFromText('Tàu chạy · 26KCT03/LOT-01 · KMTC → Bangkok', events)?.shipmentId, 's1');
+  assert.equal(eventFromText('4 CN All day Tàu chạy · 26KCT03/LOT-01 · KMTC → Bangkok', events), null);
 });
 
 test('drawer groups: attention first, unscheduled last, empty groups dropped', () => {
   const groups = overviewGroups([
     row({ shipmentId: 'a', etd: '2026-10-10' }),
     row({ shipmentId: 'b' }),
-    row({ shipmentId: 'c', actualDeparture: '2026-10-01', alerts: [danger] }),
+    row({ shipmentId: 'c', actualDeparture: '2026-10-01', alerts: [alert('Danger', 'FreeTimeOverdue', 2)] }),
   ]);
   assert.deepEqual(
     groups.map((g) => [g.label, g.rows.map((r) => r.shipmentId)]),
@@ -101,46 +150,4 @@ test('drawer groups: attention first, unscheduled last, empty groups dropped', (
       ['Chưa có lịch tàu', ['b']],
     ],
   );
-});
-
-test('the day list shows departure and arrival as separate events, with delays', () => {
-  const delayed = /** @type {import('../types/index.js').ShipmentAlert} */ ({
-    kind: 'ArrivalDelayed', severity: 'Warning', dueOn: '2026-10-20', days: 4, containerNumber: null, side: null, freeTimeKind: null, containerCount: null,
-  });
-  const events = overviewEvents(
-    [row({
-      etd: '2026-10-10', actualDeparture: '2026-10-12', eta: '2026-10-20',
-      placeOfDischarge: 'Huayyang Subdistrict, Klaeng District, Rayong Province - Thailand',
-      alerts: [delayed],
-    })],
-    '2026-09-27',
-    'milestones',
-  );
-  assert.deepEqual(
-    events.map((e) => [e.id, e.start, e.title]),
-    [
-      ['dep:s1', '2026-10-12', '26KCT03/LOT-01 · Tàu đã chạy (ATD) · KMTC · Hai Phong → Huayyang Subdistrict'],
-      ['arr:s1', '2026-10-20', '26KCT03/LOT-01 · Tàu đến (ETA) · KMTC · Hai Phong → Huayyang Subdistrict · ETA trễ 4 ngày'],
-    ],
-  );
-  assert.match(overviewEvents([row({ etd: '2026-10-10', eta: '2026-10-20', alerts: [delayed] })], '2026-09-27')[0].title, /ETA trễ 4 ngày$/);
-});
-
-test('stage filters count and keep the matching shipments', () => {
-  const rows = [
-    row({ shipmentId: 'a', etd: '2026-10-10' }),
-    row({ shipmentId: 'b' }),
-    row({ shipmentId: 'c', actualDeparture: '2026-10-01', alerts: [danger] }),
-  ];
-  assert.deepEqual(
-    overviewFilters(rows).map((f) => [f.key, f.label, f.count]),
-    [
-      ['all', 'Tất cả', 3],
-      ['attention', 'Cần chú ý', 1],
-      ['waiting', 'Chờ tàu chạy', 1],
-      ['sailing', 'Đang trên tàu', 0],
-      ['arrived', 'Đã đến cảng', 0],
-    ],
-  );
-  assert.deepEqual(filterRows(rows, 'attention').map((r) => r.shipmentId), ['c']);
 });

@@ -1,15 +1,21 @@
 /**
  * `/logistics` home: shipments in progress on the Astryx lab `Schedule`
- * (BE-kt-xnk `GET /shipments/overview`). Each scheduled shipment is a bar
- * from departure to arrival (actual when known, else estimated), plus
- * one-day deadlines: SI / CY cut-off (until it sails) and the earliest
- * running free-time day. Events are plain ISO descriptors here; the
- * component turns them into Schedule events.
+ * (BE-kt-xnk `GET /shipments/overview`), built to be read at a glance:
+ * every view shows what happens on each day — a departure, an arrival or a
+ * deadline (SI / CY cut-off until it sails, the earliest running free-time
+ * day) — and the color says which kind (legend = the header filter):
+ * blue departs, green arrives, yellow deadline, red overdue (a deadline
+ * past, or ETD / ETA past without ATD / ATA). Titles lead with the verb.
+ * Overdue items roll forward onto today (with their own date in the
+ * title): the lab Schedule mutes past days' events, and overdue is exactly
+ * what must stay visible.
+ * Events are plain ISO descriptors here; the component turns them into
+ * Schedule events.
  */
 
 /** @typedef {import('../types/index.js').ShipmentOverview} ShipmentOverview */
 /** @typedef {'waiting' | 'sailing' | 'arrived' | 'unscheduled'} ShipmentPhase */
-/** @typedef {'waiting' | 'sailing' | 'arrived' | 'attention' | 'cutoff' | 'freeTime'} OverviewCategory */
+/** @typedef {'departure' | 'arrival' | 'deadline' | 'overdue'} OverviewCategory */
 
 /**
  * @typedef {Object} OverviewEvent
@@ -21,15 +27,23 @@
  * @property {string} end - YYYY-MM-DD, inclusive
  */
 
-/** Schedule categories: label + Token color. */
+/**
+ * Schedule categories (label + Token color) and the matching legend dot
+ * (`StatusDot` variant; the Meta accent is blue).
+ */
 export const OVERVIEW_CATEGORIES = /** @type {const} */ ({
-  waiting: { label: 'Chờ tàu chạy', color: 'blue' },
-  sailing: { label: 'Đang trên tàu', color: 'teal' },
-  arrived: { label: 'Đã đến cảng', color: 'green' },
-  attention: { label: 'Cần chú ý', color: 'red' },
-  cutoff: { label: 'Cut-off', color: 'purple' },
-  freeTime: { label: 'Hạn free time', color: 'orange' },
+  departure: { label: 'Tàu chạy', color: 'blue', dot: 'accent' },
+  arrival: { label: 'Tàu đến', color: 'green', dot: 'success' },
+  deadline: { label: 'Hạn chót', color: 'yellow', dot: 'warning' },
+  overdue: { label: 'Quá hạn', color: 'red', dot: 'error' },
 });
+
+/** Drawer group labels per phase. */
+const PHASE_LABELS = {
+  waiting: 'Chờ tàu chạy',
+  sailing: 'Đang trên tàu',
+  arrived: 'Đã đến cảng',
+};
 
 /** @param {ShipmentOverview} row */
 export function departureOf(row) {
@@ -65,17 +79,13 @@ export function shipmentRoute(row) {
 
 /**
  * A place short enough for a schedule title: its first comma-separated
- * part ("Huayyang Subdistrict, Klaeng District, …" → "Huayyang Subdistrict").
+ * part, without a leading "Cảng" ("Cảng Bangkok" → "Bangkok",
+ * "Huayyang Subdistrict, Klaeng District, …" → "Huayyang Subdistrict").
  * @param {string | null} place
  */
 export function shortPlace(place) {
-  return place ? place.split(',')[0].trim() : '?';
-}
-
-/** @param {ShipmentOverview} row */
-function shortRoute(row) {
-  if (!row.placeOfLoading && !row.placeOfDischarge) return '';
-  return `${shortPlace(row.placeOfLoading)} → ${shortPlace(row.placeOfDischarge)}`;
+  if (!place) return '?';
+  return place.split(',')[0].trim().replace(/^cảng\s+/i, '');
 }
 
 /**
@@ -88,85 +98,69 @@ export function delayDays(row, kind) {
   return row.alerts.find((alert) => alert.kind === kind)?.days ?? 0;
 }
 
-/** @param {number} days @param {string} label */
-function delayTag(days, label) {
-  return days > 0 ? `${label} trễ ${days} ngày` : null;
+/** @param {number} days */
+function lateTag(days) {
+  return days > 0 ? `trễ ${days} ngày` : null;
+}
+
+/** "2026-09-20" → "20/09". @param {string} date */
+function dayMonth(date) {
+  return `${date.slice(8, 10)}/${date.slice(5, 7)}`;
+}
+
+/** @param {Array<string | null | undefined>} parts */
+function join(parts) {
+  return parts.filter(Boolean).join(' · ');
 }
 
 /**
- * Titles always start with the shipment code (a clicked event is matched
- * back to its shipment by it — see `shipmentFromEventText`).
- * @param {ShipmentOverview} row
- * @param {Array<string | null>} parts
- */
-function titleOf(row, parts) {
-  return [row.shipmentCode, ...parts].filter(Boolean).join(' · ');
-}
-
-/**
- * Every Schedule event of the shipments.
- * - `bars` (month / week): one bar departure → arrival; a bar whose arrival
- *   is before its departure (bad data) shows on the departure day only.
- * - `milestones` (day list): the departure and the arrival as separate
- *   one-day events, so a shipment at sea is not repeated on every day.
+ * Every Schedule event of the shipments: departure (on ATD, else ETD),
+ * arrival (ATA, else ETA), SI / CY cut-off while not sailed, the earliest
+ * running free-time day. Overdue relative to `today` → red, shown on today.
  * @param {ShipmentOverview[]} rows
  * @param {string} today - YYYY-MM-DD, business day in Vietnam
- * @param {'bars' | 'milestones'} [mode]
  * @returns {OverviewEvent[]}
  */
-export function overviewEvents(rows, today, mode = 'bars') {
+export function overviewEvents(rows, today) {
   /** @type {OverviewEvent[]} */
   const events = [];
   for (const row of rows) {
-    const phase = shipmentPhase(row);
+    const carrier = row.shippingLine;
     const departure = departureOf(row);
     const arrival = arrivalOf(row);
-    const category = needsAttention(row) ? 'attention' : phase;
-    const etdLate = delayTag(delayDays(row, 'DepartureDelayed'), 'ETD');
-    const etaLate = delayTag(delayDays(row, 'ArrivalDelayed'), 'ETA');
-    if (phase !== 'unscheduled' && mode === 'bars') {
-      const start = /** @type {string} */ (departure ?? arrival);
-      const end = arrival && arrival >= start ? arrival : start;
+
+    if (departure) {
+      const missed = !row.actualDeparture && departure < today;
       events.push({
-        id: `ship:${row.shipmentId}`,
+        id: `dep:${row.shipmentId}`,
         shipmentId: row.shipmentId,
-        title: titleOf(row, [row.shippingLine, shortRoute(row), etaLate ?? etdLate]),
-        category: /** @type {OverviewCategory} */ (category),
-        start,
-        end,
+        title: join([
+          row.actualDeparture ? 'Đã chạy' : missed ? 'Quá ETD, chưa chạy' : 'Tàu chạy',
+          row.shipmentCode,
+          `${carrier ? `${carrier} ` : ''}→ ${shortPlace(row.placeOfDischarge)}`,
+          missed ? `ETD ${dayMonth(departure)}` : lateTag(delayDays(row, 'DepartureDelayed')),
+        ]),
+        category: missed ? 'overdue' : 'departure',
+        start: missed ? today : departure,
+        end: missed ? today : departure,
       });
     }
-    if (phase !== 'unscheduled' && mode === 'milestones') {
-      if (departure) {
-        events.push({
-          id: `dep:${row.shipmentId}`,
-          shipmentId: row.shipmentId,
-          title: titleOf(row, [
-            row.actualDeparture ? 'Tàu đã chạy (ATD)' : 'Tàu chạy (ETD)',
-            row.shippingLine,
-            shortRoute(row),
-            etdLate,
-          ]),
-          category: /** @type {OverviewCategory} */ (category),
-          start: departure,
-          end: departure,
-        });
-      }
-      if (arrival) {
-        events.push({
-          id: `arr:${row.shipmentId}`,
-          shipmentId: row.shipmentId,
-          title: titleOf(row, [
-            row.actualArrival ? 'Tàu đã đến (ATA)' : 'Tàu đến (ETA)',
-            row.shippingLine,
-            shortRoute(row),
-            etaLate,
-          ]),
-          category: /** @type {OverviewCategory} */ (category),
-          start: arrival,
-          end: arrival,
-        });
-      }
+    if (arrival) {
+      const missed = !row.actualArrival && arrival < today;
+      events.push({
+        id: `arr:${row.shipmentId}`,
+        shipmentId: row.shipmentId,
+        title: join([
+          row.actualArrival ? 'Đã đến' : missed ? 'Quá ETA, chưa đến' : 'Tàu đến',
+          row.shipmentCode,
+          carrier,
+          `tại ${shortPlace(row.placeOfDischarge)}`,
+          missed ? `ETA ${dayMonth(arrival)}` : lateTag(delayDays(row, 'ArrivalDelayed')),
+        ]),
+        category: missed ? 'overdue' : 'arrival',
+        start: missed ? today : arrival,
+        end: missed ? today : arrival,
+      });
     }
     if (!row.actualDeparture) {
       for (const [key, label, value] of /** @type {const} */ ([
@@ -175,37 +169,78 @@ export function overviewEvents(rows, today, mode = 'bars') {
       ])) {
         if (value) {
           const day = value.slice(0, 10);
-          events.push({ id: `${key}:${row.shipmentId}`, shipmentId: row.shipmentId, title: titleOf(row, [label]), category: 'cutoff', start: day, end: day });
+          const passed = day < today;
+          events.push({
+            id: `${key}:${row.shipmentId}`,
+            shipmentId: row.shipmentId,
+            title: join([
+              passed ? `Đã qua ${label}` : label,
+              row.shipmentCode,
+              passed ? `từ ${dayMonth(day)}` : value.slice(11, 16),
+            ]),
+            category: passed ? 'overdue' : 'deadline',
+            start: passed ? today : day,
+            end: passed ? today : day,
+          });
         }
       }
     }
     if (row.freeTimeLastDay) {
+      const overdue = row.freeTimeLastDay < today;
       events.push({
         id: `ft:${row.shipmentId}`,
         shipmentId: row.shipmentId,
-        title: titleOf(row, ['Hết free time']),
-        category: row.freeTimeLastDay < today ? 'attention' : 'freeTime',
-        start: row.freeTimeLastDay,
-        end: row.freeTimeLastDay,
+        title: join([
+          overdue ? 'Quá hạn free time' : 'Hết free time',
+          row.shipmentCode,
+          overdue ? `từ ${dayMonth(row.freeTimeLastDay)}` : null,
+        ]),
+        category: overdue ? 'overdue' : 'deadline',
+        start: overdue ? today : row.freeTimeLastDay,
+        end: overdue ? today : row.freeTimeLastDay,
       });
     }
   }
   return events;
 }
 
+/** @typedef {'all' | OverviewCategory} OverviewFilter */
+
 /**
- * The shipment a clicked Schedule event belongs to, from the event's text
- * (the lab Schedule renders events without ids or handlers): every title
- * starts with the shipment code; the longest code found wins.
- * @param {string} text
- * @param {ShipmentOverview[]} rows
+ * Header filter, doubling as the color legend: each kind with how many
+ * events it has (overdue ones counted even when their day is past).
+ * @param {OverviewEvent[]} events
+ * @returns {Array<{ key: OverviewFilter, label: string, count: number, dot: 'accent' | 'success' | 'warning' | 'error' | null }>}
  */
-export function shipmentFromEventText(text, rows) {
-  return (
-    rows
-      .filter((row) => text.includes(row.shipmentCode))
-      .sort((a, b) => b.shipmentCode.length - a.shipmentCode.length)[0] ?? null
-  );
+export function overviewFilters(events) {
+  return [
+    { key: 'all', label: 'Tất cả', count: events.length, dot: null },
+    ...(/** @type {const} */ (['departure', 'arrival', 'deadline', 'overdue'])).map((key) => ({
+      key,
+      label: OVERVIEW_CATEGORIES[key].label,
+      count: events.filter((event) => event.category === key).length,
+      dot: OVERVIEW_CATEGORIES[key].dot,
+    })),
+  ];
+}
+
+/**
+ * @param {OverviewEvent[]} events
+ * @param {OverviewFilter} filter
+ */
+export function filterEvents(events, filter) {
+  return filter === 'all' ? events : events.filter((event) => event.category === filter);
+}
+
+/**
+ * The shipment behind a clicked Schedule element (the lab Schedule gives
+ * events no ids or handlers): the element's text is exactly one event's
+ * title.
+ * @param {string} text
+ * @param {OverviewEvent[]} events
+ */
+export function eventFromText(text, events) {
+  return events.find((event) => event.title === text) ?? null;
 }
 
 /**
@@ -219,7 +254,7 @@ export function overviewGroups(rows) {
     { key: 'attention', label: 'Cần chú ý', rows: rows.filter(needsAttention) },
     ...(/** @type {const} */ (['waiting', 'sailing', 'arrived'])).map((phase) => ({
       key: phase,
-      label: OVERVIEW_CATEGORIES[phase].label,
+      label: PHASE_LABELS[phase],
       rows: rows.filter((row) => !needsAttention(row) && shipmentPhase(row) === phase),
     })),
     {
@@ -229,31 +264,4 @@ export function overviewGroups(rows) {
     },
   ];
   return groups.filter((group) => group.rows.length > 0);
-}
-
-/** @typedef {'all' | 'attention' | 'waiting' | 'sailing' | 'arrived'} OverviewFilter */
-
-/**
- * Stage filter above the schedule (like a tracking dashboard's status bar):
- * each option with how many shipments it keeps. Unscheduled shipments are
- * counted in "Tất cả" only (they are not on the schedule; see the drawer).
- * @param {ShipmentOverview[]} rows
- * @returns {Array<{ key: OverviewFilter, label: string, count: number }>}
- */
-export function overviewFilters(rows) {
-  return /** @type {const} */ (['all', 'attention', 'waiting', 'sailing', 'arrived']).map((key) => ({
-    key,
-    label: key === 'all' ? 'Tất cả' : OVERVIEW_CATEGORIES[key].label,
-    count: filterRows(rows, key).length,
-  }));
-}
-
-/**
- * @param {ShipmentOverview[]} rows
- * @param {OverviewFilter} filter
- */
-export function filterRows(rows, filter) {
-  if (filter === 'all') return rows;
-  if (filter === 'attention') return rows.filter(needsAttention);
-  return rows.filter((row) => !needsAttention(row) && shipmentPhase(row) === filter);
 }

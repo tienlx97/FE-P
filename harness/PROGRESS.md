@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-09-27 — Home schedule readable at a glance
+
+- User: "nhìn qua schedule là hiểu sơ bộ". Day items only (departure /
+  arrival / cut-off / free-time end), verb-first titles, color = kind (blue
+  departs, green arrives, yellow deadline, red overdue), header filter =
+  color legend with counts (StatusDot); overdue rolled onto today (the lab
+  mutes past days); month default again; click → exact-title match
+  (`eventFromText`). `shipment-overview-schedule.test.js` rewritten (7).
+- Chrome: today shows "Đã qua Cut-off SI / VGM · 26KCT06/LOT-01 · từ 26/09"
+  in red and "Hết free time · 26KCT02/LOT-01" in yellow; departures blue on
+  2/10 and 4/10.
+
 ## 2026-09-27 — Home schedule optimized after tracking dashboards
 
 - References: GoFreight tracking dashboard (stage status bar with counts,
