@@ -8,6 +8,7 @@ export { CustomerDetailWorkspace } from './components/customer-detail-workspace.
 export { CustomersList } from './components/customers-list.jsx';
 export { PortsList } from './components/ports-list.jsx';
 export { QuickSearchPalette } from './components/quick-search-palette.jsx';
+export { ShipmentAlertsBell } from './components/shipment-alerts-bell.jsx';
 export { ShipmentDetailWorkspace } from './components/shipment-detail-workspace.jsx';
 export { ShipmentOverviewSchedule } from './components/shipment-overview-schedule.jsx';
 export { ShipmentsList } from './components/shipments-list.jsx';

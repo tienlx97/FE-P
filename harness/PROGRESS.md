@@ -1,5 +1,24 @@
 # Progress Log
 
+## 2026-09-27 — Shipment alerts move to a top-nav bell
+
+- User: the "Lô hàng cần chú ý" card above the shipment list is removed
+  (`shipment-alerts-summary.jsx` deleted). `ShipmentAlertsBell` (top nav,
+  before the layout settings, `logistics:contracts:view` only): ghost bell
+  button with a count badge (red if any shipment is overdue, amber
+  otherwise; Astryx "button with end slot" recipe), click → Popover (Meta
+  theme) listing each shipment (link to its schedule tab, alert count,
+  alert lines) + "Xem lịch các lô hàng đang làm" → /logistics.
+- Chrome (viewport 2560 px): bell "3" red; popover opens under it with
+  "3 lô · 2 có mục quá hạn" and the shipments. Screenshots of the open
+  popover time out (overlay), checked via DOM.
+- Dev server: deleting a StyleX-scanned file left Turbopack's persisted
+  dev cache (`.next/dev`) reading it (ENOENT in globals.css, every page
+  500). Fixed by stopping `next dev`, deleting `.next/dev`, `pnpm dev`
+  (now running from the agent session on :3000).
+- Harness gap: deleting a component file breaks a running `next dev`
+  until `.next/dev` is cleared — worth a note in the dev docs.
+
 ## 2026-09-27 — Home schedule: standard logistics terms
 
 - User: standard terms, no explanations. Items now "ETD / ATD / ETA / ATA

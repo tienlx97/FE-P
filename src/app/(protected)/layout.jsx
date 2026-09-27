@@ -3,7 +3,10 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { UserMenu } from '../../features/auth/index.js';
-import { QuickSearchPalette } from '../../features/logistics-contracts/index.js';
+import {
+  QuickSearchPalette,
+  ShipmentAlertsBell,
+} from '../../features/logistics-contracts/index.js';
 import { parsePermissionsCookie } from '../../shared/api/jwt.js';
 import {
   filterNavLinksByPermissions,
@@ -44,14 +47,15 @@ export default async function ProtectedLayout({ children }) {
     cookieStore.get(SESSION_PERMISSIONS_KEY)?.value,
   );
 
-  // "Tra cứu nhanh" (Ctrl + K) opens contract / shipment detail pages,
-  // which need the same permission.
+  // "Tra cứu nhanh" (Ctrl + K) and the shipment alerts bell open contract /
+  // shipment detail pages, which need the same permission.
   const canQuickSearch = permissions.includes('logistics:contracts:view');
 
   return (
     <ProtectedAppShell
       endContent={
         <HStack gap={2} vAlign="center">
+          {canQuickSearch ? <ShipmentAlertsBell /> : null}
           <LayoutSettingsMenu />
           <UserMenu />
         </HStack>
