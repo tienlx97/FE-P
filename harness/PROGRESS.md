@@ -1,5 +1,19 @@
 # Progress Log
 
+## 2026-09-27 — Public data transfer in Backups
+
+- Added Admin controls to export a versioned JSON of countries, ports and fuel
+  periods and import it into another environment. The import dialog validates
+  the file shape/size and reports added counts; successful import invalidates
+  cached queries. The BFF forwards Content-Disposition for file downloads.
+- `verify.sh` passed (`harness/runs/20260927-172233-3059/`). Browser check
+  reached `/login`; the documented seed account did not authenticate against
+  the currently running dev database, so the protected page screenshot was
+  unavailable from the isolated browser session.
+- Harness gap: UI screenshot evidence requires an isolated test Admin session;
+  the current live dev credentials are not reproducible from the documented
+  seed account.
+
 ## 2026-09-27 — Xăng dầu chart: legend above the plot
 
 - User: move the chart legend higher. The lab `ChartLegend` is a

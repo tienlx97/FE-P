@@ -107,6 +107,28 @@ export function downloadBackupUrl(fileName) {
   return `${API_PROXY_PREFIX}/api/v1/backups/${encodeURIComponent(fileName)}/download`;
 }
 
+/** Admin-only JSON export of countries, ports and fuel history. */
+export function downloadPublicDataUrl() {
+  return `${API_PROXY_PREFIX}/api/v1/backups/public-data`;
+}
+
+/**
+ * Adds missing public records to this environment in one transaction.
+ * @param {File} file
+ * @returns {Promise<{ success: true, summary: {countriesAdded: number, portsAdded: number, fuelPeriodsAdded: number} } | {success: false, message: string}>}
+ */
+export async function importPublicData(file) {
+  const body = new FormData();
+  body.append('file', file);
+  const result = await apiRequest('/api/v1/backups/public-data/import', {
+    method: 'POST',
+    body,
+    errorMessage: 'Không thể nhập dữ liệu public',
+  });
+  if (!result.success) return { success: false, message: result.message };
+  return { success: true, summary: result.data };
+}
+
 /** @returns {Promise<import('../types/index.js').OperationsStatus>} */
 export async function getOperationsStatus() {
   const result = await apiRequest('/api/v1/backups/operations-status', {

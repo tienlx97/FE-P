@@ -18,9 +18,10 @@ import {
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconUpload } from '@/shared/components/icon/icon-upload.jsx';
 
-import { downloadBackupUrl } from '../api/backups.js';
+import { downloadBackupUrl, downloadPublicDataUrl } from '../api/backups.js';
 import { useBackupsQuery } from '../hooks/use-backups-query.js';
 import { useCreateBackupMutation } from '../hooks/use-create-backup-mutation.js';
+import { ImportPublicDataDialog } from './import-public-data-dialog.jsx';
 import { OperationsStatus } from './operations-status.jsx';
 import { RestoreBackupDialog } from './restore-backup-dialog.jsx';
 import { UploadBackupDialog } from './upload-backup-dialog.jsx';
@@ -76,6 +77,7 @@ export function BackupList() {
     /** @type {import('../types/index.js').BackupFile | null} */ (null),
   );
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isPublicImportOpen, setIsPublicImportOpen] = useState(false);
 
   const listResult = backupsQuery.data;
   const backups = listResult?.success ? listResult.backups : [];
@@ -161,7 +163,18 @@ export function BackupList() {
             và kết quả khôi phục thử tự động.
           </Text>
         </VStack>
-        <HStack gap={2}>
+        <HStack gap={2} wrap="wrap">
+          <Button
+            label="Xuất dữ liệu public"
+            variant="secondary"
+            href={downloadPublicDataUrl()}
+          />
+          <Button
+            label="Nhập dữ liệu public"
+            variant="secondary"
+            icon={<Icon icon={IconUpload} size="sm" />}
+            onClick={() => setIsPublicImportOpen(true)}
+          />
           <Button
             label="Tải lên bản sao lưu"
             variant="secondary"
@@ -231,6 +244,10 @@ export function BackupList() {
       <UploadBackupDialog
         isOpen={isUploadOpen}
         onOpenChange={setIsUploadOpen}
+      />
+      <ImportPublicDataDialog
+        isOpen={isPublicImportOpen}
+        onOpenChange={setIsPublicImportOpen}
       />
     </VStack>
   );

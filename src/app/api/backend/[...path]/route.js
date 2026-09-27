@@ -127,6 +127,10 @@ async function proxy(request, context) {
   if (contentType) {
     responseHeaders.set('content-type', contentType);
   }
+  const contentDisposition = response.headers.get('content-disposition');
+  if (contentDisposition) {
+    responseHeaders.set('content-disposition', contentDisposition);
+  }
   const retryAfter = response.headers.get('retry-after');
   if (retryAfter) {
     responseHeaders.set('retry-after', retryAfter);
