@@ -1,5 +1,20 @@
 # Progress Log
 
+## 2026-09-27 — Xăng dầu Thái Lan: PTT OR source with history
+
+- User asked whether a Thai site has an API with history: PTT OR's public
+  SOAP service (`orapiweb.pttor.com/oilservice/OilPrice.asmx`,
+  `GetOilPrice(day)`) returns the period in effect on any day since
+  01/01/2022. BE-kt-xnk `fuel-price-thailand` task 2 replaces Bangchak
+  with it; 335 TH periods 2022 → 24/09/2026 in BE sample data, imported
+  into the dev DB (Bangchak row removed).
+- FE: TH products follow PTT (9, defaults Gasohol 95 / 91 / E20, Diesel),
+  note / source pill "pttor.com".
+- Chrome: TH "Giá hiện hành" compares with 15/09/2026 (Diesel +0,75),
+  "Tất cả" = 01/01/2022 – 24/09/2026 · 335 kỳ; live source-check 200
+  (3.1 s), nothing pending; no console errors. verify.sh passed
+  (`harness/runs/20260927-165218-2298/`).
+
 ## 2026-09-27 — Xăng dầu: tab Thái Lan
 
 - User: "Làm mục xăng dầu cho tab Thái Lan". BE-kt-xnk `fuel-price-thailand`:

@@ -96,9 +96,9 @@ export const FUEL_MARKETS = [
     unit: '฿/lít',
     fractionDigits: 2,
     effectiveTime: '05:00',
-    sourceLabel: 'bangchak.co.th',
-    note: 'Giá bán lẻ tại Bangkok (baht/lít, chưa gồm thuế địa phương của Bangkok) theo bảng giá Bangchak, áp dụng từ 05:00, điều chỉnh không theo chu kỳ cố định. Nguồn chỉ công bố giá hiện hành nên lịch sử được lưu dần qua mỗi lần cập nhật từ',
-    // Codes BE's TH source (Bangchak) produces.
+    sourceLabel: 'pttor.com',
+    note: 'Giá bán lẻ tại Bangkok (baht/lít) theo bảng giá PTT từ 01/01/2022, áp dụng từ 05:00, điều chỉnh không theo chu kỳ cố định. Kỳ mới được gợi ý cập nhật từ web service của',
+    // Codes BE's TH source (PTT OR) produces.
     products: [
       {
         code: 'GASOHOL_95',
@@ -118,22 +118,26 @@ export const FUEL_MARKETS = [
         category: 'xang',
         isDefault: true,
       },
-      { code: 'GASOHOL_E85', label: 'Gasohol E85', category: 'xang' },
       {
-        code: 'HI_PREMIUM_98_PLUS',
-        label: 'Xăng cao cấp 98 (Hi Premium 98 Plus)',
+        code: 'GASOLINE_95',
+        label: 'Xăng 95 không pha cồn (Gasoline 95)',
         category: 'xang',
       },
       {
-        code: 'HI_DIESEL_S',
-        label: 'Diesel (Hi Diesel S)',
-        category: 'dau',
-        isDefault: true,
+        code: 'SUPER_POWER_GSH95',
+        label: 'Super Power Gasohol 95',
+        category: 'xang',
       },
+      {
+        code: 'SUPER_POWER_X99',
+        label: 'Super Power X99',
+        category: 'xang',
+      },
+      { code: 'DIESEL', label: 'Diesel', category: 'dau', isDefault: true },
       { code: 'DIESEL_B20', label: 'Diesel B20', category: 'dau' },
       {
-        code: 'HI_PREMIUM_DIESEL_PLUS',
-        label: 'Diesel cao cấp (Hi Premium Diesel Plus)',
+        code: 'PREMIUM_DIESEL',
+        label: 'Diesel cao cấp (Premium Diesel)',
         category: 'dau',
       },
     ],

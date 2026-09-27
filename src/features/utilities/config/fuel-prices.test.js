@@ -87,7 +87,7 @@ test('Thai prices keep two decimals, axis ticks do not pad', () => {
 });
 
 test('fuelCategory uses the market list, then the code', () => {
-  assert.equal(fuelCategory('HI_DIESEL_S', TH.products), 'dau');
+  assert.equal(fuelCategory('PREMIUM_DIESEL', TH.products), 'dau');
   assert.equal(fuelCategory('GASOHOL_95', TH.products), 'xang');
   assert.equal(fuelCategory('SUPER_POWER_DIESEL'), 'dau');
   assert.equal(fuelCategory('DO_005S_II'), 'dau');
