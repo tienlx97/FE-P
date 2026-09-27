@@ -24,13 +24,13 @@ import {
   formatFuelPrice,
   formatPeriodDate,
   formatPriceChange,
-  FUEL_PRODUCTS,
   productStatuses,
   weekdayLabel,
 } from '../config/fuel-prices.js';
 
 /** @typedef {import('../config/fuel-prices.js').FuelPriceRow} FuelPriceRow */
 /** @typedef {import('../config/fuel-prices.js').FuelProductStatus} FuelProductStatus */
+/** @typedef {import('../config/fuel-prices.js').FuelMarket} FuelMarket */
 
 const GROUPS = /** @type {const} */ ([
   { category: 'xang', label: 'Xăng', icon: Fuel, tone: 'accent' },
@@ -40,19 +40,20 @@ const GROUPS = /** @type {const} */ ([
 /**
  * Tăng = danger ▲, giảm = success ▼, giữ nguyên = neutral.
  * @param {number | undefined} change
+ * @param {FuelMarket} market
  */
-function changeStatus(change) {
+function changeStatus(change, market) {
   if (change === undefined) return undefined;
   if (change > 0) {
     return {
-      label: formatPriceChange(change),
+      label: formatPriceChange(change, market),
       icon: TrendingUp,
       tone: 'danger',
     };
   }
   if (change < 0) {
     return {
-      label: formatPriceChange(change),
+      label: formatPriceChange(change, market),
       icon: TrendingDown,
       tone: 'success',
     };
@@ -63,10 +64,10 @@ function changeStatus(change) {
 /**
  * "Ngưng niêm yết": a product the latest period no longer lists — its last
  * price, when it was last priced and since which period it is gone.
- * @param {{ status: FuelProductStatus }} props
+ * @param {{ market: FuelMarket, status: FuelProductStatus }} props
  */
-function StoppedProduct({ status }) {
-  const note = FUEL_PRODUCTS.find(
+function StoppedProduct({ market, status }) {
+  const note = market.products.find(
     (product) => product.code === status.code,
   )?.stoppedNote;
   return (
@@ -80,7 +81,7 @@ function StoppedProduct({ status }) {
         </Text>
         {' · '}giá cuối{' '}
         <Text as="span" weight="semibold" color="primary" hasTabularNumbers>
-          {formatFuelPrice(status.price)} đ/lít
+          {formatFuelPrice(status.price, market)} {market.unit}
         </Text>{' '}
         (kỳ {formatPeriodDate(status.pricedOn)}){note ? `. ${note}` : ''}
       </Text>
@@ -93,20 +94,21 @@ function StoppedProduct({ status }) {
  * Dầu (price, change vs the product's previous price), then the products
  * the latest period no longer lists.
  * @param {{
+ *   market: FuelMarket,
  *   rows: FuelPriceRow[],
  *   products: Array<{ code: string, label: string }>,
  * }} props
  */
-export function FuelCurrentPrices({ rows, products }) {
+export function FuelCurrentPrices({ market, rows, products }) {
   const latest = /** @type {FuelPriceRow} */ (rows.at(-1));
-  const { active, stopped } = productStatuses(rows, products);
+  const { active, stopped } = productStatuses(rows, products, market.products);
 
   return (
     <MetaUtilityCard
       icon={Fuel}
       title="Giá hiện hành"
       tag={`Kỳ ${latest.label}`}
-      description={`Giá bán lẻ (đ/lít) áp dụng từ 15:00 ${weekdayLabel(latest.date)}, ${latest.label}; so với giá kỳ trước của từng mặt hàng.`}
+      description={`Giá bán lẻ (${market.unit}) áp dụng từ ${market.effectiveTime} ${weekdayLabel(latest.date)}, ${latest.label}; so với giá kỳ trước của từng mặt hàng.`}
     >
       <VStack gap={5} hAlign="stretch">
         {GROUPS.map((group) => {
@@ -132,15 +134,15 @@ export function FuelCurrentPrices({ rows, products }) {
                     icon={group.icon}
                     tone={group.tone}
                     label={status.label}
-                    value={formatFuelPrice(status.price)}
-                    unit="đ/lít"
+                    value={formatFuelPrice(status.price, market)}
+                    unit={market.unit}
                     footLabel={
                       status.previousOn
                         ? `So với ${formatPeriodDate(status.previousOn)}`
                         : 'Kỳ đầu tiên có giá'
                     }
                     footStatus={
-                      /** @type {any} */ (changeStatus(status.change))
+                      /** @type {any} */ (changeStatus(status.change, market))
                     }
                   />
                 ))}
@@ -149,7 +151,7 @@ export function FuelCurrentPrices({ rows, products }) {
           );
         })}
         {stopped.map((status) => (
-          <StoppedProduct key={status.code} status={status} />
+          <StoppedProduct key={status.code} market={market} status={status} />
         ))}
       </VStack>
     </MetaUtilityCard>

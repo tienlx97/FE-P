@@ -22,7 +22,6 @@ import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import {
   formatPeriodDate,
-  FUEL_PRODUCTS,
   productsIn,
   toPriceRows,
 } from '../config/fuel-prices.js';
@@ -39,9 +38,7 @@ import { FuelPricePeriodDrawer } from './fuel-price-period-drawer.jsx';
 
 /** @typedef {import('../config/fuel-prices.js').FuelPriceRow} FuelPriceRow */
 
-/** The drawer's products when the market has no period yet. */
-const DEFAULT_PRODUCTS = FUEL_PRODUCTS.filter((product) => product.isDefault);
-/** @typedef {(typeof import('../config/fuel-prices.js').FUEL_MARKETS)[number]} FuelMarket */
+/** @typedef {import('../config/fuel-prices.js').FuelMarket} FuelMarket */
 
 /**
  * "Giá hôm nay đã thay đổi": shown when the market's source publishes
@@ -119,7 +116,10 @@ export function FuelMarketPanel({ market }) {
     [query.data],
   );
   const rows = useMemo(() => toPriceRows(periods), [periods]);
-  const products = useMemo(() => productsIn(periods), [periods]);
+  const products = useMemo(
+    () => productsIn(periods, market.products),
+    [periods, market.products],
+  );
   const latest = rows[rows.length - 1];
 
   async function confirmDelete() {
@@ -152,14 +152,16 @@ export function FuelMarketPanel({ market }) {
 
       {latest ? (
         <>
-          <FuelCurrentPrices rows={rows} products={products} />
+          <FuelCurrentPrices market={market} rows={rows} products={products} />
           <FuelPriceChart
             // Re-seed the product selection when the product set changes.
             key={products.map(({ code }) => code).join()}
+            market={market}
             rows={rows}
             products={products}
           />
           <FuelPriceHistory
+            market={market}
             rows={rows}
             products={products}
             onAdd={() => setEditing({})}
@@ -196,8 +198,13 @@ export function FuelMarketPanel({ market }) {
 
       {editing ? (
         <FuelPricePeriodDrawer
-          market={market.market}
-          products={products.length > 0 ? products : DEFAULT_PRODUCTS}
+          market={market}
+          products={
+            products.length > 0
+              ? products
+              : // The drawer's products when the market has no period yet.
+                market.products.filter((product) => product.isDefault)
+          }
           period={
             editing.row
               ? { date: editing.row.date, prices: editing.row.prices }

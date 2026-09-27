@@ -45,7 +45,7 @@ function todayIso() {
  * product (blank = not priced this period). Saving replaces every price of
  * that date (BE PUT), so editing a date that already exists overwrites it.
  * @param {{
- *   market: string,
+ *   market: import('../config/fuel-prices.js').FuelMarket,
  *   products: Array<{ code: string, label: string }>,
  *   period?: { date: string, prices: Record<string, number | undefined> },
  *   onClose: () => void,
@@ -54,7 +54,7 @@ function todayIso() {
 export function FuelPricePeriodDrawer({ market, products, period, onClose }) {
   const formId = useId();
   const toast = useAppToast();
-  const mutation = useUpsertFuelPricePeriodMutation(market);
+  const mutation = useUpsertFuelPricePeriodMutation(market.market);
   const isEditing = Boolean(period);
   const [date, setDate] = useState(period?.date ?? todayIso());
   const [prices, setPrices] = useState(
@@ -119,8 +119,8 @@ export function FuelPricePeriodDrawer({ market, products, period, onClose }) {
               <MetaDrawerHeader
                 icon={Fuel}
                 title={title}
-                code={market}
-                badge={<MetaPill label="đ/lít" tone="neutral" />}
+                code={market.market}
+                badge={<MetaPill label={market.unit} tone="neutral" />}
                 onClose={onClose}
               />
             </LayoutHeader>
@@ -178,7 +178,7 @@ export function FuelPricePeriodDrawer({ market, products, period, onClose }) {
                               [code]: value,
                             }))
                           }
-                          units="đ"
+                          units={market.currency}
                         />
                       ))}
                     </Grid>

@@ -24,6 +24,7 @@ import {
 } from '../config/fuel-prices.js';
 
 /** @typedef {import('../config/fuel-prices.js').FuelPriceRow} FuelPriceRow */
+/** @typedef {import('../config/fuel-prices.js').FuelMarket} FuelMarket */
 
 const PAGE_SIZES = [20, 50, 100];
 const ALL_YEARS = 'all';
@@ -31,9 +32,13 @@ const ALL_YEARS = 'all';
 /**
  * Price over its change, end-aligned: "27.080" then "▲ 1.450" in danger /
  * "▼ 1.450" in success / "0" muted; "—" when not priced that period.
- * @param {{ price: number | undefined, change: number | undefined }} props
+ * @param {{
+ *   market: FuelMarket,
+ *   price: number | undefined,
+ *   change: number | undefined,
+ * }} props
  */
-function HistoryPriceCell({ price, change }) {
+function HistoryPriceCell({ market, price, change }) {
   if (price === undefined) {
     return (
       <Text as="span" color="placeholder">
@@ -52,7 +57,7 @@ function HistoryPriceCell({ price, change }) {
   return (
     <VStack gap={0} hAlign="end">
       <Text as="span" weight="semibold" hasTabularNumbers>
-        {formatFuelPrice(price)}
+        {formatFuelPrice(price, market)}
       </Text>
       <Text
         as="span"
@@ -63,7 +68,7 @@ function HistoryPriceCell({ price, change }) {
       >
         {change === undefined
           ? ' '
-          : `${arrow}${formatPriceChange(Math.abs(change)).replace('+', '')}`}
+          : `${arrow}${formatPriceChange(Math.abs(change), market).replace('+', '')}`}
       </Text>
     </VStack>
   );
@@ -74,6 +79,7 @@ function HistoryPriceCell({ price, change }) {
  * (20 / 50 / 100). Only products priced on the current page get a column
  * (RON 95-III disappears after 05/2026, E10 RON 95-V appears in 07/2026).
  * @param {{
+ *   market: FuelMarket,
  *   rows: FuelPriceRow[],
  *   products: Array<{ code: string, label: string }>,
  *   onAdd: () => void,
@@ -81,7 +87,14 @@ function HistoryPriceCell({ price, change }) {
  *   onDelete: (row: FuelPriceRow) => void,
  * }} props
  */
-export function FuelPriceHistory({ rows, products, onAdd, onEdit, onDelete }) {
+export function FuelPriceHistory({
+  market,
+  rows,
+  products,
+  onAdd,
+  onEdit,
+  onDelete,
+}) {
   const [year, setYear] = useState(ALL_YEARS);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
@@ -129,7 +142,11 @@ export function FuelPriceHistory({ rows, products, onAdd, onEdit, onDelete }) {
       width: proportional(1),
       align: /** @type {const} */ ('end'),
       renderCell: (/** @type {FuelPriceRow} */ row) => (
-        <HistoryPriceCell price={row.prices[code]} change={row.changes[code]} />
+        <HistoryPriceCell
+          market={market}
+          price={row.prices[code]}
+          change={row.changes[code]}
+        />
       ),
     })),
     {
@@ -152,7 +169,7 @@ export function FuelPriceHistory({ rows, products, onAdd, onEdit, onDelete }) {
       icon={History}
       title="Lịch sử điều chỉnh"
       tag={`${filtered.length} kỳ`}
-      description="Giá từng kỳ (đ/lít) và mức tăng ▲ / giảm ▼ so với lần có giá trước đó của mặt hàng."
+      description={`Giá từng kỳ (${market.unit}) và mức tăng ▲ / giảm ▼ so với lần có giá trước đó của mặt hàng.`}
     >
       <VStack gap={3} hAlign="stretch">
         <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">

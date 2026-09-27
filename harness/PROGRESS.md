@@ -1,5 +1,21 @@
 # Progress Log
 
+## 2026-09-27 — Xăng dầu: tab Thái Lan
+
+- User: "Làm mục xăng dầu cho tab Thái Lan". BE-kt-xnk `fuel-price-thailand`:
+  Bangchak public API (`oil-price.bangchak.co.th/ApiOilPrice2/en`) as the
+  `TH` source — current period only, no history endpoint.
+- `FUEL_MARKETS` now carries unit / currency / decimals / effective time /
+  products per market (`FUEL_PRODUCTS` removed); all fuel components take
+  `market`. TH: ฿/lít, 2 decimals ("36,44"), 05:00, 8 products. Config
+  tests added (TH formatting, `fuelCategory`).
+- Chrome: VN tab unchanged; TH banner "bangchak.co.th có 1 kỳ giá" →
+  "Cập nhật giá" stored 24/09/2026 on the dev DB (5 xăng, 3 dầu); chart,
+  history, note OK; no console errors. verify.sh passed
+  (`harness/runs/20260927-133231-1927/`).
+- Known limit: TH history only grows from syncs (or manual input); the
+  chart shows single points until more periods exist. News is VN-only.
+
 ## 2026-09-27 — Shipment alerts move to a top-nav bell
 
 - User: the "Lô hàng cần chú ý" card above the shipment list is removed

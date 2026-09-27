@@ -17,8 +17,8 @@ import { FuelNewsSection } from './fuel-news-section.jsx';
 const PANEL_ID = 'fuel-market-panel';
 
 /**
- * "Tiện ích › Xăng dầu": one tab per market (`FUEL_MARKETS`; Việt Nam for
- * now), the market's prices, then the latest news.
+ * "Tiện ích › Xăng dầu": one tab per market (`FUEL_MARKETS`: Việt Nam,
+ * Thái Lan), the market's prices, then the latest news.
  * @param {{ articles: import('../api/fuel-news.js').FuelNewsArticle[] }} props
  */
 export function FuelPriceUtility({ articles }) {

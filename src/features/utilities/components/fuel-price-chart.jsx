@@ -35,11 +35,12 @@ import {
   rowsInRange,
   timeToIso,
 } from '../config/fuel-chart-range.js';
-import { formatFuelPrice, formatPeriodDate } from '../config/fuel-prices.js';
+import { formatFuelAxis, formatPeriodDate } from '../config/fuel-prices.js';
 import { FuelPriceLine, FuelRangeHighlight } from './fuel-price-line.jsx';
 import { PriceWithChange } from './fuel-price-parts.jsx';
 
 /** @typedef {import('../config/fuel-prices.js').FuelPriceRow} FuelPriceRow */
+/** @typedef {import('../config/fuel-prices.js').FuelMarket} FuelMarket */
 /** @typedef {import('@astryxdesign/core/Calendar').ISODateString} ISODateString */
 
 // Left: room for "30.000"-wide tick labels (drawn inside the margin).
@@ -76,11 +77,12 @@ function toChartData(rows, codes) {
  *   window shaded).
  * The x axis is real time, so irregular periods sit where they happened.
  * @param {{
+ *   market: FuelMarket,
  *   rows: FuelPriceRow[],
  *   products: Array<{ code: string, label: string, isDefault: boolean }>,
  * }} props
  */
-export function FuelPriceChart({ rows, products }) {
+export function FuelPriceChart({ market, rows, products }) {
   const colors = useChartColors();
   const palette = colors.categorical(Math.max(products.length, 1));
   const firstIso = rows[0].date;
@@ -137,7 +139,7 @@ export function FuelPriceChart({ rows, products }) {
       icon={LineChart}
       title="Biến động giá"
       tag={`${formatPeriodDate(range.start)} – ${formatPeriodDate(range.end)} · ${periodCount} kỳ`}
-      description="Chọn mặt hàng và khoảng thời gian; rê chuột lên biểu đồ để xem giá từng kỳ (đ/lít)."
+      description={`Chọn mặt hàng và khoảng thời gian; rê chuột lên biểu đồ để xem giá từng kỳ (${market.unit}).`}
     >
       <VStack gap={4} hAlign="stretch">
         <ToggleButtonGroup
@@ -222,7 +224,7 @@ export function FuelPriceChart({ rows, products }) {
           />
           <ChartAxis
             position="left"
-            tickFormat={(value) => formatFuelPrice(Number(value))}
+            tickFormat={(value) => formatFuelAxis(Number(value), market)}
           />
           {visible.map(({ code }) => (
             <FuelPriceLine
@@ -250,6 +252,7 @@ export function FuelPriceChart({ rows, products }) {
                         {label}
                       </Text>
                       <PriceWithChange
+                        market={market}
                         price={row.prices[code]}
                         change={row.changes[code]}
                       />

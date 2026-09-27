@@ -2,14 +2,19 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  formatFuelAxis,
   formatFuelPrice,
   formatPeriodDate,
   formatPriceChange,
+  FUEL_MARKETS,
+  fuelCategory,
   productsIn,
   productStatuses,
   toPriceRows,
   weekdayLabel,
 } from './fuel-prices.js';
+
+const [VN, TH] = FUEL_MARKETS;
 
 /**
  * @param {string} effectiveDate
@@ -58,7 +63,7 @@ test('toPriceRows sorts oldest first and diffs each product vs its last price', 
 
 test('productsIn keeps known order, then unknown codes', () => {
   assert.deepEqual(
-    productsIn(PERIODS).map((product) => product.code),
+    productsIn(PERIODS, VN.products).map((product) => product.code),
     ['E10_RON95_III', 'KEROSENE_2K', 'ZZ'],
   );
 });
@@ -69,6 +74,24 @@ test('formats prices, changes and dates', () => {
   assert.equal(formatPriceChange(1450), '+1.450');
   assert.equal(formatPriceChange(-1450), '−1.450');
   assert.equal(formatPriceChange(0), '0');
+});
+
+test('Thai prices keep two decimals, axis ticks do not pad', () => {
+  assert.equal(TH.market, 'TH');
+  assert.equal(formatFuelPrice(36.44, TH), '36,44');
+  assert.equal(formatFuelPrice(40, TH), '40,00');
+  assert.equal(formatPriceChange(0.75, TH), '+0,75');
+  assert.equal(formatPriceChange(-1.2, TH), '−1,20');
+  assert.equal(formatFuelAxis(37.5, TH), '37,5');
+  assert.equal(formatFuelAxis(40, TH), '40');
+});
+
+test('fuelCategory uses the market list, then the code', () => {
+  assert.equal(fuelCategory('HI_DIESEL_S', TH.products), 'dau');
+  assert.equal(fuelCategory('GASOHOL_95', TH.products), 'xang');
+  assert.equal(fuelCategory('SUPER_POWER_DIESEL'), 'dau');
+  assert.equal(fuelCategory('DO_005S_II'), 'dau');
+  assert.equal(fuelCategory('SUPER_POWER_GSH95'), 'xang');
 });
 
 test('productStatuses splits still-sold products from stopped ones', () => {
