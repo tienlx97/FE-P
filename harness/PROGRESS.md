@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-09-27 — Pause automatic GitHub CI
+
+- Commented out `push` and `pull_request` triggers in `.github/workflows/verify.yml`.
+  `workflow_dispatch` remains available for manual checks; local `verify.sh`
+  stays required. Ruby's YAML parser found only `workflow_dispatch` active.
+- `verify.sh` passed (`harness/runs/20260927-193558-157/`).
+
 ## 2026-09-27 — Public fuel export per market
 
 - Export dialog now offers Xăng dầu Việt Nam, Xăng dầu Thái Lan, and Cảng nước.

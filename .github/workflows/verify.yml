@@ -1,7 +1,8 @@
 name: Frontend CI
 on:
-  pull_request:
-  push:
+  # Automatic CI paused; run this workflow manually when needed.
+  # pull_request:
+  # push:
   workflow_dispatch:
 permissions:
   contents: read
