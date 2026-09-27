@@ -2,7 +2,6 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  eventFromText,
   filterEvents,
   overviewEvents,
   overviewFilters,
@@ -90,6 +89,11 @@ test('each day reads as verb + shipment: departure, arrival, deadlines, colored 
   );
 });
 
+test('without a carrier the arrow follows the shipment code', () => {
+  const [departure] = overviewEvents([row({ shippingLine: null, etd: '2026-10-04' })], TODAY);
+  assert.equal(departure.title, 'Tàu chạy · 26KCT03/LOT-01 → Bangkok');
+});
+
 test('red = overdue (deadline past, or ETD / ETA past without the actual), rolled onto today', () => {
   const events = overviewEvents(
     [
@@ -117,23 +121,17 @@ test('the header legend counts each kind and filters events', () => {
     TODAY,
   );
   assert.deepEqual(
-    overviewFilters(events).map((f) => [f.label, f.count, f.dot]),
+    overviewFilters(events).map((f) => [f.label, f.count, f.tone]),
     [
       ['Tất cả', 3, null],
       ['Tàu chạy', 1, 'accent'],
       ['Tàu đến', 1, 'success'],
       ['Hạn chót', 0, 'warning'],
-      ['Quá hạn', 1, 'error'],
+      ['Quá hạn', 1, 'danger'],
     ],
   );
   assert.deepEqual(filterEvents(events, 'overdue').map((e) => e.id), ['ft:s1']);
   assert.equal(filterEvents(events, 'all').length, 3);
-});
-
-test('a clicked element maps to its event by exact title', () => {
-  const events = overviewEvents([row({ etd: '2026-10-04' })], TODAY);
-  assert.equal(eventFromText('Tàu chạy · 26KCT03/LOT-01 · KMTC → Bangkok', events)?.shipmentId, 's1');
-  assert.equal(eventFromText('4 CN All day Tàu chạy · 26KCT03/LOT-01 · KMTC → Bangkok', events), null);
 });
 
 test('drawer groups: attention first, unscheduled last, empty groups dropped', () => {

@@ -4,11 +4,10 @@
  * every view shows what happens on each day — a departure, an arrival or a
  * deadline (SI / CY cut-off until it sails, the earliest running free-time
  * day) — and the color says which kind (legend = the header filter):
- * blue departs, green arrives, yellow deadline, red overdue (a deadline
+ * blue departs, green arrives, amber deadline, red overdue (a deadline
  * past, or ETD / ETA past without ATD / ATA). Titles lead with the verb.
  * Overdue items roll forward onto today (with their own date in the
- * title): the lab Schedule mutes past days' events, and overdue is exactly
- * what must stay visible.
+ * title): overdue is exactly what must be seen today.
  * Events are plain ISO descriptors here; the component turns them into
  * Schedule events.
  */
@@ -27,15 +26,12 @@
  * @property {string} end - YYYY-MM-DD, inclusive
  */
 
-/**
- * Schedule categories (label + Token color) and the matching legend dot
- * (`StatusDot` variant; the Meta accent is blue).
- */
+/** Each kind's label and `MetaSchedule` tone (legend = the header filter). */
 export const OVERVIEW_CATEGORIES = /** @type {const} */ ({
-  departure: { label: 'Tàu chạy', color: 'blue', dot: 'accent' },
-  arrival: { label: 'Tàu đến', color: 'green', dot: 'success' },
-  deadline: { label: 'Hạn chót', color: 'yellow', dot: 'warning' },
-  overdue: { label: 'Quá hạn', color: 'red', dot: 'error' },
+  departure: { label: 'Tàu chạy', tone: 'accent' },
+  arrival: { label: 'Tàu đến', tone: 'success' },
+  deadline: { label: 'Hạn chót', tone: 'warning' },
+  overdue: { label: 'Quá hạn', tone: 'danger' },
 });
 
 /** Drawer group labels per phase. */
@@ -136,8 +132,9 @@ export function overviewEvents(rows, today) {
         shipmentId: row.shipmentId,
         title: join([
           row.actualDeparture ? 'Đã chạy' : missed ? 'Quá ETD, chưa chạy' : 'Tàu chạy',
-          row.shipmentCode,
-          `${carrier ? `${carrier} ` : ''}→ ${shortPlace(row.placeOfDischarge)}`,
+          // "KMTC → Bangkok", or "26KCT06/LOT-01 → Bangkok" without a carrier.
+          carrier ? row.shipmentCode : `${row.shipmentCode} → ${shortPlace(row.placeOfDischarge)}`,
+          carrier ? `${carrier} → ${shortPlace(row.placeOfDischarge)}` : null,
           missed ? `ETD ${dayMonth(departure)}` : lateTag(delayDays(row, 'DepartureDelayed')),
         ]),
         category: missed ? 'overdue' : 'departure',
@@ -208,18 +205,18 @@ export function overviewEvents(rows, today) {
 
 /**
  * Header filter, doubling as the color legend: each kind with how many
- * events it has (overdue ones counted even when their day is past).
+ * events it has.
  * @param {OverviewEvent[]} events
- * @returns {Array<{ key: OverviewFilter, label: string, count: number, dot: 'accent' | 'success' | 'warning' | 'error' | null }>}
+ * @returns {Array<{ key: OverviewFilter, label: string, count: number, tone: 'accent' | 'success' | 'warning' | 'danger' | null }>}
  */
 export function overviewFilters(events) {
   return [
-    { key: 'all', label: 'Tất cả', count: events.length, dot: null },
+    { key: 'all', label: 'Tất cả', count: events.length, tone: null },
     ...(/** @type {const} */ (['departure', 'arrival', 'deadline', 'overdue'])).map((key) => ({
       key,
       label: OVERVIEW_CATEGORIES[key].label,
       count: events.filter((event) => event.category === key).length,
-      dot: OVERVIEW_CATEGORIES[key].dot,
+      tone: OVERVIEW_CATEGORIES[key].tone,
     })),
   ];
 }
@@ -230,17 +227,6 @@ export function overviewFilters(events) {
  */
 export function filterEvents(events, filter) {
   return filter === 'all' ? events : events.filter((event) => event.category === filter);
-}
-
-/**
- * The shipment behind a clicked Schedule element (the lab Schedule gives
- * events no ids or handlers): the element's text is exactly one event's
- * title.
- * @param {string} text
- * @param {OverviewEvent[]} events
- */
-export function eventFromText(text, events) {
-  return events.find((event) => event.title === text) ?? null;
 }
 
 /**

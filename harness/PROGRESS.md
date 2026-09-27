@@ -1,5 +1,16 @@
 # Progress Log
 
+## 2026-09-27 — MetaSchedule: the home schedule fully in the Meta theme
+
+- Lab `Schedule` cannot be themed below its root nor swizzled; user chose
+  to build `MetaSchedule` (`custom/meta/schedule.jsx`, Astryx-only, Meta
+  tokens): full-height month grid (rows stretch), Vietnamese header and
+  weekdays, clickable items with flat rail + tint, "+n mục", 14-day list;
+  `MetaScheduleSwatch` for the legend. `schedule-calendar.js` + tests (5);
+  overview config tests (7). The page no longer uses the lab Schedule.
+- Chrome: month fills the page, item click opens 26KCT02/LOT-01's drawer,
+  "2 tuần" lists 27/09 – 10/10 with "Không có mốc nào" on empty days.
+
 ## 2026-09-27 — Home schedule readable at a glance
 
 - User: "nhìn qua schedule là hiểu sơ bộ". Day items only (departure /

@@ -64,6 +64,7 @@ export {
   MetaPaymentTermRow,
 } from './payment-term-row.jsx';
 export { MetaPill } from './pill.jsx';
+export { MetaSchedule, MetaScheduleSwatch } from './schedule.jsx';
 export { MetaShipmentDetailSkeleton } from './shipment-detail-skeleton.jsx';
 export {
   MetaJourneySkeleton,

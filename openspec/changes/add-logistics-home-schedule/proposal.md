@@ -47,8 +47,21 @@ Terminal49 (last free day first) and Portcast (early delay warnings):
 - Month is the default view again (the whole month at a glance); "2 tuần"
   remains for a list that fills the height.
 
+## MetaSchedule replaces the lab Schedule (2026-09-27, user choice)
+The lab `Schedule` can only be themed at its root (`schedule`) and is not
+swizzlable (`astryx swizzle --list` has no lab component), so its event
+pills, month grid (fixed 128 px rows) and labels ("Today", "All day")
+could not follow the Meta theme. User picked "Tự dựng MetaSchedule":
+- `src/shared/components/custom/meta/schedule.jsx` (`MetaSchedule`,
+  `MetaScheduleSwatch`), composed from Astryx core only (golden rule #15)
+  with Meta tokens: card (radius-container, hairlines), Vietnamese header
+  (‹ Hôm nay › · "Tháng 9, 2026" · Tháng / 2 tuần), month grid whose week
+  rows stretch to the page height, 14-day list, clickable one-day items
+  with a flat colored rail + tint (MetaPill palette), up to 3 per day then
+  "+n mục" → that day in the list, past days keep their colors.
+- Calendar math in `src/shared/config/schedule-calendar.js` (tested).
+- The page keeps the filter-as-legend (solid swatches), drawer and data.
+
 ## Known limits
-- The lab month grid has fixed 128 px week rows (`grid-auto-rows`), so the
-  grid does not stretch to the page height; no prop controls it.
-- Schedule labels "Today", "All day" and the lowercase month title come
-  from the lab component; the pale event tints are the lab's too.
+- (Lab Schedule limits no longer apply — see MetaSchedule above.)
+- Items only show one-day milestones (no multi-day bars).
