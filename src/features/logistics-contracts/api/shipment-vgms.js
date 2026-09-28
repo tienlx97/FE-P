@@ -88,6 +88,34 @@ export async function createShipmentVgm(contractId, shipmentId, values) {
 }
 
 /**
+ * Saves 1–100 prevalidated containers atomically.
+ * @param {string} contractId
+ * @param {string} shipmentId
+ * @param {import('../types/index.js').BulkContainerRow[]} rows
+ * @returns {Promise<{success: true, vgms: import('../types/index.js').ShipmentVgm[]} | {success: false, message: string}>}
+ */
+export async function bulkCreateShipmentVgms(contractId, shipmentId, rows) {
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/shipments/${shipmentId}/vgm/bulk`,
+    {
+      method: 'POST',
+      errorMessage: 'Không thể thêm danh sách container',
+      body: {
+        Containers: rows.map((row) => ({
+          ContainerNumber: row.containerNumber.trim(),
+          ContainerType: row.containerType,
+          SealNumber: row.sealNumber.trim() || null,
+          PackingDate: row.packingDate || null,
+        })),
+      },
+    },
+  );
+  return result.success
+    ? { success: true, vgms: result.data ?? [] }
+    : { success: false, message: result.message };
+}
+
+/**
  * Requires `logistics:contracts:manage`, scoped to the contract's company.
  * `sequenceNumber` is immutable — not part of the request body.
  * @param {string} contractId

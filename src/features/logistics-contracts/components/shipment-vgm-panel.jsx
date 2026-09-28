@@ -12,6 +12,7 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
 import { summarizeShipmentVgms } from '../config/shipment-vgm-summary.js';
 import { useDeleteShipmentVgmMutation } from '../hooks/use-shipment-vgms-query.js';
+import { ShipmentVgmBulkDialog } from './shipment-vgm-bulk-dialog.jsx';
 import { ShipmentVgmFormDialog } from './shipment-vgm-form-dialog.jsx';
 
 const WEIGHT_FORMATTER = new Intl.NumberFormat('en-US', {
@@ -51,6 +52,7 @@ export function ShipmentVgmPanel({
   const [deletingVgm, setDeletingVgm] = useState(
     /** @type {import('../types/index.js').ShipmentVgm | null} */ (null),
   );
+  const [bulkMode, setBulkMode] = useState(/** @type {'table' | 'excel' | null} */ (null));
   const deleteMutation = useDeleteShipmentVgmMutation(contractId, shipment.id);
 
   const summary = summarizeShipmentVgms(vgms, shipment);
@@ -153,6 +155,8 @@ export function ShipmentVgmPanel({
             : null
         }
         onExport={handleExport}
+        onImport={() => setBulkMode('excel')}
+        onBulkCreate={() => setBulkMode('table')}
         onCreate={() => setFormDialog({ vgm: null })}
         onEdit={(id) => setFormDialog({ vgm: vgmById(id) })}
         onDelete={(id) => setDeletingVgm(vgmById(id))}
@@ -160,6 +164,16 @@ export function ShipmentVgmPanel({
 
       {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
+        {bulkMode ? (
+          <ShipmentVgmBulkDialog
+            key={bulkMode}
+            contractId={contractId}
+            shipmentId={shipment.id}
+            existingNumbers={vgms.map((vgm) => vgm.containerNumber)}
+            mode={bulkMode}
+            onClose={() => setBulkMode(null)}
+          />
+        ) : null}
         <AlertDialog
           isOpen={deletingVgm !== null}
           onOpenChange={(nextIsOpen) => {

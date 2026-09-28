@@ -99,6 +99,7 @@ const COLUMNS = /** @type {const} */ ([
  *   isReadOnly?: boolean,
  *   onExport?: () => void,
  *   onImport?: () => void,
+ *   onBulkCreate?: () => void,
  *   onCreate?: () => void,
  *   onEdit?: (id: string) => void,
  *   onDelete?: (id: string) => void,
@@ -115,6 +116,7 @@ export function MetaVgmPanel({
   isReadOnly = false,
   onExport,
   onImport,
+  onBulkCreate,
   onCreate,
   onEdit,
   onDelete,
@@ -153,6 +155,15 @@ export function MetaVgmPanel({
                 isDisabled={isReadOnly}
                 icon={<Icon icon={Upload} size="sm" />}
                 onClick={onImport}
+              />
+            ) : null}
+            {onBulkCreate ? (
+              <Button
+                label="Thêm bằng bảng"
+                variant="secondary"
+                isDisabled={isReadOnly}
+                icon={<Icon icon={Plus} size="sm" />}
+                onClick={onBulkCreate}
               />
             ) : null}
             {onCreate ? (

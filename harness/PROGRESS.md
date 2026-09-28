@@ -15766,3 +15766,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Added “Timeline & lịch tàu” with dated physical events grouped by container and voyage. Rows show event, time, location, actual/estimated/planned classifier and source. Query cache refreshes after milestone, shipment and carrier updates.
 - Full `./harness/verify.sh` passed: `harness/runs/20260928-134028-1615/` (258 unit tests). Browser QA with dev FE :3001 and BE :8081 covered CIF timeline with 26 events and DDP's 9 compact steps. Desktop and mobile screenshots: `harness/runs/20260928-fcl-tracking-ui/`.
 - Harness check caught an initial test using Vitest although this repository uses Node's test runner; switched to `node:test` before completion. Existing gate covered the gap. Live carrier events still depend on carrier adapter configuration.
+
+## 2026-09-28 — Bulk shipment containers, task 1
+
+- Added an editable container table and Excel template/import in the shipment VGM panel. Both paths validate container number, type, duplicates and packing date before one atomic batch API request. Successful save refreshes the container and journey queries.
+- Browser QA on CIF shipment created two table rows, rejected a case-insensitive duplicate, then deleted test rows. Excel preview parsed two rows and normalized a Vietnamese date. Desktop/mobile screenshots: `harness/runs/20260928-bulk-container-ui/`.
+- `./harness/verify.sh` passed: `harness/runs/20260928-135635-243/`.

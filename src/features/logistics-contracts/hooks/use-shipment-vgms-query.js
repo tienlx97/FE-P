@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
+  bulkCreateShipmentVgms,
   createShipmentVgm,
   deleteShipmentVgm,
   listShipmentVgms,
@@ -47,6 +48,21 @@ export function useCreateShipmentVgmMutation(contractId, shipmentId) {
         invalidateShipmentTracking(queryClient);
       }
     },
+  });
+}
+
+/** @param {string} contractId @param {string} shipmentId */
+export function useBulkCreateShipmentVgmsMutation(contractId, shipmentId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (/** @type {import('../types/index.js').BulkContainerRow[]} */ rows) =>
+      bulkCreateShipmentVgms(contractId, shipmentId, rows),
+    onSuccess: (result) => result.success
+      ? Promise.all([
+          queryClient.invalidateQueries({ queryKey: queryKey(shipmentId) }),
+          invalidateShipmentTracking(queryClient),
+        ])
+      : undefined,
   });
 }
 

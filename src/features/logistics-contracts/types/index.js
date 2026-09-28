@@ -1168,6 +1168,15 @@ export {};
  * @property {string} note
  */
 
+/**
+ * @typedef {Object} BulkContainerRow
+ * @property {string} id - local UI key
+ * @property {string} containerNumber
+ * @property {ShipmentContainerType | ''} containerType
+ * @property {string} sealNumber
+ * @property {string} packingDate - ISO date or blank
+ */
+
 // ── Carrier tracking (BE-kt-xnk `add-carrier-tracking`) ─────────────────
 
 /**
