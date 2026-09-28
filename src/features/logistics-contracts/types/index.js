@@ -1170,12 +1170,10 @@ export {};
  */
 
 /**
- * @typedef {Object} BulkContainerRow
- * @property {string} id - local UI key
- * @property {string} containerNumber
- * @property {ShipmentContainerType | ''} containerType
- * @property {string} sealNumber
- * @property {string} packingDate - ISO date or blank
+ * One row of the bulk container drawer / Excel import: every field of the
+ * single-container form, plus a local key and the carrier name as typed in
+ * Excel (resolved to `carrierCustomerId` against the supplier catalog).
+ * @typedef {ShipmentVgmFormValues & { id: string, carrierName: string }} BulkContainerRow
  */
 
 // ── Carrier tracking (BE-kt-xnk `add-carrier-tracking`) ─────────────────

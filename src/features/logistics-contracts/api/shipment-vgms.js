@@ -88,7 +88,8 @@ export async function createShipmentVgm(contractId, shipmentId, values) {
 }
 
 /**
- * Saves 1–100 prevalidated containers atomically.
+ * Saves 1–100 prevalidated containers atomically, every field of the
+ * single create request per row (BE `bulk-container-full-fields`).
  * @param {string} contractId
  * @param {string} shipmentId
  * @param {import('../types/index.js').BulkContainerRow[]} rows
@@ -101,12 +102,14 @@ export async function bulkCreateShipmentVgms(contractId, shipmentId, rows) {
       method: 'POST',
       errorMessage: 'Không thể thêm danh sách container',
       body: {
-        Containers: rows.map((row) => ({
-          ContainerNumber: row.containerNumber.trim(),
-          ContainerType: row.containerType,
-          SealNumber: row.sealNumber.trim() || null,
-          PackingDate: row.packingDate || null,
-        })),
+        Containers: rows.map(({ id: _id, carrierName: _name, ...values }) =>
+          toRequestBody({
+            ...values,
+            containerNumber: values.containerNumber.trim(),
+            sealNumber: values.sealNumber.trim(),
+            note: values.note.trim(),
+          }),
+        ),
       },
     },
   );
@@ -174,7 +177,11 @@ export async function deleteShipmentVgm(contractId, shipmentId, vgmId) {
  * @param {import('../types/index.js').ContainerDatesFormRow[]} rows
  * @returns {Promise<{ success: true, vgms: import('../types/index.js').ShipmentVgm[] } | { success: false, message: string }>}
  */
-export async function recordShipmentContainerDates(contractId, shipmentId, rows) {
+export async function recordShipmentContainerDates(
+  contractId,
+  shipmentId,
+  rows,
+) {
   const result = await apiRequest(
     `/api/v1/contracts/${contractId}/shipments/${shipmentId}/vgm/container-dates`,
     {
@@ -187,7 +194,9 @@ export async function recordShipmentContainerDates(contractId, shipmentId, rows)
           GatedInOn: row.gatedInOn || null,
           DestinationGatedOutOn: row.destinationGatedOutOn || null,
           EmptyReturnedOn: row.emptyReturnedOn || null,
-          EmptyReturnDepot: row.emptyReturnedOn ? row.emptyReturnDepot || null : null,
+          EmptyReturnDepot: row.emptyReturnedOn
+            ? row.emptyReturnDepot || null
+            : null,
         })),
       },
     },

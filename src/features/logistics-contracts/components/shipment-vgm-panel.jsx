@@ -9,11 +9,12 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import { containerExportRecords } from '../config/bulk-containers.js';
 import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
 import { summarizeShipmentVgms } from '../config/shipment-vgm-summary.js';
 import { useDeleteShipmentVgmMutation } from '../hooks/use-shipment-vgms-query.js';
-import { ShipmentVgmBulkDialog } from './shipment-vgm-bulk-dialog.jsx';
-import { ShipmentVgmFormDialog } from './shipment-vgm-form-dialog.jsx';
+import { ShipmentVgmBulkDrawer } from './shipment-vgm-bulk-drawer.jsx';
+import { ShipmentVgmDrawer } from './shipment-vgm-drawer.jsx';
 
 const WEIGHT_FORMATTER = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 2,
@@ -25,8 +26,9 @@ const TONNE_FORMATTER = new Intl.NumberFormat('en-US', {
 
 /**
  * Shipment detail "Container & VGM" tab (Figma 120:9075): feeds `MetaVgmPanel` from
- * the shipment's VGM records and owns the add / edit / delete dialogs and
- * the Excel export. `vgms` comes from the workspace's own query (already
+ * the shipment's VGM records and owns the add / edit drawers (one
+ * container, or a list typed in / imported from Excel), the delete dialog
+ * and the Excel export (every container field, re-importable). `vgms` comes from the workspace's own query (already
  * sorted by sequence number) so the tab count and this table agree.
  *
  * @param {{
@@ -52,7 +54,9 @@ export function ShipmentVgmPanel({
   const [deletingVgm, setDeletingVgm] = useState(
     /** @type {import('../types/index.js').ShipmentVgm | null} */ (null),
   );
-  const [bulkMode, setBulkMode] = useState(/** @type {'table' | 'excel' | null} */ (null));
+  const [bulkMode, setBulkMode] = useState(
+    /** @type {'table' | 'excel' | null} */ (null),
+  );
   const deleteMutation = useDeleteShipmentVgmMutation(contractId, shipment.id);
 
   const summary = summarizeShipmentVgms(vgms, shipment);
@@ -71,7 +75,8 @@ export function ShipmentVgmPanel({
   const carrierName = (customerId) =>
     (customerId && customersById.get(customerId)?.companyName) || '—';
   /** @param {number | null} value */
-  const weight = (value) => (value === null ? '—' : WEIGHT_FORMATTER.format(value));
+  const weight = (value) =>
+    value === null ? '—' : WEIGHT_FORMATTER.format(value);
 
   async function handleConfirmDelete() {
     if (!deletingVgm) return;
@@ -82,19 +87,9 @@ export function ShipmentVgmPanel({
   async function handleExport() {
     const XLSX = await import('xlsx');
     const sheet = XLSX.utils.json_to_sheet(
-      vgms.map((vgm) => ({
-        STT: vgm.sequenceNumber,
-        'Nhà vận chuyển': carrierName(vgm.carrierCustomerId),
-        'Ngày đóng': formatDisplayDate(vgm.packingDate),
-        'Loại cont': labelForShipmentContainerType(vgm.containerType),
-        'Số container': vgm.containerNumber,
-        'Số seal': vgm.sealNumber ?? '',
-        'Đã khai VGM': vgm.isVgmDeclared ? 'Có' : 'Chưa',
-        'Max gross (kg)': vgm.maxGross,
-        'Tare (kg)': vgm.tare,
-        'G.W (kg)': vgm.grossWeight,
-        'VGM (kg)': vgm.vgm,
-      })),
+      containerExportRecords(vgms, (customerId) =>
+        customerId ? (customersById.get(customerId)?.companyName ?? '') : '',
+      ),
     );
     const book = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(book, sheet, 'VGM');
@@ -162,13 +157,14 @@ export function ShipmentVgmPanel({
         onDelete={(id) => setDeletingVgm(vgmById(id))}
       />
 
-      {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
+      {/* Drawers and dialogs portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
         {bulkMode ? (
-          <ShipmentVgmBulkDialog
+          <ShipmentVgmBulkDrawer
             key={bulkMode}
             contractId={contractId}
             shipmentId={shipment.id}
+            shipmentCode={shipment.shipmentCode}
             existingNumbers={vgms.map((vgm) => vgm.containerNumber)}
             mode={bulkMode}
             onClose={() => setBulkMode(null)}
@@ -185,15 +181,13 @@ export function ShipmentVgmPanel({
           onAction={handleConfirmDelete}
         />
         {formDialog ? (
-          <ShipmentVgmFormDialog
+          <ShipmentVgmDrawer
             key={formDialog.vgm?.id ?? 'create'}
-            isOpen
-            onOpenChange={(nextIsOpen) => {
-              if (!nextIsOpen) setFormDialog(null);
-            }}
             contractId={contractId}
             shipmentId={shipment.id}
+            shipmentCode={shipment.shipmentCode}
             vgm={formDialog.vgm}
+            onClose={() => setFormDialog(null)}
           />
         ) : null}
       </MetaThemeProvider>
