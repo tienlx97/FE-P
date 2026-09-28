@@ -64,6 +64,7 @@ import {
   upsertEqualsFilterCondition,
 } from '@/shared/config/upsert-filter-condition.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
+import { usePageRowSelection } from '@/shared/hooks/use-page-row-selection.js';
 
 import { searchAllShipments } from '../api/shipments.js';
 import { formatMoney, formatVndAmount } from '../config/currencies.js';
@@ -126,6 +127,8 @@ function orDash(value) {
  *   vgmCount?: number,
  *   summary: import('../api/shipments.js').ShipmentListSummary | null,
  *   isMultiCurrency: boolean,
+ *   selectedCount: number,
+ *   visibleCount: number,
  * }} ShipmentTotalsRow
  */
 
@@ -238,7 +241,7 @@ const TOTALS_ROW_CELL_RENDERERS = {
       },
     ]),
   ),
-  // Same full-filtered-set sum as the per-group totals, in the same amber.
+  // Same selected-row sum as the per-group totals, in the same amber.
   logisticsCost: (row) =>
     row.logisticsCost == null ? null : (
       <Text
@@ -383,7 +386,6 @@ export function ShipmentsList() {
   const router = useRouter();
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   // Only the "Nhà cung cấp" view adds the partner count to the Σ caption.
-  const [viewPresetKey, setViewPresetKey] = useState('basic');
   const [pageIndex, setPageIndex] = useState(1);
   const [filterConditions, setFilterConditions] = useState(
     /** @type {import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[]} */ ([]),
@@ -536,6 +538,9 @@ export function ShipmentsList() {
   const shipments = listResult?.success ? listResult.shipments : [];
   const summary = listResult?.success ? listResult.summary : null;
   const totalShipments = listResult?.success ? listResult.totalCount : 0;
+  const selection = usePageRowSelection(
+    JSON.stringify([pageIndex, pageSize, sort, filterConditions]),
+  );
 
   // Tab counts come from the search's own `summary.statusCounts`, computed
   // server-side without the status condition (so "Tất cả" is their sum).
@@ -551,39 +556,72 @@ export function ShipmentsList() {
     return byTab;
   }, [summary]);
 
-  // Full-filtered-set totals (not just this page — the backend computes
-  // them pre-paging, see `searchAllShipments`'s doc comment). Invoice and
-  // declaration values share one row per currency; the flat figures appear
-  // once, on the first row.
-  const totalsRows = useMemo(() => {
+  /** @param {import('../config/shipments-table.js').ShipmentListRow[]} visibleRows */
+  function selectedTotalsRows(visibleRows) {
     if (!listResult?.success) return [];
-    const totals =
-      listResult.totals.length > 0
-        ? listResult.totals
-        : [{ currency: '', invoiceValue: 0, declarationValue: 0 }];
-    return totals.map((total, index) => ({
+    const selected = visibleRows.filter((row) => !selection.excludedIds.has(row.id));
+    /** @type {Map<string, {currency: string, invoiceValue: number, declarationValue: number}>} */
+    const byCurrency = new Map();
+    const addCurrency = (/** @type {string} */ currency) => {
+      if (!byCurrency.has(currency)) byCurrency.set(currency, {
+        currency, invoiceValue: 0, declarationValue: 0,
+      });
+      return byCurrency.get(currency);
+    };
+    for (const row of selected) {
+      const invoice = addCurrency(row.invoiceCurrency);
+      const declaration = addCurrency(row.declarationCurrency);
+      if (invoice) invoice.invoiceValue += row.invoiceValue;
+      if (declaration) declaration.declarationValue += row.declarationValue;
+    }
+    if (byCurrency.size === 0) addCurrency('');
+    const costTotalsByCategory = COST_GROUP_COLUMNS.map((group) => ({
+      costCategoryId: '', code: group.code, name: group.name,
+      totalAmount: selected.reduce((sum, row) => sum + row.costTotalsByCategory
+        .filter((cost) => (costCodeById.get(cost.costCategoryId)
+          ?? COST_GROUP_COLUMNS.find((candidate) => candidate.name === cost.costCategoryName)?.code) === group.code)
+        .reduce((subtotal, cost) => subtotal + cost.totalAmount, 0), 0),
+    }));
+    const partnerIds = new Set(selected.flatMap((row) => [
+      row.supplierCustomerId,
+      ...(row.serviceProviders ?? []).map((provider) => provider.supplierId),
+    ]).filter(Boolean));
+    const quantities = new Map();
+    for (const row of selected) {
+      quantities.set(row.quantityUnit, (quantities.get(row.quantityUnit) ?? 0) + row.quantityAmount);
+    }
+    const summary = {
+      fclCount: selected.filter((row) => row.type === 'FCL').length,
+      lclCount: selected.filter((row) => row.type === 'LCL').length,
+      completedCount: selected.filter((row) => row.status === 'Completed').length,
+      customsDeclarationCount: selected.filter((row) => Boolean(row.customsDeclarationNumber?.trim())).length,
+      coCount: selected.filter((row) => Boolean(row.coNumber?.trim())).length,
+      statusCounts: {},
+      costTotalsByCategory,
+      servicePartnerCount: partnerIds.size,
+    };
+    return [...byCurrency.values()].map((total, index) => ({
+      ...total,
       id: `totals-${total.currency}`,
       __isTotalsRow: true,
-      currency: total.currency,
-      invoiceValue: total.invoiceValue,
-      declarationValue: total.declarationValue,
-      invoiceValueVnd:
-        index === 0 ? listResult.invoiceValueVndTotal : undefined,
-      logisticsCost: index === 0 ? listResult.logisticsCostTotal : undefined,
-      quantity:
-        index === 0
-          ? listResult.quantityTotals
-              .map(
-                (quantityTotal) =>
-                  `${numberValueToInput(quantityTotal.amount)} ${labelForShipmentQuantityUnit(quantityTotal.unit)}`,
-              )
-              .join(' / ') || null
-          : null,
-      vgmCount: index === 0 ? listResult.vgmCountTotal : undefined,
-      summary: index === 0 ? listResult.summary : null,
-      isMultiCurrency: totals.length > 1,
+      invoiceValueVnd: index === 0
+        ? selected.reduce((sum, row) => sum + row.invoiceValue * row.declarationExchangeRate, 0)
+        : undefined,
+      logisticsCost: index === 0
+        ? selected.reduce((sum, row) => sum + row.costTotalsByCategory.reduce((subtotal, cost) => subtotal + cost.totalAmount, 0), 0)
+        : undefined,
+      quantity: index === 0
+        ? [...quantities].map(([unit, amount]) => `${numberValueToInput(amount)} ${labelForShipmentQuantityUnit(unit)}`).join(' / ') || null
+        : null,
+      vgmCount: index === 0
+        ? selected.reduce((sum, row) => sum + row.vgmCount, 0)
+        : undefined,
+      summary: index === 0 ? summary : null,
+      isMultiCurrency: byCurrency.size > 1,
+      selectedCount: selected.length,
+      visibleCount: visibleRows.length,
     }));
-  }, [listResult]);
+  }
 
   // Neither field the table needs alongside a Shipment — the parent
   // contract's number/project, and the forwarder's company name — comes
@@ -605,15 +643,11 @@ export function ShipmentsList() {
   // Row cost totals arrive keyed by category id; the LOG columns are keyed
   // by code.
   const costCategoriesQuery = useShipmentCostCategoriesQuery();
-  const costCodeById = useMemo(
-    () =>
-      new Map(
-        (costCategoriesQuery.data?.success
-          ? costCategoriesQuery.data.costCategories
-          : []
-        ).map((category) => [category.id, category.code]),
-      ),
-    [costCategoriesQuery.data],
+  const costCodeById = new Map(
+    (costCategoriesQuery.data?.success
+      ? costCategoriesQuery.data.costCategories
+      : []
+    ).map((category) => [category.id, category.code]),
   );
 
   const customersQuery = useSuppliersQuery();
@@ -1263,7 +1297,6 @@ export function ShipmentsList() {
           initialColumnKeys={DEFAULT_COLUMN_KEYS}
           defaultColumnKeys={DEFAULT_COLUMN_KEYS}
           initialViewPresetKey="basic"
-          onViewPresetChange={setViewPresetKey}
           viewPresets={VIEW_PRESETS.map((preset) => ({
             ...preset,
             icon: (
@@ -1282,7 +1315,11 @@ export function ShipmentsList() {
           itemLabel="lô hàng"
           tableColumns={columnsWithTotalsRow}
           data={searchableShipments}
-          totalsRows={totalsRows}
+          totalsRows={selectedTotalsRows}
+          rowSelection={{
+            ...selection,
+            getLabel: (row) => `Shipment ${row.shipmentCode}`,
+          }}
           totalsRowLabel={(/** @type {ShipmentTotalsRow} */ row) => (
             <HStack gap={2} vAlign="center" wrap="nowrap">
               <Text size="lg" weight="bold" color="accent">
@@ -1293,11 +1330,7 @@ export function ShipmentsList() {
                 color="accent"
                 xstyle={[styles.nowrap, styles.totalsCaption]}
               >
-                {`TỔNG CỘNG (${totalShipments} LÔ HÀNG${
-                  viewPresetKey === 'supplier' && summary
-                    ? ` · ${summary.servicePartnerCount} ĐỐI TÁC DỊCH VỤ`
-                    : ''
-                }${row.isMultiCurrency ? ` · ${row.currency}` : ''})`}
+                {`${row.selectedCount}/${row.visibleCount}`}
               </Text>
             </HStack>
           )}

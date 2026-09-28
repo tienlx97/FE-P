@@ -15784,3 +15784,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Added a shared leading checkbox column for `AdvanceTable` and a scoped selection hook. The header checkbox selects or clears visible rows and shows a mixed state for partial selection. Totals can now derive from the table's filtered page rows.
 - Contract totals now sum selected rows on the current page, grouped by currency. Page, sort or server filter changes start with all rows selected. Browser QA checked row toggle, mixed header state and select all/clear all at desktop and mobile widths; screenshots: `harness/runs/20260928-selected-list-totals/`.
 - `./harness/verify.sh` passed: `harness/runs/20260928-141151-1489/`.
+
+## 2026-09-28 — Selected list totals, task 2
+
+- Applied the shared row-selection control to Shipments. Its totals now reflect selected visible rows: invoice values by currency, VNĐ totals, costs per LOG group, quantity by unit, VGM count, and selected shipment counts. Status tabs and pagination still show total result counts.
+- Browser QA on 47 shipments verified 46/47 after deselecting one, mixed header state, select all, clear all, and selected totals in the value view. Desktop/mobile screenshots: `harness/runs/20260928-selected-list-totals/`; no browser errors.
+- `./harness/verify.sh` passed: `harness/runs/20260928-144319-811/`.
