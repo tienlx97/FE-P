@@ -230,17 +230,16 @@ export function MetaShipmentHeaderCard({
           )}
 
           {steps.length > 0 ? (
-            <HStack
-              hAlign="between"
-              vAlign="center"
-              gap={4}
-              wrap="wrap"
-              xstyle={styles.progressRow}
-            >
-              <HStack gap={3} vAlign="center" xstyle={styles.progressGroup}>
-                <Text size="sm" weight="bold" color="secondary">
-                  TIẾN ĐỘ LỘ TRÌNH:
-                </Text>
+            <VStack gap={3} hAlign="stretch" xstyle={styles.progressRow}>
+              <VStack gap={2} hAlign="stretch">
+                <HStack hAlign="between" vAlign="center" gap={2} wrap="wrap">
+                  <Text size="sm" weight="bold" color="secondary">
+                    TIẾN ĐỘ LỘ TRÌNH
+                  </Text>
+                  <Text size="sm" weight="bold" type="code" color="accent">
+                    {progressLabel}
+                  </Text>
+                </HStack>
                 <HStack
                   xstyle={styles.progressTrack}
                   role="progressbar"
@@ -256,10 +255,7 @@ export function MetaShipmentHeaderCard({
                     ]}
                   />
                 </HStack>
-                <Text size="sm" weight="bold" type="code" color="accent">
-                  {progressLabel}
-                </Text>
-              </HStack>
+              </VStack>
               <HStack gap={4} vAlign="center" wrap="wrap">
                 <LegendDot tone="done" label={`${doneCount} mốc xong`} />
                 {currentCount > 0 ? (
@@ -273,7 +269,7 @@ export function MetaShipmentHeaderCard({
                   label={`${upcomingCount} kế hoạch tới`}
                 />
               </HStack>
-            </HStack>
+            </VStack>
           ) : null}
         </VStack>
       </VStack>
@@ -423,37 +419,37 @@ function JourneyStep({ step, index, liveLabel }) {
           >
             <Icon icon={step.icon} size="md" color="inherit" />
           </HStack>
-          <HStack gap={1} vAlign="center" hAlign="end" wrap="nowrap">
-            {step.markerLabel ? (
-              <MetaPill
-                label={step.markerLabel}
-                tone={step.markerTone ?? 'warning'}
-                icon={Star}
-              />
-            ) : null}
-            <MetaPill
-              label={step.badge}
-              tone={step.badgeTone ?? BADGE_TONE[look]}
-              hasDot={isDone}
-              hasBorder={!isCurrent}
+          {step.onAction && step.actionLabel ? (
+            <IconButton
+              label={step.actionLabel}
+              tooltip={step.actionLabel}
+              icon={
+                <Icon
+                  icon={step.actionIcon ?? Pencil}
+                  size="sm"
+                  color="secondary"
+                />
+              }
+              variant="ghost"
+              size="sm"
+              onClick={step.onAction}
             />
-            {step.onAction && step.actionLabel ? (
-              <IconButton
-                label={step.actionLabel}
-                tooltip={step.actionLabel}
-                icon={
-                  <Icon
-                    icon={step.actionIcon ?? Pencil}
-                    size="sm"
-                    color="secondary"
-                  />
-                }
-                variant="ghost"
-                size="sm"
-                onClick={step.onAction}
-              />
-            ) : null}
-          </HStack>
+          ) : null}
+        </HStack>
+        <HStack gap={1} vAlign="center" wrap="wrap" xstyle={styles.stepBadges}>
+          <MetaPill
+            label={step.badge}
+            tone={step.badgeTone ?? BADGE_TONE[look]}
+            hasDot={isDone}
+            hasBorder={!isCurrent}
+          />
+          {step.markerLabel ? (
+            <MetaPill
+              label={step.markerLabel}
+              tone={step.markerTone ?? 'warning'}
+              icon={Star}
+            />
+          ) : null}
         </HStack>
 
         <VStack gap={1} hAlign="stretch">
@@ -549,7 +545,7 @@ const styles = stylex.create({
     paddingBlock: 'var(--spacing-3)',
     paddingInline: 'var(--spacing-0-5)',
   },
-  // Fixed card width: every leg reads the same in the carousel.
+  // Give narrow viewports a complete card, while wider screens can show more detail.
   step: {
     backgroundColor: 'var(--color-background-card)',
     borderRadius: 'var(--radius-container)',
@@ -561,7 +557,11 @@ const styles = stylex.create({
     minHeight: 'calc(var(--spacing-10) * 4.5)',
     padding: 'var(--spacing-4)',
     position: 'relative',
-    width: 'calc(var(--spacing-10) * 9)',
+    width:
+      'clamp(calc(var(--spacing-10) * 7), 28vw, calc(var(--spacing-10) * 12))',
+  },
+  stepBadges: {
+    minWidth: 0,
   },
   livePill: {
     backgroundColor: 'var(--color-accent)',
@@ -629,19 +629,13 @@ const styles = stylex.create({
     borderTopWidth: 'var(--border-width)',
     paddingTop: 'var(--spacing-4)',
   },
-  // Label + bar + % take the row's space left of the legend.
-  progressGroup: {
-    flexGrow: 1,
-    minWidth: 0,
-  },
-  // Stretches with the row; never shorter than the old fixed bar.
+  // Full-width bar keeps the percentage readable on narrow screens.
   progressTrack: {
     backgroundColor: 'var(--color-border)',
     borderRadius: 'var(--radius-full)',
-    flexGrow: 1,
     height: 'var(--spacing-2)',
-    minWidth: 'calc(var(--spacing-10) * 5)',
     overflow: 'hidden',
+    width: '100%',
   },
   progressFill: {
     backgroundImage:

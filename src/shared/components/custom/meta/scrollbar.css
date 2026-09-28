@@ -52,3 +52,22 @@ html:has([data-astryx-theme='meta']),
 [data-astryx-theme='meta'] .astryx-carousel-scroller::-webkit-scrollbar {
   display: none;
 }
+
+/* The Meta theme gives every table header cell z-index: 2. Pinned cost
+ * headers need to paint over the other headers while the row stays visible
+ * during vertical scrolling. Keep the override scoped to this table. */
+[data-meta-cost-scroll] thead th[data-meta-cost-pinned] {
+  z-index: 8;
+}
+
+[data-meta-container-scroll] thead th[data-meta-container-pinned] {
+  z-index: 8;
+}
+
+/* On a phone, leave room between STT and Thao tác for the scrolled data. */
+@media (max-width: 899px) {
+  [data-meta-cost-scroll] thead th:nth-child(2),
+  [data-meta-cost-scroll] thead th:nth-child(3) {
+    position: static;
+  }
+}

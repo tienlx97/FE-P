@@ -19,7 +19,10 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { MetaFormDrawer } from '@/shared/components/meta-form-drawer.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
-import { formatDateInputValue, formatDisplayDate } from '@/shared/config/date-input-format.js';
+import {
+  formatDateInputValue,
+  formatDisplayDate,
+} from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import {
@@ -213,6 +216,7 @@ export function ShipmentContainerDatesDrawer({
       onClose={onClose}
       icon={CalendarRange}
       title="Ngày container"
+      width={1200}
       meta={
         <HStack gap={2} vAlign="center" wrap="wrap">
           <Text size="sm" weight="bold" color="accent" type="code">
@@ -289,16 +293,19 @@ export function ShipmentContainerDatesDrawer({
             isTitleUppercase={false}
             index={2}
             title="Từng container"
-            meta="Để trống = chưa xảy ra"
+            meta="Cuộn ngang để xem ngày · Để trống = chưa xảy ra"
           >
             <MetaCompactTable
+              isWide
               columns={[
                 { key: 'container', header: 'Container' },
                 ...fields.map((field) => ({
                   key: field.key,
                   header: field.label,
                 })),
-                ...(hasReturn ? [{ key: 'depot', header: 'Depot trả rỗng' }] : []),
+                ...(hasReturn
+                  ? [{ key: 'depot', header: 'Depot trả rỗng' }]
+                  : []),
               ]}
               rows={tableRows}
               emptyLabel="Lô hàng chưa có container."

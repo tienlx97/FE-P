@@ -181,17 +181,31 @@ export function MetaCostPanel({
             </HStack>
           ))
         ) : (
-          <Table density="compact" dividers="grid" xstyle={styles.table}>
-            <TableHeader>
+          <Table
+            density="compact"
+            dividers="grid"
+            xstyle={styles.table}
+            scrollWrapper={CostTableScrollRegion}
+          >
+            <TableHeader xstyle={styles.stickyHeader}>
               <TableRow isHeaderRow>
                 {COLUMNS.map(([key, header, align]) => (
                   <TableHeaderCell
                     key={key}
                     scope="col"
+                    data-meta-cost-pinned={
+                      key === 'no' ||
+                      key === 'group' ||
+                      key === 'name' ||
+                      key === 'actions'
+                        ? ''
+                        : undefined
+                    }
                     xstyle={[
                       styles.headCell,
                       alignStyles[align],
                       columnWidths[key],
+                      ...pinnedCell(key, 'header'),
                     ]}
                   >
                     <Text
@@ -210,8 +224,12 @@ export function MetaCostPanel({
               {groups.map((group) => (
                 <Fragment key={group.id}>
                   <TableRow xstyle={[styles.groupRow]}>
-                    <TableCell xstyle={styles.cell} />
-                    <TableCell xstyle={styles.cell}>
+                    <TableCell
+                      xstyle={[styles.cell, ...pinnedCell('no', 'group')]}
+                    />
+                    <TableCell
+                      xstyle={[styles.cell, ...pinnedCell('group', 'group')]}
+                    >
                       <HStack
                         gap={2}
                         vAlign="center"
@@ -240,7 +258,9 @@ export function MetaCostPanel({
                         ) : null}
                       </HStack>
                     </TableCell>
-                    <TableCell xstyle={styles.cell} />
+                    <TableCell
+                      xstyle={[styles.cell, ...pinnedCell('name', 'group')]}
+                    />
                     <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={[styles.cell, alignStyles.end]}>
@@ -256,19 +276,27 @@ export function MetaCostPanel({
                     <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={styles.cell} />
-                    <TableCell xstyle={styles.cell} />
+                    <TableCell
+                      xstyle={[styles.cell, ...pinnedCell('actions', 'group')]}
+                    />
                   </TableRow>
                   {group.rows.map((row) => (
                     <TableRow key={row.id}>
-                      <TableCell xstyle={[styles.cell, alignStyles.center]}>
+                      <TableCell
+                        xstyle={[
+                          styles.cell,
+                          alignStyles.center,
+                          ...pinnedCell('no'),
+                        ]}
+                      >
                         <Text type="code" color="secondary" hasTabularNumbers>
                           {row.no}
                         </Text>
                       </TableCell>
-                      <TableCell xstyle={styles.cell}>
+                      <TableCell xstyle={[styles.cell, ...pinnedCell('group')]}>
                         <Text color="secondary">{row.groupName}</Text>
                       </TableCell>
-                      <TableCell xstyle={styles.cell}>
+                      <TableCell xstyle={[styles.cell, ...pinnedCell('name')]}>
                         <Text weight="medium">{row.name}</Text>
                       </TableCell>
                       <TableCell xstyle={[styles.cell, alignStyles.end]}>
@@ -319,6 +347,7 @@ export function MetaCostPanel({
                           styles.cell,
                           styles.nowrap,
                           alignStyles.center,
+                          ...pinnedCell('actions'),
                         ]}
                       >
                         <HStack
@@ -359,13 +388,19 @@ export function MetaCostPanel({
             {totals ? (
               <TableFooter>
                 <TableRow xstyle={[styles.totalsRow]}>
-                  <TableCell xstyle={styles.footCell} />
-                  <TableCell xstyle={styles.footCell}>
+                  <TableCell
+                    xstyle={[styles.footCell, ...pinnedCell('no', 'footer')]}
+                  />
+                  <TableCell
+                    xstyle={[styles.footCell, ...pinnedCell('group', 'footer')]}
+                  >
                     <Text size="sm" weight="bold" xstyle={styles.caps}>
                       Σ Tổng cộng chi phí
                     </Text>
                   </TableCell>
-                  <TableCell xstyle={styles.footCell}>
+                  <TableCell
+                    xstyle={[styles.footCell, ...pinnedCell('name', 'footer')]}
+                  >
                     <Text size="sm" color="secondary">
                       {totals.lines}
                     </Text>
@@ -398,7 +433,12 @@ export function MetaCostPanel({
                       {totals.invoices}
                     </Text>
                   </TableCell>
-                  <TableCell xstyle={styles.footCell} />
+                  <TableCell
+                    xstyle={[
+                      styles.footCell,
+                      ...pinnedCell('actions', 'footer'),
+                    ]}
+                  />
                 </TableRow>
               </TableFooter>
             ) : null}
@@ -432,6 +472,54 @@ function OptionalText({ value, isCode = false }) {
   );
 }
 
+/** @param {{children: import('react').ReactNode, htmlProps?: import('react').HTMLAttributes<HTMLDivElement> & {ref?: import('react').Ref<HTMLDivElement>}, xstyle?: import('@stylexjs/stylex').StyleXStyles[], beforeTable?: import('react').ReactNode, afterTable?: import('react').ReactNode}} props */
+function CostTableScrollRegion({
+  children,
+  htmlProps,
+  xstyle,
+  beforeTable,
+  afterTable,
+}) {
+  return (
+    <VStack
+      {...htmlProps}
+      data-meta-cost-scroll
+      role="group"
+      aria-label="Bảng chi phí logistics, cuộn để xem thêm cột và dòng"
+      tabIndex={0}
+      xstyle={[styles.scrollRegion, ...(xstyle ?? [])]}
+    >
+      {beforeTable}
+      {children}
+      {afterTable}
+    </VStack>
+  );
+}
+
+/** @param {typeof COLUMNS[number][0]} key @param {'body' | 'header' | 'group' | 'footer'} [surface] */
+function pinnedCell(key, surface = 'body') {
+  const position =
+    key === 'no'
+      ? styles.pinNo
+      : key === 'group'
+        ? styles.pinGroup
+        : key === 'name'
+          ? styles.pinName
+          : key === 'actions'
+            ? styles.pinActions
+            : null;
+  if (!position) return [];
+  const background =
+    surface === 'header'
+      ? styles.pinHeader
+      : surface === 'group'
+        ? styles.pinGroupSurface
+        : surface === 'footer'
+          ? styles.pinFooter
+          : styles.pinBody;
+  return [position, background];
+}
+
 const styles = stylex.create({
   card: {
     boxShadow: 'var(--meta-shadow-card)',
@@ -457,10 +545,60 @@ const styles = stylex.create({
     height: 'var(--spacing-4)',
     width: 'var(--border-width)',
   },
-  // Auto layout: the Figma column shares (`columnWidths`) spread spare
-  // width, content still wins; the wrapper scrolls on narrow screens.
+  // A fixed width keeps sticky offsets aligned with their columns.
   table: {
-    tableLayout: 'auto',
+    minWidth: 'calc(var(--spacing-10) * 45)',
+    tableLayout: 'fixed',
+  },
+  scrollRegion: {
+    maxHeight: '62vh',
+    minWidth: 0,
+    overflowX: 'auto',
+    overflowY: 'auto',
+    width: '100%',
+  },
+  stickyHeader: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 6,
+  },
+  pinNo: {
+    left: 0,
+    position: 'sticky',
+  },
+  pinGroup: {
+    left: 'calc(var(--spacing-10) * 1.5)',
+    position: {
+      default: 'static',
+      '@media (min-width: 900px)': 'sticky',
+    },
+  },
+  pinName: {
+    left: 'calc(var(--spacing-10) * 6)',
+    position: {
+      default: 'static',
+      '@media (min-width: 900px)': 'sticky',
+    },
+  },
+  pinActions: {
+    position: 'sticky',
+    right: 0,
+  },
+  pinHeader: {
+    backgroundColor: 'var(--meta-row-hover)',
+    zIndex: 5,
+  },
+  pinBody: {
+    backgroundColor: 'var(--color-background-card)',
+    zIndex: 2,
+  },
+  pinGroupSurface: {
+    backgroundColor: 'var(--meta-surface-container-low)',
+    zIndex: 2,
+  },
+  pinFooter: {
+    backgroundColor: 'var(--meta-accent-tint-strong)',
+    zIndex: 2,
   },
   // The note is Markdown from the rich text editor: wraps, and keeps a
   // readable width however many columns compete for the row.
@@ -474,7 +612,10 @@ const styles = stylex.create({
     maxWidth: 'none',
     paddingBlock: 'var(--spacing-3)',
     paddingInline: 'var(--spacing-3)',
+    position: 'sticky',
+    top: 0,
     whiteSpace: 'nowrap',
+    zIndex: 4,
   },
   // Figma 124:9687 headers are sentence case; the theme's `<th>` caps
   // win over the cell's xstyle, so the label resets them itself.
@@ -534,17 +675,17 @@ const alignStyles = stylex.create({
   end: { textAlign: 'end' },
 });
 
-/** Column shares measured from the Figma 124:9687 header row (sum 100%). */
+/** Column widths use 40px spacing units; pinned offsets sum the first columns. */
 const columnWidths = stylex.create({
-  no: { width: '3%' },
-  group: { width: '10%' },
-  name: { width: '10%' },
-  quantity: { width: '6%' },
-  unitPrice: { width: '9%' },
-  amount: { width: '9%' },
-  nature: { width: '7%' },
-  note: { width: '22%' },
-  provider: { width: '10%' },
-  invoice: { width: '8%' },
-  actions: { width: '6%' },
+  no: { width: 'calc(var(--spacing-10) * 1.5)' },
+  group: { width: 'calc(var(--spacing-10) * 4.5)' },
+  name: { width: 'calc(var(--spacing-10) * 6)' },
+  quantity: { width: 'calc(var(--spacing-10) * 2.5)' },
+  unitPrice: { width: 'calc(var(--spacing-10) * 4)' },
+  amount: { width: 'calc(var(--spacing-10) * 4)' },
+  nature: { width: 'calc(var(--spacing-10) * 3.5)' },
+  note: { width: 'calc(var(--spacing-10) * 7.5)' },
+  provider: { width: 'calc(var(--spacing-10) * 4.5)' },
+  invoice: { width: 'calc(var(--spacing-10) * 4.5)' },
+  actions: { width: 'calc(var(--spacing-10) * 2.5)' },
 });

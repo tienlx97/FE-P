@@ -2,12 +2,14 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { ButtonGroup } from '@astryxdesign/core/ButtonGroup';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 import { DatabaseBackup, Download } from 'lucide-react';
 import { useState } from 'react';
 
@@ -141,7 +143,7 @@ export function BackupList() {
     {
       key: 'actions',
       header: 'Thao tác',
-      width: pixel(200),
+      width: pixel(240),
       align: 'end',
       renderCell: (backup) => (
         <HStack gap={2} vAlign="center">
@@ -155,6 +157,7 @@ export function BackupList() {
             label="Khôi phục"
             variant="destructive"
             size="sm"
+            xstyle={styles.restoreButton}
             onClick={() => setRestoringBackup(backup)}
           />
         </HStack>
@@ -181,31 +184,35 @@ export function BackupList() {
             unit="bản"
           />
           <HStack gap={2} wrap="wrap">
-            <Button
-              label="Xuất dữ liệu public"
-              variant="secondary"
-              icon={<Icon icon={Download} size="sm" />}
-              onClick={() => setIsPublicExportOpen(true)}
-            />
-            <Button
-              label="Nhập dữ liệu public"
-              variant="secondary"
-              icon={<Icon icon={IconUpload} size="sm" />}
-              onClick={() => setIsPublicImportOpen(true)}
-            />
-            <Button
-              label="Tải lên bản sao lưu"
-              variant="secondary"
-              icon={<Icon icon={IconUpload} size="sm" />}
-              onClick={() => setIsUploadOpen(true)}
-            />
-            <Button
-              label="Tạo bản sao lưu mới"
-              variant="primary"
-              icon={<Icon icon={IconPlus} size="sm" />}
-              isLoading={createBackupMutation.isPending}
-              onClick={() => createBackupMutation.mutate()}
-            />
+            <ButtonGroup label="Chuyển dữ liệu public">
+              <Button
+                label="Xuất dữ liệu public"
+                variant="secondary"
+                icon={<Icon icon={Download} size="sm" />}
+                onClick={() => setIsPublicExportOpen(true)}
+              />
+              <Button
+                label="Nhập dữ liệu public"
+                variant="secondary"
+                icon={<Icon icon={IconUpload} size="sm" />}
+                onClick={() => setIsPublicImportOpen(true)}
+              />
+            </ButtonGroup>
+            <ButtonGroup label="Tạo và tải bản sao lưu">
+              <Button
+                label="Tải lên bản sao lưu"
+                variant="primary"
+                icon={<Icon icon={IconUpload} size="sm" />}
+                onClick={() => setIsUploadOpen(true)}
+              />
+              <Button
+                label="Tạo bản sao lưu mới"
+                variant="primary"
+                icon={<Icon icon={IconPlus} size="sm" />}
+                isLoading={createBackupMutation.isPending}
+                onClick={() => createBackupMutation.mutate()}
+              />
+            </ButtonGroup>
           </HStack>
         </HStack>
 
@@ -271,3 +278,9 @@ export function BackupList() {
     </MetaThemeProvider>
   );
 }
+
+const styles = stylex.create({
+  restoreButton: {
+    marginRight: 'var(--spacing-2)',
+  },
+});

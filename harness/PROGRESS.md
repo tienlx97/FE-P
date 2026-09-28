@@ -15829,3 +15829,12 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Applied the shared row-selection control to Shipments. Its totals now reflect selected visible rows: invoice values by currency, VNĐ totals, costs per LOG group, quantity by unit, VGM count, and selected shipment counts. Status tabs and pagination still show total result counts.
 - Browser QA on 47 shipments verified 46/47 after deselecting one, mixed header state, select all, clear all, and selected totals in the value view. Desktop/mobile screenshots: `harness/runs/20260928-selected-list-totals/`; no browser errors.
 - `./harness/verify.sh` passed: `harness/runs/20260928-144319-811/`.
+
+## 2026-09-29 — Backups and dense Shipment UI
+
+- Grouped public export/import and backup upload/create actions on `/admin/backups`; widened the action cell so Restore has visible right spacing.
+- Made journey cards responsive with badges on their own row and a full-width progress meter. Widened the container dates drawer to 1200px and made its table horizontally scrollable with a pinned container column.
+- Reflowed the schedule tab: schedule and physical timeline share balanced columns only when there is enough room; B/L and transshipment form a separate responsive row.
+- Made the Logistics cost table scroll in both directions, with a sticky header, pinned STT, cost group, cost name and actions on desktop. At mobile widths, STT and actions remain pinned so the content still has a usable scrolling area.
+- Browser QA used shipment `26KCT02/LOT-01` with two containers and 13 cost rows, plus desktop and mobile backup views. Screenshots: `harness/runs/20260929-backups-shipment-dense-ui/`. Scrolling checks confirmed pinned columns and header stay visible. `./harness/verify.sh` passed: `harness/runs/20260929-001313-1073334/`.
+- Harness gap observed during QA: the Meta theme gives header cells its own z-index, which hid pinned header cells until a scoped override was added in `scrollbar.css`. A generic sticky-column visual assertion would catch this earlier; current structural checks cannot verify stacking order.

@@ -10,6 +10,7 @@ import {
   TableRow,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 
 /**
@@ -23,9 +24,15 @@ import * as stylex from '@stylexjs/stylex';
  *   columns: Array<{ key: string, header: string, align?: 'start' | 'center' | 'end', isWrapping?: boolean }>,
  *   rows: Array<{ id: string, cells: Record<string, import('react').ReactNode> }>,
  *   emptyLabel: string,
+ *   isWide?: boolean,
  * }} props
  */
-export function MetaCompactTable({ columns, rows, emptyLabel }) {
+export function MetaCompactTable({
+  columns,
+  rows,
+  emptyLabel,
+  isWide = false,
+}) {
   if (rows.length === 0) {
     return (
       <HStack hAlign="center" xstyle={styles.emptyRow}>
@@ -35,14 +42,26 @@ export function MetaCompactTable({ columns, rows, emptyLabel }) {
   }
 
   return (
-    <Table density="compact" dividers="rows" xstyle={styles.table}>
-      <TableHeader>
+    <Table
+      density="compact"
+      dividers="rows"
+      xstyle={[styles.table, isWide && styles.wideTable]}
+      {...(isWide ? { scrollWrapper: MetaCompactScrollRegion } : {})}
+    >
+      <TableHeader xstyle={isWide ? styles.stickyHeader : undefined}>
         <TableRow isHeaderRow>
           {columns.map((column) => (
             <TableHeaderCell
               key={column.key}
               scope="col"
-              xstyle={[styles.headCell, alignStyles[column.align ?? 'start']]}
+              data-meta-container-pinned={
+                isWide && column.key === columns[0].key ? '' : undefined
+              }
+              xstyle={[
+                styles.headCell,
+                alignStyles[column.align ?? 'start'],
+                isWide && column.key === columns[0].key && styles.pinnedHead,
+              ]}
             >
               <Text
                 size="sm"
@@ -66,6 +85,7 @@ export function MetaCompactTable({ columns, rows, emptyLabel }) {
                   styles.cell,
                   alignStyles[column.align ?? 'start'],
                   column.isWrapping && styles.wrapCell,
+                  isWide && column.key === columns[0].key && styles.pinnedCell,
                 ]}
               >
                 {row.cells[column.key]}
@@ -78,9 +98,60 @@ export function MetaCompactTable({ columns, rows, emptyLabel }) {
   );
 }
 
+/** @param {{children: import('react').ReactNode, htmlProps?: import('react').HTMLAttributes<HTMLDivElement> & {ref?: import('react').Ref<HTMLDivElement>}, xstyle?: import('@stylexjs/stylex').StyleXStyles[], beforeTable?: import('react').ReactNode, afterTable?: import('react').ReactNode}} props */
+function MetaCompactScrollRegion({
+  children,
+  htmlProps,
+  xstyle,
+  beforeTable,
+  afterTable,
+}) {
+  return (
+    <VStack
+      {...htmlProps}
+      data-meta-container-scroll
+      role="group"
+      aria-label="Bảng ngày container, cuộn ngang để xem các cột"
+      tabIndex={0}
+      xstyle={[styles.scrollRegion, ...(xstyle ?? [])]}
+    >
+      {beforeTable}
+      {children}
+      {afterTable}
+    </VStack>
+  );
+}
+
 const styles = stylex.create({
   table: {
     tableLayout: 'auto',
+  },
+  wideTable: {
+    minWidth: 'calc(var(--spacing-10) * 34)',
+  },
+  scrollRegion: {
+    maxHeight: '58vh',
+    minWidth: 0,
+    overflowX: 'auto',
+    overflowY: 'auto',
+    width: '100%',
+  },
+  stickyHeader: {
+    position: 'sticky',
+    top: 0,
+    zIndex: 6,
+  },
+  pinnedHead: {
+    backgroundColor: 'var(--meta-row-hover)',
+    left: 0,
+    position: 'sticky',
+    zIndex: 3,
+  },
+  pinnedCell: {
+    backgroundColor: 'var(--color-background-card)',
+    left: 0,
+    position: 'sticky',
+    zIndex: 2,
   },
   // Astryx cells default to `max-width: 0` (truncation); lift it so the
   // auto table layout sizes columns to content.

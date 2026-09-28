@@ -2,6 +2,7 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
@@ -81,8 +82,8 @@ function InfoLine({ label, children }) {
 
 /**
  * Shipment detail "Timeline & lịch tàu" tab. Wide screens: the physical
- * timeline on the left; the vessel schedule, B/L steps and transshipment
- * legs in a side column. Then, full width: carrier tracking, per-container
+ * vessel schedule before the physical timeline, side by side only when both
+ * columns have room. B/L and transshipment follow as two cards; carrier tracking, per-container
  * free time and the schedule history (as a timeline). Spec
  * `docs/shipment-journey-incoterms.md` §4, `docs/carrier-tracking-integration-plan.md`.
  * @param {{
@@ -242,13 +243,6 @@ export function ShipmentSchedulePanel({
   return (
     <VStack gap={4} hAlign="stretch">
       <HStack gap={4} vAlign="start" xstyle={styles.split}>
-        <VStack gap={4} hAlign="stretch" xstyle={styles.main}>
-          <ShipmentPhysicalTimeline
-            contractId={contractId}
-            shipmentId={shipmentId}
-          />
-        </VStack>
-
         <VStack gap={4} hAlign="stretch" xstyle={styles.side}>
           <MetaShipmentSection
             icon={CalendarClock}
@@ -278,124 +272,128 @@ export function ShipmentSchedulePanel({
               {scheduleLines}
             </VStack>
           </MetaShipmentSection>
+        </VStack>
 
-          <MetaShipmentSection
-            icon={FileText}
-            title="Chứng từ B/L"
-            subtitle={
-              [
-                labelForBillOfLadingType(schedule.documents?.billOfLadingType),
-                schedule.documents?.blReleaseReference,
-              ]
-                .filter(Boolean)
-                .join(' · ') || undefined
-            }
-            pill={{
-              label: `${blDone}/${blSteps.length} bước`,
-              tone: blDone === blSteps.length ? 'success' : 'neutral',
-              hasDot: blDone === blSteps.length,
-            }}
-            actions={
-              canEdit ? (
-                <Button
-                  label="Cập nhật"
-                  variant="secondary"
-                  size="sm"
-                  icon={<Icon icon={FileText} size="sm" />}
-                  onClick={onEditDocuments}
-                />
-              ) : null
-            }
-          >
-            <MetaEventTimeline
-              emptyLabel="Chưa có bước B/L."
-              items={blSteps.map((step, index) => ({
-                id: step.key,
-                title: step.label,
-                state: step.date
-                  ? 'done'
-                  : index === firstOpenStep
-                    ? 'next'
-                    : 'upcoming',
-                date: step.date ? formatDisplayDate(step.date) : 'Chưa có',
-              }))}
-            />
-          </MetaShipmentSection>
-
-          <MetaShipmentSection
-            icon={Split}
-            title="Chuyển tải"
-            subtitle={
-              legs.length > 0
-                ? `${legs.length} cảng chuyển tải`
-                : 'Đi thẳng — không chuyển tải'
-            }
-            actions={
-              canEdit ? (
-                <Button
-                  label="Sửa"
-                  variant="secondary"
-                  size="sm"
-                  icon={<Icon icon={Split} size="sm" />}
-                  onClick={onEditTransshipment}
-                />
-              ) : null
-            }
-          >
-            {legs.length === 0 ? (
-              <Text color="secondary">Tàu đi thẳng từ POL đến POD.</Text>
-            ) : (
-              <VStack gap={0} hAlign="stretch">
-                {legs.map((leg, index) => {
-                  const arrival = leg.ata || leg.eta;
-                  const departure = leg.atd || leg.etd;
-                  return (
-                    <InfoLine
-                      key={`${index}-${leg.port}`}
-                      label={`${index + 1}. ${leg.port}`}
-                    >
-                      <Text size="sm">
-                        {[leg.vesselName, leg.voyageNumber]
-                          .filter(Boolean)
-                          .join(' / ') || 'Chưa có tàu nối'}
-                      </Text>
-                      <HStack
-                        gap={1.5}
-                        vAlign="center"
-                        wrap="wrap"
-                        hAlign="end"
-                      >
-                        <MetaPill
-                          label={`${leg.ata ? 'ATA' : 'ETA'} ${arrival ? formatDisplayDate(arrival) : '—'}`}
-                          tone={leg.ata ? 'success' : 'neutral'}
-                          size="sm"
-                        />
-                        <MetaPill
-                          label={`${leg.atd ? 'ATD' : 'ETD'} ${departure ? formatDisplayDate(departure) : '—'}`}
-                          tone={leg.atd ? 'success' : 'neutral'}
-                          size="sm"
-                        />
-                        {isFromCarrier({
-                          field: 'TransshipmentAta',
-                          value: leg.ata,
-                          port: leg.port,
-                        }) ||
-                        isFromCarrier({
-                          field: 'TransshipmentAtd',
-                          value: leg.atd,
-                          port: leg.port,
-                        }) ? (
-                          <CarrierSourceTag />
-                        ) : null}
-                      </HStack>
-                    </InfoLine>
-                  );
-                })}
-              </VStack>
-            )}
-          </MetaShipmentSection>
+        <VStack gap={4} hAlign="stretch" xstyle={styles.main}>
+          <ShipmentPhysicalTimeline
+            contractId={contractId}
+            shipmentId={shipmentId}
+          />
         </VStack>
       </HStack>
+
+      <Grid columns={{ minWidth: 320, max: 2 }} gap={4}>
+        <MetaShipmentSection
+          icon={FileText}
+          title="Chứng từ B/L"
+          subtitle={
+            [
+              labelForBillOfLadingType(schedule.documents?.billOfLadingType),
+              schedule.documents?.blReleaseReference,
+            ]
+              .filter(Boolean)
+              .join(' · ') || undefined
+          }
+          pill={{
+            label: `${blDone}/${blSteps.length} bước`,
+            tone: blDone === blSteps.length ? 'success' : 'neutral',
+            hasDot: blDone === blSteps.length,
+          }}
+          actions={
+            canEdit ? (
+              <Button
+                label="Cập nhật"
+                variant="secondary"
+                size="sm"
+                icon={<Icon icon={FileText} size="sm" />}
+                onClick={onEditDocuments}
+              />
+            ) : null
+          }
+        >
+          <MetaEventTimeline
+            emptyLabel="Chưa có bước B/L."
+            items={blSteps.map((step, index) => ({
+              id: step.key,
+              title: step.label,
+              state: step.date
+                ? 'done'
+                : index === firstOpenStep
+                  ? 'next'
+                  : 'upcoming',
+              date: step.date ? formatDisplayDate(step.date) : 'Chưa có',
+            }))}
+          />
+        </MetaShipmentSection>
+
+        <MetaShipmentSection
+          icon={Split}
+          title="Chuyển tải"
+          subtitle={
+            legs.length > 0
+              ? `${legs.length} cảng chuyển tải`
+              : 'Đi thẳng — không chuyển tải'
+          }
+          actions={
+            canEdit ? (
+              <Button
+                label="Sửa"
+                variant="secondary"
+                size="sm"
+                icon={<Icon icon={Split} size="sm" />}
+                onClick={onEditTransshipment}
+              />
+            ) : null
+          }
+        >
+          {legs.length === 0 ? (
+            <Text color="secondary">Tàu đi thẳng từ POL đến POD.</Text>
+          ) : (
+            <VStack gap={0} hAlign="stretch">
+              {legs.map((leg, index) => {
+                const arrival = leg.ata || leg.eta;
+                const departure = leg.atd || leg.etd;
+                return (
+                  <InfoLine
+                    key={`${index}-${leg.port}`}
+                    label={`${index + 1}. ${leg.port}`}
+                  >
+                    <Text size="sm">
+                      {[leg.vesselName, leg.voyageNumber]
+                        .filter(Boolean)
+                        .join(' / ') || 'Chưa có tàu nối'}
+                    </Text>
+                    <HStack gap={1.5} vAlign="center" wrap="wrap" hAlign="end">
+                      <MetaPill
+                        label={`${leg.ata ? 'ATA' : 'ETA'} ${arrival ? formatDisplayDate(arrival) : '—'}`}
+                        tone={leg.ata ? 'success' : 'neutral'}
+                        size="sm"
+                      />
+                      <MetaPill
+                        label={`${leg.atd ? 'ATD' : 'ETD'} ${departure ? formatDisplayDate(departure) : '—'}`}
+                        tone={leg.atd ? 'success' : 'neutral'}
+                        size="sm"
+                      />
+                      {isFromCarrier({
+                        field: 'TransshipmentAta',
+                        value: leg.ata,
+                        port: leg.port,
+                      }) ||
+                      isFromCarrier({
+                        field: 'TransshipmentAtd',
+                        value: leg.atd,
+                        port: leg.port,
+                      }) ? (
+                        <CarrierSourceTag />
+                      ) : null}
+                    </HStack>
+                  </InfoLine>
+                );
+              })}
+            </VStack>
+          )}
+        </MetaShipmentSection>
+      </Grid>
 
       <ShipmentCarrierTrackingSection
         contractId={contractId}
@@ -477,25 +475,26 @@ export function ShipmentSchedulePanel({
 }
 
 const styles = stylex.create({
-  // Side by side from a laptop width; stacked (timeline first) below.
+  // The page sidebar leaves less room than the viewport implies: split only
+  // when each side can hold dates, badges and action buttons comfortably.
   split: {
     alignItems: {
       default: 'stretch',
-      '@media (min-width: 1100px)': 'flex-start',
+      '@media (min-width: 1400px)': 'flex-start',
     },
     flexDirection: {
       default: 'column',
-      '@media (min-width: 1100px)': 'row',
+      '@media (min-width: 1400px)': 'row',
     },
   },
   main: {
     flexBasis: 0,
-    flexGrow: 3,
+    flexGrow: 1,
     minWidth: 0,
   },
   side: {
     flexBasis: 0,
-    flexGrow: 2,
+    flexGrow: 1,
     minWidth: 0,
   },
   infoLine: {
