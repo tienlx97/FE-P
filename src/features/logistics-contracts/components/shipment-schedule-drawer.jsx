@@ -18,10 +18,13 @@ import {
   MetaFormSection,
   MetaPill,
 } from '@/shared/components/custom/meta/index.js';
-import { MetaFormDialog } from '@/shared/components/meta-form-dialog.jsx';
+import { MetaFormDrawer } from '@/shared/components/meta-form-drawer.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
-import { formatDateInputValue, todayIsoDate } from '@/shared/config/date-input-format.js';
+import {
+  formatDateInputValue,
+  todayIsoDate,
+} from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import {
@@ -43,17 +46,15 @@ const TWO_COLUMNS = { minWidth: 220, max: 2 };
  * vessel (kept as a revision with its reason), and sets ATD / ATA and the
  * free time. Spec `docs/shipment-journey-incoterms.md` §4.1–4.2.
  * @param {{
- *   isOpen: boolean,
- *   onOpenChange: (isOpen: boolean) => void,
+ *   onClose: () => void,
  *   contractId: string,
  *   shipmentId: string,
  *   incoterm: import('../types/index.js').Incoterm,
  *   schedule: import('../types/index.js').ShipmentSchedule,
  * }} props
  */
-export function ShipmentScheduleDialog({
-  isOpen,
-  onOpenChange,
+export function ShipmentScheduleDrawer({
+  onClose,
   contractId,
   shipmentId,
   incoterm,
@@ -88,7 +89,10 @@ export function ShipmentScheduleDialog({
   const statusOf = (key) =>
     errors[key]
       ? {
-          status: /** @type {const} */ ({ type: 'error', message: errors[key] }),
+          status: /** @type {const} */ ({
+            type: 'error',
+            message: errors[key],
+          }),
           statusVariant: /** @type {const} */ ('detached'),
         }
       : {};
@@ -99,7 +103,10 @@ export function ShipmentScheduleDialog({
       ['demDays', 'detDays', 'combinedDays'].map((field) => [
         field,
         errors[`${side}.${field}`]
-          ? { type: /** @type {const} */ ('error'), message: errors[`${side}.${field}`] }
+          ? {
+              type: /** @type {const} */ ('error'),
+              message: errors[`${side}.${field}`],
+            }
           : undefined,
       ]),
     );
@@ -136,7 +143,7 @@ export function ShipmentScheduleDialog({
       return;
     }
     toast({ body: 'Đã cập nhật lịch tàu.' });
-    onOpenChange(false);
+    onClose();
   }
 
   /**
@@ -144,8 +151,12 @@ export function ShipmentScheduleDialog({
    * @param {'siCutoff' | 'cyCutoff'} prefix
    */
   function cutoffField(label, prefix) {
-    const dateKey = /** @type {'siCutoffDate' | 'cyCutoffDate'} */ (`${prefix}Date`);
-    const timeKey = /** @type {'siCutoffTime' | 'cyCutoffTime'} */ (`${prefix}Time`);
+    const dateKey = /** @type {'siCutoffDate' | 'cyCutoffDate'} */ (
+      `${prefix}Date`
+    );
+    const timeKey = /** @type {'siCutoffTime' | 'cyCutoffTime'} */ (
+      `${prefix}Time`
+    );
     return (
       <HStack gap={2} vAlign="start" wrap="nowrap">
         <StackItem size="fill">
@@ -176,9 +187,8 @@ export function ShipmentScheduleDialog({
   }
 
   return (
-    <MetaFormDialog
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
+    <MetaFormDrawer
+      onClose={onClose}
       icon={CalendarClock}
       title="Cập nhật lịch tàu"
       meta={
@@ -206,7 +216,12 @@ export function ShipmentScheduleDialog({
       submitError={submitError}
       onSubmit={handleSubmit}
     >
-      <MetaFormSection isBoxed isTitleUppercase={false} index={1} title="Thông báo">
+      <MetaFormSection
+        isBoxed
+        isTitleUppercase={false}
+        index={1}
+        title="Thông báo"
+      >
         <Grid columns={TWO_COLUMNS} gap={4}>
           <Selector
             label="Lý do"
@@ -303,7 +318,12 @@ export function ShipmentScheduleDialog({
         ) : null}
       </MetaFormSection>
 
-      <MetaFormSection isBoxed isTitleUppercase={false} index={3} title="Thực tế">
+      <MetaFormSection
+        isBoxed
+        isTitleUppercase={false}
+        index={3}
+        title="Thực tế"
+      >
         <Grid columns={TWO_COLUMNS} gap={4}>
           <DateInput
             label="Tàu chạy thực tế (ATD)"
@@ -352,7 +372,7 @@ export function ShipmentScheduleDialog({
           </VStack>
         </MetaFormSection>
       ) : null}
-    </MetaFormDialog>
+    </MetaFormDrawer>
   );
 }
 

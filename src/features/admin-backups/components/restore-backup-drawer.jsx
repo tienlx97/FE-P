@@ -2,9 +2,11 @@
 
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { ArchiveRestore } from 'lucide-react';
 import { useRef, useState } from 'react';
 
-import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
+import { MetaFormDrawer } from '@/shared/components/meta-form-drawer.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { useRestoreBackupMutation } from '../hooks/use-restore-backup-mutation.js';
@@ -22,19 +24,18 @@ const POLL_INTERVAL_MS = 5000;
 
 /**
  * @param {{
- *   isOpen: boolean,
  *   onOpenChange: (isOpen: boolean) => void,
  *   backup: import('../types/index.js').BackupFile,
  * }} props
  */
-export function RestoreBackupDialog({ isOpen, onOpenChange, backup }) {
+export function RestoreBackupDrawer({ onOpenChange, backup }) {
   const [confirmText, setConfirmText] = useState('');
   const [error, setError] = useState('');
   const [didSucceed, setDidSucceed] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
 
   const restoreMutation = useRestoreBackupMutation(backup.fileName);
-  // Stops a scheduled retry from firing into a closed dialog's state.
+  // Stops a scheduled retry from firing into a closed drawer's state.
   const isCancelledRef = useRef(false);
 
   /** @param {boolean} nextIsOpen */
@@ -96,49 +97,60 @@ export function RestoreBackupDialog({ isOpen, onOpenChange, backup }) {
   }
 
   return (
-    <FormDialog
-      isOpen={isOpen}
-      onOpenChange={handleOpenChange}
+    <MetaFormDrawer
+      onClose={() => handleOpenChange(false)}
+      icon={ArchiveRestore}
       title="Khôi phục bản sao lưu"
-      subtitle={backup.fileName}
+      meta={
+        <Text size="sm" color="accent">
+          {backup.fileName}
+        </Text>
+      }
       submitLabel="Khôi phục"
-      width={480}
-      draft={confirmText}
+      width={600}
+      draft=""
+      showDirtyHint={false}
       isSubmitting={restoreMutation.isPending || isPolling}
-      isReady={!didSucceed}
+      isSubmitDisabled={didSucceed || isPolling}
       submitError={error}
       onSubmit={handleSubmit}
-      successMessage={
-        didSucceed
-          ? 'Khôi phục thành công. Trang sẽ tự tải lại...'
-          : isPolling
-            ? 'Vẫn đang khôi phục ở máy chủ — không tắt trình duyệt, trang sẽ tự kiểm tra lại...'
-            : ''
-      }
     >
-      {!didSucceed ? (
-        <VStack gap={3} hAlign="stretch">
-          <Text color="secondary">
-            Toàn bộ dữ liệu hiện tại sẽ bị <strong>ghi đè</strong> bằng dữ liệu
-            trong bản sao lưu này. Thao tác không thể hoàn tác. Hệ thống sẽ tự
-            tạo một bản sao lưu của dữ liệu hiện tại trước khi ghi đè, phòng
-            trường hợp cần quay lại.
-          </Text>
-          <Text color="secondary">
-            Có thể mất khoảng 1 phút — quá trình không bị ngắt giữa chừng dù
-            trang có báo &quot;quá thời gian&quot;, trang sẽ tự kiểm tra lại cho
-            tới khi xong.
-          </Text>
-          <TextInput
-            label={`Gõ "${CONFIRM_DATABASE_NAME}" để xác nhận`}
-            value={confirmText}
-            onChange={setConfirmText}
-            placeholder={CONFIRM_DATABASE_NAME}
-            isRequired
-            isDisabled={isPolling}
-          />
-        </VStack>
+      {didSucceed || isPolling ? (
+        <Text color="secondary">
+          {didSucceed
+            ? 'Khôi phục thành công. Trang sẽ tự tải lại...'
+            : 'Vẫn đang khôi phục ở máy chủ — không tắt trình duyệt, trang sẽ tự kiểm tra lại...'}
+        </Text>
       ) : null}
-    </FormDialog>
+      {!didSucceed ? (
+        <MetaFormSection
+          title="Xác nhận khôi phục"
+          isTitleUppercase={false}
+          isBoxed
+        >
+          <VStack gap={3} hAlign="stretch">
+            <Text color="secondary">
+              Toàn bộ dữ liệu hiện tại sẽ bị <strong>ghi đè</strong> bằng dữ
+              liệu trong bản sao lưu này. Thao tác không thể hoàn tác. Hệ thống
+              sẽ tự tạo một bản sao lưu của dữ liệu hiện tại trước khi ghi đè,
+              phòng trường hợp cần quay lại.
+            </Text>
+            <Text color="secondary">
+              Có thể mất khoảng 1 phút — quá trình không bị ngắt giữa chừng dù
+              trang có báo &quot;quá thời gian&quot;, trang sẽ tự kiểm tra lại
+              cho tới khi xong.
+            </Text>
+            <TextInput
+              label={`Gõ "${CONFIRM_DATABASE_NAME}" để xác nhận`}
+              value={confirmText}
+              onChange={setConfirmText}
+              placeholder={CONFIRM_DATABASE_NAME}
+              isRequired
+              isDisabled={isPolling}
+            />
+          </VStack>
+        </MetaFormSection>
+      ) : null}
+    </MetaFormDrawer>
   );
 }

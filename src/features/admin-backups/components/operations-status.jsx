@@ -1,6 +1,11 @@
 import { Banner } from '@astryxdesign/core/Banner';
+import { Card } from '@astryxdesign/core/Card';
+import { Grid } from '@astryxdesign/core/Grid';
+import { HStack } from '@astryxdesign/core/HStack';
+import { StatusDot } from '@astryxdesign/core/StatusDot';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 
 import { useOperationsStatusQuery } from '../hooks/use-operations-status-query.js';
 
@@ -25,7 +30,7 @@ export function OperationsStatus() {
       <Banner status="error" title="Không thể tải trạng thái sao lưu tự động" />
     );
   return (
-    <VStack gap={2} hAlign="stretch">
+    <Grid columns={{ minWidth: 240, max: 3 }} gap={3}>
       {
         /** @type {('local' | 'smb' | 'restore')[]} */ ([
           'local',
@@ -34,28 +39,40 @@ export function OperationsStatus() {
         ]).map((key) => {
           const operation = query.data[key];
           return (
-            <Banner
-              key={key}
-              collapsible={false}
-              status={
-                operation.status === 'healthy'
-                  ? 'success'
-                  : operation.status === 'error'
-                    ? 'error'
-                    : 'warning'
-              }
-              title={`${labels[key]}: ${states[operation.status]}`}
-            >
-              <Text>
-                Lần thành công gần nhất:{' '}
-                {operation.lastSuccessUtc
-                  ? new Date(operation.lastSuccessUtc).toLocaleString('vi-VN')
-                  : 'Chưa có'}
-              </Text>
-            </Banner>
+            <Card key={key} padding={4} xstyle={styles.card}>
+              <VStack gap={2} hAlign="stretch">
+                <Text weight="semibold">{labels[key]}</Text>
+                <HStack gap={2} vAlign="center">
+                  <StatusDot
+                    variant={
+                      operation.status === 'healthy'
+                        ? 'success'
+                        : operation.status === 'error'
+                          ? 'error'
+                          : 'warning'
+                    }
+                    label={states[operation.status]}
+                  />
+                  <Text weight="bold">{states[operation.status]}</Text>
+                </HStack>
+                <Text size="sm" color="secondary">
+                  Thành công gần nhất:{' '}
+                  {operation.lastSuccessUtc
+                    ? new Date(operation.lastSuccessUtc).toLocaleString('vi-VN')
+                    : 'Chưa có'}
+                </Text>
+              </VStack>
+            </Card>
           );
         })
       }
-    </VStack>
+    </Grid>
   );
 }
+
+const styles = stylex.create({
+  card: {
+    borderRadius: 'var(--meta-radius-inset)',
+    boxShadow: 'var(--meta-shadow-card)',
+  },
+});

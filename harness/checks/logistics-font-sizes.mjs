@@ -12,12 +12,12 @@ import { fileURLToPath } from 'node:url';
 process.chdir(path.join(path.dirname(fileURLToPath(import.meta.url)), '../..'));
 
 const files = execSync(
-  "git ls-files 'src/features/logistics*/**/*.jsx' 'src/shared/components/custom/meta/*.jsx' src/shared/components/meta-form-dialog.jsx",
+  "git ls-files --cached --others --exclude-standard 'src/features/logistics*/**/*.jsx' 'src/shared/components/custom/meta/*.jsx' src/shared/components/meta-form-dialog.jsx src/shared/components/meta-form-drawer.jsx",
 )
   .toString()
   .trim()
   .split('\n')
-  .filter(Boolean);
+  .filter((file) => file && fs.existsSync(file));
 
 const TOO_SMALL = /\ssize="(xsm|xs|2xs|3xs|4xs)"/;
 const offenders = [];

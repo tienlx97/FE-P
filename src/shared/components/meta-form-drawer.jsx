@@ -40,6 +40,7 @@ import { MetaDrawerHeader, MetaThemeProvider } from './custom/meta/index.js';
  *   isSubmitting?: boolean,
  *   isSubmitDisabled?: boolean,
  *   submitError?: string,
+ *   showDirtyHint?: boolean,
  *   onSubmit: (event: import('react').FormEvent<HTMLFormElement>) => unknown,
  *   children: import('react').ReactNode,
  * }} props
@@ -56,6 +57,7 @@ export function MetaFormDrawer({
   isSubmitting = false,
   isSubmitDisabled = false,
   submitError = '',
+  showDirtyHint = true,
   onSubmit,
   children,
 }) {
@@ -125,21 +127,25 @@ export function MetaFormDrawer({
           footer={
             <LayoutFooter padding={4}>
               <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
-                <HStack
-                  gap={2}
-                  vAlign="center"
-                  wrap="nowrap"
-                  xstyle={styles.hint}
-                >
-                  {isDirty ? <HStack as="span" xstyle={styles.dot} /> : null}
-                  <Text size="sm" color="secondary">
-                    {isSubmitting
-                      ? 'Đang lưu…'
-                      : isDirty
-                        ? 'Có thay đổi chưa lưu'
-                        : 'Chưa có thay đổi'}
-                  </Text>
-                </HStack>
+                {showDirtyHint ? (
+                  <HStack
+                    gap={2}
+                    vAlign="center"
+                    wrap="nowrap"
+                    xstyle={styles.hint}
+                  >
+                    {isDirty ? <HStack as="span" xstyle={styles.dot} /> : null}
+                    <Text size="sm" color="secondary">
+                      {isSubmitting
+                        ? 'Đang lưu…'
+                        : isDirty
+                          ? 'Có thay đổi chưa lưu'
+                          : 'Chưa có thay đổi'}
+                    </Text>
+                  </HStack>
+                ) : (
+                  <HStack />
+                )}
                 <HStack gap={2} vAlign="center" wrap="nowrap">
                   <Button
                     label="Huỷ bỏ"
@@ -156,7 +162,9 @@ export function MetaFormDrawer({
                     variant="primary"
                     size="lg"
                     icon={
-                      submitIcon ? <Icon icon={submitIcon} size="sm" /> : undefined
+                      submitIcon ? (
+                        <Icon icon={submitIcon} size="sm" />
+                      ) : undefined
                     }
                     isLoading={isSubmitting}
                     isDisabled={isSubmitDisabled}

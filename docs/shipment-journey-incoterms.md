@@ -36,7 +36,7 @@ Cập nhật lần cuối: 2026-09-28.
    hiển thị gần nhất phía trước** trong Master Journey.
 6. **Xác nhận mốc bằng tay chỉ dành cho mốc chưa có ngày thực tế riêng trên lô
    hàng**: `exw-handover`, `on-board` (LOAD), `discharged` (DISC),
-   `import-clearance` và `site`. Hộp thoại "Xác nhận mốc" ghi
+   `import-clearance` và `site`. Drawer "Xác nhận mốc" ghi
    **Ngày hoàn thành thực tế** (ngày việc đó thật sự xong) + ghi chú.
    Tiến độ = mốc xa hơn giữa Tình trạng và mốc xác nhận tay cuối cùng.
    Các mốc còn lại **không có nút xác nhận**, ngày lấy từ dữ liệu lô hàng:
@@ -299,7 +299,7 @@ cho phép nhập ngày trả rỗng và depot theo từng container.
 
 Thống nhất với người dùng ngày 2026-09-26; triển khai cùng ngày (BE-kt-xnk
 `add-shipment-schedule-free-time`). Trên trang lô hàng: tab **"Lịch tàu &
-Free time"**, hộp thoại **"Cập nhật lịch tàu"** và **"Ngày container"** (menu
+Free time"**, drawer **"Cập nhật lịch tàu"** và **"Ngày container"** (menu
 "…" của thẻ lô hàng, nút trên thẻ mốc), dải cảnh báo dưới thẻ lô hàng; trang
 danh sách Shipment có khối **"Lô hàng cần chú ý"**. Bối cảnh vận hành:
 
@@ -326,12 +326,12 @@ trị:
 | Dự kiến hiện tại | Giá trị theo thông báo mới nhất |
 | Thực tế | ATD / ATA — tàu thật sự chạy / đến |
 
-- Thao tác **"Cập nhật lịch tàu"** (hộp thoại): ETD, ETA, cut-off SI / VGM,
+- Thao tác **"Cập nhật lịch tàu"** (drawer): ETD, ETA, cut-off SI / VGM,
   cut-off CY, tàu / chuyến, free time (xem 4.2), lý do (tàu trễ, đổi tàu,
   ùn tắc cảng, khác), ghi chú. Mỗi lần lưu thành **một dòng lịch sử**
   (ngày nhận thông báo, cũ → mới, lý do), không ghi đè.
 - Cut-off **không tự dời theo ETD** (do hãng tàu / cảng quyết định). Hộp
-  thoại đặt cut-off cạnh ETD để kiểm tra; có nút "Dời cut-off cùng số ngày
+  drawer đặt cut-off cạnh ETD để kiểm tra; có nút "Dời cut-off cùng số ngày
   với ETD".
 - Số ngày trễ = (thực tế, nếu có, hoặc dự kiến hiện tại) − ban đầu. Thẻ mốc
   hiển thị ví dụ: "Rời cảng 13/10 · trễ 3 ngày (dời 2 lần)".
@@ -494,3 +494,4 @@ liệu mốc con ở backend).
 | 2026-09-27 | Container trước, VGM sau: tab "Container & VGM", khai VGM tuỳ chọn (đủ 5 khối lượng hoặc không), cảnh báo SI / VGM đếm cont chưa khai | Claude |
 | 2026-09-27 | Kiểm tra luồng: dữ liệu chỉ đẩy trong mốc Seller (EXW / FOB sau ATD), LCL không có mốc container, CIF hoàn thành không có container không kẹt ở Empty Return (nguyên tắc 7–9) | Claude |
 | 2026-09-27 | FOB "Shipping" = `end` (Seller hoàn tất khi tàu chạy); DDP không có mốc Empty Return; thêm mục 1b Luồng hoạt động | Claude |
+| 2026-09-28 | "Xác nhận mốc" và "Cập nhật lịch tàu" chuyển sang drawer; "Ngày container" đã dùng drawer | Codex |

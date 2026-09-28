@@ -3,19 +3,20 @@
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Upload } from 'lucide-react';
 import { useState } from 'react';
 
-import { FormDialog } from '@/shared/components/form-dialog.jsx';
+import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
+import { MetaFormDrawer } from '@/shared/components/meta-form-drawer.jsx';
 
 import { useUploadBackupMutation } from '../hooks/use-upload-backup-mutation.js';
 
 /**
  * @param {{
- *   isOpen: boolean,
  *   onOpenChange: (isOpen: boolean) => void,
  * }} props
  */
-export function UploadBackupDialog({ isOpen, onOpenChange }) {
+export function UploadBackupDrawer({ onOpenChange }) {
   const [file, setFile] = useState(/** @type {File | null} */ (null));
   const [error, setError] = useState('');
   const [didSucceed, setDidSucceed] = useState(false);
@@ -58,42 +59,49 @@ export function UploadBackupDialog({ isOpen, onOpenChange }) {
   }
 
   return (
-    <FormDialog
-      isOpen={isOpen}
-      onOpenChange={handleOpenChange}
+    <MetaFormDrawer
+      onClose={() => handleOpenChange(false)}
+      icon={Upload}
       title="Tải lên bản sao lưu"
       submitLabel="Tải lên"
-      width={480}
-      draft={file?.name ?? ''}
+      width={600}
+      draft=""
+      showDirtyHint={false}
       isSubmitting={uploadMutation.isPending}
-      isReady={!didSucceed}
+      isSubmitDisabled={didSucceed}
       submitError={error}
       onSubmit={handleSubmit}
-      successMessage={
-        didSucceed
-          ? 'Tải lên thành công. File đã xuất hiện trong danh sách bên dưới, có thể khôi phục như bình thường.'
-          : ''
-      }
     >
-      {!didSucceed ? (
-        <VStack gap={3} hAlign="stretch">
-          <Text color="secondary">
-            Chọn một file <strong>.sql</strong> (ví dụ: bản sao lưu đã tải về từ
-            máy khác) để lưu vào server. Thao tác này chỉ lưu file — chưa khôi
-            phục dữ liệu; sau khi tải lên xong, bấm &quot;Khôi phục&quot; trên
-            file vừa tải lên nếu muốn ghi đè dữ liệu hiện tại.
-          </Text>
-          <FileInput
-            label="File backup (.sql)"
-            value={file}
-            onChange={(files) =>
-              setFile(Array.isArray(files) ? (files[0] ?? null) : files)
-            }
-            accept=".sql"
-            isRequired
-          />
-        </VStack>
+      {didSucceed ? (
+        <Text color="secondary">
+          Tải lên thành công. File đã xuất hiện trong danh sách bên dưới.
+        </Text>
       ) : null}
-    </FormDialog>
+      {!didSucceed ? (
+        <MetaFormSection
+          title="Chọn bản sao lưu"
+          isTitleUppercase={false}
+          isBoxed
+        >
+          <VStack gap={3} hAlign="stretch">
+            <Text color="secondary">
+              Chọn một file <strong>.sql</strong> (ví dụ: bản sao lưu đã tải về
+              từ máy khác) để lưu vào server. Thao tác này chỉ lưu file — chưa
+              khôi phục dữ liệu; sau khi tải lên xong, bấm &quot;Khôi phục&quot;
+              trên file vừa tải lên nếu muốn ghi đè dữ liệu hiện tại.
+            </Text>
+            <FileInput
+              label="File backup (.sql)"
+              value={file}
+              onChange={(files) =>
+                setFile(Array.isArray(files) ? (files[0] ?? null) : files)
+              }
+              accept=".sql"
+              isRequired
+            />
+          </VStack>
+        </MetaFormSection>
+      ) : null}
+    </MetaFormDrawer>
   );
 }

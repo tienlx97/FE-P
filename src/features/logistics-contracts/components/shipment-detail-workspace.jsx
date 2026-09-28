@@ -33,7 +33,10 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
 import { shipmentTrail } from '@/shared/config/breadcrumbs.js';
-import { formatDisplayDate, todayIsoDate } from '@/shared/config/date-input-format.js';
+import {
+  formatDisplayDate,
+  todayIsoDate,
+} from '@/shared/config/date-input-format.js';
 
 import { dateRange } from '../config/shipment-container-dates.js';
 import { transshipmentRoute } from '../config/shipment-documents.js';
@@ -63,9 +66,9 @@ import { ShipmentContainerDatesDrawer } from './shipment-container-dates-drawer.
 import { ShipmentCostPanel } from './shipment-cost-panel.jsx';
 import { ShipmentDocumentsDialog } from './shipment-documents-dialog.jsx';
 import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
-import { ShipmentMilestoneDialog } from './shipment-milestone-dialog.jsx';
+import { ShipmentMilestoneDrawer } from './shipment-milestone-drawer.jsx';
 import { ShipmentOverviewPanel } from './shipment-overview-panel.jsx';
-import { ShipmentScheduleDialog } from './shipment-schedule-dialog.jsx';
+import { ShipmentScheduleDrawer } from './shipment-schedule-drawer.jsx';
 import { ShipmentSchedulePanel } from './shipment-schedule-panel.jsx';
 import { ShipmentTransshipmentDrawer } from './shipment-transshipment-drawer.jsx';
 import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
@@ -255,9 +258,15 @@ function journeyFor({
         return {
           title:
             loadingCode && dischargeCode
-              ? transshipmentRoute(loadingCode, transshipmentLegs, dischargeCode)
+              ? transshipmentRoute(
+                  loadingCode,
+                  transshipmentLegs,
+                  dischargeCode,
+                )
               : label,
-          footLabel: details?.actualDeparture ? 'Tàu chạy (ATD)' : 'Dự kiến chạy (ETD)',
+          footLabel: details?.actualDeparture
+            ? 'Tàu chạy (ATD)'
+            : 'Dự kiến chạy (ETD)',
           footValue: scheduleDateLabel(
             details?.actualDeparture,
             shipment.etd,
@@ -360,17 +369,21 @@ function journeyFor({
       badge:
         step.milestone === 'EmptyReturn' && emptyReturn?.overdueDays
           ? `Quá hạn ${emptyReturn.overdueDays} ngày`
-          : step.milestone === 'OnBoard' && step.state === 'Done' && !step.completedOn
+          : step.milestone === 'OnBoard' &&
+              step.state === 'Done' &&
+              !step.completedOn
             ? 'Thiếu ngày LOAD'
-            : step.milestone === 'Discharged' && step.state === 'Done' && !step.completedOn
+            : step.milestone === 'Discharged' &&
+                step.state === 'Done' &&
+                !step.completedOn
               ? 'Thiếu ngày DISC'
-          : step.state === 'Done'
-            ? 'Hoàn thành'
-            : step.state === 'Current'
-              ? 'Chặng hiện tại'
-              : step.scope === 'Buyer'
-                ? 'Phạm vi Buyer'
-                : 'Kế hoạch',
+              : step.state === 'Done'
+                ? 'Hoàn thành'
+                : step.state === 'Current'
+                  ? 'Chặng hiện tại'
+                  : step.scope === 'Buyer'
+                    ? 'Phạm vi Buyer'
+                    : 'Kế hoạch',
       badgeTone: /** @type {'danger' | undefined} */ (
         step.milestone === 'EmptyReturn' && emptyReturn?.overdueDays
           ? 'danger'
@@ -547,9 +560,7 @@ function ShipmentDetailBody({
             step.milestone === 'EmptyPickup'
           ) {
             setIsContainerDatesOpen(true);
-          } else if (
-            step.milestone === 'DestinationPort'
-          ) {
+          } else if (step.milestone === 'DestinationPort') {
             setIsScheduleOpen(true);
           } else {
             setSelectedMilestone(step);
@@ -714,7 +725,7 @@ function ShipmentDetailBody({
         </section>
       </VStack>
 
-      {/* Dialogs portal out of the page tree, so they re-apply Meta. */}
+      {/* Overlays portal out of the page tree, so they re-apply Meta. */}
       <MetaThemeProvider>
         {isEditing ? (
           <ShipmentFormDrawer
@@ -724,12 +735,9 @@ function ShipmentDetailBody({
           />
         ) : null}
         {selectedMilestone ? (
-          <ShipmentMilestoneDialog
+          <ShipmentMilestoneDrawer
             key={`${selectedMilestone.milestone}-${selectedMilestone.completedOn}`}
-            isOpen
-            onOpenChange={(open) => {
-              if (!open) setSelectedMilestone(null);
-            }}
+            onClose={() => setSelectedMilestone(null)}
             contractId={contract.id}
             shipmentId={shipment.id}
             step={selectedMilestone}
@@ -762,10 +770,9 @@ function ShipmentDetailBody({
           />
         ) : null}
         {isScheduleOpen && schedule ? (
-          <ShipmentScheduleDialog
+          <ShipmentScheduleDrawer
             key={schedule.version}
-            isOpen
-            onOpenChange={setIsScheduleOpen}
+            onClose={() => setIsScheduleOpen(false)}
             contractId={contract.id}
             shipmentId={shipment.id}
             incoterm={contract.incoterm}

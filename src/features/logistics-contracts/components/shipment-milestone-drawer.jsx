@@ -14,9 +14,12 @@ import {
   MetaFormSection,
   MetaPill,
 } from '@/shared/components/custom/meta/index.js';
-import { MetaFormDialog } from '@/shared/components/meta-form-dialog.jsx';
+import { MetaFormDrawer } from '@/shared/components/meta-form-drawer.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
-import { formatDateInputValue, todayIsoDate } from '@/shared/config/date-input-format.js';
+import {
+  formatDateInputValue,
+  todayIsoDate,
+} from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { useShipmentMilestoneMutations } from '../hooks/use-shipment-journey-query.js';
@@ -39,21 +42,19 @@ function stepStatePill(step) {
 /**
  * Confirms a journey milestone by hand on its actual date (or re-dates /
  * reopens one already confirmed). The backend keeps the confirmation
- * next to the status and shows the furthest of both. Meta dialog frame
- * (`MetaFormDialog`): milestone / state / scope pills in the header, a
+ * next to the status and shows the furthest of both. Meta drawer frame
+ * (`MetaFormDrawer`): milestone / state / scope pills in the header, a
  * boxed "Hoàn thành thực tế" card, a note on how confirmations combine
  * with the status, and — for a confirmed step — a "Bỏ xác nhận" card.
  * @param {{
- *   isOpen: boolean,
- *   onOpenChange: (isOpen: boolean) => void,
+ *   onClose: () => void,
  *   contractId: string,
  *   shipmentId: string,
  *   step: import('../types/index.js').ShipmentJourneyStep,
  * }} props
  */
-export function ShipmentMilestoneDialog({
-  isOpen,
-  onOpenChange,
+export function ShipmentMilestoneDrawer({
+  onClose,
   contractId,
   shipmentId,
   step,
@@ -88,7 +89,7 @@ export function ShipmentMilestoneDialog({
       return;
     }
     toast({ body: `Đã xác nhận mốc "${step.label}".` });
-    onOpenChange(false);
+    onClose();
   }
 
   async function handleReopen() {
@@ -99,13 +100,12 @@ export function ShipmentMilestoneDialog({
       return;
     }
     toast({ body: `Đã bỏ xác nhận mốc "${step.label}".` });
-    onOpenChange(false);
+    onClose();
   }
 
   return (
-    <MetaFormDialog
-      isOpen={isOpen}
-      onOpenChange={onOpenChange}
+    <MetaFormDrawer
+      onClose={onClose}
       icon={CalendarCheck}
       title={
         step.isConfirmed ? 'Sửa mốc hành trình' : 'Xác nhận mốc hành trình'
@@ -215,7 +215,7 @@ export function ShipmentMilestoneDialog({
           />
         </HStack>
       ) : null}
-    </MetaFormDialog>
+    </MetaFormDrawer>
   );
 }
 

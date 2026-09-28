@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-28 — Meta backups page and action drawers
+
+- `/admin/backups` now uses the Meta page header, count badge, file status badges, and compact operation status cards. Upload, public import/export, and restore use `MetaFormDrawer` with full-width mobile layouts; restore still requires the database-name confirmation.
+- Converted the shipment milestone confirmation and schedule update forms to `MetaFormDrawer`, then updated `docs/shipment-journey-incoterms.md` to match. `AGENTS.md` points to an ignored local login instruction file, so credentials stay outside Git.
+- Authenticated browser checks at 1280 px and 390 px: backup list, export, import, upload, restore, shipment schedule, and milestone drawers opened; the milestone drawer prompted before discarding an edited note. No restore or milestone action was submitted. Screenshots: `harness/runs/20260928-admin-backups-meta/`.
+- `./harness/verify.sh` passed: `harness/runs/20260928-231821-996088/`.
+- Harness gap fixed: logistics font-size scan now includes untracked source files and skips deleted paths, so renamed components no longer cause `ENOENT` before staging. Browser screenshots must wait for drawer transition to finish before capture.
+
 ## 2026-09-28 — Rich text "Ghi chú" for contracts, shipments and costs
 
 - Added `@astryxdesign/richtext@0.6.2-canary.bc93547` (same Astryx commit as the pinned lab) with its Lexical 0.46 peers, and `richtext.css` in `globals.css`. `RichTextNoteField` wraps `RichTextEditor` + toolbar (no headings, no link button) and stores Markdown; it ignores the editor re-emitting its seed, so opening a drawer with an old plain-text note stays "Chưa có thay đổi". `RichTextNote` renders the Markdown with Astryx `Markdown`.

@@ -5,6 +5,7 @@ build/
 .next/
 .env
 .env.*
+/.ai-login.local.md
 !.env.example
 !.env.production.example
 !.env.development.example

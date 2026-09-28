@@ -1,31 +1,38 @@
 'use client';
 
-import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { Heading, Text } from '@astryxdesign/core/Text';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { DatabaseBackup, Download } from 'lucide-react';
 import { useState } from 'react';
 
 import {
   AdvanceTable,
   AdvanceTableErrorBanner,
 } from '@/shared/components/advance-table.jsx';
+import {
+  MetaListTitle,
+  MetaPageHeader,
+  MetaPrimaryCell,
+  MetaStatusBadge,
+  MetaThemeProvider,
+} from '@/shared/components/custom/meta/index.js';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { IconUpload } from '@/shared/components/icon/icon-upload.jsx';
 
 import { downloadBackupUrl } from '../api/backups.js';
 import { useBackupsQuery } from '../hooks/use-backups-query.js';
 import { useCreateBackupMutation } from '../hooks/use-create-backup-mutation.js';
-import { ExportPublicDataDialog } from './export-public-data-dialog.jsx';
-import { ImportPublicDataDialog } from './import-public-data-dialog.jsx';
+import { ExportPublicDataDrawer } from './export-public-data-drawer.jsx';
+import { ImportPublicDataDrawer } from './import-public-data-drawer.jsx';
 import { OperationsStatus } from './operations-status.jsx';
-import { RestoreBackupDialog } from './restore-backup-dialog.jsx';
-import { UploadBackupDialog } from './upload-backup-dialog.jsx';
+import { RestoreBackupDrawer } from './restore-backup-drawer.jsx';
+import { UploadBackupDrawer } from './upload-backup-drawer.jsx';
 
 const BYTES_IN_KB = 1024;
 
@@ -101,12 +108,12 @@ export function BackupList() {
       filter: 'fileName',
       renderCell: (backup) => (
         <HStack gap={2} vAlign="center" wrap="wrap">
-          <Text weight="medium">{backup.fileName}</Text>
+          <MetaPrimaryCell>{backup.fileName}</MetaPrimaryCell>
           {backup.isNewest ? (
-            <Badge variant="success" label="Mới nhất" />
+            <MetaStatusBadge tone="success" label="Mới nhất" />
           ) : null}
           {backup.isUploaded ? (
-            <Badge variant="neutral" label="Tải lên thủ công" />
+            <MetaStatusBadge label="Tải lên thủ công" />
           ) : null}
         </HStack>
       ),
@@ -125,7 +132,7 @@ export function BackupList() {
         backup.sizeBytes === 0 ? (
           <HStack gap={2} vAlign="center">
             <Text>0 B</Text>
-            <Badge variant="warning" label="Có thể lỗi" />
+            <Text color="secondary">Cần kiểm tra</Text>
           </HStack>
         ) : (
           formatSize(backup.sizeBytes)
@@ -156,105 +163,111 @@ export function BackupList() {
   ];
 
   return (
-    <VStack gap={4} hAlign="stretch" height="100%">
-      <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
-        <VStack gap={1}>
-          <Heading level={1}>Sao lưu &amp; khôi phục dữ liệu</Heading>
-          <Text color="secondary">
-            Tạo và khôi phục bản sao lưu dữ liệu. Theo dõi bản sao ngoài máy chủ
-            và kết quả khôi phục thử tự động.
-          </Text>
-        </VStack>
-        <HStack gap={2} wrap="wrap">
-          <Button
-            label="Xuất dữ liệu public"
-            variant="secondary"
-            onClick={() => setIsPublicExportOpen(true)}
+    <MetaThemeProvider>
+      <VStack gap={5} hAlign="stretch" height="100%">
+        <MetaPageHeader
+          trail={[
+            { label: 'Quản trị', href: '/admin' },
+            { label: 'Sao lưu & khôi phục' },
+          ]}
+          icon={DatabaseBackup}
+          title="Sao lưu & khôi phục dữ liệu"
+          description="Theo dõi bản sao, tạo bản mới và khôi phục dữ liệu khi cần."
+        />
+        <HStack hAlign="between" vAlign="center" wrap="wrap" gap={3}>
+          <MetaListTitle
+            title="Danh sách bản sao lưu"
+            count={backups.length}
+            unit="bản"
           />
-          <Button
-            label="Nhập dữ liệu public"
-            variant="secondary"
-            icon={<Icon icon={IconUpload} size="sm" />}
-            onClick={() => setIsPublicImportOpen(true)}
-          />
-          <Button
-            label="Tải lên bản sao lưu"
-            variant="secondary"
-            icon={<Icon icon={IconUpload} size="sm" />}
-            onClick={() => setIsUploadOpen(true)}
-          />
-          <Button
-            label="Tạo bản sao lưu mới"
-            variant="primary"
-            icon={<Icon icon={IconPlus} size="sm" />}
-            isLoading={createBackupMutation.isPending}
-            onClick={() => createBackupMutation.mutate()}
-          />
+          <HStack gap={2} wrap="wrap">
+            <Button
+              label="Xuất dữ liệu public"
+              variant="secondary"
+              icon={<Icon icon={Download} size="sm" />}
+              onClick={() => setIsPublicExportOpen(true)}
+            />
+            <Button
+              label="Nhập dữ liệu public"
+              variant="secondary"
+              icon={<Icon icon={IconUpload} size="sm" />}
+              onClick={() => setIsPublicImportOpen(true)}
+            />
+            <Button
+              label="Tải lên bản sao lưu"
+              variant="secondary"
+              icon={<Icon icon={IconUpload} size="sm" />}
+              onClick={() => setIsUploadOpen(true)}
+            />
+            <Button
+              label="Tạo bản sao lưu mới"
+              variant="primary"
+              icon={<Icon icon={IconPlus} size="sm" />}
+              isLoading={createBackupMutation.isPending}
+              onClick={() => createBackupMutation.mutate()}
+            />
+          </HStack>
         </HStack>
-      </HStack>
 
-      <OperationsStatus />
+        <OperationsStatus />
 
-      {listResult && !listResult.success ? (
-        <AdvanceTableErrorBanner message={listResult.message} />
-      ) : null}
+        {listResult && !listResult.success ? (
+          <AdvanceTableErrorBanner message={listResult.message} />
+        ) : null}
 
-      {createBackupMutation.isError ||
-      (createBackupMutation.data && !createBackupMutation.data.success) ? (
-        <Banner
-          status="error"
-          title={
-            createBackupMutation.data && !createBackupMutation.data.success
-              ? createBackupMutation.data.message
-              : 'Không thể tạo bản sao lưu'
-          }
-          container="card"
-        />
-      ) : null}
+        {createBackupMutation.isError ||
+        (createBackupMutation.data && !createBackupMutation.data.success) ? (
+          <Banner
+            status="error"
+            title={
+              createBackupMutation.data && !createBackupMutation.data.success
+                ? createBackupMutation.data.message
+                : 'Không thể tạo bản sao lưu'
+            }
+            container="card"
+          />
+        ) : null}
 
-      <StackItem size="fill">
-        <AdvanceTable
-          toolbarLabel="Thao tác danh sách bản sao lưu"
-          searchFieldDefs={SEARCH_FIELD_DEFS}
-          entityLabel="Bản sao lưu"
-          contentSearchFieldKey="fileName"
-          searchPlaceholder="Tìm theo tên file..."
-          columnOptions={COLUMN_OPTIONS}
-          initialColumnKeys={ALL_COLUMN_KEYS}
-          defaultColumnKeys={ALL_COLUMN_KEYS}
-          tableColumns={columns}
-          data={rows}
-          idKey="fileName"
-          isLoading={backupsQuery.isLoading}
-          skeletonRows={skeletonRows}
-          onRefresh={() => backupsQuery.refetch()}
-          isRefreshing={backupsQuery.isFetching}
-        />
-      </StackItem>
+        <StackItem size="fill">
+          <AdvanceTable
+            toolbarLabel="Thao tác danh sách bản sao lưu"
+            searchFieldDefs={SEARCH_FIELD_DEFS}
+            entityLabel="Bản sao lưu"
+            contentSearchFieldKey="fileName"
+            searchPlaceholder="Tìm theo tên file..."
+            columnOptions={COLUMN_OPTIONS}
+            initialColumnKeys={ALL_COLUMN_KEYS}
+            defaultColumnKeys={ALL_COLUMN_KEYS}
+            tableColumns={columns}
+            data={rows}
+            idKey="fileName"
+            isLoading={backupsQuery.isLoading}
+            skeletonRows={skeletonRows}
+            onRefresh={() => backupsQuery.refetch()}
+            isRefreshing={backupsQuery.isFetching}
+          />
+        </StackItem>
 
-      {restoringBackup ? (
-        <RestoreBackupDialog
-          key={restoringBackup.fileName}
-          isOpen={restoringBackup !== null}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setRestoringBackup(null);
-          }}
-          backup={restoringBackup}
-        />
-      ) : null}
+        {restoringBackup ? (
+          <RestoreBackupDrawer
+            key={restoringBackup.fileName}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) setRestoringBackup(null);
+            }}
+            backup={restoringBackup}
+          />
+        ) : null}
 
-      <UploadBackupDialog
-        isOpen={isUploadOpen}
-        onOpenChange={setIsUploadOpen}
-      />
-      <ImportPublicDataDialog
-        isOpen={isPublicImportOpen}
-        onOpenChange={setIsPublicImportOpen}
-      />
-      <ExportPublicDataDialog
-        isOpen={isPublicExportOpen}
-        onOpenChange={setIsPublicExportOpen}
-      />
-    </VStack>
+        {isUploadOpen ? (
+          <UploadBackupDrawer onOpenChange={setIsUploadOpen} />
+        ) : null}
+        {isPublicImportOpen ? (
+          <ImportPublicDataDrawer onOpenChange={setIsPublicImportOpen} />
+        ) : null}
+        {isPublicExportOpen ? (
+          <ExportPublicDataDrawer onOpenChange={setIsPublicExportOpen} />
+        ) : null}
+      </VStack>
+    </MetaThemeProvider>
   );
 }

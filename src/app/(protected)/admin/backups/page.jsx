@@ -1,4 +1,3 @@
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 
@@ -18,11 +17,6 @@ export default function BackupsPage() {
   return (
     <PageContentShell fillHeight>
       <VStack gap={4} hAlign="stretch" height="100%">
-        <Breadcrumbs>
-          <BreadcrumbItem href="/admin">Quản trị</BreadcrumbItem>
-          <BreadcrumbItem isCurrent>Sao lưu &amp; khôi phục</BreadcrumbItem>
-        </Breadcrumbs>
-
         <StackItem size="fill">
           <BackupList />
         </StackItem>
