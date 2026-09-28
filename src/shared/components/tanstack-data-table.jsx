@@ -1,5 +1,6 @@
 'use client';
 
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import {
@@ -26,6 +27,7 @@ import { expandableRowStyles } from '@/shared/components/expandable-row-styles.j
 import { resolveTableSizes } from '@/shared/config/tanstack-table-columns.js';
 
 const EXPANSION_COLUMN_KEY = '__expansion';
+const SELECTION_COLUMN_KEY = '__selection';
 
 // Plain (non-StyleX) copies of the same four row-background values `styles`
 // below compiles — StyleX's Babel plugin statically analyzes `stylex.create`
@@ -217,6 +219,12 @@ function isEmptyCell(node) {
  *   isExpandable?: (row: T) => boolean,
  *   renderExpanded: (row: T) => import('react').ReactNode,
  * },
+ * rowSelection?: {
+ *   excludedIds: ReadonlySet<string>,
+ *   onToggleRow: (id: string, checked: boolean) => void,
+ *   onToggleVisible: (ids: string[], checked: boolean) => void,
+ *   getLabel: (row: T) => string,
+ * },
  * emptyState: import('react').ReactNode,
  * sort?: {field: string, direction: 'Ascending' | 'Descending'} | null,
  * onSortChange?: (field: string | null, direction: 'Ascending' | 'Descending') => void,
@@ -244,6 +252,7 @@ export function TanStackDataTable({
   filterPlugin = {},
   headerGroups = [],
   rowExpansion,
+  rowSelection,
   emptyState,
   sort = null,
   onSortChange,
@@ -315,17 +324,42 @@ export function TanStackDataTable({
         width: pixel(40),
       })
     : undefined;
+  const visibleIds = rowSelection
+    ? data.filter((row) => !/** @type {any} */ (row).__isTotalsRow).map((row) => String(row[idKey]))
+    : [];
+  const checkedCount = visibleIds.filter((id) => !rowSelection?.excludedIds.has(id)).length;
+  const selectionColumn = rowSelection
+    ? /** @type {import('./advance-table.jsx').AdvanceTableColumn<T>} */ ({
+        key: SELECTION_COLUMN_KEY,
+        header: (
+          <CheckboxInput
+            label="Chọn tất cả dòng đang hiển thị"
+            isLabelHidden
+            size="sm"
+            value={checkedCount === 0 ? false : checkedCount === visibleIds.length ? true : 'indeterminate'}
+            isDisabled={visibleIds.length === 0}
+            onChange={(checked) => rowSelection.onToggleVisible(visibleIds, checked)}
+          />
+        ),
+        align: 'center',
+        width: pixel(48),
+      })
+    : undefined;
   const effectiveColumns = useMemo(
-    () => (expansionColumn ? [expansionColumn, ...columns] : columns),
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- expansionColumn is a fresh object per render, keyed only by rowExpansion's presence
-    [columns, Boolean(rowExpansion)],
+    () => [
+      ...(selectionColumn ? [selectionColumn] : []),
+      ...(expansionColumn ? [expansionColumn] : []),
+      ...columns,
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- synthetic columns are refreshed with their selection/expansion state
+    [columns, selectionColumn, Boolean(rowExpansion)],
   );
-  const effectiveActiveColumnKeys = expansionColumn
-    ? [EXPANSION_COLUMN_KEY, ...activeColumnKeys]
-    : activeColumnKeys;
-  const effectiveStartKeys = expansionColumn
-    ? [EXPANSION_COLUMN_KEY, ...startKeys]
-    : startKeys;
+  const syntheticKeys = [
+    ...(selectionColumn ? [SELECTION_COLUMN_KEY] : []),
+    ...(expansionColumn ? [EXPANSION_COLUMN_KEY] : []),
+  ];
+  const effectiveActiveColumnKeys = [...syntheticKeys, ...activeColumnKeys];
+  const effectiveStartKeys = [...syntheticKeys, ...startKeys];
   const columnDefs = useMemo(() => {
     const leaves = effectiveColumns.map((column) => ({
       id: column.key,
@@ -336,6 +370,19 @@ export function TanStackDataTable({
           row,
         },
       ) => {
+        if (column.key === SELECTION_COLUMN_KEY && rowSelection) {
+          if (/** @type {any} */ (row.original).__isTotalsRow) return null;
+          const id = String(row.original[idKey]);
+          return (
+            <CheckboxInput
+              label={`Chọn ${rowSelection.getLabel(row.original)}`}
+              isLabelHidden
+              size="sm"
+              value={!rowSelection.excludedIds.has(id)}
+              onChange={(checked) => rowSelection.onToggleRow(id, checked)}
+            />
+          );
+        }
         if (column.key === EXPANSION_COLUMN_KEY && rowExpansion) {
           const isExpandable = rowExpansion.isExpandable
             ? rowExpansion.isExpandable(row.original)
@@ -386,7 +433,7 @@ export function TanStackDataTable({
         ),
       })),
     ];
-  }, [effectiveColumns, headerGroups, rowExpansion, sortableColumnKeys]);
+  }, [effectiveColumns, headerGroups, idKey, rowExpansion, rowSelection, sortableColumnKeys]);
   // `sort`/`onSortChange` speak the backend's wire field name (`sortField`
   // — falls back to `filter`, then `key`; see `AdvanceTableColumn`'s doc
   // comment), but TanStack's own `sorting` state addresses columns by their

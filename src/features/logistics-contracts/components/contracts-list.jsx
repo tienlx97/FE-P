@@ -31,6 +31,7 @@ import {
   upsertContainsFilterCondition,
   upsertEqualsFilterCondition,
 } from '@/shared/config/upsert-filter-condition.js';
+import { usePageRowSelection } from '@/shared/hooks/use-page-row-selection.js';
 
 import { searchContracts } from '../api/contracts.js';
 import {
@@ -140,6 +141,8 @@ function formatPaymentTerms(terms) {
  *   isMultiCurrency: boolean,
  *   containerCount?: number | null,
  *   logisticsSale?: number | null,
+ *   selectedCount: number,
+ *   visibleCount: number,
  * }} ContractTotalsRow
  */
 
@@ -153,7 +156,7 @@ function formatPaymentTerms(terms) {
 function totalsRowLabel(row) {
   return (
     <Text weight="semibold">
-      {row.isMultiCurrency ? `Tổng cộng (${row.currency})` : 'Tổng cộng'}
+      {`Σ ${row.selectedCount}/${row.visibleCount}`}
     </Text>
   );
 }
@@ -429,6 +432,9 @@ export function ContractsList({
       )?.value ?? 'all'
     );
   })();
+  const selection = usePageRowSelection(
+    JSON.stringify([pageIndex, pageSize, sort, filterConditions]),
+  );
   const tabCounts = useContractListTabCounts(filterConditions);
 
   /**
@@ -667,37 +673,48 @@ export function ContractsList({
     ? privateInfosQuery.data.totals
     : null;
 
-  // Sum of contractValue/settlementValue/paidValue/unpaidValue/
-  // exportedValue/exportedValueVnd/unexportedValue across every contract
-  // matching the current filters (not just this page — the backend
-  // computes it pre-paging, see `searchContracts`'s doc comment), grouped
-  // by currency since contracts can be denominated in more than one.
-  // Rendered as a synthetic last row per currency (see
-  // `TOTALS_ROW_LABEL_COLUMN_KEY`/`isTotalsRow` below) rather than a
-  // separate summary line, so each sum lines up under its own column.
-  const totalsRows = useMemo(() => {
+  /** @param {import('../types/index.js').Contract[]} visibleRows */
+  function selectedTotalsRows(visibleRows) {
     if (!listResult?.success) return [];
-    const totals = listResult.totals;
-    return totals.map((total) => ({
-      id: `totals-${total.currency}`,
-      __isTotalsRow: true,
-      currency: total.currency,
-      contractValue: total.contractValue,
-      settlementValue: total.settlementValue,
-      paidValue: total.paidValue,
-      unpaidValue: total.unpaidValue,
-      exportedValue: total.exportedValue,
-      exportedValueVnd: total.exportedValueVnd,
-      unexportedValue: total.unexportedValue,
-      containerCount: total.containerCount,
-      // BOQ totals are VNĐ-only, so they only make sense on a single row.
-      logisticsSale:
-        totals.length === 1 && privateTotals
-          ? privateTotals.logisticsTotal
-          : null,
-      isMultiCurrency: totals.length > 1,
+    const selected = visibleRows.filter((row) => !selection.excludedIds.has(row.id));
+    /** @type {Map<string, ContractTotalsRow>} */
+    const byCurrency = new Map();
+    for (const contract of selected) {
+      const currency = contract.currency;
+      if (!byCurrency.has(currency)) byCurrency.set(currency, {
+        id: `totals-${currency}`, __isTotalsRow: true, currency,
+        contractValue: 0, settlementValue: 0, paidValue: 0,
+        unpaidValue: 0, exportedValue: 0, exportedValueVnd: 0,
+        unexportedValue: 0, containerCount: 0, logisticsSale: 0,
+        selectedCount: selected.length, visibleCount: visibleRows.length,
+        isMultiCurrency: false,
+      });
+      const total = byCurrency.get(currency);
+      const settlement = listResult.settlements.find((entry) => entry.contractId === contract.id);
+      if (!total) continue;
+      total.contractValue += contract.contractValue;
+      total.settlementValue += settlement?.settlementValue ?? 0;
+      total.paidValue += settlement?.paidValue ?? 0;
+      total.unpaidValue += settlement?.unpaidValue ?? 0;
+      total.exportedValue += settlement?.exportedValue ?? 0;
+      total.exportedValueVnd += settlement?.exportedValueVnd ?? 0;
+      total.unexportedValue += settlement?.unexportedValue ?? 0;
+      total.containerCount = (total.containerCount ?? 0) + (settlement?.containerCount ?? 0);
+      total.logisticsSale = (total.logisticsSale ?? 0) + (privateInfosByContractId.get(contract.id)?.logisticsTotal ?? 0);
+    }
+    if (byCurrency.size === 0) byCurrency.set('', {
+      id: 'totals-empty', __isTotalsRow: true, currency: '',
+      contractValue: 0, settlementValue: 0, paidValue: 0,
+      unpaidValue: 0, exportedValue: 0, exportedValueVnd: 0,
+      unexportedValue: 0, containerCount: 0, logisticsSale: 0,
+      selectedCount: 0, visibleCount: visibleRows.length, isMultiCurrency: false,
+    });
+    return [...byCurrency.values()].map((row) => ({
+      ...row,
+      logisticsSale: byCurrency.size === 1 && privateTotals ? row.logisticsSale : null,
+      isMultiCurrency: byCurrency.size > 1,
     }));
-  }, [listResult, privateTotals]);
+  }
   // Per-contract "Quyết toán / Đã thanh toán / Chưa thanh toán" — one entry
   // per row on this page only (unlike `totalsRows` above), keyed by
   // contractId so `renderCell` below can look a row's up in O(1).
@@ -1344,7 +1361,11 @@ export function ContractsList({
           fixedEndColumnKeys={['actions']}
           tableColumns={columnsWithTotalsRow}
           data={searchableContracts}
-          totalsRows={totalsRows}
+          totalsRows={selectedTotalsRows}
+          rowSelection={{
+            ...selection,
+            getLabel: (row) => `hợp đồng ${row.contractNumber}`,
+          }}
           totalsRowLabel={
             isFramed
               ? (/** @type {ContractTotalsRow} */ row) => (
@@ -1357,7 +1378,7 @@ export function ContractsList({
                       color="accent"
                       xstyle={[styles.nowrap, styles.totalsCaption]}
                     >
-                      {`TỔNG CỘNG (${totalContracts} HỢP ĐỒNG${row.isMultiCurrency ? ` · ${row.currency}` : ''})`}
+                      {`${row.selectedCount}/${row.visibleCount}`}
                     </Text>
                   </HStack>
                 )

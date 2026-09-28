@@ -15778,3 +15778,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - The logistics cost drawer can create a named recommended fee in its selected LOG group. It saves the selected Cost Nature as the template default, rejects an existing name in the same group, refreshes recommendations and fills the current cost line name.
 - Browser QA created Standard and Abnormal templates through the dialog, verified the selected name and the persisted Abnormal value, then deleted both test templates. Desktop/mobile drawer and dialog screenshots: `harness/runs/20260928-bulk-container-ui/`. Browser reported no page errors.
 - `./harness/verify.sh` passed: `harness/runs/20260928-140209-756/`.
+
+## 2026-09-28 — Selected list totals, task 1
+
+- Added a shared leading checkbox column for `AdvanceTable` and a scoped selection hook. The header checkbox selects or clears visible rows and shows a mixed state for partial selection. Totals can now derive from the table's filtered page rows.
+- Contract totals now sum selected rows on the current page, grouped by currency. Page, sort or server filter changes start with all rows selected. Browser QA checked row toggle, mixed header state and select all/clear all at desktop and mobile widths; screenshots: `harness/runs/20260928-selected-list-totals/`.
+- `./harness/verify.sh` passed: `harness/runs/20260928-141151-1489/`.

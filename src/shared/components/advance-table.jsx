@@ -281,8 +281,14 @@ const styles = stylex.create({
  *   isRefreshing?: boolean,
  *   defaultStickyStart?: 'none' | 'one' | 'two',
  *   defaultStickyEnd?: 'none' | 'one' | 'two',
- *   totalsRows?: Partial<T>[],
+ *   totalsRows?: Partial<T>[] | ((visibleRows: T[]) => Partial<T>[]),
  *   totalsRowLabel?: (row: any) => import('react').ReactNode,
+ *   rowSelection?: {
+ *     excludedIds: ReadonlySet<string>,
+ *     onToggleRow: (id: string, checked: boolean) => void,
+ *     onToggleVisible: (ids: string[], checked: boolean) => void,
+ *     getLabel: (row: T) => string,
+ *   },
  *   summary?: import('react').ReactNode,
  *   dividers?: import('@astryxdesign/core/Table').TableDividers,
  *   isStriped?: boolean,
@@ -340,6 +346,7 @@ export function AdvanceTable({
   defaultStickyEnd = 'one',
   totalsRows,
   totalsRowLabel,
+  rowSelection,
   summary,
   // 'grid' (row + column rules) is the default so every list screen reads
   // consistently — was 'rows'-only until 2026-09-17, when contracts-list.jsx
@@ -685,10 +692,12 @@ export function AdvanceTable({
   // shape the row doesn't have. Position within this array doesn't affect
   // where it renders — `tanstack-data-table.jsx` splits `__isTotalsRow`
   // rows out by that flag, not by array position (see its own comment).
+  const resolvedTotalsRows =
+    typeof totalsRows === 'function' ? totalsRows(filteredData) : totalsRows;
   const renderedData =
-    totalsRows && totalsRows.length > 0
+    resolvedTotalsRows && resolvedTotalsRows.length > 0
       ? /** @type {T[]} */ (
-          /** @type {any} */ ([...filteredData, ...totalsRows])
+          /** @type {any} */ ([...filteredData, ...resolvedTotalsRows])
         )
       : filteredData;
 
@@ -1218,6 +1227,7 @@ export function AdvanceTable({
       content={
         <LayoutContent padding={0} isScrollable={false}>
           <TanStackDataTable
+            rowSelection={rowSelection}
             headerGroups={headerGroups}
             activeColumnKeys={columnSettingsState.activeColumnKeys}
             startKeys={tableStartKeys}
