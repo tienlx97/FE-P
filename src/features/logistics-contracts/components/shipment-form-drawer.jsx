@@ -28,7 +28,15 @@ import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { ArrowRight, Plus, Save, ScanLine, Ship, Split, Trash2 } from 'lucide-react';
+import {
+  ArrowRight,
+  Plus,
+  Save,
+  ScanLine,
+  Ship,
+  Split,
+  Trash2,
+} from 'lucide-react';
 import { useId, useRef, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
@@ -39,6 +47,7 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { RichTextNoteField } from '@/shared/components/rich-text-note-field.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
@@ -612,7 +621,11 @@ export function ShipmentFormDrawer({
                           isDisabled={isDisabled}
                           width="100%"
                         />
-                        <VStack gap={2} hAlign="stretch" xstyle={styles.fullRow}>
+                        <VStack
+                          gap={2}
+                          hAlign="stretch"
+                          xstyle={styles.fullRow}
+                        >
                           <Text size="sm" weight="semibold">
                             Phương thức vận chuyển
                           </Text>
@@ -653,8 +666,17 @@ export function ShipmentFormDrawer({
                           </SegmentedControl>
                         </VStack>
                         {values.isTransshipment ? (
-                          <VStack gap={3} hAlign="stretch" xstyle={styles.fullRow}>
-                            <HStack hAlign="between" vAlign="center" gap={2} wrap="wrap">
+                          <VStack
+                            gap={3}
+                            hAlign="stretch"
+                            xstyle={styles.fullRow}
+                          >
+                            <HStack
+                              hAlign="between"
+                              vAlign="center"
+                              gap={2}
+                              wrap="wrap"
+                            >
                               <Text size="sm" weight="semibold">
                                 Cảng chuyển tải theo thứ tự tuyến
                               </Text>
@@ -678,7 +700,12 @@ export function ShipmentFormDrawer({
                               />
                             </HStack>
                             {values.transshipmentLegs.map((leg, index) => (
-                              <HStack key={index} gap={2} vAlign="start" wrap="nowrap">
+                              <HStack
+                                key={index}
+                                gap={2}
+                                vAlign="start"
+                                wrap="nowrap"
+                              >
                                 <StackItem size="fill">
                                   <TextInput
                                     label={`Cảng chuyển tải ${index + 1}`}
@@ -690,7 +717,9 @@ export function ShipmentFormDrawer({
                                     isRequired
                                     isDisabled={isDisabled}
                                     width="100%"
-                                    {...statusOf(`transshipmentLegs.${index}.port`)}
+                                    {...statusOf(
+                                      `transshipmentLegs.${index}.port`,
+                                    )}
                                   />
                                 </StackItem>
                                 <VStack xstyle={styles.alignWithField}>
@@ -1128,6 +1157,25 @@ export function ShipmentFormDrawer({
                         </StackItem>
                       </HStack>
                     </Grid>
+                  </MetaFormSection>
+
+                  <MetaFormSection
+                    isBoxed
+                    isTitleUppercase={false}
+                    index={4}
+                    title="Ghi chú"
+                    meta="Tuỳ chọn · định dạng chữ, danh sách, liên kết"
+                  >
+                    <RichTextNoteField
+                      label="Ghi chú lô hàng"
+                      isLabelHidden
+                      value={values.note}
+                      onChange={(value) => setField('note', value)}
+                      placeholder="VD: yêu cầu đóng hàng, lưu ý giao nhận, liên hệ tại cảng…"
+                      maxLength={2000}
+                      isReadOnly={isDisabled}
+                      {...statusOf('note')}
+                    />
                   </MetaFormSection>
                 </VStack>
               </form>

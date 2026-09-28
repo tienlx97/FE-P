@@ -55,6 +55,7 @@ import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import { MetaCountBadge } from '@/shared/components/custom/meta/count-badge.jsx';
 import { MetaPill } from '@/shared/components/custom/meta/pill.jsx';
 import { MetaStatusBadge } from '@/shared/components/custom/meta/status-badge.jsx';
+import { RichTextNote } from '@/shared/components/rich-text-note.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { numberValueToInput } from '@/shared/config/formatted-number-input.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
@@ -559,13 +560,18 @@ export function ShipmentsList() {
   /** @param {import('../config/shipments-table.js').ShipmentListRow[]} visibleRows */
   function selectedTotalsRows(visibleRows) {
     if (!listResult?.success) return [];
-    const selected = visibleRows.filter((row) => !selection.excludedIds.has(row.id));
+    const selected = visibleRows.filter(
+      (row) => !selection.excludedIds.has(row.id),
+    );
     /** @type {Map<string, {currency: string, invoiceValue: number, declarationValue: number}>} */
     const byCurrency = new Map();
     const addCurrency = (/** @type {string} */ currency) => {
-      if (!byCurrency.has(currency)) byCurrency.set(currency, {
-        currency, invoiceValue: 0, declarationValue: 0,
-      });
+      if (!byCurrency.has(currency))
+        byCurrency.set(currency, {
+          currency,
+          invoiceValue: 0,
+          declarationValue: 0,
+        });
       return byCurrency.get(currency);
     };
     for (const row of selected) {
@@ -576,25 +582,49 @@ export function ShipmentsList() {
     }
     if (byCurrency.size === 0) addCurrency('');
     const costTotalsByCategory = COST_GROUP_COLUMNS.map((group) => ({
-      costCategoryId: '', code: group.code, name: group.name,
-      totalAmount: selected.reduce((sum, row) => sum + row.costTotalsByCategory
-        .filter((cost) => (costCodeById.get(cost.costCategoryId)
-          ?? COST_GROUP_COLUMNS.find((candidate) => candidate.name === cost.costCategoryName)?.code) === group.code)
-        .reduce((subtotal, cost) => subtotal + cost.totalAmount, 0), 0),
+      costCategoryId: '',
+      code: group.code,
+      name: group.name,
+      totalAmount: selected.reduce(
+        (sum, row) =>
+          sum +
+          row.costTotalsByCategory
+            .filter(
+              (cost) =>
+                (costCodeById.get(cost.costCategoryId) ??
+                  COST_GROUP_COLUMNS.find(
+                    (candidate) => candidate.name === cost.costCategoryName,
+                  )?.code) === group.code,
+            )
+            .reduce((subtotal, cost) => subtotal + cost.totalAmount, 0),
+        0,
+      ),
     }));
-    const partnerIds = new Set(selected.flatMap((row) => [
-      row.supplierCustomerId,
-      ...(row.serviceProviders ?? []).map((provider) => provider.supplierId),
-    ]).filter(Boolean));
+    const partnerIds = new Set(
+      selected
+        .flatMap((row) => [
+          row.supplierCustomerId,
+          ...(row.serviceProviders ?? []).map(
+            (provider) => provider.supplierId,
+          ),
+        ])
+        .filter(Boolean),
+    );
     const quantities = new Map();
     for (const row of selected) {
-      quantities.set(row.quantityUnit, (quantities.get(row.quantityUnit) ?? 0) + row.quantityAmount);
+      quantities.set(
+        row.quantityUnit,
+        (quantities.get(row.quantityUnit) ?? 0) + row.quantityAmount,
+      );
     }
     const summary = {
       fclCount: selected.filter((row) => row.type === 'FCL').length,
       lclCount: selected.filter((row) => row.type === 'LCL').length,
-      completedCount: selected.filter((row) => row.status === 'Completed').length,
-      customsDeclarationCount: selected.filter((row) => Boolean(row.customsDeclarationNumber?.trim())).length,
+      completedCount: selected.filter((row) => row.status === 'Completed')
+        .length,
+      customsDeclarationCount: selected.filter((row) =>
+        Boolean(row.customsDeclarationNumber?.trim()),
+      ).length,
       coCount: selected.filter((row) => Boolean(row.coNumber?.trim())).length,
       statusCounts: {},
       costTotalsByCategory,
@@ -604,18 +634,39 @@ export function ShipmentsList() {
       ...total,
       id: `totals-${total.currency}`,
       __isTotalsRow: true,
-      invoiceValueVnd: index === 0
-        ? selected.reduce((sum, row) => sum + row.invoiceValue * row.declarationExchangeRate, 0)
-        : undefined,
-      logisticsCost: index === 0
-        ? selected.reduce((sum, row) => sum + row.costTotalsByCategory.reduce((subtotal, cost) => subtotal + cost.totalAmount, 0), 0)
-        : undefined,
-      quantity: index === 0
-        ? [...quantities].map(([unit, amount]) => `${numberValueToInput(amount)} ${labelForShipmentQuantityUnit(unit)}`).join(' / ') || null
-        : null,
-      vgmCount: index === 0
-        ? selected.reduce((sum, row) => sum + row.vgmCount, 0)
-        : undefined,
+      invoiceValueVnd:
+        index === 0
+          ? selected.reduce(
+              (sum, row) =>
+                sum + row.invoiceValue * row.declarationExchangeRate,
+              0,
+            )
+          : undefined,
+      logisticsCost:
+        index === 0
+          ? selected.reduce(
+              (sum, row) =>
+                sum +
+                row.costTotalsByCategory.reduce(
+                  (subtotal, cost) => subtotal + cost.totalAmount,
+                  0,
+                ),
+              0,
+            )
+          : undefined,
+      quantity:
+        index === 0
+          ? [...quantities]
+              .map(
+                ([unit, amount]) =>
+                  `${numberValueToInput(amount)} ${labelForShipmentQuantityUnit(unit)}`,
+              )
+              .join(' / ') || null
+          : null,
+      vgmCount:
+        index === 0
+          ? selected.reduce((sum, row) => sum + row.vgmCount, 0)
+          : undefined,
       summary: index === 0 ? summary : null,
       isMultiCurrency: byCurrency.size > 1,
       selectedCount: selected.length,
@@ -1110,6 +1161,13 @@ export function ShipmentsList() {
       align: 'end',
       filter: 'vgmCount',
       renderCell: (row) => row.vgmCount,
+    },
+    {
+      key: 'note',
+      header: 'Ghi chú',
+      width: pixel(320),
+      renderCell: (row) => <RichTextNote value={row.note} />,
+      exportValue: (row) => row.note ?? '',
     },
     {
       key: 'actions',

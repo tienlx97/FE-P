@@ -16,6 +16,7 @@ import {
   FileCheck2,
   MapPin,
   Navigation,
+  NotebookText,
   Package,
   ReceiptText,
   RefreshCcw,
@@ -31,6 +32,7 @@ import {
   MetaShipmentKpiCard,
   MetaShipmentSection,
 } from '@/shared/components/custom/meta/index.js';
+import { RichTextNote } from '@/shared/components/rich-text-note.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney, formatVndAmount } from '../config/currencies.js';
@@ -140,7 +142,10 @@ export function ShipmentOverviewPanel({
         10
       : null;
   const isMatched = matchPercent === 100;
-  const grossTotal = vgms.reduce((total, vgm) => total + (vgm.grossWeight ?? 0), 0);
+  const grossTotal = vgms.reduce(
+    (total, vgm) => total + (vgm.grossWeight ?? 0),
+    0,
+  );
   const netTotal = vgms.reduce((total, vgm) => total + (vgm.netWeight ?? 0), 0);
   const quantityLabel = `${shipment.quantityAmount} ${labelForShipmentQuantityUnit(shipment.quantityUnit)}`;
   const vesselLabel = [shipment.vesselName, details?.voyageNumber]
@@ -512,6 +517,12 @@ export function ShipmentOverviewPanel({
           )}
         </VStack>
       </MetaShipmentSection>
+
+      {shipment.note ? (
+        <MetaShipmentSection icon={NotebookText} title="Ghi chú">
+          <RichTextNote value={shipment.note} />
+        </MetaShipmentSection>
+      ) : null}
     </VStack>
   );
 }

@@ -722,6 +722,7 @@ export {};
  * @property {string | null} placeOfLoading - this shipment's own copy, not a live reference to `Contract.placeOfLoading` — defaults from it client-side on create only (see `use-shipment-form.js`)
  * @property {string | null} placeOfDischarge - this shipment's own copy, same default-once pattern as `placeOfLoading`
  * @property {string | null} placeOfDelivery - "Nơi giao hàng", this shipment's own copy of the contract's (defaulted once, editable)
+ * @property {string | null} [note] - "Ghi chú", Markdown from the rich text editor
  * @property {TransshipmentLeg[]} [transshipmentLegs] - ordered ports and connecting vessel details
  * @property {ShipmentType} type
  * @property {string} name
@@ -1061,6 +1062,7 @@ export {};
  * @property {string} placeOfLoading
  * @property {string} placeOfDischarge
  * @property {string} placeOfDelivery
+ * @property {string} note - Markdown; '' = no note
  * @property {ShipmentType | ''} type
  * @property {string} name
  * @property {PaymentType | ''} paymentCondition

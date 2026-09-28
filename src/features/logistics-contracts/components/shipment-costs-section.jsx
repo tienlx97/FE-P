@@ -7,6 +7,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
+import { RichTextNote } from '@/shared/components/rich-text-note.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
@@ -71,8 +72,8 @@ export function ShipmentCostsSection({
     {
       key: 'note',
       header: 'Ghi chú',
-      width: proportional(1),
-      renderCell: (cost) => orDash(cost.note),
+      width: proportional(2, { minWidth: 240 }),
+      renderCell: (cost) => <RichTextNote value={cost.note} />,
     },
     {
       key: 'providerCustomerId',

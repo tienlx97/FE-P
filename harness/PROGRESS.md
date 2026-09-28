@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-28 — Rich text "Ghi chú" for contracts, shipments and costs
+
+- Added `@astryxdesign/richtext@0.6.2-canary.bc93547` (same Astryx commit as the pinned lab) with its Lexical 0.46 peers, and `richtext.css` in `globals.css`. `RichTextNoteField` wraps `RichTextEditor` + toolbar (no headings, no link button) and stores Markdown; it ignores the editor re-emitting its seed, so opening a drawer with an old plain-text note stays "Chưa có thay đổi". `RichTextNote` renders the Markdown with Astryx `Markdown`.
+- Contract note (both contract forms), new Shipment note (drawer section 4, overview section, list column in the default view) and logistics cost note (drawer, both cost tables) use them. The "Chi phí logistics" note column grew from 10% to 22% with a minimum width; cost notes accept 2000 characters (BE `shipment-note-rich-text`).
+- Browser check against the local API + MySQL: edited the sample shipment note with a bullet and bold text, saved, and saw it rendered in the overview and the shipment list; the contract drawer loads the existing note unchanged; the contract list note column renders when enabled. Screenshots: `harness/runs/20260928-rich-text-notes/`.
+- `./harness/verify.sh` passed: `harness/runs/20260928-095041-7679/`.
+- Harness gap: the toolbar's link dialog renders a `<form>` even while closed; inside a drawer form that nests forms and its submit bubbles to the outer form. Only a browser console warning revealed it; no check catches nested forms. Worked around by disabling the link button (auto-link plugin instead).
+
 ## 2026-09-28 — Readable "Timeline & lịch tàu", task 2
 
 - New shared `MetaEventTimeline` (vertical rail, state dots done / next / overdue / upcoming, plan-vs-actual note, tags). `buildPhysicalTimeline` merges the planned/estimated and actual facts of one event (event + leg + place) into one item with its delay, one timeline per container ("Tàu · toàn lô" first) switched by `MetaTabNav`, and drops a voyage number the vessel name already carries.
