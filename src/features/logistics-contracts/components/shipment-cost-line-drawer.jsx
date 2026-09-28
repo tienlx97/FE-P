@@ -13,15 +13,15 @@ import {
   LayoutFooter,
   LayoutHeader,
 } from '@astryxdesign/core/Layout';
-import { List, ListItem } from '@astryxdesign/core/List';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
+import { Typeahead, TypeaheadItem } from '@astryxdesign/core/Typeahead';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
 import { Check, CircleCheck, Plus, ReceiptText, Search } from 'lucide-react';
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import {
@@ -54,6 +54,9 @@ const DRAWER_WIDTH = 800;
 const NAME_MAX = 200;
 const NOTE_MAX = 2000;
 const TWO_COLUMNS = { minWidth: 260, max: 2 };
+const EMPTY_TEMPLATES = /** @type {import('../types/index.js').ShipmentCostItemTemplate[]} */ (
+  []
+);
 
 /** Figma 125:12089 — Cost Nature options with their hint line. */
 const COST_NATURES = /** @type {const} */ ([
@@ -69,13 +72,31 @@ const COST_NATURES = /** @type {const} */ ([
   },
 ]);
 
+/** @param {import('../types/index.js').ShipmentCostItemTemplate} fee */
+function feeToItem(fee) {
+  return {
+    id: fee.id,
+    label: fee.name,
+    auxiliaryData: {
+      fee,
+      description: [
+        fee.nameEn,
+        fee.occurrencePoint,
+        fee.defaultCostNature === 'Abnormal' ? 'Abnormal' : null,
+      ]
+        .filter(Boolean)
+        .join(' · '),
+    },
+  };
+}
+
 /**
  * Meta drawer that adds one logistics cost line to a shipment, or edits
  * one (`costLine`) — Figma 125:11995 "Thêm chi phí logistics". Fixed
  * header (code + incoterm), a muted canvas with two boxed sections —
  * "Phân loại" (the 8 LOG groups as selectable cards, Cost Nature as two
  * option cards; each group card shows its plain meaning) and "Khoản chi
- * phí" (name, then the group's recommended fees — the LOG 01-08 catalog,
+ * phí" (name, then a compact typeahead for the group's LOG 01-08 catalog,
  * searchable by Vietnamese name or invoice keyword; picking one fills the
  * name and Cost Nature and shows where it occurs + its classification note
  * — then quantity, unit price, invoice number, provider, note) — a live "after saving" preview,
@@ -122,7 +143,6 @@ export function ShipmentCostLineDrawer({
   });
   const { values, setField, fieldStatuses } = form;
 
-  const [feeQuery, setFeeQuery] = useState('');
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
   const [quickName, setQuickName] = useState('');
   const [quickError, setQuickError] = useState('');
@@ -130,16 +150,22 @@ export function ShipmentCostLineDrawer({
   const createTemplate = useCreateShipmentCostItemTemplateMutation();
   const templates = templatesQuery.data?.success
     ? templatesQuery.data.costItemTemplates
-    : [];
+    : EMPTY_TEMPLATES;
   const selectedCategory = costCategories.find(
     (category) => category.id === values.costCategoryId,
   );
-  const groupFeeCount = selectedCategory
-    ? recommendedFees(templates, selectedCategory.id).length
-    : 0;
-  const fees = selectedCategory
-    ? recommendedFees(templates, selectedCategory.id, feeQuery)
-    : [];
+  const feeSearchSource = useMemo(() => {
+    const categoryId = selectedCategory?.id;
+    /** @param {string} query */
+    const findItems = (query) =>
+      categoryId
+        ? recommendedFees(templates, categoryId, query).map(feeToItem)
+        : [];
+    return {
+      search: findItems,
+      bootstrap: () => findItems(''),
+    };
+  }, [selectedCategory?.id, templates]);
   const pickedFee = matchingFee(templates, values.costCategoryId, values.name);
 
   /** @param {import('../types/index.js').ShipmentCostItemTemplate} fee */
@@ -193,7 +219,6 @@ export function ShipmentCostLineDrawer({
     }
     setField('name', result.costItemTemplate.name);
     setField('costNature', result.costItemTemplate.defaultCostNature);
-    setFeeQuery('');
     setIsQuickAddOpen(false);
     toast({ body: `Đã thêm loại phí “${result.costItemTemplate.name}”.` });
   }
@@ -290,7 +315,6 @@ export function ShipmentCostLineDrawer({
                               isSelected={isSelected}
                               onChange={() => {
                                 setField('costCategoryId', category.id);
-                                setFeeQuery('');
                               }}
                               padding={3}
                               xstyle={[
@@ -468,14 +492,7 @@ export function ShipmentCostLineDrawer({
                         gap={2}
                         wrap="wrap"
                       >
-                        <FieldLabel
-                          label="Loại phí khuyến nghị"
-                          counter={
-                            selectedCategory && groupFeeCount > 0
-                              ? `${fees.length}/${groupFeeCount}`
-                              : undefined
-                          }
-                        />
+                        <FieldLabel label="Loại phí khuyến nghị" />
                         <Button
                           label="Thêm nhanh loại phí"
                           type="button"
@@ -486,69 +503,36 @@ export function ShipmentCostLineDrawer({
                           onClick={openQuickAdd}
                         />
                       </HStack>
-                      {!selectedCategory || groupFeeCount === 0 ? (
-                        <Text size="sm" color="meta-subtle">
-                          {!selectedCategory
-                            ? 'Chọn nhóm chi phí để xem các loại phí khuyến nghị.'
-                            : `Chưa có loại phí khuyến nghị cho ${selectedCategory.code}.`}
-                        </Text>
-                      ) : (
-                        <>
-                          <TextInput
-                            label="Tìm loại phí"
-                            isLabelHidden
-                            startIcon={Search}
-                            hasClear
-                            value={feeQuery}
-                            onChange={setFeeQuery}
-                            placeholder="Tìm theo tên hoặc từ khóa invoice (THC, demurrage…)"
-                            width="100%"
+                      <Typeahead
+                        key={selectedCategory?.id ?? 'no-category'}
+                        label="Loại phí khuyến nghị"
+                        isLabelHidden
+                        startIcon={Search}
+                        placeholder={
+                          selectedCategory
+                            ? 'Tìm tên phí hoặc từ khóa invoice'
+                            : 'Chọn nhóm chi phí trước'
+                        }
+                        searchSource={feeSearchSource}
+                        value={pickedFee ? feeToItem(pickedFee) : null}
+                        onChange={(item) => {
+                          if (item) pickFee(item.auxiliaryData.fee);
+                          else if (pickedFee) setField('name', '');
+                        }}
+                        renderItem={(item) => (
+                          <TypeaheadItem
+                            item={item}
+                            description={item.auxiliaryData.description}
                           />
-                          {fees.length === 0 ? (
-                            <Text size="sm" color="meta-subtle">
-                              Không có loại phí nào khớp — có thể tự nhập tên ở
-                              trên.
-                            </Text>
-                          ) : (
-                            <List
-                              density="compact"
-                              hasDividers
-                              header={
-                                <Text size="sm" color="meta-subtle">
-                                  Chọn một loại phí để điền tên và Cost Nature
-                                </Text>
-                              }
-                              xstyle={styles.feeList}
-                            >
-                              {fees.map((fee) => (
-                                <ListItem
-                                  key={fee.id}
-                                  label={fee.name}
-                                  description={[fee.nameEn, fee.occurrencePoint]
-                                    .filter(Boolean)
-                                    .join(' · ')}
-                                  isSelected={fee.id === pickedFee?.id}
-                                  onClick={() => pickFee(fee)}
-                                  endContent={
-                                    fee.id === pickedFee?.id ? (
-                                      <Icon
-                                        icon={CircleCheck}
-                                        size="md"
-                                        color="accent"
-                                      />
-                                    ) : fee.defaultCostNature === 'Abnormal' ? (
-                                      <MetaPill
-                                        label="Abnormal"
-                                        tone="warning"
-                                      />
-                                    ) : null
-                                  }
-                                />
-                              ))}
-                            </List>
-                          )}
-                        </>
-                      )}
+                        )}
+                        hasEntriesOnFocus
+                        maxMenuItems={8}
+                        debounceMs={0}
+                        isDisabled={!selectedCategory}
+                        disabledMessage="Chọn nhóm chi phí trước"
+                        emptySearchResultsText="Không tìm thấy phí; có thể tự nhập tên ở trên."
+                        width="100%"
+                      />
                     </VStack>
 
                     <Grid columns={TWO_COLUMNS} gap={3}>
@@ -935,16 +919,6 @@ const styles = stylex.create({
     borderRadius: 'var(--radius-full)',
     height: 'var(--spacing-2)',
     width: 'var(--spacing-2)',
-  },
-  // LOG-03 has 24 fees: about eight rows show, the rest scroll.
-  feeList: {
-    backgroundColor: 'var(--color-background-card)',
-    borderColor: 'var(--color-border)',
-    borderRadius: 'var(--meta-radius-inset)',
-    borderStyle: 'solid',
-    borderWidth: 'var(--border-width)',
-    maxHeight: 'calc(var(--spacing-10) * 8)',
-    overflowY: 'auto',
   },
   preview: {
     backgroundColor: 'var(--meta-accent-tint-strong)',
