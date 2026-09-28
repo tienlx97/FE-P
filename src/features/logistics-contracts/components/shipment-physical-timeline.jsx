@@ -2,85 +2,155 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Route } from 'lucide-react';
+import { Container, Route, Ship } from 'lucide-react';
+import { useState } from 'react';
 
-import { MetaCompactTable, MetaPill, MetaShipmentSection } from '@/shared/components/custom/meta/index.js';
+import {
+  MetaEventTimeline,
+  MetaShipmentSection,
+  MetaTabNav,
+} from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import {
-  groupPhysicalEvents,
+  buildPhysicalTimeline,
   PHYSICAL_EVENT_CLASSIFIERS,
   PHYSICAL_EVENT_LABELS,
   PHYSICAL_EVENT_SOURCES,
+  WHOLE_SHIPMENT,
 } from '../config/shipment-journey-events.js';
 import { useShipmentJourneyEventsQuery } from '../hooks/use-shipment-journey-query.js';
 
-/** @param {{contractId: string, shipmentId: string}} props */
+/** @param {import('../types/index.js').PhysicalJourneyEvent | null} event */
+const timeOf = (event) => event?.eventAt?.slice(11, 16) || undefined;
+
+/**
+ * Plan-vs-actual note under an event: how a confirmed date compares with
+ * the latest estimate, or how late an unconfirmed one is.
+ * @param {import('../config/shipment-journey-events.js').PhysicalTimelineItem} item
+ * @returns {import('@/shared/components/custom/meta/event-timeline.jsx').MetaTimelineItem['note']}
+ */
+function noteFor(item) {
+  if (item.state === 'done') {
+    if (!item.expected || item.deltaDays === null) return undefined;
+    const planned = formatDisplayDate(item.expected.eventOn);
+    if (item.deltaDays === 0) {
+      return { label: `Đúng dự kiến ${planned}`, tone: 'success' };
+    }
+    return item.deltaDays > 0
+      ? {
+          label: `Trễ ${item.deltaDays} ngày so với ${planned}`,
+          tone: 'warning',
+        }
+      : {
+          label: `Sớm ${-item.deltaDays} ngày so với ${planned}`,
+          tone: 'success',
+        };
+  }
+  if (item.state === 'overdue') {
+    return {
+      label: `Quá ${item.deltaDays} ngày, chưa xác nhận`,
+      tone: 'warning',
+    };
+  }
+  const classifier = item.expected?.classifier ?? 'Planned';
+  return {
+    label: PHYSICAL_EVENT_CLASSIFIERS[classifier] ?? classifier,
+    tone: 'neutral',
+  };
+}
+
+/**
+ * "Timeline vận chuyển": the shipment's physical events as a vertical
+ * timeline, one per container (switched with tabs; "Toàn lô" holds the
+ * vessel facts shared by every container). The planned / estimated and
+ * actual dates of one event are merged into one row with the delay.
+ * @param {{contractId: string, shipmentId: string}} props
+ */
 export function ShipmentPhysicalTimeline({ contractId, shipmentId }) {
   const query = useShipmentJourneyEventsQuery(contractId, shipmentId);
-  if (query.isLoading) return <Skeleton width="100%" height="var(--spacing-40)" />;
+  const [activeId, setActiveId] = useState(/** @type {string | null} */ (null));
+
+  if (query.isLoading) {
+    return <Skeleton width="100%" height="var(--spacing-40)" />;
+  }
   if (!query.data?.success) {
-    return <Banner status="error" title={query.data?.message ?? 'Không thể tải timeline vận chuyển'} container="card" />;
+    return (
+      <Banner
+        status="error"
+        title={query.data?.message ?? 'Không thể tải timeline vận chuyển'}
+        container="card"
+      />
+    );
   }
 
-  const groups = groupPhysicalEvents(query.data.events);
+  const today = new Date().toISOString().slice(0, 10);
+  const groups = buildPhysicalTimeline(query.data.events, today);
+  const active =
+    groups.find((group) => group.id === activeId) ?? groups[0] ?? null;
+  const done = groups.reduce((sum, group) => sum + group.doneCount, 0);
+  const total = groups.reduce((sum, group) => sum + group.items.length, 0);
+
   return (
     <MetaShipmentSection
       icon={Route}
       title="Timeline vận chuyển"
-      subtitle="Sự kiện vật lý theo container và chuyến tàu · chỉ hiện mốc đã có ngày"
-      pill={{ label: `${query.data.events.length} sự kiện`, tone: 'neutral' }}
+      subtitle="Mỗi mốc gộp ngày kế hoạch / dự kiến và ngày thực tế"
+      pill={{
+        label: `${done}/${total} mốc đã xảy ra`,
+        tone: total > 0 && done === total ? 'success' : 'neutral',
+        hasDot: total > 0 && done === total,
+      }}
     >
-      {groups.length === 0 ? (
-        <Text color="secondary">Chưa có sự kiện có ngày. Ghi nhận container, lịch tàu hoặc xác nhận mốc để bắt đầu.</Text>
-      ) : (
-        <VStack gap={3} hAlign="stretch">
-          {groups.map((group) => (
-            <VStack key={group.container} gap={2} hAlign="stretch">
-              <Text weight="bold">{group.container === 'Toàn lô' ? group.container : `Container ${group.container}`}</Text>
-              {group.voyages.map((voyage) => (
-                <VStack key={voyage.id} gap={1} hAlign="stretch">
-                  <Text size="sm" color="secondary">{voyage.label}</Text>
-                  <MetaCompactTable
-                    emptyLabel="Chưa có sự kiện."
-                    columns={[
-                      { key: 'event', header: 'Sự kiện', isWrapping: true },
-                      { key: 'when', header: 'Thời điểm' },
-                      { key: 'place', header: 'Địa điểm', isWrapping: true },
-                      { key: 'source', header: 'Nguồn' },
-                    ]}
-                    rows={voyage.events.map((event, index) => ({
-                      id: `${event.code}-${event.eventAt ?? event.eventOn}-${index}`,
-                      cells: {
-                        event: <Text weight="semibold">{PHYSICAL_EVENT_LABELS[event.code] ?? event.code}</Text>,
-                        when: (
-                          <VStack gap={0.5}>
-                            <Text type="code">{formatDisplayDate(event.eventOn)}{event.eventAt ? ` ${event.eventAt.slice(11, 16)}` : ''}</Text>
-                            <MetaPill
-                              label={PHYSICAL_EVENT_CLASSIFIERS[event.classifier] ?? event.classifier}
-                              tone={event.classifier === 'Actual' ? 'success' : 'neutral'}
-                              size="sm"
-                            />
-                          </VStack>
-                        ),
-                        place: <Text size="sm">{event.location || '—'}</Text>,
-                        source: (
-                          <VStack gap={0.5}>
-                            <Text size="sm">{PHYSICAL_EVENT_SOURCES[event.source] ?? event.source}</Text>
-                            {event.sourceDetail ? <Text size="sm" color="meta-subtle">{event.sourceDetail}</Text> : null}
-                          </VStack>
-                        ),
-                      },
-                    }))}
-                  />
-                </VStack>
-              ))}
-            </VStack>
-          ))}
-        </VStack>
-      )}
+      <VStack gap={4} hAlign="stretch">
+        {groups.length > 1 ? (
+          <MetaTabNav
+            isSticky={false}
+            activeId={active?.id ?? ''}
+            onChange={setActiveId}
+            tabs={groups.map((group) => ({
+              id: group.id,
+              label:
+                group.id === WHOLE_SHIPMENT ? 'Tàu · toàn lô' : group.label,
+              icon: group.id === WHOLE_SHIPMENT ? Ship : Container,
+              count: `${group.doneCount}/${group.items.length}`,
+              countTone:
+                group.doneCount === group.items.length ? 'success' : 'neutral',
+            }))}
+          />
+        ) : null}
+        <MetaEventTimeline
+          emptyLabel="Chưa có mốc nào có ngày. Ghi nhận container, lịch tàu hoặc xác nhận mốc để bắt đầu."
+          items={(active?.items ?? []).map((item) => {
+            const shown = item.actual ?? item.expected;
+            const source = shown
+              ? [
+                  PHYSICAL_EVENT_SOURCES[shown.source] ?? shown.source,
+                  shown.sourceDetail,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              : '';
+            return {
+              id: item.id,
+              title: PHYSICAL_EVENT_LABELS[item.code] ?? item.code,
+              state: item.state,
+              date: formatDisplayDate(shown?.eventOn),
+              time: timeOf(shown),
+              subtitle: item.location ?? undefined,
+              meta: [item.voyage, source && `Nguồn: ${source}`]
+                .filter(Boolean)
+                .join(' · '),
+              note: noteFor(item),
+              tags:
+                shown?.source === 'Carrier'
+                  ? [{ label: 'API', tone: 'accent' }]
+                  : undefined,
+            };
+          })}
+        />
+      </VStack>
     </MetaShipmentSection>
   );
 }
