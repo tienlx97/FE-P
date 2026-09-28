@@ -41,6 +41,7 @@ export async function createShipmentCostItemTemplate(values) {
     body: {
       Name: values.name,
       CostCategoryId: values.costCategoryId,
+      DefaultCostNature: values.defaultCostNature,
     },
   });
 

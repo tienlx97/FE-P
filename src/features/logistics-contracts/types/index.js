@@ -628,6 +628,7 @@ export {};
  * @typedef {Object} ShipmentCostItemTemplateFormValues
  * @property {string} name
  * @property {string} costCategoryId
+ * @property {ShipmentCostNature} defaultCostNature
  */
 
 /**

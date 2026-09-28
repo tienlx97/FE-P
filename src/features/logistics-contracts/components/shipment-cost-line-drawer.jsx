@@ -30,6 +30,7 @@ import {
   MetaPill,
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
+import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
@@ -42,7 +43,10 @@ import {
   recommendedFees,
 } from '../config/cost-item-templates.js';
 import { formatVndAmount } from '../config/currencies.js';
-import { useShipmentCostItemTemplatesQuery } from '../hooks/use-shipment-cost-item-templates-query.js';
+import {
+  useCreateShipmentCostItemTemplateMutation,
+  useShipmentCostItemTemplatesQuery,
+} from '../hooks/use-shipment-cost-item-templates-query.js';
 import { useShipmentCostLineForm } from '../hooks/use-shipment-cost-line-form.js';
 
 // Figma 125:11995 is 640px; widened on request (roomier cards / text).
@@ -119,7 +123,11 @@ export function ShipmentCostLineDrawer({
   const { values, setField, fieldStatuses } = form;
 
   const [feeQuery, setFeeQuery] = useState('');
+  const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [quickName, setQuickName] = useState('');
+  const [quickError, setQuickError] = useState('');
   const templatesQuery = useShipmentCostItemTemplatesQuery();
+  const createTemplate = useCreateShipmentCostItemTemplateMutation();
   const templates = templatesQuery.data?.success
     ? templatesQuery.data.costItemTemplates
     : [];
@@ -138,6 +146,41 @@ export function ShipmentCostLineDrawer({
   function pickFee(fee) {
     setField('name', fee.name.slice(0, NAME_MAX));
     setField('costNature', fee.defaultCostNature);
+  }
+
+  function openQuickAdd() {
+    setQuickName(matchingFee(templates, values.costCategoryId, values.name) ? '' : values.name.trim());
+    setQuickError('');
+    setIsQuickAddOpen(true);
+  }
+
+  /** @param {import('react').FormEvent<HTMLFormElement>} event */
+  async function saveQuickFee(event) {
+    event.preventDefault();
+    const name = quickName.trim();
+    if (!name || name.length > NAME_MAX) {
+      setQuickError(`Nhập tên loại phí từ 1 đến ${NAME_MAX} ký tự.`);
+      return;
+    }
+    if (templates.some((fee) => fee.costCategoryId === values.costCategoryId && fee.name.trim().toLocaleLowerCase('vi') === name.toLocaleLowerCase('vi'))) {
+      setQuickError('Loại phí này đã có trong nhóm. Hãy chọn từ danh sách khuyến nghị.');
+      return;
+    }
+    setQuickError('');
+    const result = await createTemplate.mutateAsync({ values: {
+      name,
+      costCategoryId: values.costCategoryId,
+      defaultCostNature: values.costNature,
+    } });
+    if (!result.success) {
+      setQuickError(result.message);
+      return;
+    }
+    setField('name', result.costItemTemplate.name);
+    setField('costNature', result.costItemTemplate.defaultCostNature);
+    setFeeQuery('');
+    setIsQuickAddOpen(false);
+    toast({ body: `Đã thêm loại phí “${result.costItemTemplate.name}”.` });
   }
 
   // "After saving" preview: the other lines + this one as it stands.
@@ -404,14 +447,25 @@ export function ShipmentCostLineDrawer({
                     </VStack>
 
                     <VStack gap={2} hAlign="stretch">
-                      <FieldLabel
-                        label="Loại phí khuyến nghị"
-                        counter={
-                          selectedCategory && groupFeeCount > 0
-                            ? `${fees.length}/${groupFeeCount}`
-                            : undefined
-                        }
-                      />
+                      <HStack hAlign="between" vAlign="center" gap={2} wrap="wrap">
+                        <FieldLabel
+                          label="Loại phí khuyến nghị"
+                          counter={
+                            selectedCategory && groupFeeCount > 0
+                              ? `${fees.length}/${groupFeeCount}`
+                              : undefined
+                          }
+                        />
+                        <Button
+                          label="Thêm nhanh loại phí"
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          icon={<Icon icon={Plus} size="sm" />}
+                          isDisabled={!selectedCategory}
+                          onClick={openQuickAdd}
+                        />
+                      </HStack>
                       {!selectedCategory || groupFeeCount === 0 ? (
                         <Text size="sm" color="meta-subtle">
                           {!selectedCategory
@@ -697,6 +751,28 @@ export function ShipmentCostLineDrawer({
           }
         />
       </CommonDialog>
+
+      <FormDialog
+        isOpen={isQuickAddOpen}
+        onOpenChange={(open) => { if (!open) setIsQuickAddOpen(false); }}
+        title="Thêm nhanh loại phí"
+        subtitle={selectedCategory ? `Nhóm ${selectedCategory.code} · ${selectedCategory.name}. Loại phí mới sẽ được chọn cho khoản chi phí này.` : ''}
+        submitLabel="Thêm loại phí"
+        draft={{ name: quickName }}
+        isSubmitting={createTemplate.isPending}
+        submitError={quickError}
+        onSubmit={saveQuickFee}
+        width={520}
+      >
+        <TextInput
+          label="Tên loại phí"
+          value={quickName}
+          onChange={(name) => { setQuickName(name.slice(0, NAME_MAX)); setQuickError(''); }}
+          placeholder="Ví dụ: Phí kiểm hóa"
+          width="100%"
+        />
+        <Text size="sm" color="secondary">Cost Nature mặc định: {values.costNature}</Text>
+      </FormDialog>
     </MetaThemeProvider>
   );
 }

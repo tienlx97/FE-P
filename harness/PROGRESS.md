@@ -15772,3 +15772,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Added an editable container table and Excel template/import in the shipment VGM panel. Both paths validate container number, type, duplicates and packing date before one atomic batch API request. Successful save refreshes the container and journey queries.
 - Browser QA on CIF shipment created two table rows, rejected a case-insensitive duplicate, then deleted test rows. Excel preview parsed two rows and normalized a Vietnamese date. Desktop/mobile screenshots: `harness/runs/20260928-bulk-container-ui/`.
 - `./harness/verify.sh` passed: `harness/runs/20260928-135635-243/`.
+
+## 2026-09-28 — Quick recommended fee creation, task 2
+
+- The logistics cost drawer can create a named recommended fee in its selected LOG group. It saves the selected Cost Nature as the template default, rejects an existing name in the same group, refreshes recommendations and fills the current cost line name.
+- Browser QA created Standard and Abnormal templates through the dialog, verified the selected name and the persisted Abnormal value, then deleted both test templates. Desktop/mobile drawer and dialog screenshots: `harness/runs/20260928-bulk-container-ui/`. Browser reported no page errors.
+- `./harness/verify.sh` passed: `harness/runs/20260928-140209-756/`.
