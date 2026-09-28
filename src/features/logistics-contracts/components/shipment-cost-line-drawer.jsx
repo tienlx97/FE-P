@@ -2,6 +2,7 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { ComplexSelector } from '@astryxdesign/core/ComplexSelector';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -13,13 +14,14 @@ import {
   LayoutFooter,
   LayoutHeader,
 } from '@astryxdesign/core/Layout';
+import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { Check, CircleCheck, Plus, ReceiptText, Sparkles } from 'lucide-react';
+import { Check, Plus, ReceiptText, Sparkles } from 'lucide-react';
 import { useId, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
@@ -69,8 +71,8 @@ const COST_NATURES = /** @type {const} */ ([
  * Meta drawer that adds one logistics cost line to a shipment, or edits
  * one (`costLine`) — Figma 125:11995 "Thêm chi phí logistics". Fixed
  * header (code + incoterm), a muted canvas with two boxed sections —
- * "Phân loại" (the 8 LOG groups as selectable cards, Cost Nature as two
- * option cards; each group card shows its plain meaning) and "Khoản chi
+ * "Phân loại" (a rich LOG-group selector, Cost Nature as two option cards)
+ * and "Khoản chi
  * phí" (name, quantity, unit price, invoice number, provider, note) — a live
  * "after saving" preview and a fixed footer with the unsaved-changes hint.
  * A sibling fee drawer can fill the group, name and Cost Nature without
@@ -254,81 +256,77 @@ export function ShipmentCostLineDrawer({
                     meta={<MetaPill label="Bắt buộc" tone="accent" />}
                   >
                     <VStack gap={3} hAlign="stretch">
-                      <FieldLabel label="Nhóm chi phí" isRequired />
-                      <Grid
-                        columns={TWO_COLUMNS}
-                        gap={3}
-                        role="radiogroup"
-                        aria-label="Nhóm chi phí"
+                      <ComplexSelector
+                        label="Nhóm chi phí"
+                        isRequired
+                        value={values.costCategoryId}
+                        onChange={(categoryId) =>
+                          setField('costCategoryId', categoryId)
+                        }
+                        triggerLabel={
+                          selectedCategory ? (
+                            <HStack gap={2} vAlign="center" wrap="nowrap">
+                              <MetaPill
+                                label={selectedCategory.code}
+                                tone="accent"
+                                size="sm"
+                              />
+                              <Text maxLines={1}>{selectedCategory.name}</Text>
+                            </HStack>
+                          ) : undefined
+                        }
+                        placeholder="Chọn nhóm chi phí LOG-01 – LOG-08"
+                        status={fieldStatuses.costCategoryId}
+                        statusVariant="detached"
+                        width="100%"
+                        contentXstyle={styles.categoryPopup}
                       >
-                        {costCategories.map((category) => {
-                          const isSelected =
-                            category.id === values.costCategoryId;
-                          return (
-                            <SelectableCard
-                              key={category.id}
-                              label={`${category.code} · ${category.name}`}
-                              isSelected={isSelected}
-                              onChange={() => {
-                                setField('costCategoryId', category.id);
+                        {(categoryId, onChange, close) => (
+                          <VStack gap={3} hAlign="stretch">
+                            <HStack hAlign="between" vAlign="center" gap={2}>
+                              <Text weight="semibold">Chọn nhóm chi phí</Text>
+                              <MetaPill
+                                label={`${costCategories.length} nhóm LOG`}
+                                tone="accent"
+                                size="sm"
+                              />
+                            </HStack>
+                            <RadioList
+                              label="Nhóm chi phí"
+                              isLabelHidden
+                              value={categoryId}
+                              onChange={(nextId) => {
+                                onChange(nextId);
+                                close();
                               }}
-                              padding={3}
-                              xstyle={[
-                                styles.option,
-                                isSelected && styles.optionSelected,
-                              ]}
                             >
-                              <VStack gap={1} hAlign="stretch">
-                                <HStack
-                                  hAlign="between"
-                                  vAlign="center"
-                                  wrap="nowrap"
-                                >
-                                  <Text
-                                    as="span"
-                                    size="sm"
-                                    type="code"
-                                    weight="bold"
-                                    // The chip's own xstyle color wins only
-                                    // over an inherited one, not a set one.
-                                    color="inherit"
-                                    xstyle={[
-                                      styles.code,
-                                      isSelected && styles.codeSelected,
-                                    ]}
-                                  >
-                                    {category.code}
-                                  </Text>
-                                  {isSelected ? (
-                                    <Icon
-                                      icon={CircleCheck}
-                                      size="md"
-                                      color="accent"
-                                    />
-                                  ) : null}
-                                </HStack>
-                                <Text
-                                  weight="semibold"
-                                  color={isSelected ? 'accent' : 'primary'}
-                                  maxLines={2}
-                                >
-                                  {category.name.toLocaleUpperCase('vi')}
-                                </Text>
-                                {category.note ? (
-                                  <Text
-                                    size="sm"
-                                    color="secondary"
-                                    maxLines={2}
-                                  >
-                                    {groupMeaning(category.note)}
-                                  </Text>
-                                ) : null}
-                              </VStack>
-                            </SelectableCard>
-                          );
-                        })}
-                      </Grid>
-                      <FieldError message={fieldStatuses.costCategoryId} />
+                              {costCategories.map((category) => (
+                                <RadioListItem
+                                  key={category.id}
+                                  value={category.id}
+                                  label={
+                                    <HStack gap={2} vAlign="center" wrap="wrap">
+                                      <MetaPill
+                                        label={category.code}
+                                        tone={
+                                          category.id === categoryId
+                                            ? 'accent'
+                                            : 'neutral'
+                                        }
+                                        size="sm"
+                                      />
+                                      <Text weight="semibold">
+                                        {category.name}
+                                      </Text>
+                                    </HStack>
+                                  }
+                                  description={groupMeaning(category.note)}
+                                />
+                              ))}
+                            </RadioList>
+                          </VStack>
+                        )}
+                      </ComplexSelector>
                     </VStack>
 
                     <VStack gap={3} hAlign="stretch">
@@ -770,19 +768,6 @@ function FieldLabel({
   );
 }
 
-/**
- * Error line under a control that has no status slot of its own (the
- * group card grid).
- * @param {{ message?: { type: 'error', message: string } }} props
- */
-function FieldError({ message }) {
-  return message ? (
-    <Text color="meta-danger" role="alert">
-      {message.message}
-    </Text>
-  ) : null;
-}
-
 const styles = stylex.create({
   surface: {
     backgroundColor: 'var(--color-background-surface)',
@@ -816,6 +801,12 @@ const styles = stylex.create({
     color: 'var(--color-accent)',
     flexShrink: 0,
   },
+  categoryPopup: {
+    maxHeight: 'min(70vh, calc(var(--spacing-10) * 14))',
+    overflowY: 'auto',
+    padding: 'var(--spacing-3)',
+    width: 'min(calc(var(--spacing-10) * 13), calc(100vw - var(--spacing-8)))',
+  },
   option: {
     backgroundColor: 'var(--color-background-card)',
     borderColor: 'var(--color-border)',
@@ -831,22 +822,6 @@ const styles = stylex.create({
   abnormalSelected: {
     backgroundColor: 'var(--meta-amber-wash)',
     borderColor: 'var(--meta-amber-border)',
-  },
-  // "LOG-03" code chip (Figma 125:12031); cobalt when selected.
-  code: {
-    backgroundColor: 'var(--meta-neutral-pill-bg)',
-    borderColor: 'var(--color-border)',
-    borderRadius: 'var(--radius-element)',
-    borderStyle: 'solid',
-    borderWidth: 'var(--border-width)',
-    color: 'var(--color-text-secondary)',
-    paddingBlock: 'var(--spacing-0-5)',
-    paddingInline: 'var(--spacing-1-5)',
-  },
-  codeSelected: {
-    backgroundColor: 'var(--color-accent)',
-    borderColor: 'var(--color-accent)',
-    color: 'var(--color-on-accent)',
   },
   radio: {
     backgroundColor: 'var(--color-background-card)',
