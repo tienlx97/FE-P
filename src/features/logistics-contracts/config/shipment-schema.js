@@ -49,7 +49,8 @@ export const shipmentCostLineSchema = z.object({
   quantity: z
     .number({ error: 'Vui lòng nhập số lượng' })
     .positive('Số lượng phải lớn hơn 0'),
-  note: z.string().trim().max(500, 'Tối đa 500 ký tự'),
+  // Markdown from the rich text editor (BE `ShipmentCost.NoteMaxLength`).
+  note: z.string().trim().max(2000, 'Tối đa 2000 ký tự (kể cả định dạng)'),
   providerCustomerId: z.string().trim(),
   invoiceNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
   invoiceDate: z.string(),
@@ -87,6 +88,8 @@ export const shipmentSchema = z
     placeOfLoading: z.string().trim().max(200, 'Tối đa 200 ký tự'),
     placeOfDischarge: z.string().trim().max(200, 'Tối đa 200 ký tự'),
     placeOfDelivery: z.string().trim().max(500, 'Tối đa 500 ký tự'),
+    // Markdown from the rich text editor (BE `Shipment.NoteMaxLength`).
+    note: z.string().trim().max(2000, 'Tối đa 2000 ký tự (kể cả định dạng)'),
     type: z.enum(SHIPMENT_TYPES, { error: 'Vui lòng chọn loại hình' }),
     name: z
       .string()
@@ -143,7 +146,10 @@ export const shipmentSchema = z
           atd: z.string().nullable(),
         }),
       )
-      .max(MAX_TRANSSHIPMENT_LEGS, `Tối đa ${MAX_TRANSSHIPMENT_LEGS} cảng chuyển tải`),
+      .max(
+        MAX_TRANSSHIPMENT_LEGS,
+        `Tối đa ${MAX_TRANSSHIPMENT_LEGS} cảng chuyển tải`,
+      ),
     coForm: z.string().trim().max(20, 'Tối đa 20 ký tự'),
     customsChannel: z.union([z.enum(SHIPMENT_CUSTOMS_CHANNELS), z.literal('')]),
     letterOfCreditNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
@@ -191,5 +197,9 @@ export const shipmentSchema = z
       });
     }
     addFreeTimeIssues(values.originFreeTime, 'originFreeTime', context);
-    addFreeTimeIssues(values.destinationFreeTime, 'destinationFreeTime', context);
+    addFreeTimeIssues(
+      values.destinationFreeTime,
+      'destinationFreeTime',
+      context,
+    );
   });

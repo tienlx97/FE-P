@@ -24,7 +24,7 @@ import { FormattedNumberTextInput } from '@/shared/components/formatted-number-t
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { NumberInput } from '@/shared/components/number-input.jsx';
 import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
-import { TextArea } from '@/shared/components/text-area.jsx';
+import { RichTextNoteField } from '@/shared/components/rich-text-note-field.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
@@ -527,9 +527,8 @@ export function ContractDrawerProfileFields({
           />
         </MetaFormSection>
 
-        <TextArea
+        <RichTextNoteField
           label="5. Quy chuẩn đóng gói & Ghi chú vận hành"
-          rows={3}
           value={values.note}
           onChange={(value) => setField('note', value)}
           placeholder="Nhập quy chuẩn đóng gói, chất lượng hoặc ghi chú hợp đồng..."

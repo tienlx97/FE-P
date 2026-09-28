@@ -24,6 +24,7 @@ import {
 } from '@/shared/components/advance-table.jsx';
 import { MetaCountBadge } from '@/shared/components/custom/meta/count-badge.jsx';
 import { MetaStatusBadge } from '@/shared/components/custom/meta/status-badge.jsx';
+import { RichTextNote } from '@/shared/components/rich-text-note.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
@@ -676,21 +677,35 @@ export function ContractsList({
   /** @param {import('../types/index.js').Contract[]} visibleRows */
   function selectedTotalsRows(visibleRows) {
     if (!listResult?.success) return [];
-    const selected = visibleRows.filter((row) => !selection.excludedIds.has(row.id));
+    const selected = visibleRows.filter(
+      (row) => !selection.excludedIds.has(row.id),
+    );
     /** @type {Map<string, ContractTotalsRow>} */
     const byCurrency = new Map();
     for (const contract of selected) {
       const currency = contract.currency;
-      if (!byCurrency.has(currency)) byCurrency.set(currency, {
-        id: `totals-${currency}`, __isTotalsRow: true, currency,
-        contractValue: 0, settlementValue: 0, paidValue: 0,
-        unpaidValue: 0, exportedValue: 0, exportedValueVnd: 0,
-        unexportedValue: 0, containerCount: 0, logisticsSale: 0,
-        selectedCount: selected.length, visibleCount: visibleRows.length,
-        isMultiCurrency: false,
-      });
+      if (!byCurrency.has(currency))
+        byCurrency.set(currency, {
+          id: `totals-${currency}`,
+          __isTotalsRow: true,
+          currency,
+          contractValue: 0,
+          settlementValue: 0,
+          paidValue: 0,
+          unpaidValue: 0,
+          exportedValue: 0,
+          exportedValueVnd: 0,
+          unexportedValue: 0,
+          containerCount: 0,
+          logisticsSale: 0,
+          selectedCount: selected.length,
+          visibleCount: visibleRows.length,
+          isMultiCurrency: false,
+        });
       const total = byCurrency.get(currency);
-      const settlement = listResult.settlements.find((entry) => entry.contractId === contract.id);
+      const settlement = listResult.settlements.find(
+        (entry) => entry.contractId === contract.id,
+      );
       if (!total) continue;
       total.contractValue += contract.contractValue;
       total.settlementValue += settlement?.settlementValue ?? 0;
@@ -699,19 +714,34 @@ export function ContractsList({
       total.exportedValue += settlement?.exportedValue ?? 0;
       total.exportedValueVnd += settlement?.exportedValueVnd ?? 0;
       total.unexportedValue += settlement?.unexportedValue ?? 0;
-      total.containerCount = (total.containerCount ?? 0) + (settlement?.containerCount ?? 0);
-      total.logisticsSale = (total.logisticsSale ?? 0) + (privateInfosByContractId.get(contract.id)?.logisticsTotal ?? 0);
+      total.containerCount =
+        (total.containerCount ?? 0) + (settlement?.containerCount ?? 0);
+      total.logisticsSale =
+        (total.logisticsSale ?? 0) +
+        (privateInfosByContractId.get(contract.id)?.logisticsTotal ?? 0);
     }
-    if (byCurrency.size === 0) byCurrency.set('', {
-      id: 'totals-empty', __isTotalsRow: true, currency: '',
-      contractValue: 0, settlementValue: 0, paidValue: 0,
-      unpaidValue: 0, exportedValue: 0, exportedValueVnd: 0,
-      unexportedValue: 0, containerCount: 0, logisticsSale: 0,
-      selectedCount: 0, visibleCount: visibleRows.length, isMultiCurrency: false,
-    });
+    if (byCurrency.size === 0)
+      byCurrency.set('', {
+        id: 'totals-empty',
+        __isTotalsRow: true,
+        currency: '',
+        contractValue: 0,
+        settlementValue: 0,
+        paidValue: 0,
+        unpaidValue: 0,
+        exportedValue: 0,
+        exportedValueVnd: 0,
+        unexportedValue: 0,
+        containerCount: 0,
+        logisticsSale: 0,
+        selectedCount: 0,
+        visibleCount: visibleRows.length,
+        isMultiCurrency: false,
+      });
     return [...byCurrency.values()].map((row) => ({
       ...row,
-      logisticsSale: byCurrency.size === 1 && privateTotals ? row.logisticsSale : null,
+      logisticsSale:
+        byCurrency.size === 1 && privateTotals ? row.logisticsSale : null,
       isMultiCurrency: byCurrency.size > 1,
     }));
   }
@@ -1138,9 +1168,10 @@ export function ContractsList({
       // while adding the three fields above (2026-09-16); same class of bug.
       key: 'note',
       header: 'Ghi chú',
-      width: pixel(200),
+      width: pixel(320),
       filter: 'note',
-      renderCell: (contract) => orDash(contract.note),
+      renderCell: (contract) => <RichTextNote value={contract.note} />,
+      exportValue: (contract) => contract.note ?? '',
     },
     {
       key: 'paymentTerms',

@@ -32,7 +32,7 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
-import { TextArea } from '@/shared/components/text-area.jsx';
+import { RichTextNoteField } from '@/shared/components/rich-text-note-field.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
@@ -52,7 +52,7 @@ import { useShipmentCostLineForm } from '../hooks/use-shipment-cost-line-form.js
 // Figma 125:11995 is 640px; widened on request (roomier cards / text).
 const DRAWER_WIDTH = 800;
 const NAME_MAX = 200;
-const NOTE_MAX = 500;
+const NOTE_MAX = 2000;
 const TWO_COLUMNS = { minWidth: 260, max: 2 };
 
 /** Figma 125:12089 — Cost Nature options with their hint line. */
@@ -149,7 +149,11 @@ export function ShipmentCostLineDrawer({
   }
 
   function openQuickAdd() {
-    setQuickName(matchingFee(templates, values.costCategoryId, values.name) ? '' : values.name.trim());
+    setQuickName(
+      matchingFee(templates, values.costCategoryId, values.name)
+        ? ''
+        : values.name.trim(),
+    );
     setQuickError('');
     setIsQuickAddOpen(true);
   }
@@ -162,16 +166,27 @@ export function ShipmentCostLineDrawer({
       setQuickError(`Nhập tên loại phí từ 1 đến ${NAME_MAX} ký tự.`);
       return;
     }
-    if (templates.some((fee) => fee.costCategoryId === values.costCategoryId && fee.name.trim().toLocaleLowerCase('vi') === name.toLocaleLowerCase('vi'))) {
-      setQuickError('Loại phí này đã có trong nhóm. Hãy chọn từ danh sách khuyến nghị.');
+    if (
+      templates.some(
+        (fee) =>
+          fee.costCategoryId === values.costCategoryId &&
+          fee.name.trim().toLocaleLowerCase('vi') ===
+            name.toLocaleLowerCase('vi'),
+      )
+    ) {
+      setQuickError(
+        'Loại phí này đã có trong nhóm. Hãy chọn từ danh sách khuyến nghị.',
+      );
       return;
     }
     setQuickError('');
-    const result = await createTemplate.mutateAsync({ values: {
-      name,
-      costCategoryId: values.costCategoryId,
-      defaultCostNature: values.costNature,
-    } });
+    const result = await createTemplate.mutateAsync({
+      values: {
+        name,
+        costCategoryId: values.costCategoryId,
+        defaultCostNature: values.costNature,
+      },
+    });
     if (!result.success) {
       setQuickError(result.message);
       return;
@@ -447,7 +462,12 @@ export function ShipmentCostLineDrawer({
                     </VStack>
 
                     <VStack gap={2} hAlign="stretch">
-                      <HStack hAlign="between" vAlign="center" gap={2} wrap="wrap">
+                      <HStack
+                        hAlign="between"
+                        vAlign="center"
+                        gap={2}
+                        wrap="wrap"
+                      >
                         <FieldLabel
                           label="Loại phí khuyến nghị"
                           counter={
@@ -517,7 +537,10 @@ export function ShipmentCostLineDrawer({
                                         color="accent"
                                       />
                                     ) : fee.defaultCostNature === 'Abnormal' ? (
-                                      <MetaPill label="Abnormal" tone="warning" />
+                                      <MetaPill
+                                        label="Abnormal"
+                                        tone="warning"
+                                      />
                                     ) : null
                                   }
                                 />
@@ -615,24 +638,16 @@ export function ShipmentCostLineDrawer({
                       />
                     </VStack>
 
-                    <VStack gap={1} hAlign="stretch">
-                      <FieldLabel
-                        label="Ghi chú"
-                        isOptional
-                        counter={`${values.note.length}/${NOTE_MAX}`}
-                      />
-                      <TextArea
-                        label="Ghi chú"
-                        isLabelHidden
-                        value={values.note}
-                        onChange={(value) =>
-                          setField('note', value.slice(0, NOTE_MAX))
-                        }
-                        placeholder="Ghi chú (không bắt buộc)"
-                        rows={2}
-                        status={fieldStatuses.note}
-                      />
-                    </VStack>
+                    <RichTextNoteField
+                      label="Ghi chú"
+                      isOptional
+                      value={values.note}
+                      onChange={(value) => setField('note', value)}
+                      placeholder="Ghi chú (không bắt buộc)"
+                      maxLength={NOTE_MAX}
+                      status={fieldStatuses.note}
+                      statusVariant="tooltip"
+                    />
                   </MetaFormSection>
 
                   {selectedCategory ? (
@@ -754,9 +769,15 @@ export function ShipmentCostLineDrawer({
 
       <FormDialog
         isOpen={isQuickAddOpen}
-        onOpenChange={(open) => { if (!open) setIsQuickAddOpen(false); }}
+        onOpenChange={(open) => {
+          if (!open) setIsQuickAddOpen(false);
+        }}
         title="Thêm nhanh loại phí"
-        subtitle={selectedCategory ? `Nhóm ${selectedCategory.code} · ${selectedCategory.name}. Loại phí mới sẽ được chọn cho khoản chi phí này.` : ''}
+        subtitle={
+          selectedCategory
+            ? `Nhóm ${selectedCategory.code} · ${selectedCategory.name}. Loại phí mới sẽ được chọn cho khoản chi phí này.`
+            : ''
+        }
         submitLabel="Thêm loại phí"
         draft={{ name: quickName }}
         isSubmitting={createTemplate.isPending}
@@ -767,11 +788,16 @@ export function ShipmentCostLineDrawer({
         <TextInput
           label="Tên loại phí"
           value={quickName}
-          onChange={(name) => { setQuickName(name.slice(0, NAME_MAX)); setQuickError(''); }}
+          onChange={(name) => {
+            setQuickName(name.slice(0, NAME_MAX));
+            setQuickError('');
+          }}
           placeholder="Ví dụ: Phí kiểm hóa"
           width="100%"
         />
-        <Text size="sm" color="secondary">Cost Nature mặc định: {values.costNature}</Text>
+        <Text size="sm" color="secondary">
+          Cost Nature mặc định: {values.costNature}
+        </Text>
       </FormDialog>
     </MetaThemeProvider>
   );

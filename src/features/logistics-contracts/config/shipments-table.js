@@ -108,6 +108,7 @@ export const COLUMN_OPTIONS = [
     label: `${group.code} · ${group.name}`,
   })),
   { key: 'vgm', label: 'VGM' },
+  { key: 'note', label: 'Ghi chú' },
   { key: 'actions', label: 'Thao tác', isAlwaysVisible: true },
 ];
 
@@ -126,6 +127,7 @@ export const DEFAULT_COLUMN_KEYS = [
   'placeOfDischarge',
   'customsDeclarationNumber',
   'coNumber',
+  'note',
   'actions',
 ];
 
@@ -235,6 +237,7 @@ export const skeletonRows = Array.from(
     placeOfLoading: null,
     placeOfDischarge: null,
     placeOfDelivery: null,
+    note: null,
     type: 'LCL',
     name: '',
     paymentCondition: 'TT',

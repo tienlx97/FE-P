@@ -4,6 +4,7 @@
  * "astryx-lab" note) ships its own pre-extracted stylesheet the same way
  * core does; components render unstyled without it. */
 @import '@astryxdesign/lab/lab.css';
+@import '@astryxdesign/richtext/richtext.css';
 
 @font-face {
   font-family: 'Optimistic Display';

@@ -123,6 +123,8 @@ function toCreateRequestBody(values, costLines) {
     PlaceOfLoading: values.placeOfLoading || null,
     PlaceOfDischarge: values.placeOfDischarge || null,
     PlaceOfDelivery: values.placeOfDelivery || null,
+    // Markdown from the rich text editor; "" clears the note on update.
+    Note: values.note.trim(),
     Type: values.type,
     Name: values.name,
     PaymentCondition: values.paymentCondition,
@@ -165,6 +167,8 @@ function toUpdateRequestBody(values, costLines) {
     PlaceOfLoading: values.placeOfLoading || null,
     PlaceOfDischarge: values.placeOfDischarge || null,
     PlaceOfDelivery: values.placeOfDelivery || null,
+    // Markdown from the rich text editor; "" clears the note on update.
+    Note: values.note.trim(),
     Name: values.name,
     PaymentCondition: values.paymentCondition,
     InvoiceValue: values.invoiceValue,

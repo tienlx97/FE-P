@@ -5,6 +5,7 @@ import { Card } from '@astryxdesign/core/Card';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { Markdown } from '@astryxdesign/core/Markdown';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import {
   Table,
@@ -289,8 +290,14 @@ export function MetaCostPanel({
                           size="sm"
                         />
                       </TableCell>
-                      <TableCell xstyle={styles.cell}>
-                        <OptionalText value={row.note} />
+                      <TableCell xstyle={[styles.cell, styles.noteCell]}>
+                        {row.note ? (
+                          <Markdown density="compact" contentWidth="100%">
+                            {row.note}
+                          </Markdown>
+                        ) : (
+                          <OptionalText value={null} />
+                        )}
                       </TableCell>
                       <TableCell xstyle={styles.cell}>
                         <OptionalText value={row.provider} />
@@ -455,6 +462,13 @@ const styles = stylex.create({
   table: {
     tableLayout: 'auto',
   },
+  // The note is Markdown from the rich text editor: wraps, and keeps a
+  // readable width however many columns compete for the row.
+  noteCell: {
+    maxWidth: 'none',
+    minWidth: 'calc(var(--spacing-12) * 5)',
+    whiteSpace: 'normal',
+  },
   headCell: {
     backgroundColor: 'var(--meta-row-hover)',
     maxWidth: 'none',
@@ -523,14 +537,14 @@ const alignStyles = stylex.create({
 /** Column shares measured from the Figma 124:9687 header row (sum 100%). */
 const columnWidths = stylex.create({
   no: { width: '3%' },
-  group: { width: '14%' },
-  name: { width: '12%' },
-  quantity: { width: '7%' },
-  unitPrice: { width: '10%' },
-  amount: { width: '10%' },
-  nature: { width: '8%' },
-  note: { width: '10%' },
-  provider: { width: '11%' },
+  group: { width: '10%' },
+  name: { width: '10%' },
+  quantity: { width: '6%' },
+  unitPrice: { width: '9%' },
+  amount: { width: '9%' },
+  nature: { width: '7%' },
+  note: { width: '22%' },
+  provider: { width: '10%' },
   invoice: { width: '8%' },
-  actions: { width: '7%' },
+  actions: { width: '6%' },
 });
