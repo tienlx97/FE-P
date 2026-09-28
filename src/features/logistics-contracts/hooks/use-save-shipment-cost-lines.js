@@ -14,6 +14,7 @@ export function costLineFormValues(cost) {
     costCategoryId: cost.costCategoryId,
     name: cost.name,
     amount: cost.amount,
+    quantity: cost.quantity ?? 1,
     note: cost.note ?? '',
     providerCustomerId: cost.providerCustomerId ?? '',
     invoiceNumber: cost.invoiceNumber ?? '',

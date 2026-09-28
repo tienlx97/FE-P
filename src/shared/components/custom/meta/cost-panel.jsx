@@ -30,6 +30,8 @@ import { MetaPill } from './pill.jsx';
  *   no: string,
  *   groupName: string,
  *   name: string,
+ *   quantity: string,
+ *   unitPrice: string,
  *   amount: string,
  *   nature: 'Standard' | 'Abnormal',
  *   note: string | null,
@@ -57,7 +59,9 @@ const COLUMNS = /** @type {const} */ ([
   ['no', 'STT', 'center'],
   ['group', 'Nhóm chi phí', 'start'],
   ['name', 'Tên khoản chi phí', 'start'],
-  ['amount', 'Số tiền (VNĐ)', 'end'],
+  ['quantity', 'Số lượng', 'end'],
+  ['unitPrice', 'Đơn giá (VNĐ)', 'end'],
+  ['amount', 'Thành tiền (VNĐ)', 'end'],
   ['nature', 'Cost Nature', 'start'],
   ['note', 'Ghi chú', 'start'],
   ['provider', 'Nhà cung cấp', 'start'],
@@ -236,6 +240,8 @@ export function MetaCostPanel({
                       </HStack>
                     </TableCell>
                     <TableCell xstyle={styles.cell} />
+                    <TableCell xstyle={styles.cell} />
+                    <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={[styles.cell, alignStyles.end]}>
                       <Text
                         weight="bold"
@@ -263,6 +269,12 @@ export function MetaCostPanel({
                       </TableCell>
                       <TableCell xstyle={styles.cell}>
                         <Text weight="medium">{row.name}</Text>
+                      </TableCell>
+                      <TableCell xstyle={[styles.cell, alignStyles.end]}>
+                        <Text hasTabularNumbers>{row.quantity}</Text>
+                      </TableCell>
+                      <TableCell xstyle={[styles.cell, alignStyles.end]}>
+                        <Text hasTabularNumbers>{row.unitPrice}</Text>
                       </TableCell>
                       <TableCell xstyle={[styles.cell, alignStyles.end]}>
                         <Text hasTabularNumbers>{row.amount}</Text>
@@ -351,6 +363,8 @@ export function MetaCostPanel({
                       {totals.lines}
                     </Text>
                   </TableCell>
+                  <TableCell xstyle={styles.footCell} />
+                  <TableCell xstyle={styles.footCell} />
                   <TableCell xstyle={[styles.footCell, alignStyles.end]}>
                     <Text weight="bold" color="accent" hasTabularNumbers>
                       {totals.amount}
@@ -509,12 +523,14 @@ const alignStyles = stylex.create({
 /** Column shares measured from the Figma 124:9687 header row (sum 100%). */
 const columnWidths = stylex.create({
   no: { width: '3%' },
-  group: { width: '20%' },
+  group: { width: '14%' },
   name: { width: '12%' },
+  quantity: { width: '7%' },
+  unitPrice: { width: '10%' },
   amount: { width: '10%' },
-  nature: { width: '9%' },
-  note: { width: '14%' },
-  provider: { width: '16%' },
-  invoice: { width: '10%' },
-  actions: { width: '6%' },
+  nature: { width: '8%' },
+  note: { width: '10%' },
+  provider: { width: '11%' },
+  invoice: { width: '8%' },
+  actions: { width: '7%' },
 });

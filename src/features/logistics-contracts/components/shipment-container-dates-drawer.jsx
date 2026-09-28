@@ -1,13 +1,15 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
+import { Calendar } from '@astryxdesign/core/Calendar';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { Popover } from '@astryxdesign/core/Popover';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { CalendarRange, CopyCheck, Save } from 'lucide-react';
+import { CalendarDays, CalendarRange, CopyCheck, Save, X } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -17,7 +19,7 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { MetaFormDrawer } from '@/shared/components/meta-form-drawer.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
-import { formatDateInputValue } from '@/shared/config/date-input-format.js';
+import { formatDateInputValue, formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import {
@@ -32,6 +34,60 @@ const isoDate = (value) =>
   /** @type {import('@astryxdesign/core/Calendar').ISODateString | undefined} */ (
     value || undefined
   );
+
+/**
+ * Compact date picker for table cells. A fixed-width trigger keeps columns
+ * stable as an empty date becomes a formatted value; the calendar opens only
+ * when the user edits that cell.
+ * @param {{ label: string, value: string, onChange: (value: string) => void }} props
+ */
+function ContainerDateCell({ label, value, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <Popover
+      label={label}
+      isOpen={isOpen}
+      onOpenChange={setIsOpen}
+      placement="above"
+      content={
+        <VStack gap={2} hAlign="stretch">
+          <Calendar
+            value={isoDate(value)}
+            onChange={(date) => {
+              onChange(/** @type {string} */ (date ?? ''));
+              setIsOpen(false);
+            }}
+            hasVariableRowCount
+            weekStartsOn="mon"
+          />
+          {value ? (
+            <Button
+              label="Xoá ngày"
+              type="button"
+              variant="ghost"
+              size="sm"
+              icon={<Icon icon={X} size="sm" />}
+              onClick={() => {
+                onChange('');
+                setIsOpen(false);
+              }}
+            />
+          ) : null}
+        </VStack>
+      }
+    >
+      <Button
+        label={value ? formatDisplayDate(value) : 'Chọn ngày'}
+        aria-label={`${label}: ${value ? formatDisplayDate(value) : 'Chưa có ngày'}`}
+        type="button"
+        variant="secondary"
+        size="sm"
+        width={160}
+        icon={<Icon icon={CalendarDays} size="sm" />}
+      />
+    </Popover>
+  );
+}
 
 /**
  * "Ngày container" (`MetaFormDrawer`): the event dates that start / stop
@@ -128,16 +184,11 @@ export function ShipmentContainerDatesDrawer({
         ...Object.fromEntries(
           fields.map((field) => [
             field.key,
-            <DateInput
+            <ContainerDateCell
               key={field.key}
               label={`${field.label} — ${row.containerNumber}`}
-              isLabelHidden
-              value={isoDate(row[field.key])}
-              onChange={(value) => setRow(row.vgmId, field.key, value ?? '')}
-              format={formatDateInputValue}
-              hasClear
-              size="sm"
-              width="100%"
+              value={row[field.key]}
+              onChange={(value) => setRow(row.vgmId, field.key, value)}
             />,
           ]),
         ),

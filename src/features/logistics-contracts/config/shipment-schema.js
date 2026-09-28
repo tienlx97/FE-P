@@ -46,6 +46,9 @@ export const shipmentCostLineSchema = z.object({
   amount: z
     .number({ error: 'Vui lòng nhập số tiền' })
     .positive('Số tiền phải lớn hơn 0'),
+  quantity: z
+    .number({ error: 'Vui lòng nhập số lượng' })
+    .positive('Số lượng phải lớn hơn 0'),
   note: z.string().trim().max(500, 'Tối đa 500 ký tự'),
   providerCustomerId: z.string().trim(),
   invoiceNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),

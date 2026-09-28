@@ -74,7 +74,7 @@ const COST_NATURES = /** @type {const} */ ([
  * phí" (name, then the group's recommended fees — the LOG 01-08 catalog,
  * searchable by Vietnamese name or invoice keyword; picking one fills the
  * name and Cost Nature and shows where it occurs + its classification note
- * — then amount, invoice number, provider, note) — a live "after saving" preview,
+ * — then quantity, unit price, invoice number, provider, note) — a live "after saving" preview,
  * and a fixed footer with the unsaved-changes hint. Closing with changes
  * asks first. Saving resends the shipment's cost list
  * (`useShipmentCostLineForm`).
@@ -474,27 +474,39 @@ export function ShipmentCostLineDrawer({
                       )}
                     </VStack>
 
-                    <VStack gap={1} hAlign="stretch">
-                      <FieldLabel label="Số tiền" isRequired />
-                      <FormattedNumberTextInput
-                        label="Số tiền"
-                        isLabelHidden
-                        value={
-                          typeof values.amount === 'number'
-                            ? values.amount
-                            : undefined
-                        }
-                        onChange={(value) =>
-                          setField('amount', /** @type {number} */ (value))
-                        }
-                        units="đ"
-                        status={fieldStatuses.amount}
-                        statusVariant="detached"
-                      />
-                      <Text size="sm" color="meta-subtle">
-                        Chỉ ghi nhận bằng VNĐ
+                    <Grid columns={TWO_COLUMNS} gap={3}>
+                      <VStack gap={1} hAlign="stretch">
+                        <FieldLabel label="Số lượng" isRequired />
+                        <FormattedNumberTextInput
+                          label="Số lượng"
+                          isLabelHidden
+                          value={values.quantity}
+                          onChange={form.setQuantity}
+                          status={fieldStatuses.quantity}
+                          statusVariant="detached"
+                        />
+                      </VStack>
+                      <VStack gap={1} hAlign="stretch">
+                        <FieldLabel label="Đơn giá (VNĐ)" isRequired />
+                        <FormattedNumberTextInput
+                          label="Đơn giá (VNĐ)"
+                          isLabelHidden
+                          value={form.unitPrice}
+                          onChange={form.setUnitPrice}
+                          units="đ"
+                          status={fieldStatuses.amount}
+                          statusVariant="detached"
+                        />
+                      </VStack>
+                    </Grid>
+                    <HStack hAlign="between" vAlign="center" gap={2}>
+                      <Text size="sm" color="secondary">
+                        Thành tiền (số lượng × đơn giá)
                       </Text>
-                    </VStack>
+                      <Text weight="bold" color="accent" hasTabularNumbers>
+                        {formatVndAmount(amount)}
+                      </Text>
+                    </HStack>
 
                     <Grid columns={TWO_COLUMNS} gap={3}>
                       <VStack gap={1} hAlign="stretch">

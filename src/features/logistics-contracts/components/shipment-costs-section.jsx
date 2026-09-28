@@ -10,6 +10,7 @@ import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/compone
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
+import { costUnitPrice } from '../config/shipment-cost-amount.js';
 
 /** @param {string | number | null | undefined} value */
 function orDash(value) {
@@ -50,8 +51,20 @@ export function ShipmentCostsSection({
       renderCell: (cost) => cost.name,
     },
     {
+      key: 'quantity',
+      header: 'Số lượng',
+      width: pixel(100),
+      renderCell: (cost) => cost.quantity ?? 1,
+    },
+    {
+      key: 'unitPrice',
+      header: 'Đơn giá',
+      width: pixel(145),
+      renderCell: (cost) => `${formatMoney(costUnitPrice(cost))} đ`,
+    },
+    {
       key: 'amount',
-      header: 'Số tiền',
+      header: 'Thành tiền',
       width: pixel(160),
       renderCell: (cost) => `${formatMoney(cost.amount)} đ`,
     },

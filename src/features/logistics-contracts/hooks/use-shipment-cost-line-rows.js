@@ -11,6 +11,7 @@ function emptyRow(costCategoryId = '') {
     costCategoryId,
     name: '',
     amount: undefined,
+    quantity: 1,
     note: '',
     providerCustomerId: '',
     invoiceNumber: '',
@@ -46,7 +47,7 @@ export function useShipmentCostLineRows(initialRows = []) {
 
   /**
    * @param {string} rowKey
-   * @param {'costCategoryId' | 'name' | 'amount' | 'note' | 'providerCustomerId' | 'invoiceNumber' | 'invoiceDate' | 'costNature'} field
+   * @param {'costCategoryId' | 'name' | 'amount' | 'quantity' | 'note' | 'providerCustomerId' | 'invoiceNumber' | 'invoiceDate' | 'costNature'} field
    * @param {number | string | undefined} value
    */
   function updateRowField(rowKey, field, value) {

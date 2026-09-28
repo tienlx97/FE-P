@@ -15753,3 +15753,10 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 
 - Shipment drawer now requires at least one port when “Chuyển tải” is selected and supports up to ten ports in route order. It restores saved legs and retains vessel/voyage/date details while editing port names. Switching to direct service sends an empty list.
 - `./harness/verify.sh` passed: `harness/runs/20260927-231311-517028/`. Browser check at 390×844 showed two editable ports (“Singapore”, “Port Klang”), add/remove controls and the save action within the drawer. Screenshot: `harness/runs/20260927-231311-517028/shipment-transshipment-ports.png`.
+
+## 2026-09-28 — Shipment cost quantity and container dates
+
+- Shipment cost lines now default quantity to 1. The editor treats the entered amount as unit price and shows the calculated line total; tables show quantity, unit price and line total. Existing API lines without Quantity display as quantity 1. Save requests send Quantity while Amount remains the line total.
+- Replaced each container table DateInput with a fixed 160px Astryx calendar trigger and popover. The bulk date field still supports typed input. Browser QA on a shipment with five containers confirmed the calendar is visible, selecting a date keeps the drawer open and the trigger measures 160px before and after. QA edits were discarded.
+- `./harness/verify.sh` passed: `harness/runs/20260928-084434-54266/`. Screenshots: `shipment-cost-quantity.png`, `container-calendar-popover.png`, `container-dates-selected-final.png` in that run directory.
+- Harness gap found during QA: the bulk DateInput keeps a hidden calendar with identical day labels. Browser date clicks must target the visible per-container popover by its accessible label; a global day selector can click the hidden calendar at (0,0) and produce a false drawer-dismissal result.

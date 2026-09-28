@@ -11,6 +11,7 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { formatVndAmount } from '../config/currencies.js';
+import { costUnitPrice } from '../config/shipment-cost-amount.js';
 import {
   costLineFormValues,
   useSaveShipmentCostLines,
@@ -98,6 +99,8 @@ export function ShipmentCostPanel({
           .get(cost.costCategoryId)
           ?.name.toLocaleUpperCase('vi') ?? '—',
       name: cost.name,
+      quantity: String(cost.quantity ?? 1),
+      unitPrice: money(costUnitPrice(cost)),
       amount: money(cost.amount),
       nature: cost.costNature ?? 'Standard',
       note: cost.note || null,

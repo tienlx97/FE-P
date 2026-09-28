@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { costLineTotal, costUnitPrice } from '../config/shipment-cost-amount.js';
 import { shipmentCostLineSchema } from '../config/shipment-schema.js';
 import {
   costLineFormValues,
@@ -19,6 +20,7 @@ function emptyValues(costCategoryId = '') {
     costCategoryId,
     name: '',
     amount: /** @type {number} */ (/** @type {unknown} */ (undefined)),
+    quantity: 1,
     note: '',
     providerCustomerId: '',
     invoiceNumber: '',
@@ -54,6 +56,9 @@ export function useShipmentCostLineForm({
       : emptyValues(initialCostCategoryId),
   );
   const [values, setValues] = useState(initialValues);
+  const [unitPrice, setUnitPriceValue] = useState(() =>
+    costLine ? costUnitPrice(costLine) : undefined,
+  );
   const [fieldErrors, setFieldErrors] = useState(
     /** @type {Partial<Record<CostLineField, string>>} */ ({}),
   );
@@ -73,6 +78,21 @@ export function useShipmentCostLineForm({
     setValues((current) => ({ ...current, [field]: value }));
     setFieldErrors((current) =>
       current[field] ? { ...current, [field]: undefined } : current,
+    );
+  }
+
+  /** @param {number | undefined} quantity */
+  function setQuantity(quantity) {
+    setField('quantity', /** @type {number} */ (quantity));
+    setField('amount', /** @type {number} */ (costLineTotal(quantity, unitPrice)));
+  }
+
+  /** @param {number | undefined} nextUnitPrice */
+  function setUnitPrice(nextUnitPrice) {
+    setUnitPriceValue(nextUnitPrice);
+    setField(
+      'amount',
+      /** @type {number} */ (costLineTotal(values.quantity, nextUnitPrice)),
     );
   }
 
@@ -123,6 +143,9 @@ export function useShipmentCostLineForm({
   return {
     values,
     setField,
+    unitPrice,
+    setUnitPrice,
+    setQuantity,
     fieldStatuses,
     submitError,
     isDirty,

@@ -642,6 +642,7 @@ export {};
  * @property {string} costCategoryId
  * @property {string} name
  * @property {number} amount
+ * @property {number} [quantity] - defaults to 1 for older API responses
  * @property {string | null} note
  * @property {string | null} providerCustomerId
  * @property {string | null} invoiceNumber - "Số hoá đơn", optional
@@ -654,6 +655,7 @@ export {};
  * @property {string} costCategoryId
  * @property {string} name
  * @property {number} amount
+ * @property {number} quantity
  * @property {string} note
  * @property {string} providerCustomerId
  * @property {string} invoiceNumber
@@ -667,6 +669,7 @@ export {};
  * @property {string} costCategoryId
  * @property {string} name
  * @property {number | undefined} amount
+ * @property {number} quantity
  * @property {string} note
  * @property {string} providerCustomerId
  * @property {string} invoiceNumber

@@ -39,6 +39,7 @@ function toCostsRequestBody(costLines) {
     CostCategoryId: cost.costCategoryId,
     Name: cost.name,
     Amount: cost.amount,
+    Quantity: cost.quantity ?? 1,
     Note: cost.note || null,
     ProviderCustomerId: cost.providerCustomerId || null,
     InvoiceNumber: cost.invoiceNumber || null,
