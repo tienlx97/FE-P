@@ -1,12 +1,19 @@
 # Progress Log
 
+## 2026-09-28 — Readable "Timeline & lịch tàu", task 2
+
+- New shared `MetaEventTimeline` (vertical rail, state dots done / next / overdue / upcoming, plan-vs-actual note, tags). `buildPhysicalTimeline` merges the planned/estimated and actual facts of one event (event + leg + place) into one item with its delay, one timeline per container ("Tàu · toàn lô" first) switched by `MetaTabNav`, and drops a voyage number the vessel name already carries.
+- The tab now puts the timeline beside a side column from 1100px: a compact "Lịch tàu" (current value, "Ban đầu" only when moved, ATD/ATA pills), B/L as steps and transshipment legs as lines. Carrier tracking, free time and the schedule history (as a timeline, newest first) run full width. Below 640px the timeline moves the date into the event text so notes fit.
+- Before/after screenshots at 1440 px and 390 px: `harness/runs/20260928-container-drawers-timeline/` (`before/schedule.png`, `schedule.png`, `schedule-mobile*.png`).
+- `./harness/verify.sh` passed: `harness/runs/20260928-084351-7732/` (same tree as this commit).
+
 ## 2026-09-28 — Container drawers and full Excel import, task 1
 
 - One column list (`BULK_CONTAINER_COLUMNS`, 14 fields) now drives the Excel template, the import and "Xuất Excel", so an export imports back. The template gains "Hướng dẫn" and "Nhà vận chuyển" sheets. Carrier names match the supplier catalog case-insensitively. Excel serial dates/times, `dd/mm/yyyy`, `H:mm`/`07h45` and `3,900` / `3.900,5` weights are normalized. Rows are validated with `shipmentVgmSchema` plus batch rules, and each error is shown on its cell.
 - "Thêm danh sách container" and "Thêm/Sửa container" are Meta drawers (`MetaFormDrawer`); the old dialogs are deleted and every caller (shipment detail, contract Shipment tab, related entities) uses `ShipmentVgmDrawer`. The bulk drawer edits identity columns inline, shows each row's VGM state, opens a row's weights/times/note below the table and can fill a carrier or packing date into every row. Field groups were split for reuse (`ShipmentVgmContainerFields` / `DeclarationFields` / `AdditionalFields`). Needs BE `bulk-container-full-fields`.
 - Browser check (local API + MySQL): a 3-row Excel file imported with the carrier resolved and VGM computed; row 3 (unknown carrier, 4 of 5 weights) was blocked with inline errors; after deleting it, 2 containers saved with every field. Screenshots: `harness/runs/20260928-container-drawers-timeline/` (`bulk-*.png`, `single-drawer.png`, `vgm-after-import.png`).
 - `./harness/verify.sh` passed: `harness/runs/20260928-084351-7732/`.
-- Harness gap: the StyleX lint autofix split a `borderWidth: calc(... * 2)` shorthand on spaces into broken longhands, which only failed at dev-server CSS build time; the gate's build did not catch it before the fix (fixed by writing longhands).
+- Harness gap: the StyleX lint autofix split a `borderWidth: calc(... * 2)` shorthand on spaces into broken longhands, which surfaced as a StyleX PostCSS error in the dev server (fixed by writing longhands). No lint rule flags a shorthand holding `calc()`.
 
 ## 2026-09-28 — Settlement counts only annexes signed by both parties
 

@@ -31,6 +31,7 @@ export { MetaContractInfoGrid } from './contract-info-grid.jsx';
 export { MetaCostPanel } from './cost-panel.jsx';
 export { MetaCountBadge } from './count-badge.jsx';
 export { MetaDrawerHeader } from './drawer-header.jsx';
+export { MetaEventTimeline } from './event-timeline.jsx';
 export {
   MetaFormCard,
   MetaFormSection,

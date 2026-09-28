@@ -7,6 +7,7 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 import {
   CalendarClock,
   CalendarRange,
@@ -18,6 +19,7 @@ import {
 
 import {
   MetaCompactTable,
+  MetaEventTimeline,
   MetaPill,
   MetaShipmentSection,
 } from '@/shared/components/custom/meta/index.js';
@@ -54,9 +56,34 @@ function CarrierSourceTag() {
 }
 
 /**
- * Shipment detail "Lịch tàu & Free time" tab: the schedule (original /
- * current / actual), each container's event dates and free-time clocks,
- * the carrier tracking, and the schedule history. Spec
+ * One label / value line of a side card: the label on the left, the value
+ * (and its notes) right-aligned, a hairline under every line but the last.
+ * @param {{ label: string, children: import('react').ReactNode }} props
+ */
+function InfoLine({ label, children }) {
+  return (
+    <HStack
+      hAlign="between"
+      vAlign="start"
+      gap={3}
+      wrap="nowrap"
+      xstyle={styles.infoLine}
+    >
+      <Text color="secondary" xstyle={styles.infoLabel}>
+        {label}
+      </Text>
+      <VStack gap={1} hAlign="end" xstyle={styles.infoValue}>
+        {children}
+      </VStack>
+    </HStack>
+  );
+}
+
+/**
+ * Shipment detail "Timeline & lịch tàu" tab. Wide screens: the physical
+ * timeline on the left; the vessel schedule, B/L steps and transshipment
+ * legs in a side column. Then, full width: carrier tracking, per-container
+ * free time and the schedule history (as a timeline). Spec
  * `docs/shipment-journey-incoterms.md` §4, `docs/carrier-tracking-integration-plan.md`.
  * @param {{
  *   contractId: string,
@@ -117,41 +144,46 @@ export function ShipmentSchedulePanel({
     etd: schedule.actualDeparture,
     eta: schedule.actualArrival,
   };
-  const scheduleRows = SCHEDULE_FIELDS.map(([field, label]) => {
+  const scheduleLines = SCHEDULE_FIELDS.map(([field, label]) => {
+    const current = formatScheduleValue(field, schedule.current[field]);
+    const first = formatScheduleValue(field, original[field]);
     const isChanged = original[field] !== schedule.current[field];
-    return {
-      id: field,
-      cells: {
-        label: <Text weight="semibold">{label}</Text>,
-        original: (
-          <Text type="code" color="secondary">
-            {formatScheduleValue(field, original[field])}
+    const actualValue =
+      field === 'etd' || field === 'eta' ? (actual[field] ?? null) : null;
+    return (
+      <InfoLine key={field} label={label}>
+        <Text type="code" weight="bold">
+          {current}
+        </Text>
+        {isChanged ? (
+          <Text size="sm" type="code" color="meta-subtle">
+            Ban đầu: {first}
           </Text>
-        ),
-        current: (
-          <Text type="code" weight={isChanged ? 'bold' : 'normal'}>
-            {formatScheduleValue(field, schedule.current[field])}
-          </Text>
-        ),
-        actual:
-          field === 'etd' || field === 'eta' ? (
-            <HStack gap={1.5} vAlign="center">
-              <Text type="code" weight="bold">
-                {formatDisplayDate(actual[field] ?? undefined)}
-              </Text>
-              {isFromCarrier({
-                field: field === 'etd' ? 'ActualDeparture' : 'ActualArrival',
-                value: actual[field],
-              }) ? (
-                <CarrierSourceTag />
-              ) : null}
-            </HStack>
-          ) : null,
-      },
-    };
+        ) : null}
+        {actualValue ? (
+          <HStack gap={1.5} vAlign="center" wrap="nowrap">
+            <MetaPill
+              label={`${field === 'etd' ? 'ATD' : 'ATA'} ${formatDisplayDate(actualValue)}`}
+              tone="success"
+              size="sm"
+              hasDot
+            />
+            {isFromCarrier({
+              field: field === 'etd' ? 'ActualDeparture' : 'ActualArrival',
+              value: actualValue,
+            }) ? (
+              <CarrierSourceTag />
+            ) : null}
+          </HStack>
+        ) : null}
+      </InfoLine>
+    );
   });
 
-  const dateFields = containerDateFields(incoterm, schedule.destinationFreeTime);
+  const dateFields = containerDateFields(
+    incoterm,
+    schedule.destinationFreeTime,
+  );
   const containerRows = (journey?.containerFreeTime ?? []).map((container) => ({
     id: container.containerId,
     cells: {
@@ -204,126 +236,166 @@ export function ShipmentSchedulePanel({
 
   const blSteps = billOfLadingSteps(schedule.documents);
   const blDone = blSteps.filter((step) => step.date).length;
+  const firstOpenStep = blSteps.findIndex((step) => !step.date);
   const legs = schedule.transshipmentLegs ?? [];
-  /** @param {string | null} date */
-  const dateCell = (date) => (
-    <Text type="code" color="secondary">
-      {formatDisplayDate(date ?? undefined)}
-    </Text>
-  );
-  const legRows = legs.map((leg, index) => ({
-    id: `${index}-${leg.port}`,
-    cells: {
-      no: (
-        <Text color="secondary" hasTabularNumbers>
-          {index + 1}
-        </Text>
-      ),
-      port: <Text weight="semibold">{leg.port}</Text>,
-      vessel: (
-        <Text size="sm">
-          {[leg.vesselName, leg.voyageNumber].filter(Boolean).join(' // ') || '—'}
-        </Text>
-      ),
-      arrival: (
-        <VStack gap={0.5}>
-          {dateCell(leg.ata || leg.eta)}
-          <HStack gap={1.5} vAlign="center">
-            <Text size="sm" color="meta-subtle">
-              {leg.ata ? 'ATA' : 'ETA'}
-            </Text>
-            {isFromCarrier({ field: 'TransshipmentAta', value: leg.ata, port: leg.port }) ? (
-              <CarrierSourceTag />
-            ) : null}
-          </HStack>
-        </VStack>
-      ),
-      departure: (
-        <VStack gap={0.5}>
-          {dateCell(leg.atd || leg.etd)}
-          <HStack gap={1.5} vAlign="center">
-            <Text size="sm" color="meta-subtle">
-              {leg.atd ? 'ATD' : 'ETD'}
-            </Text>
-            {isFromCarrier({ field: 'TransshipmentAtd', value: leg.atd, port: leg.port }) ? (
-              <CarrierSourceTag />
-            ) : null}
-          </HStack>
-        </VStack>
-      ),
-    },
-  }));
-
-  const revisionRows = schedule.revisions.map((revision) => ({
-    id: revision.id,
-    cells: {
-      noticeOn: (
-        <Text type="code" color="secondary">
-          {formatDisplayDate(revision.noticeOn)}
-        </Text>
-      ),
-      reason: (
-        <MetaPill
-          label={labelForScheduleChangeReason(revision.reason)}
-          tone={revision.reason === 'Edited' ? 'neutral' : 'warning'}
-          size="sm"
-        />
-      ),
-      changes: (
-        <VStack gap={0.5}>
-          {revisionChanges(revision).map((change) => (
-            <Text key={change} size="sm">
-              {change}
-            </Text>
-          ))}
-        </VStack>
-      ),
-      note: (
-        <Text size="sm" color="secondary">
-          {revision.note ?? '—'}
-        </Text>
-      ),
-    },
-  }));
 
   return (
     <VStack gap={4} hAlign="stretch">
-      <ShipmentPhysicalTimeline contractId={contractId} shipmentId={shipmentId} />
-      <MetaShipmentSection
-        icon={CalendarClock}
-        title="Lịch tàu"
-        subtitle="Ban đầu = lúc nhận booking · Hiện tại = thông báo mới nhất · API = do hãng tàu báo"
-        pill={
-          summary.departureDelayDays
-            ? {
-                label: `ETD trễ ${summary.departureDelayDays} ngày · dời ${summary.etdChangeCount} lần`,
-                tone: 'warning',
-              }
-            : { label: 'Đúng lịch', tone: 'success', hasDot: true }
-        }
-        actions={
-          canEdit ? (
-            <Button
-              label="Cập nhật lịch tàu"
-              variant="primary"
-              size="sm"
-              icon={<Icon icon={CalendarClock} size="sm" />}
-              onClick={onUpdateSchedule}
+      <HStack gap={4} vAlign="start" xstyle={styles.split}>
+        <VStack gap={4} hAlign="stretch" xstyle={styles.main}>
+          <ShipmentPhysicalTimeline
+            contractId={contractId}
+            shipmentId={shipmentId}
+          />
+        </VStack>
+
+        <VStack gap={4} hAlign="stretch" xstyle={styles.side}>
+          <MetaShipmentSection
+            icon={CalendarClock}
+            title="Lịch tàu"
+            subtitle="Hiện tại · ban đầu khi đã dời · thực tế"
+            pill={
+              summary.departureDelayDays
+                ? {
+                    label: `ETD trễ ${summary.departureDelayDays} ngày · dời ${summary.etdChangeCount} lần`,
+                    tone: 'warning',
+                  }
+                : { label: 'Đúng lịch', tone: 'success', hasDot: true }
+            }
+            actions={
+              canEdit ? (
+                <Button
+                  label="Cập nhật"
+                  variant="primary"
+                  size="sm"
+                  icon={<Icon icon={CalendarClock} size="sm" />}
+                  onClick={onUpdateSchedule}
+                />
+              ) : null
+            }
+          >
+            <VStack gap={0} hAlign="stretch">
+              {scheduleLines}
+            </VStack>
+          </MetaShipmentSection>
+
+          <MetaShipmentSection
+            icon={FileText}
+            title="Chứng từ B/L"
+            subtitle={
+              [
+                labelForBillOfLadingType(schedule.documents?.billOfLadingType),
+                schedule.documents?.blReleaseReference,
+              ]
+                .filter(Boolean)
+                .join(' · ') || undefined
+            }
+            pill={{
+              label: `${blDone}/${blSteps.length} bước`,
+              tone: blDone === blSteps.length ? 'success' : 'neutral',
+              hasDot: blDone === blSteps.length,
+            }}
+            actions={
+              canEdit ? (
+                <Button
+                  label="Cập nhật"
+                  variant="secondary"
+                  size="sm"
+                  icon={<Icon icon={FileText} size="sm" />}
+                  onClick={onEditDocuments}
+                />
+              ) : null
+            }
+          >
+            <MetaEventTimeline
+              emptyLabel="Chưa có bước B/L."
+              items={blSteps.map((step, index) => ({
+                id: step.key,
+                title: step.label,
+                state: step.date
+                  ? 'done'
+                  : index === firstOpenStep
+                    ? 'next'
+                    : 'upcoming',
+                date: step.date ? formatDisplayDate(step.date) : 'Chưa có',
+              }))}
             />
-          ) : null
-        }
-      >
-        <MetaCompactTable
-          columns={[
-            { key: 'label', header: 'Mốc' },
-            { key: 'original', header: 'Ban đầu' },
-            { key: 'current', header: 'Hiện tại' },
-            { key: 'actual', header: 'Thực tế (ATD / ATA)' },
-          ]}
-          rows={scheduleRows}
-          emptyLabel="Chưa có lịch tàu."
-        />
-      </MetaShipmentSection>
+          </MetaShipmentSection>
+
+          <MetaShipmentSection
+            icon={Split}
+            title="Chuyển tải"
+            subtitle={
+              legs.length > 0
+                ? `${legs.length} cảng chuyển tải`
+                : 'Đi thẳng — không chuyển tải'
+            }
+            actions={
+              canEdit ? (
+                <Button
+                  label="Sửa"
+                  variant="secondary"
+                  size="sm"
+                  icon={<Icon icon={Split} size="sm" />}
+                  onClick={onEditTransshipment}
+                />
+              ) : null
+            }
+          >
+            {legs.length === 0 ? (
+              <Text color="secondary">Tàu đi thẳng từ POL đến POD.</Text>
+            ) : (
+              <VStack gap={0} hAlign="stretch">
+                {legs.map((leg, index) => {
+                  const arrival = leg.ata || leg.eta;
+                  const departure = leg.atd || leg.etd;
+                  return (
+                    <InfoLine
+                      key={`${index}-${leg.port}`}
+                      label={`${index + 1}. ${leg.port}`}
+                    >
+                      <Text size="sm">
+                        {[leg.vesselName, leg.voyageNumber]
+                          .filter(Boolean)
+                          .join(' / ') || 'Chưa có tàu nối'}
+                      </Text>
+                      <HStack
+                        gap={1.5}
+                        vAlign="center"
+                        wrap="wrap"
+                        hAlign="end"
+                      >
+                        <MetaPill
+                          label={`${leg.ata ? 'ATA' : 'ETA'} ${arrival ? formatDisplayDate(arrival) : '—'}`}
+                          tone={leg.ata ? 'success' : 'neutral'}
+                          size="sm"
+                        />
+                        <MetaPill
+                          label={`${leg.atd ? 'ATD' : 'ETD'} ${departure ? formatDisplayDate(departure) : '—'}`}
+                          tone={leg.atd ? 'success' : 'neutral'}
+                          size="sm"
+                        />
+                        {isFromCarrier({
+                          field: 'TransshipmentAta',
+                          value: leg.ata,
+                          port: leg.port,
+                        }) ||
+                        isFromCarrier({
+                          field: 'TransshipmentAtd',
+                          value: leg.atd,
+                          port: leg.port,
+                        }) ? (
+                          <CarrierSourceTag />
+                        ) : null}
+                      </HStack>
+                    </InfoLine>
+                  );
+                })}
+              </VStack>
+            )}
+          </MetaShipmentSection>
+        </VStack>
+      </HStack>
 
       <ShipmentCarrierTrackingSection
         contractId={contractId}
@@ -331,78 +403,6 @@ export function ShipmentSchedulePanel({
         legs={legs}
         canEdit={canEdit}
       />
-
-      <MetaShipmentSection
-        icon={FileText}
-        title="Chứng từ B/L"
-        subtitle={[
-          labelForBillOfLadingType(schedule.documents?.billOfLadingType),
-          schedule.documents?.blReleaseReference,
-        ]
-          .filter(Boolean)
-          .join(' · ')}
-        pill={{
-          label: `${blDone}/${blSteps.length} bước`,
-          tone: blDone === blSteps.length ? 'success' : 'neutral',
-          hasDot: blDone === blSteps.length,
-        }}
-        actions={
-          canEdit ? (
-            <Button
-              label="Cập nhật B/L"
-              variant="secondary"
-              size="sm"
-              icon={<Icon icon={FileText} size="sm" />}
-              onClick={onEditDocuments}
-            />
-          ) : null
-        }
-      >
-        <HStack gap={2} wrap="wrap">
-          {blSteps.map((step, index) => (
-            <MetaPill
-              key={step.key}
-              label={`${index + 1}. ${step.label}: ${step.date ? formatDisplayDate(step.date) : 'chưa'}`}
-              tone={step.date ? 'success' : 'neutral'}
-              hasDot={Boolean(step.date)}
-              hasBorder
-            />
-          ))}
-        </HStack>
-      </MetaShipmentSection>
-
-      <MetaShipmentSection
-        icon={Split}
-        title="Chuyển tải"
-        subtitle={
-          legs.length > 0
-            ? `${legs.length} cảng chuyển tải`
-            : 'Đi thẳng — chưa có chặng chuyển tải'
-        }
-        actions={
-          canEdit ? (
-            <Button
-              label="Sửa chuyển tải"
-              variant="secondary"
-              size="sm"
-              icon={<Icon icon={Split} size="sm" />}
-              onClick={onEditTransshipment}
-            />
-          ) : null
-        }
-      >
-        <MetaCompactTable
-          columns={[
-            { key: 'no', header: '#', align: 'center' },
-            { key: 'port', header: 'Cảng' },
-            { key: 'vessel', header: 'Tàu / chuyến nối', isWrapping: true },
-            { key: 'arrival', header: 'Đến' },
-            { key: 'departure', header: 'Rời' },
-          ]}
-          rows={legRows}
-          emptyLabel="Đi thẳng."
-        />
-      </MetaShipmentSection>
 
       {tracksOriginFreeTime(incoterm) || tracksDestinationFreeTime(incoterm) ? (
         <MetaShipmentSection
@@ -440,7 +440,7 @@ export function ShipmentSchedulePanel({
               { key: 'clocks', header: 'Free time', isWrapping: true },
             ]}
             rows={containerRows}
-            emptyLabel="Chưa có container — thêm ở tab VGM."
+            emptyLabel="Chưa có container — thêm ở tab Container & VGM."
           />
         </MetaShipmentSection>
       ) : null}
@@ -448,19 +448,70 @@ export function ShipmentSchedulePanel({
       <MetaShipmentSection
         icon={History}
         title="Lịch sử lịch tàu"
-        subtitle="Mỗi lần ETD / ETA / cut-off / tàu thay đổi"
+        subtitle="Mỗi lần ETD / ETA / cut-off / tàu thay đổi, mới nhất trước"
+        pill={{
+          label: `${schedule.revisions.length} lần thay đổi`,
+          tone: 'neutral',
+        }}
       >
-        <MetaCompactTable
-          columns={[
-            { key: 'noticeOn', header: 'Ngày thông báo' },
-            { key: 'reason', header: 'Lý do' },
-            { key: 'changes', header: 'Thay đổi', isWrapping: true },
-            { key: 'note', header: 'Ghi chú', isWrapping: true },
-          ]}
-          rows={revisionRows}
+        <MetaEventTimeline
           emptyLabel="Lịch tàu chưa thay đổi lần nào."
+          items={[...schedule.revisions]
+            .sort((a, b) => b.noticeOn.localeCompare(a.noticeOn))
+            .map((revision) => ({
+              id: revision.id,
+              title: labelForScheduleChangeReason(revision.reason),
+              state: 'done',
+              date: formatDisplayDate(revision.noticeOn),
+              subtitle: revisionChanges(revision).join(' · '),
+              meta: revision.note ?? undefined,
+              tags:
+                revision.reason === 'Edited'
+                  ? undefined
+                  : [{ label: 'Hãng tàu / cảng', tone: 'warning' }],
+            }))}
         />
       </MetaShipmentSection>
     </VStack>
   );
 }
+
+const styles = stylex.create({
+  // Side by side from a laptop width; stacked (timeline first) below.
+  split: {
+    alignItems: {
+      default: 'stretch',
+      '@media (min-width: 1100px)': 'flex-start',
+    },
+    flexDirection: {
+      default: 'column',
+      '@media (min-width: 1100px)': 'row',
+    },
+  },
+  main: {
+    flexBasis: 0,
+    flexGrow: 3,
+    minWidth: 0,
+  },
+  side: {
+    flexBasis: 0,
+    flexGrow: 2,
+    minWidth: 0,
+  },
+  infoLine: {
+    borderBottomColor: 'var(--color-border)',
+    borderBottomStyle: {
+      default: 'solid',
+      ':last-child': 'none',
+    },
+    borderBottomWidth: 'var(--border-width)',
+    paddingBlock: 'var(--spacing-3)',
+  },
+  infoLabel: {
+    flexShrink: 0,
+  },
+  infoValue: {
+    minWidth: 0,
+    textAlign: 'end',
+  },
+});
