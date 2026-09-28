@@ -4,6 +4,10 @@ import { useMemo, useState } from 'react';
 import { MetaPaymentProgressPanel } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import {
+  isContractAnnexFullySigned,
+  sumContractAnnexAdjustments,
+} from '../config/annex-settlement.js';
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
@@ -45,11 +49,7 @@ export function ContractPaymentsPanel({ contract }) {
 
   const annexesQuery = useContractAnnexesQuery(contract.id);
   const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
-  const annexesTotal = annexes.reduce((total, annex) => {
-    if (annex.type === 'AmountIncrease') return total + annex.amount;
-    if (annex.type === 'AmountDecrease') return total - annex.amount;
-    return total;
-  }, 0);
+  const annexesTotal = sumContractAnnexAdjustments(annexes);
   const settlementValue = (contract.contractValue ?? 0) + annexesTotal;
 
   // Settlement bar: original contract value + net annex adjustment. A net
@@ -64,10 +64,9 @@ export function ContractPaymentsPanel({ contract }) {
     ),
     annexPercent: toPercent(Math.abs(annexesTotal)),
     contractLabel: formatMoney(contractValue, contract.currency),
-    annexLabel:
-      annexes.length > 0
-        ? `${annexesTotal >= 0 ? '+' : '-'}${formatMoney(Math.abs(annexesTotal), contract.currency)}`
-        : undefined,
+    annexLabel: annexes.some(isContractAnnexFullySigned)
+      ? `${annexesTotal >= 0 ? '+' : '-'}${formatMoney(Math.abs(annexesTotal), contract.currency)}`
+      : undefined,
   };
 
   const paidSchedules = schedules.filter((schedule) =>

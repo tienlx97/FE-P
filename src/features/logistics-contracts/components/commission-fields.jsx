@@ -24,6 +24,7 @@ import { ReadOnlyLock } from '@/shared/components/read-only-lock.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
+import { sumCommissionAnnexAdjustments } from '../config/annex-settlement.js';
 import { labelForCommissionAnnexType } from '../config/commission-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { useCommissionAnnexesQuery } from '../hooks/use-commission-annexes-query.js';
@@ -124,18 +125,15 @@ export function CommissionFields({
   const annexesQuery = useCommissionAnnexesQuery(commission?.contractId);
   const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
 
-  // "Tổng cộng" = the commission's own (live) `value` plus every annex's
-  // `amount`, signed by its `type` — `AmountIncrease` adds, `AmountDecrease`
-  // subtracts, `InfoChange` doesn't touch the value (matches
+  // "Tổng cộng" = the commission's own (live) `value` plus the signed
+  // `amount` of every annex both parties signed (`annex-settlement.js`) —
+  // `AmountIncrease` adds, `AmountDecrease` subtracts, `InfoChange` doesn't
+  // touch the value (matches
   // `docs/api/Commissions.md`'s note that annexes never mutate the
   // commission's own `Value`, so this total is a display-only rollup, not
   // something the backend also computes). Reading `values.value` (not the
   // stale `commission.value`) keeps the total live while editing.
-  const annexesTotal = annexes.reduce((total, annex) => {
-    if (annex.type === 'AmountIncrease') return total + annex.amount;
-    if (annex.type === 'AmountDecrease') return total - annex.amount;
-    return total;
-  }, 0);
+  const annexesTotal = sumCommissionAnnexAdjustments(annexes);
   const grandTotal = (values.value ?? 0) + annexesTotal;
 
   return (

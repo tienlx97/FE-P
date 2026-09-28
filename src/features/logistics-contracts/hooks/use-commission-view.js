@@ -4,6 +4,11 @@ import { CircleCheck, ClipboardClock, Clock, FileCheck2 } from 'lucide-react';
 
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import {
+  isCommissionAnnexFullySigned,
+  sumCommissionAnnexAdjustments,
+  sumContractAnnexAdjustments,
+} from '../config/annex-settlement.js';
 import { allocateCommissionPayments } from '../config/commission-payment-allocation.js';
 import { formatMoney } from '../config/currencies.js';
 import { useCommissionAnnexesQuery } from './use-commission-annexes-query.js';
@@ -29,22 +34,12 @@ function shortCondition(value) {
 }
 
 /**
- * @param {{ type: string, amount: number }[]} annexes
- */
-function annexAdjustment(annexes) {
-  return annexes.reduce((sum, annex) => {
-    if (annex.type === 'AmountIncrease') return sum + annex.amount;
-    if (annex.type === 'AmountDecrease') return sum - annex.amount;
-    return sum;
-  }, 0);
-}
-
-/**
  * A contract's `Commission` (at most one) plus everything the Meta
  * commission cards show — shared by the contract Commission tab and the
  * commission detail page:
  * - `metrics` (for `MetaMetricsCard`): "Hoa hồng quyết toán" (value ±
- *   commission annexes, Gốc / PL split bar,
+ *   commission annexes both parties signed, `annex-settlement.js`;
+ *   Gốc / PL split bar,
  *   display-only like the overview's "Quyết toán" — annexes never change
  *   the stored value, `docs/api/Commissions.md`; % of the contract's own
  *   settlement), "Đã chi trả", "Còn phải chi".
@@ -78,7 +73,7 @@ export function useCommissionView(contract) {
 
   const contractSettlement =
     (contract.contractValue ?? 0) +
-    annexAdjustment(
+    sumContractAnnexAdjustments(
       contractAnnexesQuery.data?.success
         ? contractAnnexesQuery.data.annexes
         : [],
@@ -95,7 +90,10 @@ export function useCommissionView(contract) {
   const commissionAnnexes = commissionAnnexesQuery.data?.success
     ? commissionAnnexesQuery.data.annexes
     : [];
-  const adjustment = annexAdjustment(commissionAnnexes);
+  const adjustment = sumCommissionAnnexAdjustments(commissionAnnexes);
+  const signedAnnexCount = commissionAnnexes.filter(
+    isCommissionAnnexFullySigned,
+  ).length;
   const settledTotal = total + adjustment;
   const pct = (/** @type {number} */ value) =>
     settledTotal > 0 ? Math.round((value / settledTotal) * 1000) / 10 : 0;
@@ -165,10 +163,10 @@ export function useCommissionView(contract) {
           adjustment > 0 ? `${basePercent}% hoa hồng quyết toán` : undefined,
       },
       end:
-        commissionAnnexes.length > 0
+        signedAnnexCount > 0
           ? {
               dotTone: 'success',
-              value: `${adjustment >= 0 ? '+' : '-'}${commissionAnnexes.length} PL: ${formatMoney(Math.abs(adjustment))}`,
+              value: `${adjustment >= 0 ? '+' : '-'}${signedAnnexCount} PL: ${formatMoney(Math.abs(adjustment))}`,
               tone: 'success',
             }
           : { hint: `(${rowCount} đợt)` },

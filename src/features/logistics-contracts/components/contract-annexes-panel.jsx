@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import { sumContractAnnexAdjustments } from '../config/annex-settlement.js';
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
 import {
@@ -72,11 +73,7 @@ export function ContractAnnexesPanel({ contract, onAddAnnex, onEditAnnex }) {
     setDeletingAnnex(null);
   }
 
-  const annexesTotal = annexes.reduce((total, annex) => {
-    if (annex.type === 'AmountIncrease') return total + annex.amount;
-    if (annex.type === 'AmountDecrease') return total - annex.amount;
-    return total;
-  }, 0);
+  const annexesTotal = sumContractAnnexAdjustments(annexes);
   const contractGrandTotal = (contract.contractValue ?? 0) + annexesTotal;
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').ContractAnnex & Record<string, unknown>>[]} */

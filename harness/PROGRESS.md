@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-28 — Settlement counts only annexes signed by both parties
+
+- `config/annex-settlement.js` holds the rule: an annex counts toward "Giá trị quyết toán" (contract) or "Hoa hồng quyết toán" (commission) only when both parties signed it. It replaces the eight duplicate inline sums (overview, payments, expanded details, annexes panels, commission fields/section/view). The "+N PL" labels and the Phụ lục tab's increase/decrease cards count only fully signed annexes. Half-signed annexes remain in the lists.
+- The contract list uses BE `settlementValue`, which applies the same rule (BE `signed-annex-settlement`).
+- Browser check against a local API + MySQL with seeded contract 26DN-SAMPLE01 (185,000 USD): with a signed +10,000 annex and a half-signed +50,000 annex, detail, payments and list all show 195,000; commission 3,500 with a signed +1,000 and a half-signed +3,000 shows 4,500. Screenshots: `harness/runs/20260928-signed-annex-settlement/`.
+- `./harness/verify.sh` passed: `harness/runs/20260928-075525-3631/`.
+- Harness gap: the same annex sum had been copied into eight files; the shared helper and its unit test now own the rule.
+
 ## 2026-09-27 — Complete Shipment overview and drawer fields
 
 - Compared Shipment API response, drawer fields and the detail overview. The overview now displays customs brokers, trucking providers, CY cut-off, ordered transshipment ports, ATD/ATA, configured free time, shipment type, declaration weight when VGM exists, and the manual empty-container return deadline when present. Delivery location shows an empty state instead of disappearing.

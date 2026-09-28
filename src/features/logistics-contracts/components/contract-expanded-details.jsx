@@ -23,6 +23,7 @@ import { createRowExpansionInteractionPlugin } from '@/shared/components/expanda
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 
+import { sumContractAnnexAdjustments } from '../config/annex-settlement.js';
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
@@ -145,11 +146,7 @@ export function ContractExpandedDetails({
 
   const annexesQuery = useContractAnnexesQuery(contract.id);
   const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
-  const annexesTotal = annexes.reduce((total, annex) => {
-    if (annex.type === 'AmountIncrease') return total + annex.amount;
-    if (annex.type === 'AmountDecrease') return total - annex.amount;
-    return total;
-  }, 0);
+  const annexesTotal = sumContractAnnexAdjustments(annexes);
   const contractGrandTotal = (contract.contractValue ?? 0) + annexesTotal;
 
   const shipmentsQuery = useShipmentsQuery(contract.id);
