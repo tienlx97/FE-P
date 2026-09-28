@@ -545,7 +545,7 @@ const styles = stylex.create({
     paddingBlock: 'var(--spacing-3)',
     paddingInline: 'var(--spacing-0-5)',
   },
-  // Give narrow viewports a complete card, while wider screens can show more detail.
+  // Keep each leg compact while leaving room for its separate edit control.
   step: {
     backgroundColor: 'var(--color-background-card)',
     borderRadius: 'var(--radius-container)',
@@ -558,7 +558,7 @@ const styles = stylex.create({
     padding: 'var(--spacing-4)',
     position: 'relative',
     width:
-      'clamp(calc(var(--spacing-10) * 7), 28vw, calc(var(--spacing-10) * 12))',
+      'clamp(calc(var(--spacing-10) * 7), 22vw, calc(var(--spacing-10) * 8))',
   },
   stepBadges: {
     minWidth: 0,
