@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-28 — Container drawers and full Excel import, task 1
+
+- One column list (`BULK_CONTAINER_COLUMNS`, 14 fields) now drives the Excel template, the import and "Xuất Excel", so an export imports back. The template gains "Hướng dẫn" and "Nhà vận chuyển" sheets. Carrier names match the supplier catalog case-insensitively. Excel serial dates/times, `dd/mm/yyyy`, `H:mm`/`07h45` and `3,900` / `3.900,5` weights are normalized. Rows are validated with `shipmentVgmSchema` plus batch rules, and each error is shown on its cell.
+- "Thêm danh sách container" and "Thêm/Sửa container" are Meta drawers (`MetaFormDrawer`); the old dialogs are deleted and every caller (shipment detail, contract Shipment tab, related entities) uses `ShipmentVgmDrawer`. The bulk drawer edits identity columns inline, shows each row's VGM state, opens a row's weights/times/note below the table and can fill a carrier or packing date into every row. Field groups were split for reuse (`ShipmentVgmContainerFields` / `DeclarationFields` / `AdditionalFields`). Needs BE `bulk-container-full-fields`.
+- Browser check (local API + MySQL): a 3-row Excel file imported with the carrier resolved and VGM computed; row 3 (unknown carrier, 4 of 5 weights) was blocked with inline errors; after deleting it, 2 containers saved with every field. Screenshots: `harness/runs/20260928-container-drawers-timeline/` (`bulk-*.png`, `single-drawer.png`, `vgm-after-import.png`).
+- `./harness/verify.sh` passed: `harness/runs/20260928-084351-7732/`.
+- Harness gap: the StyleX lint autofix split a `borderWidth: calc(... * 2)` shorthand on spaces into broken longhands, which only failed at dev-server CSS build time; the gate's build did not catch it before the fix (fixed by writing longhands).
+
 ## 2026-09-28 — Settlement counts only annexes signed by both parties
 
 - `config/annex-settlement.js` holds the rule: an annex counts toward "Giá trị quyết toán" (contract) or "Hoa hồng quyết toán" (commission) only when both parties signed it. It replaces the eight duplicate inline sums (overview, payments, expanded details, annexes panels, commission fields/section/view). The "+N PL" labels and the Phụ lục tab's increase/decrease cards count only fully signed annexes. Half-signed annexes remain in the lists.

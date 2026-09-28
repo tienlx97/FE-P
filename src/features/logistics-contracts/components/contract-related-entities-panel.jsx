@@ -7,7 +7,7 @@ import { ContractExpandedDetails } from './contract-expanded-details.jsx';
 import { ContractPrivateInfoDetailDialog } from './contract-private-info-detail-dialog.jsx';
 import { PaymentScheduleFormDialog } from './payment-schedule-form-dialog.jsx';
 import { ShipmentFormDrawer } from './shipment-form-drawer.jsx';
-import { ShipmentVgmFormDialog } from './shipment-vgm-form-dialog.jsx';
+import { ShipmentVgmDrawer } from './shipment-vgm-drawer.jsx';
 
 /**
  * The "Phụ lục"/"Thanh toán"/"Liên quan"/"Xem đầy đủ" tab bodies for one
@@ -163,16 +163,12 @@ export function ContractRelatedEntitiesPanel({
       ) : null}
 
       {vgmDialog ? (
-        <ShipmentVgmFormDialog
+        <ShipmentVgmDrawer
           key={vgmDialog.vgm?.id ?? 'create'}
-          isOpen
-          onOpenChange={(isOpen) => {
-            if (!isOpen) setVgmDialog(null);
-          }}
           contractId={vgmDialog.contractId}
           shipmentId={vgmDialog.shipmentId}
           vgm={vgmDialog.vgm}
-          onSuccess={() => setVgmDialog(null)}
+          onClose={() => setVgmDialog(null)}
         />
       ) : null}
     </>

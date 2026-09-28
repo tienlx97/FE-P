@@ -24,7 +24,7 @@ import {
   useDeleteShipmentVgmMutation,
   useShipmentVgmsQuery,
 } from '../hooks/use-shipment-vgms-query.js';
-import { ShipmentVgmFormDialog } from './shipment-vgm-form-dialog.jsx';
+import { ShipmentVgmDrawer } from './shipment-vgm-drawer.jsx';
 
 /** @param {string | number | null | undefined} value */
 function orDash(value) {
@@ -41,7 +41,7 @@ function orDash(value) {
  * renders inside a `<table>` row-expansion panel (`ContractsList`'s
  * "Selector popover stacking" note — a `*FormDialog` declared inside
  * `renderExpanded` breaks `Selector`'s popover positioning, so the caller
- * must render `ShipmentVgmFormDialog` itself, outside the table). Omit them
+ * must render `ShipmentVgmDrawer` itself, outside the table). Omit them
  * when this renders somewhere without that constraint (not inside any
  * table) and this
  * component owns the add/edit dialog locally. The delete confirmation has no
@@ -86,7 +86,10 @@ export function ShipmentVgmSection({
           __isTotalsRow: true,
           maxGross: vgms.reduce((sum, vgm) => sum + (vgm.maxGross ?? 0), 0),
           tare: vgms.reduce((sum, vgm) => sum + (vgm.tare ?? 0), 0),
-          grossWeight: vgms.reduce((sum, vgm) => sum + (vgm.grossWeight ?? 0), 0),
+          grossWeight: vgms.reduce(
+            (sum, vgm) => sum + (vgm.grossWeight ?? 0),
+            0,
+          ),
           vgm: vgms.reduce((sum, vgm) => sum + (vgm.vgm ?? 0), 0),
         }
       : null;
@@ -273,16 +276,13 @@ export function ShipmentVgmSection({
         onAction={handleConfirmDelete}
       />
 
-      {onAddVgm || onEditVgm ? null : (
-        <ShipmentVgmFormDialog
-          key={localVgmDialog?.vgm?.id ?? 'create'}
-          isOpen={localVgmDialog !== null}
-          onOpenChange={(nextIsOpen) => {
-            if (!nextIsOpen) setLocalVgmDialog(null);
-          }}
+      {onAddVgm || onEditVgm || !localVgmDialog ? null : (
+        <ShipmentVgmDrawer
+          key={localVgmDialog.vgm?.id ?? 'create'}
           contractId={contractId}
           shipmentId={shipmentId}
-          vgm={localVgmDialog?.vgm ?? null}
+          vgm={localVgmDialog.vgm ?? null}
+          onClose={() => setLocalVgmDialog(null)}
         />
       )}
     </VStack>
