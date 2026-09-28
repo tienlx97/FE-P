@@ -16,12 +16,11 @@ import {
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
-import { Typeahead, TypeaheadItem } from '@astryxdesign/core/Typeahead';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { Check, CircleCheck, Plus, ReceiptText, Search } from 'lucide-react';
-import { useId, useMemo, useState } from 'react';
+import { Check, CircleCheck, Plus, ReceiptText, Sparkles } from 'lucide-react';
+import { useId, useState } from 'react';
 
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import {
@@ -37,26 +36,20 @@ import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
-import {
-  groupMeaning,
-  matchingFee,
-  recommendedFees,
-} from '../config/cost-item-templates.js';
+import { groupMeaning, matchingFee } from '../config/cost-item-templates.js';
 import { formatVndAmount } from '../config/currencies.js';
 import {
   useCreateShipmentCostItemTemplateMutation,
   useShipmentCostItemTemplatesQuery,
 } from '../hooks/use-shipment-cost-item-templates-query.js';
 import { useShipmentCostLineForm } from '../hooks/use-shipment-cost-line-form.js';
+import { ShipmentRecommendedFeeDrawer } from './shipment-recommended-fee-drawer.jsx';
 
 // Figma 125:11995 is 640px; widened on request (roomier cards / text).
 const DRAWER_WIDTH = 800;
 const NAME_MAX = 200;
 const NOTE_MAX = 2000;
 const TWO_COLUMNS = { minWidth: 260, max: 2 };
-const EMPTY_TEMPLATES = /** @type {import('../types/index.js').ShipmentCostItemTemplate[]} */ (
-  []
-);
 
 /** Figma 125:12089 — Cost Nature options with their hint line. */
 const COST_NATURES = /** @type {const} */ ([
@@ -72,36 +65,16 @@ const COST_NATURES = /** @type {const} */ ([
   },
 ]);
 
-/** @param {import('../types/index.js').ShipmentCostItemTemplate} fee */
-function feeToItem(fee) {
-  return {
-    id: fee.id,
-    label: fee.name,
-    auxiliaryData: {
-      fee,
-      description: [
-        fee.nameEn,
-        fee.occurrencePoint,
-        fee.defaultCostNature === 'Abnormal' ? 'Abnormal' : null,
-      ]
-        .filter(Boolean)
-        .join(' · '),
-    },
-  };
-}
-
 /**
  * Meta drawer that adds one logistics cost line to a shipment, or edits
  * one (`costLine`) — Figma 125:11995 "Thêm chi phí logistics". Fixed
  * header (code + incoterm), a muted canvas with two boxed sections —
  * "Phân loại" (the 8 LOG groups as selectable cards, Cost Nature as two
  * option cards; each group card shows its plain meaning) and "Khoản chi
- * phí" (name, then a compact typeahead for the group's LOG 01-08 catalog,
- * searchable by Vietnamese name or invoice keyword; picking one fills the
- * name and Cost Nature and shows where it occurs + its classification note
- * — then quantity, unit price, invoice number, provider, note) — a live "after saving" preview,
- * and a fixed footer with the unsaved-changes hint. Closing with changes
- * asks first. Saving resends the shipment's cost list
+ * phí" (name, quantity, unit price, invoice number, provider, note) — a live
+ * "after saving" preview and a fixed footer with the unsaved-changes hint.
+ * A sibling fee drawer can fill the group, name and Cost Nature without
+ * replacing this form. Closing with changes asks first. Saving resends the shipment's cost list
  * (`useShipmentCostLineForm`).
  *
  * @param {{
@@ -144,35 +117,18 @@ export function ShipmentCostLineDrawer({
   const { values, setField, fieldStatuses } = form;
 
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
+  const [isFeePickerOpen, setIsFeePickerOpen] = useState(false);
   const [quickName, setQuickName] = useState('');
   const [quickError, setQuickError] = useState('');
   const templatesQuery = useShipmentCostItemTemplatesQuery();
   const createTemplate = useCreateShipmentCostItemTemplateMutation();
   const templates = templatesQuery.data?.success
     ? templatesQuery.data.costItemTemplates
-    : EMPTY_TEMPLATES;
+    : [];
   const selectedCategory = costCategories.find(
     (category) => category.id === values.costCategoryId,
   );
-  const feeSearchSource = useMemo(() => {
-    const categoryId = selectedCategory?.id;
-    /** @param {string} query */
-    const findItems = (query) =>
-      categoryId
-        ? recommendedFees(templates, categoryId, query).map(feeToItem)
-        : [];
-    return {
-      search: findItems,
-      bootstrap: () => findItems(''),
-    };
-  }, [selectedCategory?.id, templates]);
   const pickedFee = matchingFee(templates, values.costCategoryId, values.name);
-
-  /** @param {import('../types/index.js').ShipmentCostItemTemplate} fee */
-  function pickFee(fee) {
-    setField('name', fee.name.slice(0, NAME_MAX));
-    setField('costNature', fee.defaultCostNature);
-  }
 
   function openQuickAdd() {
     setQuickName(
@@ -464,18 +420,40 @@ export function ShipmentCostLineDrawer({
                         isRequired
                         counter={`${values.name.length}/${NAME_MAX}`}
                       />
-                      <TextInput
-                        label="Tên khoản chi phí"
-                        isLabelHidden
-                        value={values.name}
-                        onChange={(value) =>
-                          setField('name', value.slice(0, NAME_MAX))
-                        }
-                        placeholder="Chọn loại phí bên dưới hoặc tự nhập"
-                        status={fieldStatuses.name}
-                        statusVariant="detached"
-                        width="100%"
-                      />
+                      <HStack gap={2} vAlign="center" wrap="wrap">
+                        <VStack hAlign="stretch" xstyle={styles.nameInput}>
+                          <TextInput
+                            label="Tên khoản chi phí"
+                            isLabelHidden
+                            value={values.name}
+                            onChange={(value) =>
+                              setField('name', value.slice(0, NAME_MAX))
+                            }
+                            placeholder="Nhập tên khoản chi phí"
+                            status={fieldStatuses.name}
+                            statusVariant="detached"
+                            width="100%"
+                          />
+                        </VStack>
+                        <Button
+                          label="Loại phí khuyến nghị"
+                          type="button"
+                          variant="secondary"
+                          icon={<Icon icon={Sparkles} size="sm" />}
+                          onClick={() => setIsFeePickerOpen(true)}
+                          xstyle={styles.recommendationButton}
+                        />
+                      </HStack>
+                      {values.name.trim() && selectedCategory && !pickedFee ? (
+                        <Button
+                          label="Lưu loại phí mới vào danh mục"
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          icon={<Icon icon={Plus} size="sm" />}
+                          onClick={openQuickAdd}
+                        />
+                      ) : null}
                       {pickedFee?.note || pickedFee?.occurrencePoint ? (
                         <Text size="sm" color="secondary">
                           {[pickedFee.occurrencePoint, pickedFee.note]
@@ -483,56 +461,6 @@ export function ShipmentCostLineDrawer({
                             .join(' · ')}
                         </Text>
                       ) : null}
-                    </VStack>
-
-                    <VStack gap={2} hAlign="stretch">
-                      <HStack
-                        hAlign="between"
-                        vAlign="center"
-                        gap={2}
-                        wrap="wrap"
-                      >
-                        <FieldLabel label="Loại phí khuyến nghị" />
-                        <Button
-                          label="Thêm nhanh loại phí"
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          icon={<Icon icon={Plus} size="sm" />}
-                          isDisabled={!selectedCategory}
-                          onClick={openQuickAdd}
-                        />
-                      </HStack>
-                      <Typeahead
-                        key={selectedCategory?.id ?? 'no-category'}
-                        label="Loại phí khuyến nghị"
-                        isLabelHidden
-                        startIcon={Search}
-                        placeholder={
-                          selectedCategory
-                            ? 'Tìm tên phí hoặc từ khóa invoice'
-                            : 'Chọn nhóm chi phí trước'
-                        }
-                        searchSource={feeSearchSource}
-                        value={pickedFee ? feeToItem(pickedFee) : null}
-                        onChange={(item) => {
-                          if (item) pickFee(item.auxiliaryData.fee);
-                          else if (pickedFee) setField('name', '');
-                        }}
-                        renderItem={(item) => (
-                          <TypeaheadItem
-                            item={item}
-                            description={item.auxiliaryData.description}
-                          />
-                        )}
-                        hasEntriesOnFocus
-                        maxMenuItems={8}
-                        debounceMs={0}
-                        isDisabled={!selectedCategory}
-                        disabledMessage="Chọn nhóm chi phí trước"
-                        emptySearchResultsText="Không tìm thấy phí; có thể tự nhập tên ở trên."
-                        width="100%"
-                      />
                     </VStack>
 
                     <Grid columns={TWO_COLUMNS} gap={3}>
@@ -710,6 +638,20 @@ export function ShipmentCostLineDrawer({
         />
       </Drawer>
 
+      {isFeePickerOpen ? (
+        <ShipmentRecommendedFeeDrawer
+          costCategories={costCategories}
+          initialCostCategoryId={values.costCategoryId}
+          onClose={() => setIsFeePickerOpen(false)}
+          onSelect={(fee) => {
+            setField('costCategoryId', fee.costCategoryId);
+            setField('name', fee.name.slice(0, NAME_MAX));
+            setField('costNature', fee.defaultCostNature);
+            setIsFeePickerOpen(false);
+          }}
+        />
+      ) : null}
+
       <CommonDialog
         isOpen={isConfirmingDiscard}
         onOpenChange={(open) => {
@@ -862,6 +804,17 @@ const styles = stylex.create({
     '--meta-field-height': 'var(--spacing-10)',
     // eslint-disable-next-line @stylexjs/valid-styles
     '--meta-field-radius': 'var(--meta-radius-inset)',
+  },
+  nameInput: {
+    flexBasis: 'calc(var(--spacing-10) * 7)',
+    flexGrow: 1,
+    minWidth: 0,
+  },
+  recommendationButton: {
+    backgroundColor: 'var(--meta-blue-active-bg)',
+    borderColor: 'var(--meta-blue-wash-border)',
+    color: 'var(--color-accent)',
+    flexShrink: 0,
   },
   option: {
     backgroundColor: 'var(--color-background-card)',

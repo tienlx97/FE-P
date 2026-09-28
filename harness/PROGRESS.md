@@ -15844,3 +15844,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 
 - Replaced the inline 320px-high recommended-fee list with a Typeahead field. Suggestions open on focus and search Vietnamese names or English invoice keywords; choosing a fee still fills its name and Cost Nature. Manual name entry and quick fee creation remain available.
 - Browser QA on LOG-03 selected “Demurrage tại cảng xuất” via English search and confirmed the name plus Abnormal classification, then checked the open picker at 390px. Screenshots: `harness/runs/20260929-backups-shipment-dense-ui/cost-drawer-typeahead-*.png`. `./harness/verify.sh` passed: `harness/runs/20260929-055022-1490559/`.
+
+## 2026-09-29 — Recommended fee picker drawer
+
+- Moved recommended fee selection out of the cost form. A blue-accented button sits beside “Tên khoản chi phí”; it opens a sibling Meta drawer with LOG-group selection, Vietnamese/English search, blue selected state and amber Abnormal labels. Applying a fee fills the existing form's group, name and Cost Nature without losing other form state. Manual names can still be saved as a new recommendation through a contextual action.
+- Browser QA covered the stacked drawers, LOG-03 demurrage selection, Abnormal prefill, closing the picker without discarding the cost draft, and the 390px layout. Screenshots: `harness/runs/20260929-backups-shipment-dense-ui/recommended-*.png`. Full `./harness/verify.sh` passed: `harness/runs/20260929-060536-1516188/`.
+- Harness gaps found: the first placement was implemented while a material location clarification was still pending; wait for that answer before dependent UI edits. An accidentally empty Button label also escaped lint/typecheck and was caught in the browser accessibility snapshot; add a component-level empty-label check when strengthening UI lint rules.
