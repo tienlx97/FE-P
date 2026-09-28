@@ -28,6 +28,7 @@ import {
 } from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
+import { sumCommissionAnnexAdjustments } from '../config/annex-settlement.js';
 import {
   commissionAnnexTypeOptions,
   labelForCommissionAnnexType,
@@ -107,9 +108,9 @@ function signedAmount(annex) {
 /**
  * "Phụ lục Commission" in the Meta commission drawer (existing commissions
  * only): one card per annex — code, type, signing, signed amount — and the
- * value after annexes in the header (annexes never change the commission's
- * own value, `docs/api/Commissions.md`). "Thêm phụ lục" / "Sửa" open an
- * editor card in place (one at a time) that saves the annex on its own
+ * value after the annexes both parties signed in the header (annexes
+ * never change the commission's own value, `docs/api/Commissions.md`).
+ * "Thêm phụ lục" / "Sửa" open an editor card in place (one at a time) that saves the annex on its own
  * (`useCommissionAnnexForm`), independent of the drawer's form — so it
  * also works in view mode. `variant="card"` renders it as a standalone
  * card for the contract Commission tab instead of a drawer form section.
@@ -130,9 +131,7 @@ export function CommissionAnnexesSection({
   const [editing, setEditing] = useState(/** @type {string | null} */ (null));
   const annexesQuery = useCommissionAnnexesQuery(contractId);
   const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
-  const total =
-    (commissionValue ?? 0) +
-    annexes.reduce((sum, annex) => sum + signedAmount(annex), 0);
+  const total = (commissionValue ?? 0) + sumCommissionAnnexAdjustments(annexes);
 
   const meta =
     annexes.length > 0 ? (

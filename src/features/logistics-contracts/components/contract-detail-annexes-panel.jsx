@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { MetaAnnexListPanel } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import { isContractAnnexFullySigned } from '../config/annex-settlement.js';
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
@@ -20,8 +21,9 @@ const BLANK = '___';
  * not the older `ContractAnnexesPanel`, which the "Liên quan"/"Xem đầy đủ"
  * tabs still use): `MetaAnnexListPanel` fed with the contract's real
  * `ContractAnnex`es, plus the create/edit dialog it opens. `AmountIncrease`/
- * `AmountDecrease` adjust the settlement value; `ValueChange` is
- * non-monetary (its `amount` is meaningless, see `ContractAnnex.amount`).
+ * `AmountDecrease` adjust the settlement value once both parties signed;
+ * `ValueChange` is non-monetary (its `amount` is meaningless, see
+ * `ContractAnnex.amount`).
  * @param {{ contract: import('../types/index.js').Contract }} props
  */
 export function ContractDetailAnnexesPanel({ contract }) {
@@ -40,8 +42,15 @@ export function ContractDetailAnnexesPanel({ contract }) {
     [annexesQuery.data],
   );
 
-  const increases = annexes.filter((annex) => annex.type === 'AmountIncrease');
-  const decreases = annexes.filter((annex) => annex.type === 'AmountDecrease');
+  // The summary mirrors the settlement value: only annexes both parties
+  // signed count (`annex-settlement.js`).
+  const signedAnnexes = annexes.filter(isContractAnnexFullySigned);
+  const increases = signedAnnexes.filter(
+    (annex) => annex.type === 'AmountIncrease',
+  );
+  const decreases = signedAnnexes.filter(
+    (annex) => annex.type === 'AmountDecrease',
+  );
   const sum = (
     /** @type {import('../types/index.js').ContractAnnex[]} */ list,
   ) => list.reduce((total, annex) => total + annex.amount, 0);
@@ -58,7 +67,7 @@ export function ContractDetailAnnexesPanel({ contract }) {
     {
       label: 'PHÁT SINH TĂNG',
       value: `${increases.length > 0 ? '+' : ''}${formatMoney(sum(increases))}`,
-      note: `Tổng giá trị phụ lục tăng (${increases.length} phụ lục)`,
+      note: `Phụ lục tăng đã ký 2 bên (${increases.length} phụ lục)`,
       tone: /** @type {const} */ ('success'),
       icon: /** @type {const} */ ('up'),
       noteIcon: CirclePlus,
@@ -66,7 +75,7 @@ export function ContractDetailAnnexesPanel({ contract }) {
     {
       label: 'PHÁT SINH GIẢM',
       value: `${decreases.length > 0 ? '-' : ''}${formatMoney(sum(decreases))}`,
-      note: `Tổng giá trị phụ lục giảm (${decreases.length > 0 ? `${decreases.length} phụ lục` : 'Không có'})`,
+      note: `Phụ lục giảm đã ký 2 bên (${decreases.length > 0 ? `${decreases.length} phụ lục` : 'Không có'})`,
       tone: /** @type {const} */ ('muted'),
       icon: /** @type {const} */ ('down'),
       noteIcon: CircleMinus,

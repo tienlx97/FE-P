@@ -17,6 +17,10 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import {
+  isContractAnnexFullySigned,
+  sumContractAnnexAdjustments,
+} from '../config/annex-settlement.js';
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
@@ -87,15 +91,10 @@ export function ContractOverviewPanel({
 
   const annexesQuery = useContractAnnexesQuery(contract.id);
   const annexes = annexesQuery.data?.success ? annexesQuery.data.annexes : [];
-  // Same sign convention as `ContractExpandedDetails`'s `annexesTotal`:
-  // `AmountIncrease` adds, `AmountDecrease` subtracts, `ValueChange` is
-  // non-monetary (see `ContractAnnex.amount`'s doc comment) and never
-  // affects the total.
-  const annexesTotal = annexes.reduce((total, annex) => {
-    if (annex.type === 'AmountIncrease') return total + annex.amount;
-    if (annex.type === 'AmountDecrease') return total - annex.amount;
-    return total;
-  }, 0);
+  // Only annexes both parties signed count (`annex-settlement.js`) — same
+  // rule as the contract list's BE `settlementValue`.
+  const annexesTotal = sumContractAnnexAdjustments(annexes);
+  const signedAnnexCount = annexes.filter(isContractAnnexFullySigned).length;
   const contractValue = contract.contractValue ?? 0;
   const settlementValue = contractValue + annexesTotal;
 
@@ -128,7 +127,8 @@ export function ContractOverviewPanel({
 
   const bankAccountsById = useSellerBankAccountsById();
   // Seller accounts arrive with the sellers list.
-  const sellersLoading = bankAccountsById.size === 0 && contract.bankIds.length > 0;
+  const sellersLoading =
+    bankAccountsById.size === 0 && contract.bankIds.length > 0;
   const banks = contract.bankIds
     .map((bankId) => bankAccountsById.get(bankId))
     .filter((account) => account != null);
@@ -164,10 +164,10 @@ export function ContractOverviewPanel({
             : undefined,
       },
       end:
-        annexes.length > 0
+        signedAnnexCount > 0
           ? {
               dotTone: 'success',
-              value: `${annexesTotal >= 0 ? '+' : '-'}${annexes.length} PL: ${formatMoney(Math.abs(annexesTotal))}`,
+              value: `${annexesTotal >= 0 ? '+' : '-'}${signedAnnexCount} PL: ${formatMoney(Math.abs(annexesTotal))}`,
               tone: 'success',
               tooltip:
                 annexesTotal > 0
@@ -414,7 +414,9 @@ export function ContractOverviewPanel({
                 ? [
                     {
                       label: 'Chi nhánh:',
-                      value: [item.branch, item.province].filter(Boolean).join(', '),
+                      value: [item.branch, item.province]
+                        .filter(Boolean)
+                        .join(', '),
                       weight: /** @type {const} */ ('semibold'),
                     },
                   ]
