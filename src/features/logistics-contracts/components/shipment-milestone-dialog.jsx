@@ -158,7 +158,7 @@ export function ShipmentMilestoneDialog({
         <VStack gap={1} hAlign="stretch">
           <TextArea
             label="Ghi chú"
-            placeholder="Ví dụ: Tàu rời cảng lúc 22:00, trễ 1 ngày"
+            placeholder="Ghi chú về việc hoàn thành mốc này"
             value={values.note}
             onChange={(value) =>
               setValues((current) => ({

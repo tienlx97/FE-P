@@ -46,6 +46,7 @@ import {
 } from '../config/shipment-tracking.js';
 import { useShipmentTrackingQuery } from '../hooks/use-shipment-tracking-query.js';
 import { ShipmentCarrierTrackingSection } from './shipment-carrier-tracking-section.jsx';
+import { ShipmentPhysicalTimeline } from './shipment-physical-timeline.jsx';
 
 /** Marks a date the carrier supplied (principle 4, "hiển thị nguồn"). */
 function CarrierSourceTag() {
@@ -287,6 +288,7 @@ export function ShipmentSchedulePanel({
 
   return (
     <VStack gap={4} hAlign="stretch">
+      <ShipmentPhysicalTimeline contractId={contractId} shipmentId={shipmentId} />
       <MetaShipmentSection
         icon={CalendarClock}
         title="Lịch tàu"

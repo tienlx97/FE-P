@@ -76,7 +76,7 @@ import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
 // document storage for shipments yet.
 const TAB_LABELS = {
   overview: 'Tổng quan',
-  schedule: 'Lịch tàu & Free time',
+  schedule: 'Timeline & lịch tàu',
   vgm: 'Container & VGM',
   costs: 'Chi phí logistics',
 };
@@ -94,11 +94,13 @@ const TAB_VALUES = /** @type {ShipmentDetailTab[]} */ (Object.keys(TAB_LABELS));
 const MILESTONE_ICONS = {
   EmptyPickup: Container,
   CargoReady: Factory,
+  ExwHandover: Flag,
   OriginInland: Truck,
   OriginPort: Anchor,
   OnBoard: Ship,
   Ocean: Sailboat,
   DestinationPort: MapPin,
+  Discharged: Container,
   ImportClearance: FileCheck2,
   DestinationInland: Truck,
   Site: Flag,
@@ -174,13 +176,6 @@ function journeyFor({
   const delays = shipment.scheduleSummary;
   const packing = packingDateRange(vgms);
   const containerCount = vgms.length;
-  // ATD / ATA when known, else the current ETD / ETA.
-  const sailedOn = details?.actualDeparture || shipment.etd;
-  const arrivedOn = details?.actualArrival || shipment.eta;
-  const transitDays =
-    sailedOn && arrivedOn
-      ? Math.round((Date.parse(arrivedOn) - Date.parse(sailedOn)) / 86_400_000)
-      : null;
   const truckingNames = (shipment.serviceProviders ?? [])
     .filter((provider) => provider.role === 'Trucking')
     .map((provider) => suppliersById.get(provider.supplierId)?.companyName)
@@ -192,11 +187,11 @@ function journeyFor({
   /**
    * What a tracking card needs: where / which vessel the leg is, and the
    * leg's key date (… + tooltip when long).
-   * @param {import('../types/index.js').ShipmentMilestone} milestone
-   * @param {string} label
+   * @param {import('../types/index.js').ShipmentJourneyStep} step
    * @returns {{ title: string, footLabel: string, footValue: string }}
    */
-  function content(milestone, label) {
+  function content(step) {
+    const { milestone, label } = step;
     switch (milestone) {
       case 'EmptyPickup':
         return {
@@ -220,6 +215,12 @@ function journeyFor({
             packing && packing.from !== packing.to
               ? `${formatDisplayDate(packing.from)} – ${formatDisplayDate(packing.to)}`
               : formatDisplayDate(packing?.from),
+        };
+      case 'ExwHandover':
+        return {
+          title: shipment.placeOfDelivery || label,
+          footLabel: 'Giao EXW thực tế',
+          footValue: formatDisplayDate(step.completedOn),
         };
       case 'OriginInland':
         return {
@@ -247,12 +248,8 @@ function journeyFor({
       case 'OnBoard':
         return {
           title: shipment.vesselName || label,
-          footLabel: details?.actualDeparture ? 'Rời cảng (ATD)' : 'Rời cảng',
-          footValue: scheduleDateLabel(
-            details?.actualDeparture,
-            shipment.etd,
-            delays?.departureDelayDays,
-          ),
+          footLabel: 'Xếp lên tàu (LOAD)',
+          footValue: formatDisplayDate(step.completedOn),
         };
       case 'Ocean':
         return {
@@ -260,8 +257,12 @@ function journeyFor({
             loadingCode && dischargeCode
               ? transshipmentRoute(loadingCode, transshipmentLegs, dischargeCode)
               : label,
-          footLabel: 'Transit',
-          footValue: transitDays === null ? '—' : `~ ${transitDays} ngày`,
+          footLabel: details?.actualDeparture ? 'Tàu chạy (ATD)' : 'Dự kiến chạy (ETD)',
+          footValue: scheduleDateLabel(
+            details?.actualDeparture,
+            shipment.etd,
+            delays?.departureDelayDays,
+          ),
         };
       case 'DestinationPort':
         return {
@@ -272,6 +273,12 @@ function journeyFor({
             shipment.eta,
             delays?.arrivalDelayDays,
           ),
+        };
+      case 'Discharged':
+        return {
+          title: shipment.placeOfDischarge || label,
+          footLabel: 'Dỡ khỏi tàu (DISC)',
+          footValue: formatDisplayDate(step.completedOn),
         };
       case 'ImportClearance':
         return {
@@ -322,7 +329,7 @@ function journeyFor({
           }
         : {};
     }
-    if (step.milestone === 'OnBoard' || step.milestone === 'DestinationPort') {
+    if (step.milestone === 'DestinationPort') {
       return {
         actionLabel: 'Cập nhật lịch tàu',
         onAction: () => onStepAction(step),
@@ -353,6 +360,10 @@ function journeyFor({
       badge:
         step.milestone === 'EmptyReturn' && emptyReturn?.overdueDays
           ? `Quá hạn ${emptyReturn.overdueDays} ngày`
+          : step.milestone === 'OnBoard' && step.state === 'Done' && !step.completedOn
+            ? 'Thiếu ngày LOAD'
+            : step.milestone === 'Discharged' && step.state === 'Done' && !step.completedOn
+              ? 'Thiếu ngày DISC'
           : step.state === 'Done'
             ? 'Hoàn thành'
             : step.state === 'Current'
@@ -370,7 +381,7 @@ function journeyFor({
       label: step.label,
       liveLabel: step.milestone === 'EmptyReturn' ? 'TRẢ CONT RỖNG' : undefined,
       ...stepAction(step),
-      ...content(step.milestone, step.label),
+      ...content(step),
     })),
   };
 }
@@ -537,7 +548,6 @@ function ShipmentDetailBody({
           ) {
             setIsContainerDatesOpen(true);
           } else if (
-            step.milestone === 'OnBoard' ||
             step.milestone === 'DestinationPort'
           ) {
             setIsScheduleOpen(true);

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   confirmShipmentMilestone,
   getShipmentJourney,
+  getShipmentJourneyEvents,
   reopenShipmentMilestone,
 } from '../api/shipment-journey.js';
 
@@ -13,6 +14,11 @@ import {
 export const SHIPMENT_JOURNEY_QUERY_PREFIX = [
   'logistics-contracts',
   'shipment-journey',
+];
+
+export const SHIPMENT_JOURNEY_EVENTS_QUERY_PREFIX = [
+  'logistics-contracts',
+  'shipment-journey-events',
 ];
 
 /** Prefix shared by every shipment's schedule (history, free time). */
@@ -40,6 +46,7 @@ export const SHIPMENT_ALERTS_QUERY_KEY = ['logistics-contracts', 'shipment-alert
 export function invalidateShipmentTracking(queryClient) {
   return Promise.all([
     queryClient.invalidateQueries({ queryKey: SHIPMENT_JOURNEY_QUERY_PREFIX }),
+    queryClient.invalidateQueries({ queryKey: SHIPMENT_JOURNEY_EVENTS_QUERY_PREFIX }),
     queryClient.invalidateQueries({ queryKey: SHIPMENT_SCHEDULE_QUERY_PREFIX }),
     queryClient.invalidateQueries({ queryKey: SHIPMENT_ALERTS_QUERY_KEY }),
   ]);
@@ -62,6 +69,16 @@ export function useShipmentJourneyQuery(contractId, shipmentId) {
   });
 }
 
+/** @param {string} contractId @param {string | undefined} shipmentId @param {boolean} enabled */
+export function useShipmentJourneyEventsQuery(contractId, shipmentId, enabled = true) {
+  return useQuery({
+    queryKey: [...SHIPMENT_JOURNEY_EVENTS_QUERY_PREFIX, shipmentId ?? ''],
+    queryFn: () => getShipmentJourneyEvents(contractId, /** @type {string} */ (shipmentId)),
+    enabled: enabled && Boolean(shipmentId),
+    staleTime: TRACKING_STALE_TIME,
+  });
+}
+
 /**
  * Confirm / reopen a milestone; the response is the new journey, written
  * straight into the cache.
@@ -75,6 +92,7 @@ export function useShipmentMilestoneMutations(contractId, shipmentId) {
     if (result.success) {
       queryClient.setQueryData(queryKey(shipmentId), result);
       queryClient.invalidateQueries({ queryKey: SHIPMENT_ALERTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: SHIPMENT_JOURNEY_EVENTS_QUERY_PREFIX });
     }
   };
 

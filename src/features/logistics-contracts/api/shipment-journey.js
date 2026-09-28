@@ -12,10 +12,12 @@ const GENERIC_REOPEN_ERROR = 'Không thể bỏ xác nhận mốc hành trình';
 const MILESTONE_LABELS = {
   EmptyPickup: 'Empty Pickup',
   CargoReady: 'Packing',
+  ExwHandover: 'EXW Delivery',
   OriginPort: 'POL',
   OnBoard: 'Shipped on Board',
   Ocean: 'Ocean Freight',
   DestinationPort: 'POD',
+  Discharged: 'Discharged',
   DestinationInland: 'On-carriage',
   Site: 'Site Delivery',
   EmptyReturn: 'Empty Return',
@@ -66,6 +68,22 @@ export async function getShipmentJourney(contractId, shipmentId) {
 
   return result.success
     ? { success: true, journey: withMilestoneLabels(result.data) }
+    : { success: false, message: result.message };
+}
+
+/**
+ * Dated physical events from container records, schedule, confirmations and
+ * carrier tracking. Only recorded dates are returned by the server.
+ * @param {string} contractId
+ * @param {string} shipmentId
+ * @returns {Promise<{success: true, events: import('../types/index.js').PhysicalJourneyEvent[]} | {success: false, message: string}>}
+ */
+export async function getShipmentJourneyEvents(contractId, shipmentId) {
+  const result = await apiRequest(`${journeyUrl(contractId, shipmentId)}/events`, {
+    errorMessage: 'Không thể tải timeline vận chuyển',
+  });
+  return result.success
+    ? { success: true, events: result.data }
     : { success: false, message: result.message };
 }
 

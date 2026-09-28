@@ -7,13 +7,15 @@ import {
   packingDateRange,
 } from './shipment-journey.js';
 
-test('only import clearance and site delivery are confirmed by hand', () => {
+test('handover, load, discharge, clearance and site delivery are confirmed by hand', () => {
+  assert.equal(isConfirmableMilestone('ExwHandover'), true);
+  assert.equal(isConfirmableMilestone('OnBoard'), true);
+  assert.equal(isConfirmableMilestone('Discharged'), true);
   assert.equal(isConfirmableMilestone('ImportClearance'), true);
   assert.equal(isConfirmableMilestone('Site'), true);
   for (const milestone of /** @type {const} */ ([
     'CargoReady',
     'OriginPort',
-    'OnBoard',
     'Ocean',
     'DestinationPort',
     'EmptyReturn',

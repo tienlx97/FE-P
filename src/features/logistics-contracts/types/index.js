@@ -908,7 +908,22 @@ export {};
  */
 
 /**
- * @typedef {'EmptyPickup' | 'CargoReady' | 'OriginInland' | 'OriginPort' | 'OnBoard' | 'Ocean' | 'DestinationPort' | 'ImportClearance' | 'DestinationInland' | 'Site' | 'EmptyReturn'} ShipmentMilestone
+ * @typedef {'EmptyPickup' | 'CargoReady' | 'ExwHandover' | 'OriginInland' | 'OriginPort' | 'OnBoard' | 'Ocean' | 'DestinationPort' | 'Discharged' | 'ImportClearance' | 'DestinationInland' | 'Site' | 'EmptyReturn'} ShipmentMilestone
+ */
+
+/**
+ * @typedef {Object} PhysicalJourneyEvent
+ * @property {'EmptyPickup' | 'Packing' | 'ExwHandover' | 'OriginGateIn' | 'Load' | 'Departure' | 'TransshipmentArrival' | 'TransshipmentDischarge' | 'TransshipmentLoad' | 'TransshipmentDeparture' | 'Arrival' | 'Discharge' | 'ImportClearance' | 'DestinationGateOut' | 'SiteDelivery' | 'EmptyReturn'} code
+ * @property {'Actual' | 'Estimated' | 'Planned'} classifier
+ * @property {string} eventOn
+ * @property {string | null} eventAt
+ * @property {string | null} location
+ * @property {string | null} containerNumber
+ * @property {number | null} legSequence
+ * @property {string | null} vesselName
+ * @property {string | null} voyageNumber
+ * @property {'Container' | 'Milestone' | 'Schedule' | 'Carrier'} source
+ * @property {string | null} sourceDetail
  */
 
 /**

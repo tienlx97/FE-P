@@ -8,7 +8,13 @@ import { dateRange } from './shipment-container-dates.js';
  * mốc" action. Spec: `docs/shipment-journey-incoterms.md`.
  * @type {ReadonlySet<import('../types/index.js').ShipmentMilestone>}
  */
-const CONFIRMABLE_MILESTONES = new Set(['ImportClearance', 'Site']);
+const CONFIRMABLE_MILESTONES = new Set([
+  'ExwHandover',
+  'OnBoard',
+  'Discharged',
+  'ImportClearance',
+  'Site',
+]);
 
 /** @param {import('../types/index.js').ShipmentMilestone} milestone */
 export function isConfirmableMilestone(milestone) {
