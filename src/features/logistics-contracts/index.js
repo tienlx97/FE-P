@@ -14,3 +14,4 @@ export { ShipmentOverviewSchedule } from './components/shipment-overview-schedul
 export { ShipmentsList } from './components/shipments-list.jsx';
 export { SupplierDetailWorkspace } from './components/supplier-detail-workspace.jsx';
 export { SuppliersList } from './components/suppliers-list.jsx';
+export { VesselScheduleWorkspace } from './components/vessel-schedule-workspace.jsx';

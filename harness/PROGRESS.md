@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule page `/logistics/schedule`
+
+- New page ("Lịch tàu", NGHIỆP VỤ sidebar, `logistics:contracts:view`): POL / POD `Typeahead`s over the whole port catalog (`POST /ports/search`, code / name / full name contains; sends the UN/LOCODE, else the name) and the lab `Schedule` (month / week / list views) filling the rest of the page. Its async loader asks every carrier whose schedule adapter is implemented (`GET /shipments/tracking/carriers` → `schedule.isImplemented`, KMTC for now) through `GET /shipments/schedules` for the visible range (≤ 62-day windows); each sailing is an event at its ETD titled `[HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]`, one colour per carrier. Carrier times are read and shown in Asia/Ho_Chi_Minh so they appear as the carrier gives them. A carrier that fails shows a red token with its message; the loader never rejects. Needs BE `add-carrier-schedules` (branch `feat/carrier-schedules`).
+- Unit tests for the title tag, time zone, event mapping, windows, carrier filter (`config/vessel-schedule.test.js`).
+- Browser check (Chrome, local :3000 against the dev API rebuilt from the BE branch): VNSGN / THBKK picked through the typeaheads; next / previous month requested the October (28/09–01/11) and August (27/07–06/09) grids, back to September served from the `Schedule` loader cache. KMTC showed "KMTC chặn truy cập (HTTP 403, Akamai)": this machine's IP was temporarily blocked by KMTC after many probe calls, so no sailings could be shown live today (the BE adapter was verified live earlier; fixtures cover parsing). Screenshot: `harness/runs/20260929-vessel-schedule-page/`.
+- `./harness/verify.sh` passed: `harness/runs/20260929-103357-599/`.
+- Discovered: the lab month view has fixed 128 px rows (`grid-auto-rows`) and only a root theme hook, so the month grid does not stretch to the page height (the frame does). `node_modules` lacked the rich-text packages from the previous session until `pnpm install --frozen-lockfile`. Harness gap: `theme-build` fails with EPERM on Windows while a dev server holds `theme.built.css`; the gate does not say so.
+
 ## 2026-09-28 — Meta backups page and action drawers
 
 - `/admin/backups` now uses the Meta page header, count badge, file status badges, and compact operation status cards. Upload, public import/export, and restore use `MetaFormDrawer` with full-width mobile layouts; restore still requires the database-name confirmation.

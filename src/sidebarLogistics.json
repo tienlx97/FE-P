@@ -17,6 +17,11 @@
       "allowedPermissions": ["logistics:contracts:view"]
     },
     {
+      "title": "Lịch tàu",
+      "path": "/logistics/schedule",
+      "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
       "title": "Commission",
       "path": "/logistics/commissions",
       "allowedPermissions": ["logistics:contracts:view"]
