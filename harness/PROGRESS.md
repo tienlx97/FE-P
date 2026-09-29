@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-09-29 — Fix: backup upload > 10 MB cut short (/admin/backups restore elsewhere)
+
+- User: a backup taken here and restored on another machine seems to fail. Checked end to end on the dev stack:
+  - Dump (API `mysqldump` = MariaDB 10.11 client, 4.3 MB, `/*M!999999\- enable the sandbox mode */` first line) restores fine into a fresh MySQL 8.0 as a least-privilege user with the MySQL 8.0 client and with the API's MariaDB client (73 tables, row counts equal); a sidecar-style MySQL `mysqldump` (root) dump too. 4.3 MB restore = 12 s.
+  - **Upload > 10 MB failed**: `src/proxy.js` matched every path, and Next 16 buffers a proxied request body up to `proxyClientMaxBodySize` (10 MB) — the API got a truncated multipart ("Unexpected end of Stream", 400). Measured through `/api/backend/.../backups/upload`: 9 MB → 201, 10.5 / 12 MB → 400. The FE nginx also had `client_max_body_size 10m` (API nginx 550m, API limit 500 MB).
+- Fix: the proxy matcher leaves out `/api/` (its rules only gate pages); FE nginx `client_max_body_size 550m`. After: 12 MB and 60 MB uploads stored at their full size; `/admin/backups` still gated. Test `src/proxy.test.js` (matcher read from the source — `next/server` does not load in plain Node).
+- Probe uploads deleted from the dev API's backup folder; the throw-away MySQL stopped. The dev backup `companymanagement-20260929-095116-a1e218.sql` taken for the check is kept.
+- Discovered (not fixed, needs a decision):
+  - Restore longer than `Backup:RestoreTimeoutSeconds` (60) → the API answers 409 and `restore-backup-drawer.jsx` re-POSTs the restore every 5 s: on the same machine a retry landing after completion starts a second restore (+ another safety backup); on another machine the restored `Users` table ends the session, the retry gets 401 and the drawer shows an error although the restore succeeded. Needs a restore-status endpoint to poll instead of re-POSTing.
+  - After a restore from another machine the admin is logged out (users / refresh tokens come from the backup) — expected, but the drawer does not say so.
+- `./harness/verify.sh` passed: `harness/runs/20260929-165618-529/`.
+
 ## 2026-09-29 — Vessel schedule: no "n không thể book" pills
 
 - User: drop the per-carrier "n không thể book" pill from the result header; it now reads "VNSGN → THBKK · KMTC · 20 chuyến · Heung-A · 19 chuyến" (checked in Chrome). Unavailable sailings stay red on the calendar with the reason in the hover card / drawer.
