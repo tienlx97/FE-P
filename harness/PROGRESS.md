@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: POL + POD only (no destination country)
+
+- User: drop "Nước đến", keep only POL and POD. The catalog has 17,520 UN/LOCODE ports (all-ports JSON 4.5 MB) and Astryx `Selector` renders every option (no virtualization), so a single POD selector over the whole catalog is not viable. POL stays a `Selector` (Vietnamese ports); POD is `PortTypeahead` again — server search (`POST /ports/search`, code / name / full name, ≥ 2 characters), items `THLCH — Laem Chabang`, code sent to the BE. `countryOptions` removed.
+- Page check (Chrome, :3000): the filter card shows POL, POD, Hãng tàu, Tìm. Interacting was not possible — the Chrome window was hidden again.
+- `./harness/verify.sh` passed: `harness/runs/20260929-114234-914/`.
+
 ## 2026-09-29 — Vessel schedule: "Hết chỗ" in red
 
 - User: flag full sailings red. The BE now returns `bookingStatus` per sailing (KMTC: `Full` = closed to bookings by KMTC, the red "Closing" marks of ekmtc.com). `bookingState(sailing, now)`: `Full` with the SI (else CY) cut-off still ahead → "Hết chỗ"; `Full` after it or `CutoffPassed` → "Đã đóng booking"; plus "Chưa mở booking", "Còn nhận booking", "Hãng không cho biết". Full sailings are red (`danger`) on the calendar with "· Hết chỗ" after the tag; the header adds "n hết chỗ" next to the carrier's count; the hover card and drawer (title badge + "Booking" row) show the state.
