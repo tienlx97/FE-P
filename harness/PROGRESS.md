@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-09-29 — Faster `pnpm dev` compiles; /admin checked
+
+- User: check `/admin` and fix the slow compile on `pnpm dev`. `/admin` redirects to `/admin/users`; `/admin/users`, `/admin/permissions`, `/admin/backups` render in Meta + InterVariable (first compile 3–5.6 s each on the old config).
+- Cause: Next 16 Turbopack found `babel.config.js` and ran the full `next/babel` preset on all 622 app files; only 133 import StyleX. Now `experimental.turbopackUseBuiltinBabel: false` plus a `turbopack.rules` entry that runs `stylex-loader.cjs` (the StyleX plugin only, from `babel.config.js`) on non-`node_modules` `.js/.jsx` files whose content matches `@stylexjs/stylex`; SWC compiles the rest. `@babel/core` became a direct devDependency.
+- `pnpm dev` runs `scripts/theme-build-if-stale.mjs` (0.07 s when `theme.js` is not newer than `theme.built.css`) instead of `theme:build` (~3.8 s); `build` / verify still always rebuild. Deleted the obsolete `scripts/generate-vietnamese-italic-fonts.py`.
+- Measured: `next build` "Compiled successfully" 65 s → 31.6 s. The production build served on :3007 rendered `/logistics/contracts` and `/docs` with StyleX styles intact. Not measured on `pnpm dev` itself: the user's dev server on :3000 was left running (restart it to pick up the config).
+- The StyleX PostCSS plugin still transforms the 133 StyleX files once per dev start (~9.3 s cold in a worker, 87 ms warm).
+- `./harness/verify.sh` passed: `harness/runs/20260929-151522-1115/`.
+
 ## 2026-09-29 — Meta theme only, InterVariable only (`meta-theme-only`)
 
 - User: use only the Meta theme and only the InterVariable font. The root `ThemeProvider` now renders `<Theme theme={metaTheme}>` (+ Meta scrollbar CSS); `pnpm theme:build` builds `custom/meta/theme.js`. Deleted: the `kt-xnk` theme (`shared/components/theme.js` + gitignored build output), `@astryxdesign/theme-stone`, `shared/config/fonts.js` (next/font Montserrat / JetBrains Mono), `public/fonts/react-docs/` (Optimistic), the `data-app-font` route scoping and the `.astryx-button.destructive` white-label hack. Meta gained kt-xnk's success-toast override; its font stack is `InterVariable` + system fallbacks; `globals.css` sets Inter's features on `body` for every route. ADR-0011 (supersedes ADR-0010's scoping), `openspec/project.md` updated.

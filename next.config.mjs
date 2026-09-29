@@ -5,6 +5,10 @@ const rehypeMetaPluginPath = fileURLToPath(
   new URL('./src/shared/api/rehype-meta-as-attributes.js', import.meta.url),
 );
 
+const stylexLoaderPath = fileURLToPath(
+  new URL('./stylex-loader.cjs', import.meta.url),
+);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -19,6 +23,27 @@ const nextConfig = {
   // filesystem", panics on HMR for any Babel-processed file — i.e. anything
   // StyleX touches). A cosmetic warning beats a fatal crash — see
   // harness/PROGRESS.md for the panic log and revert reasoning.
+  experimental: {
+    // Next 16 runs babel.config.js (full `next/babel` preset) over every
+    // app file when it finds one, so each route's first `pnpm dev` compile
+    // waited on Babel for all of src/. Only the StyleX plugin needs Babel:
+    // the rule below runs it on files that import StyleX; SWC does the rest.
+    turbopackUseBuiltinBabel: false,
+  },
+  turbopack: {
+    rules: {
+      '*': {
+        condition: {
+          all: [
+            { not: 'foreign' },
+            { path: /\.jsx?$/ },
+            { content: /@stylexjs\/stylex/ },
+          ],
+        },
+        loaders: [stylexLoaderPath],
+      },
+    },
+  },
 };
 
 // remark-frontmatter parses the leading `---` YAML block; remark-mdx-frontmatter

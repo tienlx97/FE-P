@@ -6,7 +6,7 @@
   "scripts": {
     "audit": "./harness/audit-harness.sh",
     "build": "pnpm theme:build && next build",
-    "dev": "pnpm theme:build && next dev",
+    "dev": "node scripts/theme-build-if-stale.mjs && next dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -63,6 +63,7 @@
   },
   "devDependencies": {
     "@astryxdesign/cli": "0.6.2",
+    "@babel/core": "7.29.7",
     "@eslint/js": "^9.18.0",
     "@stylexjs/babel-plugin": "^0.15.0",
     "@stylexjs/eslint-plugin": "^0.15.0",
