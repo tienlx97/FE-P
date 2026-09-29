@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  ALL_CARRIERS,
   carrierCategories,
+  carrierOptions,
+  carriersToSearch,
   instantToDate,
   localToInstant,
   portQueryValue,
@@ -78,25 +81,43 @@ test('searchWindows turns the visible range into dated windows of at most 62 day
   ]);
 });
 
-test('scheduleCarriers keeps carriers whose schedule adapter works', () => {
-  const adapter = (/** @type {string} */ code, /** @type {any} */ schedule) =>
-    /** @type {import('../types/index.js').CarrierTrackingAdapter} */ ({
-      carrier: { code, name: code },
-      enabled: true,
-      activeVersion: 'v1',
-      isImplemented: false,
-      source: null,
-      versions: ['v1'],
-      schedule,
-    });
-  const carriers = scheduleCarriers([
-    adapter('KMTC', { enabled: true, isImplemented: true }),
-    adapter('SITC', { enabled: true, isImplemented: false }),
-    adapter('RCL', { enabled: false, isImplemented: true }),
-    adapter('ONE', null),
-  ]);
+/** @param {string} code @param {any} schedule */
+const adapter = (code, schedule) =>
+  /** @type {import('../types/index.js').CarrierTrackingAdapter} */ ({
+    carrier: { code, name: code },
+    enabled: true,
+    activeVersion: 'v1',
+    isImplemented: false,
+    source: null,
+    versions: ['v1'],
+    schedule,
+  });
 
-  assert.deepEqual(carriers.map((carrier) => carrier.code), ['KMTC']);
+const ADAPTERS = [
+  adapter('KMTC', { enabled: true, isImplemented: true }),
+  adapter('SITC', { enabled: true, isImplemented: false }),
+  adapter('RCL', { enabled: false, isImplemented: true }),
+  adapter('ONE', null),
+];
+
+test('scheduleCarriers keeps carriers whose schedule adapter works', () => {
+  assert.deepEqual(scheduleCarriers(ADAPTERS).map((carrier) => carrier.code), ['KMTC']);
+});
+
+test('carrierOptions starts with "Tất cả hãng" and marks carriers not connected', () => {
+  assert.deepEqual(carrierOptions(ADAPTERS), [
+    { value: ALL_CARRIERS, label: 'Tất cả hãng' },
+    { value: 'KMTC', label: 'KMTC' },
+    { value: 'SITC', label: 'SITC (chưa kết nối)' },
+    { value: 'RCL', label: 'RCL (chưa kết nối)' },
+    { value: 'ONE', label: 'ONE (chưa kết nối)' },
+  ]);
+});
+
+test('carriersToSearch: all connected carriers, or exactly the chosen one', () => {
+  assert.deepEqual(carriersToSearch(ADAPTERS, ALL_CARRIERS).map((carrier) => carrier.code), ['KMTC']);
+  assert.deepEqual(carriersToSearch(ADAPTERS, 'SITC').map((carrier) => carrier.code), ['SITC']);
+  assert.deepEqual(carriersToSearch(ADAPTERS, 'MAERSK'), []);
 });
 
 test('carrierCategories labels by carrier name with a colour each', () => {
@@ -105,8 +126,8 @@ test('carrierCategories labels by carrier name with a colour each', () => {
   assert.notEqual(categories[0].color, categories[1].color);
 });
 
-test('portQueryValue sends the UN/LOCODE, else the name', () => {
-  assert.equal(portQueryValue({ code: 'VNSGN', name: 'Ho Chi Minh' }), 'VNSGN');
-  assert.equal(portQueryValue({ code: null, name: 'Cang Bangkok' }), 'Cang Bangkok');
+test('portQueryValue sends only the UN/LOCODE', () => {
+  assert.equal(portQueryValue({ code: 'VNSGN' }), 'VNSGN');
+  assert.equal(portQueryValue({ code: null }), '');
   assert.equal(portQueryValue(null), '');
 });

@@ -10,28 +10,28 @@ const MAX_RESULTS = 20;
 
 /**
  * @typedef {import('@astryxdesign/core/Typeahead').SearchableItem<{
- *   code: string | null,
+ *   code: string,
  *   name: string,
  * }>} PortItem
  */
 
 /**
- * A catalog port as a typeahead item: "Cát Lái (VNCLI)", with the full name
- * underneath.
- * @param {import('../types/index.js').Port} port
+ * A catalog port as a typeahead item, UN/LOCODE first: "VNCLI — Cát Lái".
+ * @param {import('../types/index.js').Port & { code: string }} port
  * @returns {PortItem}
  */
 function toItem(port) {
   return {
     id: port.id,
-    label: port.code ? `${port.name} (${port.code})` : port.name,
+    label: `${port.code} — ${port.name}`,
     auxiliaryData: { code: port.code, name: port.name },
   };
 }
 
 /**
- * Picks one port of the whole catalog (~17.5k UN/LOCODE ports) by typing
- * part of its code, name or full name (`POST /ports/search`).
+ * Picks one UN/LOCODE port of the catalog (~17.5k) by typing part of its
+ * code, name or full name (`POST /ports/search`). Facilities without a
+ * UN/LOCODE are left out: the vessel schedule is looked up by UN/LOCODE.
  * @param {{
  *   label: string,
  *   placeholder?: string,
@@ -63,7 +63,9 @@ export function PortTypeahead({ label, placeholder, value, onChange }) {
         if (version !== latest || !result.success) {
           return [];
         }
-        return result.ports.map(toItem);
+        return result.ports
+          .filter((port) => Boolean(port.code))
+          .map((port) => toItem(/** @type {import('../types/index.js').Port & { code: string }} */ (port)));
       },
       bootstrap() {
         return [];

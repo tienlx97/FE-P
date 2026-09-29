@@ -121,20 +121,59 @@ export function carrierCategories(carriers) {
   }));
 }
 
+/** The carrier selector's "every carrier" value. */
+export const ALL_CARRIERS = 'ALL';
+
 /**
- * The carriers the page can ask: schedule adapter enabled and implemented.
- * @param {import('../types/index.js').CarrierTrackingAdapter[]} adapters
+ * Whether the carrier's vessel schedule is connected (adapter enabled and
+ * implemented, not a placeholder).
+ * @param {import('../types/index.js').CarrierTrackingAdapter} adapter
  */
-export function scheduleCarriers(adapters) {
-  return adapters
-    .filter((adapter) => adapter.schedule?.enabled && adapter.schedule.isImplemented)
-    .map((adapter) => adapter.carrier);
+function hasSchedule(adapter) {
+  return Boolean(adapter.schedule?.enabled && adapter.schedule.isImplemented);
 }
 
 /**
- * The value sent to the BE for a picked port: its UN/LOCODE, else its name.
- * @param {{ code?: string | null, name: string } | null} port
+ * The carriers whose vessel schedule is connected.
+ * @param {import('../types/index.js').CarrierTrackingAdapter[]} adapters
+ */
+export function scheduleCarriers(adapters) {
+  return adapters.filter(hasSchedule).map((adapter) => adapter.carrier);
+}
+
+/**
+ * Carrier selector options: "Tất cả hãng" first, then every carrier; a
+ * carrier without a connected schedule is marked (choosing it shows why).
+ * @param {import('../types/index.js').CarrierTrackingAdapter[]} adapters
+ */
+export function carrierOptions(adapters) {
+  return [
+    { value: ALL_CARRIERS, label: 'Tất cả hãng' },
+    ...adapters.map((adapter) => ({
+      value: adapter.carrier.code,
+      label: hasSchedule(adapter) ? adapter.carrier.name : `${adapter.carrier.name} (chưa kết nối)`,
+    })),
+  ];
+}
+
+/**
+ * The carriers one search asks: every connected one for "Tất cả hãng", else
+ * the chosen carrier (even when not connected, so its status is shown).
+ * @param {import('../types/index.js').CarrierTrackingAdapter[]} adapters
+ * @param {string} choice - a carrier code or {@link ALL_CARRIERS}
+ */
+export function carriersToSearch(adapters, choice) {
+  if (choice === ALL_CARRIERS) {
+    return scheduleCarriers(adapters);
+  }
+  return adapters.filter((adapter) => adapter.carrier.code === choice).map((adapter) => adapter.carrier);
+}
+
+/**
+ * The value sent to the BE for a picked port: its UN/LOCODE (the BE maps it
+ * to each carrier's own codes); '' when the port has none.
+ * @param {{ code?: string | null } | null | undefined} port
  */
 export function portQueryValue(port) {
-  return port ? port.code || port.name : '';
+  return port?.code ?? '';
 }
