@@ -17,13 +17,14 @@ import { ShowcaseSection } from '../showcase-section.jsx';
 // CodeBlock sample *of* theme.js, so the hex values are the subject matter.
 // It drifted out of sync once already (documented --color-accent as the red
 // #b91a24 while the real accent was teal), which is what prompted the lint
-// rule — keep it in step with src/shared/components/theme.js by hand.
+// rule — keep it in step with src/shared/components/custom/meta/theme.js
+// by hand.
 /* eslint-disable no-restricted-syntax */
-const THEME_SNIPPET = `export const ktxnkTheme = defineTheme({
-  name: 'kt-xnk',
+const THEME_SNIPPET = `export const metaTheme = defineTheme({
+  name: 'meta',
   tokens: {
-    '--color-accent': '#247768', // teal, sampled from the logo
-    '--color-background-body': '#ffffff', // page stays pure white
+    '--color-accent': '#0064e0', // spec: primary-container
+    '--color-background-body': '#faf8ff', // spec: background / surface
   },
 });`;
 /* eslint-enable no-restricted-syntax */
@@ -57,12 +58,12 @@ export function ContentSection() {
         <VStack gap={5}>
           <Blockquote cite="AGENTS.md">
             Mọi màu đều lấy từ Astryx theme token trong
-            src/shared/components/theme.js — không hardcode hex trong component.
+            src/shared/components/custom/meta/theme.js — không hardcode hex trong component.
           </Blockquote>
           <CodeBlock
             code={THEME_SNIPPET}
             language="typescript"
-            title="src/shared/components/theme.js"
+            title="src/shared/components/custom/meta/theme.js"
             hasLineNumbers
           />
         </VStack>

@@ -1,6 +1,7 @@
 'use client';
 
-import './theme.built.css';
+import './custom/meta/scrollbar.css';
+import './custom/meta/theme.built.css';
 
 import { InternationalizationProvider } from '@astryxdesign/core/i18n';
 import { LayerProvider } from '@astryxdesign/core/Layer';
@@ -9,9 +10,12 @@ import viVN from '@astryxdesign/core/locales/vi-VN.json';
 import { Theme } from '@astryxdesign/core/theme';
 import NextLink from 'next/link';
 
-import { ktXnkTheme } from './kt-xnk.js';
+import { metaTheme } from './custom/meta/meta.js';
 
 /**
+ * The whole app uses the Meta theme (`custom/meta/theme.js`) and only the
+ * InterVariable font (user request, 2026-09-29).
+ *
  * Wraps both the app root and every portaled dialog (`FormDialog` reuses
  * this same provider for content rendered into `document.body`), so
  * `vi-VN` locale strings — including Calendar's month/weekday names, which
@@ -27,7 +31,7 @@ export function ThemeProvider({ children }) {
   return (
     <LinkProvider component={NextLink}>
       <InternationalizationProvider locale="vi-VN" messages={{ 'vi-VN': viVN }}>
-        <Theme theme={ktXnkTheme} mode="light">
+        <Theme theme={metaTheme} mode="light">
           <LayerProvider toast={{ position: 'topEnd' }}>
             {children}
           </LayerProvider>

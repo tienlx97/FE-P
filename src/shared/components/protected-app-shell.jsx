@@ -274,9 +274,6 @@ export function ProtectedAppShell({
   return (
     <div
       {...stylex.props(styles.root)}
-      // `/admin/**` and `/logistics/**` render in Inter: `globals.css` keys
-      // the font tokens on <html> off this attribute.
-      data-app-font={isAdminOrLogistics ? 'inter' : undefined}
       style={
         /** @type {import('react').CSSProperties} */ ({
           ...stylex.props(styles.root).style,

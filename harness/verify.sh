@@ -44,8 +44,8 @@ step "tanstack-table-only" ./harness/checks/tanstack-table-only.sh
 step "logistics-font-sizes" node harness/checks/logistics-font-sizes.mjs
 
 # ── 0. Generated sources ──────────────────────────────────────────
-# src/shared/components/kt-xnk.{js,d.ts} + theme.built.css are `astryx theme
-# build` output (gitignored — regenerated from src/shared/components/theme.js).
+# src/shared/components/custom/meta/meta.{js,d.ts} + theme.built.css are
+# `astryx theme build` output of src/shared/components/custom/meta/theme.js.
 # lint/typecheck/structure
 # below all resolve imports of these files, so they must exist first.
 if has_pkg_script theme:build; then
