@@ -84,8 +84,9 @@ export function VesselSailingDrawer({ carrier, sailing, now, onClose }) {
   /** @type {Facts} */
   const route = [
     ['Cảng xếp (POL)', <Text key="pol">{sailing.portOfLoading || '—'}</Text>],
-    ['Terminal', <Text key="terminal">{sailing.portOfLoadingTerminal ?? '—'}</Text>],
+    ['Terminal xếp', <Text key="pol-terminal">{sailing.portOfLoadingTerminal ?? '—'}</Text>],
     ['Cảng dỡ (POD)', <Text key="pod">{sailing.portOfDischarge || '—'}</Text>],
+    ['Terminal dỡ', <Text key="pod-terminal">{sailing.portOfDischargeTerminal ?? '—'}</Text>],
     [
       'Chuyển tải',
       isDirect ? (
