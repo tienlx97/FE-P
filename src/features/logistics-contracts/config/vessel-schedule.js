@@ -10,7 +10,11 @@ import { addDays, dayRange, monthWeeks } from '@/shared/config/schedule-calendar
 import { formatScheduleValue } from './shipment-schedule.js';
 
 /** The carrier selector's "every carrier" value. */
-export const ALL_CARRIERS = 'ALL';
+/** How many recently picked PODs the POD selector lists when opened. */
+export const RECENT_PORTS_LIMIT = 8;
+
+/** Shortest POD search text sent to the server. */
+export const PORT_SEARCH_MIN_LENGTH = 2;
 
 /** `MetaSchedule` tones given to carriers in list order (danger is kept for errors). */
 const CARRIER_TONES = /** @type {const} */ (['accent', 'success', 'warning', 'neutral']);
@@ -166,31 +170,86 @@ export function scheduleCarriers(adapters) {
 }
 
 /**
- * Carrier selector options: "Tất cả hãng" first, then every carrier; a
- * carrier without a connected schedule is marked (choosing it shows why).
+ * "Hãng tàu" multi-selector options: every carrier; one without a
+ * connected schedule is listed but disabled, marked "(chưa kết nối)".
  * @param {import('../types/index.js').CarrierTrackingAdapter[]} adapters
  */
 export function carrierOptions(adapters) {
-  return [
-    { value: ALL_CARRIERS, label: 'Tất cả hãng' },
-    ...adapters.map((adapter) => ({
-      value: adapter.carrier.code,
-      label: hasSchedule(adapter) ? adapter.carrier.name : `${adapter.carrier.name} (chưa kết nối)`,
-    })),
-  ];
+  return adapters.map((adapter) =>
+    hasSchedule(adapter)
+      ? { value: adapter.carrier.code, label: adapter.carrier.name }
+      : { value: adapter.carrier.code, label: `${adapter.carrier.name} (chưa kết nối)`, isDisabled: true },
+  );
 }
 
 /**
- * The carriers one search asks: every connected one for "Tất cả hãng", else
- * the chosen carrier (even when not connected, so its status is shown).
+ * The carriers one search asks: the checked connected ones, in list order;
+ * none checked = every connected carrier ("Tất cả hãng").
  * @param {import('../types/index.js').CarrierTrackingAdapter[]} adapters
- * @param {string} choice - a carrier code or {@link ALL_CARRIERS}
+ * @param {string[]} codes - checked carrier codes
  */
-export function carriersToSearch(adapters, choice) {
-  if (choice === ALL_CARRIERS) {
-    return scheduleCarriers(adapters);
+export function carriersToSearch(adapters, codes) {
+  const connected = scheduleCarriers(adapters);
+  const chosen = connected.filter((carrier) => codes.includes(carrier.code));
+  return chosen.length > 0 ? chosen : connected;
+}
+
+/**
+ * The closed "Hãng tàu" trigger: "Tất cả hãng" when none or every
+ * connected carrier is checked, else the names ("KMTC, Heung-A").
+ * @param {{ label: string }[]} items - checked items
+ * @param {number} connectedCount
+ */
+export function carrierSelectionLabel(items, connectedCount) {
+  return items.length === 0 || items.length === connectedCount
+    ? 'Tất cả hãng'
+    : items.map((item) => item.label).join(', ');
+}
+
+/**
+ * `POST /ports/search` conditions for the POD selector: the text in the
+ * UN/LOCODE, the name or the full name.
+ * @param {string} text
+ */
+export function portSearchConditions(text) {
+  const value = text.trim();
+  return ['code', 'name', 'fullName'].map((field, index) => ({
+    id: field,
+    field,
+    operator: 'Contains',
+    value,
+    valueTo: '',
+    connector: index === 0 ? 'And' : 'Or',
+  }));
+}
+
+/**
+ * The recently picked PODs with `port` first, without duplicates, at most
+ * {@link RECENT_PORTS_LIMIT}.
+ * @param {{ code: string, name: string }[]} recent
+ * @param {{ code: string, name: string }} port
+ */
+export function withRecentPort(recent, port) {
+  return [port, ...recent.filter((item) => item.code !== port.code)].slice(0, RECENT_PORTS_LIMIT);
+}
+
+/**
+ * Recently picked PODs as stored (JSON); anything malformed is dropped.
+ * @param {string | null} stored
+ * @returns {{ code: string, name: string }[]}
+ */
+export function parseRecentPorts(stored) {
+  try {
+    const value = JSON.parse(stored ?? '[]');
+    return Array.isArray(value)
+      ? value
+          .filter((item) => typeof item?.code === 'string' && typeof item?.name === 'string')
+          .map((item) => ({ code: item.code, name: item.name }))
+          .slice(0, RECENT_PORTS_LIMIT)
+      : [];
+  } catch {
+    return [];
   }
-  return adapters.filter((adapter) => adapter.carrier.code === choice).map((adapter) => adapter.carrier);
 }
 
 /**

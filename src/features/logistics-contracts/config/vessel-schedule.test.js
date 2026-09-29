@@ -2,18 +2,22 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  ALL_CARRIERS,
   bookingState,
   carrierOptions,
+  carrierSelectionLabel,
   carriersToSearch,
   carrierTone,
   formatCarrierTime,
   localNow,
+  parseRecentPorts,
   portOptions,
+  portSearchConditions,
+  RECENT_PORTS_LIMIT,
   sailingItems,
   sailingTitle,
   scheduleCarriers,
   visibleRange,
+  withRecentPort,
 } from './vessel-schedule.js';
 
 const KMTC = { code: 'KMTC', name: 'KMTC' };
@@ -115,35 +119,77 @@ const adapter = (code, schedule) =>
 
 const ADAPTERS = [
   adapter('KMTC', { enabled: true, isImplemented: true }),
+  adapter('HEUNGA', { enabled: true, isImplemented: true }),
   adapter('SITC', { enabled: true, isImplemented: false }),
   adapter('RCL', { enabled: false, isImplemented: true }),
   adapter('ONE', null),
 ];
 
 test('scheduleCarriers keeps carriers whose schedule adapter works', () => {
-  assert.deepEqual(scheduleCarriers(ADAPTERS).map((carrier) => carrier.code), ['KMTC']);
+  assert.deepEqual(scheduleCarriers(ADAPTERS).map((carrier) => carrier.code), ['KMTC', 'HEUNGA']);
 });
 
-test('carrierOptions starts with "Tất cả hãng" and marks carriers not connected', () => {
+test('carrierOptions lists every carrier, those not connected disabled', () => {
   assert.deepEqual(carrierOptions(ADAPTERS), [
-    { value: ALL_CARRIERS, label: 'Tất cả hãng' },
     { value: 'KMTC', label: 'KMTC' },
-    { value: 'SITC', label: 'SITC (chưa kết nối)' },
-    { value: 'RCL', label: 'RCL (chưa kết nối)' },
-    { value: 'ONE', label: 'ONE (chưa kết nối)' },
+    { value: 'HEUNGA', label: 'HEUNGA' },
+    { value: 'SITC', label: 'SITC (chưa kết nối)', isDisabled: true },
+    { value: 'RCL', label: 'RCL (chưa kết nối)', isDisabled: true },
+    { value: 'ONE', label: 'ONE (chưa kết nối)', isDisabled: true },
   ]);
 });
 
-test('carriersToSearch: all connected carriers, or exactly the chosen one', () => {
-  assert.deepEqual(carriersToSearch(ADAPTERS, ALL_CARRIERS).map((carrier) => carrier.code), ['KMTC']);
-  assert.deepEqual(carriersToSearch(ADAPTERS, 'SITC').map((carrier) => carrier.code), ['SITC']);
-  assert.deepEqual(carriersToSearch(ADAPTERS, 'MAERSK'), []);
+test('carriersToSearch: the checked connected carriers, none checked = all connected', () => {
+  const codes = (/** @type {string[]} */ checked) => carriersToSearch(ADAPTERS, checked).map((carrier) => carrier.code);
+  assert.deepEqual(codes([]), ['KMTC', 'HEUNGA']);
+  assert.deepEqual(codes(['HEUNGA']), ['HEUNGA']);
+  assert.deepEqual(codes(['HEUNGA', 'KMTC']), ['KMTC', 'HEUNGA'], 'list order, not click order');
+  assert.deepEqual(codes(['SITC', 'MAERSK']), ['KMTC', 'HEUNGA'], 'nothing connected checked = all connected');
+});
+
+test('carrierSelectionLabel: "Tất cả hãng" for none or all, else the names', () => {
+  assert.equal(carrierSelectionLabel([], 2), 'Tất cả hãng');
+  assert.equal(carrierSelectionLabel([{ label: 'KMTC' }, { label: 'Heung-A' }], 2), 'Tất cả hãng');
+  assert.equal(carrierSelectionLabel([{ label: 'Heung-A' }], 2), 'Heung-A');
+  assert.equal(carrierSelectionLabel([{ label: 'KMTC' }, { label: 'Heung-A' }], 3), 'KMTC, Heung-A');
+});
+
+test('portSearchConditions looks the text up in code, name or full name', () => {
+  assert.deepEqual(
+    portSearchConditions('  laem ').map(({ field, operator, value, connector }) => [field, operator, value, connector]),
+    [
+      ['code', 'Contains', 'laem', 'And'],
+      ['name', 'Contains', 'laem', 'Or'],
+      ['fullName', 'Contains', 'laem', 'Or'],
+    ],
+  );
+});
+
+test('withRecentPort puts the pick first, once, and keeps the list short', () => {
+  const lch = { code: 'THLCH', name: 'Laem Chabang' };
+  const bkk = { code: 'THBKK', name: 'Bangkok' };
+  assert.deepEqual(withRecentPort([bkk, lch], lch), [lch, bkk]);
+  const many = Array.from({ length: RECENT_PORTS_LIMIT }, (_, index) => ({ code: `P${index}`, name: `Port ${index}` }));
+  const next = withRecentPort(many, lch);
+  assert.equal(next.length, RECENT_PORTS_LIMIT);
+  assert.deepEqual(next[0], lch);
+});
+
+test('parseRecentPorts reads stored ports and drops anything malformed', () => {
+  assert.deepEqual(parseRecentPorts(null), []);
+  assert.deepEqual(parseRecentPorts('not json'), []);
+  assert.deepEqual(parseRecentPorts('{"code":"THLCH"}'), []);
+  assert.deepEqual(
+    parseRecentPorts('[{"code":"THLCH","name":"Laem Chabang","extra":1},{"code":2},null]'),
+    [{ code: 'THLCH', name: 'Laem Chabang' }],
+  );
 });
 
 test('carrierTone is fixed by the carrier position, never danger', () => {
   const carriers = ADAPTERS.map((entry) => entry.carrier);
   assert.equal(carrierTone(carriers, 'KMTC'), 'accent');
-  assert.equal(carrierTone(carriers, 'SITC'), 'success');
+  assert.equal(carrierTone(carriers, 'HEUNGA'), 'success');
+  assert.equal(carrierTone(carriers, 'SITC'), 'warning');
   assert.equal(carrierTone(carriers, 'MAERSK'), 'accent');
 });
 

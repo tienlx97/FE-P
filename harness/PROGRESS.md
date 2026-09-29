@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: POD selector, several carriers (task 1.7)
+
+- User: POD as a selector; "Hãng tàu" can check several lines. Also asked whether Heung-A needed UI work: no — the page lists carriers from `GET /shipments/tracking/carriers`; with the BE Heung-A adapters (BE `82e1fa1`, dev API container rebuilt, no migration) Heung-A is selectable and loads sailings.
+- POD: a plain `Selector` would load and render all 17,520 catalog ports (all are seaports, no subset to filter on), so `PortSearchSelector` uses Astryx `ComplexSelector`: selector trigger + popup with a search field (server `POST /ports/search`, ≥ 2 chars, 250 ms debounce, 30 results) and, before typing, "Chọn gần đây" (last 8 picked PODs, `localStorage`, read on open, try/catch). The popup restarts empty on each opening. `PortTypeahead` deleted (no other user). `useSearchPortsQuery` takes `enabled`.
+- "Hãng tàu": `MultiSelector`; none checked (placeholder) = every connected carrier, all connected checked also reads "Tất cả hãng", else the names; carriers not connected are listed disabled "(chưa kết nối)". `carriersToSearch(adapters, codes)` keeps list order.
+- Unit tests (`config/vessel-schedule.test.js`, 17): options / disabled, carriers to search, trigger label, search conditions, recent-port list and stored-value parsing.
+- Browser (Chrome, :3000, logged in by the user): POD "laem" → THBNL Ban Laem, THLCH Laem Chabang; reopened → "Chọn gần đây"; Hãng tàu: KMTC, Heung-A selectable, 7 others disabled; VNSGN → THLCH Heung-A only: "Heung-A · 23 chuyến"; KMTC + Heung-A: 25 + 23 sailings on the calendar.
+- `./harness/verify.sh` passed: `harness/runs/20260929-160221-852/` (first run failed: `readonly-input-wrappers.test.js` requires the shared `TextInput` wrapper — fixed).
+
 ## 2026-09-29 — Dev compile measured on `pnpm dev`; PostCSS StyleX fix; docs
 
 - User: write the fixes into docs and test on dev. Docs: ADR-0012 (rewritten with dev measurements), `docs/stylex-installation.md` ("This repository" section), `docs/architecture.md` (theme wiring → Meta).
