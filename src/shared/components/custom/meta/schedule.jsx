@@ -438,8 +438,9 @@ const styles = stylex.create({
     paddingInline: 'var(--spacing-3)',
     textTransform: 'uppercase',
   },
+  // Sundays in blue (was red): red stays for sailings that cannot be booked.
   sunday: {
-    color: 'var(--color-error)',
+    color: 'var(--color-accent)',
   },
   monthRows: (count) => ({
     gridTemplateRows: `repeat(${count}, minmax(0, 1fr))`,
@@ -471,7 +472,7 @@ const styles = stylex.create({
     color: 'var(--color-on-accent)',
   },
   dayNumberSundayToday: {
-    backgroundColor: 'var(--color-error)',
+    backgroundColor: 'var(--color-accent)',
     color: 'var(--color-on-accent)',
   },
   more: {

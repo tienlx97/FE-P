@@ -29,3 +29,6 @@
   in the hover card and drawer; a sailing whose vessel stops short of the
   POD (`onCarriage`, Heung-A → Bangkok via Laem Chabang + barge) says so in
   both; calendar ids tell it from the same vessel's direct call.
+- [x] 1.12 SI cut-off in the hover card; Sundays blue in `MetaSchedule`
+  (red stays for sailings that cannot be booked); Namsung shown once its BE
+  adapters landed (no FE change — carriers come from the API).
