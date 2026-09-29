@@ -1212,6 +1212,51 @@ export {};
  * @property {boolean} isImplemented - false = placeholder, hand entry
  * @property {string | null} source
  * @property {string[]} versions
+ * @property {CarrierScheduleAdapter | null} [schedule] - the carrier's vessel schedule adapters
+ */
+
+/**
+ * A carrier's vessel schedule adapters (BE-kt-xnk `add-carrier-schedules`).
+ * @typedef {Object} CarrierScheduleAdapter
+ * @property {boolean} enabled
+ * @property {string | null} activeVersion
+ * @property {boolean} isImplemented - false = placeholder, no schedule
+ * @property {string | null} source
+ * @property {string[]} versions
+ */
+
+/**
+ * One sailing of a carrier's point-to-point schedule. Date-times are the
+ * carrier's local port times without offset (`2026-10-06T20:00:00`).
+ * @typedef {Object} CarrierSailing
+ * @property {string} vesselName
+ * @property {string | null} voyageNumber
+ * @property {string} portOfLoading
+ * @property {string | null} portOfLoadingTerminal
+ * @property {string} portOfDischarge
+ * @property {string | null} etd
+ * @property {string | null} eta
+ * @property {string | null} siCutoff
+ * @property {string | null} cyCutoff
+ * @property {string | null} vgmCutoff
+ * @property {string[]} transshipmentPorts
+ * @property {number | null} transitDays
+ * @property {string | null} serviceCode
+ */
+
+/**
+ * `GET /shipments/schedules`: a carrier's sailings POL → POD. `status`
+ * other than `Synced` comes with `error` and no sailings.
+ * @typedef {Object} CarrierScheduleSearch
+ * @property {ShippingCarrier} carrier
+ * @property {CarrierScheduleAdapter} adapter
+ * @property {{ code: string | null, name: string }} portOfLoading
+ * @property {{ code: string | null, name: string }} portOfDischarge
+ * @property {string} from
+ * @property {string} to
+ * @property {'Synced' | 'NotImplemented' | 'Failed' | 'Disabled' | 'Incomplete'} status
+ * @property {string | null} error
+ * @property {CarrierSailing[]} sailings
  */
 
 /**
