@@ -13,9 +13,9 @@ import {
   portOptions,
   portSearchConditions,
   RECENT_PORTS_LIMIT,
-  sailingItems,
   sailingTitle,
   scheduleCarriers,
+  scheduleItems,
   visibleRange,
   withRecentPort,
 } from './vessel-schedule.js';
@@ -53,21 +53,47 @@ test('carrier times are shown as given, date then time', () => {
 
 const NOW = '2026-09-29T11:00:00';
 
-test('sailingItems puts each sailing on its ETD date, late ETDs included', () => {
-  const items = sailingItems(KMTC, [sailing({ bookingStatus: 'Open' }), sailing({ etd: '2026-09-29T23:30:00', voyageNumber: '2616S', bookingStatus: 'Open' }), sailing({ etd: null })], 'accent', NOW);
+const HEUNGA = { code: 'HEUNGA', name: 'Heung-A' };
+
+test('scheduleItems puts each sailing on its ETD date, titled by its tag only', () => {
+  const items = scheduleItems(
+    [{ carrier: KMTC, tone: 'accent', sailings: [sailing({ bookingStatus: 'Open' }), sailing({ etd: '2026-09-29T23:30:00', voyageNumber: '2616S', bookingStatus: 'Open' }), sailing({ etd: null })] }],
+    NOW,
+  );
 
   assert.deepEqual(items, [
-    { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S · Đã qua giờ khởi hành', tone: 'danger' },
     { id: 'KMTC:KMTC ULSAN:2616S:2026-09-29T23:30:00', date: '2026-09-29', title: 'KMTC - KMTC ULSAN / 2616S', tone: 'accent' },
+    { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S', tone: 'danger' },
   ]);
 });
 
-test('a full sailing is red and says "Hết chỗ" after its tag', () => {
-  const full = sailing({ etd: '2026-10-07T05:00:00', siCutoff: '2026-10-05T16:00:00', bookingStatus: 'Full' });
-  const [item] = sailingItems(KMTC, [full], 'accent', NOW);
+test('scheduleItems: bookable first, then ETD, then carrier order; red ones last', () => {
+  const day = '2026-10-07';
+  const items = scheduleItems(
+    [
+      {
+        carrier: KMTC,
+        tone: 'accent',
+        sailings: [
+          sailing({ voyageNumber: 'FULL', etd: `${day}T01:00:00`, siCutoff: '2026-10-05T16:00:00', bookingStatus: 'Full' }),
+          sailing({ voyageNumber: 'A', etd: `${day}T09:00:00`, bookingStatus: 'Open' }),
+          sailing({ voyageNumber: 'B', etd: `${day}T12:00:00`, bookingStatus: 'Open' }),
+        ],
+      },
+      { carrier: HEUNGA, tone: 'success', sailings: [sailing({ vesselName: 'SKY ORION', voyageNumber: 'C', etd: `${day}T09:00:00`, bookingStatus: 'Open' })] },
+    ],
+    NOW,
+  );
 
-  assert.equal(item.tone, 'danger');
-  assert.equal(item.title, 'KMTC - KMTC ULSAN / 2615S · Hết chỗ');
+  assert.deepEqual(
+    items.map((item) => [item.title, item.tone]),
+    [
+      ['KMTC - KMTC ULSAN / A', 'accent'],
+      ['Heung-A - SKY ORION / C', 'success'],
+      ['KMTC - KMTC ULSAN / B', 'accent'],
+      ['KMTC - KMTC ULSAN / FULL', 'danger'],
+    ],
+  );
 });
 
 test('bookingState: carrier-closed is "hết chỗ" only before the cut-off', () => {
@@ -82,16 +108,14 @@ test('bookingState: carrier-closed is "hết chỗ" only before the cut-off', ()
   assert.equal(bookingState(sailing({ bookingStatus: 'Open' }), NOW), 'departed');
 });
 
-test('all confirmed unavailable statuses are red with a reason', () => {
-  const cases = [
-    ['CutoffPassed', 'Đã đóng booking'],
-    ['NotYetOpen', 'Chưa mở booking'],
-    ['Full', 'Hết chỗ'],
-  ];
-  for (const [bookingStatus, reason] of cases) {
-    const [item] = sailingItems(KMTC, [sailing({ etd: '2026-10-07T05:00:00', siCutoff: '2026-10-05T16:00:00', bookingStatus })], 'accent', NOW);
+test('every confirmed unavailable status is red, without the reason in the title', () => {
+  for (const bookingStatus of ['CutoffPassed', 'NotYetOpen', 'Full']) {
+    const [item] = scheduleItems(
+      [{ carrier: KMTC, tone: 'accent', sailings: [sailing({ etd: '2026-10-07T05:00:00', siCutoff: '2026-10-05T16:00:00', bookingStatus })] }],
+      NOW,
+    );
     assert.equal(item.tone, 'danger');
-    assert.ok(item.title.endsWith(` · ${reason}`));
+    assert.equal(item.title, 'KMTC - KMTC ULSAN / 2615S');
   }
 });
 
@@ -155,6 +179,7 @@ test('carrierSelectionLabel: "Tất cả hãng" for none or all, else the names'
 });
 
 test('portSearchConditions looks the text up in code, name or full name', () => {
+  assert.deepEqual(portSearchConditions('  '), [], 'blank = every port');
   assert.deepEqual(
     portSearchConditions('  laem ').map(({ field, operator, value, connector }) => [field, operator, value, connector]),
     [

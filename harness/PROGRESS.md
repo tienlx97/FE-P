@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: tags only, bookable first, POD like POL, skeletons, fitted cells (task 1.8)
+
+- User: (1) unavailable sailings without "Đã qua giờ khởi hành / Đã đóng booking / Hết chỗ" on the calendar (drawer keeps it); (2) POD as a selector like POL; (3) skeletons; (4) better "+n mục", bookable sailings before the others in a day.
+- (1)+(4) `scheduleItems(groups, now)` replaces `sailingItems`: title = tag only, unavailable still red; order bookable → ETD → carrier position (`MetaSchedule` keeps order inside a day). Reason stays in the hover card and drawer.
+- (2) Measured a real `Selector` with all ports (temporary probe, removed): catalog 17,520 ports, 4.5 MB uncompressed, 150 ms fetch — but opening took 25 s until options, 44 s until painted (17,661 rows) on dev. So `PortSearchSelector` stays a `ComplexSelector` but behaves like POL: list on open ("Chọn gần đây" + "Tất cả cảng" sorted by code, `usePortPagesQuery` 50 per page, next page on scroll), search on top filters on the server, popup as wide as the field (ResizeObserver). Live: 52 → 102 → 152 → 202 rows on scroll; "laem cha" → THLCH.
+- (3) `MetaSchedule` `isLoading`: skeleton rows in month cells / 2-week rows while any carrier's sailings for the range load; POD list shows skeletons while a page loads.
+- (4) `MetaSchedule` measures its cells (ResizeObserver) and shows as many one-row items as fit (rows are as tall as the day number), else one less + a one-row "+n mục"; `maxPerDay` is now an optional cap. Helpers `rowsThatFit` / `dayOverflow` (`schedule-calendar.js`, tested). Also changes `/logistics` (shared): Sep 29 shows 4 items instead of 3 + "+1 mục".
+- Browser (:3000): VNSGN → THLCH, all carriers: 4/10 KMTC (open), Heung-A (open), Heung-A (red); 19/9 four items + "+4 mục"; December skeletons while loading.
+- `./harness/verify.sh` passed: `harness/runs/20260929-162115-489/`.
+
 ## 2026-09-29 — Vessel schedule: POD selector, several carriers (task 1.7)
 
 - User: POD as a selector; "Hãng tàu" can check several lines. Also asked whether Heung-A needed UI work: no — the page lists carriers from `GET /shipments/tracking/carriers`; with the BE Heung-A adapters (BE `82e1fa1`, dev API container rebuilt, no migration) Heung-A is selectable and loads sailings.

@@ -24,8 +24,8 @@ import {
   localNow,
   portOptions,
   sailingId,
-  sailingItems,
   scheduleCarriers,
+  scheduleItems,
   visibleRange,
 } from '../config/vessel-schedule.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
@@ -96,6 +96,8 @@ export function VesselScheduleWorkspace() {
   // To the minute, so the memo below recomputes at most once a minute.
   const now = localNow().slice(0, 16);
   const results = useCarrierSchedulesQueries({ search, ...range });
+  // Skeletons while any searched carrier's sailings for this range are still loading.
+  const isLoadingSailings = Boolean(search) && results.some((result) => result.isLoading);
 
   const entries = useMemo(() => {
     /** @type {Map<string, SailingEntry>} */
@@ -113,12 +115,15 @@ export function VesselScheduleWorkspace() {
 
   const items = useMemo(
     () =>
-      (search?.carriers ?? []).flatMap((carrier, index) => {
-        const data = results[index]?.data;
-        return data?.success && data.search.status === 'Synced'
-          ? sailingItems(carrier, data.search.sailings, carrierTone(allCarriers, carrier.code), now)
-          : [];
-      }),
+      scheduleItems(
+        (search?.carriers ?? []).flatMap((carrier, index) => {
+          const data = results[index]?.data;
+          return data?.success && data.search.status === 'Synced'
+            ? [{ carrier, sailings: data.search.sailings, tone: carrierTone(allCarriers, carrier.code) }]
+            : [];
+        }),
+        now,
+      ),
     [results, search, allCarriers, now],
   );
 
@@ -183,6 +188,7 @@ export function VesselScheduleWorkspace() {
           onAnchorChange={setAnchor}
           today={today}
           items={items}
+          isLoading={isLoadingSailings}
           onItemClick={(item) => setSelectedId(item.id)}
           renderItemPreview={(item) => {
             const entry = entries.get(item.id);

@@ -11,26 +11,33 @@ import {
   SegmentedControl,
   SegmentedControlItem,
 } from '@astryxdesign/core/SegmentedControl';
+import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useEffect, useId, useState } from 'react';
 
 import {
   addDays,
   addMonths,
+  dayOverflow,
   dayRange,
   groupByDay,
   isSameMonth,
   monthTitle,
   monthWeeks,
   rangeTitle,
+  rowsThatFit,
   WEEKDAY_LABELS,
   weekdayLabel,
 } from '@/shared/config/schedule-calendar.js';
 
 /** Days in the "2 tuần" view. */
 const LIST_DAYS = 14;
+
+/** Month-cell rows before the grid has been measured. */
+const DEFAULT_ROWS = 3;
 
 /**
  * @typedef {'accent' | 'success' | 'warning' | 'danger' | 'neutral'} MetaScheduleTone
@@ -44,10 +51,12 @@ const LIST_DAYS = 14;
  * with a Vietnamese header (‹ Hôm nay › · title · view switch) and either
  * a month grid whose week rows stretch to the card's height, or a 14-day
  * list. Items are one-day, clickable pills with a colored rail (`tone`);
- * past days keep their colors. A month day shows up to `maxPerDay` items,
- * then "+n mục" opens that day in the list view. `renderItemPreview`
- * (optional) shows a hover card on each item — also opened by keyboard
- * focus.
+ * past days keep their colors. A month day shows as many items as its
+ * cell fits (measured; `maxPerDay` caps it), otherwise one row less and
+ * "+n mục", which opens that day in the list view; items keep the order
+ * given. `renderItemPreview` (optional) shows a hover card on each item —
+ * also opened by keyboard focus. `isLoading` draws skeleton rows instead of
+ * items.
  * @param {{
  *   label: string,
  *   view: MetaScheduleView,
@@ -61,6 +70,7 @@ const LIST_DAYS = 14;
  *   headerStart?: import('react').ReactNode,
  *   headerEnd?: import('react').ReactNode,
  *   maxPerDay?: number,
+ *   isLoading?: boolean,
  * }} props
  */
 export function MetaSchedule({
@@ -75,7 +85,8 @@ export function MetaSchedule({
   renderItemPreview,
   headerStart,
   headerEnd,
-  maxPerDay = 3,
+  maxPerDay = Infinity,
+  isLoading = false,
 }) {
   const byDay = groupByDay(items);
   const listDays = dayRange(anchor, LIST_DAYS);
@@ -135,6 +146,7 @@ export function MetaSchedule({
           today={today}
           byDay={byDay}
           maxPerDay={maxPerDay}
+          isLoading={isLoading}
           onItemClick={onItemClick}
           renderItemPreview={renderItemPreview}
           onShowDay={(day) => {
@@ -147,6 +159,7 @@ export function MetaSchedule({
           days={listDays}
           today={today}
           byDay={byDay}
+          isLoading={isLoading}
           onItemClick={onItemClick}
           renderItemPreview={renderItemPreview}
         />
@@ -156,18 +169,55 @@ export function MetaSchedule({
 }
 
 /**
+ * Rows that fit in the month grid's cells (all the same height), measured
+ * whenever the grid resizes; {@link DEFAULT_ROWS} until then.
+ * @param {string} gridId
+ */
+function useMonthCellRows(gridId) {
+  const [rows, setRows] = useState(DEFAULT_ROWS);
+
+  useEffect(() => {
+    const grid = document.getElementById(gridId);
+    if (!grid || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(() => {
+      const cell = /** @type {HTMLElement | null} */ (grid.firstElementChild);
+      const dayNumber = /** @type {HTMLElement | null} */ (cell?.firstElementChild ?? null);
+      if (!cell || !dayNumber) return;
+      const style = getComputedStyle(cell);
+      setRows(
+        rowsThatFit({
+          available: cell.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom),
+          rowHeight: dayNumber.getBoundingClientRect().height,
+          gap: parseFloat(style.rowGap) || 0,
+        }),
+      );
+    });
+    observer.observe(grid);
+    return () => observer.disconnect();
+  }, [gridId]);
+
+  return rows;
+}
+
+/** Skeleton rows of a day while loading (0–2, fixed per day so it does not flicker). */
+const skeletonRows = (/** @type {string} */ day) => Number(day.slice(8, 10)) % 3;
+
+/**
  * @param {{
  *   anchor: string,
  *   today: string,
  *   byDay: Map<string, MetaScheduleItem[]>,
  *   maxPerDay: number,
+ *   isLoading: boolean,
  *   onItemClick?: (item: MetaScheduleItem) => void,
  *   renderItemPreview?: (item: MetaScheduleItem) => import('react').ReactNode,
  *   onShowDay: (day: string) => void,
  * }} props
  */
-function MonthGrid({ anchor, today, byDay, maxPerDay, onItemClick, renderItemPreview, onShowDay }) {
+function MonthGrid({ anchor, today, byDay, maxPerDay, isLoading, onItemClick, renderItemPreview, onShowDay }) {
   const weeks = monthWeeks(anchor);
+  const gridId = useId();
+  const rows = Math.min(useMonthCellRows(gridId), maxPerDay);
 
   return (
     <VStack gap={0} hAlign="stretch" xstyle={styles.fill}>
@@ -178,10 +228,10 @@ function MonthGrid({ anchor, today, byDay, maxPerDay, onItemClick, renderItemPre
           </Text>
         ))}
       </Grid>
-      <Grid columns={7} gap={0} xstyle={[styles.fill, styles.monthRows(weeks.length)]}>
+      <Grid id={gridId} columns={7} gap={0} xstyle={[styles.fill, styles.monthRows(weeks.length)]}>
         {weeks.flat().map((day) => {
           const dayItems = byDay.get(day) ?? [];
-          const hidden = dayItems.length - maxPerDay;
+          const { shown, hidden } = dayOverflow(dayItems.length, rows);
           const isOutside = !isSameMonth(day, anchor);
           return (
             <VStack
@@ -191,17 +241,26 @@ function MonthGrid({ anchor, today, byDay, maxPerDay, onItemClick, renderItemPre
               xstyle={[styles.cell, isOutside && styles.cellOutside, day === today && styles.cellToday]}
             >
               <DayNumber day={day} today={today} isMuted={isOutside} />
-              {dayItems.slice(0, maxPerDay).map((item) => (
-                <ScheduleItem key={item.id} item={item} onClick={onItemClick} renderPreview={renderItemPreview} />
-              ))}
-              {hidden > 0 ? (
-                <Button
-                  label={`+${hidden} mục`}
-                  variant="ghost"
-                  size="sm"
-                  xstyle={styles.more}
+              {isLoading
+                ? Array.from({ length: Math.min(skeletonRows(day), rows) }, (_, index) => (
+                    <Skeleton key={index} height="var(--spacing-6)" radius={1} index={index} />
+                  ))
+                : dayItems.slice(0, shown).map((item) => (
+                    <ScheduleItem key={item.id} item={item} onClick={onItemClick} renderPreview={renderItemPreview} />
+                  ))}
+              {!isLoading && hidden > 0 ? (
+                <HStack
+                  as="button"
+                  gap={0}
+                  vAlign="center"
+                  aria-label={`Xem thêm ${hidden} mục ngày ${day}`}
                   onClick={() => onShowDay(day)}
-                />
+                  xstyle={styles.more}
+                >
+                  <Text size="sm" weight="semibold" color="secondary">
+                    {`+${hidden} mục`}
+                  </Text>
+                </HStack>
               ) : null}
             </VStack>
           );
@@ -216,11 +275,12 @@ function MonthGrid({ anchor, today, byDay, maxPerDay, onItemClick, renderItemPre
  *   days: string[],
  *   today: string,
  *   byDay: Map<string, MetaScheduleItem[]>,
+ *   isLoading: boolean,
  *   onItemClick?: (item: MetaScheduleItem) => void,
  *   renderItemPreview?: (item: MetaScheduleItem) => import('react').ReactNode,
  * }} props
  */
-function DayList({ days, today, byDay, onItemClick, renderItemPreview }) {
+function DayList({ days, today, byDay, isLoading, onItemClick, renderItemPreview }) {
   return (
     <ScrollableArea label="Các ngày" height="100%" xstyle={styles.fill}>
       <VStack gap={0} hAlign="stretch">
@@ -234,7 +294,13 @@ function DayList({ days, today, byDay, onItemClick, renderItemPreview }) {
                 </Text>
                 <DayNumber day={day} today={today} />
               </VStack>
-              {dayItems.length > 0 ? (
+              {isLoading ? (
+                <HStack gap={1.5} wrap="wrap" xstyle={styles.listItems}>
+                  {Array.from({ length: skeletonRows(day) + 1 }, (_, index) => (
+                    <Skeleton key={index} width="12rem" height="var(--spacing-6)" radius={1} index={index} />
+                  ))}
+                </HStack>
+              ) : dayItems.length > 0 ? (
                 <HStack gap={1.5} wrap="wrap" xstyle={styles.listItems}>
                   {dayItems.map((item) => (
                     <ScheduleItem
@@ -297,7 +363,7 @@ function ScheduleItem({ item, onClick, renderPreview, isWide = false }) {
       vAlign="center"
       aria-label={item.title}
       onClick={() => onClick?.(item)}
-      xstyle={[styles.item, tones[item.tone], isWide && styles.itemWide]}
+      xstyle={[styles.item, tones[item.tone], isWide ? styles.itemWide : styles.itemRow]}
     >
       <Text size="sm" weight="semibold" color="inherit" xstyle={isWide ? styles.itemTextWide : styles.itemText}>
         {item.title}
@@ -410,6 +476,29 @@ const styles = stylex.create({
   },
   more: {
     alignSelf: 'flex-start',
+    backgroundColor: {
+      default: 'transparent',
+      ':hover': 'var(--meta-inset-bg)',
+    },
+    borderRadius: 'var(--radius-element)',
+    borderWidth: 0,
+    cursor: 'pointer',
+    flexShrink: 0,
+    height: 'var(--spacing-6)',
+    outlineColor: {
+      default: null,
+      ':focus-visible': 'var(--color-accent)',
+    },
+    outlineStyle: {
+      default: null,
+      ':focus-visible': 'solid',
+    },
+    paddingInline: 'var(--spacing-1-5)',
+  },
+  /** A month-grid item: exactly one row, as tall as the day number. */
+  itemRow: {
+    flexShrink: 0,
+    height: 'var(--spacing-6)',
   },
   item: {
     backgroundColor: 'transparent',

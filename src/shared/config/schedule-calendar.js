@@ -97,3 +97,26 @@ export function groupByDay(items) {
   }
   return byDay;
 }
+
+/**
+ * Rows that fit in a month cell under its day number: every row (item or
+ * "+n mục") is as tall as the day number, `gap` apart.
+ * @param {{ available: number, rowHeight: number, gap: number }} size - px
+ */
+export function rowsThatFit({ available, rowHeight, gap }) {
+  if (!(available > 0) || !(rowHeight > 0)) return 0;
+  return Math.max(0, Math.floor((available - rowHeight) / (rowHeight + gap)));
+}
+
+/**
+ * How many of a day's `count` items a month cell shows: all when they fit
+ * in `rows`, else one row less and a "+n mục" row for the rest.
+ * @param {number} count
+ * @param {number} rows
+ * @returns {{ shown: number, hidden: number }}
+ */
+export function dayOverflow(count, rows) {
+  if (count <= rows) return { shown: count, hidden: 0 };
+  const shown = Math.max(rows - 1, 0);
+  return { shown, hidden: count - shown };
+}

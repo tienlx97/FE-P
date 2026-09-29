@@ -13,9 +13,6 @@ import { formatScheduleValue } from './shipment-schedule.js';
 /** How many recently picked PODs the POD selector lists when opened. */
 export const RECENT_PORTS_LIMIT = 8;
 
-/** Shortest POD search text sent to the server. */
-export const PORT_SEARCH_MIN_LENGTH = 2;
-
 /** `MetaSchedule` tones given to carriers in list order (danger is kept for errors). */
 const CARRIER_TONES = /** @type {const} */ (['accent', 'success', 'warning', 'neutral']);
 
@@ -127,29 +124,45 @@ export function bookingState(sailing, now) {
 }
 
 /**
- * One calendar item per sailing with an ETD, on the ETD's date. Confirmed
- * unavailable sailings are red and carry the reason after their tag.
- * @param {import('../types/index.js').ShippingCarrier} carrier
- * @param {import('../types/index.js').CarrierSailing[]} sailings
- * @param {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleTone} tone
+ * The calendar items of every searched carrier: one per sailing with an
+ * ETD, on the ETD's date, titled by its tag only. Sailings that cannot be
+ * booked (departed, full, closed, not yet open) are red — the reason is in
+ * the hover card and drawer. Order (kept inside each day): bookable first,
+ * then by ETD, then by carrier position.
+ * @param {{
+ *   carrier: import('../types/index.js').ShippingCarrier,
+ *   sailings: import('../types/index.js').CarrierSailing[],
+ *   tone: import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleTone,
+ * }[]} groups - one per carrier, in list order
  * @param {string} now - local date-time (`localNow()`)
  * @returns {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleItem[]}
  */
-export function sailingItems(carrier, sailings, tone, now) {
-  return sailings.flatMap((sailing) => {
-    if (!sailing.etd) return [];
-    const state = BOOKING_STATES[bookingState(sailing, now)];
-    const isUnavailable = state.tone === 'danger';
-
-    return [
-      {
-        id: sailingId(carrier.code, sailing),
-        date: sailing.etd.slice(0, 10),
-        title: isUnavailable ? `${sailingTitle(carrier.name, sailing)} · ${state.label}` : sailingTitle(carrier.name, sailing),
-        tone: isUnavailable ? 'danger' : tone,
-      },
-    ];
-  });
+export function scheduleItems(groups, now) {
+  return groups
+    .flatMap(({ carrier, sailings, tone }, carrierIndex) =>
+      sailings.flatMap((sailing) => {
+        if (!sailing.etd) return [];
+        const isUnavailable = BOOKING_STATES[bookingState(sailing, now)].tone === 'danger';
+        return [
+          {
+            rank: [isUnavailable ? 1 : 0, sailing.etd, carrierIndex],
+            item: {
+              id: sailingId(carrier.code, sailing),
+              date: sailing.etd.slice(0, 10),
+              title: sailingTitle(carrier.name, sailing),
+              tone: isUnavailable ? /** @type {const} */ ('danger') : tone,
+            },
+          },
+        ];
+      }),
+    )
+    .sort(
+      (a, b) =>
+        Number(a.rank[0]) - Number(b.rank[0]) ||
+        String(a.rank[1]).localeCompare(String(b.rank[1])) ||
+        Number(a.rank[2]) - Number(b.rank[2]),
+    )
+    .map((entry) => entry.item);
 }
 
 /**
@@ -208,11 +221,12 @@ export function carrierSelectionLabel(items, connectedCount) {
 
 /**
  * `POST /ports/search` conditions for the POD selector: the text in the
- * UN/LOCODE, the name or the full name.
+ * UN/LOCODE, the name or the full name; none for blank text (every port).
  * @param {string} text
  */
 export function portSearchConditions(text) {
   const value = text.trim();
+  if (!value) return [];
   return ['code', 'name', 'fullName'].map((field, index) => ({
     id: field,
     field,
