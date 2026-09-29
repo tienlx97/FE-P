@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: UN/LOCODE ports, carrier selector, search button
+
+- User: POL / POD by UN/LOCODE, a carrier selector (default all) and a search button. The port typeaheads list only catalog ports with a UN/LOCODE, labelled `VNCLI — Cát Lái`, and send only the code (BE-kt-xnk now requires it and maps it per carrier). "Hãng tàu" selector: "Tất cả hãng" (every carrier whose schedule is connected) or one carrier; carriers not connected are marked "(chưa kết nối)" and, when chosen, show the BE's reason. The calendar loads only after "Tìm" (disabled until both ports are picked); pressing it again re-runs the search; month paging reuses the committed search. Carrier colours are fixed over all carriers.
+- Unit tests: selector options, carriers to search, code-only port value (`config/vessel-schedule.test.js`, 10 tests).
+- Browser (Chrome, :3000): the page and the selector options render ("Tất cả hãng", "KMTC", "Heung-A (chưa kết nối)"…). Typing into the typeaheads could not be exercised: the Chrome window was hidden (`visibilityState: hidden`), keystrokes did not reach the page.
+- `./harness/verify.sh` passed: `harness/runs/20260929-110344-822/`.
+
 ## 2026-09-29 — Vessel schedule: KMTC 403 fixed in BE, late ETD on one day
 
 - The "KMTC chặn truy cập (HTTP 403, Akamai)" on `/logistics/schedule` was the BE sending HTTP/1.1 (Akamai needs HTTP/2) — fixed in BE-kt-xnk `22ee728`. With the rebuilt dev API the page showed "KMTC · 20 chuyến" for VNSGN → THBKK, events titled `KMTC - SKY ORION / 2610S` at the carrier's times.
