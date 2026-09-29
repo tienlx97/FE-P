@@ -1,9 +1,10 @@
 import { defineTheme } from '@astryxdesign/core/theme';
 
 // Inter 4.1.1 variable, self-hosted in `public/fonts/inter/` and declared
-// in `src/app/globals.css` (user request, 2026-09-25).
+// in `src/app/globals.css` (user request, 2026-09-25) — the app's only
+// font (2026-09-29); the rest of the stack is the system fallback.
 const INTER =
-  'InterVariable, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  'InterVariable, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
 
 /**
  * "Meta" — a custom Astryx theme built from the "Optimistic VF Commerce &
@@ -435,6 +436,14 @@ export const metaTheme = defineTheme({
       base: {
         backgroundColor: 'var(--meta-surface-container-high)',
         height: 'var(--spacing-1)',
+      },
+    },
+    // The app's only theme (2026-09-29): Astryx's success toast is
+    // otherwise unthemed (carried over from the former kt-xnk theme).
+    toast: {
+      'type:success': {
+        backgroundColor: 'var(--color-success)',
+        color: 'var(--color-on-success)',
       },
     },
     card: {

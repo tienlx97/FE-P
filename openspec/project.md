@@ -17,7 +17,7 @@ uses a light theme and feature-based `src/` architecture.
 - Framework: Next.js (latest, App Router) — UI normally uses real
   `@astryxdesign/core` components; the protected Docs shell and its MDX
   authoring surface are the documented react.dev-parity exception below
-- Style: Astryx theme tokens (`src/shared/components/theme.js`) drive all
+- Style: Astryx theme tokens (`src/shared/components/custom/meta/theme.js`) drive all
   color/spacing. StyleX is the sanctioned styling runtime for local semantic
   components and the `xstyle` escape hatch on Astryx components — see
   `docs/stylex-installation.md` and `docs/stylex-authoring.md`
@@ -76,45 +76,19 @@ build with messages that explain the fix.
   queries/pseudo-classes. Use StyleX (`xstyle` prop, see
   `docs/stylex-authoring.md` antipatterns) only for layout overrides Astryx
   props don't cover — never to re-implement colors or component chrome.
-- Color: all colors come from Astryx theme tokens in
-  `src/shared/components/theme.js` (`defineTheme` — `--color-accent`,
-  `--color-text-primary`, etc.) — no hardcoded hex outside that file
-  (enforced by the `no-restricted-syntax` hex rule in `eslint.config.mjs`).
-  `src/shared/components/theme.js` is the editable source; `pnpm theme:build`
-  (runs automatically before `dev`/`build`/`verify`) compiles it via
-  `astryx theme build` into gitignored, do-not-edit artifacts
-  (`src/shared/components/kt-xnk.js`, `src/shared/components/kt-xnk.d.ts`,
-  `src/shared/components/kt-xnk.variants.d.ts`,
-  `src/shared/components/theme.built.css`) for static, non-runtime-injected
-  CSS — see `theme-provider.jsx` for how they're wired into `<Theme>`.
-  The theme is `extends: stoneTheme` from the installed
-  `@astryxdesign/theme-stone` package (redesign-theme-stone), not a
-  from-scratch `defineTheme` — Stone's own aesthetic (pill radius,
-  Montserrat headings, categorical colors, badge/banner/switch/progressbar/
-  field-status/input-status component coverage) passes through untouched;
-  `theme.js` only layers the DN Group brand and a handful of app-specific
-  functional fixes on top:
-  (1) the accent token family (`--color-accent`, `--color-accent-muted`,
-  `--color-text-accent`, `--color-icon-accent`, `--color-on-accent`) is the
-  logo teal `#247768`, not a darkened variant, sampled from
-  `public/images/logo-dn-group.png`; (2) `button['variant:destructive']`
-  (Xóa and other dangerous actions) is the logo red `#c2252a`, solid, not
-  Stone's default soft red-tint pill — `variant:secondary` (Cancel/Hủy,
-  used app-wide) is left as Stone's own neutral outline, since it's a
-  de-emphasized action, not a second brand color; (3) `--font-family-body`
-  stays `Optimistic Text Vietnamese` rather than Stone's Figtree, which
-  ships no Vietnamese subset (would reintroduce the mixed-font bug
-  `vietnamese-font-coverage` fixed); `--font-family-heading`/
-  `--font-family-code` point at Montserrat/JetBrains Mono (both do carry a
-  Vietnamese subset) self-hosted via `next/font/google`
-  (`src/shared/config/fonts.js`, applied in `layout.jsx`) since next/font
-  never exposes a literal family name a CSS-var token override can key off;
-  (4) a few table/toast/tab overrides fix real bugs unrelated to branding
-  (sticky header/columns, internal scroll height, an unthemed success
-  toast) and are unaffected by which base theme is in use. Status hues
-  (green/amber/red) stay Stone's own conventional tokens. Adding a new hue
-  or component override means updating `src/shared/components/theme.js`,
-  not inlining one.
+- Color: all colors come from Astryx theme tokens in the Meta theme,
+  `src/shared/components/custom/meta/theme.js` (`defineTheme`), the app's
+  only theme (ADR-0011) — no hardcoded hex outside that file (enforced by
+  the `no-restricted-syntax` hex rule in `eslint.config.mjs`). `pnpm
+  theme:build` (runs automatically before `dev`/`build`/`verify`) compiles
+  it via `astryx theme build` into tracked, do-not-edit artifacts
+  (`custom/meta/meta.js`, `meta.d.ts`, `meta.variants.d.ts`,
+  `theme.built.css`). `theme-provider.jsx` wraps the whole app in
+  `<Theme theme={metaTheme}>`. Adding a hue or component override means
+  updating `custom/meta/theme.js`, not inlining one.
+- Font: InterVariable only (`public/fonts/inter/`, `@font-face` in
+  `src/app/globals.css`) for body, headings and code; no `next/font`, no
+  other face. `src/app/fonts.test.js` guards it.
 - Every convention here must map to a lint/structural rule. A convention that
   cannot be checked mechanically goes to `harness/GOLDEN_RULES.md` with a plan
   to make it checkable.

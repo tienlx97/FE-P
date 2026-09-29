@@ -14,7 +14,7 @@ import { use, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
 import { CommonDialog } from './common-dialog.jsx';
-import { ktXnkTheme } from './kt-xnk.js';
+import { metaTheme } from './custom/meta/meta.js';
 import { ThemeProvider } from './theme-provider.jsx';
 
 const styles = stylex.create({
@@ -70,7 +70,7 @@ export function FormDialog(props) {
   const session = <FormDialogSession {...props} />;
   return createPortal(
     <ThemeProvider>
-      {callerTheme && callerTheme.theme.name !== ktXnkTheme.name ? (
+      {callerTheme && callerTheme.theme.name !== metaTheme.name ? (
         <Theme theme={callerTheme.theme} mode={callerTheme.mode}>
           {session}
         </Theme>

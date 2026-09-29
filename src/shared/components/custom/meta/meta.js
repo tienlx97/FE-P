@@ -105,9 +105,9 @@ export const metaTheme = {
     "--radius-page": "28px",
     "--radius-chat": "28px",
     "--radius-full": "9999px",
-    "--font-family-body": "InterVariable, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
-    "--font-family-heading": "InterVariable, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
-    "--font-family-code": "InterVariable, Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+    "--font-family-body": "InterVariable, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+    "--font-family-heading": "InterVariable, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
+    "--font-family-code": "InterVariable, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif",
     "--color-error": "#ba1a1a",
     "--color-on-error": "#ffffff",
     "--color-error-muted": "#ffdad6",
@@ -552,6 +552,12 @@ export const metaTheme = {
       "base": {
         "backgroundColor": "var(--meta-surface-container-high)",
         "height": "var(--spacing-1)"
+      }
+    },
+    "toast": {
+      "type:success": {
+        "backgroundColor": "var(--color-success)",
+        "color": "var(--color-on-success)"
       }
     },
     "card": {

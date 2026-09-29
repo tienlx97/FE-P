@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-29 — Meta theme only, InterVariable only (`meta-theme-only`)
+
+- User: use only the Meta theme and only the InterVariable font. The root `ThemeProvider` now renders `<Theme theme={metaTheme}>` (+ Meta scrollbar CSS); `pnpm theme:build` builds `custom/meta/theme.js`. Deleted: the `kt-xnk` theme (`shared/components/theme.js` + gitignored build output), `@astryxdesign/theme-stone`, `shared/config/fonts.js` (next/font Montserrat / JetBrains Mono), `public/fonts/react-docs/` (Optimistic), the `data-app-font` route scoping and the `.astryx-button.destructive` white-label hack. Meta gained kt-xnk's success-toast override; its font stack is `InterVariable` + system fallbacks; `globals.css` sets Inter's features on `body` for every route. ADR-0011 (supersedes ADR-0010's scoping), `openspec/project.md` updated.
+- `src/app/fonts.test.js`: exactly two `@font-face` (InterVariable normal / italic), `public/fonts` holds only `inter`, root theme is Meta, no next/font, Meta font tokens start with InterVariable.
+- Browser (Chrome, :3000 `/login`): `data-astryx-theme="meta"`, computed font `InterVariable, …`, only `InterVariable` loaded. Other routes (`/`, `/docs`, `/design-system`) not checked visually — they now render in Meta colors.
+- `./harness/verify.sh` passed: `harness/runs/20260929-143908-101/`.
+- Discovered: `astryx theme build` warns that "InterVariable" is not loaded even though `globals.css` declares it — the CLI does not read the app's CSS; ignore.
+
 ## 2026-09-29 — Vessel schedule: POL + POD only (no destination country)
 
 - User: drop "Nước đến", keep only POL and POD. The catalog has 17,520 UN/LOCODE ports (all-ports JSON 4.5 MB) and Astryx `Selector` renders every option (no virtualization), so a single POD selector over the whole catalog is not viable. POL stays a `Selector` (Vietnamese ports); POD is `PortTypeahead` again — server search (`POST /ports/search`, code / name / full name, ≥ 2 characters), items `THLCH — Laem Chabang`, code sent to the BE. `countryOptions` removed.

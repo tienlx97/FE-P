@@ -89,15 +89,14 @@ const config = [
   },
   {
     // openspec/project.md's Color convention says every color comes from a
-    // theme token and no raw hex lives outside src/shared/components/theme.js
+    // theme token and no raw hex lives outside src/shared/components/custom/meta/theme.js
     // — but nothing enforced it, which is how a /design-system code sample
     // ended up documenting `--color-accent: '#b91a24'` (red) while the real
     // accent was teal. TemplateElement is checked alongside Literal because
     // that stale sample lived in a template literal.
     files: ['src/**/*.js', 'src/**/*.jsx'],
     ignores: [
-      'src/shared/components/theme.js',
-      // "Meta" custom theme (user request, 2026-09-23) — same reason.
+      // "Meta" — the app's only theme (user request, 2026-09-29).
       'src/shared/components/custom/meta/theme.js',
     ],
     rules: {
@@ -107,13 +106,13 @@ const config = [
           selector:
             'Literal[value=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]',
           message:
-            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/theme.js.',
+            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/custom/meta/theme.js.',
         },
         {
           selector:
             'TemplateElement[value.raw=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]',
           message:
-            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/theme.js.',
+            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/custom/meta/theme.js.',
         },
       ],
     },
@@ -173,13 +172,13 @@ const config = [
           selector:
             'Literal[value=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]',
           message:
-            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/theme.js.',
+            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/custom/meta/theme.js.',
         },
         {
           selector:
             'TemplateElement[value.raw=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]',
           message:
-            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/theme.js.',
+            'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/custom/meta/theme.js.',
         },
         {
           selector: 'Literal[value=/^-?\\d+(\\.\\d+)?px$/]',
@@ -198,13 +197,8 @@ const config = [
       'harness/**',
       'babel.config.js',
       'postcss.config.js',
-      // `astryx theme build` output — generated from
-      // src/shared/components/theme.js and gitignored. Linting build
-      // artifacts reports problems nobody can fix at the source.
-      'src/shared/components/kt-xnk.js',
-      'src/shared/components/kt-xnk.d.ts',
-      'src/shared/components/kt-xnk.variants.d.ts',
-      // Same for the "Meta" custom theme's own build output.
+      // `astryx theme build` output of the Meta theme (`pnpm theme:build`).
+      // Linting build artifacts reports problems nobody can fix at the source.
       'src/shared/components/custom/meta/meta.js',
       'src/shared/components/custom/meta/meta.d.ts',
       'src/shared/components/custom/meta/meta.variants.d.ts',

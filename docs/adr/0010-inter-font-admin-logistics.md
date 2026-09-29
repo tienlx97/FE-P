@@ -1,7 +1,7 @@
 # ADR-0010: Inter for /admin and /logistics; Maritime theme removed
 
 Date: 2026-09-25
-Status: accepted
+Status: accepted; route scoping superseded by ADR-0011
 
 ## Context
 
