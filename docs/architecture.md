@@ -102,8 +102,9 @@ Enforced by `harness/structure.rules.cjs` (dependency-cruiser), run via
   `content/docs/{noi-quy,it}/`.
 - `src/shared/components/` — semantic StyleX documentation shell
   (`header.jsx`, `side-nav.jsx`, `protected-app-shell.jsx`, `footer.jsx`), MDX
-  registry/layout primitives, and theme wiring (`theme.js` — no JSX, hence
-  `.js` — plus `theme-provider.jsx` and `astryx theme build` output).
+  registry/layout primitives, and theme wiring: `theme-provider.jsx` applies
+  the Meta theme (`custom/meta/theme.js` and its tracked `astryx theme build`
+  output), the app's only theme (ADR-0011).
 - `src/shared/hooks/` — cross-cutting browser behavior, currently the
   React Docs-style active-section tracking used by the MDX table of contents.
 - `src/shared/config/` — `site.js` (site name, nav links).

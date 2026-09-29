@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-09-29 — Dev compile measured on `pnpm dev`; PostCSS StyleX fix; docs
+
+- User: write the fixes into docs and test on dev. Docs: ADR-0012 (rewritten with dev measurements), `docs/stylex-installation.md` ("This repository" section), `docs/architecture.md` (theme wiring → Meta).
+- Dev test (cold `.next/dev`, same route order, old vs new config swapped in turn): the Turbopack StyleX-only loader alone made no dev difference (`/admin/users` first compile 24.6 s → 23.8 s). Real cause found: `postcss.config.js`'s StyleX `babelConfig` lacked `configFile: false`, so Babel also loaded `babel.config.js` (`next/babel` + StyleX twice) for every StyleX file — 4.2–9.3 s per cold run vs 1.1 s with the fix, byte-identical CSS. With it: `/admin/users` 9.1 s, `/docs` 2.3 s (was 4.5), `/design-system` 0.8 s (2.1), `/logistics/schedule` 0.8 s (1.6); HMR of a StyleX file `Compiled in 264ms`. Page renders Meta + InterVariable with StyleX styles.
+- Correction to the entry below: its claim that the loader speeds up dev was not measured; only `next build` (65 → 31.6 s) was.
+- Discovered: Next reports a slow filesystem on D: (`.next/dev` benchmark 420–680 ms) — likely antivirus on the project folder; not changed (system setting).
+- The dev server was restarted several times for the benchmark and left running on :3000 with the new config.
+
 ## 2026-09-29 — Faster `pnpm dev` compiles; /admin checked
 
 - User: check `/admin` and fix the slow compile on `pnpm dev`. `/admin` redirects to `/admin/users`; `/admin/users`, `/admin/permissions`, `/admin/backups` render in Meta + InterVariable (first compile 3–5.6 s each on the old config).
