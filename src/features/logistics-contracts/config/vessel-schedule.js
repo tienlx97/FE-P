@@ -73,18 +73,76 @@ export function sailingId(carrierCode, sailing) {
 }
 
 /**
- * One calendar item per sailing with an ETD, on the ETD's date.
+ * Now as a Việt Nam local date-time (`2026-09-29T11:05:00`), comparable with
+ * carrier times.
+ * @param {number} [instant]
+ */
+export function localNow(instant = Date.now()) {
+  return new Date(instant + 7 * 60 * 60 * 1000).toISOString().slice(0, 19);
+}
+
+/**
+ * @typedef {'full' | 'closed' | 'notYetOpen' | 'open' | 'unknown'} BookingState
+ */
+
+/** Label and pill tone of each booking state. */
+export const BOOKING_STATES = /** @type {const} */ ({
+  full: { label: 'Hết chỗ', tone: 'danger' },
+  closed: { label: 'Đã đóng booking', tone: 'neutral' },
+  notYetOpen: { label: 'Chưa mở booking', tone: 'neutral' },
+  open: { label: 'Còn nhận booking', tone: 'success' },
+  unknown: { label: 'Hãng không cho biết', tone: 'neutral' },
+});
+
+/**
+ * Whether a sailing can still be booked. The carrier's `Full` (it closed
+ * the sailing itself) is "hết chỗ" only while its SI cut-off (else CY) is
+ * still ahead; once past it the sailing is simply closed, like one whose
+ * cut-off passed.
+ * @param {import('../types/index.js').CarrierSailing} sailing
+ * @param {string} now - local date-time (`localNow()`)
+ * @returns {BookingState}
+ */
+export function bookingState(sailing, now) {
+  switch (sailing.bookingStatus) {
+    case 'Full': {
+      const deadline = sailing.siCutoff ?? sailing.cyCutoff;
+      return !deadline || deadline > now ? 'full' : 'closed';
+    }
+    case 'CutoffPassed':
+      return 'closed';
+    case 'NotYetOpen':
+      return 'notYetOpen';
+    case 'Open':
+      return 'open';
+    default:
+      return 'unknown';
+  }
+}
+
+/**
+ * One calendar item per sailing with an ETD, on the ETD's date; a full
+ * sailing ("hết chỗ") is red and says so after its tag.
  * @param {import('../types/index.js').ShippingCarrier} carrier
  * @param {import('../types/index.js').CarrierSailing[]} sailings
  * @param {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleTone} tone
+ * @param {string} now - local date-time (`localNow()`)
  * @returns {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleItem[]}
  */
-export function sailingItems(carrier, sailings, tone) {
-  return sailings.flatMap((sailing) =>
-    sailing.etd
-      ? [{ id: sailingId(carrier.code, sailing), date: sailing.etd.slice(0, 10), title: sailingTitle(carrier.name, sailing), tone }]
-      : [],
-  );
+export function sailingItems(carrier, sailings, tone, now) {
+  return sailings.flatMap((sailing) => {
+    if (!sailing.etd) return [];
+    const isFull = bookingState(sailing, now) === 'full';
+
+    return [
+      {
+        id: sailingId(carrier.code, sailing),
+        date: sailing.etd.slice(0, 10),
+        title: isFull ? `${sailingTitle(carrier.name, sailing)} · Hết chỗ` : sailingTitle(carrier.name, sailing),
+        tone: isFull ? 'danger' : tone,
+      },
+    ];
+  });
 }
 
 /**

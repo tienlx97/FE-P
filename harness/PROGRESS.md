@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: "Hết chỗ" in red
+
+- User: flag full sailings red. The BE now returns `bookingStatus` per sailing (KMTC: `Full` = closed to bookings by KMTC, the red "Closing" marks of ekmtc.com). `bookingState(sailing, now)`: `Full` with the SI (else CY) cut-off still ahead → "Hết chỗ"; `Full` after it or `CutoffPassed` → "Đã đóng booking"; plus "Chưa mở booking", "Còn nhận booking", "Hãng không cho biết". Full sailings are red (`danger`) on the calendar with "· Hết chỗ" after the tag; the header adds "n hết chỗ" next to the carrier's count; the hover card and drawer (title badge + "Booking" row) show the state.
+- Unit tests: 13 (`config/vessel-schedule.test.js`), incl. before / after cut-off and Việt Nam local now.
+- Live data through the dev API (VNHPH → THLCH, Sep 28 – Nov 1): 5 of 14 sailings Full with cut-offs ahead → red. Browser screenshot pending: the Chrome window was hidden (`visibilityState: hidden`), automation could not interact.
+- `./harness/verify.sh` passed: `harness/runs/20260929-113424-1297/`.
+
 ## 2026-09-29 — Vessel schedule: selectors, `/logistics` calendar, sailing drawer
 
 - User: POL / POD as selectors with a nicer design, the same schedule as `/logistics`, and a drawer with ETD / ETA, SI / VGM / CY cut-off and terminal on click. Filter card: "POL — cảng xếp" (Vietnamese catalog ports with a UN/LOCODE), "Nước đến" + "POD — cảng dỡ" (that country's UN/LOCODE ports), "Hãng tàu", "Tìm" — all `Selector`s with search, labelled `VNHPH — Haiphong`; the whole 17.5k catalog is never loaded at once. The calendar is now `MetaSchedule` (month rows stretch to the page height, "2 tuần" view, hover card) instead of the lab `Schedule`; the header shows the route and one pill per carrier (count, loading, or the error in red). Data comes from `useCarrierSchedulesQueries` (one React Query per carrier and visible range, cached when paging back). Hover (`VesselSailingPreview`): tag, route, ETD / ETA / CY. Click (`VesselSailingDrawer`): Lịch tàu (ETD, ETA, days), Cut-off (SI, VGM, CY), Cảng & tuyến (POL + terminal, POD, transshipment, service). The Typeahead picker and the lab-`Schedule` time-zone helpers were removed.
