@@ -79,16 +79,16 @@ import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
 // document storage for shipments yet.
 const TAB_LABELS = {
   overview: 'Tổng quan',
-  schedule: 'Timeline & lịch tàu',
   vgm: 'Container & VGM',
   costs: 'Chi phí logistics',
+  schedule: 'Timeline & lịch tàu',
 };
 
 const TAB_ICONS = {
   overview: LayoutGrid,
-  schedule: CalendarClock,
   vgm: Weight,
   costs: ReceiptText,
+  schedule: CalendarClock,
 };
 
 const TAB_VALUES = /** @type {ShipmentDetailTab[]} */ (Object.keys(TAB_LABELS));
