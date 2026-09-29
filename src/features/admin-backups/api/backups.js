@@ -41,19 +41,15 @@ export async function createBackup() {
 }
 
 /**
- * Admin-only. Overwrites the live database from `fileName` — destructive and
- * irreversible from inside the app. The backend requires `confirmDatabaseName`
- * to exactly match the live database's name as a confirmation step (see the
- * API's `Backups.md`).
- *
- * `status` is surfaced on failure so the caller can tell a `409` (the
- * restore is either still running past the backend's own response timeout,
- * or another one is already in progress — both worth silently retrying)
- * apart from a real failure (wrong confirmation text, backup missing) that
- * retrying would not fix.
+ * Admin-only. Starts overwriting the live database from `fileName` —
+ * destructive and irreversible from inside the app. The backend requires
+ * `confirmDatabaseName` to exactly match the live database's name as a
+ * confirmation step (see the API's `Backups.md`). The restore runs in the
+ * background (202): poll {@link getRestoreStatus} for `status.restoreId`.
+ * 409 = another restore is running.
  * @param {string} fileName
  * @param {string} confirmDatabaseName
- * @returns {Promise<{ success: true } | { success: false, status: number | null, message: string }>}
+ * @returns {Promise<{ success: true, status: import('../types/index.js').RestoreStatus } | { success: false, status: number | null, message: string }>}
  */
 export async function restoreBackup(fileName, confirmDatabaseName) {
   const result = await apiRequest(
@@ -69,7 +65,26 @@ export async function restoreBackup(fileName, confirmDatabaseName) {
     return { success: false, status: result.status, message: result.message };
   }
 
-  return { success: true };
+  return { success: true, status: result.data };
+}
+
+/**
+ * The latest restore's state. Readable without signing in: a restore from
+ * another machine replaces the users, so the Admin's session may have ended
+ * by the time it finishes — never redirect to `/login` from here.
+ * @returns {Promise<{ success: true, status: import('../types/index.js').RestoreStatus } | { success: false, message: string }>}
+ */
+export async function getRestoreStatus() {
+  const result = await apiRequest('/api/v1/backups/restore-status', {
+    errorMessage: 'Không đọc được trạng thái khôi phục',
+    redirectOnSessionExpiry: false,
+  });
+
+  if (!result.success) {
+    return { success: false, message: result.message };
+  }
+
+  return { success: true, status: result.data };
 }
 
 /**
