@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: "Tải lại từ hãng" (task 1.10)
+
+- User: force-pull a fresh schedule into Redis. Button "Tải lại từ hãng" (header end of the calendar, shown once a search ran): `useRefreshCarrierSchedulesMutation` POSTs `/shipments/schedules/refresh` for every searched carrier with the visible dates and writes each answer into the calendar's query key; skeletons while it runs; off for 60 s after use (`REFRESH_COOLDOWN_MS`) — carriers throttle bursts.
+- Browser (:3000, VNSGN → THBKK): after the click KMTC's October Redis key was fresh again (TTL 189 → 1798 s); Heung-A (slow tonight) now shows "Hãng Heung-A không trả lời kịp…" instead of the generic "Không thể tải lịch tàu" (BE fix: timeout was a 500).
+- `./harness/verify.sh` passed: `harness/runs/20260929-214008-1184/`.
+
 ## 2026-09-29 — "/live" carrier API status page (`carrier-status-page` task 1.1)
 
 - User: a `/live` page telling whether each carrier's schedule and tracking API works, designed like Anthropic's status page. New feature `src/features/carrier-status` over BE `GET /api/v1/carrier-status` / `POST .../check`: overall `Banner`, per connected carrier a `Card` with "Lịch tàu" / "Tracking" rows (`StatusDot` + label + adapter version, uptime %, 90 day bars with `Tooltip`, latest detail · latency · time), not-connected carriers in one line, legend, "Kiểm tra ngay", refetch every 60 s. Config helpers tested (`carrier-status.test.js`). Route `/live` gated like `/logistics/schedule`; sidebar entry under TIỆN ÍCH.

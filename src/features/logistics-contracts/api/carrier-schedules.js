@@ -25,8 +25,30 @@ export async function listCarrierAdapters() {
  * @returns {Promise<{ success: true, search: import('../types/index.js').CarrierScheduleSearch } | { success: false, message: string }>}
  */
 export async function searchCarrierSchedules({ carrier, pol, pod, from, to }) {
+  return fetchSchedules('GET', { carrier, pol, pod, from, to });
+}
+
+/**
+ * "Tải lại từ hãng": the same search, asking the carrier again instead of
+ * its cached answer (BE Redis, up to 30 minutes old) — the new answer
+ * replaces the cached one for everyone. As slow as a first search.
+ * @param {{ carrier: string, pol: string, pod: string, from: string, to: string }} params
+ * @returns {Promise<{ success: true, search: import('../types/index.js').CarrierScheduleSearch } | { success: false, message: string }>}
+ */
+export async function refreshCarrierSchedules({ carrier, pol, pod, from, to }) {
+  return fetchSchedules('POST', { carrier, pol, pod, from, to });
+}
+
+/**
+ * @param {'GET' | 'POST'} method
+ * @param {{ carrier: string, pol: string, pod: string, from: string, to: string }} params
+ * @returns {Promise<{ success: true, search: import('../types/index.js').CarrierScheduleSearch } | { success: false, message: string }>}
+ */
+async function fetchSchedules(method, { carrier, pol, pod, from, to }) {
   const query = new URLSearchParams({ carrier, pol, pod, from, to });
-  const result = await apiRequest(`/api/v1/shipments/schedules?${query.toString()}`, {
+  const path = method === 'POST' ? '/api/v1/shipments/schedules/refresh' : '/api/v1/shipments/schedules';
+  const result = await apiRequest(`${path}?${query.toString()}`, {
+    method,
     errorMessage: 'Không thể tải lịch tàu',
   });
 

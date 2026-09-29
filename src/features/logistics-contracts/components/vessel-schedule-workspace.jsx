@@ -8,7 +8,7 @@ import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { ArrowRight, Search } from 'lucide-react';
+import { ArrowRight, RefreshCw, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { MetaPill, MetaSchedule } from '@/shared/components/custom/meta/index.js';
@@ -21,6 +21,7 @@ import {
   carrierTone,
   localNow,
   portOptions,
+  REFRESH_COOLDOWN_MS,
   sailingId,
   scheduleCarriers,
   scheduleItems,
@@ -28,7 +29,10 @@ import {
 } from '../config/vessel-schedule.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
 import { useCarrierAdaptersQuery } from '../hooks/use-carrier-adapters-query.js';
-import { useCarrierSchedulesQueries } from '../hooks/use-carrier-schedules-queries.js';
+import {
+  useCarrierSchedulesQueries,
+  useRefreshCarrierSchedulesMutation,
+} from '../hooks/use-carrier-schedules-queries.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { usePortsQuery } from '../hooks/use-ports-query.js';
 import { PortSearchSelector } from './port-search-selector.jsx';
@@ -94,8 +98,11 @@ export function VesselScheduleWorkspace() {
   // To the minute, so the memo below recomputes at most once a minute.
   const now = localNow().slice(0, 16);
   const results = useCarrierSchedulesQueries({ search, ...range });
+  const refreshMutation = useRefreshCarrierSchedulesMutation();
+  const [isRefreshCoolingDown, setIsRefreshCoolingDown] = useState(false);
   // Skeletons while any searched carrier's sailings for this range are still loading.
-  const isLoadingSailings = Boolean(search) && results.some((result) => result.isLoading);
+  const isLoadingSailings =
+    Boolean(search) && (results.some((result) => result.isLoading) || refreshMutation.isPending);
 
   const entries = useMemo(() => {
     /** @type {Map<string, SailingEntry>} */
@@ -194,6 +201,24 @@ export function VesselScheduleWorkspace() {
               <VesselSailingPreview carrier={entry.carrier} sailing={entry.sailing} tone={item.tone} now={now} />
             ) : null;
           }}
+          headerEnd={
+            search && search.carriers.length > 0 ? (
+              <Button
+                label="Tải lại từ hãng"
+                tooltip="Hỏi lại hãng thay vì lịch đã lưu (tối đa 30 phút trước) và lưu lịch mới"
+                variant="secondary"
+                size="sm"
+                icon={<Icon icon={RefreshCw} size="sm" />}
+                isLoading={refreshMutation.isPending}
+                isDisabled={isRefreshCoolingDown || isLoadingSailings}
+                onClick={() => {
+                  setIsRefreshCoolingDown(true);
+                  window.setTimeout(() => setIsRefreshCoolingDown(false), REFRESH_COOLDOWN_MS);
+                  refreshMutation.mutate({ search, ...range });
+                }}
+              />
+            ) : null
+          }
           headerStart={
             <HStack gap={2} vAlign="center" wrap="wrap">
               {!search ? (
