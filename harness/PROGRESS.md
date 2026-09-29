@@ -15907,3 +15907,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Redacted login credentials from the September 27 and 28 session memory before committing the three new memory files. The credentials remain in the ignored local login instructions.
 - Harness gap: `memory-secrets` detects common key formats but did not flag plaintext login credentials in session summaries. Consider a context-aware credential check for memory files.
 - `./harness/verify.sh` passed: `harness/runs/20260929-074613-1648343/`.
+## 2026-09-29 — Vessel schedule booking availability, task 1.6
+
+- Sailings with a past ETD or a carrier status of Full, CutoffPassed, or NotYetOpen now use the red calendar tone and show the reason in the event title, hover preview and drawer. The carrier summary counts all confirmed unavailable sailings. Unknown future booking availability stays neutral.
+- Sundays use the error color in the month header, month dates and 2-week day list. POL and carrier selectors show loading for the initial fetch only, so background refetch on window focus does not replace populated selections with a spinner; POD Typeahead continues to search only on typed input.
+- Browser QA selected VNCLI → THLCH, searched KMTC, inspected red departed/closed/full sailings, switched between month and 2-week views, and switched away from and back to the tab with the port selections retained. Sunday text computed to `rgb(186, 26, 26)` and unavailable items used the same red rail. Screenshots: `harness/runs/20260929-schedule-booking/`.
+- `./harness/verify.sh` content passed all gates via a temporary LF-only copy at `harness/runs/20260929-115447-2903/`. Harness gap: the tracked script has CRLF and cannot run directly under WSL Bash; normalize its line endings in a separate harness task. A UI test that triggers focus refetch and asserts no selector spinner would prevent recurrence; logged for a future UI test pass.

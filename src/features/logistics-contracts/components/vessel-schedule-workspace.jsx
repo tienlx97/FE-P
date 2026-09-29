@@ -15,6 +15,7 @@ import { todayIsoDate } from '@/shared/config/date-input-format.js';
 
 import {
   ALL_CARRIERS,
+  BOOKING_STATES,
   bookingState,
   carrierOptions,
   carriersToSearch,
@@ -133,7 +134,7 @@ export function VesselScheduleWorkspace() {
             options={polOptions}
             value={polCode}
             onChange={(value) => setPolCode(value ?? '')}
-            isLoading={polPortsQuery.isFetching}
+            isLoading={polPortsQuery.isLoading}
             isDisabled={!vietnamId}
             disabledMessage='Danh mục nước chưa có "Việt Nam"'
             width="100%"
@@ -156,7 +157,7 @@ export function VesselScheduleWorkspace() {
           options={carrierOptions(adapters)}
           value={carrierChoice}
           onChange={(value) => setCarrierChoice(value ?? ALL_CARRIERS)}
-          isLoading={adaptersQuery.isFetching}
+          isLoading={adaptersQuery.isLoading}
           width={200}
         />
         <Button
@@ -206,8 +207,8 @@ export function VesselScheduleWorkspace() {
                       const reason = !data ? 'lỗi' : data.success ? (data.search.error ?? data.search.status) : data.message;
                       return <MetaPill key={carrier.code} label={`${carrier.name}: ${reason}`} tone="danger" size="sm" hasDot />;
                     }
-                    const fullCount = data.search.sailings.filter(
-                      (sailing) => bookingState(sailing, now) === 'full',
+                    const unavailableCount = data.search.sailings.filter(
+                      (sailing) => BOOKING_STATES[bookingState(sailing, now)].tone === 'danger',
                     ).length;
                     return (
                       <HStack key={carrier.code} gap={1} vAlign="center">
@@ -217,8 +218,8 @@ export function VesselScheduleWorkspace() {
                           size="sm"
                           hasDot
                         />
-                        {fullCount > 0 ? (
-                          <MetaPill label={`${fullCount} hết chỗ`} tone="danger" size="sm" hasDot />
+                        {unavailableCount > 0 ? (
+                          <MetaPill label={`${unavailableCount} không thể book`} tone="danger" size="sm" hasDot />
                         ) : null}
                       </HStack>
                     );

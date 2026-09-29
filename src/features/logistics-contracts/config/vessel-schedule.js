@@ -82,14 +82,15 @@ export function localNow(instant = Date.now()) {
 }
 
 /**
- * @typedef {'full' | 'closed' | 'notYetOpen' | 'open' | 'unknown'} BookingState
+ * @typedef {'departed' | 'full' | 'closed' | 'notYetOpen' | 'open' | 'unknown'} BookingState
  */
 
 /** Label and pill tone of each booking state. */
 export const BOOKING_STATES = /** @type {const} */ ({
+  departed: { label: 'Đã qua giờ khởi hành', tone: 'danger' },
   full: { label: 'Hết chỗ', tone: 'danger' },
-  closed: { label: 'Đã đóng booking', tone: 'neutral' },
-  notYetOpen: { label: 'Chưa mở booking', tone: 'neutral' },
+  closed: { label: 'Đã đóng booking', tone: 'danger' },
+  notYetOpen: { label: 'Chưa mở booking', tone: 'danger' },
   open: { label: 'Còn nhận booking', tone: 'success' },
   unknown: { label: 'Hãng không cho biết', tone: 'neutral' },
 });
@@ -104,6 +105,7 @@ export const BOOKING_STATES = /** @type {const} */ ({
  * @returns {BookingState}
  */
 export function bookingState(sailing, now) {
+  if (sailing.etd && sailing.etd <= now) return 'departed';
   switch (sailing.bookingStatus) {
     case 'Full': {
       const deadline = sailing.siCutoff ?? sailing.cyCutoff;
@@ -121,8 +123,8 @@ export function bookingState(sailing, now) {
 }
 
 /**
- * One calendar item per sailing with an ETD, on the ETD's date; a full
- * sailing ("hết chỗ") is red and says so after its tag.
+ * One calendar item per sailing with an ETD, on the ETD's date. Confirmed
+ * unavailable sailings are red and carry the reason after their tag.
  * @param {import('../types/index.js').ShippingCarrier} carrier
  * @param {import('../types/index.js').CarrierSailing[]} sailings
  * @param {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleTone} tone
@@ -132,14 +134,15 @@ export function bookingState(sailing, now) {
 export function sailingItems(carrier, sailings, tone, now) {
   return sailings.flatMap((sailing) => {
     if (!sailing.etd) return [];
-    const isFull = bookingState(sailing, now) === 'full';
+    const state = BOOKING_STATES[bookingState(sailing, now)];
+    const isUnavailable = state.tone === 'danger';
 
     return [
       {
         id: sailingId(carrier.code, sailing),
         date: sailing.etd.slice(0, 10),
-        title: isFull ? `${sailingTitle(carrier.name, sailing)} · Hết chỗ` : sailingTitle(carrier.name, sailing),
-        tone: isFull ? 'danger' : tone,
+        title: isUnavailable ? `${sailingTitle(carrier.name, sailing)} · ${state.label}` : sailingTitle(carrier.name, sailing),
+        tone: isUnavailable ? 'danger' : tone,
       },
     ];
   });
