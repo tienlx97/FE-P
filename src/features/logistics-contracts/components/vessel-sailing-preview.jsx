@@ -17,7 +17,7 @@ import {
 
 /**
  * Hover card of a sailing on the vessel schedule: the tag, whether it still
- * takes bookings ("Hết chỗ" in red), ETD → ETA, the CY cut-off and, for a
+ * takes bookings ("Hết chỗ" in red), ETD → ETA, the SI and CY cut-offs and, for a
  * transshipment, the transit port(s) and how the cargo goes on when the
  * vessel stops short of the POD (barge) — enough to pick a sailing;
  * everything else is in the drawer.
@@ -48,6 +48,7 @@ export function VesselSailingPreview({ carrier, sailing, tone, now }) {
       </HStack>
       <Row label="ETD" value={formatCarrierTime(sailing.etd)} />
       <Row label="ETA" value={formatCarrierTime(sailing.eta)} />
+      <Row label="SI cut-off" value={formatCarrierTime(sailing.siCutoff)} />
       <Row label="CY cut-off" value={formatCarrierTime(sailing.cyCutoff)} />
       <Row label="Terminal dỡ" value={sailing.portOfDischargeTerminal ?? '—'} />
       {sailing.transshipmentPorts.length > 0 ? (

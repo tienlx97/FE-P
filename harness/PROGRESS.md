@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-09-30 — Vessel schedule: SI cut-off on hover, blue Sundays, Namsung live (task 1.12)
+
+- User: hover card shows the SI cut-off; Sundays in blue; Namsung schedule + tracking built in BE-P (Codex's draft fixed — BE progress 2026-09-30), then update `/live` and `/logistics/schedule`.
+- `VesselSailingPreview`: "SI cut-off" row above "CY cut-off". `MetaSchedule` (shared, also `/logistics`): Sunday weekday label and day numbers `--color-accent` (Meta blue) instead of `--color-error`; a Sunday "today" circle is accent like any today. Red now only means a sailing that cannot be booked.
+- `/live` and `/logistics/schedule` needed no code: both read the carriers from the API. Browser (Chrome, :3000, dev API rebuilt): `/live` — Namsung "Lịch tàu Hoạt động v1 · VNSGN → THBKK: 7 chuyến · 2,0 giây", "Tracking Hoạt động v1 · NSSLHCBKC2600393: 10 sự kiện" (schedule uptime 50 % today: Codex's failing build was probed once). `/logistics/schedule` VNSGN → THBKK, all carriers, October: "KMTC · 26 chuyến · Heung-A · 61 chuyến · Namsung · 12 chuyến"; hover `Namsung - KMTC PUSAN / 2611S`: Hãng không cho biết, ETD 02/10 10:00, ETA 04/10 14:00, SI cut-off 30/09 09:00, CY cut-off 01/10 08:00, Terminal dỡ UNITHAI; Sundays blue.
+- `./harness/verify.sh` passed: `harness/runs/20260930-005057-1152/`.
+
 ## 2026-09-30 — Vessel schedule: TS tag, transit ports, barge routings (task 1.11)
 
 - User: look at the pages; if the Laem Chabang + barge routings are shown, say so in the hover card and drawer; a transshipment is tagged `[LINE TÀU]-[TS]-[TÀU / SỐ TÀU]` and both show the transit port. BE (BE-P `add-carrier-schedules`): Heung-A v2 now returns the barge routing as its own sailing (`onCarriage: "Barge"`, T/S LAEM CHABANG, no ETA) next to the direct call — booking status often differs (KMTC BANGKOK 2611S: direct closed, via Laem Chabang open).
