@@ -25,3 +25,7 @@
   (BE `portOfDischargeTerminal`).
 - [x] 1.10 "Tải lại từ hãng" button: refetch the visible range from the
   carriers (BE skips and replaces its Redis cache), 60 s cooldown.
+- [x] 1.11 Transshipment tag `[HÃNG] - TS - [TÀU / SỐ CHUYẾN]`; transit port(s)
+  in the hover card and drawer; a sailing whose vessel stops short of the
+  POD (`onCarriage`, Heung-A → Bangkok via Laem Chabang + barge) says so in
+  both; calendar ids tell it from the same vessel's direct call.

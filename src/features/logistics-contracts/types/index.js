@@ -1244,6 +1244,7 @@ export {};
  * @property {number | null} transitDays
  * @property {string | null} serviceCode
  * @property {'Unknown' | 'Open' | 'NotYetOpen' | 'CutoffPassed' | 'Full'} [bookingStatus] - `Full` = the carrier closed it to bookings
+ * @property {string | null} [onCarriage] - `"Barge"`…: the vessel stops at the last `transshipmentPorts` entry and the cargo goes on to the POD by that mode (`eta` then usually null); null = the vessel calls at the POD
  */
 
 /**

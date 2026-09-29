@@ -11,13 +11,16 @@ import {
   BOOKING_STATES,
   bookingState,
   formatCarrierTime,
+  onCarriageNote,
   sailingTitle,
 } from '../config/vessel-schedule.js';
 
 /**
  * Hover card of a sailing on the vessel schedule: the tag, whether it still
- * takes bookings ("Hết chỗ" in red), ETD → ETA and the CY cut-off — enough
- * to pick a sailing; everything else is in the drawer.
+ * takes bookings ("Hết chỗ" in red), ETD → ETA, the CY cut-off and, for a
+ * transshipment, the transit port(s) and how the cargo goes on when the
+ * vessel stops short of the POD (barge) — enough to pick a sailing;
+ * everything else is in the drawer.
  * @param {{
  *   carrier: import('../types/index.js').ShippingCarrier,
  *   sailing: import('../types/index.js').CarrierSailing,
@@ -27,6 +30,7 @@ import {
  */
 export function VesselSailingPreview({ carrier, sailing, tone, now }) {
   const state = BOOKING_STATES[bookingState(sailing, now)];
+  const note = onCarriageNote(sailing);
 
   return (
     <VStack gap={2} hAlign="stretch" xstyle={styles.card}>
@@ -46,6 +50,14 @@ export function VesselSailingPreview({ carrier, sailing, tone, now }) {
       <Row label="ETA" value={formatCarrierTime(sailing.eta)} />
       <Row label="CY cut-off" value={formatCarrierTime(sailing.cyCutoff)} />
       <Row label="Terminal dỡ" value={sailing.portOfDischargeTerminal ?? '—'} />
+      {sailing.transshipmentPorts.length > 0 ? (
+        <Row label="Chuyển tải" value={sailing.transshipmentPorts.join(' → ')} />
+      ) : null}
+      {note ? (
+        <Text size="sm" color="meta-amber">
+          {note}
+        </Text>
+      ) : null}
       <Text size="sm" color="secondary">
         Bấm để xem chi tiết
       </Text>

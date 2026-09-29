@@ -9,10 +9,12 @@ import {
   carrierTone,
   formatCarrierTime,
   localNow,
+  onCarriageNote,
   parseRecentPorts,
   portOptions,
   portSearchConditions,
   RECENT_PORTS_LIMIT,
+  sailingId,
   sailingTitle,
   scheduleCarriers,
   scheduleItems,
@@ -46,6 +48,35 @@ test('sailingTitle tags [HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]', () => {
   assert.equal(sailingTitle('Yang Ming', sailing({ vesselName: 'YM WELLNESS', voyageNumber: null })), 'Yang Ming - YM WELLNESS');
 });
 
+test('sailingTitle puts TS between the carrier and the vessel of a transshipment', () => {
+  assert.equal(
+    sailingTitle('Heung-A', sailing({ vesselName: 'STARSHIP JUPITER', voyageNumber: '2607N', transshipmentPorts: ['BUSAN'] })),
+    'Heung-A - TS - STARSHIP JUPITER / 2607N',
+  );
+  assert.equal(
+    sailingTitle('Heung-A', sailing({ transshipmentPorts: ['LAEM CHABANG'], onCarriage: 'Barge' })),
+    'Heung-A - TS - KMTC ULSAN / 2615S',
+  );
+});
+
+test('onCarriageNote tells where the vessel stops and how the cargo goes on', () => {
+  const barge = sailing({ portOfDischarge: 'BANGKOK', transshipmentPorts: ['LAEM CHABANG'], onCarriage: 'Barge', eta: null });
+  assert.equal(onCarriageNote(barge), 'Dỡ tại LAEM CHABANG, đi tiếp bằng sà lan (barge) tới BANGKOK — hãng chưa có giờ đến');
+  assert.equal(
+    onCarriageNote({ ...barge, onCarriage: 'X', eta: '2026-10-08T10:00:00' }),
+    'Dỡ tại LAEM CHABANG, đi tiếp bằng X tới BANGKOK',
+  );
+  assert.equal(onCarriageNote(sailing({ transshipmentPorts: ['BUSAN'] })), null);
+  assert.equal(onCarriageNote(sailing({})), null);
+});
+
+test('sailingId tells a call at the POD from the same vessel going on by barge', () => {
+  const direct = sailing({ portOfDischarge: 'BANGKOK' });
+  const barge = sailing({ portOfDischarge: 'BANGKOK', transshipmentPorts: ['LAEM CHABANG'], onCarriage: 'Barge' });
+  assert.notEqual(sailingId('HEUNGA', direct), sailingId('HEUNGA', barge));
+  assert.equal(sailingId('HEUNGA', direct), sailingId('HEUNGA', { ...direct }));
+});
+
 test('carrier times are shown as given, date then time', () => {
   assert.equal(formatCarrierTime('2026-09-29T23:30:00'), '29/09/2026 23:30');
   assert.equal(formatCarrierTime(null), '—');
@@ -62,8 +93,8 @@ test('scheduleItems puts each sailing on its ETD date, titled by its tag only', 
   );
 
   assert.deepEqual(items, [
-    { id: 'KMTC:KMTC ULSAN:2616S:2026-09-29T23:30:00', date: '2026-09-29', title: 'KMTC - KMTC ULSAN / 2616S', tone: 'accent' },
-    { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S', tone: 'danger' },
+    { id: 'KMTC:KMTC ULSAN:2616S:2026-09-29T23:30:00:BANGKOK,THAILAND::', date: '2026-09-29', title: 'KMTC - KMTC ULSAN / 2616S', tone: 'accent' },
+    { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00:BANGKOK,THAILAND::', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S', tone: 'danger' },
   ]);
 });
 
