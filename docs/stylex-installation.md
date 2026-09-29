@@ -106,6 +106,44 @@ Add the `@stylex` directive to your CSS file:
 @stylex;
 ```
 
+#### This repository (Next.js 16, Turbopack) — ADR-0012
+
+`babel.config.js` and `postcss.config.js` above are what this repo uses, with
+one change: Next 16 would run `babel.config.js` (the whole `next/babel`
+preset) over **every** app file, which made `pnpm dev` compile slowly. So
+`next.config.mjs` turns that off and runs only the StyleX plugin, only on
+files that import StyleX:
+
+```js
+// next.config.mjs (excerpt)
+experimental: { turbopackUseBuiltinBabel: false },
+turbopack: {
+  rules: {
+    '*': {
+      condition: {
+        all: [
+          { not: 'foreign' },               // not node_modules
+          { path: /\.jsx?$/ },
+          { content: /@stylexjs\/stylex/ }, // imports StyleX
+        ],
+      },
+      loaders: [stylexLoaderPath],          // ./stylex-loader.cjs
+    },
+  },
+},
+```
+
+`postcss.config.js` also sets `configFile: false` in the StyleX plugin's
+`babelConfig`: with only `babelrc: false`, Babel still loads
+`babel.config.js` and runs the whole `next/babel` preset on every StyleX
+file (≈9 s instead of ≈1 s per dev start, same CSS).
+
+`stylex-loader.cjs` calls `@babel/core` with `babelrc: false`,
+`configFile: false` and only `babel.config.js`'s `plugins`; SWC compiles
+JSX and everything else. A new file that uses `stylex.create` must import
+`@stylexjs/stylex` directly (every file here does), or the rule skips it and
+`stylex.create` throws at runtime.
+
 #### Webpack
 
 ```js
