@@ -23,14 +23,40 @@ const CARRIER_TONES = /** @type {const} */ (['accent', 'success', 'warning', 'ne
 const TWO_WEEKS = 14;
 
 /**
- * The tag of a sailing: `[HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]`.
+ * The tag of a sailing: `[HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]`, with `TS`
+ * after the carrier when it transships (also when the vessel stops short of
+ * the POD and the cargo goes on by barge): `[HÃNG TÀU] - TS - [TÊN TÀU] / [SỐ CHUYẾN]`.
  * @param {string} carrierName
- * @param {{ vesselName: string, voyageNumber: string | null }} sailing
+ * @param {{ vesselName: string, voyageNumber: string | null, transshipmentPorts?: string[] }} sailing
  */
-export function sailingTitle(carrierName, { vesselName, voyageNumber }) {
-  return voyageNumber
-    ? `${carrierName} - ${vesselName} / ${voyageNumber}`
-    : `${carrierName} - ${vesselName}`;
+export function sailingTitle(carrierName, { vesselName, voyageNumber, transshipmentPorts = [] }) {
+  const vessel = voyageNumber ? `${vesselName} / ${voyageNumber}` : vesselName;
+  return transshipmentPorts.length > 0
+    ? `${carrierName} - TS - ${vessel}`
+    : `${carrierName} - ${vessel}`;
+}
+
+/** How the cargo goes on after the vessel's last port, by `onCarriage`. */
+const ON_CARRIAGE_LABELS = /** @type {Record<string, string>} */ ({
+  Barge: 'sà lan (barge)',
+  Truck: 'xe tải',
+  Rail: 'tàu hoả',
+});
+
+/**
+ * The note of a sailing whose vessel does not reach the POD
+ * (`onCarriage`): "Dỡ tại LAEM CHABANG, đi tiếp bằng sà lan (barge) tới
+ * BANGKOK — hãng chưa có giờ đến". Null when the vessel calls at the POD.
+ * @param {import('../types/index.js').CarrierSailing} sailing
+ */
+export function onCarriageNote(sailing) {
+  if (!sailing.onCarriage) return null;
+  const mode = ON_CARRIAGE_LABELS[sailing.onCarriage] ?? sailing.onCarriage;
+  const from = sailing.transshipmentPorts.at(-1);
+  const note = from
+    ? `Dỡ tại ${from}, đi tiếp bằng ${mode} tới ${sailing.portOfDischarge}`
+    : `Đi tiếp bằng ${mode} tới ${sailing.portOfDischarge}`;
+  return sailing.eta ? note : `${note} — hãng chưa có giờ đến`;
 }
 
 /**
@@ -73,7 +99,17 @@ export function carrierTone(carriers, code) {
  * @param {import('../types/index.js').CarrierSailing} sailing
  */
 export function sailingId(carrierCode, sailing) {
-  return `${carrierCode}:${sailing.vesselName}:${sailing.voyageNumber ?? ''}:${sailing.etd}`;
+  // The same vessel / voyage / ETD can be two sailings: a call at the POD
+  // and a discharge at a nearby port with a barge on (Heung-A → Bangkok).
+  return [
+    carrierCode,
+    sailing.vesselName,
+    sailing.voyageNumber ?? '',
+    sailing.etd,
+    sailing.portOfDischarge,
+    sailing.transshipmentPorts.join('>'),
+    sailing.onCarriage ?? '',
+  ].join(':');
 }
 
 /**

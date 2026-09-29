@@ -26,6 +26,7 @@ import {
   BOOKING_STATES,
   bookingState,
   formatCarrierTime,
+  onCarriageNote,
   sailingTitle,
 } from '../config/vessel-schedule.js';
 
@@ -51,8 +52,9 @@ function TimeText({ value }) {
 /**
  * A sailing of the vessel schedule, as the carrier publishes it: whether it
  * still takes bookings ("Hết chỗ" in red), ETD / ETA, SI, VGM and CY
- * cut-offs, terminal, route and transshipment. Times are the carrier's
- * local port times.
+ * cut-offs, terminal, route and transshipment (the transit ports, and how
+ * the cargo goes on when the vessel stops short of the POD). Times are the
+ * carrier's local port times.
  * @param {{
  *   carrier: import('../types/index.js').ShippingCarrier,
  *   sailing: import('../types/index.js').CarrierSailing,
@@ -64,6 +66,8 @@ export function VesselSailingDrawer({ carrier, sailing, now, onClose }) {
   const title = sailingTitle(carrier.name, sailing);
   const state = BOOKING_STATES[bookingState(sailing, now)];
   const isDirect = sailing.transshipmentPorts.length === 0;
+  const note = onCarriageNote(sailing);
+  const stops = [sailing.portOfLoading, ...sailing.transshipmentPorts, sailing.portOfDischarge];
 
   /** @type {Facts} */
   const schedule = [
@@ -95,6 +99,9 @@ export function VesselSailingDrawer({ carrier, sailing, now, onClose }) {
         <Text key="ts">{sailing.transshipmentPorts.join(' → ')}</Text>
       ),
     ],
+    ...(/** @type {Facts} */ (
+      note ? [['Đi tiếp', <Text key="on-carriage" color="meta-amber">{note}</Text>]] : []
+    )),
     ['Tuyến (service)', <Text key="service" type="code">{sailing.serviceCode ?? '—'}</Text>],
   ];
 
@@ -121,7 +128,7 @@ export function VesselSailingDrawer({ carrier, sailing, now, onClose }) {
                 icon={Ship}
                 title={title}
                 titleBadge={<MetaPill label={state.label} tone={state.tone} size="sm" hasDot />}
-                meta={`${sailing.portOfLoading} → ${sailing.portOfDischarge}`}
+                meta={stops.join(' → ')}
                 onClose={onClose}
               />
             </LayoutHeader>

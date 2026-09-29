@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-09-30 — Vessel schedule: TS tag, transit ports, barge routings (task 1.11)
+
+- User: look at the pages; if the Laem Chabang + barge routings are shown, say so in the hover card and drawer; a transshipment is tagged `[LINE TÀU]-[TS]-[TÀU / SỐ TÀU]` and both show the transit port. BE (BE-P `add-carrier-schedules`): Heung-A v2 now returns the barge routing as its own sailing (`onCarriage: "Barge"`, T/S LAEM CHABANG, no ETA) next to the direct call — booking status often differs (KMTC BANGKOK 2611S: direct closed, via Laem Chabang open).
+- `sailingTitle` → `Heung-A - TS - KMTC TAIPEIS / 2612S` when `transshipmentPorts` is not empty; `onCarriageNote` ("Dỡ tại LAEM CHABANG, đi tiếp bằng sà lan (barge) tới BANGKOK — hãng chưa có giờ đến"); hover card: "Chuyển tải" row + the note (amber); drawer: header route POL → T/S → POD, "Đi tiếp" row. `sailingId` adds POD, T/S ports and `onCarriage` (the two routings share vessel / voyage / ETD). Tests: 3 new in `config/vessel-schedule.test.js`.
+- Browser (Chrome, :3000): `/live` — KMTC schedule + tracking v1, Heung-A schedule + tracking v2 "Hoạt động". `/logistics/schedule` VNSGN → THBKK, Heung-A, October: "Heung-A · 61 chuyến", pairs `Heung-A - SAWASDEE SPICA / 2609S` (red) + `Heung-A - TS - SAWASDEE SPICA / 2609S`; hover on `Heung-A - TS - KMTC TAIPEIS / 2612S`: Còn nhận booking, Chuyển tải LAEM CHABANG, barge note; drawer header "HOCHIMINH → LAEM CHABANG → BANGKOK", rows Chuyển tải / Đi tiếp.
+- `./harness/verify.sh` passed: `harness/runs/20260930-002339-1700/`.
+
 ## 2026-09-29 — Vessel schedule: "Tải lại từ hãng" (task 1.10)
 
 - User: force-pull a fresh schedule into Redis. Button "Tải lại từ hãng" (header end of the calendar, shown once a search ran): `useRefreshCarrierSchedulesMutation` POSTs `/shipments/schedules/refresh` for every searched carrier with the visible dates and writes each answer into the calendar's query key; skeletons while it runs; off for 60 s after use (`REFRESH_COOLDOWN_MS`) — carriers throttle bursts.
