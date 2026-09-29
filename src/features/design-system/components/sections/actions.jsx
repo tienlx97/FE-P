@@ -24,10 +24,8 @@ export function ActionsSection() {
       <ShowcaseSection
         title="Button"
         description={
-          'variant là mức nhấn mạnh, không phải màu brand: primary = teal logo (--color-accent), ' +
-          'secondary = đỏ logo (override, hai màu brand cân nhau về trọng lượng thị giác), ' +
-          'ghost = trong suốt, destructive = đỏ lỗi (--color-error) — trùng hướng màu với ' +
-          'secondary nhưng là seed riêng, để đổi màu brand không kéo theo màu cảnh báo.'
+          'variant là mức nhấn mạnh, không phải màu brand: primary = cobalt Meta (--color-accent), ' +
+          'secondary = viền trắng hairline, ghost = trong suốt, destructive = đỏ lỗi (--color-error).'
         }
       >
         <VStack gap={3}>
@@ -99,7 +97,7 @@ export function ActionsSection() {
 
       <ShowcaseSection
         title="Link"
-        description="Link màu accent (teal thương hiệu) — trước khi nối --color-text-accent, link từng ra màu xám mặc định của theme-neutral."
+        description="Link màu accent (cobalt Meta, --color-text-accent)."
       >
         <HStack gap={4} wrap="wrap">
           <Link href="/" isStandalone>
