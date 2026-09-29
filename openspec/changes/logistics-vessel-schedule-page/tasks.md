@@ -21,3 +21,5 @@
   lists the whole catalog on open (paged on scroll, searched on the server,
   popup as wide as the field); skeletons while sailings / ports load; month
   cells show as many rows as fit before "+n mục" (`MetaSchedule`, shared).
+- [x] 1.9 POD terminal ("Terminal dỡ") in the sailing drawer and hover card
+  (BE `portOfDischargeTerminal`).

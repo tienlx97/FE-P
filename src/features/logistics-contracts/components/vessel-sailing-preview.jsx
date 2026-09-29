@@ -45,6 +45,7 @@ export function VesselSailingPreview({ carrier, sailing, tone, now }) {
       <Row label="ETD" value={formatCarrierTime(sailing.etd)} />
       <Row label="ETA" value={formatCarrierTime(sailing.eta)} />
       <Row label="CY cut-off" value={formatCarrierTime(sailing.cyCutoff)} />
+      <Row label="Terminal dỡ" value={sailing.portOfDischargeTerminal ?? '—'} />
       <Text size="sm" color="secondary">
         Bấm để xem chi tiết
       </Text>

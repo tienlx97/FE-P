@@ -1234,6 +1234,7 @@ export {};
  * @property {string} portOfLoading
  * @property {string | null} portOfLoadingTerminal
  * @property {string} portOfDischarge
+ * @property {string | null} [portOfDischargeTerminal] - terminal at the final POD as the carrier names it ("UTCT (Unithai Container Terminal)")
  * @property {string | null} etd
  * @property {string | null} eta
  * @property {string | null} siCutoff

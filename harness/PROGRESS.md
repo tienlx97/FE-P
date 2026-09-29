@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: POD terminal (task 1.9)
+
+- User: POD terminal missing. The BE now returns `portOfDischargeTerminal`; the sailing drawer shows "Terminal xếp" / "Terminal dỡ", the hover card "Terminal dỡ".
+- Browser (:3000, VNSGN → THBKK): KMTC hover "Terminal dỡ: PAT (Port Authority of Thailand)"; Heung-A drawer "Terminal xếp: CAT LAI", "Terminal dỡ: PAT TERMINAL 2 (PORT AUTHORITY OF THAILAND)".
+- `./harness/verify.sh` passed: `harness/runs/20260929-163514-985/`.
+
 ## 2026-09-29 — Vessel schedule: tags only, bookable first, POD like POL, skeletons, fitted cells (task 1.8)
 
 - User: (1) unavailable sailings without "Đã qua giờ khởi hành / Đã đóng booking / Hết chỗ" on the calendar (drawer keeps it); (2) POD as a selector like POL; (3) skeletons; (4) better "+n mục", bookable sailings before the others in a day.
