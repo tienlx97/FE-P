@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: selectors, `/logistics` calendar, sailing drawer
+
+- User: POL / POD as selectors with a nicer design, the same schedule as `/logistics`, and a drawer with ETD / ETA, SI / VGM / CY cut-off and terminal on click. Filter card: "POL — cảng xếp" (Vietnamese catalog ports with a UN/LOCODE), "Nước đến" + "POD — cảng dỡ" (that country's UN/LOCODE ports), "Hãng tàu", "Tìm" — all `Selector`s with search, labelled `VNHPH — Haiphong`; the whole 17.5k catalog is never loaded at once. The calendar is now `MetaSchedule` (month rows stretch to the page height, "2 tuần" view, hover card) instead of the lab `Schedule`; the header shows the route and one pill per carrier (count, loading, or the error in red). Data comes from `useCarrierSchedulesQueries` (one React Query per carrier and visible range, cached when paging back). Hover (`VesselSailingPreview`): tag, route, ETD / ETA / CY. Click (`VesselSailingDrawer`): Lịch tàu (ETD, ETA, days), Cut-off (SI, VGM, CY), Cảng & tuyến (POL + terminal, POD, transshipment, service). The Typeahead picker and the lab-`Schedule` time-zone helpers were removed.
+- Unit tests: `config/vessel-schedule.test.js` (10 tests: tag, time display, items per ETD date, visible range, carrier tones, options).
+- Browser (Chrome, :3000, KMTC live): VNHPH → Thailand → THLCH, "Tất cả hãng", Tìm → "KMTC · 10 chuyến" on September; hover card and drawer for `KMTC - SUNNY KALMIA / 2618N` showed ETD 25/09/2026 08:00, ETA 06/10/2026 03:00, SI 24/09 09:00, VGM 24/09 15:00, CY 24/09 18:00, Greenport Terminal, T/S Shekou, service IHS1. Screenshots: `harness/runs/20260929-vessel-schedule-page/meta-schedule-*.jpg`.
+- `./harness/verify.sh` passed: `harness/runs/20260929-111639-1574/`.
+
 ## 2026-09-29 — Vessel schedule: UN/LOCODE ports, carrier selector, search button
 
 - User: POL / POD by UN/LOCODE, a carrier selector (default all) and a search button. The port typeaheads list only catalog ports with a UN/LOCODE, labelled `VNCLI — Cát Lái`, and send only the code (BE-kt-xnk now requires it and maps it per carrier). "Hãng tàu" selector: "Tất cả hãng" (every carrier whose schedule is connected) or one carrier; carriers not connected are marked "(chưa kết nối)" and, when chosen, show the BE's reason. The calendar loads only after "Tìm" (disabled until both ports are picked); pressing it again re-runs the search; month paging reuses the committed search. Carrier colours are fixed over all carriers.

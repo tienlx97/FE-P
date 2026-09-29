@@ -6,3 +6,6 @@
   entry and route access; unit tests for the event mapping.
 - [x] 1.2 POL / POD by UN/LOCODE only (code sent to the BE), carrier
   selector (default "Tất cả hãng"), "Tìm" button; calendar loads on search.
+- [x] 1.3 POL / POD / country selectors, `MetaSchedule` calendar (as on
+  `/logistics`), hover card and sailing drawer (ETD, ETA, SI / VGM / CY
+  cut-off, terminal, route).
