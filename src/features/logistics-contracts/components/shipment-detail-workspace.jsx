@@ -59,7 +59,7 @@ import { useShipmentCostCategoriesQuery } from '../hooks/use-shipment-cost-categ
 import { useShipmentJourneyQuery } from '../hooks/use-shipment-journey-query.js';
 import { useShipmentScheduleQuery } from '../hooks/use-shipment-schedule-query.js';
 import { useShipmentVgmsQuery } from '../hooks/use-shipment-vgms-query.js';
-import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
+import { useShipmentQuery } from '../hooks/use-shipments-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { ShipmentAlertsBanner } from './shipment-alerts-banner.jsx';
 import { ShipmentContainerDatesDrawer } from './shipment-container-dates-drawer.jsx';
@@ -401,9 +401,9 @@ function journeyFor({
 
 /**
  * `/logistics/contract/[id]/shipment/[shipmentId]` — the Meta shipment
- * detail page (Figma 111:7829). The shipment comes from its contract's
- * shipment list (same cache the contract page and the edit dialog
- * invalidate), so a save in the dialog refreshes this page too.
+ * detail page (Figma 111:7829). The shipment is fetched by id under its
+ * contract's shipment cache key, which the contract page and the edit dialog
+ * invalidate, so a save in the dialog refreshes this page too.
  * @param {{ contractId: string, shipmentId: string }} props
  */
 export function ShipmentDetailWorkspace({ contractId, shipmentId }) {
@@ -426,19 +426,19 @@ export function ShipmentDetailWorkspace({ contractId, shipmentId }) {
   }
 
   const contractQuery = useContractQuery(contractId);
-  const shipmentsQuery = useShipmentsQuery(contractId);
+  const shipmentQuery = useShipmentQuery(contractId, shipmentId);
 
   const contract =
     contractQuery.data?.success && contractQuery.data.contract.id === contractId
       ? contractQuery.data.contract
       : null;
-  const shipment = shipmentsQuery.data?.success
-    ? (shipmentsQuery.data.shipments.find((item) => item.id === shipmentId) ??
-      null)
-    : null;
+  const shipment =
+    shipmentQuery.data?.success && shipmentQuery.data.shipment.id === shipmentId
+      ? shipmentQuery.data.shipment
+      : null;
   const errorMessage =
-    shipmentsQuery.data && !shipmentsQuery.data.success
-      ? shipmentsQuery.data.message
+    shipmentQuery.data && !shipmentQuery.data.success
+      ? shipmentQuery.data.message
       : contractQuery.data && !contractQuery.data.success
         ? contractQuery.data.message
         : 'Không tìm thấy lô hàng.';
@@ -455,7 +455,7 @@ export function ShipmentDetailWorkspace({ contractId, shipmentId }) {
             })}
           />
 
-          {contractQuery.isLoading || shipmentsQuery.isLoading ? (
+          {contractQuery.isLoading || shipmentQuery.isLoading ? (
             <MetaShipmentDetailSkeleton tab={activeTab} />
           ) : !contract || !shipment ? (
             <Banner status="error" title={errorMessage} container="card" />
@@ -511,7 +511,10 @@ function ShipmentDetailBody({
     ? scheduleQuery.data.schedule
     : null;
   const suppliersQuery = useSuppliersQuery();
-  const costCategoriesQuery = useShipmentCostCategoriesQuery();
+  // Only the Costs tab renders the groups.
+  const costCategoriesQuery = useShipmentCostCategoriesQuery({
+    enabled: activeTab === 'costs',
+  });
 
   const vgms = useMemo(
     () =>

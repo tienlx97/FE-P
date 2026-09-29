@@ -18,12 +18,17 @@ import {
   searchSuppliers,
   updateSupplier,
 } from '../api/suppliers.js';
+import { REFERENCE_DATA_STALE_TIME } from './use-shipment-journey-query.js';
 
 const QUERY_KEY = ['logistics-contracts', 'suppliers'];
 const SEARCH_KEY = ['logistics-contracts', 'suppliers-search'];
 
 export function useSuppliersQuery() {
-  return useQuery({ queryKey: QUERY_KEY, queryFn: listSuppliers });
+  return useQuery({
+    queryKey: QUERY_KEY,
+    queryFn: listSuppliers,
+    staleTime: REFERENCE_DATA_STALE_TIME,
+  });
 }
 
 /** @param {{page: number, pageSize: number, conditions?: any[]}} params */

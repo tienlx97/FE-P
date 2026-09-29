@@ -34,6 +34,13 @@ export const SHIPMENT_SCHEDULE_QUERY_PREFIX = [
  */
 export const TRACKING_STALE_TIME = 30_000;
 
+/**
+ * Reference data (cost groups, supplier directory) changes on explicit admin
+ * saves, which invalidate their own keys: do not refetch it on every mount
+ * or window focus.
+ */
+export const REFERENCE_DATA_STALE_TIME = 5 * 60_000;
+
 /** The cross-shipment alert list. */
 export const SHIPMENT_ALERTS_QUERY_KEY = ['logistics-contracts', 'shipment-alerts'];
 

@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createShipment,
   deleteShipment,
+  getShipment,
   listShipments,
   updateShipment,
 } from '../api/shipments.js';
@@ -28,6 +29,26 @@ export function useShipmentsQuery(contractId) {
     queryKey: queryKey(contractId ?? ''),
     queryFn: () => listShipments(/** @type {string} */ (contractId)),
     enabled: Boolean(contractId),
+  });
+}
+
+/**
+ * One shipment by id — backs the detail page, so it does not download the
+ * whole contract's list (with every cost line) to `.find()` one row. Keyed
+ * under the contract's list key: every shipment mutation's
+ * `invalidateQueries({ queryKey: queryKey(contractId) })` refreshes it too.
+ * @param {string | undefined} contractId
+ * @param {string | undefined} shipmentId
+ */
+export function useShipmentQuery(contractId, shipmentId) {
+  return useQuery({
+    queryKey: [...queryKey(contractId ?? ''), 'by-id', shipmentId ?? ''],
+    queryFn: () =>
+      getShipment(
+        /** @type {string} */ (contractId),
+        /** @type {string} */ (shipmentId),
+      ),
+    enabled: Boolean(contractId && shipmentId),
   });
 }
 

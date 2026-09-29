@@ -8,6 +8,14 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unusedImports from 'eslint-plugin-unused-imports';
 
 const config = [
+  {
+    // `astryx theme build` output (header `@generated`), not hand-written
+    // source; nothing imports it. Never lint generated files.
+    ignores: [
+      'src/shared/components/kt-xnk.js',
+      'src/shared/components/kt-xnk.d.ts',
+    ],
+  },
   js.configs.recommended,
   ...next,
   {

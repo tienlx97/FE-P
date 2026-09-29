@@ -5,6 +5,7 @@ import { freeTimeRequestBody } from '../config/shipment-schedule.js';
 
 const GENERIC_LIST_ERROR = 'Không thể tải danh sách lần xuất hàng';
 const GENERIC_LIST_ALL_ERROR = 'Không thể tải danh sách Shipment';
+const GENERIC_GET_ERROR = 'Không thể tải lần xuất hàng';
 const GENERIC_CREATE_ERROR = 'Không thể thêm lần xuất hàng';
 const GENERIC_UPDATE_ERROR = 'Không thể cập nhật lần xuất hàng';
 const GENERIC_DELETE_ERROR = 'Không thể xoá Shipment';
@@ -211,6 +212,30 @@ export async function listShipments(contractId) {
   }
 
   return { success: true, shipments: result.data ?? [] };
+}
+
+/**
+ * One Shipment of a contract. Requires `logistics:contracts:view`, scoped to
+ * the contract's company; `404` when the shipment is not under `contractId`.
+ * @param {string} contractId
+ * @param {string} shipmentId
+ * @returns {Promise<{ success: true, shipment: import('../types/index.js').Shipment } | { success: false, message: string, conflict: boolean }>}
+ */
+export async function getShipment(contractId, shipmentId) {
+  const result = await apiRequest(
+    `/api/v1/contracts/${contractId}/shipments/${shipmentId}`,
+    { errorMessage: GENERIC_GET_ERROR },
+  );
+
+  if (!result.success) {
+    return {
+      success: false,
+      message: result.message,
+      conflict: result.status === 409,
+    };
+  }
+
+  return { success: true, shipment: result.data };
 }
 
 /**
