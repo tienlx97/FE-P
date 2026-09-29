@@ -201,13 +201,3 @@ export function portOptions(ports) {
     .map((port) => ({ value: /** @type {string} */ (port.code), label: `${port.code} — ${port.name}` }))
     .sort((a, b) => a.value.localeCompare(b.value));
 }
-
-/**
- * Destination country options by name, ISO code in brackets.
- * @param {import('../types/index.js').Country[]} countries
- */
-export function countryOptions(countries) {
-  return countries
-    .map((country) => ({ value: country.id, label: country.code ? `${country.name} (${country.code})` : country.name }))
-    .sort((a, b) => a.label.localeCompare(b.label, 'vi'));
-}

@@ -19,7 +19,6 @@ import {
   carrierOptions,
   carriersToSearch,
   carrierTone,
-  countryOptions,
   localNow,
   portOptions,
   sailingId,
@@ -31,6 +30,7 @@ import { useCarrierAdaptersQuery } from '../hooks/use-carrier-adapters-query.js'
 import { useCarrierSchedulesQueries } from '../hooks/use-carrier-schedules-queries.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { usePortsQuery } from '../hooks/use-ports-query.js';
+import { PortTypeahead } from './port-typeahead.jsx';
 import { VesselSailingDrawer } from './vessel-sailing-drawer.jsx';
 import { VesselSailingPreview } from './vessel-sailing-preview.jsx';
 
@@ -50,7 +50,8 @@ import { VesselSailingPreview } from './vessel-sailing-preview.jsx';
  */
 
 /**
- * "Lịch tàu": POL (Vietnamese ports), destination country + POD and a
+ * "Lịch tàu": POL (Vietnamese ports, selector), POD (any port, searched as
+ * you type) and a
  * carrier ("Tất cả hãng" = every carrier whose vessel schedule is
  * connected), then "Tìm". Ports are sent as UN/LOCODE; the BE maps them to
  * each carrier's codes (BE-kt-xnk `add-carrier-schedules`). Sailings sit on
@@ -61,8 +62,7 @@ import { VesselSailingPreview } from './vessel-sailing-preview.jsx';
 export function VesselScheduleWorkspace() {
   const today = todayIsoDate();
   const [polCode, setPolCode] = useState('');
-  const [podCountryId, setPodCountryId] = useState('');
-  const [podCode, setPodCode] = useState('');
+  const [pod, setPod] = useState(/** @type {import('./port-typeahead.jsx').PortItem | null} */ (null));
   const [carrierChoice, setCarrierChoice] = useState(ALL_CARRIERS);
   const [search, setSearch] = useState(/** @type {ScheduleSearch | null} */ (null));
   const [view, setView] = useState(
@@ -82,15 +82,11 @@ export function VesselScheduleWorkspace() {
   const countries = countriesQuery.data?.success ? countriesQuery.data.countries : [];
   const vietnamId = findVietnamCountry(countries)?.id ?? '';
   const polPortsQuery = usePortsQuery({ countryId: vietnamId });
-  const podPortsQuery = usePortsQuery({ countryId: podCountryId });
   const polOptions = useMemo(
     () => portOptions(polPortsQuery.data?.success ? polPortsQuery.data.ports : []),
     [polPortsQuery.data],
   );
-  const podOptions = useMemo(
-    () => portOptions(podPortsQuery.data?.success ? podPortsQuery.data.ports : []),
-    [podPortsQuery.data],
-  );
+  const podCode = pod?.auxiliaryData?.code ?? '';
 
   const range = visibleRange(view, anchor);
   // To the minute, so the memo below recomputes at most once a minute.
@@ -147,35 +143,12 @@ export function VesselScheduleWorkspace() {
           <Icon icon={ArrowRight} size="sm" color="secondary" />
         </HStack>
         <StackItem size="fill" xstyle={styles.field}>
-          <Selector
-            label="Nước đến"
-            placeholder="Chọn nước"
-            hasSearch
-            searchPlaceholder="Tên nước…"
-            options={countryOptions(countries)}
-            value={podCountryId}
-            onChange={(value) => {
-              setPodCountryId(value ?? '');
-              setPodCode('');
-            }}
-            isLoading={countriesQuery.isFetching}
-            width="100%"
-          />
-        </StackItem>
-        <StackItem size="fill" xstyle={styles.field}>
-          <Selector
+          {/* Any port worldwide (~17.5k, too many for a Selector): searched on the server as you type. */}
+          <PortTypeahead
             label="POD — cảng dỡ"
-            placeholder={podCountryId ? 'Chọn cảng' : 'Chọn nước trước'}
-            hasSearch
-            searchPlaceholder="Mã hoặc tên cảng…"
-            options={podOptions}
-            value={podCode}
-            onChange={(value) => setPodCode(value ?? '')}
-            isLoading={podPortsQuery.isFetching}
-            isDisabled={!podCountryId}
-            disabledMessage="Chọn nước đến trước"
-            emptyText="Nước này chưa có cảng mã UN/LOCODE"
-            width="100%"
+            placeholder="Gõ mã hoặc tên cảng: THLCH, Laem Chabang…"
+            value={pod}
+            onChange={setPod}
           />
         </StackItem>
         <Selector

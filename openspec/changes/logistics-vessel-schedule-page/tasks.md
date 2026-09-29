@@ -10,3 +10,4 @@
   `/logistics`), hover card and sailing drawer (ETD, ETA, SI / VGM / CY
   cut-off, terminal, route).
 - [x] 1.4 "Hết chỗ" in red (carrier-closed sailing before its cut-off), booking state in hover card / drawer.
+- [x] 1.5 POL + POD only: POL selector (Vietnam), POD searched on the server (whole catalog).

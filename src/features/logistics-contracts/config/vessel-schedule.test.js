@@ -7,7 +7,6 @@ import {
   carrierOptions,
   carriersToSearch,
   carrierTone,
-  countryOptions,
   formatCarrierTime,
   localNow,
   portOptions,
@@ -143,13 +142,4 @@ test('portOptions keeps UN/LOCODE ports, code first, sorted', () => {
     { value: 'VNCLI', label: 'VNCLI — Cát Lái' },
     { value: 'VNSGN', label: 'VNSGN — Ho Chi Minh City' },
   ]);
-});
-
-test('countryOptions sorts by name with the ISO code', () => {
-  const countries = [
-    { id: 'th', name: 'Thái Lan', code: 'TH' },
-    { id: 'au', name: 'Úc', code: 'AU' },
-    { id: 'x', name: 'Philippines', code: null },
-  ];
-  assert.deepEqual(countryOptions(countries).map((option) => option.label), ['Philippines', 'Thái Lan (TH)', 'Úc (AU)']);
 });
