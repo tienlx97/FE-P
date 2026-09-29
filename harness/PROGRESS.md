@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: KMTC 403 fixed in BE, late ETD on one day
+
+- The "KMTC chặn truy cập (HTTP 403, Akamai)" on `/logistics/schedule` was the BE sending HTTP/1.1 (Akamai needs HTTP/2) — fixed in BE-kt-xnk `22ee728`. With the rebuilt dev API the page showed "KMTC · 20 chuyến" for VNSGN → THBKK, events titled `KMTC - SKY ORION / 2610S` at the carrier's times.
+- Fix: an event whose ETD is late (23:30) ran to 00:30 and appeared on two days in the list view; events now end at 23:59 of their ETD day at the latest (unit test).
+- `./harness/verify.sh` passed: `harness/runs/20260929-105137-1983/`.
+- Discovered: browser automation cannot type into or screenshot the page while the Chrome window is hidden (`visibilityState: hidden`).
+
 ## 2026-09-29 — Vessel schedule page `/logistics/schedule`
 
 - New page ("Lịch tàu", NGHIỆP VỤ sidebar, `logistics:contracts:view`): POL / POD `Typeahead`s over the whole port catalog (`POST /ports/search`, code / name / full name contains; sends the UN/LOCODE, else the name) and the lab `Schedule` (month / week / list views) filling the rest of the page. Its async loader asks every carrier whose schedule adapter is implemented (`GET /shipments/tracking/carriers` → `schedule.isImplemented`, KMTC for now) through `GET /shipments/schedules` for the visible range (≤ 62-day windows); each sailing is an event at its ETD titled `[HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]`, one colour per carrier. Carrier times are read and shown in Asia/Ho_Chi_Minh so they appear as the carrier gives them. A carrier that fails shows a red token with its message; the loader never rejects. Needs BE `add-carrier-schedules` (branch `feat/carrier-schedules`).

@@ -57,6 +57,14 @@ test('sailingEvents puts one event at each ETD in the carrier category', () => {
   assert.equal(events[0].id, 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00');
 });
 
+test('a late ETD stays on its own day', () => {
+  const [late] = sailingEvents(KMTC, [sailing({ etd: '2026-09-29T23:30:00' })]);
+
+  assert.equal(instantToDate(late.start), '2026-09-29');
+  assert.equal(instantToDate(late.end), '2026-09-29');
+  assert.equal(late.end, localToInstant('2026-09-29T23:59:00'));
+});
+
 test('searchWindows turns the visible range into dated windows of at most 62 days', () => {
   // Monthly grid of October 2026: Sun 27/09 00:00 → Sun 08/11 00:00 (exclusive), Việt Nam time.
   const start = /** @type {number} */ (localToInstant('2026-09-27T00:00:00'));

@@ -94,10 +94,19 @@ export function sailingEvents(carrier, sailings) {
         title: sailingTitle(carrier.name, sailing),
         category: carrier.name,
         start: etd,
-        end: etd + EVENT_DURATION_MS,
+        end: Math.min(etd + EVENT_DURATION_MS, endOfDay(etd)),
       },
     ];
   });
+}
+
+/**
+ * The last minute of the {@link SCHEDULE_TIMEZONE} day holding `instant`,
+ * so a late ETD (23:30) does not spill into the next day's cell.
+ * @param {number} instant
+ */
+function endOfDay(instant) {
+  return Date.parse(`${instantToDate(instant)}T23:59:00${ZONE_OFFSET}`);
 }
 
 /**
