@@ -24,12 +24,13 @@ export function usePortsQuery({ countryId, enabled = true } = {}) {
   });
 }
 
-/** @param {{ page: number, pageSize: number, conditions?: any[] }} params */
-export function useSearchPortsQuery({ page, pageSize, conditions = [] }) {
+/** @param {{ page: number, pageSize: number, conditions?: any[], enabled?: boolean }} params */
+export function useSearchPortsQuery({ page, pageSize, conditions = [], enabled = true }) {
   return useQuery({
     queryKey: [...QUERY_KEY, 'search', page, pageSize, conditions],
     queryFn: () => searchPorts({ page, pageSize, conditions }),
     placeholderData: keepPreviousData,
+    enabled,
   });
 }
 

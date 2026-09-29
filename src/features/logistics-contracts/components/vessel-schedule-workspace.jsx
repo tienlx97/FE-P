@@ -3,6 +3,7 @@
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -14,16 +15,17 @@ import { MetaPill, MetaSchedule } from '@/shared/components/custom/meta/index.js
 import { todayIsoDate } from '@/shared/config/date-input-format.js';
 
 import {
-  ALL_CARRIERS,
   BOOKING_STATES,
   bookingState,
   carrierOptions,
+  carrierSelectionLabel,
   carriersToSearch,
   carrierTone,
   localNow,
   portOptions,
   sailingId,
   sailingItems,
+  scheduleCarriers,
   visibleRange,
 } from '../config/vessel-schedule.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
@@ -31,7 +33,7 @@ import { useCarrierAdaptersQuery } from '../hooks/use-carrier-adapters-query.js'
 import { useCarrierSchedulesQueries } from '../hooks/use-carrier-schedules-queries.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { usePortsQuery } from '../hooks/use-ports-query.js';
-import { PortTypeahead } from './port-typeahead.jsx';
+import { PortSearchSelector } from './port-search-selector.jsx';
 import { VesselSailingDrawer } from './vessel-sailing-drawer.jsx';
 import { VesselSailingPreview } from './vessel-sailing-preview.jsx';
 
@@ -51,10 +53,10 @@ import { VesselSailingPreview } from './vessel-sailing-preview.jsx';
  */
 
 /**
- * "Lịch tàu": POL (Vietnamese ports, selector), POD (any port, searched as
- * you type) and a
- * carrier ("Tất cả hãng" = every carrier whose vessel schedule is
- * connected), then "Tìm". Ports are sent as UN/LOCODE; the BE maps them to
+ * "Lịch tàu": POL (Vietnamese ports, selector), POD (any port, a selector
+ * that searches on the server) and one or more carriers (none checked =
+ * "Tất cả hãng", every carrier whose vessel schedule is connected), then
+ * "Tìm". Ports are sent as UN/LOCODE; the BE maps them to
  * each carrier's codes (BE-kt-xnk `add-carrier-schedules`). Sailings sit on
  * their ETD in the same calendar as `/logistics` (`MetaSchedule`), tagged
  * `[HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]`; hovering shows ETD / ETA / CY,
@@ -63,8 +65,8 @@ import { VesselSailingPreview } from './vessel-sailing-preview.jsx';
 export function VesselScheduleWorkspace() {
   const today = todayIsoDate();
   const [polCode, setPolCode] = useState('');
-  const [pod, setPod] = useState(/** @type {import('./port-typeahead.jsx').PortItem | null} */ (null));
-  const [carrierChoice, setCarrierChoice] = useState(ALL_CARRIERS);
+  const [pod, setPod] = useState(/** @type {{ code: string, name: string } | null} */ (null));
+  const [carrierCodes, setCarrierCodes] = useState(/** @type {string[]} */ ([]));
   const [search, setSearch] = useState(/** @type {ScheduleSearch | null} */ (null));
   const [view, setView] = useState(
     /** @type {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleView} */ ('month'),
@@ -78,6 +80,7 @@ export function VesselScheduleWorkspace() {
     [adaptersQuery.data],
   );
   const allCarriers = useMemo(() => adapters.map((adapter) => adapter.carrier), [adapters]);
+  const connectedCount = useMemo(() => scheduleCarriers(adapters).length, [adapters]);
 
   const countriesQuery = useCountriesQuery();
   const countries = countriesQuery.data?.success ? countriesQuery.data.countries : [];
@@ -87,7 +90,7 @@ export function VesselScheduleWorkspace() {
     () => portOptions(polPortsQuery.data?.success ? polPortsQuery.data.ports : []),
     [polPortsQuery.data],
   );
-  const podCode = pod?.auxiliaryData?.code ?? '';
+  const podCode = pod?.code ?? '';
 
   const range = visibleRange(view, anchor);
   // To the minute, so the memo below recomputes at most once a minute.
@@ -144,21 +147,20 @@ export function VesselScheduleWorkspace() {
           <Icon icon={ArrowRight} size="sm" color="secondary" />
         </HStack>
         <StackItem size="fill" xstyle={styles.field}>
-          {/* Any port worldwide (~17.5k, too many for a Selector): searched on the server as you type. */}
-          <PortTypeahead
-            label="POD — cảng dỡ"
-            placeholder="Gõ mã hoặc tên cảng: THLCH, Laem Chabang…"
-            value={pod}
-            onChange={setPod}
-          />
+          {/* Any port worldwide (~17.5k): the selector searches on the server. */}
+          <PortSearchSelector label="POD — cảng dỡ" placeholder="Chọn cảng dỡ" value={pod} onChange={setPod} />
         </StackItem>
-        <Selector
+        <MultiSelector
           label="Hãng tàu"
+          placeholder="Tất cả hãng"
           options={carrierOptions(adapters)}
-          value={carrierChoice}
-          onChange={(value) => setCarrierChoice(value ?? ALL_CARRIERS)}
+          value={carrierCodes}
+          onChange={setCarrierCodes}
+          triggerDisplay="labels"
+          formatValue={(items) => carrierSelectionLabel(items, connectedCount)}
+          hasClear
           isLoading={adaptersQuery.isLoading}
-          width={200}
+          width={240}
         />
         <Button
           label="Tìm"
@@ -167,7 +169,7 @@ export function VesselScheduleWorkspace() {
           isDisabled={!canSearch}
           onClick={() => {
             setSelectedId(null);
-            setSearch({ pol: polCode, pod: podCode, carriers: carriersToSearch(adapters, carrierChoice) });
+            setSearch({ pol: polCode, pod: podCode, carriers: carriersToSearch(adapters, carrierCodes) });
           }}
         />
       </HStack>
