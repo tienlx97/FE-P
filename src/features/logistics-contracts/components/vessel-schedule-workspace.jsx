@@ -15,8 +15,6 @@ import { MetaPill, MetaSchedule } from '@/shared/components/custom/meta/index.js
 import { todayIsoDate } from '@/shared/config/date-input-format.js';
 
 import {
-  BOOKING_STATES,
-  bookingState,
   carrierOptions,
   carrierSelectionLabel,
   carriersToSearch,
@@ -215,21 +213,14 @@ export function VesselScheduleWorkspace() {
                       const reason = !data ? 'lỗi' : data.success ? (data.search.error ?? data.search.status) : data.message;
                       return <MetaPill key={carrier.code} label={`${carrier.name}: ${reason}`} tone="danger" size="sm" hasDot />;
                     }
-                    const unavailableCount = data.search.sailings.filter(
-                      (sailing) => BOOKING_STATES[bookingState(sailing, now)].tone === 'danger',
-                    ).length;
                     return (
-                      <HStack key={carrier.code} gap={1} vAlign="center">
-                        <MetaPill
-                          label={`${carrier.name} · ${data.search.sailings.length} chuyến`}
-                          tone={carrierTone(allCarriers, carrier.code)}
-                          size="sm"
-                          hasDot
-                        />
-                        {unavailableCount > 0 ? (
-                          <MetaPill label={`${unavailableCount} không thể book`} tone="danger" size="sm" hasDot />
-                        ) : null}
-                      </HStack>
+                      <MetaPill
+                        key={carrier.code}
+                        label={`${carrier.name} · ${data.search.sailings.length} chuyến`}
+                        tone={carrierTone(allCarriers, carrier.code)}
+                        size="sm"
+                        hasDot
+                      />
                     );
                   })}
                 </>

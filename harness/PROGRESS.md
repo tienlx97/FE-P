@@ -1,5 +1,10 @@
 # Progress Log
 
+## 2026-09-29 — Vessel schedule: no "n không thể book" pills
+
+- User: drop the per-carrier "n không thể book" pill from the result header; it now reads "VNSGN → THBKK · KMTC · 20 chuyến · Heung-A · 19 chuyến" (checked in Chrome). Unavailable sailings stay red on the calendar with the reason in the hover card / drawer.
+- `./harness/verify.sh` passed: `harness/runs/20260929-163853-628/`.
+
 ## 2026-09-29 — Vessel schedule: POD terminal (task 1.9)
 
 - User: POD terminal missing. The BE now returns `portOfDischargeTerminal`; the sailing drawer shows "Terminal xếp" / "Terminal dỡ", the hover card "Terminal dỡ".
