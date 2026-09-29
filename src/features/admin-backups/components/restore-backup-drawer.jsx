@@ -9,6 +9,8 @@ import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { MetaFormDrawer } from '@/shared/components/meta-form-drawer.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
+import { getRestoreStatus } from '../api/backups.js';
+import { RESTORE_POLL_INTERVAL_MS, restoreOutcome } from '../config/restore-status.js';
 import { useRestoreBackupMutation } from '../hooks/use-restore-backup-mutation.js';
 
 // Must match the backend's live database name exactly — the API rejects the
@@ -17,12 +19,15 @@ import { useRestoreBackupMutation } from '../hooks/use-restore-backup-mutation.j
 // inside the app.
 const CONFIRM_DATABASE_NAME = 'CompanyManagement';
 
-// How often to silently re-check while the backend reports the restore as
-// still running (409) rather than making the Admin reload the page by hand
-// to find out.
-const POLL_INTERVAL_MS = 5000;
+/** Time to read the success message before the page reloads. */
+const RELOAD_DELAY_MS = 4000;
 
 /**
+ * Starts a restore (the API runs it in the background and answers at once)
+ * and follows it through `restore-status` until it ends — never by sending
+ * the restore again. The status is readable without a session: restoring a
+ * backup from another machine replaces the users, so after a success the
+ * reload may land on `/login` — sign in with an account from that backup.
  * @param {{
  *   onOpenChange: (isOpen: boolean) => void,
  *   backup: import('../types/index.js').BackupFile,
@@ -35,7 +40,7 @@ export function RestoreBackupDrawer({ onOpenChange, backup }) {
   const [isPolling, setIsPolling] = useState(false);
 
   const restoreMutation = useRestoreBackupMutation(backup.fileName);
-  // Stops a scheduled retry from firing into a closed drawer's state.
+  // Stops a scheduled status check from firing into a closed drawer's state.
   const isCancelledRef = useRef(false);
 
   /** @param {boolean} nextIsOpen */
@@ -50,37 +55,33 @@ export function RestoreBackupDrawer({ onOpenChange, backup }) {
     onOpenChange(nextIsOpen);
   }
 
-  /** @param {string} confirmDatabaseName */
-  async function attemptRestore(confirmDatabaseName) {
-    const result = await restoreMutation.mutateAsync(confirmDatabaseName);
+  /** @param {string} restoreId */
+  function scheduleCheck(restoreId) {
+    window.setTimeout(async () => {
+      if (isCancelledRef.current) return;
+      const result = await getRestoreStatus();
+      if (isCancelledRef.current) return;
 
-    if (isCancelledRef.current) return;
+      // A failed read (network blip, API restarting) is not the restore
+      // failing: keep checking.
+      const outcome = restoreOutcome(result.success ? result.status : null, restoreId);
+      if (outcome === 'running') {
+        scheduleCheck(restoreId);
+        return;
+      }
 
-    if (result.success) {
       setIsPolling(false);
-      setDidSucceed(true);
-      // Every cached query result across the app is now stale — a reload
-      // is simpler and safer than trying to selectively invalidate
-      // everything.
-      window.setTimeout(() => window.location.reload(), 2000);
-      return;
-    }
+      if (outcome === 'succeeded') {
+        setDidSucceed(true);
+        // Every cached query result across the app is now stale — a reload
+        // is simpler and safer than trying to selectively invalidate
+        // everything.
+        window.setTimeout(() => window.location.reload(), RELOAD_DELAY_MS);
+        return;
+      }
 
-    // 409 covers two backend cases, both worth retrying silently rather
-    // than surfacing as an error: the restore is still running past the
-    // backend's own response timeout, or (on an earlier retry landing
-    // while it's still going) it's already in progress. Anything else
-    // (wrong confirmation text, backup missing) is final.
-    if (result.status === 409) {
-      setIsPolling(true);
-      window.setTimeout(() => {
-        if (!isCancelledRef.current) attemptRestore(confirmDatabaseName);
-      }, POLL_INTERVAL_MS);
-      return;
-    }
-
-    setIsPolling(false);
-    setError(result.message);
+      setError((result.success && result.status.message) || 'Khôi phục thất bại — xem log máy chủ.');
+    }, RESTORE_POLL_INTERVAL_MS);
   }
 
   /** @param {import('react').FormEvent<HTMLFormElement>} event */
@@ -93,7 +94,17 @@ export function RestoreBackupDrawer({ onOpenChange, backup }) {
       return;
     }
 
-    await attemptRestore(confirmText);
+    isCancelledRef.current = false;
+    const result = await restoreMutation.mutateAsync(confirmText);
+    if (isCancelledRef.current) return;
+
+    if (!result.success || !result.status.restoreId) {
+      setError(result.success ? 'Máy chủ không trả mã khôi phục.' : result.message);
+      return;
+    }
+
+    setIsPolling(true);
+    scheduleCheck(result.status.restoreId);
   }
 
   return (
@@ -116,11 +127,19 @@ export function RestoreBackupDrawer({ onOpenChange, backup }) {
       onSubmit={handleSubmit}
     >
       {didSucceed || isPolling ? (
-        <Text color="secondary">
-          {didSucceed
-            ? 'Khôi phục thành công. Trang sẽ tự tải lại...'
-            : 'Vẫn đang khôi phục ở máy chủ — không tắt trình duyệt, trang sẽ tự kiểm tra lại...'}
-        </Text>
+        <VStack gap={2} hAlign="stretch">
+          <Text color="secondary">
+            {didSucceed
+              ? 'Khôi phục thành công. Trang sẽ tự tải lại...'
+              : 'Đang khôi phục ở máy chủ (sao lưu an toàn, rồi ghi đè dữ liệu) — không cần giữ trang, quá trình không bị ngắt; trang tự kiểm tra kết quả...'}
+          </Text>
+          {didSucceed ? (
+            <Text color="secondary">
+              Nếu bản sao lưu lấy từ máy khác, danh sách người dùng giờ là của máy đó: khi được đưa về trang đăng
+              nhập, hãy đăng nhập bằng tài khoản có trong bản sao lưu.
+            </Text>
+          ) : null}
+        </VStack>
       ) : null}
       {!didSucceed ? (
         <MetaFormSection
@@ -136,9 +155,8 @@ export function RestoreBackupDrawer({ onOpenChange, backup }) {
               phòng trường hợp cần quay lại.
             </Text>
             <Text color="secondary">
-              Có thể mất khoảng 1 phút — quá trình không bị ngắt giữa chừng dù
-              trang có báo &quot;quá thời gian&quot;, trang sẽ tự kiểm tra lại
-              cho tới khi xong.
+              Có thể mất vài phút với dữ liệu lớn — máy chủ khôi phục ở nền và
+              trang sẽ báo kết quả khi xong.
             </Text>
             <TextInput
               label={`Gõ "${CONFIRM_DATABASE_NAME}" để xác nhận`}

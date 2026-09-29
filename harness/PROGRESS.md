@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-09-29 — Backup restore drawer polls restore-status (BE `fix-backup-restore-status`)
+
+- The API now starts a restore in the background (`POST .../restore` → 202 `{ state, restoreId }`) and reports it on anonymous `GET /backups/restore-status`. `restore-backup-drawer.jsx` no longer re-POSTs the restore on 409 (which restarted a finished restore on the same machine, and got 401 → "error" after a restore from another machine replaced the users): it polls the status every 3 s until its own `restoreId` ends (`restoreOutcome`, `config/restore-status.js`, tested), shows the failure message, or on success tells to sign in with an account from the backup if it came from another machine, then reloads. `getRestoreStatus` never redirects to `/login`.
+- Checked on the rebuilt dev API through `/api/backend`: wrong confirmation 400, unknown file 404, status `None` (no real restore run on the shared dev DB; the full flow is covered by the BE integration tests).
+- `./harness/verify.sh` passed: `harness/runs/20260929-192326-1962/`.
+
 ## 2026-09-29 — Fix: backup upload > 10 MB cut short (/admin/backups restore elsewhere)
 
 - User: a backup taken here and restored on another machine seems to fail. Checked end to end on the dev stack:
