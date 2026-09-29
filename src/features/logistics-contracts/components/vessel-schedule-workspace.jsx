@@ -15,10 +15,12 @@ import { todayIsoDate } from '@/shared/config/date-input-format.js';
 
 import {
   ALL_CARRIERS,
+  bookingState,
   carrierOptions,
   carriersToSearch,
   carrierTone,
   countryOptions,
+  localNow,
   portOptions,
   sailingId,
   sailingItems,
@@ -91,6 +93,8 @@ export function VesselScheduleWorkspace() {
   );
 
   const range = visibleRange(view, anchor);
+  // To the minute, so the memo below recomputes at most once a minute.
+  const now = localNow().slice(0, 16);
   const results = useCarrierSchedulesQueries({ search, ...range });
 
   const entries = useMemo(() => {
@@ -112,10 +116,10 @@ export function VesselScheduleWorkspace() {
       (search?.carriers ?? []).flatMap((carrier, index) => {
         const data = results[index]?.data;
         return data?.success && data.search.status === 'Synced'
-          ? sailingItems(carrier, data.search.sailings, carrierTone(allCarriers, carrier.code))
+          ? sailingItems(carrier, data.search.sailings, carrierTone(allCarriers, carrier.code), now)
           : [];
       }),
-    [results, search, allCarriers],
+    [results, search, allCarriers, now],
   );
 
   const canSearch = Boolean(polCode && podCode) && adapters.length > 0;
@@ -207,7 +211,7 @@ export function VesselScheduleWorkspace() {
           renderItemPreview={(item) => {
             const entry = entries.get(item.id);
             return entry ? (
-              <VesselSailingPreview carrier={entry.carrier} sailing={entry.sailing} tone={item.tone} />
+              <VesselSailingPreview carrier={entry.carrier} sailing={entry.sailing} tone={item.tone} now={now} />
             ) : null;
           }}
           headerStart={
@@ -229,14 +233,21 @@ export function VesselScheduleWorkspace() {
                       const reason = !data ? 'lỗi' : data.success ? (data.search.error ?? data.search.status) : data.message;
                       return <MetaPill key={carrier.code} label={`${carrier.name}: ${reason}`} tone="danger" size="sm" hasDot />;
                     }
+                    const fullCount = data.search.sailings.filter(
+                      (sailing) => bookingState(sailing, now) === 'full',
+                    ).length;
                     return (
-                      <MetaPill
-                        key={carrier.code}
-                        label={`${carrier.name} · ${data.search.sailings.length} chuyến`}
-                        tone={carrierTone(allCarriers, carrier.code)}
-                        size="sm"
-                        hasDot
-                      />
+                      <HStack key={carrier.code} gap={1} vAlign="center">
+                        <MetaPill
+                          label={`${carrier.name} · ${data.search.sailings.length} chuyến`}
+                          tone={carrierTone(allCarriers, carrier.code)}
+                          size="sm"
+                          hasDot
+                        />
+                        {fullCount > 0 ? (
+                          <MetaPill label={`${fullCount} hết chỗ`} tone="danger" size="sm" hasDot />
+                        ) : null}
+                      </HStack>
                     );
                   })}
                 </>
@@ -250,6 +261,7 @@ export function VesselScheduleWorkspace() {
         <VesselSailingDrawer
           carrier={selected.carrier}
           sailing={selected.sailing}
+          now={now}
           onClose={() => setSelectedId(null)}
         />
       ) : null}

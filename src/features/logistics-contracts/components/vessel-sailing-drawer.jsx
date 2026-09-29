@@ -22,7 +22,12 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 
-import { formatCarrierTime, sailingTitle } from '../config/vessel-schedule.js';
+import {
+  BOOKING_STATES,
+  bookingState,
+  formatCarrierTime,
+  sailingTitle,
+} from '../config/vessel-schedule.js';
 
 /** @typedef {Array<[string, import('react').ReactNode]>} Facts */
 
@@ -44,21 +49,25 @@ function TimeText({ value }) {
 }
 
 /**
- * A sailing of the vessel schedule, as the carrier publishes it: ETD / ETA,
- * SI, VGM and CY cut-offs, terminal, route and transshipment. Times are the
- * carrier's local port times.
+ * A sailing of the vessel schedule, as the carrier publishes it: whether it
+ * still takes bookings ("Hết chỗ" in red), ETD / ETA, SI, VGM and CY
+ * cut-offs, terminal, route and transshipment. Times are the carrier's
+ * local port times.
  * @param {{
  *   carrier: import('../types/index.js').ShippingCarrier,
  *   sailing: import('../types/index.js').CarrierSailing,
+ *   now: string,
  *   onClose: () => void,
  * }} props
  */
-export function VesselSailingDrawer({ carrier, sailing, onClose }) {
+export function VesselSailingDrawer({ carrier, sailing, now, onClose }) {
   const title = sailingTitle(carrier.name, sailing);
+  const state = BOOKING_STATES[bookingState(sailing, now)];
   const isDirect = sailing.transshipmentPorts.length === 0;
 
   /** @type {Facts} */
   const schedule = [
+    ['Booking', <MetaPill key="booking" label={state.label} tone={state.tone} size="sm" hasDot />],
     ['ETD', <TimeText key="etd" value={sailing.etd} />],
     ['ETA', <TimeText key="eta" value={sailing.eta} />],
     [
@@ -110,6 +119,7 @@ export function VesselSailingDrawer({ carrier, sailing, onClose }) {
               <MetaDrawerHeader
                 icon={Ship}
                 title={title}
+                titleBadge={<MetaPill label={state.label} tone={state.tone} size="sm" hasDot />}
                 meta={`${sailing.portOfLoading} → ${sailing.portOfDischarge}`}
                 onClose={onClose}
               />

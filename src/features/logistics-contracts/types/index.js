@@ -1242,6 +1242,7 @@ export {};
  * @property {string[]} transshipmentPorts
  * @property {number | null} transitDays
  * @property {string | null} serviceCode
+ * @property {'Unknown' | 'Open' | 'NotYetOpen' | 'CutoffPassed' | 'Full'} [bookingStatus] - `Full` = the carrier closed it to bookings
  */
 
 /**

@@ -3,11 +3,13 @@ import test from 'node:test';
 
 import {
   ALL_CARRIERS,
+  bookingState,
   carrierOptions,
   carriersToSearch,
   carrierTone,
   countryOptions,
   formatCarrierTime,
+  localNow,
   portOptions,
   sailingItems,
   sailingTitle,
@@ -46,13 +48,37 @@ test('carrier times are shown as given, date then time', () => {
   assert.equal(formatCarrierTime(null), '—');
 });
 
+const NOW = '2026-09-29T11:00:00';
+
 test('sailingItems puts each sailing on its ETD date, late ETDs included', () => {
-  const items = sailingItems(KMTC, [sailing({}), sailing({ etd: '2026-09-29T23:30:00', voyageNumber: '2616S' }), sailing({ etd: null })], 'accent');
+  const items = sailingItems(KMTC, [sailing({}), sailing({ etd: '2026-09-29T23:30:00', voyageNumber: '2616S' }), sailing({ etd: null })], 'accent', NOW);
 
   assert.deepEqual(items, [
     { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S', tone: 'accent' },
     { id: 'KMTC:KMTC ULSAN:2616S:2026-09-29T23:30:00', date: '2026-09-29', title: 'KMTC - KMTC ULSAN / 2616S', tone: 'accent' },
   ]);
+});
+
+test('a full sailing is red and says "Hết chỗ" after its tag', () => {
+  const full = sailing({ etd: '2026-10-07T05:00:00', siCutoff: '2026-10-05T16:00:00', bookingStatus: 'Full' });
+  const [item] = sailingItems(KMTC, [full], 'accent', NOW);
+
+  assert.equal(item.tone, 'danger');
+  assert.equal(item.title, 'KMTC - KMTC ULSAN / 2615S · Hết chỗ');
+});
+
+test('bookingState: carrier-closed is "hết chỗ" only before the cut-off', () => {
+  assert.equal(bookingState(sailing({ bookingStatus: 'Full', siCutoff: '2026-10-05T16:00:00' }), NOW), 'full');
+  assert.equal(bookingState(sailing({ bookingStatus: 'Full', siCutoff: '2026-09-28T16:00:00' }), NOW), 'closed');
+  assert.equal(bookingState(sailing({ bookingStatus: 'Full', siCutoff: null, cyCutoff: null }), NOW), 'full');
+  assert.equal(bookingState(sailing({ bookingStatus: 'CutoffPassed' }), NOW), 'closed');
+  assert.equal(bookingState(sailing({ bookingStatus: 'NotYetOpen' }), NOW), 'notYetOpen');
+  assert.equal(bookingState(sailing({ bookingStatus: 'Open' }), NOW), 'open');
+  assert.equal(bookingState(sailing({ bookingStatus: undefined }), NOW), 'unknown');
+});
+
+test('localNow is Việt Nam local time', () => {
+  assert.equal(localNow(Date.parse('2026-09-29T04:00:00Z')), '2026-09-29T11:00:00');
 });
 
 test('visibleRange covers the month grid or the two weeks shown', () => {
