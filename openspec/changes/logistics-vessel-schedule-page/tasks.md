@@ -23,3 +23,5 @@
   cells show as many rows as fit before "+n mục" (`MetaSchedule`, shared).
 - [x] 1.9 POD terminal ("Terminal dỡ") in the sailing drawer and hover card
   (BE `portOfDischargeTerminal`).
+- [x] 1.10 "Tải lại từ hãng" button: refetch the visible range from the
+  carriers (BE skips and replaces its Redis cache), 60 s cooldown.

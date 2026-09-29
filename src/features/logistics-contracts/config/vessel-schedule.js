@@ -10,6 +10,9 @@ import { addDays, dayRange, monthWeeks } from '@/shared/config/schedule-calendar
 import { formatScheduleValue } from './shipment-schedule.js';
 
 /** The carrier selector's "every carrier" value. */
+/** "Tải lại từ hãng" stays off this long after use — carriers throttle / block bursts. */
+export const REFRESH_COOLDOWN_MS = 60_000;
+
 /** How many recently picked PODs the POD selector lists when opened. */
 export const RECENT_PORTS_LIMIT = 8;
 
