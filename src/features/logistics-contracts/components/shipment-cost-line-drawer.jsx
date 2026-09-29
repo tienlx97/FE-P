@@ -8,6 +8,7 @@ import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import {
   Layout,
   LayoutContent,
@@ -433,8 +434,9 @@ export function ShipmentCostLineDrawer({
                             width="100%"
                           />
                         </VStack>
-                        <Button
+                        <IconButton
                           label="Loại phí khuyến nghị"
+                          tooltip="Loại phí khuyến nghị"
                           type="button"
                           variant="secondary"
                           icon={<Icon icon={Sparkles} size="sm" />}

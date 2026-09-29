@@ -15855,3 +15855,7 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 
 - Replaced the eight always-visible LOG group cards in the cost-line drawer with Astryx `ComplexSelector`. The closed field shows the selected code and group name; the popup uses an accessible radio list with the group's plain meaning. Selection closes the popup and continues to drive validation and the recommended-fee drawer's initial group.
 - Browser QA checked desktop and 390px mobile closed/open states, selected LOG-03 and LOG-02, and confirmed the fee drawer starts on the chosen group. Screenshots: `harness/runs/20260929-backups-shipment-dense-ui/cost-group-complex-*.png`. `./harness/verify.sh` passed: `harness/runs/20260929-061220-1527033/`.
+
+## 2026-09-29 — Recommended fee icon tooltip
+
+- Changed the recommended fee control beside the cost name field to an icon-only Astryx IconButton with a hover tooltip and accessible name. Browser QA confirmed the tooltip appears and clicking still opens the fee picker. Screenshots: `harness/runs/20260929-backups-shipment-dense-ui/recommended-icon-only.png` and `recommended-icon-tooltip.png`. `./harness/verify.sh` passed: `harness/runs/20260929-071719-1608447/`.
