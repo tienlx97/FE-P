@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-09-29 — "/live" carrier API status page (`carrier-status-page` task 1.1)
+
+- User: a `/live` page telling whether each carrier's schedule and tracking API works, designed like Anthropic's status page. New feature `src/features/carrier-status` over BE `GET /api/v1/carrier-status` / `POST .../check`: overall `Banner`, per connected carrier a `Card` with "Lịch tàu" / "Tracking" rows (`StatusDot` + label + adapter version, uptime %, 90 day bars with `Tooltip`, latest detail · latency · time), not-connected carriers in one line, legend, "Kiểm tra ngay", refetch every 60 s. Config helpers tested (`carrier-status.test.js`). Route `/live` gated like `/logistics/schedule`; sidebar entry under TIỆN ÍCH.
+- Browser (:3000): cards for KMTC (schedule Up 100 %, tracking "Chưa kết nối") and Heung-A; after "Kiểm tra ngay" at 21:13 Heung-A showed "Lỗi" — the Heung-A site was slow then (curl 12–39 s, schedule > 60 s), matching.
+- `./harness/verify.sh` passed: `harness/runs/20260929-211626-986/`.
+
 ## 2026-09-29 — Backup restore drawer polls restore-status (BE `fix-backup-restore-status`)
 
 - The API now starts a restore in the background (`POST .../restore` → 202 `{ state, restoreId }`) and reports it on anonymous `GET /backups/restore-status`. `restore-backup-drawer.jsx` no longer re-POSTs the restore on 409 (which restarted a finished restore on the same machine, and got 401 → "error" after a restore from another machine replaced the users): it polls the status every 3 s until its own `restoreId` ends (`restoreOutcome`, `config/restore-status.js`, tested), shows the failure message, or on success tells to sign in with an account from the backup if it came from another machine, then reloads. `getRestoreStatus` never redirects to `/login`.

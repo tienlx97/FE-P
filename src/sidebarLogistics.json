@@ -64,6 +64,11 @@
       "sectionHeader": "TIỆN ÍCH"
     },
     {
+      "title": "Trạng thái API hãng tàu",
+      "path": "/live",
+      "allowedPermissions": ["logistics:contracts:view"]
+    },
+    {
       "title": "Giá trị",
       "path": "/logistics/utilities/value",
       "allowedPermissions": ["logistics:view"]
