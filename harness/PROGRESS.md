@@ -15859,3 +15859,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 ## 2026-09-29 — Recommended fee icon tooltip
 
 - Changed the recommended fee control beside the cost name field to an icon-only Astryx IconButton with a hover tooltip and accessible name. Browser QA confirmed the tooltip appears and clicking still opens the fee picker. Screenshots: `harness/runs/20260929-backups-shipment-dense-ui/recommended-icon-only.png` and `recommended-icon-tooltip.png`. `./harness/verify.sh` passed: `harness/runs/20260929-071719-1608447/`.
+
+## 2026-09-29 — Shared memory commit
+
+- Redacted login credentials from the September 27 and 28 session memory before committing the three new memory files. The credentials remain in the ignored local login instructions.
+- Harness gap: `memory-secrets` detects common key formats but did not flag plaintext login credentials in session summaries. Consider a context-aware credential check for memory files.
+- `./harness/verify.sh` passed: `harness/runs/20260929-074613-1648343/`.
