@@ -3,16 +3,16 @@ import test from 'node:test';
 
 import {
   ALL_CARRIERS,
-  carrierCategories,
   carrierOptions,
   carriersToSearch,
-  instantToDate,
-  localToInstant,
-  portQueryValue,
-  sailingEvents,
+  carrierTone,
+  countryOptions,
+  formatCarrierTime,
+  portOptions,
+  sailingItems,
   sailingTitle,
   scheduleCarriers,
-  searchWindows,
+  visibleRange,
 } from './vessel-schedule.js';
 
 const KMTC = { code: 'KMTC', name: 'KMTC' };
@@ -41,44 +41,24 @@ test('sailingTitle tags [HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]', () => {
   assert.equal(sailingTitle('Yang Ming', sailing({ vesselName: 'YM WELLNESS', voyageNumber: null })), 'Yang Ming - YM WELLNESS');
 });
 
-test('carrier local times are read in Việt Nam time so they show as given', () => {
-  const instant = localToInstant('2026-09-20T06:20:00');
-  assert.equal(new Date(/** @type {number} */ (instant)).toISOString(), '2026-09-19T23:20:00.000Z');
-  assert.equal(instantToDate(/** @type {number} */ (instant)), '2026-09-20');
-  assert.equal(localToInstant(null), null);
-  assert.equal(localToInstant('not a date'), null);
+test('carrier times are shown as given, date then time', () => {
+  assert.equal(formatCarrierTime('2026-09-29T23:30:00'), '29/09/2026 23:30');
+  assert.equal(formatCarrierTime(null), '—');
 });
 
-test('sailingEvents puts one event at each ETD in the carrier category', () => {
-  const events = sailingEvents(KMTC, [sailing({}), sailing({ etd: null, vesselName: 'NO ETD' })]);
+test('sailingItems puts each sailing on its ETD date, late ETDs included', () => {
+  const items = sailingItems(KMTC, [sailing({}), sailing({ etd: '2026-09-29T23:30:00', voyageNumber: '2616S' }), sailing({ etd: null })], 'accent');
 
-  assert.equal(events.length, 1);
-  assert.equal(events[0].title, 'KMTC - KMTC ULSAN / 2615S');
-  assert.equal(events[0].category, 'KMTC');
-  assert.equal(events[0].start, localToInstant('2026-09-20T06:20:00'));
-  assert.ok(events[0].end > events[0].start);
-  assert.equal(events[0].id, 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00');
-});
-
-test('a late ETD stays on its own day', () => {
-  const [late] = sailingEvents(KMTC, [sailing({ etd: '2026-09-29T23:30:00' })]);
-
-  assert.equal(instantToDate(late.start), '2026-09-29');
-  assert.equal(instantToDate(late.end), '2026-09-29');
-  assert.equal(late.end, localToInstant('2026-09-29T23:59:00'));
-});
-
-test('searchWindows turns the visible range into dated windows of at most 62 days', () => {
-  // Monthly grid of October 2026: Sun 27/09 00:00 → Sun 08/11 00:00 (exclusive), Việt Nam time.
-  const start = /** @type {number} */ (localToInstant('2026-09-27T00:00:00'));
-  const end = /** @type {number} */ (localToInstant('2026-11-08T00:00:00'));
-  assert.deepEqual(searchWindows(start, end), [{ from: '2026-09-27', to: '2026-11-07' }]);
-
-  const long = searchWindows(start, /** @type {number} */ (localToInstant('2027-01-01T00:00:00')));
-  assert.deepEqual(long, [
-    { from: '2026-09-27', to: '2026-11-27' },
-    { from: '2026-11-28', to: '2026-12-31' },
+  assert.deepEqual(items, [
+    { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S', tone: 'accent' },
+    { id: 'KMTC:KMTC ULSAN:2616S:2026-09-29T23:30:00', date: '2026-09-29', title: 'KMTC - KMTC ULSAN / 2616S', tone: 'accent' },
   ]);
+});
+
+test('visibleRange covers the month grid or the two weeks shown', () => {
+  // October 2026: the grid starts Monday 28/09 and ends Sunday 01/11.
+  assert.deepEqual(visibleRange('month', '2026-10-15'), { from: '2026-09-28', to: '2026-11-01' });
+  assert.deepEqual(visibleRange('twoWeeks', '2026-10-15'), { from: '2026-10-15', to: '2026-10-28' });
 });
 
 /** @param {string} code @param {any} schedule */
@@ -120,14 +100,30 @@ test('carriersToSearch: all connected carriers, or exactly the chosen one', () =
   assert.deepEqual(carriersToSearch(ADAPTERS, 'MAERSK'), []);
 });
 
-test('carrierCategories labels by carrier name with a colour each', () => {
-  const categories = carrierCategories([KMTC, { code: 'SITC', name: 'SITC' }]);
-  assert.deepEqual(categories.map((category) => category.label), ['KMTC', 'SITC']);
-  assert.notEqual(categories[0].color, categories[1].color);
+test('carrierTone is fixed by the carrier position, never danger', () => {
+  const carriers = ADAPTERS.map((entry) => entry.carrier);
+  assert.equal(carrierTone(carriers, 'KMTC'), 'accent');
+  assert.equal(carrierTone(carriers, 'SITC'), 'success');
+  assert.equal(carrierTone(carriers, 'MAERSK'), 'accent');
 });
 
-test('portQueryValue sends only the UN/LOCODE', () => {
-  assert.equal(portQueryValue({ code: 'VNSGN' }), 'VNSGN');
-  assert.equal(portQueryValue({ code: null }), '');
-  assert.equal(portQueryValue(null), '');
+test('portOptions keeps UN/LOCODE ports, code first, sorted', () => {
+  const ports = /** @type {import('../types/index.js').Port[]} */ ([
+    { id: '1', code: 'VNSGN', name: 'Ho Chi Minh City' },
+    { id: '2', code: null, name: 'Nhà máy Vsip' },
+    { id: '3', code: 'VNCLI', name: 'Cát Lái' },
+  ]);
+  assert.deepEqual(portOptions(ports), [
+    { value: 'VNCLI', label: 'VNCLI — Cát Lái' },
+    { value: 'VNSGN', label: 'VNSGN — Ho Chi Minh City' },
+  ]);
+});
+
+test('countryOptions sorts by name with the ISO code', () => {
+  const countries = [
+    { id: 'th', name: 'Thái Lan', code: 'TH' },
+    { id: 'au', name: 'Úc', code: 'AU' },
+    { id: 'x', name: 'Philippines', code: null },
+  ];
+  assert.deepEqual(countryOptions(countries).map((option) => option.label), ['Philippines', 'Thái Lan (TH)', 'Úc (AU)']);
 });

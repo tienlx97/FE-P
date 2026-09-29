@@ -1,0 +1,62 @@
+'use client';
+
+import { HStack } from '@astryxdesign/core/HStack';
+import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
+
+import { MetaScheduleSwatch } from '@/shared/components/custom/meta/index.js';
+
+import { formatCarrierTime, sailingTitle } from '../config/vessel-schedule.js';
+
+/**
+ * Hover card of a sailing on the vessel schedule: the tag, ETD → ETA and the
+ * CY cut-off — enough to pick a sailing; everything else is in the drawer.
+ * @param {{
+ *   carrier: import('../types/index.js').ShippingCarrier,
+ *   sailing: import('../types/index.js').CarrierSailing,
+ *   tone: import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleTone,
+ * }} props
+ */
+export function VesselSailingPreview({ carrier, sailing, tone }) {
+  return (
+    <VStack gap={2} hAlign="stretch" xstyle={styles.card}>
+      <HStack gap={2} vAlign="center">
+        <MetaScheduleSwatch tone={tone} />
+        <Text size="sm" weight="bold">
+          {sailingTitle(carrier.name, sailing)}
+        </Text>
+      </HStack>
+      <Text size="sm" color="meta-subtle">
+        {`${sailing.portOfLoading} → ${sailing.portOfDischarge}`}
+      </Text>
+      <Row label="ETD" value={formatCarrierTime(sailing.etd)} />
+      <Row label="ETA" value={formatCarrierTime(sailing.eta)} />
+      <Row label="CY cut-off" value={formatCarrierTime(sailing.cyCutoff)} />
+      <Text size="sm" color="secondary">
+        Bấm để xem chi tiết
+      </Text>
+    </VStack>
+  );
+}
+
+/** @param {{ label: string, value: string }} props */
+function Row({ label, value }) {
+  return (
+    <HStack gap={3} hAlign="between" vAlign="center">
+      <Text size="sm" color="meta-subtle">
+        {label}
+      </Text>
+      <Text size="sm" type="code">
+        {value}
+      </Text>
+    </HStack>
+  );
+}
+
+const styles = stylex.create({
+  card: {
+    maxWidth: '20rem',
+    minWidth: '16rem',
+  },
+});

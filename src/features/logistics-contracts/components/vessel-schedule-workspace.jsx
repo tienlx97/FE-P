@@ -5,56 +5,32 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
-import { Token } from '@astryxdesign/core/Token';
 import { VStack } from '@astryxdesign/core/VStack';
-import {
-  createScheduleListView,
-  createScheduleMonthlyView,
-  createScheduleWeeklyView,
-  Schedule,
-  useSchedulePaginationPlugin,
-  useScheduleViewSelectorPlugin,
-} from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
-import { Search } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { ArrowRight, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
-import { searchCarrierSchedules } from '../api/carrier-schedules.js';
+import { MetaPill, MetaSchedule } from '@/shared/components/custom/meta/index.js';
+import { todayIsoDate } from '@/shared/config/date-input-format.js';
+
 import {
   ALL_CARRIERS,
-  carrierCategories,
   carrierOptions,
   carriersToSearch,
-  portQueryValue,
-  sailingEvents,
-  SCHEDULE_TIMEZONE,
-  searchWindows,
+  carrierTone,
+  countryOptions,
+  portOptions,
+  sailingId,
+  sailingItems,
+  visibleRange,
 } from '../config/vessel-schedule.js';
+import { findVietnamCountry } from '../config/vietnam-country.js';
 import { useCarrierAdaptersQuery } from '../hooks/use-carrier-adapters-query.js';
-import { PortTypeahead } from './port-typeahead.jsx';
-
-const styles = stylex.create({
-  schedule: {
-    height: '100%',
-    minHeight: 0,
-  },
-});
-
-/** @type {ReadonlyArray<import('@astryxdesign/lab').ScheduleViewSelectorOption<import('@astryxdesign/lab').ScheduleView<any>>>} */
-const VIEWS = [
-  { label: 'Tháng', view: createScheduleMonthlyView({ weekStartsOn: 1 }) },
-  { label: 'Tuần', view: createScheduleWeeklyView({ weekStartsOn: 1 }) },
-  { label: 'Danh sách', view: createScheduleListView({ days: 42 }) },
-];
-
-/**
- * @typedef {{
- *   carrier: import('../types/index.js').ShippingCarrier,
- *   count: number,
- *   problem: string | null,
- * }} CarrierOutcome
- */
+import { useCarrierSchedulesQueries } from '../hooks/use-carrier-schedules-queries.js';
+import { useCountriesQuery } from '../hooks/use-countries-query.js';
+import { usePortsQuery } from '../hooks/use-ports-query.js';
+import { VesselSailingDrawer } from './vessel-sailing-drawer.jsx';
+import { VesselSailingPreview } from './vessel-sailing-preview.jsx';
 
 /**
  * @typedef {{
@@ -65,106 +41,137 @@ const VIEWS = [
  */
 
 /**
- * One carrier's sailings over the visible range (one call per ≤ 62-day
- * window). Never throws: a failure becomes `problem`, so one carrier being
- * blocked never hides the others.
- * @param {import('../types/index.js').ShippingCarrier} carrier
- * @param {string} pol - UN/LOCODE
- * @param {string} pod - UN/LOCODE
- * @param {Array<{ from: string, to: string }>} windows
+ * @typedef {{
+ *   carrier: import('../types/index.js').ShippingCarrier,
+ *   sailing: import('../types/index.js').CarrierSailing,
+ * }} SailingEntry
  */
-async function loadCarrier(carrier, pol, pod, windows) {
-  /** @type {import('../types/index.js').CarrierSailing[]} */
-  const sailings = [];
-  for (const window of windows) {
-    const result = await searchCarrierSchedules({ carrier: carrier.code, pol, pod, ...window });
-    if (!result.success) {
-      return { carrier, sailings, problem: result.message };
-    }
-    if (result.search.status !== 'Synced') {
-      return { carrier, sailings, problem: result.search.error ?? result.search.status };
-    }
-    sailings.push(...result.search.sailings);
-  }
-  return { carrier, sailings, problem: null };
-}
 
 /**
- * "Lịch tàu": pick POL and POD by UN/LOCODE and a carrier ("Tất cả hãng" =
- * every carrier whose vessel schedule is connected), then "Tìm". The BE
- * maps the UN/LOCODEs to each carrier's own codes (BE-kt-xnk
- * `add-carrier-schedules`). Each sailing sits on its ETD, tagged
- * `[HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]`; paging months asks the BE for the
- * new range of the same search.
+ * "Lịch tàu": POL (Vietnamese ports), destination country + POD and a
+ * carrier ("Tất cả hãng" = every carrier whose vessel schedule is
+ * connected), then "Tìm". Ports are sent as UN/LOCODE; the BE maps them to
+ * each carrier's codes (BE-kt-xnk `add-carrier-schedules`). Sailings sit on
+ * their ETD in the same calendar as `/logistics` (`MetaSchedule`), tagged
+ * `[HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]`; hovering shows ETD / ETA / CY,
+ * clicking opens every detail in a drawer.
  */
 export function VesselScheduleWorkspace() {
-  const [pol, setPol] = useState(/** @type {import('./port-typeahead.jsx').PortItem | null} */ (null));
-  const [pod, setPod] = useState(/** @type {import('./port-typeahead.jsx').PortItem | null} */ (null));
+  const today = todayIsoDate();
+  const [polCode, setPolCode] = useState('');
+  const [podCountryId, setPodCountryId] = useState('');
+  const [podCode, setPodCode] = useState('');
   const [carrierChoice, setCarrierChoice] = useState(ALL_CARRIERS);
   const [search, setSearch] = useState(/** @type {ScheduleSearch | null} */ (null));
-  const [date, setDate] = useState(() => Date.now());
-  const [view, setView] = useState(VIEWS[0].view);
-  const [outcomes, setOutcomes] = useState(/** @type {CarrierOutcome[]} */ ([]));
+  const [view, setView] = useState(
+    /** @type {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleView} */ ('month'),
+  );
+  const [anchor, setAnchor] = useState(today);
+  const [selectedId, setSelectedId] = useState(/** @type {string | null} */ (null));
 
   const adaptersQuery = useCarrierAdaptersQuery();
   const adapters = useMemo(
     () => (adaptersQuery.data?.success ? adaptersQuery.data.carriers : []),
     [adaptersQuery.data],
   );
-  // Colours over every carrier, so a carrier keeps its colour whatever is chosen.
-  const categories = useMemo(() => carrierCategories(adapters.map((adapter) => adapter.carrier)), [adapters]);
-  const colorOf = (/** @type {string} */ name) =>
-    categories.find((category) => category.label === name)?.color ?? 'default';
+  const allCarriers = useMemo(() => adapters.map((adapter) => adapter.carrier), [adapters]);
 
-  const polCode = portQueryValue(pol?.auxiliaryData);
-  const podCode = portQueryValue(pod?.auxiliaryData);
-  const canSearch = Boolean(polCode && podCode) && adapters.length > 0;
-
-  const runSearch = () => {
-    setOutcomes([]);
-    // A new object also re-runs an unchanged search ("Tìm" again).
-    setSearch({ pol: polCode, pod: podCode, carriers: carriersToSearch(adapters, carrierChoice) });
-  };
-
-  const loadEvents = useCallback(
-    async (/** @type {number} */ start, /** @type {number} */ end) => {
-      if (!search || search.carriers.length === 0) {
-        return [];
-      }
-      const windows = searchWindows(start, end);
-      const results = await Promise.all(
-        search.carriers.map((carrier) => loadCarrier(carrier, search.pol, search.pod, windows)),
-      );
-      setOutcomes(
-        results.map(({ carrier, sailings, problem }) => ({ carrier, count: sailings.length, problem })),
-      );
-      return results.flatMap(({ carrier, sailings }) => sailingEvents(carrier, sailings));
-    },
-    [search],
+  const countriesQuery = useCountriesQuery();
+  const countries = countriesQuery.data?.success ? countriesQuery.data.countries : [];
+  const vietnamId = findVietnamCountry(countries)?.id ?? '';
+  const polPortsQuery = usePortsQuery({ countryId: vietnamId });
+  const podPortsQuery = usePortsQuery({ countryId: podCountryId });
+  const polOptions = useMemo(
+    () => portOptions(polPortsQuery.data?.success ? polPortsQuery.data.ports : []),
+    [polPortsQuery.data],
+  );
+  const podOptions = useMemo(
+    () => portOptions(podPortsQuery.data?.success ? podPortsQuery.data.ports : []),
+    [podPortsQuery.data],
   );
 
-  const plugins = [
-    useSchedulePaginationPlugin(),
-    useScheduleViewSelectorPlugin(VIEWS, { onChangeView: setView }),
-  ];
+  const range = visibleRange(view, anchor);
+  const results = useCarrierSchedulesQueries({ search, ...range });
+
+  const entries = useMemo(() => {
+    /** @type {Map<string, SailingEntry>} */
+    const byId = new Map();
+    (search?.carriers ?? []).forEach((carrier, index) => {
+      const data = results[index]?.data;
+      if (data?.success && data.search.status === 'Synced') {
+        for (const sailing of data.search.sailings) {
+          byId.set(sailingId(carrier.code, sailing), { carrier, sailing });
+        }
+      }
+    });
+    return byId;
+  }, [results, search]);
+
+  const items = useMemo(
+    () =>
+      (search?.carriers ?? []).flatMap((carrier, index) => {
+        const data = results[index]?.data;
+        return data?.success && data.search.status === 'Synced'
+          ? sailingItems(carrier, data.search.sailings, carrierTone(allCarriers, carrier.code))
+          : [];
+      }),
+    [results, search, allCarriers],
+  );
+
+  const canSearch = Boolean(polCode && podCode) && adapters.length > 0;
+  const selected = selectedId ? (entries.get(selectedId) ?? null) : null;
 
   return (
     <VStack gap={3} hAlign="stretch" height="100%">
-      <HStack gap={3} vAlign="end" wrap="wrap">
-        <StackItem size="fill">
-          <PortTypeahead
-            label="POL — cảng xếp (UN/LOCODE)"
-            placeholder="VNSGN, VNHPH, Cát Lái…"
-            value={pol}
-            onChange={setPol}
+      <HStack gap={3} vAlign="end" wrap="wrap" xstyle={styles.filters}>
+        <StackItem size="fill" xstyle={styles.field}>
+          <Selector
+            label="POL — cảng xếp"
+            placeholder="Chọn cảng Việt Nam"
+            hasSearch
+            searchPlaceholder="Mã hoặc tên cảng…"
+            options={polOptions}
+            value={polCode}
+            onChange={(value) => setPolCode(value ?? '')}
+            isLoading={polPortsQuery.isFetching}
+            isDisabled={!vietnamId}
+            disabledMessage='Danh mục nước chưa có "Việt Nam"'
+            width="100%"
           />
         </StackItem>
-        <StackItem size="fill">
-          <PortTypeahead
-            label="POD — cảng dỡ (UN/LOCODE)"
-            placeholder="THBKK, THLCH, Laem Chabang…"
-            value={pod}
-            onChange={setPod}
+        <HStack gap={1} vAlign="center" xstyle={styles.arrow}>
+          <Icon icon={ArrowRight} size="sm" color="secondary" />
+        </HStack>
+        <StackItem size="fill" xstyle={styles.field}>
+          <Selector
+            label="Nước đến"
+            placeholder="Chọn nước"
+            hasSearch
+            searchPlaceholder="Tên nước…"
+            options={countryOptions(countries)}
+            value={podCountryId}
+            onChange={(value) => {
+              setPodCountryId(value ?? '');
+              setPodCode('');
+            }}
+            isLoading={countriesQuery.isFetching}
+            width="100%"
+          />
+        </StackItem>
+        <StackItem size="fill" xstyle={styles.field}>
+          <Selector
+            label="POD — cảng dỡ"
+            placeholder={podCountryId ? 'Chọn cảng' : 'Chọn nước trước'}
+            hasSearch
+            searchPlaceholder="Mã hoặc tên cảng…"
+            options={podOptions}
+            value={podCode}
+            onChange={(value) => setPodCode(value ?? '')}
+            isLoading={podPortsQuery.isFetching}
+            isDisabled={!podCountryId}
+            disabledMessage="Chọn nước đến trước"
+            emptyText="Nước này chưa có cảng mã UN/LOCODE"
+            width="100%"
           />
         </StackItem>
         <Selector
@@ -172,51 +179,97 @@ export function VesselScheduleWorkspace() {
           options={carrierOptions(adapters)}
           value={carrierChoice}
           onChange={(value) => setCarrierChoice(value ?? ALL_CARRIERS)}
-          isDisabled={adapters.length === 0}
-          width={220}
+          isLoading={adaptersQuery.isFetching}
+          width={200}
         />
         <Button
           label="Tìm"
           variant="primary"
           icon={<Icon icon={Search} size="sm" />}
           isDisabled={!canSearch}
-          onClick={runSearch}
+          onClick={() => {
+            setSelectedId(null);
+            setSearch({ pol: polCode, pod: podCode, carriers: carriersToSearch(adapters, carrierChoice) });
+          }}
         />
-      </HStack>
-
-      <HStack gap={2} vAlign="center" wrap="wrap">
-        {!search ? (
-          <Text color="secondary" type="supporting">
-            Chọn POL, POD (mã UN/LOCODE) và hãng tàu rồi bấm Tìm.
-          </Text>
-        ) : search.carriers.length === 0 ? (
-          <Text color="secondary" type="supporting">
-            Chưa có hãng tàu nào kết nối lịch tàu.
-          </Text>
-        ) : (
-          outcomes.map(({ carrier, count, problem }) =>
-            problem ? (
-              <Token key={carrier.code} color="red" label={`${carrier.name}: ${problem}`} />
-            ) : (
-              <Token key={carrier.code} color={colorOf(carrier.name)} label={`${carrier.name} · ${count} chuyến`} />
-            ),
-          )
-        )}
       </HStack>
 
       <StackItem size="fill">
-        <Schedule
-          xstyle={styles.schedule}
+        <MetaSchedule
+          label="Lịch tàu theo tuyến"
           view={view}
-          events={loadEvents}
-          categories={categories}
-          date={date}
-          onChangeDate={setDate}
-          timezoneID={SCHEDULE_TIMEZONE}
-          plugins={plugins}
-          headingLevel={2}
+          onViewChange={setView}
+          anchor={anchor}
+          onAnchorChange={setAnchor}
+          today={today}
+          items={items}
+          onItemClick={(item) => setSelectedId(item.id)}
+          renderItemPreview={(item) => {
+            const entry = entries.get(item.id);
+            return entry ? (
+              <VesselSailingPreview carrier={entry.carrier} sailing={entry.sailing} tone={item.tone} />
+            ) : null;
+          }}
+          headerStart={
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              {!search ? (
+                <MetaPill label="Chọn POL, POD rồi bấm Tìm" tone="neutral" size="sm" />
+              ) : search.carriers.length === 0 ? (
+                <MetaPill label="Chưa có hãng tàu nào kết nối lịch tàu" tone="neutral" size="sm" />
+              ) : (
+                <>
+                  <MetaPill label={`${search.pol} → ${search.pod}`} tone="neutral" size="sm" />
+                  {search.carriers.map((carrier, index) => {
+                    const result = results[index];
+                    if (!result || result.isPending) {
+                      return <MetaPill key={carrier.code} label={`${carrier.name} · đang tải…`} tone="neutral" size="sm" />;
+                    }
+                    const data = result.data;
+                    if (!data?.success || data.search.status !== 'Synced') {
+                      const reason = !data ? 'lỗi' : data.success ? (data.search.error ?? data.search.status) : data.message;
+                      return <MetaPill key={carrier.code} label={`${carrier.name}: ${reason}`} tone="danger" size="sm" hasDot />;
+                    }
+                    return (
+                      <MetaPill
+                        key={carrier.code}
+                        label={`${carrier.name} · ${data.search.sailings.length} chuyến`}
+                        tone={carrierTone(allCarriers, carrier.code)}
+                        size="sm"
+                        hasDot
+                      />
+                    );
+                  })}
+                </>
+              )}
+            </HStack>
+          }
         />
       </StackItem>
+
+      {selected ? (
+        <VesselSailingDrawer
+          carrier={selected.carrier}
+          sailing={selected.sailing}
+          onClose={() => setSelectedId(null)}
+        />
+      ) : null}
     </VStack>
   );
 }
+
+const styles = stylex.create({
+  filters: {
+    backgroundColor: 'var(--color-background-card)',
+    borderColor: 'var(--color-border)',
+    borderRadius: 'var(--radius-container)',
+    borderStyle: 'solid',
+    borderWidth: 'var(--border-width)',
+    padding: 'var(--spacing-4)',
+  },
+  field: {
+    minWidth: '14rem',
+  },
+  arrow: {
+    paddingBlockEnd: 'var(--spacing-2)',
+  },
+});

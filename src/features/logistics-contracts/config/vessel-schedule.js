@@ -1,24 +1,22 @@
 /**
  * Vessel schedule page (`/logistics/schedule`): carriers' sailings as
- * Astryx lab `Schedule` events. Carrier times are local port times without
- * an offset; they are read and shown in one fixed zone (Việt Nam, no DST),
- * so every time appears exactly as the carrier gives it.
+ * `MetaSchedule` items (the same calendar as `/logistics`). Carrier times
+ * are local port times without an offset (`2026-10-06T20:00:00`); they are
+ * shown as given, never converted.
  */
 
-export const SCHEDULE_TIMEZONE = 'Asia/Ho_Chi_Minh';
+import { addDays, dayRange, monthWeeks } from '@/shared/config/schedule-calendar.js';
 
-const ZONE_OFFSET = '+07:00';
+import { formatScheduleValue } from './shipment-schedule.js';
 
-/** BE limit of one `GET /shipments/schedules` call. */
-export const MAX_SEARCH_DAYS = 62;
+/** The carrier selector's "every carrier" value. */
+export const ALL_CARRIERS = 'ALL';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+/** `MetaSchedule` tones given to carriers in list order (danger is kept for errors). */
+const CARRIER_TONES = /** @type {const} */ (['accent', 'success', 'warning', 'neutral']);
 
-/** Length of a sailing's event on the calendar (it marks the ETD). */
-const EVENT_DURATION_MS = 60 * 60 * 1000;
-
-/** @type {ReadonlyArray<import('@astryxdesign/lab').ScheduleEventColor>} */
-const CARRIER_COLORS = ['blue', 'teal', 'orange', 'purple', 'pink', 'green', 'cyan', 'yellow', 'red'];
+/** Days in `MetaSchedule`'s "2 tuần" view. */
+const TWO_WEEKS = 14;
 
 /**
  * The tag of a sailing: `[HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]`.
@@ -32,97 +30,62 @@ export function sailingTitle(carrierName, { vesselName, voyageNumber }) {
 }
 
 /**
- * `2026-10-06T20:00:00` (carrier local time) → epoch ms in
- * {@link SCHEDULE_TIMEZONE}; null when missing or unreadable.
+ * A carrier local date-time for display: `06/10/2026 20:00`, `—` when missing.
  * @param {string | null | undefined} localDateTime
  */
-export function localToInstant(localDateTime) {
-  if (!localDateTime) return null;
-  const instant = Date.parse(`${localDateTime.slice(0, 19)}${ZONE_OFFSET}`);
-  return Number.isNaN(instant) ? null : instant;
+export function formatCarrierTime(localDateTime) {
+  return formatScheduleValue('siCutoff', localDateTime ?? null);
 }
 
 /**
- * Epoch ms → `yyyy-MM-dd` in {@link SCHEDULE_TIMEZONE}.
- * @param {number} instant
+ * The dates the calendar shows (`from` / `to`, inclusive `yyyy-MM-dd`): the
+ * month grid's full weeks, or the 14 days of the "2 tuần" view.
+ * @param {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleView} view
+ * @param {string} anchor - `yyyy-MM-dd`
  */
-export function instantToDate(instant) {
-  return new Date(instant + 7 * 60 * 60 * 1000).toISOString().slice(0, 10);
-}
-
-/**
- * The visible range of the `Schedule` (`[start, end)` epoch ms) as the
- * `from` / `to` date windows of the search, each at most
- * {@link MAX_SEARCH_DAYS} days.
- * @param {number} start
- * @param {number} end - exclusive
- * @returns {Array<{ from: string, to: string }>}
- */
-export function searchWindows(start, end) {
-  const windows = [];
-  const last = Date.parse(`${instantToDate(end - 1)}T00:00:00Z`);
-
-  for (let from = Date.parse(`${instantToDate(start)}T00:00:00Z`); from <= last; ) {
-    const to = Math.min(from + (MAX_SEARCH_DAYS - 1) * DAY_MS, last);
-    windows.push({ from: utcDate(from), to: utcDate(to) });
-    from = to + DAY_MS;
+export function visibleRange(view, anchor) {
+  if (view === 'month') {
+    const weeks = monthWeeks(anchor);
+    return { from: weeks[0][0], to: weeks[weeks.length - 1][6] };
   }
-
-  return windows;
-}
-
-/** @param {number} utcMidnight */
-function utcDate(utcMidnight) {
-  return new Date(utcMidnight).toISOString().slice(0, 10);
+  const days = dayRange(anchor, TWO_WEEKS);
+  return { from: days[0], to: addDays(days[0], TWO_WEEKS - 1) };
 }
 
 /**
- * One `Schedule` event per sailing with an ETD, at the ETD, in the
- * carrier's category (`Schedule` matches categories by label = carrier name).
+ * A carrier's tone, stable whatever carrier is chosen (index in the full list).
+ * @param {import('../types/index.js').ShippingCarrier[]} carriers - every carrier
+ * @param {string} code
+ * @returns {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleTone}
+ */
+export function carrierTone(carriers, code) {
+  const index = carriers.findIndex((carrier) => carrier.code === code);
+  return CARRIER_TONES[Math.max(index, 0) % CARRIER_TONES.length];
+}
+
+/**
+ * The id of a sailing's calendar item (also how a click finds the sailing).
+ * @param {string} carrierCode
+ * @param {import('../types/index.js').CarrierSailing} sailing
+ */
+export function sailingId(carrierCode, sailing) {
+  return `${carrierCode}:${sailing.vesselName}:${sailing.voyageNumber ?? ''}:${sailing.etd}`;
+}
+
+/**
+ * One calendar item per sailing with an ETD, on the ETD's date.
  * @param {import('../types/index.js').ShippingCarrier} carrier
  * @param {import('../types/index.js').CarrierSailing[]} sailings
- * @returns {import('@astryxdesign/lab').CalendarInstantEvent[]}
+ * @param {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleTone} tone
+ * @returns {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleItem[]}
  */
-export function sailingEvents(carrier, sailings) {
-  return sailings.flatMap((sailing) => {
-    const etd = localToInstant(sailing.etd);
-    if (etd == null) return [];
-
-    return [
-      {
-        id: `${carrier.code}:${sailing.vesselName}:${sailing.voyageNumber ?? ''}:${sailing.etd}`,
-        title: sailingTitle(carrier.name, sailing),
-        category: carrier.name,
-        start: etd,
-        end: Math.min(etd + EVENT_DURATION_MS, endOfDay(etd)),
-      },
-    ];
-  });
+export function sailingItems(carrier, sailings, tone) {
+  return sailings.flatMap((sailing) =>
+    sailing.etd
+      ? [{ id: sailingId(carrier.code, sailing), date: sailing.etd.slice(0, 10), title: sailingTitle(carrier.name, sailing), tone }]
+      : [],
+  );
 }
-
-/**
- * The last minute of the {@link SCHEDULE_TIMEZONE} day holding `instant`,
- * so a late ETD (23:30) does not spill into the next day's cell.
- * @param {number} instant
- */
-function endOfDay(instant) {
-  return Date.parse(`${instantToDate(instant)}T23:59:00${ZONE_OFFSET}`);
-}
-
-/**
- * One category (label + colour) per carrier, stable by list order.
- * @param {import('../types/index.js').ShippingCarrier[]} carriers
- * @returns {import('@astryxdesign/lab').ScheduleCategory[]}
- */
-export function carrierCategories(carriers) {
-  return carriers.map((carrier, index) => ({
-    label: carrier.name,
-    color: CARRIER_COLORS[index % CARRIER_COLORS.length],
-  }));
-}
-
-/** The carrier selector's "every carrier" value. */
-export const ALL_CARRIERS = 'ALL';
 
 /**
  * Whether the carrier's vessel schedule is connected (adapter enabled and
@@ -170,10 +133,23 @@ export function carriersToSearch(adapters, choice) {
 }
 
 /**
- * The value sent to the BE for a picked port: its UN/LOCODE (the BE maps it
- * to each carrier's own codes); '' when the port has none.
- * @param {{ code?: string | null } | null | undefined} port
+ * Port selector options: only ports with a UN/LOCODE (the vessel schedule
+ * is looked up by it), code first, sorted by code — `VNCLI — Cát Lái`.
+ * @param {import('../types/index.js').Port[]} ports
  */
-export function portQueryValue(port) {
-  return port?.code ?? '';
+export function portOptions(ports) {
+  return ports
+    .filter((port) => Boolean(port.code))
+    .map((port) => ({ value: /** @type {string} */ (port.code), label: `${port.code} — ${port.name}` }))
+    .sort((a, b) => a.value.localeCompare(b.value));
+}
+
+/**
+ * Destination country options by name, ISO code in brackets.
+ * @param {import('../types/index.js').Country[]} countries
+ */
+export function countryOptions(countries) {
+  return countries
+    .map((country) => ({ value: country.id, label: country.code ? `${country.name} (${country.code})` : country.name }))
+    .sort((a, b) => a.label.localeCompare(b.label, 'vi'));
 }
