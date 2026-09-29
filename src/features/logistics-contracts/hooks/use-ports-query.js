@@ -2,6 +2,7 @@
 
 import {
   keepPreviousData,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
@@ -24,13 +25,28 @@ export function usePortsQuery({ countryId, enabled = true } = {}) {
   });
 }
 
-/** @param {{ page: number, pageSize: number, conditions?: any[], enabled?: boolean }} params */
-export function useSearchPortsQuery({ page, pageSize, conditions = [], enabled = true }) {
+/** @param {{ page: number, pageSize: number, conditions?: any[] }} params */
+export function useSearchPortsQuery({ page, pageSize, conditions = [] }) {
   return useQuery({
     queryKey: [...QUERY_KEY, 'search', page, pageSize, conditions],
     queryFn: () => searchPorts({ page, pageSize, conditions }),
     placeholderData: keepPreviousData,
-    enabled,
+  });
+}
+
+/**
+ * The port catalog page by page (sorted by UN/LOCODE), filtered by
+ * `conditions` — the POD selector's list, loaded as it scrolls.
+ * @param {{ pageSize: number, conditions: any[] }} params
+ */
+export function usePortPagesQuery({ pageSize, conditions }) {
+  return useInfiniteQuery({
+    queryKey: [...QUERY_KEY, 'pages', pageSize, conditions],
+    queryFn: ({ pageParam }) => searchPorts({ page: pageParam, pageSize, conditions }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, _pages, lastPageParam) =>
+      lastPage.success && lastPageParam < lastPage.totalPages ? lastPageParam + 1 : undefined,
+    placeholderData: keepPreviousData,
   });
 }
 

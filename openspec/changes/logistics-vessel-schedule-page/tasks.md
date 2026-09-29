@@ -16,3 +16,8 @@
   the popup, recently picked PODs listed when it opens) and a multi-carrier
   "Hãng tàu" (`MultiSelector`; none checked = every connected carrier,
   carriers not connected listed but disabled).
+- [x] 1.8 Unavailable sailings red without the reason in the calendar (reason
+  in hover card / drawer); bookable sailings first in each day; POD selector
+  lists the whole catalog on open (paged on scroll, searched on the server,
+  popup as wide as the field); skeletons while sailings / ports load; month
+  cells show as many rows as fit before "+n mục" (`MetaSchedule`, shared).

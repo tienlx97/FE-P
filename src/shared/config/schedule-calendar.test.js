@@ -4,11 +4,13 @@ import test from 'node:test';
 import {
   addDays,
   addMonths,
+  dayOverflow,
   dayRange,
   groupByDay,
   monthTitle,
   monthWeeks,
   rangeTitle,
+  rowsThatFit,
   startOfWeek,
   weekdayLabel,
 } from './schedule-calendar.js';
@@ -49,4 +51,19 @@ test('items group by day in order', () => {
   ]);
   assert.deepEqual(byDay.get('2026-10-01')?.map((item) => item.id), ['a', 'c']);
   assert.equal(byDay.get('2026-10-03'), undefined);
+});
+
+test('rowsThatFit: rows as tall as the day number under it, gap apart', () => {
+  // 24 px rows, 4 px gap: 24 (day) + 3 × 28 = 108.
+  assert.equal(rowsThatFit({ available: 108, rowHeight: 24, gap: 4 }), 3);
+  assert.equal(rowsThatFit({ available: 107, rowHeight: 24, gap: 4 }), 2);
+  assert.equal(rowsThatFit({ available: 20, rowHeight: 24, gap: 4 }), 0);
+  assert.equal(rowsThatFit({ available: 0, rowHeight: 0, gap: 4 }), 0);
+});
+
+test('dayOverflow shows all that fit, else one row less and "+n mục"', () => {
+  assert.deepEqual(dayOverflow(3, 3), { shown: 3, hidden: 0 });
+  assert.deepEqual(dayOverflow(5, 3), { shown: 2, hidden: 3 });
+  assert.deepEqual(dayOverflow(2, 0), { shown: 0, hidden: 2 });
+  assert.deepEqual(dayOverflow(0, 0), { shown: 0, hidden: 0 });
 });
