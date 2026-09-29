@@ -59,6 +59,10 @@ export function proxy(request) {
   return NextResponse.next();
 }
 
+// `/api/*` is left out: the rules only gate pages, and a request that goes
+// through the proxy has its body buffered up to `proxyClientMaxBodySize`
+// (10 MB) — a larger backup uploaded to `/api/backend/.../backups/upload`
+// reached the API cut short ("Unexpected end of Stream", 400).
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!api/|_next/static|_next/image|favicon.ico).*)'],
 };
