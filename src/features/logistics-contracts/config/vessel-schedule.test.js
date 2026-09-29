@@ -50,10 +50,10 @@ test('carrier times are shown as given, date then time', () => {
 const NOW = '2026-09-29T11:00:00';
 
 test('sailingItems puts each sailing on its ETD date, late ETDs included', () => {
-  const items = sailingItems(KMTC, [sailing({}), sailing({ etd: '2026-09-29T23:30:00', voyageNumber: '2616S' }), sailing({ etd: null })], 'accent', NOW);
+  const items = sailingItems(KMTC, [sailing({ bookingStatus: 'Open' }), sailing({ etd: '2026-09-29T23:30:00', voyageNumber: '2616S', bookingStatus: 'Open' }), sailing({ etd: null })], 'accent', NOW);
 
   assert.deepEqual(items, [
-    { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S', tone: 'accent' },
+    { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S · Đã qua giờ khởi hành', tone: 'danger' },
     { id: 'KMTC:KMTC ULSAN:2616S:2026-09-29T23:30:00', date: '2026-09-29', title: 'KMTC - KMTC ULSAN / 2616S', tone: 'accent' },
   ]);
 });
@@ -67,13 +67,28 @@ test('a full sailing is red and says "Hết chỗ" after its tag', () => {
 });
 
 test('bookingState: carrier-closed is "hết chỗ" only before the cut-off', () => {
-  assert.equal(bookingState(sailing({ bookingStatus: 'Full', siCutoff: '2026-10-05T16:00:00' }), NOW), 'full');
-  assert.equal(bookingState(sailing({ bookingStatus: 'Full', siCutoff: '2026-09-28T16:00:00' }), NOW), 'closed');
-  assert.equal(bookingState(sailing({ bookingStatus: 'Full', siCutoff: null, cyCutoff: null }), NOW), 'full');
-  assert.equal(bookingState(sailing({ bookingStatus: 'CutoffPassed' }), NOW), 'closed');
-  assert.equal(bookingState(sailing({ bookingStatus: 'NotYetOpen' }), NOW), 'notYetOpen');
-  assert.equal(bookingState(sailing({ bookingStatus: 'Open' }), NOW), 'open');
-  assert.equal(bookingState(sailing({ bookingStatus: undefined }), NOW), 'unknown');
+  const futureEtd = '2026-10-07T05:00:00';
+  assert.equal(bookingState(sailing({ etd: futureEtd, bookingStatus: 'Full', siCutoff: '2026-10-05T16:00:00' }), NOW), 'full');
+  assert.equal(bookingState(sailing({ etd: futureEtd, bookingStatus: 'Full', siCutoff: '2026-09-28T16:00:00' }), NOW), 'closed');
+  assert.equal(bookingState(sailing({ etd: futureEtd, bookingStatus: 'Full', siCutoff: null, cyCutoff: null }), NOW), 'full');
+  assert.equal(bookingState(sailing({ etd: futureEtd, bookingStatus: 'CutoffPassed' }), NOW), 'closed');
+  assert.equal(bookingState(sailing({ etd: futureEtd, bookingStatus: 'NotYetOpen' }), NOW), 'notYetOpen');
+  assert.equal(bookingState(sailing({ etd: futureEtd, bookingStatus: 'Open' }), NOW), 'open');
+  assert.equal(bookingState(sailing({ etd: futureEtd, bookingStatus: undefined }), NOW), 'unknown');
+  assert.equal(bookingState(sailing({ bookingStatus: 'Open' }), NOW), 'departed');
+});
+
+test('all confirmed unavailable statuses are red with a reason', () => {
+  const cases = [
+    ['CutoffPassed', 'Đã đóng booking'],
+    ['NotYetOpen', 'Chưa mở booking'],
+    ['Full', 'Hết chỗ'],
+  ];
+  for (const [bookingStatus, reason] of cases) {
+    const [item] = sailingItems(KMTC, [sailing({ etd: '2026-10-07T05:00:00', siCutoff: '2026-10-05T16:00:00', bookingStatus })], 'accent', NOW);
+    assert.equal(item.tone, 'danger');
+    assert.ok(item.title.endsWith(` · ${reason}`));
+  }
 });
 
 test('localNow is Việt Nam local time', () => {

@@ -173,7 +173,7 @@ function MonthGrid({ anchor, today, byDay, maxPerDay, onItemClick, renderItemPre
     <VStack gap={0} hAlign="stretch" xstyle={styles.fill}>
       <Grid columns={7} gap={0} xstyle={styles.weekdays}>
         {WEEKDAY_LABELS.map((weekday) => (
-          <Text key={weekday} size="sm" weight="semibold" color="secondary" xstyle={styles.weekday}>
+          <Text key={weekday} size="sm" weight="semibold" color={weekday === 'CN' ? 'inherit' : 'secondary'} xstyle={[styles.weekday, weekday === 'CN' && styles.sunday]}>
             {weekday}
           </Text>
         ))}
@@ -229,7 +229,7 @@ function DayList({ days, today, byDay, onItemClick, renderItemPreview }) {
           return (
             <HStack key={day} gap={4} vAlign="start" xstyle={[styles.listRow, day === today && styles.cellToday]}>
               <VStack gap={0.5} hAlign="center" xstyle={styles.listDate}>
-                <Text size="sm" color={day === today ? 'accent' : 'secondary'} weight="semibold">
+                <Text size="sm" color={weekdayLabel(day) === 'CN' ? 'inherit' : day === today ? 'accent' : 'secondary'} weight="semibold" xstyle={weekdayLabel(day) === 'CN' && styles.sunday}>
                   {weekdayLabel(day)}
                 </Text>
                 <DayNumber day={day} today={today} />
@@ -262,12 +262,14 @@ function DayList({ days, today, byDay, onItemClick, renderItemPreview }) {
 /** @param {{ day: string, today: string, isMuted?: boolean }} props */
 function DayNumber({ day, today, isMuted = false }) {
   const isToday = day === today;
+  const isSunday = weekdayLabel(day) === 'CN';
   return (
-    <HStack hAlign="center" vAlign="center" xstyle={[styles.dayNumber, isToday && styles.dayNumberToday]}>
+    <HStack hAlign="center" vAlign="center" xstyle={[styles.dayNumber, isToday && (isSunday ? styles.dayNumberSundayToday : styles.dayNumberToday)]}>
       <Text
         size="sm"
         weight={isToday ? 'bold' : 'semibold'}
-        color={isToday ? 'inherit' : isMuted ? 'meta-subtle' : 'primary'}
+        color={isToday ? 'inherit' : isSunday ? 'inherit' : isMuted ? 'meta-subtle' : 'primary'}
+        xstyle={isSunday && !isToday && styles.sunday}
         hasTabularNumbers
       >
         {String(Number(day.slice(8, 10)))}
@@ -370,6 +372,9 @@ const styles = stylex.create({
     paddingInline: 'var(--spacing-3)',
     textTransform: 'uppercase',
   },
+  sunday: {
+    color: 'var(--color-error)',
+  },
   monthRows: (count) => ({
     gridTemplateRows: `repeat(${count}, minmax(0, 1fr))`,
   }),
@@ -397,6 +402,10 @@ const styles = stylex.create({
   },
   dayNumberToday: {
     backgroundColor: 'var(--color-accent)',
+    color: 'var(--color-on-accent)',
+  },
+  dayNumberSundayToday: {
+    backgroundColor: 'var(--color-error)',
     color: 'var(--color-on-accent)',
   },
   more: {
