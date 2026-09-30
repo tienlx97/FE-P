@@ -42,6 +42,19 @@ function baseCandidate() {
     sellerSigned: false,
     buyerSigned: false,
     status: 'InProgress',
+    consignee: noParty(),
+    notifyParty: noParty(),
+  };
+}
+
+function noParty() {
+  return {
+    kind: '',
+    name: '',
+    address: '',
+    sourceContactId: '',
+    loadedName: '',
+    extraFields: [],
   };
 }
 
@@ -237,7 +250,10 @@ test('requires placeOfDelivery for DDP', () => {
 test('rejects placeOfDelivery outside DDP', () => {
   for (const incoterm of ['EXW', 'FOB', 'CIF']) {
     assert.ok(
-      issueOn({ incoterm, placeOfDelivery: 'Công trình ABC' }, 'placeOfDelivery'),
+      issueOn(
+        { incoterm, placeOfDelivery: 'Công trình ABC' },
+        'placeOfDelivery',
+      ),
       `expected ${incoterm} to reject it`,
     );
     assert.equal(
@@ -264,4 +280,26 @@ test('rejects note longer than 2000 characters', () => {
     note: 'a'.repeat(2001),
   });
   assert.equal(result.success, false);
+});
+
+test('requires a name only for the party kinds that print one', () => {
+  const bankWithoutName = contractSchema.safeParse({
+    ...baseCandidate(),
+    consignee: { ...noParty(), kind: 'ToOrderOfBank' },
+  });
+  assert.equal(bankWithoutName.success, false);
+  if (!bankWithoutName.success) {
+    assert.ok(
+      bankWithoutName.error.issues.some(
+        (issue) => issue.path.join('.') === 'consignee.name',
+      ),
+    );
+  }
+
+  const fixedWording = contractSchema.safeParse({
+    ...baseCandidate(),
+    consignee: { ...noParty(), kind: 'ToOrder' },
+    notifyParty: { ...noParty(), kind: 'SameAsConsignee' },
+  });
+  assert.equal(fixedWording.success, true);
 });

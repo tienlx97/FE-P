@@ -208,19 +208,27 @@ export async function updateCommission(
  * Real-time duplicate check for the "Mã" field — backs the Commission
  * form's live validation, separate from the `409 Conflict` the backend
  * still returns on submit (this is a UX aid, not the source of truth).
- * Not scoped under a contract — a code must be unique across every
- * commission, not just within one contract's own (at most one) commission.
+ * Not nested under a contract — a code must be unique across the company's
+ * commissions, not just within one contract's own (at most one) commission.
  * `excludeCommissionId` lets the edit form check "does any *other*
  * commission use this code" without the commission colliding with its own
  * current code (see `GET /commissions/exists`, `docs/api/Commissions.md`,
  * BE-kt-xnk).
- * @param {{ code: string, excludeCommissionId?: string | null }} params
+ * Codes are unique per company (BE-P): `contractId` picks the company.
+ * @param {{ code: string, excludeCommissionId?: string | null, contractId?: string | null }} params
  * @returns {Promise<{ success: true, exists: boolean } | { success: false, message: string, conflict: boolean }>}
  */
-export async function checkCommissionCodeExists({ code, excludeCommissionId }) {
+export async function checkCommissionCodeExists({
+  code,
+  excludeCommissionId,
+  contractId,
+}) {
   const params = new URLSearchParams({ code });
   if (excludeCommissionId) {
     params.set('excludeCommissionId', excludeCommissionId);
+  }
+  if (contractId) {
+    params.set('contractId', contractId);
   }
 
   const result = await apiRequest(

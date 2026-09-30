@@ -1,5 +1,7 @@
 import { apiRequest } from '@/shared/api/api-client.js';
 
+import { partyPayload } from '../config/party-kinds.js';
+
 const GENERIC_LIST_ERROR = 'Không thể tải danh sách hợp đồng';
 const GENERIC_GET_ERROR = 'Không thể tải hợp đồng';
 const GENERIC_CREATE_ERROR = 'Không thể tạo hợp đồng';
@@ -136,17 +138,23 @@ export async function getContract(contractId) {
  * returns on submit (this is a UX aid, not the source of truth).
  * `excludeContractId` lets the edit form check "does any *other* contract
  * use this number" without the contract colliding with its own current
- * number (see `GET /contracts/exists`, `docs/api/Contracts.md`, BE-kt-xnk).
- * @param {{ contractNumber: string, excludeContractId?: string | null }} params
+ * number (see `GET /contracts/exists`, `docs/api/Contracts.md`, BE-P).
+ * Numbers are unique per company: `companyId` scopes the check (the edit
+ * form's `excludeContractId` also implies it).
+ * @param {{ contractNumber: string, excludeContractId?: string | null, companyId?: string | null }} params
  * @returns {Promise<{ success: true, exists: boolean } | { success: false, message: string, conflict: boolean }>}
  */
 export async function checkContractNumberExists({
   contractNumber,
   excludeContractId,
+  companyId,
 }) {
   const params = new URLSearchParams({ contractNumber });
   if (excludeContractId) {
     params.set('excludeContractId', excludeContractId);
+  }
+  if (companyId) {
+    params.set('companyId', companyId);
   }
 
   const result = await apiRequest(
@@ -221,7 +229,7 @@ function buildBuyerPayload(values, buyerExtraFieldRows) {
 
 /**
  * @param {import('../types/index.js').ContractFormValues} values
- * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
+ * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string, paymentType?: import('../types/index.js').PaymentMethod }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
  */
 function buildContractBody(
   values,
@@ -245,12 +253,14 @@ function buildContractBody(
     IncotermYear: values.incotermYear,
     Seller: buildSellerPayload(values, sellerExtraFieldRows),
     Buyer: buildBuyerPayload(values, buyerExtraFieldRows),
-    NotifyParty: null,
-    Consignee: null,
+    // Always sent back (edited or not) — a null here would wipe them.
+    NotifyParty: partyPayload(values.notifyParty),
+    Consignee: partyPayload(values.consignee),
     Note: values.note || null,
     PaymentTerms: paymentTerms.map((term) => ({
       PaymentRatioPercent: term.paymentRatioPercent,
       PaymentCondition: term.paymentCondition,
+      PaymentType: term.paymentType ?? 'TT',
     })),
     BankIds: values.bankIds,
     SellerSigned: values.sellerSigned,
@@ -262,7 +272,7 @@ function buildContractBody(
 
 /**
  * @param {import('../types/index.js').ContractFormValues} values
- * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
+ * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string, paymentType?: import('../types/index.js').PaymentMethod }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
  * @returns {Promise<{ success: true, contract: import('../types/index.js').Contract } | { success: false, message: string, conflict: boolean }>}
  */
 export async function createContract(values, extra) {
@@ -289,7 +299,7 @@ export async function createContract(values, extra) {
 /**
  * @param {string} contractId
  * @param {import('../types/index.js').ContractFormValues} values
- * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
+ * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string, paymentType?: import('../types/index.js').PaymentMethod }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
  * @returns {Promise<{ success: true, contract: import('../types/index.js').Contract } | { success: false, message: string, conflict: boolean }>}
  */
 export async function updateContract(contractId, values, extra) {

@@ -14,9 +14,13 @@ const DEBOUNCE_MS = 400;
  * `useContractNumberExistsQuery`. `isChecking` covers both "waiting for the
  * debounce" and "request in flight" — the caller shouldn't show a stale
  * result while either is true.
- * @param {{ code: string, excludeCommissionId?: string | null }} params
+ * @param {{ code: string, excludeCommissionId?: string | null, contractId?: string | null }} params
  */
-export function useCommissionCodeExistsQuery({ code, excludeCommissionId }) {
+export function useCommissionCodeExistsQuery({
+  code,
+  excludeCommissionId,
+  contractId,
+}) {
   const trimmed = code.trim();
   const [debounced, setDebounced] = useState(trimmed);
 
@@ -26,9 +30,18 @@ export function useCommissionCodeExistsQuery({ code, excludeCommissionId }) {
   }, [trimmed]);
 
   const query = useQuery({
-    queryKey: [...QUERY_KEY, debounced, excludeCommissionId ?? null],
+    queryKey: [
+      ...QUERY_KEY,
+      debounced,
+      excludeCommissionId ?? null,
+      contractId ?? null,
+    ],
     queryFn: () =>
-      checkCommissionCodeExists({ code: debounced, excludeCommissionId }),
+      checkCommissionCodeExists({
+        code: debounced,
+        excludeCommissionId,
+        contractId,
+      }),
     enabled: debounced.length > 0,
     staleTime: 10_000,
   });

@@ -10,6 +10,10 @@ import { CONTRACT_STATUSES } from '../config/contract-status.js';
 import { CONTRACT_TYPES } from '../config/contract-types.js';
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
 import { requiresPlaceOfDelivery } from '../config/incoterms.js';
+import {
+  emptyPartyFormValue,
+  partyFormValueFrom,
+} from '../config/party-kinds.js';
 import { dedupePlacesByName, portOption } from '../config/place-options.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
 import { useContractNumberExistsQuery } from './use-contract-number-exists-query.js';
@@ -79,6 +83,8 @@ function emptyValues() {
     // New contracts default to "Đang thực hiện" (in-progress) — matches
     // the backend's own default (BE-kt-xnk).
     status: CONTRACT_STATUSES[0],
+    consignee: emptyPartyFormValue(),
+    notifyParty: emptyPartyFormValue(),
   };
 }
 
@@ -142,6 +148,8 @@ function valuesFromContract(contract) {
     sellerSigned: contract.sellerSigned,
     buyerSigned: contract.buyerSigned,
     status: contract.status,
+    consignee: partyFormValueFrom(contract.consignee),
+    notifyParty: partyFormValueFrom(contract.notifyParty),
   };
 }
 
@@ -201,6 +209,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
           rowKey: term.id,
           paymentRatioPercent: term.paymentRatioPercent,
           paymentCondition: term.paymentCondition,
+          paymentType: term.paymentType ?? 'TT',
         }))
       : undefined,
   );
@@ -234,6 +243,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   const contractNumberExistsQuery = useContractNumberExistsQuery({
     contractNumber: values.contractNumber,
     excludeContractId: contract?.id,
+    companyId: values.companyId,
   });
 
   /**
@@ -406,6 +416,14 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     );
   }
 
+  /**
+   * @param {'consignee' | 'notifyParty'} role
+   * @param {import('../types/index.js').PartyFormValue} party
+   */
+  function setParty(role, party) {
+    setValues((current) => ({ ...current, [role]: party }));
+  }
+
   function switchToInlineBuyer() {
     setValues((current) => ({ ...current, sourceCustomerId: '' }));
   }
@@ -438,6 +456,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
             rowKey: term.id,
             paymentRatioPercent: term.paymentRatioPercent,
             paymentCondition: term.paymentCondition,
+            paymentType: term.paymentType ?? 'TT',
           }))
         : [],
     );
@@ -469,6 +488,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
       paymentTerms: paymentTermRows.rows.map((row) => ({
         paymentRatioPercent: row.paymentRatioPercent,
         paymentCondition: row.paymentCondition,
+        paymentType: row.paymentType ?? 'TT',
       })),
     };
 
@@ -562,6 +582,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     setBuyerInlineField,
     selectExistingCustomer,
     switchToInlineBuyer,
+    setParty,
     setBankIds,
     fieldStatuses,
     isCheckingContractNumber: contractNumberExistsQuery.isChecking,

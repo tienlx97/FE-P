@@ -32,9 +32,14 @@ import { contractStatusOptions } from '../config/contract-status.js';
 import { contractTypeOptions } from '../config/contract-types.js';
 import { currencyOptions } from '../config/currencies.js';
 import { incotermOptions } from '../config/incoterms.js';
+import {
+  consigneeKindOptions,
+  notifyPartyKindOptions,
+} from '../config/party-kinds.js';
 import { withSavedOption } from '../config/place-options.js';
 import { BuyerFields } from './buyer-fields.jsx';
 import { ContractDrawerPaymentTerms } from './contract-drawer-payment-terms.jsx';
+import { ContractPartyContactFields } from './contract-party-contact-fields.jsx';
 import { QuickCreateCountryDialog } from './quick-create-country-dialog.jsx';
 import { QuickCreatePortDialog } from './quick-create-port-dialog.jsx';
 import { SellerPickerFields } from './seller-picker-fields.jsx';
@@ -87,6 +92,7 @@ export function ContractDrawerProfileFields({
     setBuyerInlineField,
     selectExistingCustomer,
     switchToInlineBuyer,
+    setParty,
     setBankIds,
     fieldStatuses,
     companies,
@@ -496,6 +502,20 @@ export function ContractDrawerProfileFields({
               actionSize="lg"
             />
           </MetaFormCard>
+          <ContractPartyContactFields
+            title="CONSIGNEE"
+            value={values.consignee}
+            kindOptions={consigneeKindOptions}
+            onChange={(party) => setParty('consignee', party)}
+            nameStatus={fieldStatuses['consignee.name']}
+          />
+          <ContractPartyContactFields
+            title="NOTIFY PARTY"
+            value={values.notifyParty}
+            kindOptions={notifyPartyKindOptions}
+            onChange={(party) => setParty('notifyParty', party)}
+            nameStatus={fieldStatuses['notifyParty.name']}
+          />
         </MetaFormSection>
 
         <MetaFormSection

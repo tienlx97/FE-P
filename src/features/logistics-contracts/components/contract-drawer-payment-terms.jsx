@@ -46,7 +46,7 @@ function bankLabel(account) {
  *   contractValue?: number,
  *   currency?: string,
  *   onRemoveRow: (rowKey: string) => void,
- *   onUpdateRowField: (rowKey: string, field: 'paymentRatioPercent' | 'paymentCondition', value: number | string | undefined) => void,
+ *   onUpdateRowField: (rowKey: string, field: 'paymentRatioPercent' | 'paymentCondition' | 'paymentType', value: number | string | undefined) => void,
  *   banks: import('@/shared/api/bank-accounts.js').BankAccount[],
  *   selectedBankIds: string[],
  *   onBankIdsChange: (bankIds: string[]) => void,
@@ -139,6 +139,7 @@ export function ContractDrawerPaymentTerms({
         onAddRow={() => {}}
         onRemoveRow={onRemoveRow}
         onUpdateRowField={onUpdateRowField}
+        hasPaymentType
       />
 
       {isQuickCreateBankOpen ? (

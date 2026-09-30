@@ -16028,3 +16028,17 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Browser QA on `/logistics/contract/{id}/shipment/{id}`: Overview issued 7 API calls with no shipment list and no cost groups; switching to Costs fetched `shipment-cost-categories`.
 - Harness gap fixed: `eslint .` failed on the orphan generated `src/shared/components/kt-xnk.js` (136 hex-colour errors); it is now in ESLint ignores. `./harness/verify.sh` passed: `harness/runs/20260930-065048-464843/`.
 - Harness gap open: `theme:build` on Linux rewrites `meta.*` headers with `/` instead of the committed `\` paths, dirtying the tree after every verify run.
+
+## 2026-09-30 — Wire contract review backend, task 1.1 (`wire-contract-review-backend`)
+
+- **Data-loss fix.** Every contract save sent `NotifyParty: null, Consignee: null`, which wiped both parties. It also sent no `PaymentType`, which turned L/C terms back into T/T. The form now loads and sends both parties and each term's type.
+- **Consignee / Notify.** New cards in "Các bên tham gia hợp đồng". The kind is chosen with a Selector ("Không có" / named / TO ORDER… / SAME AS CONSIGNEE). A name is asked only where the kind prints one. The catalog link is kept while the name is unchanged; extra fields go back untouched.
+- **T/T or L/C** can be chosen per payment term. The overview shows the B/L `displayName`.
+- The contract-number check sends `companyId`; the commission-code check sends `contractId`.
+- Browser QA on the user's running dev server (:3000 → BE :8081), on the draft contract `[DRAFT] 11.09.26`:
+  - Set consignee "TO ORDER OF Vietcombank" and notify "SAME AS CONSIGNEE", and one term to L/C. Saved and read back through the API.
+  - Saved again without touching the parties: they and the L/C term survived.
+  - Restored the draft to no parties and all T/T (version 5 → 8).
+  - Screenshots timed out (the browser renderer did not capture), so the evidence is API reads and network logs, not images.
+- Tests: API payload tests for parties, PaymentType and the dropped catalog link on rename; a schema test for the per-kind name rule; the schema fixtures gained parties. `./harness/verify.sh` passed: `harness/runs/20260930-221756-945/`.
+- Discovered: BE-P's CLAUDE.md points at `../kt-xnk`, but the FE checkout is `../FE-P`.

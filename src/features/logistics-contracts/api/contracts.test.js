@@ -42,6 +42,22 @@ const BASE_VALUES = {
   sellerSigned: false,
   buyerSigned: false,
   status: 'InProgress',
+  consignee: {
+    kind: '',
+    name: '',
+    address: '',
+    sourceContactId: '',
+    loadedName: '',
+    extraFields: [],
+  },
+  notifyParty: {
+    kind: '',
+    name: '',
+    address: '',
+    sourceContactId: '',
+    loadedName: '',
+    extraFields: [],
+  },
 };
 
 test('sends an inline Buyer when no source customer is selected', async () => {
@@ -67,7 +83,7 @@ test('sends an inline Buyer when no source customer is selected', async () => {
     assert.equal(body.PlaceOfLoading, 'Cảng Hải Phòng');
     assert.equal(body.PlaceOfDischarge, 'Cảng Rotterdam');
     assert.deepEqual(body.PaymentTerms, [
-      { PaymentRatioPercent: 100, PaymentCondition: 'T/T' },
+      { PaymentRatioPercent: 100, PaymentCondition: 'T/T', PaymentType: 'TT' },
     ]);
     assert.deepEqual(body.BankIds, ['bank-1']);
     assert.equal(body.NotifyParty, null);
@@ -334,6 +350,107 @@ test('checkContractNumberExists omits excludeContractId when not given', async (
 
     assert.equal(result.success && result.exists, false);
     assert.doesNotMatch(String(captured.url), /excludeContractId/);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test("sends the parties back so a save never wipes them, and each term's PaymentType", async () => {
+  const originalFetch = globalThis.fetch;
+  /** @type {{ init?: RequestInit }} */
+  const captured = {};
+  globalThis.fetch = async (_input, init) => {
+    captured.init = init;
+    return Response.json({ id: 'contract-1' });
+  };
+
+  try {
+    await createContract(
+      {
+        ...BASE_VALUES,
+        consignee: {
+          kind: 'Named',
+          name: 'ABC Ltd',
+          address: 'Manila',
+          sourceContactId: 'contact-1',
+          loadedName: 'ABC Ltd',
+          extraFields: [{ key: 'Tax', value: '123' }],
+        },
+        notifyParty: {
+          kind: 'SameAsConsignee',
+          name: 'ignored',
+          address: '',
+          sourceContactId: '',
+          loadedName: '',
+          extraFields: [],
+        },
+      },
+      {
+        paymentTerms: [
+          { paymentRatioPercent: 30, paymentCondition: 'Deposit' },
+          {
+            paymentRatioPercent: 70,
+            paymentCondition: 'At sight',
+            paymentType: 'LC',
+          },
+        ],
+      },
+    );
+
+    const body = JSON.parse(String(captured.init?.body));
+    assert.deepEqual(body.Consignee, {
+      Kind: 'Named',
+      SourceContactId: 'contact-1',
+      Name: 'ABC Ltd',
+      Address: 'Manila',
+      ExtraFields: [{ Key: 'Tax', Value: '123' }],
+    });
+    assert.deepEqual(body.NotifyParty, {
+      Kind: 'SameAsConsignee',
+      SourceContactId: null,
+      Name: null,
+      Address: null,
+      ExtraFields: [],
+    });
+    assert.deepEqual(
+      body.PaymentTerms.map(
+        (/** @type {{ PaymentType: string }} */ term) => term.PaymentType,
+      ),
+      ['TT', 'LC'],
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('drops the catalog link when a linked party is renamed', async () => {
+  const originalFetch = globalThis.fetch;
+  /** @type {{ init?: RequestInit }} */
+  const captured = {};
+  globalThis.fetch = async (_input, init) => {
+    captured.init = init;
+    return Response.json({ id: 'contract-1' });
+  };
+
+  try {
+    await createContract(
+      {
+        ...BASE_VALUES,
+        consignee: {
+          kind: 'Named',
+          name: 'ABC Branch',
+          address: '',
+          sourceContactId: 'contact-1',
+          loadedName: 'ABC Ltd',
+          extraFields: [],
+        },
+      },
+      { paymentTerms: [{ paymentRatioPercent: 100, paymentCondition: 'T/T' }] },
+    );
+
+    const body = JSON.parse(String(captured.init?.body));
+    assert.equal(body.Consignee.SourceContactId, null);
+    assert.equal(body.Consignee.Name, 'ABC Branch');
   } finally {
     globalThis.fetch = originalFetch;
   }

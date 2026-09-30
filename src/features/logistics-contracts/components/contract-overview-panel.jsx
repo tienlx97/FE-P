@@ -302,7 +302,7 @@ export function ContractOverviewPanel({
       ? {
           icon,
           label,
-          name: contact.name,
+          name: contact.displayName ?? contact.name ?? '',
           lines: [
             ...(contact.address ? [contact.address] : []),
             ...contact.extraFields.map(

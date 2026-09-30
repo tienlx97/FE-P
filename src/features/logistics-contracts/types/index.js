@@ -31,6 +31,29 @@ export {};
  * @property {string} id
  * @property {number} paymentRatioPercent
  * @property {string} paymentCondition
+ * @property {PaymentMethod | null} [paymentType] - contract installments only ("TT" / "LC"); `null` on commission terms
+ */
+
+/** @typedef {'TT' | 'LC'} PaymentMethod */
+
+/**
+ * How a Consignee / Notify Party reads on the B/L (BE-P `PartyKind`).
+ * Consignee: Named | ToOrder | ToOrderOfShipper | ToOrderOfBank; Notify:
+ * Named | SameAsConsignee.
+ * @typedef {'Named' | 'ToOrder' | 'ToOrderOfShipper' | 'ToOrderOfBank' | 'SameAsConsignee'} PartyKind
+ */
+
+/**
+ * Consignee / Notify Party in the contract form. `kind` '' = none.
+ * `loadedName` remembers the name the catalog link was loaded with;
+ * `extraFields` are carried back unchanged (not edited here).
+ * @typedef {Object} PartyFormValue
+ * @property {PartyKind | ''} kind
+ * @property {string} name
+ * @property {string} address
+ * @property {string} sourceContactId
+ * @property {string} loadedName
+ * @property {ExtraField[]} extraFields
  */
 
 /**
@@ -188,14 +211,16 @@ export {};
 
 /**
  * "Bên thông báo"/"Đại lý nhận hàng" contact snapshot — `NotifyParty`/
- * `Consignee` on the wire (`ContractsController.MapToPartyContactResponse`,
- * BE-kt-xnk). Read-only in this app; there is no form for creating/editing
- * one yet.
+ * `Consignee` on the wire (`PartyContactMapper`, BE-P). `displayName` is
+ * the B/L wording (e.g. "TO ORDER OF Vietcombank"); `name` is null for a
+ * kind that takes none.
  * @typedef {Object} ContractPartyContact
- * @property {string} name
+ * @property {string | null} name
  * @property {string | null} address
  * @property {string | null} sourceContactId
  * @property {ExtraField[]} extraFields
+ * @property {PartyKind} [kind]
+ * @property {string} [displayName]
  */
 
 /**
@@ -219,8 +244,8 @@ export {};
  * @property {string} companyId - the company the contract belongs to (permissions are scoped by company, not branch)
  * @property {ContractSeller} seller
  * @property {Buyer} buyer - was `partyA`
- * @property {ContractPartyContact | null} notifyParty - "Bên thông báo"; not editable from this app yet, but BE-kt-xnk already returns it — read-only display only
- * @property {ContractPartyContact | null} consignee - "Đại lý nhận hàng"; not editable from this app yet, but BE-kt-xnk already returns it — read-only display only
+ * @property {ContractPartyContact | null} notifyParty - "Notify Party"
+ * @property {ContractPartyContact | null} consignee - "Consignee" (người nhận hàng trên B/L)
  * @property {string | null} note
  * @property {PaymentTerm[]} paymentTerms
  * @property {string[]} bankIds
@@ -437,6 +462,7 @@ export {};
  * @property {string} rowKey
  * @property {number | undefined} paymentRatioPercent
  * @property {string} paymentCondition
+ * @property {PaymentMethod} [paymentType] - contract rows only; defaults to "TT"
  */
 
 /**
@@ -541,6 +567,8 @@ export {};
  * @property {boolean} sellerSigned - "Bên bán ký"
  * @property {boolean} buyerSigned - "Bên mua ký"
  * @property {ContractStatus | ''} status
+ * @property {PartyFormValue} consignee
+ * @property {PartyFormValue} notifyParty
  */
 
 /**

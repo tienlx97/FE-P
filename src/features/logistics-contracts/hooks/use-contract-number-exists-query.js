@@ -13,11 +13,13 @@ const DEBOUNCE_MS = 400;
  * types, for the Contract form's real-time duplicate warning. `isChecking`
  * covers both "waiting for the debounce" and "request in flight" — the
  * caller shouldn't show a stale result while either is true.
- * @param {{ contractNumber: string, excludeContractId?: string | null }} params
+ * Numbers are unique per company (BE-P) — `companyId` scopes the check.
+ * @param {{ contractNumber: string, excludeContractId?: string | null, companyId?: string | null }} params
  */
 export function useContractNumberExistsQuery({
   contractNumber,
   excludeContractId,
+  companyId,
 }) {
   const trimmed = contractNumber.trim();
   const [debounced, setDebounced] = useState(trimmed);
@@ -28,11 +30,17 @@ export function useContractNumberExistsQuery({
   }, [trimmed]);
 
   const query = useQuery({
-    queryKey: [...QUERY_KEY, debounced, excludeContractId ?? null],
+    queryKey: [
+      ...QUERY_KEY,
+      debounced,
+      excludeContractId ?? null,
+      companyId ?? null,
+    ],
     queryFn: () =>
       checkContractNumberExists({
         contractNumber: debounced,
         excludeContractId,
+        companyId,
       }),
     enabled: debounced.length > 0,
     staleTime: 10_000,
