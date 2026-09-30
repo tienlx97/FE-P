@@ -51,11 +51,11 @@ test('sailingTitle tags [HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]', () => {
 test('sailingTitle puts TS between the carrier and the vessel of a transshipment', () => {
   assert.equal(
     sailingTitle('Heung-A', sailing({ vesselName: 'STARSHIP JUPITER', voyageNumber: '2607N', transshipmentPorts: ['BUSAN'] })),
-    'Heung-A - TS - STARSHIP JUPITER / 2607N',
+    'Heung-A - [TS] - STARSHIP JUPITER / 2607N',
   );
   assert.equal(
     sailingTitle('Heung-A', sailing({ transshipmentPorts: ['LAEM CHABANG'], onCarriage: 'Barge' })),
-    'Heung-A - TS - KMTC ULSAN / 2615S',
+    'Heung-A - [TS] - KMTC ULSAN / 2615S',
   );
 });
 

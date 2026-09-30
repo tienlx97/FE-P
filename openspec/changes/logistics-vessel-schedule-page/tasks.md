@@ -32,3 +32,8 @@
 - [x] 1.12 SI cut-off in the hover card; Sundays blue in `MetaSchedule`
   (red stays for sailings that cannot be booked); Namsung shown once its BE
   adapters landed (no FE change — carriers come from the API).
+- [x] 1.13 Search card: POL / POD fixed width (20rem, wrap on narrow
+  screens); "Tìm" + "Tải lại từ hãng" on their own row with the route and
+  per-carrier result pills in a `Carousel`; "Terminal dỡ" value in accent
+  blue (hover card + drawer). SITC shown once its BE schedule adapter
+  landed (no FE change for that).

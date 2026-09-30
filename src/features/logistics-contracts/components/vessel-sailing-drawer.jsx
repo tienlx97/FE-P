@@ -90,7 +90,16 @@ export function VesselSailingDrawer({ carrier, sailing, now, onClose }) {
     ['Cảng xếp (POL)', <Text key="pol">{sailing.portOfLoading || '—'}</Text>],
     ['Terminal xếp', <Text key="pol-terminal">{sailing.portOfLoadingTerminal ?? '—'}</Text>],
     ['Cảng dỡ (POD)', <Text key="pod">{sailing.portOfDischarge || '—'}</Text>],
-    ['Terminal dỡ', <Text key="pod-terminal">{sailing.portOfDischargeTerminal ?? '—'}</Text>],
+    [
+      'Terminal dỡ',
+      sailing.portOfDischargeTerminal ? (
+        <Text key="pod-terminal" color="accent" weight="semibold">
+          {sailing.portOfDischargeTerminal}
+        </Text>
+      ) : (
+        <Text key="pod-terminal">—</Text>
+      ),
+    ],
     [
       'Chuyển tải',
       isDirect ? (

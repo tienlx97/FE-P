@@ -25,14 +25,14 @@ const TWO_WEEKS = 14;
 /**
  * The tag of a sailing: `[HÃNG TÀU] - [TÊN TÀU] / [SỐ CHUYẾN]`, with `TS`
  * after the carrier when it transships (also when the vessel stops short of
- * the POD and the cargo goes on by barge): `[HÃNG TÀU] - TS - [TÊN TÀU] / [SỐ CHUYẾN]`.
+ * the POD and the cargo goes on by barge): `[HÃNG TÀU] - [TS] - [TÊN TÀU] / [SỐ CHUYẾN]`.
  * @param {string} carrierName
  * @param {{ vesselName: string, voyageNumber: string | null, transshipmentPorts?: string[] }} sailing
  */
 export function sailingTitle(carrierName, { vesselName, voyageNumber, transshipmentPorts = [] }) {
   const vessel = voyageNumber ? `${vesselName} / ${voyageNumber}` : vesselName;
   return transshipmentPorts.length > 0
-    ? `${carrierName} - TS - ${vessel}`
+    ? `${carrierName} - [TS] - ${vessel}`
     : `${carrierName} - ${vessel}`;
 }
 

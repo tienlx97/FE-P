@@ -1,6 +1,8 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
+import { Carousel } from '@astryxdesign/core/Carousel';
+import { Divider } from '@astryxdesign/core/Divider';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
@@ -134,55 +136,80 @@ export function VesselScheduleWorkspace() {
 
   const canSearch = Boolean(polCode && podCode) && adapters.length > 0;
   const selected = selectedId ? (entries.get(selectedId) ?? null) : null;
+  const canRefresh = Boolean(search && search.carriers.length > 0);
 
   return (
     <VStack gap={3} hAlign="stretch" height="100%">
-      <HStack gap={3} vAlign="end" wrap="wrap" xstyle={styles.filters}>
-        <StackItem size="fill" xstyle={styles.field}>
-          <Selector
-            label="POL — cảng xếp"
-            placeholder="Chọn cảng Việt Nam"
-            hasSearch
-            searchPlaceholder="Mã hoặc tên cảng…"
-            options={polOptions}
-            value={polCode}
-            onChange={(value) => setPolCode(value ?? '')}
-            isLoading={polPortsQuery.isLoading}
-            isDisabled={!vietnamId}
-            disabledMessage='Danh mục nước chưa có "Việt Nam"'
-            width="100%"
+      <VStack gap={3} hAlign="stretch" xstyle={styles.filters}>
+        <HStack gap={3} vAlign="end" wrap="wrap">
+          <StackItem xstyle={styles.port}>
+            <Selector
+              label="POL — cảng xếp"
+              placeholder="Chọn cảng Việt Nam"
+              hasSearch
+              searchPlaceholder="Mã hoặc tên cảng…"
+              options={polOptions}
+              value={polCode}
+              onChange={(value) => setPolCode(value ?? '')}
+              isLoading={polPortsQuery.isLoading}
+              isDisabled={!vietnamId}
+              disabledMessage='Danh mục nước chưa có "Việt Nam"'
+              width="100%"
+            />
+          </StackItem>
+          <HStack gap={1} vAlign="center" xstyle={styles.arrow}>
+            <Icon icon={ArrowRight} size="sm" color="secondary" />
+          </HStack>
+          <StackItem xstyle={styles.port}>
+            {/* Any port worldwide (~17.5k): the selector searches on the server. */}
+            <PortSearchSelector label="POD — cảng dỡ" placeholder="Chọn cảng dỡ" value={pod} onChange={setPod} />
+          </StackItem>
+          <MultiSelector
+            label="Hãng tàu"
+            placeholder="Tất cả hãng"
+            options={carrierOptions(adapters)}
+            value={carrierCodes}
+            onChange={setCarrierCodes}
+            triggerDisplay="labels"
+            formatValue={(items) => carrierSelectionLabel(items, connectedCount)}
+            hasClear
+            isLoading={adaptersQuery.isLoading}
+            width={240}
           />
-        </StackItem>
-        <HStack gap={1} vAlign="center" xstyle={styles.arrow}>
-          <Icon icon={ArrowRight} size="sm" color="secondary" />
         </HStack>
-        <StackItem size="fill" xstyle={styles.field}>
-          {/* Any port worldwide (~17.5k): the selector searches on the server. */}
-          <PortSearchSelector label="POD — cảng dỡ" placeholder="Chọn cảng dỡ" value={pod} onChange={setPod} />
-        </StackItem>
-        <MultiSelector
-          label="Hãng tàu"
-          placeholder="Tất cả hãng"
-          options={carrierOptions(adapters)}
-          value={carrierCodes}
-          onChange={setCarrierCodes}
-          triggerDisplay="labels"
-          formatValue={(items) => carrierSelectionLabel(items, connectedCount)}
-          hasClear
-          isLoading={adaptersQuery.isLoading}
-          width={240}
-        />
-        <Button
-          label="Tìm"
-          variant="primary"
-          icon={<Icon icon={Search} size="sm" />}
-          isDisabled={!canSearch}
-          onClick={() => {
-            setSelectedId(null);
-            setSearch({ pol: polCode, pod: podCode, carriers: carriersToSearch(adapters, carrierCodes) });
-          }}
-        />
-      </HStack>
+        <HStack gap={2} vAlign="center" xstyle={styles.actions}>
+          <Button
+            label="Tìm"
+            variant="primary"
+            icon={<Icon icon={Search} size="sm" />}
+            isDisabled={!canSearch}
+            onClick={() => {
+              setSelectedId(null);
+              setSearch({ pol: polCode, pod: podCode, carriers: carriersToSearch(adapters, carrierCodes) });
+            }}
+          />
+          <Button
+            label="Tải lại từ hãng"
+            tooltip="Hỏi lại hãng thay vì lịch đã lưu (tối đa 30 phút trước) và lưu lịch mới"
+            variant="secondary"
+            icon={<Icon icon={RefreshCw} size="sm" />}
+            isLoading={refreshMutation.isPending}
+            isDisabled={!canRefresh || isRefreshCoolingDown || isLoadingSailings}
+            onClick={() => {
+              if (!search) return;
+              setIsRefreshCoolingDown(true);
+              window.setTimeout(() => setIsRefreshCoolingDown(false), REFRESH_COOLDOWN_MS);
+              refreshMutation.mutate({ search, ...range });
+            }}
+          />
+          <Divider orientation="vertical" />
+          <StackItem size="fill" xstyle={styles.summary}>
+            <Carousel aria-label="Kết quả theo hãng tàu" gap={2}>
+              {summaryPills(search, results, allCarriers)}
+            </Carousel>
+          </StackItem>
+        </HStack>
+      </VStack>
 
       <StackItem size="fill">
         <MetaSchedule
@@ -201,57 +228,6 @@ export function VesselScheduleWorkspace() {
               <VesselSailingPreview carrier={entry.carrier} sailing={entry.sailing} tone={item.tone} now={now} />
             ) : null;
           }}
-          headerEnd={
-            search && search.carriers.length > 0 ? (
-              <Button
-                label="Tải lại từ hãng"
-                tooltip="Hỏi lại hãng thay vì lịch đã lưu (tối đa 30 phút trước) và lưu lịch mới"
-                variant="secondary"
-                size="sm"
-                icon={<Icon icon={RefreshCw} size="sm" />}
-                isLoading={refreshMutation.isPending}
-                isDisabled={isRefreshCoolingDown || isLoadingSailings}
-                onClick={() => {
-                  setIsRefreshCoolingDown(true);
-                  window.setTimeout(() => setIsRefreshCoolingDown(false), REFRESH_COOLDOWN_MS);
-                  refreshMutation.mutate({ search, ...range });
-                }}
-              />
-            ) : null
-          }
-          headerStart={
-            <HStack gap={2} vAlign="center" wrap="wrap">
-              {!search ? (
-                <MetaPill label="Chọn POL, POD rồi bấm Tìm" tone="neutral" size="sm" />
-              ) : search.carriers.length === 0 ? (
-                <MetaPill label="Chưa có hãng tàu nào kết nối lịch tàu" tone="neutral" size="sm" />
-              ) : (
-                <>
-                  <MetaPill label={`${search.pol} → ${search.pod}`} tone="neutral" size="sm" />
-                  {search.carriers.map((carrier, index) => {
-                    const result = results[index];
-                    if (!result || result.isPending) {
-                      return <MetaPill key={carrier.code} label={`${carrier.name} · đang tải…`} tone="neutral" size="sm" />;
-                    }
-                    const data = result.data;
-                    if (!data?.success || data.search.status !== 'Synced') {
-                      const reason = !data ? 'lỗi' : data.success ? (data.search.error ?? data.search.status) : data.message;
-                      return <MetaPill key={carrier.code} label={`${carrier.name}: ${reason}`} tone="danger" size="sm" hasDot />;
-                    }
-                    return (
-                      <MetaPill
-                        key={carrier.code}
-                        label={`${carrier.name} · ${data.search.sailings.length} chuyến`}
-                        tone={carrierTone(allCarriers, carrier.code)}
-                        size="sm"
-                        hasDot
-                      />
-                    );
-                  })}
-                </>
-              )}
-            </HStack>
-          }
         />
       </StackItem>
 
@@ -267,6 +243,45 @@ export function VesselScheduleWorkspace() {
   );
 }
 
+/**
+ * One pill per searched carrier ("KMTC · 20 chuyến", or why it has none),
+ * after the route — the carousel beside the buttons scrolls them.
+ * @param {ScheduleSearch | null} search
+ * @param {ReturnType<typeof useCarrierSchedulesQueries>} results
+ * @param {import('../types/index.js').ShippingCarrier[]} allCarriers
+ */
+function summaryPills(search, results, allCarriers) {
+  if (!search) {
+    return [<MetaPill key="hint" label="Chọn POL, POD rồi bấm Tìm" tone="neutral" size="sm" />];
+  }
+  if (search.carriers.length === 0) {
+    return [<MetaPill key="none" label="Chưa có hãng tàu nào kết nối lịch tàu" tone="neutral" size="sm" />];
+  }
+  return [
+    <MetaPill key="route" label={`${search.pol} → ${search.pod}`} tone="neutral" size="sm" />,
+    ...search.carriers.map((carrier, index) => {
+      const result = results[index];
+      if (!result || result.isPending) {
+        return <MetaPill key={carrier.code} label={`${carrier.name} · đang tải…`} tone="neutral" size="sm" />;
+      }
+      const data = result.data;
+      if (!data?.success || data.search.status !== 'Synced') {
+        const reason = !data ? 'lỗi' : data.success ? (data.search.error ?? data.search.status) : data.message;
+        return <MetaPill key={carrier.code} label={`${carrier.name}: ${reason}`} tone="danger" size="sm" hasDot />;
+      }
+      return (
+        <MetaPill
+          key={carrier.code}
+          label={`${carrier.name} · ${data.search.sailings.length} chuyến`}
+          tone={carrierTone(allCarriers, carrier.code)}
+          size="sm"
+          hasDot
+        />
+      );
+    }),
+  ];
+}
+
 const styles = stylex.create({
   filters: {
     backgroundColor: 'var(--color-background-card)',
@@ -276,8 +291,21 @@ const styles = stylex.create({
     borderWidth: 'var(--border-width)',
     padding: 'var(--spacing-4)',
   },
-  field: {
-    minWidth: '14rem',
+  // POL / POD keep one width whatever is picked (a long POD name must not
+  // push "Hãng tàu" around); narrower screens wrap them instead.
+  port: {
+    flexShrink: 0,
+    maxWidth: '100%',
+    width: '20rem',
+  },
+  actions: {
+    borderBlockStartColor: 'var(--color-border)',
+    borderBlockStartStyle: 'solid',
+    borderBlockStartWidth: 'var(--border-width)',
+    paddingBlockStart: 'var(--spacing-3)',
+  },
+  summary: {
+    minWidth: 0,
   },
   arrow: {
     paddingBlockEnd: 'var(--spacing-2)',

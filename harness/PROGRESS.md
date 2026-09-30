@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-09-30 — Vessel schedule: search card layout, results carousel, blue POD terminal, SITC live (task 1.13)
+
+- User: SITC schedule built in BE-P (`add-carrier-schedules` task 5), then test the UI; make the search card more professional — (1) POL / POD fixed width, (2) "Tìm" and "Tải lại từ hãng" on a new row with the "KMTC · 20 chuyến…" pills in a Carousel, (3) "Terminal dỡ" value in blue.
+- `vessel-schedule-workspace.jsx`: the card is two rows — POL → POD (`styles.port`: 20rem, `flexShrink: 0`, `maxWidth: 100%`) + "Hãng tàu"; then a top-bordered row with "Tìm", "Tải lại từ hãng" (moved from the calendar header, disabled until a search ran), a divider and an Astryx `Carousel` of `summaryPills` (route + one pill per carrier; hint pill before a search). The calendar header no longer carries pills / refresh. `VesselSailingPreview` / `VesselSailingDrawer`: POD terminal `color="accent"` semibold; hover-card row labels no longer wrap.
+- Also aligned `vessel-schedule.test.js` + the doc comment with the `[TS]` title format already edited (uncommitted) in `vessel-schedule.js`.
+- Browser (Chrome, :3000, dev API rebuilt): VNSGN → PHMNL October: "VNSGN → PHMNL · KMTC · 0 chuyến · Heung-A · 0 chuyến · Namsung · 25 chuyến · SITC · 5 chuyến" in the carousel row; hover `SITC - SITC XIANDE / 2625N`: ETD 07/10/2026 00:00, ETA 10/10/2026 00:00, cut-offs —, Terminal dỡ MANILA INTERNATIONAL CONTAINER TERMIAL in blue. Carousel squeezed to 300 px: scrollWidth 720 > 300, "Cuộn sang phải" shown (smooth scroll not observable — tab was hidden). `/live` first showed SITC "Lỗi: không có cảng VNSGN" → BE probe fix; after it the API check reports SITC schedule Up v1 (Chrome extension disconnected before the re-check in the browser).
+- SITC gives dates without times, so ETD / ETA show 00:00 — not changed (a real 00:00 elsewhere cannot be told apart on the FE).
+- `pnpm test` 296/296; lint of `src/` clean except the untracked `src/shared/components/kt-xnk.js` (not from this session, hard-coded hex colours) — it fails `./harness/verify.sh` lint (`harness/runs/20260930-014413-77248/`); left for the user to decide.
+
 ## 2026-09-30 — Vessel schedule: SI cut-off on hover, blue Sundays, Namsung live (task 1.12)
 
 - User: hover card shows the SI cut-off; Sundays in blue; Namsung schedule + tracking built in BE-P (Codex's draft fixed — BE progress 2026-09-30), then update `/live` and `/logistics/schedule`.
@@ -16012,3 +16021,10 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Sundays use the error color in the month header, month dates and 2-week day list. POL and carrier selectors show loading for the initial fetch only, so background refetch on window focus does not replace populated selections with a spinner; POD Typeahead continues to search only on typed input.
 - Browser QA selected VNCLI → THLCH, searched KMTC, inspected red departed/closed/full sailings, switched between month and 2-week views, and switched away from and back to the tab with the port selections retained. Sunday text computed to `rgb(186, 26, 26)` and unavailable items used the same red rail. Screenshots: `harness/runs/20260929-schedule-booking/`.
 - `./harness/verify.sh` content passed all gates via a temporary LF-only copy at `harness/runs/20260929-115447-2903/`. Harness gap: the tracked script has CRLF and cannot run directly under WSL Bash; normalize its line endings in a separate harness task. A UI test that triggers focus refetch and asserts no selector spinner would prevent recurrence; logged for a future UI test pass.
+
+## 2026-09-30 — Shipment detail loading, task 1
+
+- Detail page fetches one shipment by id (`GET /contracts/{id}/shipments/{shipmentId}`) instead of the contract's whole list; cost groups load only on the Costs tab; suppliers and cost groups get a 5-minute `staleTime`. Suppliers and schedule stay eager (header journey and Costs provider picker read them). Follow-up task 2: id-batch supplier lookup (needs a BE endpoint).
+- Browser QA on `/logistics/contract/{id}/shipment/{id}`: Overview issued 7 API calls with no shipment list and no cost groups; switching to Costs fetched `shipment-cost-categories`.
+- Harness gap fixed: `eslint .` failed on the orphan generated `src/shared/components/kt-xnk.js` (136 hex-colour errors); it is now in ESLint ignores. `./harness/verify.sh` passed: `harness/runs/20260930-065048-464843/`.
+- Harness gap open: `theme:build` on Linux rewrites `meta.*` headers with `/` instead of the committed `\` paths, dirtying the tree after every verify run.

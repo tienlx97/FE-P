@@ -50,7 +50,11 @@ export function VesselSailingPreview({ carrier, sailing, tone, now }) {
       <Row label="ETA" value={formatCarrierTime(sailing.eta)} />
       <Row label="SI cut-off" value={formatCarrierTime(sailing.siCutoff)} />
       <Row label="CY cut-off" value={formatCarrierTime(sailing.cyCutoff)} />
-      <Row label="Terminal dỡ" value={sailing.portOfDischargeTerminal ?? '—'} />
+      <Row
+        label="Terminal dỡ"
+        value={sailing.portOfDischargeTerminal ?? '—'}
+        isAccent={Boolean(sailing.portOfDischargeTerminal)}
+      />
       {sailing.transshipmentPorts.length > 0 ? (
         <Row label="Chuyển tải" value={sailing.transshipmentPorts.join(' → ')} />
       ) : null}
@@ -66,14 +70,14 @@ export function VesselSailingPreview({ carrier, sailing, tone, now }) {
   );
 }
 
-/** @param {{ label: string, value: string }} props */
-function Row({ label, value }) {
+/** @param {{ label: string, value: string, isAccent?: boolean }} props */
+function Row({ label, value, isAccent = false }) {
   return (
     <HStack gap={3} hAlign="between" vAlign="center">
-      <Text size="sm" color="meta-subtle">
+      <Text size="sm" color="meta-subtle" xstyle={styles.label}>
         {label}
       </Text>
-      <Text size="sm" type="code">
+      <Text size="sm" type="code" color={isAccent ? 'accent' : undefined} weight={isAccent ? 'semibold' : undefined}>
         {value}
       </Text>
     </HStack>
@@ -84,5 +88,9 @@ const styles = stylex.create({
   card: {
     maxWidth: '20rem',
     minWidth: '16rem',
+  },
+  label: {
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
   },
 });
