@@ -16081,3 +16081,14 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
   - Restored the draft (version 12).
 - Observed: opening a contract or shipment URL directly in the hidden tab sometimes rendered only the shell with no API calls; client-side navigation rendered fine. This was not reproduced in a visible tab.
 - `./harness/verify.sh` passed: `harness/runs/20261001-090129-530/`.
+
+## 2026-10-01 — Stable theme build output
+
+- Closed the open harness gap: `theme:build` dirtied `meta.js` / `theme.built.css` after every verify. There were two causes:
+  - The CLI writes its `@generated` header paths with the host's separator: `\` on Windows, `/` on Linux.
+  - It writes LF while Windows checkouts use `core.autocrlf=true`.
+- Fix:
+  - `scripts/normalize-theme-build.mjs` runs after the CLI in `theme:build` and rewrites the header paths to `/` and line endings to LF.
+  - `.gitattributes` pins both files to `eol=lf`.
+  - The committed output switched to `/` header paths once.
+- After `./harness/verify.sh` rebuilt the theme, `git status` showed no unstaged change. Gate passed: `harness/runs/20261001-095157-534/`.
