@@ -37,6 +37,35 @@ export {};
 /** @typedef {'TT' | 'LC'} PaymentMethod */
 
 /**
+ * One contract goods line ("danh mục hàng hóa", BE-P `ContractLine`).
+ * `amount` = quantity × unitPrice (contract currency). `shippedQuantity` /
+ * `remainingQuantity` are filled only by GET contract by id.
+ * @typedef {Object} ContractLine
+ * @property {string} id
+ * @property {number} sequence
+ * @property {string} description
+ * @property {string | null} hsCode
+ * @property {number} quantity
+ * @property {string} unit
+ * @property {number} unitPrice
+ * @property {number} amount
+ * @property {number | null} [shippedQuantity]
+ * @property {number | null} [remainingQuantity]
+ */
+
+/**
+ * Editable goods line in the contract form; `id` '' = new line.
+ * @typedef {Object} ContractLineRow
+ * @property {string} rowKey
+ * @property {string} id
+ * @property {string} description
+ * @property {string} hsCode
+ * @property {number | undefined} quantity
+ * @property {string} unit
+ * @property {number | undefined} unitPrice
+ */
+
+/**
  * How a Consignee / Notify Party reads on the B/L (BE-P `PartyKind`).
  * Consignee: Named | ToOrder | ToOrderOfShipper | ToOrderOfBank; Notify:
  * Named | SameAsConsignee.
@@ -248,6 +277,8 @@ export {};
  * @property {ContractPartyContact | null} consignee - "Consignee" (người nhận hàng trên B/L)
  * @property {string | null} note
  * @property {PaymentTerm[]} paymentTerms
+ * @property {ContractLine[]} [lines] - goods lines, in order
+ * @property {number} [linesTotal] - Σ line amounts; may differ from contractValue
  * @property {string[]} bankIds
  * @property {boolean} sellerSigned - "Bên bán ký"
  * @property {boolean} buyerSigned - "Bên mua ký"

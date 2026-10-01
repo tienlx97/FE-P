@@ -455,3 +455,59 @@ test('drops the catalog link when a linked party is renamed', async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test('sends the goods lines in order, keeping a line id and nulling a new one', async () => {
+  const originalFetch = globalThis.fetch;
+  /** @type {{ init?: RequestInit }} */
+  const captured = {};
+  globalThis.fetch = async (_input, init) => {
+    captured.init = init;
+    return Response.json({ id: 'contract-1' });
+  };
+
+  try {
+    await createContract(BASE_VALUES, {
+      paymentTerms: [{ paymentRatioPercent: 100, paymentCondition: 'T/T' }],
+      lines: [
+        {
+          id: 'line-1',
+          description: 'Kết cấu thép',
+          hsCode: '7308.90.99',
+          quantity: 120.5,
+          unit: 'tấn',
+          unitPrice: 1000,
+        },
+        {
+          id: '',
+          description: 'Bu lông',
+          hsCode: '',
+          quantity: 2000,
+          unit: 'bộ',
+          unitPrice: 2.5,
+        },
+      ],
+    });
+
+    const body = JSON.parse(String(captured.init?.body));
+    assert.deepEqual(body.Lines, [
+      {
+        Id: 'line-1',
+        Description: 'Kết cấu thép',
+        HsCode: '7308.90.99',
+        Quantity: 120.5,
+        Unit: 'tấn',
+        UnitPrice: 1000,
+      },
+      {
+        Id: null,
+        Description: 'Bu lông',
+        HsCode: null,
+        Quantity: 2000,
+        Unit: 'bộ',
+        UnitPrice: 2.5,
+      },
+    ]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

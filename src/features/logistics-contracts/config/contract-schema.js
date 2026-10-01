@@ -18,6 +18,27 @@ const paymentTermSchema = z.object({
   paymentType: z.enum(['TT', 'LC']).optional(),
 });
 
+const lineSchema = z.object({
+  id: z.string(),
+  description: z
+    .string()
+    .trim()
+    .min(1, 'Vui lòng nhập mô tả hàng hóa')
+    .max(500, 'Tối đa 500 ký tự'),
+  hsCode: z.string().trim().max(20, 'HS code tối đa 20 ký tự'),
+  quantity: z
+    .number({ error: 'Vui lòng nhập số lượng' })
+    .positive('Số lượng phải lớn hơn 0'),
+  unit: z
+    .string()
+    .trim()
+    .min(1, 'Vui lòng nhập đơn vị')
+    .max(20, 'Đơn vị tối đa 20 ký tự'),
+  unitPrice: z
+    .number({ error: 'Vui lòng nhập đơn giá' })
+    .nonnegative('Đơn giá không được âm'),
+});
+
 const partySchema = z.object({
   kind: z.enum([
     '',
@@ -112,6 +133,7 @@ export const contractSchema = z
     }),
     consignee: partySchema,
     notifyParty: partySchema,
+    lines: z.array(lineSchema).default([]),
   })
   .refine(
     (values) =>

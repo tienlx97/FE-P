@@ -229,11 +229,16 @@ function buildBuyerPayload(values, buyerExtraFieldRows) {
 
 /**
  * @param {import('../types/index.js').ContractFormValues} values
- * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string, paymentType?: import('../types/index.js').PaymentMethod }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
+ * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string, paymentType?: import('../types/index.js').PaymentMethod }[], lines?: { id: string, description: string, hsCode: string, quantity: number, unit: string, unitPrice: number }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
  */
 function buildContractBody(
   values,
-  { paymentTerms, sellerExtraFieldRows = [], buyerExtraFieldRows = [] },
+  {
+    paymentTerms,
+    lines = [],
+    sellerExtraFieldRows = [],
+    buyerExtraFieldRows = [],
+  },
 ) {
   return {
     ContractNumber: values.contractNumber,
@@ -262,6 +267,16 @@ function buildContractBody(
       PaymentCondition: term.paymentCondition,
       PaymentType: term.paymentType ?? 'TT',
     })),
+    // Whole list; a line keeps its Id so shipments referring to it stay
+    // valid (dropping one a shipment carries → 409).
+    Lines: lines.map((line) => ({
+      Id: line.id || null,
+      Description: line.description,
+      HsCode: line.hsCode || null,
+      Quantity: line.quantity,
+      Unit: line.unit,
+      UnitPrice: line.unitPrice,
+    })),
     BankIds: values.bankIds,
     SellerSigned: values.sellerSigned,
     BuyerSigned: values.buyerSigned,
@@ -272,7 +287,7 @@ function buildContractBody(
 
 /**
  * @param {import('../types/index.js').ContractFormValues} values
- * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string, paymentType?: import('../types/index.js').PaymentMethod }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
+ * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string, paymentType?: import('../types/index.js').PaymentMethod }[], lines?: { id: string, description: string, hsCode: string, quantity: number, unit: string, unitPrice: number }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
  * @returns {Promise<{ success: true, contract: import('../types/index.js').Contract } | { success: false, message: string, conflict: boolean }>}
  */
 export async function createContract(values, extra) {
@@ -299,7 +314,7 @@ export async function createContract(values, extra) {
 /**
  * @param {string} contractId
  * @param {import('../types/index.js').ContractFormValues} values
- * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string, paymentType?: import('../types/index.js').PaymentMethod }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
+ * @param {{ paymentTerms: { paymentRatioPercent: number, paymentCondition: string, paymentType?: import('../types/index.js').PaymentMethod }[], lines?: { id: string, description: string, hsCode: string, quantity: number, unit: string, unitPrice: number }[], version?: number, sellerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[], buyerExtraFieldRows?: import('../types/index.js').ExtraFieldRow[] }} extra
  * @returns {Promise<{ success: true, contract: import('../types/index.js').Contract } | { success: false, message: string, conflict: boolean }>}
  */
 export async function updateContract(contractId, values, extra) {

@@ -39,6 +39,7 @@ import {
 import { withSavedOption } from '../config/place-options.js';
 import { BuyerFields } from './buyer-fields.jsx';
 import { ContractDrawerPaymentTerms } from './contract-drawer-payment-terms.jsx';
+import { ContractLinesFields } from './contract-lines-fields.jsx';
 import { ContractPartyContactFields } from './contract-party-contact-fields.jsx';
 import { QuickCreateCountryDialog } from './quick-create-country-dialog.jsx';
 import { QuickCreatePortDialog } from './quick-create-port-dialog.jsx';
@@ -110,6 +111,7 @@ export function ContractDrawerProfileFields({
     selectedSeller,
     addSellerBankAccount,
     paymentTermRows,
+    lineRows,
     submitError,
     isCheckingContractNumber,
   } = form;
@@ -547,8 +549,31 @@ export function ContractDrawerProfileFields({
           />
         </MetaFormSection>
 
+        <MetaFormSection
+          index={5}
+          title="Danh mục hàng hóa"
+          action={
+            <MetaTintButton
+              label="Thêm dòng hàng"
+              icon={<Icon icon={CirclePlus} size="sm" />}
+              type="button"
+              onClick={lineRows.addRow}
+            />
+          }
+        >
+          <ContractLinesFields
+            rows={lineRows.rows}
+            total={lineRows.total}
+            contractValue={values.contractValue}
+            currency={values.currency}
+            status={fieldStatuses.lines}
+            onRemoveRow={lineRows.removeRow}
+            onUpdateRowField={lineRows.updateRowField}
+          />
+        </MetaFormSection>
+
         <RichTextNoteField
-          label="5. Quy chuẩn đóng gói & Ghi chú vận hành"
+          label="6. Quy chuẩn đóng gói & Ghi chú vận hành"
           value={values.note}
           onChange={(value) => setField('note', value)}
           placeholder="Nhập quy chuẩn đóng gói, chất lượng hoặc ghi chú hợp đồng..."

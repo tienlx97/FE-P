@@ -16,6 +16,10 @@ import {
 } from '../config/party-kinds.js';
 import { dedupePlacesByName, portOption } from '../config/place-options.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
+import {
+  contractLineRowsFrom,
+  useContractLineRows,
+} from './use-contract-line-rows.js';
 import { useContractNumberExistsQuery } from './use-contract-number-exists-query.js';
 import {
   useCreateContractMutation,
@@ -213,6 +217,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
         }))
       : undefined,
   );
+  const lineRows = useContractLineRows(contractLineRowsFrom(contract?.lines));
   const sellerExtraFieldRows = useExtraFieldRows(
     (contract?.seller.extraFields ?? []).map((field) => ({
       rowKey: generateRowKey(),
@@ -231,6 +236,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
   const draftFingerprint = JSON.stringify({
     values,
     paymentTerms: paymentTermRows.rows,
+    lines: lineRows.rows,
     sellerExtras: sellerExtraFieldRows.rows,
     buyerExtras: buyerExtraFieldRows.rows,
   });
@@ -460,6 +466,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
           }))
         : [],
     );
+    lineRows.setRows(contractLineRowsFrom(contract?.lines));
     sellerExtraFieldRows.setRows(
       (contract?.seller.extraFields ?? []).map((field) => ({
         rowKey: generateRowKey(),
@@ -490,6 +497,14 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
         paymentCondition: row.paymentCondition,
         paymentType: row.paymentType ?? 'TT',
       })),
+      lines: lineRows.rows.map((row) => ({
+        id: row.id,
+        description: row.description,
+        hsCode: row.hsCode,
+        quantity: row.quantity,
+        unit: row.unit,
+        unitPrice: row.unitPrice,
+      })),
     };
 
     const result = contractSchema.safeParse(candidate);
@@ -513,6 +528,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
 
     const extra = {
       paymentTerms: result.data.paymentTerms,
+      lines: result.data.lines,
       sellerExtraFieldRows: sellerExtraFieldRows.rows,
       buyerExtraFieldRows: buyerExtraFieldRows.rows,
     };
@@ -611,6 +627,7 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     selectedSeller,
     addSellerBankAccount,
     paymentTermRows,
+    lineRows,
     sellerExtraFieldRows,
     buyerExtraFieldRows,
     submitError,
