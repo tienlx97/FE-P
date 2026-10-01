@@ -7,6 +7,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 
+import { formatQuantity } from '../config/currencies.js';
 import {
   consigneeKindOptions,
   notifyPartyKindOptions,
@@ -96,7 +97,7 @@ export function ShipmentGoodsAndPartiesFields({
             <FormattedNumberTextInput
               key={line.id}
               label={`${line.description}${line.hsCode ? ` · HS ${line.hsCode}` : ''}`}
-              description={`Hợp đồng: ${line.quantity.toLocaleString('vi-VN')} ${line.unit}`}
+              description={`Hợp đồng: ${formatQuantity(line.quantity)} ${line.unit}`}
               value={goodsLines[line.id]}
               onChange={(value) => onGoodsLineChange(line.id, value)}
               units={line.unit}

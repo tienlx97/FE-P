@@ -89,3 +89,20 @@ export const paymentMethodOptions = [
   { value: 'TT', label: 'T/T' },
   { value: 'LC', label: 'L/C' },
 ];
+
+/** "T/T" / "L/C"; empty for a term without a stored type (commission).
+ * @param {import('../types/index.js').PaymentMethod | null | undefined} type */
+export function labelForPaymentMethod(type) {
+  return (
+    paymentMethodOptions.find((option) => option.value === type)?.label ?? ''
+  );
+}
+
+/** One payment term as "30% L/C · <condition>".
+ * @param {import('../types/index.js').PaymentTerm} term */
+export function describePaymentTerm(term) {
+  const method = labelForPaymentMethod(term.paymentType);
+  return [`${term.paymentRatioPercent}%`, method, term.paymentCondition]
+    .filter(Boolean)
+    .join(' ');
+}

@@ -16065,3 +16065,19 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Payload test lives in `hooks/use-shipment-form.test.js`, because an `api` test importing `hooks` breaks the layer rule.
 - Browser QA was read-only on the real shipment 26KCT34/LOT-01: the section rendered, the override card toggled, and the form was discarded with no PUT. A save was not exercised on real data. The payload is covered by the unit test and BE-P integration tests.
 - `./harness/verify.sh` passed: `harness/runs/20261001-084743-1355/`.
+
+## 2026-10-01 — Display screens for the contract review data (task 1.4)
+
+- `feat/wire-contract-review-backend` merged into main (`28c7cad`, not pushed). Display polish on `feat/contract-review-display`:
+  - The contract list's "Đợt thanh toán" column and its export show T/T or L/C.
+  - The overview's milestones read "Đợt 1 (70%) · T/T".
+  - The shipment overview shows Consignee / Notify with their origin, plus the carried goods lines.
+  - Quantities use en-US separators (they were "9.000" next to "13,500.00").
+- Browser QA (tab still hidden, so DOM reads only):
+  - Seeded `[DRAFT] 11.09.26` through the API with "TO ORDER OF Vietcombank" / a named notify / one L/C term / two goods lines.
+  - Checked the list column (toggled it on and back off afterwards), the overview cards and all 6 contract tabs.
+  - For shipment 26KCT34/LOT-01, augmented the GET response in the page's `fetch` only (nothing written). Checked the overview, the edit-form prefill (closed without saving) and the 4 tabs.
+  - Checked the shipment and commission lists; dev has 0 commissions, which the API confirms.
+  - Restored the draft (version 12).
+- Observed: opening a contract or shipment URL directly in the hidden tab sometimes rendered only the shell with no API calls; client-side navigation rendered fine. This was not reproduced in a visible tab.
+- `./harness/verify.sh` passed: `harness/runs/20261001-090129-530/`.

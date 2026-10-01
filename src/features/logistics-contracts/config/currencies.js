@@ -50,3 +50,18 @@ export function formatVndAmount(value) {
 
   return `${VND_AMOUNT_FORMATTER.format(value)} đ`;
 }
+
+const QUANTITY_FORMATTER = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 3,
+});
+
+/**
+ * Goods quantity ("180", "9,000", "120.5") — same separators as
+ * `formatMoney`, up to the 3 decimals the backend stores.
+ * @param {number | null | undefined} value
+ */
+export function formatQuantity(value) {
+  return value == null || !Number.isFinite(value)
+    ? '—'
+    : QUANTITY_FORMATTER.format(value);
+}
