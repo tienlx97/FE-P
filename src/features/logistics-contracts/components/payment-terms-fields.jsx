@@ -6,6 +6,7 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
+import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
@@ -21,8 +22,10 @@ import { NumberInput } from '@/shared/components/number-input.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 
 import { formatMoney } from '../config/currencies.js';
+import { paymentMethodOptions } from '../config/party-kinds.js';
 
 const TWO_COLUMNS = { minWidth: 200, max: 2 };
+const THREE_COLUMNS = { minWidth: 160, max: 3 };
 
 const rowTones = stylex.create({
   accent: { borderColor: 'var(--color-border-emphasized)' },
@@ -91,8 +94,14 @@ function paymentTermTitle(condition, sequence) {
   return `Mốc thanh toán ${sequence}`;
 }
 
-/** @param {string} condition */
-function paymentMethod(condition) {
+/**
+ * The stored method (contract terms) wins; commission terms have none, so
+ * fall back to reading the condition text.
+ * @param {string} condition @param {import('../types/index.js').PaymentMethod} [stored]
+ */
+function paymentMethod(condition, stored) {
+  if (stored === 'LC') return 'L/C (Letter of Credit)';
+  if (stored === 'TT') return 'T/T (Telegraphic Transfer)';
   if (/l\/c|letter of credit/i.test(condition)) return 'L/C (Letter of Credit)';
   if (/t\/t|telegraphic transfer|chuyển khoản/i.test(condition)) {
     return 'T/T (Telegraphic Transfer)';
@@ -106,8 +115,8 @@ function paymentMethod(condition) {
  * toán 1" with the step's amount and delete, then Tỷ lệ (%) | Số tiền tương
  * ứng (ratio × contract value, read-only), then the trigger condition.
  * Read-only: the compact `MetaPaymentTermRow` summary (derived title,
- * ratio pill, amount, condition). The API only persists ratio and
- * condition. Wrapped in `MetaThemeProvider` because it is also used by the
+ * ratio pill, amount, condition). Contract terms also carry T/T | L/C
+ * (`hasPaymentType`); commission terms persist ratio and condition only. Wrapped in `MetaThemeProvider` because it is also used by the
  * commission form outside the Meta contract pages.
  * @param {{
  *   rows: import('../types/index.js').PaymentTermRow[],
@@ -119,7 +128,8 @@ function paymentMethod(condition) {
  *   hasAddButton?: boolean,
  *   onAddRow: () => void,
  *   onRemoveRow: (rowKey: string) => void,
- *   onUpdateRowField: (rowKey: string, field: 'paymentRatioPercent' | 'paymentCondition', value: number | string | undefined) => void,
+ *   onUpdateRowField: (rowKey: string, field: 'paymentRatioPercent' | 'paymentCondition' | 'paymentType', value: number | string | undefined) => void,
+ *   hasPaymentType?: boolean,
  * }} props
  */
 export function PaymentTermsFields({
@@ -132,6 +142,7 @@ export function PaymentTermsFields({
   onAddRow,
   onRemoveRow,
   onUpdateRowField,
+  hasPaymentType = false,
 }) {
   const hasValue =
     typeof contractValue === 'number' && !Number.isNaN(contractValue);
@@ -152,8 +163,8 @@ export function PaymentTermsFields({
                 sequence={sequence}
                 title={paymentTermTitle(condition, sequence)}
                 subtitle={
-                  condition
-                    ? `Phương thức: ${paymentMethod(condition)}`
+                  condition || row.paymentType
+                    ? `Phương thức: ${paymentMethod(condition, row.paymentType)}`
                     : undefined
                 }
                 ratioLabel={`${ratio}%`}
@@ -224,7 +235,20 @@ export function PaymentTermsFields({
                 </HStack>
               </HStack>
 
-              <Grid columns={TWO_COLUMNS} gap={3}>
+              <Grid
+                columns={hasPaymentType ? THREE_COLUMNS : TWO_COLUMNS}
+                gap={3}
+              >
+                {hasPaymentType ? (
+                  <Selector
+                    label="Hình thức"
+                    value={row.paymentType ?? 'TT'}
+                    onChange={(value) =>
+                      onUpdateRowField(row.rowKey, 'paymentType', value ?? 'TT')
+                    }
+                    options={paymentMethodOptions}
+                  />
+                ) : null}
                 <NumberInput
                   label="Tỷ lệ"
                   value={row.paymentRatioPercent}

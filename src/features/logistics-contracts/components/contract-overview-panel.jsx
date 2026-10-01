@@ -31,6 +31,7 @@ import { useCustomersQuery } from '../hooks/use-customers-query.js';
 import { usePaymentSchedulesQuery } from '../hooks/use-payment-schedules-query.js';
 import { useSellerBankAccountsById } from '../hooks/use-sellers-query.js';
 import { useShipmentsQuery } from '../hooks/use-shipments-query.js';
+import { ContractLinesCard } from './contract-lines-card.jsx';
 
 /** @param {string | null | undefined} value */
 function orDash(value) {
@@ -302,7 +303,7 @@ export function ContractOverviewPanel({
       ? {
           icon,
           label,
-          name: contact.name,
+          name: contact.displayName ?? contact.name ?? '',
           lines: [
             ...(contact.address ? [contact.address] : []),
             ...contact.extraFields.map(
@@ -552,6 +553,8 @@ export function ContractOverviewPanel({
           commission: commissionQuery.isLoading || customersQuery.isLoading,
         }}
       />
+
+      <ContractLinesCard contract={contract} />
     </VStack>
   );
 }

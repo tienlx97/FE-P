@@ -16028,3 +16028,40 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Browser QA on `/logistics/contract/{id}/shipment/{id}`: Overview issued 7 API calls with no shipment list and no cost groups; switching to Costs fetched `shipment-cost-categories`.
 - Harness gap fixed: `eslint .` failed on the orphan generated `src/shared/components/kt-xnk.js` (136 hex-colour errors); it is now in ESLint ignores. `./harness/verify.sh` passed: `harness/runs/20260930-065048-464843/`.
 - Harness gap open: `theme:build` on Linux rewrites `meta.*` headers with `/` instead of the committed `\` paths, dirtying the tree after every verify run.
+
+## 2026-09-30 — Wire contract review backend, task 1.1 (`wire-contract-review-backend`)
+
+- **Data-loss fix.** Every contract save sent `NotifyParty: null, Consignee: null`, which wiped both parties. It also sent no `PaymentType`, which turned L/C terms back into T/T. The form now loads and sends both parties and each term's type.
+- **Consignee / Notify.** New cards in "Các bên tham gia hợp đồng". The kind is chosen with a Selector ("Không có" / named / TO ORDER… / SAME AS CONSIGNEE). A name is asked only where the kind prints one. The catalog link is kept while the name is unchanged; extra fields go back untouched.
+- **T/T or L/C** can be chosen per payment term. The overview shows the B/L `displayName`.
+- The contract-number check sends `companyId`; the commission-code check sends `contractId`.
+- Browser QA on the user's running dev server (:3000 → BE :8081), on the draft contract `[DRAFT] 11.09.26`:
+  - Set consignee "TO ORDER OF Vietcombank" and notify "SAME AS CONSIGNEE", and one term to L/C. Saved and read back through the API.
+  - Saved again without touching the parties: they and the L/C term survived.
+  - Restored the draft to no parties and all T/T (version 5 → 8).
+  - Screenshots timed out (the browser renderer did not capture), so the evidence is API reads and network logs, not images.
+- Tests: API payload tests for parties, PaymentType and the dropped catalog link on rename; a schema test for the per-kind name rule; the schema fixtures gained parties. `./harness/verify.sh` passed: `harness/runs/20260930-221756-945/`.
+- Discovered: BE-P's CLAUDE.md points at `../kt-xnk`, but the FE checkout is `../FE-P`.
+
+## 2026-10-01 — Wire contract review backend, task 1.2
+
+- Contract goods lines:
+  - Form section "5. Danh mục hàng hóa" holds one card per line (description, HS code, quantity, unit, unit price, computed amount). It shows the total and its gap to the contract value.
+  - The overview's "Danh mục hàng hóa" table shows shipped and remaining quantity; an overshipped remainder is red.
+  - Lines are sent with their id, so the backend keeps them in place.
+- Browser QA on `[DRAFT] 11.09.26`:
+  - Added a line, saved, and saw it on the overview (đã xuất 0, còn lại 10).
+  - Removed it again; the draft is back to no lines.
+  - The Chrome tab was `visibilityState: hidden`, so keyboard input and screenshots did not work. Field values were set with the native value setter plus input events, which still runs React's onChange.
+- Mistake fixed before pushing: a folder-wide `prettier --write` reformatted about 50 unrelated files into the first task-1.2 commit. The commit was redone with only the task's 11 files. Harness gap: format only the touched files (e.g. `prettier --write $(git diff --name-only)`).
+- `./harness/verify.sh` passed: `harness/runs/20261001-082939-947/`.
+
+## 2026-10-01 — Wire contract review backend, task 1.3
+
+- The shipment form gained "4. Hàng hóa & bên nhận trên B/L":
+  - A quantity per contract goods line; several lines means several HS codes. Only positive quantities are sent as `Lines`.
+  - Consignee / Notify "tùy chỉnh riêng cho lô này": off shows the contract's current party and sends null (follow the contract); on edits the shipment's own party.
+  - A shipment the backend reports as overridden (including parties frozen at B/L issue) loads as a custom party.
+- Payload test lives in `hooks/use-shipment-form.test.js`, because an `api` test importing `hooks` breaks the layer rule.
+- Browser QA was read-only on the real shipment 26KCT34/LOT-01: the section rendered, the override card toggled, and the form was discarded with no PUT. A save was not exercised on real data. The payload is covered by the unit test and BE-P integration tests.
+- `./harness/verify.sh` passed: `harness/runs/20261001-084743-1355/`.

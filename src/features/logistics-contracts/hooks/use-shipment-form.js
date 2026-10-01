@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
+import { partyFormValueFrom } from '../config/party-kinds.js';
 import { dedupePlacesByName, portOption } from '../config/place-options.js';
 import { blankTransshipmentLeg } from '../config/shipment-documents.js';
 import { splitSiCutoff } from '../config/shipment-operational-details.js';
@@ -34,6 +35,9 @@ import { useSuppliersQuery } from './use-suppliers-query.js';
  */
 function emptyValues(contract = null) {
   return {
+    goodsLines: {},
+    consigneeOverride: null,
+    notifyPartyOverride: null,
     supplierCustomerId: '',
     customsBrokerIds: [],
     truckingIds: [],
@@ -96,6 +100,18 @@ export function valuesFromShipment(shipment) {
   const siCutoff = splitSiCutoff(details?.siCutoff);
   const cyCutoff = splitSiCutoff(details?.cyCutoff);
   return {
+    goodsLines: Object.fromEntries(
+      (shipment.lines ?? []).map((line) => [
+        line.contractLineId,
+        line.quantity,
+      ]),
+    ),
+    consigneeOverride: shipment.consigneeOverridden
+      ? partyFormValueFrom(shipment.consignee)
+      : null,
+    notifyPartyOverride: shipment.notifyPartyOverridden
+      ? partyFormValueFrom(shipment.notifyParty)
+      : null,
     supplierCustomerId: shipment.supplierCustomerId,
     customsBrokerIds: (shipment.serviceProviders ?? [])
       .filter((provider) => provider.role === 'CustomsBroker')

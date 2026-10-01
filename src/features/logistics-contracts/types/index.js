@@ -31,6 +31,68 @@ export {};
  * @property {string} id
  * @property {number} paymentRatioPercent
  * @property {string} paymentCondition
+ * @property {PaymentMethod | null} [paymentType] - contract installments only ("TT" / "LC"); `null` on commission terms
+ */
+
+/** @typedef {'TT' | 'LC'} PaymentMethod */
+
+/**
+ * How much of a contract goods line a shipment carries (BE-P `ShipmentLine`).
+ * @typedef {Object} ShipmentLine
+ * @property {string} contractLineId
+ * @property {string} description
+ * @property {string | null} hsCode
+ * @property {string} unit
+ * @property {number} quantity
+ */
+
+/**
+ * One contract goods line ("danh mục hàng hóa", BE-P `ContractLine`).
+ * `amount` = quantity × unitPrice (contract currency). `shippedQuantity` /
+ * `remainingQuantity` are filled only by GET contract by id.
+ * @typedef {Object} ContractLine
+ * @property {string} id
+ * @property {number} sequence
+ * @property {string} description
+ * @property {string | null} hsCode
+ * @property {number} quantity
+ * @property {string} unit
+ * @property {number} unitPrice
+ * @property {number} amount
+ * @property {number | null} [shippedQuantity]
+ * @property {number | null} [remainingQuantity]
+ */
+
+/**
+ * Editable goods line in the contract form; `id` '' = new line.
+ * @typedef {Object} ContractLineRow
+ * @property {string} rowKey
+ * @property {string} id
+ * @property {string} description
+ * @property {string} hsCode
+ * @property {number | undefined} quantity
+ * @property {string} unit
+ * @property {number | undefined} unitPrice
+ */
+
+/**
+ * How a Consignee / Notify Party reads on the B/L (BE-P `PartyKind`).
+ * Consignee: Named | ToOrder | ToOrderOfShipper | ToOrderOfBank; Notify:
+ * Named | SameAsConsignee.
+ * @typedef {'Named' | 'ToOrder' | 'ToOrderOfShipper' | 'ToOrderOfBank' | 'SameAsConsignee'} PartyKind
+ */
+
+/**
+ * Consignee / Notify Party in the contract form. `kind` '' = none.
+ * `loadedName` remembers the name the catalog link was loaded with;
+ * `extraFields` are carried back unchanged (not edited here).
+ * @typedef {Object} PartyFormValue
+ * @property {PartyKind | ''} kind
+ * @property {string} name
+ * @property {string} address
+ * @property {string} sourceContactId
+ * @property {string} loadedName
+ * @property {ExtraField[]} extraFields
  */
 
 /**
@@ -188,14 +250,16 @@ export {};
 
 /**
  * "Bên thông báo"/"Đại lý nhận hàng" contact snapshot — `NotifyParty`/
- * `Consignee` on the wire (`ContractsController.MapToPartyContactResponse`,
- * BE-kt-xnk). Read-only in this app; there is no form for creating/editing
- * one yet.
+ * `Consignee` on the wire (`PartyContactMapper`, BE-P). `displayName` is
+ * the B/L wording (e.g. "TO ORDER OF Vietcombank"); `name` is null for a
+ * kind that takes none.
  * @typedef {Object} ContractPartyContact
- * @property {string} name
+ * @property {string | null} name
  * @property {string | null} address
  * @property {string | null} sourceContactId
  * @property {ExtraField[]} extraFields
+ * @property {PartyKind} [kind]
+ * @property {string} [displayName]
  */
 
 /**
@@ -219,10 +283,12 @@ export {};
  * @property {string} companyId - the company the contract belongs to (permissions are scoped by company, not branch)
  * @property {ContractSeller} seller
  * @property {Buyer} buyer - was `partyA`
- * @property {ContractPartyContact | null} notifyParty - "Bên thông báo"; not editable from this app yet, but BE-kt-xnk already returns it — read-only display only
- * @property {ContractPartyContact | null} consignee - "Đại lý nhận hàng"; not editable from this app yet, but BE-kt-xnk already returns it — read-only display only
+ * @property {ContractPartyContact | null} notifyParty - "Notify Party"
+ * @property {ContractPartyContact | null} consignee - "Consignee" (người nhận hàng trên B/L)
  * @property {string | null} note
  * @property {PaymentTerm[]} paymentTerms
+ * @property {ContractLine[]} [lines] - goods lines, in order
+ * @property {number} [linesTotal] - Σ line amounts; may differ from contractValue
  * @property {string[]} bankIds
  * @property {boolean} sellerSigned - "Bên bán ký"
  * @property {boolean} buyerSigned - "Bên mua ký"
@@ -437,6 +503,7 @@ export {};
  * @property {string} rowKey
  * @property {number | undefined} paymentRatioPercent
  * @property {string} paymentCondition
+ * @property {PaymentMethod} [paymentType] - contract rows only; defaults to "TT"
  */
 
 /**
@@ -541,6 +608,8 @@ export {};
  * @property {boolean} sellerSigned - "Bên bán ký"
  * @property {boolean} buyerSigned - "Bên mua ký"
  * @property {ContractStatus | ''} status
+ * @property {PartyFormValue} consignee
+ * @property {PartyFormValue} notifyParty
  */
 
 /**
@@ -723,6 +792,11 @@ export {};
  * @property {string | null} placeOfDischarge - this shipment's own copy, same default-once pattern as `placeOfLoading`
  * @property {string | null} placeOfDelivery - "Nơi giao hàng", this shipment's own copy of the contract's (defaulted once, editable)
  * @property {string | null} [note] - "Ghi chú", Markdown from the rich text editor
+ * @property {ShipmentLine[]} [lines] - contract goods lines carried (several HS codes allowed)
+ * @property {ContractPartyContact | null} [consignee] - effective: the shipment's own when `consigneeOverridden`, else the contract's
+ * @property {ContractPartyContact | null} [notifyParty] - effective, same rule
+ * @property {boolean} [consigneeOverridden]
+ * @property {boolean} [notifyPartyOverridden]
  * @property {TransshipmentLeg[]} [transshipmentLegs] - ordered ports and connecting vessel details
  * @property {ShipmentType} type
  * @property {string} name
@@ -1050,6 +1124,9 @@ export {};
 
 /**
  * @typedef {Object} ShipmentFormValues
+ * @property {Record<string, number | undefined>} goodsLines - quantity carried per contract line id
+ * @property {PartyFormValue | null} consigneeOverride - null = follow the contract
+ * @property {PartyFormValue | null} notifyPartyOverride - null = follow the contract
  * @property {string} supplierCustomerId
  * @property {string[]} customsBrokerIds - "Đại lý hải quan", several allowed
  * @property {string[]} truckingIds - "Đơn vị trucking", several allowed

@@ -132,6 +132,7 @@ export function useCommissionForm({
   const commissionCodeExistsQuery = useCommissionCodeExistsQuery({
     code: values.code,
     excludeCommissionId: commission?.id,
+    contractId,
   });
 
   /**

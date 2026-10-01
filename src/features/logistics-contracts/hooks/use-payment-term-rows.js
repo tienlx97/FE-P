@@ -10,6 +10,7 @@ function emptyRow() {
     rowKey: generateRowKey(),
     paymentRatioPercent: undefined,
     paymentCondition: '',
+    paymentType: 'TT',
   };
 }
 
@@ -36,7 +37,7 @@ export function usePaymentTermRows(initialRows = []) {
 
   /**
    * @param {string} rowKey
-   * @param {'paymentRatioPercent' | 'paymentCondition'} field
+   * @param {'paymentRatioPercent' | 'paymentCondition' | 'paymentType'} field
    * @param {number | string | undefined} value
    */
   function updateRowField(rowKey, field, value) {

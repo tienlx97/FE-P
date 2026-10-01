@@ -127,6 +127,12 @@ export const shipmentSchema = z
     customsDeclarationDate: z.string(),
     customsInspected: z.boolean(),
     costLines: z.array(shipmentCostLineSchema),
+    goodsLines: z.record(
+      z.string(),
+      z.number().nonnegative('Số lượng không được âm').optional(),
+    ),
+    consigneeOverride: z.any().nullable(),
+    notifyPartyOverride: z.any().nullable(),
     status: z.enum(SHIPMENT_STATUSES, { error: 'Vui lòng chọn tình trạng' }),
     invoiceNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
     voyageNumber: z.string().trim().max(50, 'Tối đa 50 ký tự'),

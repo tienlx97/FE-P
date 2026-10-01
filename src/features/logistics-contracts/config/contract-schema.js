@@ -15,6 +15,44 @@ const paymentTermSchema = z.object({
     .string()
     .trim()
     .min(1, 'Vui lòng nhập điều kiện thanh toán'),
+  paymentType: z.enum(['TT', 'LC']).optional(),
+});
+
+const lineSchema = z.object({
+  id: z.string(),
+  description: z
+    .string()
+    .trim()
+    .min(1, 'Vui lòng nhập mô tả hàng hóa')
+    .max(500, 'Tối đa 500 ký tự'),
+  hsCode: z.string().trim().max(20, 'HS code tối đa 20 ký tự'),
+  quantity: z
+    .number({ error: 'Vui lòng nhập số lượng' })
+    .positive('Số lượng phải lớn hơn 0'),
+  unit: z
+    .string()
+    .trim()
+    .min(1, 'Vui lòng nhập đơn vị')
+    .max(20, 'Đơn vị tối đa 20 ký tự'),
+  unitPrice: z
+    .number({ error: 'Vui lòng nhập đơn giá' })
+    .nonnegative('Đơn giá không được âm'),
+});
+
+const partySchema = z.object({
+  kind: z.enum([
+    '',
+    'Named',
+    'ToOrder',
+    'ToOrderOfShipper',
+    'ToOrderOfBank',
+    'SameAsConsignee',
+  ]),
+  name: z.string().trim().max(200, 'Tối đa 200 ký tự'),
+  address: z.string().trim().max(500, 'Tối đa 500 ký tự'),
+  sourceContactId: z.string(),
+  loadedName: z.string(),
+  extraFields: z.array(z.object({ key: z.string(), value: z.string() })),
 });
 
 /**
@@ -93,7 +131,22 @@ export const contractSchema = z
     status: z.enum(CONTRACT_STATUSES, {
       error: 'Vui lòng chọn trạng thái hợp đồng',
     }),
+    consignee: partySchema,
+    notifyParty: partySchema,
+    lines: z.array(lineSchema).default([]),
   })
+  .refine(
+    (values) =>
+      !['Named', 'ToOrderOfBank'].includes(values.consignee.kind) ||
+      values.consignee.name.trim().length > 0,
+    { message: 'Vui lòng nhập tên', path: ['consignee', 'name'] },
+  )
+  .refine(
+    (values) =>
+      values.notifyParty.kind !== 'Named' ||
+      values.notifyParty.name.trim().length > 0,
+    { message: 'Vui lòng nhập tên', path: ['notifyParty', 'name'] },
+  )
   .refine((values) => Boolean(values.sourceSellerId), {
     message: 'Vui lòng chọn bên bán, hoặc bấm "Thêm bên bán" để tạo mới',
     path: ['sourceSellerId'],
