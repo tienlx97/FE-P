@@ -14,7 +14,7 @@
     "structure": "depcruise src --config harness/structure.rules.cjs",
     "test": "node --import ./harness/register-node-alias.mjs --test",
     "test:harness": "node --test harness/tests/*.test.cjs",
-    "theme:build": "astryx theme build src/shared/components/custom/meta/theme.js -o src/shared/components/custom/meta/theme.built.css",
+    "theme:build": "astryx theme build src/shared/components/custom/meta/theme.js -o src/shared/components/custom/meta/theme.built.css && node scripts/normalize-theme-build.mjs",
     "typecheck": "tsc --noEmit -p jsconfig.json",
     "verify": "./harness/verify.sh",
     "verify:quality": "node harness/checks/quality.mjs"
