@@ -35,7 +35,11 @@ import {
 import { RichTextNote } from '@/shared/components/rich-text-note.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
-import { formatMoney, formatVndAmount } from '../config/currencies.js';
+import {
+  formatMoney,
+  formatQuantity,
+  formatVndAmount,
+} from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
 import {
@@ -100,6 +104,14 @@ function describeCutoff(cutoff) {
     label: `${time} • ${formatDisplayDate(date)}${isClosed ? ' (Đã đóng)' : ''}`,
     isClosed,
   };
+}
+
+/**
+ * B/L wording of a party, or "Không có".
+ * @param {import('../types/index.js').ContractPartyContact | null | undefined} party
+ */
+function partyText(party) {
+  return party ? (party.displayName ?? party.name ?? '—') : 'Không có';
 }
 
 /**
@@ -472,7 +484,47 @@ export function ShipmentOverviewPanel({
             }
             caption={shipment.placeOfLoading ?? undefined}
           />
+          <MetaShipmentField
+            label="Consignee"
+            value={partyText(shipment.consignee)}
+            caption={
+              shipment.consigneeOverridden
+                ? 'Riêng cho lô này'
+                : 'Theo hợp đồng'
+            }
+          />
+          <MetaShipmentField
+            label="Notify party"
+            value={partyText(shipment.notifyParty)}
+            caption={
+              shipment.notifyPartyOverridden
+                ? 'Riêng cho lô này'
+                : 'Theo hợp đồng'
+            }
+          />
         </Grid>
+
+        {(shipment.lines ?? []).length > 0 ? (
+          <VStack gap={2} hAlign="stretch">
+            <Text weight="bold">HÀNG HÓA THEO HỢP ĐỒNG</Text>
+            {(shipment.lines ?? []).map((line) => (
+              <HStack
+                key={line.contractLineId}
+                hAlign="between"
+                vAlign="center"
+                gap={3}
+              >
+                <Text>
+                  {line.description}
+                  {line.hsCode ? ` · HS ${line.hsCode}` : ''}
+                </Text>
+                <Text weight="semibold" hasTabularNumbers>
+                  {formatQuantity(line.quantity)} {line.unit}
+                </Text>
+              </HStack>
+            ))}
+          </VStack>
+        ) : null}
 
         <VStack gap={4} hAlign="stretch">
           <HStack hAlign="between" vAlign="center" gap={3}>

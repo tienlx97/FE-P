@@ -9,16 +9,11 @@ import { Package } from 'lucide-react';
 import { MetaShipmentSection } from '@/shared/components/custom/meta/index.js';
 import { TanStackDataTable } from '@/shared/components/tanstack-data-table.jsx';
 
-import { formatMoney } from '../config/currencies.js';
+import { formatMoney, formatQuantity } from '../config/currencies.js';
 
 const styles = stylex.create({
   overshipped: { color: colorVars['--color-error'] },
 });
-
-/** @param {number | null | undefined} value */
-function formatQuantity(value) {
-  return value == null ? '—' : value.toLocaleString('vi-VN');
-}
 
 /**
  * "Danh mục hàng hóa" on the contract overview: every goods line with the

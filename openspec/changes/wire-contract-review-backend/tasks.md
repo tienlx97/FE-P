@@ -18,3 +18,9 @@
       `harness/runs/20261001-084743-1355/`. Browser QA (read-only, real
       shipment 26KCT34/LOT-01): section rendered, override card toggled on,
       closed with "Bỏ thay đổi" — no PUT sent.
+- [x] 1.4 Display screens: T/T | L/C on the contract list "Đợt thanh toán"
+      column ("2 đợt · T/T + L/C") and export, on the overview's payment
+      milestones; shipment overview shows Consignee / Notify (with "Theo
+      hợp đồng" / "Riêng cho lô này") and carried goods lines; quantities use
+      the money formatter's separators. `./harness/verify.sh` PASSED:
+      `harness/runs/20261001-090129-530/`.

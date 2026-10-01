@@ -52,6 +52,10 @@ import {
   VIEW_PRESETS,
 } from '../config/contracts-table.js';
 import { CURRENCY_CODES, formatMoney } from '../config/currencies.js';
+import {
+  describePaymentTerm,
+  labelForPaymentMethod,
+} from '../config/party-kinds.js';
 import { useContractPrivateInfosListQuery } from '../hooks/use-contract-private-infos-list-query.js';
 import {
   useContractListTabCounts,
@@ -122,9 +126,15 @@ function formatPaymentTerms(terms) {
     return '—';
   }
   if (terms.length === 1) {
-    return `${terms[0].paymentRatioPercent}% ${terms[0].paymentCondition}`;
+    return describePaymentTerm(terms[0]);
   }
-  return `${terms.length} đợt`;
+  // "2 đợt · T/T + L/C" — which methods the installments use.
+  const methods = [
+    ...new Set(terms.map((term) => labelForPaymentMethod(term.paymentType))),
+  ].filter(Boolean);
+  return methods.length > 0
+    ? `${terms.length} đợt · ${methods.join(' + ')}`
+    : `${terms.length} đợt`;
 }
 
 /**
@@ -1179,11 +1189,7 @@ export function ContractsList({
       width: pixel(160),
       renderCell: (contract) => formatPaymentTerms(contract.paymentTerms),
       exportValue: (contract) =>
-        contract.paymentTerms
-          .map(
-            (term) => `${term.paymentRatioPercent}% ${term.paymentCondition}`,
-          )
-          .join('; '),
+        contract.paymentTerms.map(describePaymentTerm).join('; '),
     },
     {
       key: 'bankIds',

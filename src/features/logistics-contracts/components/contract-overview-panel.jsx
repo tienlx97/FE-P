@@ -23,6 +23,7 @@ import {
 } from '../config/annex-settlement.js';
 import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
+import { labelForPaymentMethod } from '../config/party-kinds.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
@@ -449,7 +450,12 @@ export function ContractOverviewPanel({
       : {
           title: `${contract.paymentTerms.length} MỐC ĐIỀU KHOẢN THANH TOÁN HỢP ĐỒNG`,
           items: contract.paymentTerms.map((term, index) => ({
-            label: `Đợt ${index + 1} (${term.paymentRatioPercent}%)`,
+            label: [
+              `Đợt ${index + 1} (${term.paymentRatioPercent}%)`,
+              labelForPaymentMethod(term.paymentType),
+            ]
+              .filter(Boolean)
+              .join(' · '),
             amount: formatMoney(
               (term.paymentRatioPercent / 100) * settlementValue,
               contract.currency,
