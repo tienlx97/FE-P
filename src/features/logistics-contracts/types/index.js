@@ -37,6 +37,16 @@ export {};
 /** @typedef {'TT' | 'LC'} PaymentMethod */
 
 /**
+ * How much of a contract goods line a shipment carries (BE-P `ShipmentLine`).
+ * @typedef {Object} ShipmentLine
+ * @property {string} contractLineId
+ * @property {string} description
+ * @property {string | null} hsCode
+ * @property {string} unit
+ * @property {number} quantity
+ */
+
+/**
  * One contract goods line ("danh mục hàng hóa", BE-P `ContractLine`).
  * `amount` = quantity × unitPrice (contract currency). `shippedQuantity` /
  * `remainingQuantity` are filled only by GET contract by id.
@@ -782,6 +792,11 @@ export {};
  * @property {string | null} placeOfDischarge - this shipment's own copy, same default-once pattern as `placeOfLoading`
  * @property {string | null} placeOfDelivery - "Nơi giao hàng", this shipment's own copy of the contract's (defaulted once, editable)
  * @property {string | null} [note] - "Ghi chú", Markdown from the rich text editor
+ * @property {ShipmentLine[]} [lines] - contract goods lines carried (several HS codes allowed)
+ * @property {ContractPartyContact | null} [consignee] - effective: the shipment's own when `consigneeOverridden`, else the contract's
+ * @property {ContractPartyContact | null} [notifyParty] - effective, same rule
+ * @property {boolean} [consigneeOverridden]
+ * @property {boolean} [notifyPartyOverridden]
  * @property {TransshipmentLeg[]} [transshipmentLegs] - ordered ports and connecting vessel details
  * @property {ShipmentType} type
  * @property {string} name
@@ -1109,6 +1124,9 @@ export {};
 
 /**
  * @typedef {Object} ShipmentFormValues
+ * @property {Record<string, number | undefined>} goodsLines - quantity carried per contract line id
+ * @property {PartyFormValue | null} consigneeOverride - null = follow the contract
+ * @property {PartyFormValue | null} notifyPartyOverride - null = follow the contract
  * @property {string} supplierCustomerId
  * @property {string[]} customsBrokerIds - "Đại lý hải quan", several allowed
  * @property {string[]} truckingIds - "Đơn vị trucking", several allowed

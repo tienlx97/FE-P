@@ -16055,3 +16055,13 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
   - The Chrome tab was `visibilityState: hidden`, so keyboard input and screenshots did not work. Field values were set with the native value setter plus input events, which still runs React's onChange.
 - Mistake fixed before pushing: a folder-wide `prettier --write` reformatted about 50 unrelated files into the first task-1.2 commit. The commit was redone with only the task's 11 files. Harness gap: format only the touched files (e.g. `prettier --write $(git diff --name-only)`).
 - `./harness/verify.sh` passed: `harness/runs/20261001-082939-947/`.
+
+## 2026-10-01 — Wire contract review backend, task 1.3
+
+- The shipment form gained "4. Hàng hóa & bên nhận trên B/L":
+  - A quantity per contract goods line; several lines means several HS codes. Only positive quantities are sent as `Lines`.
+  - Consignee / Notify "tùy chỉnh riêng cho lô này": off shows the contract's current party and sends null (follow the contract); on edits the shipment's own party.
+  - A shipment the backend reports as overridden (including parties frozen at B/L issue) loads as a custom party.
+- Payload test lives in `hooks/use-shipment-form.test.js`, because an `api` test importing `hooks` breaks the layer rule.
+- Browser QA was read-only on the real shipment 26KCT34/LOT-01: the section rendered, the override card toggled, and the form was discarded with no PUT. A save was not exercised on real data. The payload is covered by the unit test and BE-P integration tests.
+- `./harness/verify.sh` passed: `harness/runs/20261001-084743-1355/`.

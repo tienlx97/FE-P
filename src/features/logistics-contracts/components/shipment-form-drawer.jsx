@@ -86,6 +86,7 @@ import { useShipmentForm } from '../hooks/use-shipment-form.js';
 import { QuickCreatePortDialog } from './quick-create-port-dialog.jsx';
 import { QuickCreateSupplierDialog } from './quick-create-supplier-dialog.jsx';
 import { ShipmentFreeTimeFields } from './shipment-free-time-fields.jsx';
+import { ShipmentGoodsAndPartiesFields } from './shipment-goods-and-parties-fields.jsx';
 
 // Stitch "Chỉnh sửa Shipment" (project 6957224641630765183, screen
 // cab96b6c…) drawer width.
@@ -1163,6 +1164,31 @@ export function ShipmentFormDrawer({
                     isBoxed
                     isTitleUppercase={false}
                     index={4}
+                    title="Hàng hóa & bên nhận trên B/L"
+                    meta="Số lượng theo dòng hàng hợp đồng · Consignee / Notify"
+                  >
+                    <ShipmentGoodsAndPartiesFields
+                      contract={contract}
+                      goodsLines={values.goodsLines}
+                      onGoodsLineChange={(lineId, quantity) =>
+                        setField('goodsLines', {
+                          ...values.goodsLines,
+                          [lineId]: quantity,
+                        })
+                      }
+                      consigneeOverride={values.consigneeOverride}
+                      notifyPartyOverride={values.notifyPartyOverride}
+                      onPartyOverrideChange={(role, value) =>
+                        setField(role, value)
+                      }
+                      isDisabled={isDisabled}
+                    />
+                  </MetaFormSection>
+
+                  <MetaFormSection
+                    isBoxed
+                    isTitleUppercase={false}
+                    index={5}
                     title="Ghi chú"
                     meta="Tuỳ chọn · định dạng chữ, danh sách, liên kết"
                   >

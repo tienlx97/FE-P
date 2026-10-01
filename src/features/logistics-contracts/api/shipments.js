@@ -1,5 +1,6 @@
 import { apiRequest } from '@/shared/api/api-client.js';
 
+import { partyPayload } from '../config/party-kinds.js';
 import { joinSiCutoff } from '../config/shipment-operational-details.js';
 import { freeTimeRequestBody } from '../config/shipment-schedule.js';
 
@@ -107,6 +108,35 @@ function toTransshipmentLegsRequestBody(values) {
 }
 
 /**
+ * Goods carried: one entry per contract line with a positive quantity.
+ * @param {import('../types/index.js').ShipmentFormValues} values
+ */
+function toLinesRequestBody(values) {
+  return Object.entries(values.goodsLines ?? {})
+    .filter(([, quantity]) => typeof quantity === 'number' && quantity > 0)
+    .map(([contractLineId, quantity]) => ({
+      ContractLineId: contractLineId,
+      Quantity: quantity,
+    }));
+}
+
+/**
+ * Always sent: a null party follows the contract (BE-P keeps a party frozen
+ * once the B/L is issued, and returns it as overridden).
+ * @param {import('../types/index.js').ShipmentFormValues} values
+ */
+function toPartyOverridesRequestBody(values) {
+  return {
+    Consignee: values.consigneeOverride
+      ? partyPayload(values.consigneeOverride)
+      : null,
+    NotifyParty: values.notifyPartyOverride
+      ? partyPayload(values.notifyPartyOverride)
+      : null,
+  };
+}
+
+/**
  * `QuantityUnit` is derived from `Type` on the backend now (LCL is always
  * Kiện, FCL always Cont) — never sent, on create or update.
  * @param {import('../types/index.js').ShipmentFormValues} values
@@ -114,6 +144,8 @@ function toTransshipmentLegsRequestBody(values) {
  */
 function toCreateRequestBody(values, costLines) {
   return {
+    Lines: toLinesRequestBody(values),
+    PartyOverrides: toPartyOverridesRequestBody(values),
     SupplierCustomerId: values.supplierCustomerId,
     BookingNumber: values.bookingNumber,
     BillOfLadingNumber: values.billOfLadingNumber || null,
@@ -158,6 +190,8 @@ function toCreateRequestBody(values, costLines) {
  */
 function toUpdateRequestBody(values, costLines) {
   return {
+    Lines: toLinesRequestBody(values),
+    PartyOverrides: toPartyOverridesRequestBody(values),
     SupplierCustomerId: values.supplierCustomerId,
     BookingNumber: values.bookingNumber,
     BillOfLadingNumber: values.billOfLadingNumber || null,
