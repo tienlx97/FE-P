@@ -16042,3 +16042,16 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
   - Screenshots timed out (the browser renderer did not capture), so the evidence is API reads and network logs, not images.
 - Tests: API payload tests for parties, PaymentType and the dropped catalog link on rename; a schema test for the per-kind name rule; the schema fixtures gained parties. `./harness/verify.sh` passed: `harness/runs/20260930-221756-945/`.
 - Discovered: BE-P's CLAUDE.md points at `../kt-xnk`, but the FE checkout is `../FE-P`.
+
+## 2026-10-01 — Wire contract review backend, task 1.2
+
+- Contract goods lines:
+  - Form section "5. Danh mục hàng hóa" holds one card per line (description, HS code, quantity, unit, unit price, computed amount). It shows the total and its gap to the contract value.
+  - The overview's "Danh mục hàng hóa" table shows shipped and remaining quantity; an overshipped remainder is red.
+  - Lines are sent with their id, so the backend keeps them in place.
+- Browser QA on `[DRAFT] 11.09.26`:
+  - Added a line, saved, and saw it on the overview (đã xuất 0, còn lại 10).
+  - Removed it again; the draft is back to no lines.
+  - The Chrome tab was `visibilityState: hidden`, so keyboard input and screenshots did not work. Field values were set with the native value setter plus input events, which still runs React's onChange.
+- Mistake fixed before pushing: a folder-wide `prettier --write` reformatted about 50 unrelated files into the first task-1.2 commit. The commit was redone with only the task's 11 files. Harness gap: format only the touched files (e.g. `prettier --write $(git diff --name-only)`).
+- `./harness/verify.sh` passed: `harness/runs/20261001-082939-947/`.
