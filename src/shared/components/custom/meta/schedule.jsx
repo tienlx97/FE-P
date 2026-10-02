@@ -40,7 +40,7 @@ const LIST_DAYS = 14;
 const DEFAULT_ROWS = 3;
 
 /**
- * @typedef {'accent' | 'success' | 'warning' | 'danger' | 'neutral' | 'indigo' | 'pink'} MetaScheduleTone
+ * @typedef {'accent' | 'success' | 'warning' | 'danger' | 'neutral' | 'indigo' | 'pink' | 'teal'} MetaScheduleTone
  * @typedef {{ id: string, date: string, title: string, tone: MetaScheduleTone }} MetaScheduleItem
  * @typedef {'month' | 'twoWeeks'} MetaScheduleView
  */
@@ -604,6 +604,11 @@ const tones = stylex.create({
     borderInlineStartColor: 'var(--meta-pink)',
     color: 'var(--meta-pink-deep)',
   },
+  teal: {
+    backgroundColor: 'var(--meta-teal-wash)',
+    borderInlineStartColor: 'var(--meta-teal)',
+    color: 'var(--meta-teal-deep)',
+  },
 });
 
 /** Solid rail color per tone (legend swatches). */
@@ -615,4 +620,5 @@ const swatches = stylex.create({
   neutral: { backgroundColor: 'var(--color-text-secondary)' },
   indigo: { backgroundColor: 'var(--meta-indigo)' },
   pink: { backgroundColor: 'var(--meta-pink)' },
+  teal: { backgroundColor: 'var(--meta-teal)' },
 });

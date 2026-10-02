@@ -179,6 +179,10 @@ export const metaTheme = {
     "--meta-pink-wash": "#fdf2f8",
     "--meta-pink-border": "#fbcfe8",
     "--meta-pink-deep": "#9d174d",
+    "--meta-teal": "#0d9488",
+    "--meta-teal-wash": "#f0fdfa",
+    "--meta-teal-border": "#99f6e4",
+    "--meta-teal-deep": "#115e59",
     "--meta-shadow-card": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
     "--meta-shadow-drawer": "-10px 0 35px 0 rgba(0, 0, 0, 0.09)"
   },
@@ -246,6 +250,10 @@ export const metaTheme = {
     "--meta-pink-wash": "meta",
     "--meta-pink-border": "meta",
     "--meta-pink-deep": "meta",
+    "--meta-teal": "meta",
+    "--meta-teal-wash": "meta",
+    "--meta-teal-border": "meta",
+    "--meta-teal-deep": "meta",
     "--meta-shadow-card": "meta",
     "--meta-shadow-drawer": "meta"
   },

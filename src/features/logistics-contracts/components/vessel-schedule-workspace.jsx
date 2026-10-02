@@ -83,8 +83,8 @@ export function VesselScheduleWorkspace() {
     () => (adaptersQuery.data?.success ? adaptersQuery.data.carriers : []),
     [adaptersQuery.data],
   );
-  const allCarriers = useMemo(() => adapters.map((adapter) => adapter.carrier), [adapters]);
-  const connectedCount = useMemo(() => scheduleCarriers(adapters).length, [adapters]);
+  const connectedCarriers = useMemo(() => scheduleCarriers(adapters), [adapters]);
+  const connectedCount = connectedCarriers.length;
 
   const countriesQuery = useCountriesQuery();
   const countries = countriesQuery.data?.success ? countriesQuery.data.countries : [];
@@ -126,12 +126,12 @@ export function VesselScheduleWorkspace() {
         (search?.carriers ?? []).flatMap((carrier, index) => {
           const data = results[index]?.data;
           return data?.success && data.search.status === 'Synced'
-            ? [{ carrier, sailings: data.search.sailings, tone: carrierTone(allCarriers, carrier.code) }]
+            ? [{ carrier, sailings: data.search.sailings, tone: carrierTone(connectedCarriers, carrier.code) }]
             : [];
         }),
         now,
       ),
-    [results, search, allCarriers, now],
+    [results, search, connectedCarriers, now],
   );
 
   const canSearch = Boolean(polCode && podCode) && adapters.length > 0;
@@ -205,7 +205,7 @@ export function VesselScheduleWorkspace() {
           <Divider orientation="vertical" />
           <StackItem size="fill" xstyle={styles.summary}>
             <Carousel aria-label="Kết quả theo hãng tàu" gap={2}>
-              {summaryPills(search, results, allCarriers)}
+              {summaryPills(search, results, connectedCarriers)}
             </Carousel>
           </StackItem>
         </HStack>
@@ -248,9 +248,9 @@ export function VesselScheduleWorkspace() {
  * after the route — the carousel beside the buttons scrolls them.
  * @param {ScheduleSearch | null} search
  * @param {ReturnType<typeof useCarrierSchedulesQueries>} results
- * @param {import('../types/index.js').ShippingCarrier[]} allCarriers
+ * @param {import('../types/index.js').ShippingCarrier[]} connectedCarriers - carriers with a connected schedule (tone order)
  */
-function summaryPills(search, results, allCarriers) {
+function summaryPills(search, results, connectedCarriers) {
   if (!search) {
     return [<MetaPill key="hint" label="Chọn POL, POD rồi bấm Tìm" tone="neutral" size="sm" />];
   }
@@ -273,7 +273,7 @@ function summaryPills(search, results, allCarriers) {
         <MetaPill
           key={carrier.code}
           label={`${carrier.name} · ${data.search.sailings.length} chuyến`}
-          tone={carrierTone(allCarriers, carrier.code)}
+          tone={carrierTone(connectedCarriers, carrier.code)}
           size="sm"
           hasDot
         />
