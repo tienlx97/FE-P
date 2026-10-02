@@ -37,3 +37,9 @@
   per-carrier result pills in a `Carousel`; "Terminal dỡ" value in accent
   blue (hover card + drawer). SITC shown once its BE schedule adapter
   landed (no FE change for that).
+- [x] 1.14 Evergreen and RCL (BE-P `add-carrier-schedules` tasks 6, 7) shown
+  with no API change; six carrier tones (`indigo`, new `pink` added to
+  `MetaSchedule` / `MetaPill`, `--meta-pink-*` theme tokens) so the six
+  connected carriers never share a colour; the sailing id includes the ETA
+  (two Evergreen routings via Kaohsiung differ only by it — duplicate React
+  keys, a click could open the wrong one).

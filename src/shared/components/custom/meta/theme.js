@@ -200,6 +200,12 @@ export const metaTheme = defineTheme({
     '--meta-amber-wash': '#fffbeb',
     '--meta-amber-border': '#fde68a',
     '--meta-amber-text': '#b45309',
+    // Carrier tone on the vessel schedule (6th connected carrier): Tailwind
+    // pink-50 / -200 / -600 / -800 — far from the red of unbookable sailings.
+    '--meta-pink': '#db2777',
+    '--meta-pink-wash': '#fdf2f8',
+    '--meta-pink-border': '#fbcfe8',
+    '--meta-pink-deep': '#9d174d',
     '--meta-shadow-card': '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // figma: header / summary card
     '--meta-shadow-drawer': '-10px 0 35px 0 rgba(0, 0, 0, 0.09)', // figma 103:4983: edit drawer
   },
