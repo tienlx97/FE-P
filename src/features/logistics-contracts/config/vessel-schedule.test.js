@@ -77,6 +77,12 @@ test('sailingId tells a call at the POD from the same vessel going on by barge',
   assert.equal(sailingId('HEUNGA', direct), sailingId('HEUNGA', { ...direct }));
 });
 
+test('sailingId tells two routings via the same transshipment port apart by their ETA', () => {
+  const first = sailing({ transshipmentPorts: ['KAOHSIUNG'], eta: '2026-10-13T00:00:00' });
+  const later = sailing({ transshipmentPorts: ['KAOHSIUNG'], eta: '2026-10-14T00:00:00' });
+  assert.notEqual(sailingId('EVERGREEN', first), sailingId('EVERGREEN', later));
+});
+
 test('carrier times are shown as given, date then time', () => {
   assert.equal(formatCarrierTime('2026-09-29T23:30:00'), '29/09/2026 23:30');
   assert.equal(formatCarrierTime(null), '—');
@@ -93,8 +99,8 @@ test('scheduleItems puts each sailing on its ETD date, titled by its tag only', 
   );
 
   assert.deepEqual(items, [
-    { id: 'KMTC:KMTC ULSAN:2616S:2026-09-29T23:30:00:BANGKOK,THAILAND::', date: '2026-09-29', title: 'KMTC - KMTC ULSAN / 2616S', tone: 'accent' },
-    { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00:BANGKOK,THAILAND::', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S', tone: 'danger' },
+    { id: 'KMTC:KMTC ULSAN:2616S:2026-09-29T23:30:00:2026-09-22T13:48:00:BANGKOK,THAILAND::', date: '2026-09-29', title: 'KMTC - KMTC ULSAN / 2616S', tone: 'accent' },
+    { id: 'KMTC:KMTC ULSAN:2615S:2026-09-20T06:20:00:2026-09-22T13:48:00:BANGKOK,THAILAND::', date: '2026-09-20', title: 'KMTC - KMTC ULSAN / 2615S', tone: 'danger' },
   ]);
 });
 
@@ -247,6 +253,14 @@ test('carrierTone is fixed by the carrier position, never danger', () => {
   assert.equal(carrierTone(carriers, 'HEUNGA'), 'success');
   assert.equal(carrierTone(carriers, 'SITC'), 'warning');
   assert.equal(carrierTone(carriers, 'MAERSK'), 'accent');
+});
+
+test('carrierTone gives the six carriers with a schedule six different tones', () => {
+  const carriers = ['KMTC', 'HEUNGA', 'NAMSUNG', 'SITC', 'EVERGREEN', 'RCL', 'OOCL', 'YANGMING', 'ONE'].map((code) => ({ code, name: code }));
+  const tones = carriers.slice(0, 6).map((carrier) => carrierTone(carriers, carrier.code));
+  assert.equal(new Set(tones).size, 6);
+  assert.ok(!tones.includes('danger'));
+  assert.deepEqual(tones.slice(4), ['indigo', 'pink']);
 });
 
 test('portOptions keeps UN/LOCODE ports, code first, sorted', () => {

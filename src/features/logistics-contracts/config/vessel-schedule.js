@@ -16,8 +16,12 @@ export const REFRESH_COOLDOWN_MS = 60_000;
 /** How many recently picked PODs the POD selector lists when opened. */
 export const RECENT_PORTS_LIMIT = 8;
 
-/** `MetaSchedule` tones given to carriers in list order (danger is kept for errors). */
-const CARRIER_TONES = /** @type {const} */ (['accent', 'success', 'warning', 'neutral']);
+/**
+ * `MetaSchedule` tones given to carriers in list order (danger is kept for
+ * sailings that cannot be booked). Six, so the six carriers with a connected
+ * schedule (KMTC, Heung-A, Namsung, SITC, Evergreen, RCL) never share one.
+ */
+const CARRIER_TONES = /** @type {const} */ (['accent', 'success', 'warning', 'neutral', 'indigo', 'pink']);
 
 /** Days in `MetaSchedule`'s "2 tuần" view. */
 const TWO_WEEKS = 14;
@@ -100,12 +104,15 @@ export function carrierTone(carriers, code) {
  */
 export function sailingId(carrierCode, sailing) {
   // The same vessel / voyage / ETD can be two sailings: a call at the POD
-  // and a discharge at a nearby port with a barge on (Heung-A → Bangkok).
+  // and a discharge at a nearby port with a barge on (Heung-A → Bangkok),
+  // or two routings via the same transshipment port on different connecting
+  // vessels, told apart only by their ETA (Evergreen via Kaohsiung).
   return [
     carrierCode,
     sailing.vesselName,
     sailing.voyageNumber ?? '',
     sailing.etd,
+    sailing.eta ?? '',
     sailing.portOfDischarge,
     sailing.transshipmentPorts.join('>'),
     sailing.onCarriage ?? '',

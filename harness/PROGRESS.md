@@ -1,5 +1,16 @@
 # Progress Log
 
+## 2026-10-02 — Vessel schedule: Evergreen + RCL, six carrier tones, unique sailing ids (task 1.14)
+
+- User: after the BE-P Evergreen (schedule + tracking) and RCL (schedule; tracking blocked by a Cloudflare Turnstile captcha) adapters, apply them in the FE. Dev API rebuilt from BE-P `feat/rcl-schedule` (stacked on `feat/evergreen`, `feat/sitc-tracking`; not merged).
+- No API or page change was needed for them to appear: the carriers come from `/api/v1/shipments/tracking/carriers`. Two problems showed up in the browser and are fixed:
+  - Colours: `CARRIER_TONES` had 4 tones, so Evergreen took KMTC's blue and RCL Heung-A's green. There are now 6 (`accent`, `success`, `warning`, `neutral`, `indigo`, `pink`). `MetaSchedule` gains `indigo` / `pink` (rail, wash, ink, swatch); `MetaPill` gains `pink`; theme tokens `--meta-pink`, `-wash`, `-border`, `-deep` (Tailwind pink-600 / 50 / 200 / 800; `pnpm theme:build`).
+  - Duplicate keys: Evergreen lists two routings with the same first vessel, ETD, POD and transshipment port that differ only by ETA (different connecting vessel). `sailingId` collided ("Encountered two children with the same key", 14 issues) and a click could open the other routing. `sailingId` now includes the ETA, which is the BE de-duplication key.
+- Tests: `vessel-schedule.test.js` — six distinct tones for the six connected carriers; two routings differing only by ETA get different ids; the pinned ids include the ETA. `pnpm test` 305/305.
+- Browser (Chrome, :3000 → dev API :8081): `/logistics/schedule` VNSGN → PHMNL October, all carriers: "Namsung · 29 · SITC · 5 · Evergreen · 35 · RCL · 4 chuyến". Evergreen is indigo and RCL pink. No dev-overlay issues after the fix. Evergreen `YM CELEBRITY / 108A` drawer: KAOHSIUNG transshipment, CY 22/10 01:00, VGM 22/10 11:59, THX, booking "Hãng không cho biết". `/live`: Evergreen schedule + tracking "Hoạt động" (235600689219: 68 sự kiện); RCL schedule "Hoạt động" (19 chuyến), tracking "Chưa kết nối"; SITC tracking "Hoạt động" (34 sự kiện).
+- Not changed: date-only carriers (SITC, Evergreen, RCL) still show ETD / ETA as `00:00`, per the 2026-09-30 decision.
+- `./harness/verify.sh` passed: `harness/runs/20261002-160601-1531/`.
+
 ## 2026-09-30 — Vessel schedule: search card layout, results carousel, blue POD terminal, SITC live (task 1.13)
 
 - User: SITC schedule built in BE-P (`add-carrier-schedules` task 5), then test the UI; make the search card more professional — (1) POL / POD fixed width, (2) "Tìm" and "Tải lại từ hãng" on a new row with the "KMTC · 20 chuyến…" pills in a Carousel, (3) "Terminal dỡ" value in blue.

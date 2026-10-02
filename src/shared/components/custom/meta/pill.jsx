@@ -17,7 +17,7 @@ import * as stylex from '@stylexjs/stylex';
  *
  * @param {{
  *   label: string,
- *   tone?: 'accent' | 'success' | 'green' | 'indigo' | 'warning' | 'danger' | 'neutral' | 'muted' | 'solid' | 'on-accent',
+ *   tone?: 'accent' | 'success' | 'green' | 'indigo' | 'pink' | 'warning' | 'danger' | 'neutral' | 'muted' | 'solid' | 'on-accent',
  *   hasDot?: boolean,
  *   icon?: import('react').ComponentType,
  *   hasBorder?: boolean,
@@ -118,6 +118,11 @@ const tones = stylex.create({
     backgroundColor: 'var(--meta-indigo-wash)',
     color: 'var(--meta-indigo)',
   },
+  // Vessel schedule: the 6th connected carrier's tone.
+  pink: {
+    backgroundColor: 'var(--meta-pink-wash)',
+    color: 'var(--meta-pink-deep)',
+  },
   // Figma 108:5920 shipment "Đang đóng hàng" / "Khai HQ".
   warning: {
     backgroundColor: 'var(--meta-amber-wash)',
@@ -153,6 +158,7 @@ const borders = stylex.create({
   success: { borderColor: 'var(--meta-emerald-border)' },
   green: { borderColor: 'var(--meta-green-border)' },
   indigo: { borderColor: 'var(--meta-indigo-wash)' },
+  pink: { borderColor: 'var(--meta-pink-border)' },
   warning: { borderColor: 'var(--meta-amber-border)' },
   danger: { borderColor: 'var(--color-error-muted)' },
   neutral: { borderColor: 'var(--color-border)' },
@@ -166,6 +172,7 @@ const dots = stylex.create({
   success: { backgroundColor: 'var(--meta-emerald-dot)' },
   green: { backgroundColor: 'var(--meta-green)' },
   indigo: { backgroundColor: 'var(--meta-indigo)' },
+  pink: { backgroundColor: 'var(--meta-pink)' },
   warning: { backgroundColor: 'var(--meta-amber-text)' },
   danger: { backgroundColor: 'var(--color-error)' },
   neutral: { backgroundColor: 'var(--color-text-secondary)' },
