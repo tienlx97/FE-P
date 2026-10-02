@@ -206,6 +206,11 @@ export const metaTheme = defineTheme({
     '--meta-pink-wash': '#fdf2f8',
     '--meta-pink-border': '#fbcfe8',
     '--meta-pink-deep': '#9d174d',
+    // 7th connected carrier: Tailwind teal-50 / -200 / -600 / -800.
+    '--meta-teal': '#0d9488',
+    '--meta-teal-wash': '#f0fdfa',
+    '--meta-teal-border': '#99f6e4',
+    '--meta-teal-deep': '#115e59',
     '--meta-shadow-card': '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // figma: header / summary card
     '--meta-shadow-drawer': '-10px 0 35px 0 rgba(0, 0, 0, 0.09)', // figma 103:4983: edit drawer
   },

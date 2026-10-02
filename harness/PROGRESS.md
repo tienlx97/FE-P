@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-10-02 — Vessel schedule: ONE, tones by connected carriers (task 1.15)
+
+- User: ONE built in BE-P (`add-carrier-schedules` task 9, branch `feat/one`, stacked on `feat/rcl-schedule`; not merged). Dev API rebuilt from it.
+- ONE appeared with no API change. Its colour would have wrapped: `carrierTone` indexed the full list of 9 carriers, so ONE (9th) took `warning`, the same as Namsung. Tones now index the carriers with a connected schedule (`scheduleCarriers`; the workspace passes `connectedCarriers`, which also feeds `connectedCount`). A 7th tone `teal` was added to `MetaSchedule` / `MetaPill`, with theme tokens `--meta-teal`, `-wash`, `-border`, `-deep` (Tailwind teal-600 / 50 / 200 / 800; `pnpm theme:build`). Test: 7 connected carriers get 7 tones, ONE gets teal. `pnpm test` 305/305.
+- Browser (Chrome, :3000 → dev API :8081): `/logistics/schedule` VNSGN → AUSYD October, all carriers: "Evergreen · 28 chuyến · RCL · 0 chuyến · ONE · 8 chuyến", ONE in teal.
+  - Drawer `ONE - [TS] - ZENITH LUMOS / 022E`: CAI MEP → SINGAPORE → SYDNEY, NSW; ETD 04/10 04:00, ETA 09/11 22:00, 41 ngày; SI 30/09 10:00, VGM 30/09 12:00, CY 29/09 12:00; terminals TCIT / DP WORLD SYDNEY; EC3.
+  - `/live` "Kiểm tra ngay": ONE schedule "Hoạt động" (VNSGN → AUSYD 8 chuyến), tracking "Hoạt động" (SGNGA3598500: 44 sự kiện).
+- Seen on the way, not FE:
+  - SITC answered "không trả lời kịp" for Sydney (a port it does not serve) after ~30 s.
+  - At 16:24 the SITC probes failed with "Connection refused (api.sitcline.com:443)". A `curl` right after got 200 from the host and from the API container, so the outage was transient on SITC's side.
+- `./harness/verify.sh` passed: `harness/runs/20261002-162753-446/`.
+
 ## 2026-10-02 — Vessel schedule: Evergreen + RCL, six carrier tones, unique sailing ids (task 1.14)
 
 - User: after the BE-P Evergreen (schedule + tracking) and RCL (schedule; tracking blocked by a Cloudflare Turnstile captcha) adapters, apply them in the FE. Dev API rebuilt from BE-P `feat/rcl-schedule` (stacked on `feat/evergreen`, `feat/sitc-tracking`; not merged).

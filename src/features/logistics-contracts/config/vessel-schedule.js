@@ -17,11 +17,12 @@ export const REFRESH_COOLDOWN_MS = 60_000;
 export const RECENT_PORTS_LIMIT = 8;
 
 /**
- * `MetaSchedule` tones given to carriers in list order (danger is kept for
- * sailings that cannot be booked). Six, so the six carriers with a connected
- * schedule (KMTC, Heung-A, Namsung, SITC, Evergreen, RCL) never share one.
+ * `MetaSchedule` tones given to the carriers with a connected schedule, in
+ * list order (danger is kept for sailings that cannot be booked). Seven, so
+ * the seven connected today (KMTC, Heung-A, Namsung, SITC, Evergreen, RCL,
+ * ONE) never share one.
  */
-const CARRIER_TONES = /** @type {const} */ (['accent', 'success', 'warning', 'neutral', 'indigo', 'pink']);
+const CARRIER_TONES = /** @type {const} */ (['accent', 'success', 'warning', 'neutral', 'indigo', 'pink', 'teal']);
 
 /** Days in `MetaSchedule`'s "2 tuần" view. */
 const TWO_WEEKS = 14;
@@ -87,8 +88,10 @@ export function visibleRange(view, anchor) {
 }
 
 /**
- * A carrier's tone, stable whatever carrier is chosen (index in the full list).
- * @param {import('../types/index.js').ShippingCarrier[]} carriers - every carrier
+ * A carrier's tone, stable whatever carrier is chosen: its index among the
+ * carriers with a connected schedule (placeholders take no colour, so the
+ * connected ones do not wrap round the palette).
+ * @param {import('../types/index.js').ShippingCarrier[]} carriers - the carriers with a connected schedule (`scheduleCarriers`)
  * @param {string} code
  * @returns {import('@/shared/components/custom/meta/schedule.jsx').MetaScheduleTone}
  */

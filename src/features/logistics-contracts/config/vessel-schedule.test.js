@@ -255,12 +255,12 @@ test('carrierTone is fixed by the carrier position, never danger', () => {
   assert.equal(carrierTone(carriers, 'MAERSK'), 'accent');
 });
 
-test('carrierTone gives the six carriers with a schedule six different tones', () => {
-  const carriers = ['KMTC', 'HEUNGA', 'NAMSUNG', 'SITC', 'EVERGREEN', 'RCL', 'OOCL', 'YANGMING', 'ONE'].map((code) => ({ code, name: code }));
-  const tones = carriers.slice(0, 6).map((carrier) => carrierTone(carriers, carrier.code));
-  assert.equal(new Set(tones).size, 6);
+test('carrierTone gives every connected carrier its own tone, placeholders take none', () => {
+  const connected = ['KMTC', 'HEUNGA', 'NAMSUNG', 'SITC', 'EVERGREEN', 'RCL', 'ONE'].map((code) => ({ code, name: code }));
+  const tones = connected.map((carrier) => carrierTone(connected, carrier.code));
+  assert.equal(new Set(tones).size, 7);
   assert.ok(!tones.includes('danger'));
-  assert.deepEqual(tones.slice(4), ['indigo', 'pink']);
+  assert.deepEqual(tones.slice(4), ['indigo', 'pink', 'teal'], 'ONE after RCL, not wrapped onto Namsung as 9th of all carriers');
 });
 
 test('portOptions keeps UN/LOCODE ports, code first, sorted', () => {

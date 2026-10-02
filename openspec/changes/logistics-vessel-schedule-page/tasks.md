@@ -43,3 +43,8 @@
   connected carriers never share a colour; the sailing id includes the ETA
   (two Evergreen routings via Kaohsiung differ only by it — duplicate React
   keys, a click could open the wrong one).
+- [x] 1.15 ONE (BE-P `add-carrier-schedules` task 9) shown with no API change;
+  carrier tones now follow the order of the carriers with a connected
+  schedule (placeholders take none), plus a 7th tone `teal`
+  (`--meta-teal-*`), so ONE — 9th of all carriers — no longer wraps onto
+  Namsung's colour.
