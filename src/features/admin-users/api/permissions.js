@@ -19,7 +19,8 @@ export async function listGrantablePermissions() {
     errorMessage: GENERIC_LIST_ERROR,
   });
 
-  return result.success ? (result.data ?? []) : [];
+  if (!result.success) throw new Error(result.message);
+  return result.data ?? [];
 }
 
 /**
@@ -35,7 +36,8 @@ export async function previewInheritedPermissions(departmentId) {
     { errorMessage: 'Không thể tải quyền kế thừa' },
   );
 
-  return result.success ? (result.data ?? []) : [];
+  if (!result.success) throw new Error(result.message);
+  return result.data ?? [];
 }
 
 /**

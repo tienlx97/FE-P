@@ -134,7 +134,9 @@ export function useCreateUserForm({ onSuccess } = {}) {
   const newAddressQuery = useNewAddressQuery();
   const createUserMutation = useCreateUserMutation();
   const grantablePermissionsQuery = useGrantablePermissionsQuery();
-  const inheritedPermissionsQuery = useInheritedPermissionsQuery(values.departmentId);
+  const inheritedPermissionsQuery = useInheritedPermissionsQuery(
+    values.departmentId,
+  );
   const bankAccountRows = useBankAccountRows();
 
   const departmentsInBranch = (departmentsQuery.data ?? []).filter(
@@ -155,7 +157,11 @@ export function useCreateUserForm({ onSuccess } = {}) {
    * @param {string | number | undefined} value
    */
   function setField(field, value) {
-    if (field === 'companyId' || field === 'branchId' || field === 'departmentId') {
+    if (
+      field === 'companyId' ||
+      field === 'branchId' ||
+      field === 'departmentId'
+    ) {
       setValues((current) => ({ ...current, extraPermissions: [] }));
     }
 
@@ -266,7 +272,12 @@ export function useCreateUserForm({ onSuccess } = {}) {
     inheritedPermissions: inheritedPermissionsQuery.data ?? [],
     grantablePermissions: grantablePermissionsQuery.data ?? [],
     isLoadingPermissions:
-      inheritedPermissionsQuery.isLoading || grantablePermissionsQuery.isLoading,
+      inheritedPermissionsQuery.isLoading ||
+      grantablePermissionsQuery.isLoading,
+    permissionsError:
+      inheritedPermissionsQuery.isError || grantablePermissionsQuery.isError
+        ? 'Không thể tải quyền truy cập. Vui lòng đóng và mở lại biểu mẫu để thử lại.'
+        : '',
     setExtraPermissions,
     vietnamBanks: vietnamBanksQuery.data ?? [],
     oldProvinces,

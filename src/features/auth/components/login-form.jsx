@@ -5,7 +5,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { Center } from '@astryxdesign/core/Center';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
-import { Heading } from '@astryxdesign/core/Text';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { TextInput } from '@/shared/components/text-input.jsx';
@@ -38,28 +38,36 @@ export function LoginForm() {
             <VStack gap={4} hAlign="stretch">
               <VStack gap={1} hAlign="center">
                 <Heading level={2}>ĐĂNG NHẬP</Heading>
+                <Text color="secondary">
+                  Đăng nhập bằng CCCD và mật khẩu của bạn.
+                </Text>
               </VStack>
 
               {signedInElsewhereNotice ? (
                 <Banner
                   status="warning"
-                  title="Tài khoản đã được đăng nhập ở thiết bị khác. Nếu không phải bạn, hãy đổi mật khẩu ngay."
+                  title="Đã đăng nhập trên thiết bị khác"
+                  description="Phiên trên thiết bị này đã kết thúc. Nếu không phải bạn đăng nhập, hãy liên hệ quản trị viên và đổi mật khẩu."
                   container="card"
                 />
               ) : null}
 
-              {sessionExpiredNotice ? (
+              {sessionExpiredNotice &&
+              !signedInElsewhereNotice &&
+              !sessionRevokedNotice ? (
                 <Banner
                   status="warning"
-                  title="Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+                  title="Phiên đăng nhập đã hết hạn"
+                  description="Vui lòng đăng nhập lại để tiếp tục công việc."
                   container="card"
                 />
               ) : null}
 
-              {sessionRevokedNotice ? (
+              {sessionRevokedNotice && !signedInElsewhereNotice ? (
                 <Banner
                   status="warning"
-                  title="Phiên đăng nhập đã bị thu hồi. Vui lòng đăng nhập lại."
+                  title="Phiên đăng nhập đã kết thúc"
+                  description="Phiên có thể đã được đăng xuất hoặc thu hồi do thay đổi mật khẩu, quyền truy cập. Vui lòng đăng nhập lại."
                   container="card"
                 />
               ) : null}
@@ -72,12 +80,13 @@ export function LoginForm() {
                 label="Số CCCD"
                 value={nationalId}
                 onChange={setNationalId}
-                placeholder="VD: 036097012975"
+                placeholder="Nhập 12 chữ số CCCD"
                 type="text"
+                autoComplete="username"
+                htmlName="nationalId"
                 size="lg"
                 isRequired
                 status={nationalIdStatus}
-                statusVariant="tooltip"
               />
 
               <TextInput
@@ -86,14 +95,16 @@ export function LoginForm() {
                 onChange={setPassword}
                 placeholder="Nhập mật khẩu"
                 type="password"
+                autoComplete="current-password"
+                htmlName="password"
                 size="lg"
                 isRequired
                 status={passwordStatus}
-                statusVariant="tooltip"
               />
 
               <CheckboxInput
-                label="Ghi nhớ đăng nhập"
+                label="Ghi nhớ số CCCD trên thiết bị này"
+                description="Chỉ lưu số CCCD để điền lần sau, không lưu mật khẩu."
                 value={rememberMe}
                 onChange={setRememberMe}
               />
@@ -104,6 +115,7 @@ export function LoginForm() {
                 variant="primary"
                 size="lg"
                 isLoading={isSubmitting}
+                isDisabled={isSubmitting}
               />
             </VStack>
           </form>

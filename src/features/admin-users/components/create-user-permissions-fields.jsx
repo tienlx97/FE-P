@@ -1,5 +1,6 @@
 'use client';
 
+import { Banner } from '@astryxdesign/core/Banner';
 import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import {
   CheckboxList,
@@ -9,7 +10,10 @@ import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 
-import { labelForPermission } from '../config/grantable-permissions.js';
+import {
+  labelForPermission,
+  labelForPermissionScope,
+} from '../config/grantable-permissions.js';
 
 /**
  * @param {{
@@ -17,6 +21,7 @@ import { labelForPermission } from '../config/grantable-permissions.js';
  *   grantablePermissions: import('../types/index.js').GrantablePermission[],
  *   selectedPermissions: string[],
  *   isLoading: boolean,
+ *   error?: string,
  *   hasDepartment: boolean,
  *   onChange: (permissions: string[]) => void,
  * }} props
@@ -26,6 +31,7 @@ export function CreateUserPermissionsFields({
   grantablePermissions,
   selectedPermissions,
   isLoading,
+  error,
   hasDepartment,
   onChange,
 }) {
@@ -47,6 +53,8 @@ export function CreateUserPermissionsFields({
     );
   }
 
+  if (error) return <Banner status="error" title={error} />;
+
   return (
     <VStack gap={5} hAlign="stretch">
       <VStack gap={3} hAlign="stretch">
@@ -57,19 +65,25 @@ export function CreateUserPermissionsFields({
           inheritedPermissions.map((permission) => (
             <CheckboxInput
               key={`${permission.key}-${permission.scopeId}`}
-              label={permission.key}
-              description={`${permission.description} · Phạm vi chi nhánh`}
+              label={
+                labelForPermission(permission.key, permission.description).label
+              }
+              description={`${permission.description} · ${labelForPermissionScope(permission.scopeType)}`}
               value
               isReadOnly
               width="100%"
             />
           ))
         ) : (
-          <Text color="secondary">
-            Phòng ban này không cấp quyền kế thừa.
-          </Text>
+          <Text color="secondary">Phòng ban này không cấp quyền kế thừa.</Text>
         )}
       </VStack>
+
+      <Text color="secondary">
+        Quyền Admin được cấp riêng cho tài khoản, không phụ thuộc tên phòng ban.
+        Tạo nhân viên không đăng nhập thay họ; nhân viên sử dụng CCCD và mật
+        khẩu để đăng nhập.
+      </Text>
 
       <CheckboxList
         label="Quyền cấp thêm"

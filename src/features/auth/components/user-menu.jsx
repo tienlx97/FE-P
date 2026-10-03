@@ -1,6 +1,7 @@
 'use client';
 
 import { Avatar } from '@astryxdesign/core/Avatar';
+import { Banner } from '@astryxdesign/core/Banner';
 import { DropdownMenuItem } from '@astryxdesign/core/DropdownMenu';
 import { Popover } from '@astryxdesign/core/Popover';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
@@ -28,6 +29,8 @@ function getIsHydratedServerSnapshot() {
 export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState('');
   const { isAuthenticated, displayName, logout } = useSession();
   // useSession's server snapshot always reports logged-out, so on first
   // paint the real avatar isn't known yet. Rather than pop from nothing to
@@ -41,7 +44,13 @@ export function UserMenu() {
   );
 
   if (!isHydrated) {
-    return <Skeleton width={AVATAR_MD_SIZE} height={AVATAR_MD_SIZE} radius="rounded" />;
+    return (
+      <Skeleton
+        width={AVATAR_MD_SIZE}
+        height={AVATAR_MD_SIZE}
+        radius="rounded"
+      />
+    );
   }
 
   if (!isAuthenticated) {
@@ -60,6 +69,7 @@ export function UserMenu() {
         label="Menu tài khoản"
         content={
           <Fragment>
+            {logoutError ? <Banner status="error" title={logoutError} /> : null}
             <DropdownMenuItem
               label="Đổi mật khẩu"
               onClick={() => {
@@ -68,16 +78,31 @@ export function UserMenu() {
               }}
             />
             <DropdownMenuItem
-              label="Đăng xuất"
-              onClick={() => {
-                setIsOpen(false);
-                logout();
+              label={
+                isLoggingOut ? 'Đang đăng xuất…' : 'Đăng xuất thiết bị này'
+              }
+              isDisabled={isLoggingOut}
+              onClick={async () => {
+                if (isLoggingOut) return;
+                setIsLoggingOut(true);
+                setLogoutError('');
+                try {
+                  await logout();
+                } catch {
+                  setLogoutError('Không thể đăng xuất. Vui lòng thử lại.');
+                  setIsLoggingOut(false);
+                }
               }}
             />
           </Fragment>
         }
       >
-        <Avatar name={displayName} size="md" tooltip={false} onClick={() => {}} />
+        <Avatar
+          name={displayName}
+          size="md"
+          tooltip={false}
+          onClick={() => {}}
+        />
       </Popover>
       <ChangePasswordDialog
         isOpen={isChangePasswordOpen}

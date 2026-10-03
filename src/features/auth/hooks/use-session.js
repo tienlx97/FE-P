@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useSyncExternalStore } from 'react';
 
 import {
@@ -46,7 +45,6 @@ function getEmployeeCodeServerSnapshot() {
 }
 
 export function useSession() {
-  const router = useRouter();
   const isAuthenticated = useSyncExternalStore(
     subscribeToSessionChange,
     getIsAuthenticated,
@@ -65,8 +63,11 @@ export function useSession() {
   const permissions = useSessionPermissions();
 
   async function logout() {
-    await clearSession();
-    router.push('/login');
+    if (!(await clearSession())) {
+      throw new Error('Không thể đăng xuất. Vui lòng thử lại.');
+    }
+    // Reload also discards protected React Query and router data from this user.
+    window.location.assign('/login');
   }
 
   return { isAuthenticated, displayName, employeeCode, permissions, logout };

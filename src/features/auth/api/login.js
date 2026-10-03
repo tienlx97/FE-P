@@ -1,5 +1,6 @@
 const GENERIC_ERROR_MESSAGE = 'Sai số CCCD hoặc mật khẩu';
-const RATE_LIMITED_MESSAGE = 'Bạn đã thử quá nhiều lần. Vui lòng đợi ít phút rồi thử lại.';
+const RATE_LIMITED_MESSAGE =
+  'Bạn đã thử quá nhiều lần. Vui lòng đợi ít phút rồi thử lại.';
 
 /**
  * Signs in via this app's own `/api/session/login` route handler, which calls
@@ -37,7 +38,14 @@ export async function login({ nationalId, password }) {
       return { success: false, message: RATE_LIMITED_MESSAGE };
     }
 
-    return { success: false, message: problem?.detail ?? GENERIC_ERROR_MESSAGE };
+    if (response.status === 401) {
+      return { success: false, message: GENERIC_ERROR_MESSAGE };
+    }
+
+    return {
+      success: false,
+      message: problem?.detail ?? GENERIC_ERROR_MESSAGE,
+    };
   }
 
   const body = await response.json();

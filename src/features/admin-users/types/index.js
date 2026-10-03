@@ -72,7 +72,7 @@
 /** @typedef {{ id: string, name: string, companyId: string }} Branch */
 /** @typedef {{ id: string, name: string, branchId: string }} Department */
 /** @typedef {{ id: string, name: string }} Position */
-/** @typedef {{ key: string, description: string, scopeType: 'branch', scopeId: string }} InheritedPermission */
+/** @typedef {{ key: string, description: string, scopeType: 'branch' | 'company', scopeId: string }} InheritedPermission */
 /** @typedef {{ key: string, description: string | null }} GrantablePermission */
 
 /**
@@ -186,7 +186,6 @@
  * @typedef {import('@/shared/api/bank-accounts.js').BankAccount} BankAccountApiItem
  */
 
-
 /**
  * @typedef {Object} BankAccountListSuccess
  * @property {true} success
@@ -251,6 +250,7 @@ export {};
  *   grantablePermissions: GrantablePermission[],
  *   selectedPermissions: string[],
  *   isLoading: boolean,
+ *   error?: string,
  *   hasDepartment: boolean,
  *   onChange: (permissions: string[]) => void,
  * } | null} createPermissionsFieldsProps Create only — inherited permissions

@@ -33,6 +33,7 @@ export function useCreateUserFormV2({ onSuccess } = {}) {
       grantablePermissions: form.grantablePermissions,
       selectedPermissions: form.values.extraPermissions,
       isLoading: form.isLoadingPermissions,
+      error: form.permissionsError,
       hasDepartment: Boolean(form.values.departmentId),
       onChange: form.setExtraPermissions,
     },

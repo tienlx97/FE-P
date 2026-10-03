@@ -16,21 +16,28 @@ import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { Token } from '@astryxdesign/core/Token';
 import { VStack } from '@astryxdesign/core/VStack';
-import { KeyRound, Pencil, ShieldMinus, ShieldPlus, UserRound } from 'lucide-react';
+import {
+  KeyRound,
+  Pencil,
+  ShieldMinus,
+  ShieldPlus,
+  UserRound,
+} from 'lucide-react';
 import { useState } from 'react';
 
 import { expandableRowStyles } from '@/shared/components/expandable-row-styles.jsx';
 
-import { labelForPermission } from '../config/grantable-permissions.js';
+import {
+  labelForPermission,
+  labelForPermissionScope,
+} from '../config/grantable-permissions.js';
 import { useAdminBankAccountsQuery } from '../hooks/use-admin-bank-accounts-query.js';
 import {
   useGrantAdminRoleMutation,
   useRevokeAdminRoleMutation,
 } from '../hooks/use-admin-role-mutation.js';
 import { useInheritedPermissionsQuery } from '../hooks/use-inherited-permissions-query.js';
-import {
-  useBranchesQuery,
-} from '../hooks/use-org-directory.js';
+import { useBranchesQuery } from '../hooks/use-org-directory.js';
 import { useUserDetailQuery } from '../hooks/use-user-detail-query.js';
 import { UserPermissionsFields } from './user-permissions-fields.jsx';
 
@@ -72,7 +79,9 @@ export function UserExpandedDetails({
   departmentNameById,
   positionNameById,
 }) {
-  const [activeTab, setActiveTab] = useState(/** @type {ExpandedTab} */ ('info'));
+  const [activeTab, setActiveTab] = useState(
+    /** @type {ExpandedTab} */ ('info'),
+  );
   const [isConfirmingAdminChange, setIsConfirmingAdminChange] = useState(false);
   const [adminRoleError, setAdminRoleError] = useState('');
 
@@ -213,9 +222,7 @@ export function UserExpandedDetails({
               {orDash(departmentNameById.get(departmentId))}
             </MetadataListItem>
             <MetadataListItem label="Chức vụ">
-              {orDash(
-                user.positionId && positionNameById.get(user.positionId),
-              )}
+              {orDash(user.positionId && positionNameById.get(user.positionId))}
             </MetadataListItem>
           </MetadataList>
         ))}
@@ -277,6 +284,12 @@ export function UserExpandedDetails({
               </Text>
             ) : inheritedPermissionsQuery.isLoading ? (
               <Skeleton height={16} width="60%" />
+            ) : inheritedPermissionsQuery.isError ? (
+              <Banner
+                status="error"
+                title="Không thể tải quyền kế thừa"
+                description="Vui lòng tải lại trang để thử lại."
+              />
             ) : inheritedPermissions.length > 0 ? (
               <List hasDividers density="compact">
                 {inheritedPermissions.map((permission) => {
@@ -290,8 +303,8 @@ export function UserExpandedDetails({
                       label={label}
                       description={
                         description
-                          ? `${description} · Phạm vi chi nhánh`
-                          : 'Phạm vi chi nhánh'
+                          ? `${description} · ${labelForPermissionScope(permission.scopeType)}`
+                          : labelForPermissionScope(permission.scopeType)
                       }
                     />
                   );
@@ -305,6 +318,18 @@ export function UserExpandedDetails({
           </VStack>
 
           <Divider />
+
+          <Banner
+            status="info"
+            title={
+              user.isAdmin ? 'Tài khoản có quyền Admin' : 'Tài khoản nhân viên'
+            }
+            description={
+              user.isAdmin
+                ? 'Quyền Admin áp dụng toàn hệ thống, ngoài các quyền kế thừa và cấp riêng bên dưới.'
+                : 'Tên phòng ban không cấp quyền Admin. Quyền truy cập phụ thuộc quyền được cấp và phạm vi công ty, chi nhánh.'
+            }
+          />
 
           <VStack gap={3} hAlign="stretch">
             <Text type="large" weight="semibold">

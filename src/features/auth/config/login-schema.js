@@ -6,7 +6,8 @@ export const loginSchema = z.object({
   nationalId: z
     .string()
     .trim()
-    .min(1, 'Vui lòng nhập số CCCD'),
+    .min(1, 'Vui lòng nhập số CCCD')
+    .regex(/^\d{12}$/, 'Số CCCD phải gồm đúng 12 chữ số'),
   // Password format/strength is enforced by the backend; the client only
   // checks that something was typed.
   password: z.string().min(1, 'Vui lòng nhập mật khẩu'),

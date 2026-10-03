@@ -65,11 +65,19 @@ export function readSessionPermissions() {
 }
 
 export async function clearSession() {
-  await fetch('/api/session', { method: 'DELETE' }).catch(() => {});
+  let response;
+  try {
+    response = await fetch('/api/session', { method: 'DELETE' });
+  } catch {
+    return false;
+  }
+
+  if (!response.ok) return false;
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event(SESSION_CHANGE_EVENT));
   }
+  return true;
 }
 
 export { clearSession as clearClientSessionCookies };

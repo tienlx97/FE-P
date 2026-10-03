@@ -8,12 +8,27 @@
  * @type {Record<string, { label: string, description?: string }>}
  */
 export const PERMISSION_LABELS = {
+  'logistics:view': { label: 'Xem Logistics' },
+  'logistics:manage': { label: 'Quản lý Logistics' },
+  'logistics:contracts:view': { label: 'Xem hợp đồng' },
+  'logistics:contracts:manage': { label: 'Quản lý hợp đồng' },
   'logistics:secret': {
     label: 'Dữ liệu mật Logistics',
     description:
       'Dành cho trưởng phòng hoặc 1 nhân viên được chỉ định riêng — độc lập với phòng ban.',
   },
 };
+
+/** @param {string} scopeType */
+export function labelForPermissionScope(scopeType) {
+  return (
+    {
+      company: 'Phạm vi công ty',
+      branch: 'Phạm vi chi nhánh',
+      global: 'Toàn hệ thống',
+    }[scopeType] ?? 'Phạm vi chưa xác định'
+  );
+}
 
 /**
  * Preference order: a curated `PERMISSION_LABELS` entry (nicest — reviewed
@@ -28,7 +43,11 @@ export const PERMISSION_LABELS = {
  */
 export function labelForPermission(permission, apiDescription) {
   const curated = PERMISSION_LABELS[permission];
-  if (curated) return curated;
+  if (curated)
+    return {
+      ...curated,
+      description: curated.description ?? apiDescription ?? undefined,
+    };
 
   return apiDescription
     ? { label: permission, description: apiDescription }

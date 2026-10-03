@@ -10,6 +10,7 @@ import {
 } from '@/shared/api/api-client.js';
 import { SESSION_CHANGE_EVENT } from '@/shared/api/session-cookies.js';
 
+import { loginDestination } from '../config/login-redirect.js';
 import { loginSchema } from '../config/login-schema.js';
 import { useLoginMutation } from './use-login-mutation.js';
 
@@ -124,7 +125,7 @@ export function useLoginForm() {
     // subscribed to the session (the header's user menu) to re-read them.
     window.dispatchEvent(new Event(SESSION_CHANGE_EVENT));
 
-    router.replace(searchParams.get('next') || '/');
+    router.replace(loginDestination(searchParams.get('next')));
   }
 
   return {

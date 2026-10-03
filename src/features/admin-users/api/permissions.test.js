@@ -34,3 +34,17 @@ test('loads inherited permissions for the selected department', async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test('a failed permission preview is an error, not an empty permission set', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () =>
+    Response.json({ detail: 'Unavailable' }, { status: 503 });
+  try {
+    await assert.rejects(
+      () => previewInheritedPermissions('department-1'),
+      /Unavailable/,
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

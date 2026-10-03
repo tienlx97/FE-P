@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-03 — Authentication/session and employee access UI (task 1.1)
+
+- Change: `improve-auth-session-ui`, following BE-P `cc05985` and `7291865` (session-family validation and accurate inherited scopes).
+- Login: one specific session-ended reason, inline 12-digit CCCD validation preserving leading zeroes, Vietnamese wrong-credential feedback, native credential autocomplete, safe local return destinations, and clear CCCD-only remembering text.
+- Logout: pending state and recoverable deletion error; successful deletion reloads to discard protected React Query/router caches. Employee UI explains immediate session revocation, distinguishes account Admin from department membership, displays real company/branch permission scopes and reports permission loading failures.
+- Verification: six focused tests; full gate `harness/runs/20261003-165657-1454/` passed, 310 unit tests, lint/typecheck/structure/build/quality checks. Browser login validation, pending/error states and notice priority checked on :3000; screenshot in tool transcript and details in that run's `browser-evidence.md`. Protected employee panels were not exercised with a real account against the shared DB.
+- Initial gate `harness/runs/20261003-165046-2021/` failed import sorting in four changed files; corrected using the existing ESLint rule and reran the complete gate. No new harness gap.
+
 ## 2026-10-02 — Vessel schedule: ONE, tones by connected carriers (task 1.15)
 
 - User: ONE built in BE-P (`add-carrier-schedules` task 9, branch `feat/one`, stacked on `feat/rcl-schedule`; not merged). Dev API rebuilt from it.

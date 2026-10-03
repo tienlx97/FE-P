@@ -34,7 +34,9 @@ export function UserPermissionsFields({ userId, extraPermissions, isLoading }) {
   // is followed by a refetch of the user detail, so the round trip is long
   // enough to be noticed — without this the switch sits on its old value,
   // still clickable, giving no sign the toggle was registered.
-  const [pendingKey, setPendingKey] = useState(/** @type {string | null} */ (null));
+  const [pendingKey, setPendingKey] = useState(
+    /** @type {string | null} */ (null),
+  );
   const grantablePermissionsQuery = useGrantablePermissionsQuery();
   const grantMutation = useGrantUserPermissionMutation(userId);
   const revokeMutation = useRevokeUserPermissionMutation(userId);
@@ -46,6 +48,16 @@ export function UserPermissionsFields({ userId, extraPermissions, isLoading }) {
           <Skeleton key={row} height={40} index={row} />
         ))}
       </VStack>
+    );
+  }
+
+  if (grantablePermissionsQuery.isError) {
+    return (
+      <Banner
+        status="error"
+        title="Không thể tải danh sách quyền"
+        description="Vui lòng tải lại trang để thử lại."
+      />
     );
   }
 
@@ -69,7 +81,9 @@ export function UserPermissionsFields({ userId, extraPermissions, isLoading }) {
       // The api layer resolves failures as { success: false }, so the only
       // way here is the post-mutation refetch throwing. The grant/revoke
       // itself already landed; only the re-read of the user failed.
-      setError('Đã lưu thay đổi nhưng không tải lại được danh sách quyền. Vui lòng tải lại trang.');
+      setError(
+        'Đã lưu thay đổi nhưng không tải lại được danh sách quyền. Vui lòng tải lại trang.',
+      );
     } finally {
       setPendingKey(null);
     }
@@ -81,27 +95,33 @@ export function UserPermissionsFields({ userId, extraPermissions, isLoading }) {
 
       <Text color="secondary">
         Quyền cấp riêng cho người dùng này, không phụ thuộc phòng ban. Bật/tắt
-        có hiệu lực ngay, không cần bấm &quot;Lưu thay đổi&quot;.
+        có hiệu lực ngay, không cần bấm &quot;Lưu thay đổi&quot;. Thay đổi quyền
+        sẽ kết thúc các phiên hiện tại; nhân viên cần đăng nhập lại.
       </Text>
 
       <VStack gap={3} hAlign="stretch">
-        {(grantablePermissionsQuery.data ?? []).map(({ key, description: apiDescription }) => {
-          const { label, description } = labelForPermission(key, apiDescription);
-          return (
-            <Switch
-              key={key}
-              label={label}
-              description={description}
-              value={extraPermissions.includes(key)}
-              changeAction={(checked) => togglePermission(key, checked)}
-              isLoading={pendingKey === key}
-              // Serialised on purpose: each toggle rotates the same user's
-              // SecurityStamp, so two in flight at once race over one record.
-              isDisabled={pendingKey !== null && pendingKey !== key}
-              labelSpacing="spread"
-            />
-          );
-        })}
+        {(grantablePermissionsQuery.data ?? []).map(
+          ({ key, description: apiDescription }) => {
+            const { label, description } = labelForPermission(
+              key,
+              apiDescription,
+            );
+            return (
+              <Switch
+                key={key}
+                label={label}
+                description={description}
+                value={extraPermissions.includes(key)}
+                changeAction={(checked) => togglePermission(key, checked)}
+                isLoading={pendingKey === key}
+                // Serialised on purpose: each toggle rotates the same user's
+                // SecurityStamp, so two in flight at once race over one record.
+                isDisabled={pendingKey !== null && pendingKey !== key}
+                labelSpacing="spread"
+              />
+            );
+          },
+        )}
       </VStack>
     </VStack>
   );
