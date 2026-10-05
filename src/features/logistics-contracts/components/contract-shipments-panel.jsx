@@ -8,6 +8,13 @@ import { formatMoney } from '../config/currencies.js';
 // import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
 import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
+import {
+  formatFigure,
+  invoiceValueVnd,
+  invoiceValueVndTotal,
+  missingRateNote,
+  sumFigure,
+} from '../config/shipment-figures.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import { labelForShipmentStatus } from '../config/shipment-status.js';
 import { useCustomersQuery } from '../hooks/use-customers-query.js';
@@ -107,9 +114,7 @@ export function ContractShipmentsPanel({ contract }) {
   );
 
   const toTons = (/** @type {number} */ kg) => kg / 1000;
-  const totalTons = toTons(
-    shipments.reduce((total, s) => total + s.declarationWeightKg, 0),
-  );
+  const totalTons = toTons(sumFigure(shipments, (s) => s.declarationWeightKg));
   const totalVgmKg = [...vgmsByShipmentId.values()].reduce(
     (total, records) =>
       total + records.reduce((sum, record) => sum + (record.vgm ?? 0), 0),
@@ -124,18 +129,16 @@ export function ContractShipmentsPanel({ contract }) {
 
   const totalContainers = shipments.reduce(
     (total, shipment) =>
-      total + (shipment.type === 'FCL' ? shipment.quantityAmount : 0),
+      total + (shipment.type === 'FCL' ? (shipment.quantityAmount ?? 0) : 0),
     0,
   );
   const exportedValue = shipments.reduce(
     (total, shipment) => total + shipment.invoiceValue,
     0,
   );
-  const exportedValueVnd = shipments.reduce(
-    (total, shipment) =>
-      total + shipment.invoiceValue * shipment.declarationExchangeRate,
-    0,
-  );
+  // Only shipments with a declaration rate (BE `shipmentsMissingExchangeRate`).
+  const { total: exportedValueVnd, missingRateCount } =
+    invoiceValueVndTotal(shipments);
   const stats = [
     {
       label: 'TỔNG SỐ CONT & KHỐI LƯỢNG',
@@ -161,14 +164,20 @@ export function ContractShipmentsPanel({ contract }) {
       label: 'GIÁ TRỊ ĐÃ XUẤT (VNĐ)',
       value: formatMoney(exportedValueVnd),
       unit: 'VNĐ',
-      note: `Tương đương ${formatMoney(exportedValue)} ${contract.currency}`,
+      note:
+        missingRateNote(missingRateCount) ||
+        `Tương đương ${formatMoney(exportedValue)} ${contract.currency}`,
     },
   ];
 
   const rows = shipments.map((s) => {
     const unit = labelForShipmentQuantityUnit(s.quantityUnit);
-    const quantity = `${s.quantityAmount} ${unit}`;
-    const tons = toTons(s.declarationWeightKg);
+    const quantity = formatFigure(
+      s.quantityAmount,
+      (amount) => `${amount} ${unit}`,
+    );
+    const tons =
+      s.declarationWeightKg === null ? null : toTons(s.declarationWeightKg);
     const supplier = suppliersById.get(s.supplierCustomerId);
 
     /** @param {string} label @param {string | null | undefined} value @param {'accent' | 'teal'} [tone] @returns {[string, string, ('accent' | 'teal')?]} */
@@ -196,7 +205,7 @@ export function ContractShipmentsPanel({ contract }) {
     ]);
     const totalCont =
       s.quantityUnit === 'Cont'
-        ? Math.max(s.quantityAmount, vgms.length)
+        ? Math.max(s.quantityAmount ?? 0, vgms.length)
         : vgms.length;
     // Always the design's "phân bổ xe" layout; with no VGM records it is an
     // empty bar and a `___` row that fills in once carriers are recorded.
@@ -303,7 +312,7 @@ export function ContractShipmentsPanel({ contract }) {
         quantityUnit: unit,
         status: s.status,
         invoiceValue: s.invoiceValue,
-        invoiceValueVnd: s.invoiceValue * s.declarationExchangeRate,
+        invoiceValueVnd: invoiceValueVnd(s),
         logisticsCost: s.costs.reduce((sum, cost) => sum + cost.amount, 0),
         vgmKg: vgmTotal,
         vgm: vgms.length ? `${formatMoney(toTons(vgmTotal))} Tấn` : BLANK,
@@ -321,10 +330,10 @@ export function ContractShipmentsPanel({ contract }) {
       },
       value: {
         usd: formatMoney(s.invoiceValue),
-        vnd: formatMoney(s.invoiceValue * s.declarationExchangeRate),
-        rate: formatMoney(s.declarationExchangeRate),
+        vnd: formatFigure(invoiceValueVnd(s), formatMoney),
+        rate: formatFigure(s.declarationExchangeRate, formatMoney),
         scaleTag: quantity,
-        weight: `${formatMoney(tons)} Tấn`,
+        weight: formatFigure(tons, (value) => `${formatMoney(value)} Tấn`),
         vgm: vgms.length ? `${formatMoney(vgmTotal)} kg` : undefined,
       },
       route: {

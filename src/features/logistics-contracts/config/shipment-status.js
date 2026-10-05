@@ -125,3 +125,14 @@ export function nextShipmentStatus(incoterm, current) {
   const flow = shipmentStatusFlow(incoterm, current);
   return flow[flow.indexOf(current) + 1] ?? null;
 }
+
+/**
+ * Whether a shipment at `status` must carry its declaration figures
+ * (declared value, declaration exchange rate, quantity, declared weight).
+ * Mirrors BE `ShipmentStatusRules.RequiresDeclarationFigures`: optional
+ * while Booked / Packing, required from AtYardAwaitingExport on.
+ * @param {import('../types/index.js').ShipmentStatus | ''} status
+ */
+export function requiresDeclarationFigures(status) {
+  return status !== '' && status !== 'Booked' && status !== 'Packing';
+}

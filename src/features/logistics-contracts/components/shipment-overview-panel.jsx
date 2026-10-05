@@ -42,6 +42,7 @@ import {
 } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
+import { formatFigure } from '../config/shipment-figures.js';
 import {
   labelForCustomsChannel,
   metaToneForCustomsChannel,
@@ -149,7 +150,9 @@ export function ShipmentOverviewPanel({
   const sameCurrency =
     shipment.invoiceCurrency === shipment.declarationCurrency;
   const matchPercent =
-    sameCurrency && shipment.invoiceValue > 0
+    sameCurrency &&
+    shipment.invoiceValue > 0 &&
+    shipment.declarationValue !== null
       ? Math.round((shipment.declarationValue / shipment.invoiceValue) * 1000) /
         10
       : null;
@@ -159,7 +162,11 @@ export function ShipmentOverviewPanel({
     0,
   );
   const netTotal = vgms.reduce((total, vgm) => total + (vgm.netWeight ?? 0), 0);
-  const quantityLabel = `${shipment.quantityAmount} ${labelForShipmentQuantityUnit(shipment.quantityUnit)}`;
+  const quantityLabel = formatFigure(
+    shipment.quantityAmount,
+    (amount) =>
+      `${amount} ${labelForShipmentQuantityUnit(shipment.quantityUnit)}`,
+  );
   const vesselLabel = [shipment.vesselName, details?.voyageNumber]
     .filter(Boolean)
     .join(' // ');
@@ -195,7 +202,7 @@ export function ShipmentOverviewPanel({
                   hasDot: true,
                 }
           }
-          value={formatMoney(shipment.declarationValue)}
+          value={formatFigure(shipment.declarationValue, formatMoney)}
           unit={shipment.declarationCurrency}
           footLabel="Trị giá tính thuế xuất khẩu"
           footStatus={
@@ -214,10 +221,16 @@ export function ShipmentOverviewPanel({
           icon={RefreshCcw}
           tone="indigo"
           label="TỶ GIÁ QUY ĐỔI TỜ KHAI"
-          value={RATE_FORMATTER.format(shipment.declarationExchangeRate)}
+          value={formatFigure(shipment.declarationExchangeRate, (rate) =>
+            RATE_FORMATTER.format(rate),
+          )}
           unit={`VND / ${shipment.declarationCurrency}`}
           footLabel="Quy đổi ước tính:"
-          footValue={`~ ${formatVndAmount(shipment.declarationValueVnd)}`}
+          footValue={
+            shipment.declarationValueVnd === null
+              ? 'Chưa khai — bổ sung từ “Hạ bãi chờ xuất”'
+              : `~ ${formatVndAmount(shipment.declarationValueVnd)}`
+          }
         />
       </Grid>
 
@@ -458,9 +471,11 @@ export function ShipmentOverviewPanel({
             label={
               vgms.length > 0 ? 'Tổng khối lượng gộp' : 'Khối lượng tờ khai'
             }
-            value={formatKg(
-              vgms.length > 0 ? grossTotal : shipment.declarationWeightKg,
-            )}
+            value={
+              vgms.length > 0
+                ? formatKg(grossTotal)
+                : formatFigure(shipment.declarationWeightKg, formatKg)
+            }
             isCode
             caption={
               vgms.length > 0 ? `Net weight: ${formatKg(netTotal)}` : undefined
@@ -469,7 +484,7 @@ export function ShipmentOverviewPanel({
           {vgms.length > 0 ? (
             <MetaShipmentField
               label="Khối lượng tờ khai"
-              value={formatKg(shipment.declarationWeightKg)}
+              value={formatFigure(shipment.declarationWeightKg, formatKg)}
               isCode
             />
           ) : null}

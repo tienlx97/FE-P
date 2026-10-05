@@ -9,6 +9,7 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
+import { formatFigure } from '../config/shipment-figures.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
 
@@ -46,20 +47,25 @@ export function ShipmentInfoSection({ shipment, supplierName }) {
           {labelForPaymentType(shipment.paymentCondition)}
         </MetadataListItem>
         <MetadataListItem label="Số lượng">
-          {shipment.quantityAmount}{' '}
-          {labelForShipmentQuantityUnit(shipment.quantityUnit)}
+          {formatFigure(
+            shipment.quantityAmount,
+            (amount) =>
+              `${amount} ${labelForShipmentQuantityUnit(shipment.quantityUnit)}`,
+          )}
         </MetadataListItem>
         <MetadataListItem label="Giá trị invoice">
           {formatMoney(shipment.invoiceValue, shipment.invoiceCurrency)}
         </MetadataListItem>
         <MetadataListItem label="Giá trị tờ khai">
-          {formatMoney(shipment.declarationValue, shipment.declarationCurrency)}
+          {formatFigure(shipment.declarationValue, (value) =>
+            formatMoney(value, shipment.declarationCurrency),
+          )}
         </MetadataListItem>
         <MetadataListItem label="Tỷ giá tờ khai">
-          {shipment.declarationExchangeRate}
+          {formatFigure(shipment.declarationExchangeRate, String)}
         </MetadataListItem>
         <MetadataListItem label="Khối lượng tờ khai">
-          {shipment.declarationWeightKg} kg
+          {formatFigure(shipment.declarationWeightKg, (kg) => `${kg} kg`)}
         </MetadataListItem>
       </MetadataList>
 

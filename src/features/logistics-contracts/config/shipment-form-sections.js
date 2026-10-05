@@ -36,11 +36,6 @@ export const SHIPMENT_FORM_SECTIONS = [
       'invoiceNumber',
       'invoiceValue',
       'invoiceCurrency',
-      'declarationValue',
-      'declarationCurrency',
-      'declarationExchangeRate',
-      'quantityAmount',
-      'declarationWeightKg',
       'placeOfLoading',
       'placeOfDischarge',
       'placeOfDelivery',
@@ -51,10 +46,6 @@ export const SHIPMENT_FORM_SECTIONS = [
       'paymentCondition',
       'status',
       'invoiceValue',
-      'declarationValue',
-      'declarationExchangeRate',
-      'quantityAmount',
-      'declarationWeightKg',
       'placeOfLoading',
       'placeOfDischarge',
     ],
@@ -116,6 +107,11 @@ export const SHIPMENT_FORM_SECTIONS = [
     group: 'Hải quan',
     stage: 'AtYardAwaitingExport',
     fields: [
+      'declarationValue',
+      'declarationCurrency',
+      'declarationExchangeRate',
+      'quantityAmount',
+      'declarationWeightKg',
       'customsDeclarationNumber',
       'customsDeclarationDate',
       'customsChannel',
@@ -126,6 +122,10 @@ export const SHIPMENT_FORM_SECTIONS = [
       'coIssuedDate',
     ],
     keyFields: [
+      'declarationValue',
+      'declarationExchangeRate',
+      'quantityAmount',
+      'declarationWeightKg',
       'customsDeclarationNumber',
       'customsDeclarationDate',
       'customsChannel',
@@ -160,6 +160,15 @@ const STAGE_SECTIONS = {
 export function sectionsForStage(status) {
   return [...(STAGE_SECTIONS[status] ?? []), 'note'];
 }
+
+// Fields that always start with a value (currency, status, …): they say
+// nothing about whether the user has filled a group in.
+const PRESET_FIELDS = new Set([
+  'status',
+  'type',
+  'invoiceCurrency',
+  'declarationCurrency',
+]);
 
 /** @param {unknown} value */
 function isFilled(value) {
@@ -215,7 +224,13 @@ export function sectionCompleteness(section, values, errors) {
  */
 export function isSectionOpenByDefault(section, values) {
   if (section.stage === 'Booked') return true;
-  if (section.fields.some((field) => isFilled(values[field]))) return true;
+  if (
+    section.fields.some(
+      (field) => !PRESET_FIELDS.has(field) && isFilled(values[field]),
+    )
+  ) {
+    return true;
+  }
   if (!section.stage || !values.status) return false;
   return (
     SHIPMENT_STATUSES.indexOf(values.status) >=

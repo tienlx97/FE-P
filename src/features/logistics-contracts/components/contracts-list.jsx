@@ -56,6 +56,7 @@ import {
   describePaymentTerm,
   labelForPaymentMethod,
 } from '../config/party-kinds.js';
+import { missingRateNote } from '../config/shipment-figures.js';
 import { useContractPrivateInfosListQuery } from '../hooks/use-contract-private-infos-list-query.js';
 import {
   useContractListTabCounts,
@@ -148,6 +149,7 @@ function formatPaymentTerms(terms) {
  *   unpaidValue: number,
  *   exportedValue: number,
  *   exportedValueVnd: number,
+ *   shipmentsMissingExchangeRate: number,
  *   unexportedValue: number,
  *   isMultiCurrency: boolean,
  *   containerCount?: number | null,
@@ -220,6 +222,9 @@ const TOTALS_ROW_CELL_RENDERERS = {
   exportedValueVnd: (row) => (
     <Text weight="bold" color="secondary" hasTabularNumbers>
       {formatMoney(row.exportedValueVnd)} đ
+      {row.shipmentsMissingExchangeRate
+        ? ` (${missingRateNote(row.shipmentsMissingExchangeRate)})`
+        : ''}
     </Text>
   ),
   unexportedValue: (row) => (
@@ -705,6 +710,7 @@ export function ContractsList({
           unpaidValue: 0,
           exportedValue: 0,
           exportedValueVnd: 0,
+          shipmentsMissingExchangeRate: 0,
           unexportedValue: 0,
           containerCount: 0,
           logisticsSale: 0,
@@ -723,6 +729,8 @@ export function ContractsList({
       total.unpaidValue += settlement?.unpaidValue ?? 0;
       total.exportedValue += settlement?.exportedValue ?? 0;
       total.exportedValueVnd += settlement?.exportedValueVnd ?? 0;
+      total.shipmentsMissingExchangeRate +=
+        settlement?.shipmentsMissingExchangeRate ?? 0;
       total.unexportedValue += settlement?.unexportedValue ?? 0;
       total.containerCount =
         (total.containerCount ?? 0) + (settlement?.containerCount ?? 0);
@@ -741,6 +749,7 @@ export function ContractsList({
         unpaidValue: 0,
         exportedValue: 0,
         exportedValueVnd: 0,
+        shipmentsMissingExchangeRate: 0,
         unexportedValue: 0,
         containerCount: 0,
         logisticsSale: 0,
@@ -1038,8 +1047,15 @@ export function ContractsList({
       width: proportional(1, { minWidth: isFramed ? 220 : 250 }),
       align: 'end',
       filter: 'exportedValueVnd',
+      // Rated shipments only (BE `shipmentsMissingExchangeRate`).
       renderCell: (contract) =>
-        mutedIf(`${formatMoney(Number(contract.exportedValueVnd))} đ`),
+        mutedIf(
+          `${formatMoney(Number(contract.exportedValueVnd))} đ${
+            Number(contract.shipmentsMissingExchangeRate)
+              ? ` (${missingRateNote(Number(contract.shipmentsMissingExchangeRate))})`
+              : ''
+          }`,
+        ),
       exportValue: (contract) => Number(contract.exportedValueVnd),
     },
     {
@@ -1277,6 +1293,9 @@ export function ContractsList({
     exportedValue: settlementsByContractId.get(contract.id)?.exportedValue ?? 0,
     exportedValueVnd:
       settlementsByContractId.get(contract.id)?.exportedValueVnd ?? 0,
+    shipmentsMissingExchangeRate:
+      settlementsByContractId.get(contract.id)?.shipmentsMissingExchangeRate ??
+      0,
     unexportedValue:
       settlementsByContractId.get(contract.id)?.unexportedValue ?? 0,
     buyerCompanyName: contract.buyer.companyName,

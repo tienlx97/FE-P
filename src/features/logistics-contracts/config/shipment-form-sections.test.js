@@ -96,6 +96,15 @@ test('booking-time groups open on create, later ones wait for their stage', () =
     true,
   );
 });
+test('a preset currency does not count as data', () => {
+  assert.equal(
+    isSectionOpenByDefault(
+      section('customs'),
+      values({ declarationCurrency: 'USD' }),
+    ),
+    false,
+  );
+});
 test('a group with data opens whatever the status', () => {
   assert.equal(
     isSectionOpenByDefault(section('customs'), values({ coNumber: 'VN-1' })),
@@ -114,12 +123,16 @@ test('completeness: missing key fields, errors win, note is optional', () => {
   const customs = section('customs');
   assert.deepEqual(sectionCompleteness(customs, values(), {}), {
     state: 'missing',
-    missing: 3,
+    missing: 7,
   });
   assert.deepEqual(
     sectionCompleteness(
       customs,
       values({
+        declarationValue: 1200,
+        declarationExchangeRate: 25_000,
+        quantityAmount: 2,
+        declarationWeightKg: 18_000,
         customsDeclarationNumber: '1',
         customsDeclarationDate: '2026-10-01',
         customsChannel: 'Green',

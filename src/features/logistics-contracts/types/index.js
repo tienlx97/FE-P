@@ -803,13 +803,13 @@ export {};
  * @property {PaymentType} paymentCondition
  * @property {number} invoiceValue
  * @property {string} invoiceCurrency - 3-letter uppercase ISO 4217 code
- * @property {number} declarationValue
+ * @property {number | null} declarationValue - null until declared (Booked / Packing)
  * @property {string} declarationCurrency - 3-letter uppercase ISO 4217 code
- * @property {number} declarationExchangeRate
- * @property {number} declarationValueVnd - `declarationValue * declarationExchangeRate`, computed at read time, never stored
- * @property {number} quantityAmount
+ * @property {number | null} declarationExchangeRate - null until declared (Booked / Packing)
+ * @property {number | null} declarationValueVnd - `declarationValue * declarationExchangeRate`, computed at read time, never stored; null without either
+ * @property {number | null} quantityAmount - null until declared (Booked / Packing)
  * @property {ShipmentQuantityUnit} quantityUnit
- * @property {number} declarationWeightKg
+ * @property {number | null} declarationWeightKg - null until declared (Booked / Packing)
  * @property {string | null} coNumber - customs-issued, manually entered
  * @property {string | null} coDeclarationDate - ISO date, "ngày khai C/O"
  * @property {string | null} coIssuedDate - ISO date, "ngày có C/O"
@@ -1145,11 +1145,11 @@ export {};
  * @property {PaymentType | ''} paymentCondition
  * @property {number | undefined} invoiceValue
  * @property {string} invoiceCurrency
- * @property {number | undefined} declarationValue
+ * @property {number} [declarationValue] - optional while Booked / Packing
  * @property {string} declarationCurrency
- * @property {number | undefined} declarationExchangeRate
- * @property {number | undefined} quantityAmount
- * @property {number | undefined} declarationWeightKg
+ * @property {number} [declarationExchangeRate] - optional while Booked / Packing
+ * @property {number} [quantityAmount] - optional while Booked / Packing
+ * @property {number} [declarationWeightKg] - optional while Booked / Packing
  * @property {string} coNumber
  * @property {string} coDeclarationDate
  * @property {string} coIssuedDate

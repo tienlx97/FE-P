@@ -73,6 +73,12 @@ import {
   isContractEligibleForShipment,
   reasonContractIneligibleForShipment,
 } from '../config/shipment-contract-eligibility.js';
+import {
+  formatFigure,
+  invoiceValueVnd,
+  invoiceValueVndTotal,
+  missingRateNote,
+} from '../config/shipment-figures.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import {
   labelForShipmentStatus,
@@ -123,6 +129,7 @@ function orDash(value) {
  *   invoiceValue: number,
  *   declarationValue: number,
  *   invoiceValueVnd?: number,
+ *   missingRateCount?: number,
  *   logisticsCost?: number,
  *   quantity: string | null,
  *   vgmCount?: number,
@@ -216,6 +223,9 @@ const TOTALS_ROW_CELL_RENDERERS = {
         xstyle={styles.nowrap}
       >
         {formatMoney(row.invoiceValueVnd)} đ
+        {row.missingRateCount
+          ? ` (${missingRateNote(row.missingRateCount)})`
+          : ''}
       </Text>
     ),
   // Figma 109:6632: per-LOG-group totals in bold amber.
@@ -578,7 +588,9 @@ export function ShipmentsList() {
       const invoice = addCurrency(row.invoiceCurrency);
       const declaration = addCurrency(row.declarationCurrency);
       if (invoice) invoice.invoiceValue += row.invoiceValue;
-      if (declaration) declaration.declarationValue += row.declarationValue;
+      if (declaration) {
+        declaration.declarationValue += row.declarationValue ?? 0;
+      }
     }
     if (byCurrency.size === 0) addCurrency('');
     const costTotalsByCategory = COST_GROUP_COLUMNS.map((group) => ({
@@ -614,7 +626,7 @@ export function ShipmentsList() {
     for (const row of selected) {
       quantities.set(
         row.quantityUnit,
-        (quantities.get(row.quantityUnit) ?? 0) + row.quantityAmount,
+        (quantities.get(row.quantityUnit) ?? 0) + (row.quantityAmount ?? 0),
       );
     }
     const summary = {
@@ -634,14 +646,11 @@ export function ShipmentsList() {
       ...total,
       id: `totals-${total.currency}`,
       __isTotalsRow: true,
+      // Rated shipments only; the rest are counted for the cell's note.
       invoiceValueVnd:
-        index === 0
-          ? selected.reduce(
-              (sum, row) =>
-                sum + row.invoiceValue * row.declarationExchangeRate,
-              0,
-            )
-          : undefined,
+        index === 0 ? invoiceValueVndTotal(selected).total : undefined,
+      missingRateCount:
+        index === 0 ? invoiceValueVndTotal(selected).missingRateCount : 0,
       logisticsCost:
         index === 0
           ? selected.reduce(
@@ -932,10 +941,18 @@ export function ShipmentsList() {
       filter: 'quantityAmount',
       renderCell: (row) =>
         primaryText(
-          `${numberValueToInput(row.quantityAmount)} ${labelForShipmentQuantityUnit(row.quantityUnit)}`,
+          formatFigure(
+            row.quantityAmount,
+            (amount) =>
+              `${numberValueToInput(amount)} ${labelForShipmentQuantityUnit(row.quantityUnit)}`,
+          ),
         ),
       exportValue: (row) =>
-        `${row.quantityAmount} ${labelForShipmentQuantityUnit(row.quantityUnit)}`,
+        formatFigure(
+          row.quantityAmount,
+          (amount) =>
+            `${amount} ${labelForShipmentQuantityUnit(row.quantityUnit)}`,
+        ),
     },
     {
       key: 'status',
@@ -1090,10 +1107,13 @@ export function ShipmentsList() {
       // computed value (invoiceValue * declarationExchangeRate).
       renderCell: (row) => (
         <Text color="secondary" hasTabularNumbers xstyle={styles.nowrap}>
-          {formatMoney(row.invoiceValue * row.declarationExchangeRate)} đ
+          {formatFigure(
+            invoiceValueVnd(row),
+            (value) => `${formatMoney(value)} đ`,
+          )}
         </Text>
       ),
-      exportValue: (row) => row.invoiceValue * row.declarationExchangeRate,
+      exportValue: (row) => invoiceValueVnd(row),
     },
     {
       key: 'logisticsCost',

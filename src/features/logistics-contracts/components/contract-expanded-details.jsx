@@ -27,6 +27,7 @@ import { sumContractAnnexAdjustments } from '../config/annex-settlement.js';
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
 import { reasonContractIneligibleForShipment } from '../config/shipment-contract-eligibility.js';
+import { formatFigure } from '../config/shipment-figures.js';
 import { labelForShipmentQuantityUnit } from '../config/shipment-quantity-units.js';
 import { labelForShipmentStatus } from '../config/shipment-status.js';
 import { labelForShipmentType } from '../config/shipment-types.js';
@@ -264,7 +265,11 @@ export function ContractExpandedDetails({
       header: 'Số lượng',
       width: pixel(110),
       renderCell: (shipment) =>
-        `${shipment.quantityAmount} ${labelForShipmentQuantityUnit(shipment.quantityUnit)}`,
+        formatFigure(
+          shipment.quantityAmount,
+          (amount) =>
+            `${amount} ${labelForShipmentQuantityUnit(shipment.quantityUnit)}`,
+        ),
     },
     {
       key: 'bookingNumber',

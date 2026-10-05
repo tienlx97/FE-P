@@ -13,6 +13,8 @@ import { Anchor, Eye, Package, Pencil, Ship, Warehouse } from 'lucide-react';
 import { MetaPill } from '@/shared/components/custom/meta/index.js';
 import { TanStackDataTable } from '@/shared/components/tanstack-data-table.jsx';
 
+import { MISSING_FIGURE, missingRateNote } from '../config/shipment-figures.js';
+
 const NUMBER = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const MONEY = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 
@@ -54,6 +56,8 @@ export function ContractShipmentsTable({ shipments, contractNumber, declarationC
   const byUnit = new Map();
   for (const row of shipments) {
     const { quantityUnit, quantityAmount } = row.table;
+    // Not declared yet (Booked / Packing): nothing to add.
+    if (quantityAmount === null) continue;
     byUnit.set(quantityUnit, (byUnit.get(quantityUnit) ?? 0) + quantityAmount);
   }
   const total = {
@@ -64,7 +68,9 @@ export function ContractShipmentsTable({ shipments, contractNumber, declarationC
       quantity: [...byUnit].map(([unit, amount]) => `${NUMBER.format(amount)} ${unit}`).join(' + '),
       completedCount: shipments.filter((row) => row.table.status === 'Completed').length,
       invoiceValue: shipments.reduce((sum, row) => sum + row.table.invoiceValue, 0),
-      invoiceValueVnd: shipments.reduce((sum, row) => sum + row.table.invoiceValueVnd, 0),
+      // Rated shipments only; the rest are counted for the cell's note.
+      invoiceValueVnd: shipments.reduce((sum, row) => sum + (row.table.invoiceValueVnd ?? 0), 0),
+      missingRateCount: shipments.filter((row) => row.table.invoiceValueVnd === null).length,
       logisticsCost: shipments.reduce((sum, row) => sum + row.table.logisticsCost, 0),
       vgmKg: shipments.reduce((sum, row) => sum + row.table.vgmKg, 0),
     },
@@ -100,7 +106,7 @@ export function ContractShipmentsTable({ shipments, contractNumber, declarationC
       return <MetaPill label={presentation?.label ?? row.status.label} icon={presentation?.icon} tone={presentation?.tone ?? (row.status.tone === 'success' ? 'success' : row.status.tone === 'neutral' ? 'neutral' : 'accent')} size="lg" />;
     } },
     { key: 'value', header: 'GIÁ TRỊ INV', width: pixel(148), align: 'end', renderCell: (row) => cell(`${declarationCurrency === 'USD' ? '$' : ''}${MONEY.format(row.table.invoiceValue)}`, true) },
-    { key: 'vnd', header: 'GIÁ TRỊ INV (VNĐ)', width: pixel(160), align: 'end', renderCell: (row) => cell(`${MONEY.format(row.table.invoiceValueVnd)} đ`, isTotal(row)) },
+    { key: 'vnd', header: 'GIÁ TRỊ INV (VNĐ)', width: pixel(160), align: 'end', renderCell: (row) => (row.table.invoiceValueVnd === null ? cell(MISSING_FIGURE) : cell(`${MONEY.format(row.table.invoiceValueVnd)} đ${isTotal(row) && row.table.missingRateCount ? ` (${missingRateNote(row.table.missingRateCount)})` : ''}`, isTotal(row))) },
     { key: 'cost', header: 'CHI PHÍ LOGISTICS', width: pixel(161), align: 'end', renderCell: (row) => <Text as="span" weight={isTotal(row) ? 'bold' : 'semibold'} color="accent" hasTabularNumbers xstyle={styles.cell}>{MONEY.format(row.table.logisticsCost)} VNĐ</Text> },
     { key: 'vgm', header: 'VGM', width: pixel(112), align: 'end', renderCell: (row) => cell(isTotal(row) ? row.table.vgmKg ? `${NUMBER.format(row.table.vgmKg / 1000)} Tấn` : '—' : row.table.vgm, isTotal(row)) },
     { key: 'actions', header: 'THAO TÁC', width: pixel(111), align: 'center', renderCell: (row) => isTotal(row) ? cell('—') : <HStack gap={0} xstyle={styles.actionRow}><IconButton label={`Xem ${row.code}`} icon={<Icon icon={Eye} size="sm" />} variant="ghost" size="sm" onClick={() => onView?.(row.id)} /><IconButton label={`Sửa ${row.code}`} icon={<Icon icon={Pencil} size="sm" />} variant="ghost" size="sm" onClick={() => onEdit(row.id)} /></HStack> },

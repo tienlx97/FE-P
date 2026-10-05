@@ -5,7 +5,10 @@ import { PAYMENT_TYPES } from './payment-schedule-types.js';
 import { MAX_TRANSSHIPMENT_LEGS } from './shipment-documents.js';
 import { SHIPMENT_CUSTOMS_CHANNELS } from './shipment-operational-details.js';
 import { freeTimeErrors } from './shipment-schedule.js';
-import { SHIPMENT_STATUSES } from './shipment-status.js';
+import {
+  requiresDeclarationFigures,
+  SHIPMENT_STATUSES,
+} from './shipment-status.js';
 import { SHIPMENT_TYPES } from './shipment-types.js';
 
 /** One side's free time as edited ('' mode = none agreed). */
@@ -57,6 +60,20 @@ export const shipmentCostLineSchema = z.object({
   costNature: z.enum(['Standard', 'Abnormal']),
 });
 
+/** Required-from-the-yard message per declaration figure. */
+const DECLARATION_FIGURE_MESSAGES = /** @type {const} */ ([
+  ['declarationValue', 'Bắt buộc từ “Hạ bãi chờ xuất”: nhập giá trị tờ khai'],
+  [
+    'declarationExchangeRate',
+    'Bắt buộc từ “Hạ bãi chờ xuất”: nhập tỷ giá tờ khai',
+  ],
+  ['quantityAmount', 'Bắt buộc từ “Hạ bãi chờ xuất”: nhập số lượng'],
+  [
+    'declarationWeightKg',
+    'Bắt buộc từ “Hạ bãi chờ xuất”: nhập khối lượng tờ khai',
+  ],
+]);
+
 /**
  * Mirrors the backend's `CreateShipmentCommandValidator`/
  * `UpdateShipmentCommandValidator` (BE-kt-xnk). `shipmentNumber`/
@@ -105,21 +122,21 @@ export const shipmentSchema = z
     invoiceCurrency: z.enum(CURRENCY_CODES, {
       error: 'Vui lòng chọn đơn vị tiền tệ',
     }),
-    declarationValue: z
-      .number({ error: 'Vui lòng nhập giá trị tờ khai' })
-      .positive('Giá trị phải lớn hơn 0'),
+    // Declaration figures: optional while Booked / Packing, required from
+    // AtYardAwaitingExport (superRefine below, BE `DeclarationFigureRules`).
+    declarationValue: z.number().positive('Giá trị phải lớn hơn 0').optional(),
     declarationCurrency: z.enum(CURRENCY_CODES, {
       error: 'Vui lòng chọn đơn vị tiền tệ',
     }),
     declarationExchangeRate: z
-      .number({ error: 'Vui lòng nhập tỷ giá tờ khai' })
-      .positive('Tỷ giá phải lớn hơn 0'),
-    quantityAmount: z
-      .number({ error: 'Vui lòng nhập số lượng' })
-      .positive('Số lượng phải lớn hơn 0'),
+      .number()
+      .positive('Tỷ giá phải lớn hơn 0')
+      .optional(),
+    quantityAmount: z.number().positive('Số lượng phải lớn hơn 0').optional(),
     declarationWeightKg: z
-      .number({ error: 'Vui lòng nhập khối lượng tờ khai' })
-      .positive('Khối lượng phải lớn hơn 0'),
+      .number()
+      .positive('Khối lượng phải lớn hơn 0')
+      .optional(),
     coNumber: z.string().trim().max(50, 'Tối đa 50 ký tự'),
     coDeclarationDate: z.string(),
     coIssuedDate: z.string(),
@@ -167,6 +184,23 @@ export const shipmentSchema = z
     originFreeTime: freeTimeFormSchema,
     destinationFreeTime: freeTimeFormSchema,
   })
+  // Its own check with `when`: zod skips refinements once another field
+  // fails its type (an unset enum on an empty form), and the figures would
+  // only report after those were fixed.
+  .superRefine(
+    (values, context) => {
+      if (!requiresDeclarationFigures(values.status)) return;
+      for (const [field, message] of DECLARATION_FIGURE_MESSAGES) {
+        if (values[field] === undefined) {
+          context.addIssue({ code: 'custom', path: [field], message });
+        }
+      }
+    },
+    {
+      when: (payload) =>
+        typeof payload.value === 'object' && payload.value !== null,
+    },
+  )
   .superRefine((values, context) => {
     if (values.isTransshipment) {
       if (values.transshipmentLegs.length === 0) {

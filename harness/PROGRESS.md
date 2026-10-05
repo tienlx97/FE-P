@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-05 — Stage-gated declaration figures (tasks 1.1–1.2)
+
+- `stage-gated-declaration-figures`, FE side of BE-P 54823e7 (user chose: required by stage; VNĐ totals skip + count). 1.1: `requiresDeclarationFigures` (shipment-status.js); schema makes the 4 figures optional, required from AtYardAwaitingExport with field messages; payload sends null; figures moved to "Hải quan & C/O" with status-dependent required marks and a hint; preset currency/status no longer count as group data. 1.2: `config/shipment-figures.js` (invoiceValueVnd, invoiceValueVndTotal, sumFigure, missingRateNote, formatFigure) used by shipment overview/info, contract overview/shipments panel+table, shipments list and contracts list (BE `shipmentsMissingExchangeRate`). Typecheck surfaced 21 null-unsafe sites; template-string sites fixed by hand. Tasks done together because the type change breaks the gate until displays are fixed.
+- Bug caught in browser: on an empty form the figure check did not run (zod skips refinements after aborting enum issues). Regression test added; the check now runs as its own `superRefine` with `when`.
+- Browser (preview :3001 → rebuilt dev API :8081): create drawer Booked → no customs errors; "Hạ bãi chờ xuất" → 4 figure errors and outline "Có lỗi"; nothing created. 26KCT34/LOT-01 overview unchanged (35,000.00 USD, Khớp 100%, 25,930, ~907,550,000 đ). A real Booked shipment with null figures was not created on shared data; null rendering covered by helper tests.
+- Gate passed: `harness/runs/20261005-233019-251449/`. A first commit had swept in prettier reformatting of 47 untouched files (directory-wide `prettier --write`); verified formatting-only, reverted, and recommitted with task files only. Harness gap: no check that a commit avoids format-only churn; use file-scoped prettier.
+- Discovered: the remaining `superRefine` (transshipment ports, SI/CY cut-off time without date, free time) has the same skip-after-aborting-issue behaviour; those errors appear only after enum fields are chosen. Generated `meta*.d.ts` header churn still left uncommitted.
+
 ## 2026-10-05 — Shipment form by stage (tasks 1.1–1.3)
 
 - `shipment-staged-form`, after the user reviewed a Stepper-wizard idea and chose progressive disclosure A–D. 1.1 `config/shipment-form-sections.js` (7 groups: Thông tin cơ bản incl. POL/POD/delivery, Đơn vị tham gia, Booking & tàu, Lịch trình & cut-off, Hàng hóa & bên nhận, Hải quan & C/O, Ghi chú; completeness, default-open, stage groups) and `shipmentStatusFlow` / `nextShipmentStatus` per Incoterm in `shipment-status.js`; 8 tests.

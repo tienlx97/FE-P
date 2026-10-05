@@ -163,11 +163,11 @@ function toCreateRequestBody(values, costLines) {
     PaymentCondition: values.paymentCondition,
     InvoiceValue: values.invoiceValue,
     InvoiceCurrency: values.invoiceCurrency,
-    DeclarationValue: values.declarationValue,
+    DeclarationValue: values.declarationValue ?? null,
     DeclarationCurrency: values.declarationCurrency,
-    DeclarationExchangeRate: values.declarationExchangeRate,
-    QuantityAmount: values.quantityAmount,
-    DeclarationWeightKg: values.declarationWeightKg,
+    DeclarationExchangeRate: values.declarationExchangeRate ?? null,
+    QuantityAmount: values.quantityAmount ?? null,
+    DeclarationWeightKg: values.declarationWeightKg ?? null,
     CoNumber: values.coNumber || null,
     CoDeclarationDate: values.coDeclarationDate || null,
     CoIssuedDate: values.coIssuedDate || null,
@@ -208,11 +208,11 @@ function toUpdateRequestBody(values, costLines) {
     PaymentCondition: values.paymentCondition,
     InvoiceValue: values.invoiceValue,
     InvoiceCurrency: values.invoiceCurrency,
-    DeclarationValue: values.declarationValue,
+    DeclarationValue: values.declarationValue ?? null,
     DeclarationCurrency: values.declarationCurrency,
-    DeclarationExchangeRate: values.declarationExchangeRate,
-    QuantityAmount: values.quantityAmount,
-    DeclarationWeightKg: values.declarationWeightKg,
+    DeclarationExchangeRate: values.declarationExchangeRate ?? null,
+    QuantityAmount: values.quantityAmount ?? null,
+    DeclarationWeightKg: values.declarationWeightKg ?? null,
     CoNumber: values.coNumber || null,
     CoDeclarationDate: values.coDeclarationDate || null,
     CoIssuedDate: values.coIssuedDate || null,
@@ -332,7 +332,7 @@ export async function listAllShipments({ page = 1, pageSize = 25 } = {}) {
  * declaration / C/O number) and per-status tab counts computed without the
  * `status` conditions; an older backend without it yields all zeros.
  * @param {{ page?: number, pageSize?: number, conditions?: import('@/shared/components/advanced-filter-builder.jsx').AdvancedFilterCondition[], sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} [options]
- * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number, declarationValue: number }[], logisticsCostTotal: number, declarationValueVndTotal: number, invoiceValueVndTotal: number, quantityTotals: { unit: import('../types/index.js').ShipmentQuantityUnit, amount: number }[], vgmCountTotal: number, summary: ShipmentListSummary } | { success: false, message: string, conflict: boolean }>}
+ * @returns {Promise<{ success: true, shipments: import('../types/index.js').Shipment[], page: number, pageSize: number, totalCount: number, totalPages: number, totals: { currency: string, invoiceValue: number, declarationValue: number }[], logisticsCostTotal: number, declarationValueVndTotal: number, invoiceValueVndTotal: number, missingExchangeRateCount: number, quantityTotals: { unit: import('../types/index.js').ShipmentQuantityUnit, amount: number }[], vgmCountTotal: number, summary: ShipmentListSummary } | { success: false, message: string, conflict: boolean }>}
  */
 export async function searchAllShipments({
   page = 1,
@@ -376,6 +376,8 @@ export async function searchAllShipments({
     logisticsCostTotal: result.data?.logisticsCostTotal ?? 0,
     declarationValueVndTotal: result.data?.declarationValueVndTotal ?? 0,
     invoiceValueVndTotal: result.data?.invoiceValueVndTotal ?? 0,
+    // Shipments left out of both VNĐ totals for lack of a declaration rate.
+    missingExchangeRateCount: result.data?.missingExchangeRateCount ?? 0,
     quantityTotals: result.data?.quantityTotals ?? [],
     vgmCountTotal: result.data?.vgmCountTotal ?? 0,
     summary: toListSummary(result.data?.summary),

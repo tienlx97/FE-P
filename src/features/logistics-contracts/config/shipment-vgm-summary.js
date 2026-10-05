@@ -38,7 +38,7 @@ export function summarizeShipmentVgms(vgms, shipment) {
 
   const declaredCount = vgms.filter((vgm) => (vgm.vgm ?? 0) > 0).length;
   const plannedContainerCount =
-    shipment.quantityUnit === 'Cont' && shipment.quantityAmount > 0
+    shipment.quantityUnit === 'Cont' && (shipment.quantityAmount ?? 0) > 0
       ? shipment.quantityAmount
       : null;
 

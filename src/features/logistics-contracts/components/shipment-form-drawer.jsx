@@ -81,6 +81,7 @@ import {
 import {
   labelForShipmentStatus,
   metaToneForShipmentStatus,
+  requiresDeclarationFigures,
   shipmentStatusOptions,
 } from '../config/shipment-status.js';
 import {
@@ -99,7 +100,6 @@ import { ShipmentGoodsAndPartiesFields } from './shipment-goods-and-parties-fiel
 // cab96b6c…) drawer width, plus the section outline (`shipment-staged-form`).
 const DRAWER_WIDTH = 1120;
 const TWO_COLUMNS = { minWidth: 280, max: 2 };
-const THREE_COLUMNS = { minWidth: 200, max: 3 };
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** @typedef {import('@astryxdesign/core/Calendar').ISODateString} ISODateString */
@@ -243,6 +243,8 @@ export function ShipmentFormDrawer({
     label: customer.companyName,
   }));
   const quantityUnit = quantityUnitForShipmentType(values.type);
+  // Declaration figures: optional while Booked / Packing.
+  const figuresRequired = requiresDeclarationFigures(values.status);
   const transitDays =
     values.etd && values.eta
       ? Math.round((Date.parse(values.eta) - Date.parse(values.etd)) / DAY_MS)
@@ -537,60 +539,6 @@ export function ShipmentFormDrawer({
                             amountStatus={fieldStatuses.invoiceValue}
                             currencyStatus={fieldStatuses.invoiceCurrency}
                             isDisabled={isDisabled}
-                          />
-                          <MoneyWithCurrency
-                            label="Giá trị tờ khai"
-                            amount={values.declarationValue}
-                            onAmountChange={(value) =>
-                              setField('declarationValue', value)
-                            }
-                            currency={values.declarationCurrency}
-                            onCurrencyChange={(value) =>
-                              setField('declarationCurrency', value)
-                            }
-                            amountStatus={fieldStatuses.declarationValue}
-                            currencyStatus={fieldStatuses.declarationCurrency}
-                            isDisabled={isDisabled}
-                          />
-                        </Grid>
-
-                        <Grid columns={THREE_COLUMNS} gap={4}>
-                          <FormattedNumberTextInput
-                            label="Tỷ giá tờ khai"
-                            value={values.declarationExchangeRate}
-                            onChange={(value) =>
-                              setField('declarationExchangeRate', value)
-                            }
-                            units="đ"
-                            isRequired
-                            isDisabled={isDisabled}
-                            {...statusOf('declarationExchangeRate')}
-                          />
-                          <FormattedNumberTextInput
-                            label="Số lượng"
-                            value={values.quantityAmount}
-                            onChange={(value) =>
-                              setField('quantityAmount', value)
-                            }
-                            units={
-                              quantityUnit
-                                ? labelForShipmentQuantityUnit(quantityUnit)
-                                : undefined
-                            }
-                            isRequired
-                            isDisabled={isDisabled}
-                            {...statusOf('quantityAmount')}
-                          />
-                          <FormattedNumberTextInput
-                            label="Khối lượng tờ khai"
-                            value={values.declarationWeightKg}
-                            onChange={(value) =>
-                              setField('declarationWeightKg', value)
-                            }
-                            units="kg"
-                            isRequired
-                            isDisabled={isDisabled}
-                            {...statusOf('declarationWeightKg')}
                           />
                         </Grid>
 
@@ -1135,6 +1083,65 @@ export function ShipmentFormDrawer({
                       </ShipmentFormSection>
 
                       <ShipmentFormSection {...sectionProps('customs')}>
+                        <Text size="sm" color="secondary">
+                          {figuresRequired
+                            ? 'Lô đã tới “Hạ bãi chờ xuất”: số liệu tờ khai là bắt buộc.'
+                            : 'Số liệu tờ khai có thể bổ sung sau — bắt buộc từ “Hạ bãi chờ xuất”.'}
+                        </Text>
+                        <Grid columns={TWO_COLUMNS} gap={4}>
+                          <MoneyWithCurrency
+                            label="Giá trị tờ khai"
+                            amount={values.declarationValue}
+                            onAmountChange={(value) =>
+                              setField('declarationValue', value)
+                            }
+                            currency={values.declarationCurrency}
+                            onCurrencyChange={(value) =>
+                              setField('declarationCurrency', value)
+                            }
+                            amountStatus={fieldStatuses.declarationValue}
+                            currencyStatus={fieldStatuses.declarationCurrency}
+                            isAmountRequired={figuresRequired}
+                            isDisabled={isDisabled}
+                          />
+                          <FormattedNumberTextInput
+                            label="Tỷ giá tờ khai"
+                            value={values.declarationExchangeRate}
+                            onChange={(value) =>
+                              setField('declarationExchangeRate', value)
+                            }
+                            units="đ"
+                            isRequired={figuresRequired}
+                            isDisabled={isDisabled}
+                            {...statusOf('declarationExchangeRate')}
+                          />
+                          <FormattedNumberTextInput
+                            label="Số lượng"
+                            value={values.quantityAmount}
+                            onChange={(value) =>
+                              setField('quantityAmount', value)
+                            }
+                            units={
+                              quantityUnit
+                                ? labelForShipmentQuantityUnit(quantityUnit)
+                                : undefined
+                            }
+                            isRequired={figuresRequired}
+                            isDisabled={isDisabled}
+                            {...statusOf('quantityAmount')}
+                          />
+                          <FormattedNumberTextInput
+                            label="Khối lượng tờ khai"
+                            value={values.declarationWeightKg}
+                            onChange={(value) =>
+                              setField('declarationWeightKg', value)
+                            }
+                            units="kg"
+                            isRequired={figuresRequired}
+                            isDisabled={isDisabled}
+                            {...statusOf('declarationWeightKg')}
+                          />
+                        </Grid>
                         <Grid columns={TWO_COLUMNS} gap={4}>
                           <TextInput
                             label="Mã C/O"
@@ -1423,8 +1430,10 @@ export function ShipmentFormDrawer({
  *   onCurrencyChange: (value: string) => void,
  *   amountStatus?: { type: 'error', message: string },
  *   currencyStatus?: { type: 'error', message: string },
+ *   isAmountRequired?: boolean,
  *   isDisabled: boolean,
- * }} props
+ * }} props `isAmountRequired` false: "Giá trị tờ khai" before the yard
+ * stage (the currency is always required).
  */
 function MoneyWithCurrency({
   label,
@@ -1434,6 +1443,7 @@ function MoneyWithCurrency({
   onCurrencyChange,
   amountStatus,
   currencyStatus,
+  isAmountRequired = true,
   isDisabled,
 }) {
   return (
@@ -1444,7 +1454,7 @@ function MoneyWithCurrency({
           value={amount}
           onChange={onAmountChange}
           units={currency || undefined}
-          isRequired
+          isRequired={isAmountRequired}
           isDisabled={isDisabled}
           status={amountStatus}
           statusVariant="detached"

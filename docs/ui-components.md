@@ -72,7 +72,12 @@ through them.
   beside an outline with completeness; groups not yet relevant to the status
   start collapsed. The shipment page's `shipment-status-flow.jsx` (Stepper of
   `shipmentStatusFlow(incoterm)`) opens the drawer with `stage` to move to a
-  status while showing only that stage's groups.
+  status while showing only that stage's groups. Declaration figures
+  (declared value, rate, quantity, weight) sit in "Hải quan & C/O" and are
+  optional while Booked/Packing (`requiresDeclarationFigures`, BE-P
+  `stage-gated-declaration-figures`); displays go through
+  `config/shipment-figures.js` ("—" when missing, VNĐ totals skip unrated
+  shipments with a "chưa gồm N lô chưa có tỷ giá" note).
 - Commission: `commission-form-dialog.jsx` (create/view/edit); view content
   uses `commission-expanded-details.jsx` with related annex/payment
   actions. 1:1 with its Contract.

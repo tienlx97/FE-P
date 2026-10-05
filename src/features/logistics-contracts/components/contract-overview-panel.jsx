@@ -25,6 +25,11 @@ import { labelForContractAnnexType } from '../config/contract-annex-types.js';
 import { formatMoney } from '../config/currencies.js';
 import { labelForPaymentMethod } from '../config/party-kinds.js';
 import { labelForPaymentType } from '../config/payment-schedule-types.js';
+import {
+  invoiceValueVndTotal,
+  missingRateNote,
+  sumFigure,
+} from '../config/shipment-figures.js';
 import { useCommissionQuery } from '../hooks/use-commission-query.js';
 import { useContractAnnexesQuery } from '../hooks/use-contract-annexes-query.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
@@ -117,11 +122,9 @@ export function ContractOverviewPanel({
     0,
   );
   const unexportedValue = Math.max(0, settlementValue - exportedValue);
-  const exportedValueVnd = shipments.reduce(
-    (total, shipment) =>
-      total + shipment.invoiceValue * shipment.declarationExchangeRate,
-    0,
-  );
+  // Only shipments with a declaration rate (BE `shipmentsMissingExchangeRate`).
+  const { total: exportedValueVnd, missingRateCount } =
+    invoiceValueVndTotal(shipments);
   const exportedPercent =
     settlementValue > 0 ? roundTo2((exportedValue / settlementValue) * 100) : 0;
   const unexportedPercent = roundTo2(Math.max(0, 100 - exportedPercent));
@@ -206,7 +209,11 @@ export function ContractOverviewPanel({
       iconTone: 'neutral',
       value: formatMoney(exportedValueVnd),
       unit: 'VNĐ',
-      end: { hint: shipmentCountHint },
+      end: {
+        hint: missingRateCount
+          ? `(${missingRateNote(missingRateCount)})`
+          : shipmentCountHint,
+      },
       segments: [{ percent: Math.min(100, exportedPercent), tone: 'neutral' }],
     },
     {
@@ -375,16 +382,13 @@ export function ContractOverviewPanel({
   };
 
   const totalWeightTons =
-    shipments.reduce(
-      (total, shipment) => total + shipment.declarationWeightKg,
-      0,
-    ) / 1000;
+    sumFigure(shipments, (shipment) => shipment.declarationWeightKg) / 1000;
   const containerCount = shipments
     .filter((shipment) => shipment.quantityUnit === 'Cont')
-    .reduce((total, shipment) => total + shipment.quantityAmount, 0);
+    .reduce((total, shipment) => total + (shipment.quantityAmount ?? 0), 0);
   const packageCount = shipments
     .filter((shipment) => shipment.quantityUnit === 'Kien')
-    .reduce((total, shipment) => total + shipment.quantityAmount, 0);
+    .reduce((total, shipment) => total + (shipment.quantityAmount ?? 0), 0);
   const cargo = {
     subtitle: contract.category || undefined,
     weightValue: formatMoney(totalWeightTons),
