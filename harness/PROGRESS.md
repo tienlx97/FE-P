@@ -16190,3 +16190,12 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Weather card back to the default (neutral) Card. Condition icons use `weatherTone` (config, unit-tested): clear day orange, part-sun/clear night yellow, cloud/fog gray, drizzle/snow cyan, rain blue, thunderstorm purple, via `--color-icon-*` tokens (adapt to dark mode). "Bây giờ" uses the muted background.
 - Bug found: `Text type="supporting"` overrides an `xstyle` colour, so the ≥50% rain highlight added in task 1.1 never rendered. Fixed with `color="inherit"` + `xstyle` (`rainText`); computed colour checked in the browser: 25%/41% gray, 61%+ `rgb(4, 47, 151)`. Harness gap: no check catches an `xstyle` colour on a `Text` whose `type` sets its own colour.
 - Screenshot: `harness/runs/20261005-home-redesign/weather-natural-icons.png`. `./harness/verify.sh` passed: `harness/runs/20261005-134616-984/`.
+
+## 2026-10-05 — Home calendar, topic tabs and gold, task 1.1 (`home-calendar-topics-and-gold`)
+
+- Uses BE-P `home-topic-news-and-logistics-press` (`774bb81`). TabList topics for news (8 tabs) and logistics (5 tabs) with counts and coloured topic tags; tear-off calendar (solar day 72px, lunar date, Can Chi, giờ hoàng đạo, observance, proverb); gold tiles with spread; rail not sticky.
+- Lunar algorithm unit-tested against Tết 2024/2025/2026, Trung thu 2026, 16/02/2026 = 29/12 Ất Tỵ, 2025 leap month 6, 2000-01-01 = Mậu Ngọ day.
+- Same Text pitfall as task 1.3: xstyle `fontSize` on `Text` lost to its type (calendar day rendered 14px); fixed with a sized wrapper + `type="inherit"` (72px measured).
+- Browser QA: desktop and 390px iframe (order weather → calendar → gold → operations → news; no horizontal overflow). Screenshots: `harness/runs/20261005-home-redesign/{topics-desktop,calendar-gold,topics-mobile-390}.*`.
+- Not checked: dark theme; a Sunday/holiday page in the browser (covered by unit tests for holidayName only).
+- `./harness/verify.sh` passed: `harness/runs/20261005-140731-264/`.

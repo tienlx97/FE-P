@@ -11,6 +11,7 @@ import {
   radiusVars,
   spacingVars,
 } from '@astryxdesign/core/theme/tokens.stylex';
+import { Token } from '@astryxdesign/core/Token';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import {
@@ -60,11 +61,14 @@ const styles = stylex.create({
   purple: { color: colorVars['--color-icon-purple'] },
   facts: { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
   forecasts: { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
-  prices: {
-    alignItems: 'baseline',
-    gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr)',
+  // One muted tile per gold type (PNJ, SJC) so the two boards read separately.
+  quote: {
+    backgroundColor: colorVars['--color-background-muted'],
+    borderRadius: radiusVars['--radius-container'],
+    paddingBlock: spacingVars['--spacing-3'],
+    paddingInline: spacingVars['--spacing-3'],
   },
-  number: { textAlign: 'end' },
+  alignEnd: { alignItems: 'flex-end', textAlign: 'end' },
   region: { minWidth: 0, overflowWrap: 'anywhere' },
 });
 
@@ -288,52 +292,44 @@ export function WeatherPanel({ weather }) {
 /** @param {{gold:import('../types/feed.js').Gold|null}} props */
 export function GoldPanel({ gold }) {
   return (
-    <Card variant="yellow" xstyle={styles.region}>
+    <Card xstyle={styles.region}>
       <VStack gap={4}>
         <PanelHeader
           icon={Coins}
           title="Giá vàng"
-          meta="Triệu đồng/lượng"
+          meta="TP. Hồ Chí Minh"
           color="warning"
         />
         {gold ? (
           <VStack gap={3}>
-            <Grid gap={3} xstyle={styles.prices}>
-              <Text type="supporting">TP. Hồ Chí Minh</Text>
-              <Text type="supporting" xstyle={styles.number}>
-                Mua vào
-              </Text>
-              <Text type="supporting" xstyle={styles.number}>
-                Bán ra
-              </Text>
-            </Grid>
             {gold.quotes.map((quote) => (
-              <VStack key={quote.name} gap={3}>
-                <Divider />
-                <Grid gap={3} xstyle={styles.prices}>
+              <VStack key={quote.name} gap={3} xstyle={styles.quote}>
+                <HStack gap={2} justify="between" align="center" wrap="wrap">
+                  <Token color="yellow" label={`Vàng ${quote.name}`} />
+                  <Text type="supporting">
+                    Niêm yết {newsTime(quote.updatedAt)}
+                  </Text>
+                </HStack>
+                <Grid gap={3} columns={2}>
                   <VStack gap={1} xstyle={styles.region}>
-                    <Text weight="semibold">Vàng {quote.name}</Text>
-                    <Text type="supporting">{newsTime(quote.updatedAt)}</Text>
+                    <Text type="supporting">Mua vào</Text>
+                    <Text size="2xl" weight="semibold" hasTabularNumbers>
+                      {goldMillions(quote.buy)}
+                    </Text>
                   </VStack>
-                  <Text
-                    size="lg"
-                    weight="semibold"
-                    hasTabularNumbers
-                    xstyle={styles.number}
-                  >
-                    {goldMillions(quote.buy)}
-                  </Text>
-                  <Text
-                    size="lg"
-                    weight="semibold"
-                    hasTabularNumbers
-                    xstyle={styles.number}
-                  >
-                    {goldMillions(quote.sell)}
-                  </Text>
+                  <VStack gap={1} xstyle={[styles.region, styles.alignEnd]}>
+                    <Text type="supporting">Bán ra</Text>
+                    <Text size="2xl" weight="semibold" hasTabularNumbers>
+                      {goldMillions(quote.sell)}
+                    </Text>
+                  </VStack>
                 </Grid>
+                <Text type="supporting" hasTabularNumbers>
+                  Chênh lệch mua – bán: {goldMillions(quote.sell - quote.buy)}
+                </Text>
               </VStack>
             ))}
+            <Text type="supporting">Đơn vị: triệu đồng/lượng</Text>
           </VStack>
         ) : (
           <Text color="secondary">

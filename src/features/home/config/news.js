@@ -1,23 +1,37 @@
 /** @typedef {'default'|'red'|'orange'|'yellow'|'green'|'teal'|'cyan'|'blue'|'purple'|'pink'|'gray'} TokenColor */
+/** @typedef {{value:string, label:string, color:TokenColor}} Topic */
 
-/** Category colour per publisher so a scanning eye can group stories by source. */
-const PUBLISHER_COLORS = /** @type {Record<string, TokenColor>} */ ({
-  VnExpress: 'purple',
-  'Tuổi Trẻ': 'blue',
-  'Thanh Niên': 'teal',
-  'Dân trí': 'green',
-  VietnamPlus: 'orange',
-  'Nhân Dân': 'pink',
-});
+/** News tabs; values match BE-P article `topic`. The first entry shows every topic. */
+export const NEWS_TOPICS = /** @type {Topic[]} */ ([
+  { value: 'all', label: 'Mới nhất', color: 'default' },
+  { value: 'thoi-su', label: 'Thời sự', color: 'blue' },
+  { value: 'the-gioi', label: 'Thế giới', color: 'purple' },
+  { value: 'kinh-doanh', label: 'Kinh doanh', color: 'orange' },
+  { value: 'cong-nghe', label: 'Công nghệ', color: 'cyan' },
+  { value: 'the-thao', label: 'Thể thao', color: 'green' },
+  { value: 'giai-tri', label: 'Giải trí', color: 'pink' },
+  { value: 'suc-khoe', label: 'Sức khỏe', color: 'teal' },
+]);
 
-/** @param {string} source @returns {TokenColor} */
-export function publisherColor(source) {
-  return PUBLISHER_COLORS[source] ?? 'gray';
+/** Logistics groups: Vietnamese specialist/filtered press, then international by mode. */
+export const LOGISTICS_TOPICS = /** @type {Topic[]} */ ([
+  { value: 'all', label: 'Tất cả', color: 'default' },
+  { value: 'vn', label: 'Việt Nam', color: 'orange' },
+  { value: 'maritime', label: 'Hàng hải & cảng', color: 'blue' },
+  { value: 'air', label: 'Hàng không', color: 'purple' },
+  { value: 'supply-chain', label: 'Chuỗi cung ứng', color: 'teal' },
+]);
+
+/** @param {Topic[]} topics @param {string|null|undefined} value */
+export function findTopic(topics, value) {
+  return topics.find((topic) => topic.value === value) ?? null;
 }
 
-/** Publishers in feed order, for the filter control. @param {{source:string}[]} articles */
-export function publishers(articles) {
-  return [...new Set(articles.map((article) => article.source))];
+/** @template {{topic?:string|null}} T @param {T[]} articles @param {string} value */
+export function articlesInTopic(articles, value) {
+  return value === 'all'
+    ? articles
+    : articles.filter((article) => article.topic === value);
 }
 
 /**

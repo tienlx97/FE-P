@@ -1,17 +1,35 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { publisherColor, publishers, relativeTime } from './news.js';
+import {
+  articlesInTopic,
+  findTopic,
+  LOGISTICS_TOPICS,
+  NEWS_TOPICS,
+  relativeTime,
+} from './news.js';
 
-test('known publishers get stable category colours; unknown ones stay neutral', () => {
-  assert.equal(publisherColor('VnExpress'), 'purple');
-  assert.equal(publisherColor('Splash247'), 'gray');
+test('topic tabs start with an all-topics entry and have unique values', () => {
+  for (const topics of [NEWS_TOPICS, LOGISTICS_TOPICS]) {
+    assert.equal(topics[0].value, 'all');
+    assert.equal(
+      new Set(topics.map((topic) => topic.value)).size,
+      topics.length,
+    );
+  }
+  assert.equal(findTopic(NEWS_TOPICS, 'cong-nghe')?.label, 'Công nghệ');
+  assert.equal(findTopic(NEWS_TOPICS, 'unknown'), null);
 });
-test('publisher list keeps first-seen order without duplicates', () => {
-  assert.deepEqual(
-    publishers([{ source: 'B' }, { source: 'A' }, { source: 'B' }]),
-    ['B', 'A'],
-  );
+test('topic filter keeps everything for "all"', () => {
+  const articles = [
+    { topic: 'the-thao' },
+    { topic: 'cong-nghe' },
+    { topic: null },
+  ];
+  assert.equal(articlesInTopic(articles, 'all').length, 3);
+  assert.deepEqual(articlesInTopic(articles, 'cong-nghe'), [
+    { topic: 'cong-nghe' },
+  ]);
 });
 test('relative time covers minutes, hours, older dates and missing values', () => {
   const now = Date.parse('2026-10-05T05:00:00Z');
