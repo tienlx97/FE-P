@@ -41,15 +41,18 @@ html:has([data-astryx-theme='meta']),
 }
 
 /*
- * Carousel swipes with its own prev/next buttons and edge fades; the rule
- * above would otherwise put a thin native scrollbar back under it (e.g.
- * the shipment list's status tabs).
+ * Carousel and an overflowing TabList strip scroll with their own prev/next
+ * buttons and edge fades; the rule above would otherwise put a thin native
+ * scrollbar back under them (e.g. the shipment list's status tabs, Home's
+ * news topic tabs).
  */
-[data-astryx-theme='meta'] .astryx-carousel-scroller {
+[data-astryx-theme='meta'] .astryx-carousel-scroller,
+[data-astryx-theme='meta'] .astryx-tab-strip {
   scrollbar-width: none;
 }
 
-[data-astryx-theme='meta'] .astryx-carousel-scroller::-webkit-scrollbar {
+[data-astryx-theme='meta'] .astryx-carousel-scroller::-webkit-scrollbar,
+[data-astryx-theme='meta'] .astryx-tab-strip::-webkit-scrollbar {
   display: none;
 }
 

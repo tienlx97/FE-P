@@ -16206,3 +16206,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Logistics tabs: Tất cả · Hải quan · Cước & forwarder · Việt Nam · Hàng hải & cảng · Hàng không · Chuỗi cung ứng, filtered by BE `tags`.
 - Bug caught in the browser: every news tab counted 0 because BE sends `tags: []` for headlines and the filter treated an empty list as "has tags". Fixed (`tags?.length`) with a unit test. Harness gap: config tests used fixtures without the live API's empty `tags`; a fixture recorded from the real `/api/v1/home` shape would have caught it.
 - Screenshots: `harness/runs/20261005-home-redesign/{featured-carousel,logistics-customs-tab}.jpg`. `./harness/verify.sh` passed: `harness/runs/20261005-141921-1950/`.
+
+## 2026-10-05 — Hide TabList strip scrollbar, task 1.3 (`home-calendar-topics-and-gold`)
+
+- The Meta theme's `scrollbar.css` sets `scrollbar-width: thin` on every element, which put a native scrollbar under overflowing TabList strips (Home news/logistics tabs) even though TabList has its own arrows and edge fades. `.astryx-tab-strip` joins the existing `.astryx-carousel-scroller` exception, so this applies to every TabList in the app.
+- Browser check on a dev server at :3002 (:3000 was down): both Home strips overflow with `scrollbar-width: none` and 0px scrollbar gutter; "›" arrow present. Screenshot: `harness/runs/20261005-home-redesign/tabs-no-scrollbar.jpg`.
+- `./harness/verify.sh` passed: `harness/runs/20261005-142927-370/`.
