@@ -7,6 +7,7 @@ import {
   newsTime,
   uvLabel,
   weatherLabel,
+  weatherTone,
 } from './weather.js';
 
 test('unknown weather never gets a fabricated sunny fallback', () => {
@@ -25,4 +26,14 @@ test('UV bands, hour labels and rain threshold', () => {
   assert.equal(hourLabel('2026-10-05T09:00'), '9h');
   assert.equal(isLikelyRain(50), true);
   assert.equal(isLikelyRain(49), false);
+});
+test('weather tones follow natural colours', () => {
+  assert.equal(weatherTone(0), 'orange');
+  assert.equal(weatherTone(0, false), 'yellow');
+  assert.equal(weatherTone(2), 'yellow');
+  assert.equal(weatherTone(3), 'gray');
+  assert.equal(weatherTone(53), 'cyan');
+  assert.equal(weatherTone(63), 'blue');
+  assert.equal(weatherTone(95), 'purple');
+  assert.equal(weatherTone(999), 'gray');
 });

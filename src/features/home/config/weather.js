@@ -39,3 +39,19 @@ export function hourLabel(time) {
 export function isLikelyRain(probability) {
   return probability >= 50;
 }
+/** @typedef {'orange'|'yellow'|'gray'|'cyan'|'blue'|'purple'} WeatherTone */
+/**
+ * Natural colour for a WMO weather code: sun orange, part-sun/moon yellow,
+ * cloud/fog gray, drizzle/snow cyan, rain blue, thunderstorm purple.
+ * @param {number} code @param {boolean} [isDay] @returns {WeatherTone}
+ */
+export function weatherTone(code, isDay = true) {
+  if (code === 0) return isDay ? 'orange' : 'yellow';
+  if ([1, 2].includes(code)) return 'yellow';
+  if ([3, 45, 48].includes(code)) return 'gray';
+  if ([51, 53, 55, 56, 57, 71, 73, 75, 77, 85, 86].includes(code))
+    return 'cyan';
+  if ([95, 96, 99].includes(code)) return 'purple';
+  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return 'blue';
+  return 'gray';
+}

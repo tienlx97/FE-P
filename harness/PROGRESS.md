@@ -16184,3 +16184,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - The 12-hour weather strip now uses `@astryxdesign/core/Carousel` (`hasSnap`, `gap={1}`, aria-label "Dự báo 12 giờ tới") instead of a hand-rolled overflow HStack; the custom scroll/snap styles and list roles were removed.
 - Browser QA on :3000: carousel role and 12 slides present; "Cuộn sang phải" scrolled to 19h–0h and revealed "Cuộn sang trái". Screenshot: `harness/runs/20261005-home-redesign/weather-carousel.png`.
 - `./harness/verify.sh` passed: `harness/runs/20261005-133841-349/`.
+
+## 2026-10-05 — Home weather natural icons, task 1.3 (`home-hourly-weather-and-news-filters`)
+
+- Weather card back to the default (neutral) Card. Condition icons use `weatherTone` (config, unit-tested): clear day orange, part-sun/clear night yellow, cloud/fog gray, drizzle/snow cyan, rain blue, thunderstorm purple, via `--color-icon-*` tokens (adapt to dark mode). "Bây giờ" uses the muted background.
+- Bug found: `Text type="supporting"` overrides an `xstyle` colour, so the ≥50% rain highlight added in task 1.1 never rendered. Fixed with `color="inherit"` + `xstyle` (`rainText`); computed colour checked in the browser: 25%/41% gray, 61%+ `rgb(4, 47, 151)`. Harness gap: no check catches an `xstyle` colour on a `Text` whose `type` sets its own colour.
+- Screenshot: `harness/runs/20261005-home-redesign/weather-natural-icons.png`. `./harness/verify.sh` passed: `harness/runs/20261005-134616-984/`.

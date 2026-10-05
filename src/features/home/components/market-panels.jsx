@@ -38,6 +38,7 @@ import {
   newsTime,
   uvLabel,
   weatherLabel,
+  weatherTone,
 } from '../config/weather.js';
 
 const styles = stylex.create({
@@ -48,8 +49,15 @@ const styles = stylex.create({
     minWidth: '3.25rem',
     paddingBlock: spacingVars['--spacing-2'],
   },
-  hourNow: { backgroundColor: colorVars['--color-background-surface'] },
-  rain: { color: colorVars['--color-text-accent'] },
+  hourNow: { backgroundColor: colorVars['--color-background-muted'] },
+  rain: { color: colorVars['--color-text-blue'] },
+  // Natural weather colours (see weatherTone); icon tokens adapt to dark mode.
+  orange: { color: colorVars['--color-icon-orange'] },
+  yellow: { color: colorVars['--color-icon-yellow'] },
+  gray: { color: colorVars['--color-icon-gray'] },
+  cyan: { color: colorVars['--color-icon-cyan'] },
+  blue: { color: colorVars['--color-icon-blue'] },
+  purple: { color: colorVars['--color-icon-purple'] },
   facts: { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
   forecasts: { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
   prices: {
@@ -72,6 +80,28 @@ function weatherIcon(code, isDay = true) {
   if ([95, 96, 99].includes(code)) return CloudLightning;
   if (code >= 61) return CloudRain;
   return Cloud;
+}
+
+/** Text props that colour a likely-rain probability blue. `color="inherit"`
+ * stops the supporting type's own colour from overriding the xstyle colour.
+ * @param {number} probability */
+function rainText(probability) {
+  return isLikelyRain(probability)
+    ? { color: /** @type {const} */ ('inherit'), xstyle: styles.rain }
+    : {};
+}
+
+/** Condition icon in its natural colour.
+ * @param {{code:number, isDay?:boolean, size?:'sm'|'md'|'lg', label?:string}} props */
+function WeatherIcon({ code, isDay = true, size = 'md', label }) {
+  return (
+    <Icon
+      icon={weatherIcon(code, isDay)}
+      size={size}
+      label={label}
+      xstyle={styles[weatherTone(code, isDay)]}
+    />
+  );
 }
 
 /** @param {{icon:typeof CloudSun, title:string, meta:string, color?:'accent'|'warning'}} props */
@@ -133,18 +163,14 @@ function HourlyStrip({ hours }) {
             <Text type="supporting">
               {index === 0 ? 'Bây giờ' : hourLabel(hour.time)}
             </Text>
-            <Icon
-              icon={weatherIcon(hour.code)}
-              color="accent"
-              label={weatherLabel(hour.code)}
-            />
+            <WeatherIcon code={hour.code} label={weatherLabel(hour.code)} />
             <Text weight="semibold" hasTabularNumbers>
               {Math.round(hour.temperature)}°
             </Text>
             <Text
               type="supporting"
               hasTabularNumbers
-              xstyle={isLikelyRain(hour.rainProbability) && styles.rain}
+              {...rainText(hour.rainProbability)}
             >
               {hour.rainProbability}%
             </Text>
@@ -159,15 +185,15 @@ function HourlyStrip({ hours }) {
 export function WeatherPanel({ weather }) {
   const uv = uvLabel(weather?.uvIndex);
   return (
-    <Card variant="blue" xstyle={styles.region}>
+    <Card xstyle={styles.region}>
       <VStack gap={4}>
         <PanelHeader icon={CloudSun} title="Thời tiết" meta="TP. Hồ Chí Minh" />
         {weather ? (
           <>
             <HStack gap={3} wrap="wrap" align="center">
-              <Icon
-                icon={weatherIcon(weather.code, weather.isDay)}
-                color="accent"
+              <WeatherIcon
+                code={weather.code}
+                isDay={weather.isDay}
                 size="lg"
               />
               <Text type="display-3" hasTabularNumbers>
@@ -225,9 +251,8 @@ export function WeatherPanel({ weather }) {
                         }).format(new Date(day.date + 'T12:00:00+07:00'))}
                   </Text>
                   <HStack gap={1} align="center">
-                    <Icon
-                      icon={weatherIcon(day.code)}
-                      color="secondary"
+                    <WeatherIcon
+                      code={day.code}
                       size="sm"
                       label={weatherLabel(day.code)}
                     />
@@ -235,10 +260,7 @@ export function WeatherPanel({ weather }) {
                       {Math.round(day.min)}–{Math.round(day.max)}°
                     </Text>
                   </HStack>
-                  <Text
-                    type="supporting"
-                    xstyle={isLikelyRain(day.rainProbability) && styles.rain}
-                  >
+                  <Text type="supporting" {...rainText(day.rainProbability)}>
                     Mưa {day.rainProbability}%
                   </Text>
                 </VStack>
