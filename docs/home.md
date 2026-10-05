@@ -31,3 +31,5 @@ No shared operational data needs to be edited for these checks. Historical
 Home now includes PNJ-published regional PNJ/SJC buy/sell quotes, displayed in millions of VND/lượng with each quote update time in Vietnam. Backend returns VND/lượng; the widget retains 1,000 VND precision. PNJ is an independent nullable source.
 
 Layout: compact reading width, weather/gold quick panels side by side on desktop and stacked on mobile, scoped shipment operations before news. Each news column initially shows five articles; expand/collapse preserves original publisher links. The app composes operations through the Home slot; there are no cross-feature imports. Dashboard uses normal UI density and one page inset instead of doubled padding.
+
+Redesign (2026-10-05, `redesign-home-dashboard`): desktop ≥64rem uses a reading column (operations → news, each in a card) and a sticky 22rem rail (weather, gold table). Below 64rem the rail comes first; 40–64rem shows its two cards side by side. Without the operations permission the grid drops the operations area instead of leaving a gap.

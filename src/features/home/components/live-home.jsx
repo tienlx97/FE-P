@@ -8,93 +8,144 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import { spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { CloudSun, Coins, Newspaper, RefreshCw, Ship } from 'lucide-react';
+import { Newspaper, RefreshCw, Ship } from 'lucide-react';
 import { useState } from 'react';
 
 import { newsTime } from '../config/weather.js';
 import { useHomeFeed } from '../hooks/use-home-feed.js';
 import { GoldPanel, WeatherPanel } from './market-panels.jsx';
 
+// Desktop: reading column (operations → news) beside a sticky 22rem rail of
+// quick-look widgets. Below 64rem the rail moves first so weather and gold stay
+// above the fold; between 40 and 64rem its two cards sit side by side.
 const styles = stylex.create({
-  dashboard: { maxWidth: '80rem', width: '100%', marginInline: 'auto' },
-  columns: {
-    alignItems: 'stretch',
+  dashboard: { marginInline: 'auto', maxWidth: '80rem', width: '100%' },
+  layout: {
+    alignItems: 'start',
+    gridTemplateAreas: {
+      default: '"rail" "ops" "news"',
+      '@media (min-width: 64rem)': '"ops rail" "news rail"',
+    },
     gridTemplateColumns: {
       default: 'minmax(0, 1fr)',
-      '@media (min-width: 60rem)': 'minmax(0, 1fr) minmax(0, 1fr)',
+      '@media (min-width: 64rem)': 'minmax(0, 1fr) 22rem',
+    },
+    gridTemplateRows: {
+      default: 'auto',
+      '@media (min-width: 64rem)': 'auto 1fr',
     },
   },
+  layoutNoOps: {
+    gridTemplateAreas: {
+      default: '"rail" "news"',
+      '@media (min-width: 64rem)': '"news rail"',
+    },
+    gridTemplateRows: 'auto',
+  },
+  rail: {
+    gridArea: 'rail',
+    insetBlockStart: `calc(64px + ${spacingVars['--spacing-4']})`,
+    position: { default: 'static', '@media (min-width: 64rem)': 'sticky' },
+  },
+  railCards: {
+    alignItems: 'start',
+    gridTemplateColumns: {
+      default: 'minmax(0, 1fr)',
+      '@media (min-width: 40rem) and (max-width: 63.99rem)':
+        'minmax(0, 1fr) minmax(0, 1fr)',
+    },
+  },
+  ops: { gridArea: 'ops' },
+  news: { gridArea: 'news' },
   region: { minWidth: 0, overflowWrap: 'anywhere' },
 });
+
+const INITIAL_ARTICLES = 5;
+
 /** @param {{title:string, description:string, icon:typeof Newspaper, articles:import('../types/feed.js').Article[]}} props */
 function NewsSection({ title, description, icon, articles }) {
   const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? articles : articles.slice(0, 5);
+  const visible = expanded ? articles : articles.slice(0, INITIAL_ARTICLES);
   return (
-    <VStack gap={3} xstyle={styles.region}>
-      <HStack gap={2}>
-        <Icon icon={icon} color="accent" />
-        <Heading level={2}>{title}</Heading>
-      </HStack>
-      <Text type="supporting">{description}</Text>
-      {articles.length ? (
-        <List hasDividers density="spacious">
-          {visible.map((article) => (
-            <ListItem
-              key={article.url}
-              href={article.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              label={article.title}
-              description={`${article.source} · ${newsTime(article.publishedAt)}`}
-              endContent={
-                <Icon icon="externalLink" color="secondary" size="sm" />
-              }
-            />
-          ))}
-        </List>
-      ) : (
-        <Text color="secondary">
-          Chưa có tin từ nguồn trong lần cập nhật này.
-        </Text>
-      )}
-      {articles.length > 5 ? (
-        <Button
-          variant="ghost"
-          label={
-            expanded
-              ? `Thu gọn · ${title}`
-              : `Xem thêm ${articles.length - 5} tin · ${title}`
-          }
-          aria-expanded={expanded}
-          onClick={() => setExpanded(!expanded)}
-        />
-      ) : null}
-    </VStack>
+    <Card xstyle={styles.region}>
+      <VStack gap={3}>
+        <HStack gap={2} justify="between" align="center" wrap="wrap">
+          <HStack gap={2} align="center">
+            <Icon icon={icon} color="accent" />
+            <Heading level={2}>{title}</Heading>
+          </HStack>
+          <Text type="supporting">{description}</Text>
+        </HStack>
+        {articles.length ? (
+          <List hasDividers>
+            {visible.map((article) => (
+              <ListItem
+                key={article.url}
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                label={article.title}
+                description={`${article.source} · ${newsTime(article.publishedAt)}`}
+                endContent={
+                  <Icon icon="externalLink" color="secondary" size="sm" />
+                }
+              />
+            ))}
+          </List>
+        ) : (
+          <Text color="secondary">
+            Chưa có tin từ nguồn trong lần cập nhật này.
+          </Text>
+        )}
+        {articles.length > INITIAL_ARTICLES ? (
+          <Button
+            variant="ghost"
+            label={
+              expanded
+                ? `Thu gọn · ${title}`
+                : `Xem thêm ${articles.length - INITIAL_ARTICLES} tin · ${title}`
+            }
+            aria-expanded={expanded}
+            onClick={() => setExpanded(!expanded)}
+          />
+        ) : null}
+      </VStack>
+    </Card>
   );
 }
+
+/** @param {string} iso */
+function longDate(iso) {
+  const text = new Intl.DateTimeFormat('vi-VN', {
+    weekday: 'long',
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    timeZone: 'Asia/Ho_Chi_Minh',
+  }).format(new Date(iso));
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** @param {{operations?:import('react').ReactNode}} props */
 export function LiveHome({ operations }) {
   const query = useHomeFeed();
   const feed = query.data;
   return (
     <VStack gap={6} xstyle={[styles.region, styles.dashboard]}>
-      <HStack gap={3} wrap="wrap" justify="between">
-        <VStack gap={2}>
+      <HStack gap={3} wrap="wrap" justify="between" align="end">
+        <VStack gap={1}>
           <Text type="label" color="accent">
-            THÔNG TIN & VẬN HÀNH
+            {feed ? longDate(feed.fetchedAt) : 'THÔNG TIN & VẬN HÀNH'}
           </Text>
           <Heading level={1}>Bản tin hôm nay</Heading>
-          <Text color="secondary">
-            Một góc nhìn nhanh cho ngày làm việc của bạn.
+          <Text type="supporting">
+            {feed
+              ? `Cập nhật lúc ${newsTime(feed.fetchedAt)} · Tự làm mới mỗi 15 phút`
+              : 'Một góc nhìn nhanh cho ngày làm việc của bạn.'}
           </Text>
-          {feed ? (
-            <Text type="supporting">
-              Cập nhật lúc {newsTime(feed.fetchedAt)} · Tự làm mới mỗi 15 phút
-            </Text>
-          ) : null}
         </VStack>
         <Button
           variant="secondary"
@@ -104,12 +155,6 @@ export function LiveHome({ operations }) {
           onClick={() => query.refetch()}
         />
       </HStack>
-      {query.isPending ? (
-        <Grid gap={4} xstyle={styles.columns}>
-          <Skeleton width="100%" height="18rem" />
-          <Skeleton width="100%" height="18rem" />
-        </Grid>
-      ) : null}
       {query.isError ? (
         <Banner
           status="error"
@@ -124,45 +169,44 @@ export function LiveHome({ operations }) {
           description={feed.unavailableSources.join(', ')}
         />
       ) : null}
-      {feed ? (
-        <Grid gap={4} xstyle={styles.columns}>
-          <Card variant="blue" xstyle={styles.region}>
-            <VStack gap={4}>
-              <HStack gap={2}>
-                <Icon icon={CloudSun} color="accent" />
-                <Heading level={2}>Thời tiết</Heading>
-              </HStack>
+      <Grid gap={6} xstyle={[styles.layout, !operations && styles.layoutNoOps]}>
+        <Grid gap={4} xstyle={[styles.rail, styles.railCards]}>
+          {feed ? (
+            <>
               <WeatherPanel weather={feed.weather} />
-            </VStack>
-          </Card>
-          <Card variant="yellow" xstyle={styles.region}>
-            <VStack gap={4}>
-              <HStack gap={2}>
-                <Icon icon={Coins} color="warning" />
-                <Heading level={2}>Giá vàng</Heading>
-              </HStack>
               <GoldPanel gold={feed.gold} />
-            </VStack>
-          </Card>
+            </>
+          ) : query.isPending ? (
+            <>
+              <Skeleton width="100%" height="16rem" />
+              <Skeleton width="100%" height="14rem" />
+            </>
+          ) : null}
         </Grid>
-      ) : null}
-      {operations}
-      {feed ? (
-        <Grid gap={6} xstyle={styles.columns}>
-          <NewsSection
-            title="Tin nổi bật"
-            description="Tin mới từ VnExpress & Tuổi Trẻ"
-            icon={Newspaper}
-            articles={feed.headlines}
-          />
-          <NewsSection
-            title="Logistics & xuất nhập khẩu"
-            description="Vận tải biển, thương mại & chuỗi cung ứng"
-            icon={Ship}
-            articles={feed.logistics}
-          />
-        </Grid>
-      ) : null}
+        {operations ? (
+          <VStack xstyle={[styles.region, styles.ops]}>{operations}</VStack>
+        ) : null}
+        <VStack gap={6} xstyle={[styles.region, styles.news]}>
+          {feed ? (
+            <>
+              <NewsSection
+                title="Tin nổi bật"
+                description="VnExpress & Tuổi Trẻ"
+                icon={Newspaper}
+                articles={feed.headlines}
+              />
+              <NewsSection
+                title="Logistics & xuất nhập khẩu"
+                description="Vận tải biển, thương mại & chuỗi cung ứng"
+                icon={Ship}
+                articles={feed.logistics}
+              />
+            </>
+          ) : query.isPending ? (
+            <Skeleton width="100%" height="24rem" />
+          ) : null}
+        </VStack>
+      </Grid>
     </VStack>
   );
 }

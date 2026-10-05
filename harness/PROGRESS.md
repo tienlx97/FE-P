@@ -16163,3 +16163,10 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
   - `.gitattributes` pins both files to `eol=lf`.
   - The committed output switched to `/` header paths once.
 - After `./harness/verify.sh` rebuilt the theme, `git status` showed no unstaged change. Gate passed: `harness/runs/20261001-095157-534/`.
+
+## 2026-10-05 — Redesign Home dashboard, task 1.1 (`redesign-home-dashboard`)
+
+- Home is now a reading column (operations → "Tin nổi bật" → "Logistics & XNK", each in a card) beside a sticky 22rem rail (weather, gold). Below 64rem the rail comes first; 40–64rem puts weather and gold side by side. Gold is a compact buy/sell table with per-quote update times; weather/gold cards are neutral instead of blue/yellow fills. The header shows the snapshot's Vietnam date. Operations KPIs use a 3-column grid. No API changes.
+- Browser QA on this checkout's dev server (:3000; :3001 serves an older build): desktop 1440, iframe 800 and 390. Rail sticks 96px from the viewport top while scrolling; no horizontal overflow; mobile order weather → gold → operations → news. Screenshots: `harness/runs/20261005-home-redesign/`.
+- Not checked in the browser: a user without `logistics:contracts:view` (the `layoutNoOps` grid areas).
+- `./harness/verify.sh` passed: `harness/runs/20261005-115013-1377/`.

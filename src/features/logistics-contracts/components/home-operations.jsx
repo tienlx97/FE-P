@@ -2,6 +2,7 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
+import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Heading, Text } from '@astryxdesign/core/Text';
@@ -52,7 +53,7 @@ export function HomeOperations() {
           />
         ) : (
           <>
-            <HStack gap={6} wrap="wrap">
+            <Grid gap={4} columns={3}>
               <Stat label="Lô đang làm" value={rows.length} size="sm" />
               <Stat
                 label="Đang trên tàu"
@@ -62,7 +63,7 @@ export function HomeOperations() {
                 size="sm"
               />
               <Stat label="Cần chú ý" value={attention.length} size="sm" />
-            </HStack>
+            </Grid>
             {visible.length ? (
               <List header="Lô hàng cần theo dõi · tối đa 5 lô" hasDividers>
                 {visible.map((row) => (
