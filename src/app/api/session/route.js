@@ -1,8 +1,7 @@
 import { cookies } from 'next/headers';
 
-import { clearSessionCookies } from '@/shared/api/server-session.js';
+import { endServerSession } from '@/shared/api/end-server-session.js';
 import { resolveApiBaseUrl } from '@/shared/config/api-config.js';
-import { REFRESH_TOKEN_KEY } from '@/shared/config/session-keys.js';
 
 /**
  * Ends a session. Signing *in* lives at `/api/session/login`, which never hands
@@ -23,26 +22,7 @@ import { REFRESH_TOKEN_KEY } from '@/shared/config/session-keys.js';
  */
 export async function DELETE() {
   const cookieStore = await cookies();
-  const refreshToken = cookieStore.get(REFRESH_TOKEN_KEY)?.value;
-
-  if (refreshToken) {
-    try {
-      await fetch(`${resolveApiBaseUrl()}/api/v1/authentication/logout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ RefreshToken: refreshToken }),
-        cache: 'no-store',
-      });
-    } catch {
-      // The backend being unreachable must not strand the user in a
-      // half-signed-in state; clear locally regardless. The token still
-      // expires on its own.
-    }
-  }
-
-  clearSessionCookies(cookieStore);
-
-  return Response.json({ ok: true });
+  return endServerSession(cookieStore, resolveApiBaseUrl());
 }
 
 export const dynamic = 'force-dynamic';

@@ -87,6 +87,10 @@ Enforced by `harness/structure.rules.cjs` (dependency-cruiser), run via
   local return destinations. Logout reports deletion failures and reloads after
   success to discard the previous user's protected client caches. Remembering
   login stores only the CCCD. Session termination notices show one specific reason.
+  Server logout clears cookies only after backend acknowledgement; rejected,
+  offline or timed-out revocation preserves credentials and returns 503 for retry.
+  An access-only session cannot claim confirmed revocation. Requests with neither
+  token are already logged out. Backend revocation waits at most ten seconds.
   Employee access UI displays the API's company/branch scope, distinguishes the
   account Admin role from department membership, and shows permission loading errors.
 - `src/features/admin-users/` — users, organization/employee fields, permissions,

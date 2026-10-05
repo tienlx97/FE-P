@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-05 — Require backend acknowledgement for logout (task 1.1)
+
+- Change: `confirm-backend-logout`. `/api/session` DELETE previously ignored backend HTTP failures and cleared cookies even on transport failure. It now delegates to a tested server boundary that clears cookies only after backend 2xx; failures/timeouts return 503 and preserve credentials for idempotent retry. Wait bounded to ten seconds. Access-only sessions fail closed, already-empty sessions succeed.
+- Existing logout UI receives the non-success result and remains usable for retry. No UI layout changes and no shared database sessions modified. Backend logout already commits family revocation before acknowledgement; access-token validation checks active family on the next request.
+- Regression guard: default unit suite now covers backend 400/401/500/503, transport rejection, successful retry with 204, all six cookie deletions, access-only and empty sessions. This replaces the previous untested best-effort remote revocation boundary.
+- Full gate passed: `harness/runs/20261005-100047-668/`, lint/typecheck/structure/tests/build/quality; detailed `logout-evidence.md` in the run.
+- Discovered: BE refresh/logout use reads before the commit transaction; simultaneous refresh/logout across workers warrants a separate MySQL concurrency test and serialization design. This task verifies remote acknowledgement and retry, not distributed race exclusion.
+
 ## 2026-10-03 — Authentication/session and employee access UI (task 1.1)
 
 - Change: `improve-auth-session-ui`, following BE-P `cc05985` and `7291865` (session-family validation and accurate inherited scopes).
