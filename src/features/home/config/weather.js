@@ -22,3 +22,20 @@ export function newsTime(value) {
       }).format(date)
     : 'Chưa có thời gian đăng';
 }
+/** WHO UV index bands. @param {number|null|undefined} value */
+export function uvLabel(value) {
+  if (value == null || !Number.isFinite(value)) return null;
+  if (value < 3) return 'Thấp';
+  if (value < 6) return 'Trung bình';
+  if (value < 8) return 'Cao';
+  if (value < 11) return 'Rất cao';
+  return 'Cực cao';
+}
+/** Open-Meteo local hour ("2026-10-05T14:00") → "14h". @param {string} time */
+export function hourLabel(time) {
+  return `${Number(time.slice(11, 13))}h`;
+}
+/** @param {number} probability */
+export function isLikelyRain(probability) {
+  return probability >= 50;
+}

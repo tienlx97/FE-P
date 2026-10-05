@@ -5,14 +5,60 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Heading, Text } from '@astryxdesign/core/Text';
+import {
+  colorVars,
+  radiusVars,
+  spacingVars,
+} from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { CloudSun, Coins } from 'lucide-react';
+import {
+  Cloud,
+  CloudDrizzle,
+  CloudFog,
+  CloudLightning,
+  CloudMoon,
+  CloudRain,
+  CloudSnow,
+  CloudSun,
+  Coins,
+  Droplets,
+  Moon,
+  Sun,
+  Thermometer,
+  Umbrella,
+  Wind,
+} from 'lucide-react';
 
 import { goldMillions } from '../config/gold.js';
-import { newsTime, weatherLabel } from '../config/weather.js';
+import {
+  hourLabel,
+  isLikelyRain,
+  newsTime,
+  uvLabel,
+  weatherLabel,
+} from '../config/weather.js';
 
 const styles = stylex.create({
+  hours: {
+    display: 'flex',
+    gap: spacingVars['--spacing-1'],
+    overflowX: 'auto',
+    paddingBlockEnd: spacingVars['--spacing-1'],
+    scrollSnapType: 'x mandatory',
+    scrollbarWidth: 'thin',
+  },
+  hour: {
+    alignItems: 'center',
+    borderRadius: radiusVars['--radius-container'],
+    flexShrink: 0,
+    minWidth: '3.25rem',
+    paddingBlock: spacingVars['--spacing-2'],
+    scrollSnapAlign: 'start',
+  },
+  hourNow: { backgroundColor: colorVars['--color-background-surface'] },
+  rain: { color: colorVars['--color-text-accent'] },
+  facts: { gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
   forecasts: { gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
   prices: {
     alignItems: 'baseline',
@@ -22,12 +68,26 @@ const styles = stylex.create({
   region: { minWidth: 0, overflowWrap: 'anywhere' },
 });
 
-/** @param {{icon:typeof CloudSun, title:string, meta:string}} props */
-function PanelHeader({ icon, title, meta }) {
+/** WMO weather code → icon; night variants where the sky is visible.
+ * @param {number} code @param {boolean} [isDay] */
+function weatherIcon(code, isDay = true) {
+  if (code === 0) return isDay ? Sun : Moon;
+  if ([1, 2].includes(code)) return isDay ? CloudSun : CloudMoon;
+  if (code === 3) return Cloud;
+  if ([45, 48].includes(code)) return CloudFog;
+  if ([51, 53, 55, 56, 57].includes(code)) return CloudDrizzle;
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return CloudSnow;
+  if ([95, 96, 99].includes(code)) return CloudLightning;
+  if (code >= 61) return CloudRain;
+  return Cloud;
+}
+
+/** @param {{icon:typeof CloudSun, title:string, meta:string, color?:'accent'|'warning'}} props */
+function PanelHeader({ icon, title, meta, color = 'accent' }) {
   return (
     <HStack gap={2} justify="between" align="center" wrap="wrap">
       <HStack gap={2} align="center">
-        <Icon icon={icon} color="accent" />
+        <Icon icon={icon} color={color} />
         <Heading level={2}>{title}</Heading>
       </HStack>
       <Text type="supporting">{meta}</Text>
@@ -50,44 +110,157 @@ function SourceLink({ href, label }) {
   );
 }
 
+/** @param {{icon:typeof Wind, label:string, value:string}} props */
+function Fact({ icon, label, value }) {
+  return (
+    <HStack gap={2} align="center" xstyle={styles.region}>
+      <Icon icon={icon} color="secondary" size="sm" />
+      <VStack gap={0} xstyle={styles.region}>
+        <Text type="supporting">{label}</Text>
+        <Text weight="semibold" hasTabularNumbers>
+          {value}
+        </Text>
+      </VStack>
+    </HStack>
+  );
+}
+
+/** @param {{hours:import('../types/feed.js').WeatherHour[]}} props */
+function HourlyStrip({ hours }) {
+  return (
+    <VStack gap={2}>
+      <Text type="label">12 giờ tới</Text>
+      {/* Scrollable region: focusable so keyboard users can pan it. */}
+      <HStack
+        role="list"
+        aria-label="Dự báo theo giờ"
+        tabIndex={0}
+        xstyle={styles.hours}
+      >
+        {hours.map((hour, index) => (
+          <VStack
+            key={hour.time}
+            role="listitem"
+            gap={1}
+            xstyle={[styles.hour, index === 0 && styles.hourNow]}
+          >
+            <Text type="supporting">
+              {index === 0 ? 'Bây giờ' : hourLabel(hour.time)}
+            </Text>
+            <Icon
+              icon={weatherIcon(hour.code)}
+              color="accent"
+              label={weatherLabel(hour.code)}
+            />
+            <Text weight="semibold" hasTabularNumbers>
+              {Math.round(hour.temperature)}°
+            </Text>
+            <Text
+              type="supporting"
+              hasTabularNumbers
+              xstyle={isLikelyRain(hour.rainProbability) && styles.rain}
+            >
+              {hour.rainProbability}%
+            </Text>
+          </VStack>
+        ))}
+      </HStack>
+    </VStack>
+  );
+}
+
 /** @param {{weather:import('../types/feed.js').Weather|null}} props */
 export function WeatherPanel({ weather }) {
+  const uv = uvLabel(weather?.uvIndex);
   return (
-    <Card xstyle={styles.region}>
+    <Card variant="blue" xstyle={styles.region}>
       <VStack gap={4}>
         <PanelHeader icon={CloudSun} title="Thời tiết" meta="TP. Hồ Chí Minh" />
         {weather ? (
           <>
-            <HStack gap={4} wrap="wrap" align="center">
+            <HStack gap={3} wrap="wrap" align="center">
+              <Icon
+                icon={weatherIcon(weather.code, weather.isDay)}
+                color="accent"
+                size="lg"
+              />
               <Text type="display-3" hasTabularNumbers>
                 {Math.round(weather.temperature)}°C
               </Text>
               <VStack gap={1} xstyle={styles.region}>
                 <Text weight="semibold">{weatherLabel(weather.code)}</Text>
-                <Text type="supporting">
-                  Độ ẩm {weather.humidity}% · Gió {weather.windSpeed} km/h
-                </Text>
+                {weather.apparentTemperature != null ? (
+                  <Text type="supporting">
+                    Cảm giác như {Math.round(weather.apparentTemperature)}°C
+                  </Text>
+                ) : null}
               </VStack>
             </HStack>
+            <Grid gap={3} xstyle={styles.facts}>
+              <Fact
+                icon={Droplets}
+                label="Độ ẩm"
+                value={`${weather.humidity}%`}
+              />
+              <Fact
+                icon={Wind}
+                label="Gió"
+                value={`${weather.windSpeed} km/h`}
+              />
+              {uv ? (
+                <Fact
+                  icon={Thermometer}
+                  label="Chỉ số UV"
+                  value={`${Math.round(weather.uvIndex ?? 0)} · ${uv}`}
+                />
+              ) : null}
+              {weather.precipitation != null ? (
+                <Fact
+                  icon={Umbrella}
+                  label="Lượng mưa"
+                  value={`${weather.precipitation} mm`}
+                />
+              ) : null}
+            </Grid>
+            {weather.hours?.length ? (
+              <HourlyStrip hours={weather.hours} />
+            ) : null}
             <Divider />
             <Grid gap={3} xstyle={styles.forecasts}>
-              {weather.days.map((day) => (
+              {weather.days.map((day, index) => (
                 <VStack key={day.date} gap={1} xstyle={styles.region}>
                   <Text type="label">
-                    {new Intl.DateTimeFormat('vi-VN', {
-                      day: '2-digit',
-                      month: '2-digit',
-                    }).format(new Date(day.date + 'T12:00:00+07:00'))}
+                    {index === 0
+                      ? 'Hôm nay'
+                      : new Intl.DateTimeFormat('vi-VN', {
+                          weekday: 'short',
+                          day: '2-digit',
+                          month: '2-digit',
+                        }).format(new Date(day.date + 'T12:00:00+07:00'))}
                   </Text>
-                  <Text hasTabularNumbers weight="semibold">
-                    {Math.round(day.min)}–{Math.round(day.max)}°
+                  <HStack gap={1} align="center">
+                    <Icon
+                      icon={weatherIcon(day.code)}
+                      color="secondary"
+                      size="sm"
+                      label={weatherLabel(day.code)}
+                    />
+                    <Text hasTabularNumbers weight="semibold">
+                      {Math.round(day.min)}–{Math.round(day.max)}°
+                    </Text>
+                  </HStack>
+                  <Text
+                    type="supporting"
+                    xstyle={isLikelyRain(day.rainProbability) && styles.rain}
+                  >
+                    Mưa {day.rainProbability}%
                   </Text>
-                  <Text type="supporting">Mưa {day.rainProbability}%</Text>
                 </VStack>
               ))}
             </Grid>
             <Text type="supporting">
-              Dữ liệu lúc {newsTime(weather.time + '+07:00')} (giờ Việt Nam)
+              Dữ liệu lúc {newsTime(weather.time + '+07:00')} · cập nhật mỗi 15
+              phút
             </Text>
           </>
         ) : (
@@ -107,9 +280,14 @@ export function WeatherPanel({ weather }) {
 /** @param {{gold:import('../types/feed.js').Gold|null}} props */
 export function GoldPanel({ gold }) {
   return (
-    <Card xstyle={styles.region}>
+    <Card variant="yellow" xstyle={styles.region}>
       <VStack gap={4}>
-        <PanelHeader icon={Coins} title="Giá vàng" meta="Triệu đồng/lượng" />
+        <PanelHeader
+          icon={Coins}
+          title="Giá vàng"
+          meta="Triệu đồng/lượng"
+          color="warning"
+        />
         {gold ? (
           <VStack gap={3}>
             <Grid gap={3} xstyle={styles.prices}>

@@ -16170,3 +16170,11 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Browser QA on this checkout's dev server (:3000; :3001 serves an older build): desktop 1440, iframe 800 and 390. Rail sticks 96px from the viewport top while scrolling; no horizontal overflow; mobile order weather → gold → operations → news. Screenshots: `harness/runs/20261005-home-redesign/`.
 - Not checked in the browser: a user without `logistics:contracts:view` (the `layoutNoOps` grid areas).
 - `./harness/verify.sh` passed: `harness/runs/20261005-115013-1377/`.
+
+## 2026-10-05 — Home hourly weather and news filters, task 1.1 (`home-hourly-weather-and-news-filters`)
+
+- Uses BE-P `enrich-home-feed` (`892f58f`). Weather: condition icons, feels-like, UV band, precipitation, 12-hour scroll strip, iconised 3-day forecast; ≥50% rain in accent. News moved to `news-section.jsx`: publisher filter + lead for headlines, Việt Nam / Quốc tế filter for logistics, colour-coded publisher tokens, relative times. Rail widened to 24rem; weather blue and gold yellow tints.
+- Browser QA on :3000 with the rebuilt BE dev container: desktop shows 36 headlines from 4 publishers and 39 logistics stories; the "Việt Nam" filter shows 15 relevant stories; iframe 390px keeps the order weather → gold → operations → news with no horizontal overflow. Screenshots: `harness/runs/20261005-home-redesign/enriched-*.jpg`.
+- `react-hooks/purity` rejected `Date.now()` in render; relative time now uses the query's `dataUpdatedAt`.
+- Not checked: dark theme rendering of the tinted cards.
+- `./harness/verify.sh` passed: `harness/runs/20261005-120758-1294/`.

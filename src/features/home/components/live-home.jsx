@@ -1,24 +1,23 @@
 'use client';
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
-import { Card } from '@astryxdesign/core/Card';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { List, ListItem } from '@astryxdesign/core/List';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Newspaper, RefreshCw, Ship } from 'lucide-react';
-import { useState } from 'react';
 
+import { publishers } from '../config/news.js';
 import { newsTime } from '../config/weather.js';
 import { useHomeFeed } from '../hooks/use-home-feed.js';
 import { GoldPanel, WeatherPanel } from './market-panels.jsx';
+import { NewsSection } from './news-section.jsx';
 
-// Desktop: reading column (operations → news) beside a sticky 22rem rail of
+// Desktop: reading column (operations → news) beside a sticky 24rem rail of
 // quick-look widgets. Below 64rem the rail moves first so weather and gold stay
 // above the fold; between 40 and 64rem its two cards sit side by side.
 const styles = stylex.create({
@@ -31,7 +30,7 @@ const styles = stylex.create({
     },
     gridTemplateColumns: {
       default: 'minmax(0, 1fr)',
-      '@media (min-width: 64rem)': 'minmax(0, 1fr) 22rem',
+      '@media (min-width: 64rem)': 'minmax(0, 1fr) 24rem',
     },
     gridTemplateRows: {
       default: 'auto',
@@ -63,58 +62,36 @@ const styles = stylex.create({
   region: { minWidth: 0, overflowWrap: 'anywhere' },
 });
 
-const INITIAL_ARTICLES = 5;
-
-/** @param {{title:string, description:string, icon:typeof Newspaper, articles:import('../types/feed.js').Article[]}} props */
-function NewsSection({ title, description, icon, articles }) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? articles : articles.slice(0, INITIAL_ARTICLES);
-  return (
-    <Card xstyle={styles.region}>
-      <VStack gap={3}>
-        <HStack gap={2} justify="between" align="center" wrap="wrap">
-          <HStack gap={2} align="center">
-            <Icon icon={icon} color="accent" />
-            <Heading level={2}>{title}</Heading>
-          </HStack>
-          <Text type="supporting">{description}</Text>
-        </HStack>
-        {articles.length ? (
-          <List hasDividers>
-            {visible.map((article) => (
-              <ListItem
-                key={article.url}
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                label={article.title}
-                description={`${article.source} · ${newsTime(article.publishedAt)}`}
-                endContent={
-                  <Icon icon="externalLink" color="secondary" size="sm" />
-                }
-              />
-            ))}
-          </List>
-        ) : (
-          <Text color="secondary">
-            Chưa có tin từ nguồn trong lần cập nhật này.
-          </Text>
-        )}
-        {articles.length > INITIAL_ARTICLES ? (
-          <Button
-            variant="ghost"
-            label={
-              expanded
-                ? `Thu gọn · ${title}`
-                : `Xem thêm ${articles.length - INITIAL_ARTICLES} tin · ${title}`
-            }
-            aria-expanded={expanded}
-            onClick={() => setExpanded(!expanded)}
-          />
-        ) : null}
-      </VStack>
-    </Card>
-  );
+/** @typedef {import('./news-section.jsx').NewsFilter} NewsFilter */
+const ALL = /** @type {NewsFilter} */ ({
+  value: 'all',
+  label: 'Tất cả',
+  match: () => true,
+});
+const LOGISTICS_FILTERS = /** @type {NewsFilter[]} */ ([
+  ALL,
+  {
+    value: 'vn',
+    label: 'Việt Nam',
+    match: (article) => article.region === 'vn',
+  },
+  {
+    value: 'global',
+    label: 'Quốc tế',
+    match: (article) => article.region === 'global',
+  },
+]);
+/** @param {import('../types/feed.js').Article[]} articles @returns {NewsFilter[]} */
+function publisherFilters(articles) {
+  return [
+    ALL,
+    ...publishers(articles).map((source) => ({
+      value: source,
+      label: source,
+      match: (/** @type {import('../types/feed.js').Article} */ article) =>
+        article.source === source,
+    })),
+  ];
 }
 
 /** @param {string} iso */
@@ -191,15 +168,22 @@ export function LiveHome({ operations }) {
             <>
               <NewsSection
                 title="Tin nổi bật"
-                description="VnExpress & Tuổi Trẻ"
+                description={`${feed.headlines.length} tin mới nhất từ ${publishers(feed.headlines).length} báo`}
                 icon={Newspaper}
                 articles={feed.headlines}
+                filters={publisherFilters(feed.headlines)}
+                initialCount={8}
+                now={query.dataUpdatedAt}
+                hasLead
               />
               <NewsSection
                 title="Logistics & xuất nhập khẩu"
                 description="Vận tải biển, thương mại & chuỗi cung ứng"
                 icon={Ship}
                 articles={feed.logistics}
+                filters={LOGISTICS_FILTERS}
+                initialCount={8}
+                now={query.dataUpdatedAt}
               />
             </>
           ) : query.isPending ? (
