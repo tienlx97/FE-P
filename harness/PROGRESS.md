@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-05 — Vietnam fuel chart defaults and local UI test guidance (task 1.1)
+
+- Change: `vn-fuel-chart-defaults`. Defaults are now Xăng E10 RON 95-III, Xăng E5 RON 92-II, Dầu DO 0,05S-II and Dầu DO 0,001S-V. Mineral RON95_III and kerosene remain selectable but no longer default; Thailand defaults unchanged.
+- Browser: real chart rendered with disposable synthetic periods; AX checkboxes, legend and chart data contain exactly four requested selected series. Screenshot in tool transcript. Temporary preview and exports removed before verification; no shared database changes.
+- Full gate passed: `harness/runs/20261005-103104-1457/`. Details in `fuel-defaults-evidence.md`. No new implementation-mirroring tests for this reversible configuration-only change.
+- User-provided test credentials saved only in ignored `.ai-login.local.md`; AGENTS.md now explicitly directs authenticated UI tests to read it. Verified ignored/untracked and instruction audit passed; credentials are absent from tracked documentation.
+
 ## 2026-10-05 — Return to login immediately after password change (task 1.1)
 
 - Change: `password-change-signin`. Successful self-service password response clears all six cookies in the BFF proxy (BE has committed password and SecurityStamp), then the dialog reloads `/login?passwordChanged=1` to discard protected caches. Login shows confirmation and asks for the new password; notice dismisses when submitting login.

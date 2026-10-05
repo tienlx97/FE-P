@@ -62,7 +62,6 @@ export const FUEL_MARKETS = [
         code: 'RON95_III',
         label: 'Xăng RON 95-III',
         category: 'xang',
-        isDefault: true,
         stoppedNote:
           'Xăng khoáng RON 95 được thay bằng xăng E10 RON 95 bắt buộc từ 01/06/2026.',
       },
@@ -79,12 +78,16 @@ export const FUEL_MARKETS = [
         category: 'dau',
         isDefault: true,
       },
-      { code: 'DO_0001S_V', label: 'Dầu DO 0,001S-V', category: 'dau' },
+      {
+        code: 'DO_0001S_V',
+        label: 'Dầu DO 0,001S-V',
+        category: 'dau',
+        isDefault: true,
+      },
       {
         code: 'KEROSENE_2K',
         label: 'Dầu hỏa 2-K',
         category: 'dau',
-        isDefault: true,
       },
     ],
   },
