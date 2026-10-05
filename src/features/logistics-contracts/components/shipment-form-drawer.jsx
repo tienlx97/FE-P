@@ -386,9 +386,11 @@ export function ShipmentFormDrawer({
                           container="card"
                           title={`Chuyển tình trạng: ${labelForShipmentStatus(shipment.status)} → ${labelForShipmentStatus(stage)}`}
                           description={
-                            stageSections.length > 1
-                              ? 'Bổ sung thông tin của giai đoạn này nếu đã có (không bắt buộc), rồi lưu.'
-                              : 'Thêm ghi chú nếu cần, rồi lưu.'
+                            figuresRequired
+                              ? 'Từ giai đoạn này số liệu tờ khai (giá trị, tỷ giá, số lượng, khối lượng) là bắt buộc; các thông tin khác bổ sung nếu đã có, rồi lưu.'
+                              : stageSections.length > 1
+                                ? 'Bổ sung thông tin của giai đoạn này nếu đã có (không bắt buộc), rồi lưu.'
+                                : 'Thêm ghi chú nếu cần, rồi lưu.'
                           }
                           endContent={
                             isShowingAll ? null : (

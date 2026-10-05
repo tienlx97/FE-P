@@ -60,6 +60,16 @@ export const shipmentCostLineSchema = z.object({
   costNature: z.enum(['Standard', 'Abnormal']),
 });
 
+/**
+ * Cross-field checks run even when another field fails its type: zod skips
+ * refinements after such an issue (an unset enum on an empty form), so
+ * these errors would only appear once those fields were chosen.
+ */
+const RUN_DESPITE_FIELD_ERRORS = {
+  when: (/** @type {{ value: unknown }} */ payload) =>
+    typeof payload.value === 'object' && payload.value !== null,
+};
+
 /** Required-from-the-yard message per declaration figure. */
 const DECLARATION_FIGURE_MESSAGES = /** @type {const} */ ([
   ['declarationValue', 'Bắt buộc từ “Hạ bãi chờ xuất”: nhập giá trị tờ khai'],
@@ -184,25 +194,16 @@ export const shipmentSchema = z
     originFreeTime: freeTimeFormSchema,
     destinationFreeTime: freeTimeFormSchema,
   })
-  // Its own check with `when`: zod skips refinements once another field
-  // fails its type (an unset enum on an empty form), and the figures would
-  // only report after those were fixed.
-  .superRefine(
-    (values, context) => {
-      if (!requiresDeclarationFigures(values.status)) return;
-      for (const [field, message] of DECLARATION_FIGURE_MESSAGES) {
-        if (values[field] === undefined) {
-          context.addIssue({ code: 'custom', path: [field], message });
-        }
-      }
-    },
-    {
-      when: (payload) =>
-        typeof payload.value === 'object' && payload.value !== null,
-    },
-  )
   .superRefine((values, context) => {
-    if (values.isTransshipment) {
+    if (!requiresDeclarationFigures(values.status)) return;
+    for (const [field, message] of DECLARATION_FIGURE_MESSAGES) {
+      if (values[field] === undefined) {
+        context.addIssue({ code: 'custom', path: [field], message });
+      }
+    }
+  }, RUN_DESPITE_FIELD_ERRORS)
+  .superRefine((values, context) => {
+    if (values.isTransshipment && Array.isArray(values.transshipmentLegs)) {
       if (values.transshipmentLegs.length === 0) {
         context.addIssue({
           code: 'custom',
@@ -242,4 +243,4 @@ export const shipmentSchema = z
       'destinationFreeTime',
       context,
     );
-  });
+  }, RUN_DESPITE_FIELD_ERRORS);

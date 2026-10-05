@@ -113,3 +113,14 @@ test('figure errors show even while other fields are still invalid', () => {
   for (const field of FIGURES) assert.ok(paths.includes(field), field);
   assert.ok(paths.includes('name'));
 });
+test('route and cut-off errors show even while enum fields are unset', () => {
+  const paths = issuePaths({
+    type: '',
+    paymentCondition: '',
+    isTransshipment: true,
+    transshipmentLegs: [],
+    siCutoffTime: '17:00',
+  });
+  assert.ok(paths.includes('transshipmentLegs'));
+  assert.ok(paths.includes('siCutoffDate'));
+});

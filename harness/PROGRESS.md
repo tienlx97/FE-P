@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-05 — Declaration figures follow-up (task 1.3)
+
+- `stage-gated-declaration-figures` 1.3, per user ("fix hết"): every cross-field schema check (transshipment ports, SI/CY time without date, free time) now runs with the shared `RUN_DESPITE_FIELD_ERRORS` `when` option, so errors show on an empty form; regression test. Stage-mode banner now says declaration figures are required when moving to a status that requires them (it said "không bắt buộc").
+- Real save round-trip on preview :3001 → dev API :8081 with a disposable shipment on 26KCT42 (no shipments before): created Booked without figures ("—" in cards, "chưa gồm 1 lô chưa có tỷ giá" on contract VNĐ cards); moved to Đang đóng hàng (saved); move to Hạ bãi chờ xuất blocked until figures entered, then saved (API: 1000 / 25000 / 25,000,000 VNĐ / 1 / 100 kg). Deleted via API (204); contract back to 0 shipments, numbering unaffected (max+1).
+- Gate passed: `harness/runs/20261005-233938-265007/`.
+
 ## 2026-10-05 — Stage-gated declaration figures (tasks 1.1–1.2)
 
 - `stage-gated-declaration-figures`, FE side of BE-P 54823e7 (user chose: required by stage; VNĐ totals skip + count). 1.1: `requiresDeclarationFigures` (shipment-status.js); schema makes the 4 figures optional, required from AtYardAwaitingExport with field messages; payload sends null; figures moved to "Hải quan & C/O" with status-dependent required marks and a hint; preset currency/status no longer count as group data. 1.2: `config/shipment-figures.js` (invoiceValueVnd, invoiceValueVndTotal, sumFigure, missingRateNote, formatFigure) used by shipment overview/info, contract overview/shipments panel+table, shipments list and contracts list (BE `shipmentsMissingExchangeRate`). Typecheck surfaced 21 null-unsafe sites; template-string sites fixed by hand. Tasks done together because the type change breaks the gate until displays are fixed.
