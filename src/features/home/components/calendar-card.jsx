@@ -1,29 +1,22 @@
 'use client';
-import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { Card } from '@astryxdesign/core/Card';
-import { Divider } from '@astryxdesign/core/Divider';
-import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { Text } from '@astryxdesign/core/Text';
 import {
   colorVars,
+  fontWeightVars,
   radiusVars,
   spacingVars,
+  textSizeVars,
 } from '@astryxdesign/core/theme/tokens.stylex';
 import { Token } from '@astryxdesign/core/Token';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { CalendarDays, Quote } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 
-import {
-  dayCanChi,
-  holidayName,
-  monthCanChi,
-  solarToLunar,
-  yearCanChi,
-} from '../config/lunar.js';
+import { holidayName, solarToLunar, yearCanChi } from '../config/lunar.js';
 import { dailyQuote } from '../config/quotes.js';
 import { useVietnamToday } from '../hooks/use-vietnam-today.js';
 
@@ -38,7 +31,7 @@ const WEEKDAYS = [
 ];
 
 // A tear-off wall calendar page ("lịch bloc"): red header band, a large solar
-// day, then the lunar day, Can Chi and the quote of the day.
+// day with its lunar date, then the quote of the day.
 const styles = stylex.create({
   band: {
     backgroundColor: colorVars['--color-background-red'],
@@ -47,7 +40,7 @@ const styles = stylex.create({
     paddingInline: spacingVars['--spacing-4'],
   },
   page: {
-    paddingBlock: spacingVars['--spacing-4'],
+    paddingBlock: spacingVars['--spacing-5'],
     paddingInline: spacingVars['--spacing-4'],
   },
   center: { alignItems: 'center', textAlign: 'center' },
@@ -57,17 +50,62 @@ const styles = stylex.create({
   dayFrame: { fontSize: '4.5rem', fontWeight: 700, lineHeight: 1 },
   day: { color: colorVars['--color-text-accent'] },
   red: { color: colorVars['--color-text-red'] },
-  // Quote of the day: a tinted note with the calendar's red rule and mark.
+  lunar: {
+    backgroundColor: colorVars['--color-background-muted'],
+    borderRadius: radiusVars['--radius-full'],
+    paddingBlock: spacingVars['--spacing-1'],
+    paddingInline: spacingVars['--spacing-3'],
+  },
+  // Quote of the day, hand-built: a tinted note with an oversized faded
+  // quotation mark behind the text and a red-ruled attribution.
   quote: {
     backgroundColor: colorVars['--color-background-muted'],
-    borderInlineStartColor: colorVars['--color-text-red'],
     borderRadius: radiusVars['--radius-container'],
-    color: colorVars['--color-text-primary'],
-    paddingBlock: spacingVars['--spacing-4'],
-    paddingInline: spacingVars['--spacing-4'],
+    margin: 0,
+    overflow: 'hidden',
+    paddingBlockEnd: spacingVars['--spacing-4'],
+    paddingBlockStart: spacingVars['--spacing-6'],
+    paddingInline: spacingVars['--spacing-5'],
+    position: 'relative',
   },
-  mark: { color: colorVars['--color-text-red'] },
-  quoteText: { fontStyle: 'italic', textWrap: 'balance' },
+  glyph: {
+    color: colorVars['--color-text-red'],
+    fontFamily: 'Georgia, "Times New Roman", serif',
+    fontSize: '6rem',
+    insetBlockStart: '-0.75rem',
+    insetInlineStart: spacingVars['--spacing-2'],
+    lineHeight: 1,
+    opacity: 0.18,
+    pointerEvents: 'none',
+    position: 'absolute',
+    userSelect: 'none',
+  },
+  quoteText: {
+    color: colorVars['--color-text-primary'],
+    fontSize: textSizeVars['--font-size-lg'],
+    fontStyle: 'italic',
+    fontWeight: fontWeightVars['--font-weight-medium'],
+    lineHeight: 1.55,
+    margin: 0,
+    position: 'relative',
+    textWrap: 'balance',
+  },
+  author: {
+    alignItems: 'center',
+    color: colorVars['--color-text-secondary'],
+    display: 'flex',
+    fontSize: textSizeVars['--font-size-sm'],
+    fontWeight: fontWeightVars['--font-weight-semibold'],
+    gap: spacingVars['--spacing-2'],
+    letterSpacing: '0.02em',
+    marginBlockStart: spacingVars['--spacing-3'],
+    '::before': {
+      backgroundColor: colorVars['--color-text-red'],
+      blockSize: '2px',
+      content: '""',
+      inlineSize: spacingVars['--spacing-5'],
+    },
+  },
   region: { minWidth: 0, overflowWrap: 'anywhere' },
 });
 
@@ -106,7 +144,7 @@ export function CalendarCard() {
           Năm {yearCanChi(lunar.year)}
         </Text>
       </HStack>
-      <VStack gap={4} xstyle={styles.page}>
+      <VStack gap={5} xstyle={styles.page}>
         <VStack gap={2} xstyle={styles.center}>
           <Text
             type="label"
@@ -126,49 +164,30 @@ export function CalendarCard() {
             </Text>
           </VStack>
           {holiday ? <Token color="red" label={holiday} /> : null}
-        </VStack>
-        <Divider />
-        <Grid gap={3} columns={2}>
-          <VStack gap={1} xstyle={styles.region}>
+          <HStack gap={2} align="center" xstyle={styles.lunar}>
             <Text type="label" color="secondary">
-              ÂM LỊCH
+              Âm lịch
             </Text>
-            <Text type="display-3" weight="semibold" hasTabularNumbers>
-              {lunar.day}
-            </Text>
-            <Text type="supporting">
-              {lunarDayLabel(lunar.day)} · Tháng {lunar.month}
+            <Text type="supporting" color="primary">
+              <Text weight="semibold" hasTabularNumbers>
+                {lunarDayLabel(lunar.day)}
+              </Text>{' '}
+              · Tháng {lunar.month}
               {lunar.isLeap ? ' nhuận' : ''}
             </Text>
-          </VStack>
-          <VStack gap={1} xstyle={styles.region}>
-            <Text type="supporting">
-              Ngày <Text weight="semibold">{dayCanChi(lunar.jd)}</Text>
-            </Text>
-            <Text type="supporting">
-              Tháng{' '}
-              <Text weight="semibold">
-                {monthCanChi(lunar.month, lunar.year)}
-              </Text>
-            </Text>
-            <Text type="supporting">
-              Năm <Text weight="semibold">{yearCanChi(lunar.year)}</Text>
-            </Text>
-          </VStack>
-        </Grid>
-        <Blockquote
-          xstyle={styles.quote}
-          cite={<Text type="supporting">— {quote.author}</Text>}
-        >
-          <VStack gap={2}>
-            <HStack gap={2} align="center" xstyle={styles.mark}>
-              <Icon icon={Quote} color="inherit" size="sm" />
-            </HStack>
-            <Text type="large" weight="medium" xstyle={styles.quoteText}>
-              {quote.text}
-            </Text>
-          </VStack>
-        </Blockquote>
+          </HStack>
+        </VStack>
+        <figure {...stylex.props(styles.quote)}>
+          <span aria-hidden="true" {...stylex.props(styles.glyph)}>
+            “
+          </span>
+          <blockquote {...stylex.props(styles.quoteText)}>
+            {quote.text}
+          </blockquote>
+          <figcaption {...stylex.props(styles.author)}>
+            {quote.author}
+          </figcaption>
+        </figure>
       </VStack>
     </Card>
   );

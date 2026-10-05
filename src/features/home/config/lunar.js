@@ -1,5 +1,5 @@
 // Vietnamese lunar calendar (Hồ Ngọc Đức's astronomical algorithm, UTC+7).
-// Pure functions: solar date → lunar day/month/year/leap, Can Chi and observances.
+// Pure functions: solar date → lunar day/month/year/leap, year Can Chi and observances.
 
 const TIME_ZONE = 7;
 const { floor, sin, PI } = Math;
@@ -153,14 +153,6 @@ const CHI = [
 /** @param {number} year */
 export function yearCanChi(year) {
   return `${CAN[(year + 6) % 10]} ${CHI[(year + 8) % 12]}`;
-}
-/** @param {number} month @param {number} year lunar month and year */
-export function monthCanChi(month, year) {
-  return `${CAN[(year * 12 + month + 3) % 10]} ${CHI[(month + 1) % 12]}`;
-}
-/** @param {number} jd */
-export function dayCanChi(jd) {
-  return `${CAN[(jd + 9) % 10]} ${CHI[(jd + 1) % 12]}`;
 }
 
 const SOLAR_HOLIDAYS = /** @type {Record<string, string>} */ ({

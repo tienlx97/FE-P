@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-05 — Home calendar card polish (task 1.2)
+
+- `home-calendar-daily-quote` 1.2, per user: quote is now hand-built (native figure/blockquote/figcaption + StyleX tokens, no Astryx component): muted note, oversized faded red Georgia quotation mark, large medium-italic balanced text, red-ruled author caption. Removed day/month Can Chi (`dayCanChi`, `monthCanChi` and their test); year Can Chi stays in the red band. Lunar date is now a pill under the solar day ("Âm lịch Ngày 25 · Tháng 8"), so the divider/two-column grid is gone.
+- Browser :3000 screenshot (tool transcript): band, weekday, day, lunar pill, quote with "Ngạn ngữ Nga"; no Can Chi text in the page body.
+- Full gate passed: `harness/runs/20261005-212503-67013/`. Generated `meta*.d.ts` header churn still left uncommitted.
+
 ## 2026-10-05 — Home calendar daily quote (task 1.1)
 
 - `home-calendar-daily-quote`: removed "Giờ hoàng đạo" (and `auspiciousHours`) from the Home calendar card. The old unattributed saying is replaced by `config/quotes.js`: 60 attributed quotes (well-known people in our own Vietnamese renderings, plus tục ngữ/ca dao), one per Vietnam day via `jd % length`, rendered as a semantic Astryx `Blockquote` with the calendar's red rule/quote mark, large italic text and `cite` author.

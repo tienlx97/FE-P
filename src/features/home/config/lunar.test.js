@@ -2,10 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
-  dayCanChi,
   holidayName,
-  jdFromDate,
-  monthCanChi,
   solarToLunar,
   yearCanChi,
 } from './lunar.js';
@@ -28,12 +25,9 @@ test('2025 leap sixth month', () => {
   assert.equal(short(solarToLunar(25, 7, 2025)), '1/6/2025 nhuận');
   assert.equal(short(solarToLunar(24, 7, 2025)), '30/6/2025');
 });
-test('Can Chi of year, month and day', () => {
+test('Can Chi of the lunar year', () => {
   assert.equal(yearCanChi(2026), 'Bính Ngọ');
   assert.equal(yearCanChi(2025), 'Ất Tỵ');
-  assert.equal(monthCanChi(1, 2026), 'Canh Dần');
-  // 2000-01-01 is a Mậu Ngọ day.
-  assert.equal(dayCanChi(jdFromDate(1, 1, 2000)), 'Mậu Ngọ');
 });
 test('solar and lunar observances; leap months have none', () => {
   assert.equal(holidayName(2, 9, solarToLunar(2, 9, 2026)), 'Quốc khánh');
