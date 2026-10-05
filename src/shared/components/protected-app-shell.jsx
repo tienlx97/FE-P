@@ -188,12 +188,12 @@ export function ProtectedAppShell({
     pathname === '/docs' ||
     pathname.startsWith('/docs/') ||
     pathname.startsWith('/tutorial/');
-  // Only the home page and the /docs section keep the larger react.dev-
+  // Only the /docs section keeps the larger react.dev-
   // matched reading scale (see `styles.largeTypography` above) — every
   // other route (including /tutorial) now renders at Astryx's normal UI
   // density.
   const hasLargeTypography =
-    pathname === '/' || pathname === '/docs' || pathname.startsWith('/docs/');
+    pathname === '/docs' || pathname.startsWith('/docs/');
   // /admin/* uses /docs' layout as its standard (see
   // `shared/components/page-content-shell.jsx`): same self-managed
   // padding/max-width contract, so it also opts out of `paddedMain` below
@@ -203,7 +203,8 @@ export function ProtectedAppShell({
     pathname.startsWith('/admin/') ||
     pathname === '/logistics' ||
     pathname.startsWith('/logistics/');
-  const hasSelfManagedPadding = hasMdxLayout || isAdminOrLogistics;
+  const hasSelfManagedPadding =
+    pathname === '/' || hasMdxLayout || isAdminOrLogistics;
   // Grid columns follow side-nav presence in general (any side-nav'd
   // section gets the 2-column layout); self-managed-padding content
   // additionally opts out of `main`'s own padding below since it applies

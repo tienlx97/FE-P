@@ -27,3 +27,7 @@ configured with `API_BASE_URL=http://localhost:8081`. Verify desktop/mobile, loa
 empty operations, source failure feedback, update action and original article links.
 No shared operational data needs to be edited for these checks. Historical
 `home-portal-browser.mjs` was removed with the portal it tested.
+
+Home now includes PNJ-published regional PNJ/SJC buy/sell quotes, displayed in millions of VND/lượng with each quote update time in Vietnam. Backend returns VND/lượng; the widget retains 1,000 VND precision. PNJ is an independent nullable source.
+
+Layout: compact reading width, weather/gold quick panels side by side on desktop and stacked on mobile, scoped shipment operations before news. Each news column initially shows five articles; expand/collapse preserves original publisher links. The app composes operations through the Home slot; there are no cross-feature imports. Dashboard uses normal UI density and one page inset instead of doubled padding.

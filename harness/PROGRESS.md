@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-05 — Gold prices and Home UX (task 1.1)
+
+- `home-gold-and-layout`: PNJ-published HCM PNJ/SJC buy/sell widgets, explicit triệu đồng/lượng and individual Vietnam quote times. API VND values converted without losing 1,000 VND precision; source link included, nullable source has a retry hint.
+- Astryx discovery (build dashboard kit, dashboard skeleton and component docs) informed responsive tinted weather/market panels, 80rem reading width, normal UI density, one page inset, headline/source hierarchy, external-link glyphs and five initial stories per section with accessible expand/collapse. Scoped operations moved above news through an app-composed slot, with Stat metrics and unchanged permissions/API scope.
+- Full gate passed: `harness/runs/20261005-113127-561/`, 296 unit tests plus lint/typecheck/structure/harness/build/quality. First gate failed import sorting; eslint autofix corrected it and second full gate passed.
+- Final production preview :3001 against dev BE :8081: real quotes 140,50 /143,50 with 07:53/07:54 source times; original links, refresh, 5→12→5 headlines and aria-expanded false/true confirmed. No overflow: 1280/1270, 390/380 (final 390/390), 320/310 width/scrollWidth. Screenshots saved as home-desktop.png and home-mobile.png in final run, further evidence in home-gold-evidence.md. Existing :3000 dev service restored.
+- Discovered: existing unrelated unused `trailing` warning in meta/contract-info-grid.jsx left unchanged. Open-Meteo commercial API configuration remains documented. No business data or production stack changed.
+- Harness gaps: browser viewport/expand interaction remains manual as before; price-unit conversion now has a direct precision test. Existing lint caught the import order issue.
+
 ## 2026-10-05 — Live Home weather, publisher news and operations (task 1.1)
 
 - `live-home-dashboard`, BE-P `4caba6d`: replaced the entire sample Home portal with HCM current weather + three days, VnExpress/Tuoi Tre headlines, logistics/export/import/shipping news including Seatrade Maritime. Titles/source/time/original links; public refresh every 15 minutes with loading/error/source-failure states.

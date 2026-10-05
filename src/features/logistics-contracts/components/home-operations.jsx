@@ -6,6 +6,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Stat } from '@astryxdesign/lab';
 
 import {
   needsAttention,
@@ -52,12 +53,15 @@ export function HomeOperations() {
         ) : (
           <>
             <HStack gap={6} wrap="wrap">
-              <Text>{rows.length} lô đang làm</Text>
-              <Text>
-                {rows.filter((row) => shipmentPhase(row) === 'sailing').length}{' '}
-                lô đang trên tàu
-              </Text>
-              <Text color="secondary">{attention.length} lô cần chú ý</Text>
+              <Stat label="Lô đang làm" value={rows.length} size="sm" />
+              <Stat
+                label="Đang trên tàu"
+                value={
+                  rows.filter((row) => shipmentPhase(row) === 'sailing').length
+                }
+                size="sm"
+              />
+              <Stat label="Cần chú ý" value={attention.length} size="sm" />
             </HStack>
             {visible.length ? (
               <List header="Lô hàng cần theo dõi · tối đa 5 lô" hasDividers>

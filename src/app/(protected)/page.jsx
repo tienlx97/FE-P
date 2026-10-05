@@ -1,4 +1,3 @@
-import { VStack } from '@astryxdesign/core/VStack';
 import { cookies } from 'next/headers';
 
 import { LiveHome } from '@/features/home/index.js';
@@ -13,13 +12,14 @@ export default async function HomePage() {
     store.get(SESSION_PERMISSIONS_KEY)?.value,
   );
   return (
-    <PageContentShell isFullWidth>
-      <VStack gap={6}>
-        <LiveHome />
-        {permissions.includes('logistics:contracts:view') ? (
-          <HomeOperations />
-        ) : null}
-      </VStack>
+    <PageContentShell>
+      <LiveHome
+        operations={
+          permissions.includes('logistics:contracts:view') ? (
+            <HomeOperations />
+          ) : null
+        }
+      />
     </PageContentShell>
   );
 }
