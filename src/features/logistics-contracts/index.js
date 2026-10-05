@@ -6,6 +6,7 @@ export { ContractsList } from './components/contracts-list.jsx';
 export { CountriesList } from './components/countries-list.jsx';
 export { CustomerDetailWorkspace } from './components/customer-detail-workspace.jsx';
 export { CustomersList } from './components/customers-list.jsx';
+export { HomeOperations } from './components/home-operations.jsx';
 export { PortsList } from './components/ports-list.jsx';
 export { QuickSearchPalette } from './components/quick-search-palette.jsx';
 export { ShipmentAlertsBell } from './components/shipment-alerts-bell.jsx';

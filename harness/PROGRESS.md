@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-05 — Live Home weather, publisher news and operations (task 1.1)
+
+- `live-home-dashboard`, BE-P `4caba6d`: replaced the entire sample Home portal with HCM current weather + three days, VnExpress/Tuoi Tre headlines, logistics/export/import/shipping news including Seatrade Maritime. Titles/source/time/original links; public refresh every 15 minutes with loading/error/source-failure states.
+- Permission-gated active shipment widget reuses existing scoped overview API: total/on-board/danger-alert counts and up to five links, danger alerts first. Empty state shown for current local account; no shared business records edited. Users without contracts-view permission do not mount/request the widget.
+- Deleted old company-news/notices/calendar/video/ecosystem components, fixtures/helpers/tests and obsolete browser check. Updated docs/architecture.md and docs/home.md.
+- Full gate passed: `harness/runs/20261005-110838-420/`, 295 unit tests, lint/typecheck/structure/harness/build/quality. Browser screenshot in tool transcript; details in home-evidence.md. Width/scrollWidth: 1280/1270, 390/380, 320/310. Real weather, 12 headlines + 12 industry links, correct Tuoi Tre local times and empty operations verified; permissionless HTML excludes operations, anonymous redirects to login.
+- Initial follow-up gate failed the new weather test's import sorting; existing ESLint autofix corrected it. No new lint harness gap. Runtime: StyleX dev watcher needed restart after file deletion; verified build and restarted local servers work. Positive shipment rows not tested against shared data; existing API/helper coverage retained.
+- Commercial weather deployment requires backend HomeFeed__WeatherApiKey. Production stack not rebuilt; :3001 previews the verified build against dev API :8081.
+
 ## 2026-10-05 — Vietnam fuel chart defaults and local UI test guidance (task 1.1)
 
 - Change: `vn-fuel-chart-defaults`. Defaults are now Xăng E10 RON 95-III, Xăng E5 RON 92-II, Dầu DO 0,05S-II and Dầu DO 0,001S-V. Mineral RON95_III and kerosene remain selectable but no longer default; Thailand defaults unchanged.

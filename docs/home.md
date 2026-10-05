@@ -1,0 +1,29 @@
+# Home · Bản tin hôm nay
+
+Home replaces the sample company portal. Public data comes from authenticated
+BE-P `GET /api/v1/home`: HCM current model weather, three daily forecasts,
+VnExpress/Tuoi Tre headlines and logistics/import-export/shipping news including
+Seatrade Maritime (English titles kept in their original language).
+Only titles, publication times, publisher names and original article links are shown.
+The weather provider is attributed to Open-Meteo. Tuoi Tre's offsetless publication
+dates are interpreted in Vietnam time by BE-P.
+
+The public feed refreshes every 15 minutes and on “Cập nhật”; the backend snapshot
+is cached 15 minutes, or two minutes when a source fails. API and partial source
+errors are visible. No fake fallback stories or weather. The article selection is
+the latest RSS entries, not a popularity score or manual editorial ranking.
+
+`logistics:contracts:view` users also see active shipment counts, the number on
+board, danger alerts and up to five shipment links (danger-alert rows first).
+Company scoping remains enforced by the existing backend shipment overview query.
+Users without the permission do not mount the operation widget or request its data.
+
+For commercial weather API use, set backend `HomeFeed__WeatherApiKey` with an
+Open-Meteo commercial subscription; no key belongs in frontend code.
+See BE-P `docs/api/Home.md` for source URLs and API details.
+
+UI verification: use the local account in ignored `.ai-login.local.md`, frontend
+configured with `API_BASE_URL=http://localhost:8081`. Verify desktop/mobile, loading,
+empty operations, source failure feedback, update action and original article links.
+No shared operational data needs to be edited for these checks. Historical
+`home-portal-browser.mjs` was removed with the portal it tested.
