@@ -16178,3 +16178,9 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - `react-hooks/purity` rejected `Date.now()` in render; relative time now uses the query's `dataUpdatedAt`.
 - Not checked: dark theme rendering of the tinted cards.
 - `./harness/verify.sh` passed: `harness/runs/20261005-120758-1294/`.
+
+## 2026-10-05 — Home weather carousel, task 1.2 (`home-hourly-weather-and-news-filters`)
+
+- The 12-hour weather strip now uses `@astryxdesign/core/Carousel` (`hasSnap`, `gap={1}`, aria-label "Dự báo 12 giờ tới") instead of a hand-rolled overflow HStack; the custom scroll/snap styles and list roles were removed.
+- Browser QA on :3000: carousel role and 12 slides present; "Cuộn sang phải" scrolled to 19h–0h and revealed "Cuộn sang trái". Screenshot: `harness/runs/20261005-home-redesign/weather-carousel.png`.
+- `./harness/verify.sh` passed: `harness/runs/20261005-133841-349/`.

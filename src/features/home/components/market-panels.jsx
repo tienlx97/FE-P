@@ -1,5 +1,6 @@
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
+import { Carousel } from '@astryxdesign/core/Carousel';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
@@ -40,21 +41,12 @@ import {
 } from '../config/weather.js';
 
 const styles = stylex.create({
-  hours: {
-    display: 'flex',
-    gap: spacingVars['--spacing-1'],
-    overflowX: 'auto',
-    paddingBlockEnd: spacingVars['--spacing-1'],
-    scrollSnapType: 'x mandatory',
-    scrollbarWidth: 'thin',
-  },
   hour: {
     alignItems: 'center',
     borderRadius: radiusVars['--radius-container'],
     flexShrink: 0,
     minWidth: '3.25rem',
     paddingBlock: spacingVars['--spacing-2'],
-    scrollSnapAlign: 'start',
   },
   hourNow: { backgroundColor: colorVars['--color-background-surface'] },
   rain: { color: colorVars['--color-text-accent'] },
@@ -130,17 +122,11 @@ function HourlyStrip({ hours }) {
   return (
     <VStack gap={2}>
       <Text type="label">12 giờ tới</Text>
-      {/* Scrollable region: focusable so keyboard users can pan it. */}
-      <HStack
-        role="list"
-        aria-label="Dự báo theo giờ"
-        tabIndex={0}
-        xstyle={styles.hours}
-      >
+      {/* Carousel supplies prev/next buttons, edge fades, snap and keyboard panning. */}
+      <Carousel aria-label="Dự báo 12 giờ tới" gap={1} hasSnap>
         {hours.map((hour, index) => (
           <VStack
             key={hour.time}
-            role="listitem"
             gap={1}
             xstyle={[styles.hour, index === 0 && styles.hourNow]}
           >
@@ -164,7 +150,7 @@ function HourlyStrip({ hours }) {
             </Text>
           </VStack>
         ))}
-      </HStack>
+      </Carousel>
     </VStack>
   );
 }
