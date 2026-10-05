@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import {
   articlesInTopic,
   findTopic,
+  leadPerTopic,
   LOGISTICS_TOPICS,
   NEWS_TOPICS,
   relativeTime,
@@ -30,6 +31,29 @@ test('topic filter keeps everything for "all"', () => {
   assert.deepEqual(articlesInTopic(articles, 'cong-nghe'), [
     { topic: 'cong-nghe' },
   ]);
+});
+test('logistics tags: an article can sit in several tabs', () => {
+  const customs = { topic: 'vn', tags: ['vn', 'customs'] };
+  const port = { topic: 'maritime', tags: ['maritime'] };
+  assert.deepEqual(articlesInTopic([customs, port], 'customs'), [customs]);
+  assert.deepEqual(articlesInTopic([customs, port], 'vn'), [customs]);
+  assert.equal(findTopic(LOGISTICS_TOPICS, 'customs')?.label, 'Hải quan');
+  // Headlines carry an empty tag list and still filter by topic.
+  assert.equal(
+    articlesInTopic([{ topic: 'the-thao', tags: [] }], 'the-thao').length,
+    1,
+  );
+});
+test('featured carousel takes the newest story per topic in tab order', () => {
+  const articles = [
+    { topic: 'the-thao', title: 'a' },
+    { topic: 'thoi-su', title: 'b' },
+    { topic: 'the-thao', title: 'c' },
+  ];
+  assert.deepEqual(
+    leadPerTopic(articles, NEWS_TOPICS).map((article) => article.title),
+    ['b', 'a'],
+  );
 });
 test('relative time covers minutes, hours, older dates and missing values', () => {
   const now = Date.parse('2026-10-05T05:00:00Z');

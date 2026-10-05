@@ -16199,3 +16199,10 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Browser QA: desktop and 390px iframe (order weather → calendar → gold → operations → news; no horizontal overflow). Screenshots: `harness/runs/20261005-home-redesign/{topics-desktop,calendar-gold,topics-mobile-390}.*`.
 - Not checked: dark theme; a Sunday/holiday page in the browser (covered by unit tests for holidayName only).
 - `./harness/verify.sh` passed: `harness/runs/20261005-140731-264/`.
+
+## 2026-10-05 — Featured carousel and logistics tags, task 1.2 (`home-calendar-topics-and-gold`)
+
+- "Tin nổi bật" Carousel: newest story per topic, ClickableCard 16rem × 10rem (measured 256×160 for all 7 slides). The list lead was removed (the carousel replaces it).
+- Logistics tabs: Tất cả · Hải quan · Cước & forwarder · Việt Nam · Hàng hải & cảng · Hàng không · Chuỗi cung ứng, filtered by BE `tags`.
+- Bug caught in the browser: every news tab counted 0 because BE sends `tags: []` for headlines and the filter treated an empty list as "has tags". Fixed (`tags?.length`) with a unit test. Harness gap: config tests used fixtures without the live API's empty `tags`; a fixture recorded from the real `/api/v1/home` shape would have caught it.
+- Screenshots: `harness/runs/20261005-home-redesign/{featured-carousel,logistics-customs-tab}.jpg`. `./harness/verify.sh` passed: `harness/runs/20261005-141921-1950/`.

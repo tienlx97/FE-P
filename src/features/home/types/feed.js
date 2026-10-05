@@ -1,6 +1,7 @@
 /** @typedef {'vn'|'global'} ArticleRegion */
-/** topic: news topic (thoi-su…suc-khoe) or logistics group (vn, maritime, air, supply-chain). */
-/** @typedef {{title:string, url:string, source:string, publishedAt:string|null, region:ArticleRegion, topic:string|null}} Article */
+/** topic: news topic (thoi-su…suc-khoe) or logistics group (vn, maritime, air, supply-chain).
+ * tags (logistics): the group plus "customs" / "freight" when the title is about them. */
+/** @typedef {{title:string, url:string, source:string, publishedAt:string|null, region:ArticleRegion, topic:string|null, tags?:string[]}} Article */
 /** @typedef {{date:string, min:number, max:number, rainProbability:number, code:number}} WeatherDay */
 /** @typedef {{time:string, temperature:number, rainProbability:number, code:number}} WeatherHour */
 /** @typedef {{location:string, time:string, temperature:number, humidity:number, windSpeed:number, code:number, days:WeatherDay[], apparentTemperature:number|null, uvIndex:number|null, precipitation:number|null, isDay:boolean, hours:WeatherHour[]}} Weather */

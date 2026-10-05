@@ -5,3 +5,5 @@
 - Lunar conversion matches published calendars for Tết 2024–2026, Trung thu 2026 and the 2025 leap sixth month.
 - Gold shows PNJ and SJC tiles with update time, buy, sell and spread in millions of VND/lượng.
 - Rail order: weather, calendar, gold; calendar renders even when the feed fails; mobile has no horizontal overflow.
+- "Tin nổi bật" shows the newest story of each news topic in a Carousel of fixed-size cards (16rem × 10rem; topic tag, three-line title, source and time).
+- Logistics tabs add Hải quan and Cước & forwarder, filtered by article `tags`; an article may appear in several tabs.

@@ -13,9 +13,12 @@ export const NEWS_TOPICS = /** @type {Topic[]} */ ([
   { value: 'suc-khoe', label: 'Sức khỏe', color: 'teal' },
 ]);
 
-/** Logistics groups: Vietnamese specialist/filtered press, then international by mode. */
+/** Logistics tabs from a shipper's view: customs and freight/forwarding first,
+ * then Vietnamese press and international press by transport mode. */
 export const LOGISTICS_TOPICS = /** @type {Topic[]} */ ([
   { value: 'all', label: 'Tất cả', color: 'default' },
+  { value: 'customs', label: 'Hải quan', color: 'red' },
+  { value: 'freight', label: 'Cước & forwarder', color: 'yellow' },
   { value: 'vn', label: 'Việt Nam', color: 'orange' },
   { value: 'maritime', label: 'Hàng hải & cảng', color: 'blue' },
   { value: 'air', label: 'Hàng không', color: 'purple' },
@@ -27,11 +30,26 @@ export function findTopic(topics, value) {
   return topics.find((topic) => topic.value === value) ?? null;
 }
 
-/** @template {{topic?:string|null}} T @param {T[]} articles @param {string} value */
+/** Articles in a tab: by tag when the article has tags (logistics), else by topic
+ * (headlines arrive with an empty tag list).
+ * @template {{topic?:string|null, tags?:string[]}} T @param {T[]} articles @param {string} value */
 export function articlesInTopic(articles, value) {
   return value === 'all'
     ? articles
-    : articles.filter((article) => article.topic === value);
+    : articles.filter((article) =>
+        article.tags?.length
+          ? article.tags.includes(value)
+          : article.topic === value,
+      );
+}
+
+/** Newest story of each topic, in tab order, for the featured carousel.
+ * @template {{topic?:string|null}} T @param {T[]} articles newest first @param {Topic[]} topics */
+export function leadPerTopic(articles, topics) {
+  return topics.flatMap((topic) => {
+    const lead = articles.find((article) => article.topic === topic.value);
+    return lead ? [lead] : [];
+  });
 }
 
 /**

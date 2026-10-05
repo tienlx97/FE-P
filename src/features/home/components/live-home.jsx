@@ -14,6 +14,7 @@ import { LOGISTICS_TOPICS, NEWS_TOPICS } from '../config/news.js';
 import { newsTime } from '../config/weather.js';
 import { useHomeFeed } from '../hooks/use-home-feed.js';
 import { CalendarCard } from './calendar-card.jsx';
+import { FeaturedNews } from './featured-news.jsx';
 import { GoldPanel, WeatherPanel } from './market-panels.jsx';
 import { NewsSection } from './news-section.jsx';
 
@@ -132,6 +133,10 @@ export function LiveHome({ operations }) {
         <VStack gap={6} xstyle={[styles.region, styles.news]}>
           {feed ? (
             <>
+              <FeaturedNews
+                articles={feed.headlines}
+                now={query.dataUpdatedAt}
+              />
               <NewsSection
                 title="Tin tức"
                 description="Theo chủ đề, từ các trang chuyên mục"
@@ -140,7 +145,6 @@ export function LiveHome({ operations }) {
                 topics={NEWS_TOPICS}
                 initialCount={8}
                 now={query.dataUpdatedAt}
-                hasLead
               />
               <NewsSection
                 title="Logistics & xuất nhập khẩu"

@@ -35,10 +35,10 @@ function ArticleMeta({ article, topic, now }) {
 }
 
 /**
- * Card of publisher stories split into topic tabs, with an optional featured lead.
+ * Card of publisher stories split into topic tabs.
  * In the first ("all") tab each story is tagged with its coloured topic.
  * @param {{title:string, description:string, icon:import('lucide-react').LucideIcon,
- *   articles:Article[], topics:Topic[], initialCount:number, hasLead?:boolean,
+ *   articles:Article[], topics:Topic[], initialCount:number,
  *   now:number}} props  `now` = when the client received the feed (relative times).
  */
 export function NewsSection({
@@ -48,7 +48,6 @@ export function NewsSection({
   articles,
   topics,
   initialCount,
-  hasLead = false,
   now,
 }) {
   const panelId = useId();
@@ -95,21 +94,13 @@ export function NewsSection({
         <VStack id={panelId} role="tabpanel" gap={3}>
           {visible.length ? (
             <List hasDividers>
-              {visible.map((article, index) => (
+              {visible.map((article) => (
                 <ListItem
                   key={article.url}
                   href={article.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  label={
-                    hasLead && index === 0 ? (
-                      <Text size="lg" weight="semibold">
-                        {article.title}
-                      </Text>
-                    ) : (
-                      article.title
-                    )
-                  }
+                  label={article.title}
                   description={
                     <ArticleMeta
                       article={article}
