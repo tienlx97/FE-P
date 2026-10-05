@@ -91,6 +91,9 @@ Enforced by `harness/structure.rules.cjs` (dependency-cruiser), run via
   offline or timed-out revocation preserves credentials and returns 503 for retry.
   An access-only session cannot claim confirmed revocation. Requests with neither
   token are already logged out. Backend revocation waits at most ten seconds.
+  A confirmed self-service password change clears session cookies in the proxy
+  response, then reloads login with confirmation. Failed changes keep the session;
+  Admin reset of another employee retains the administrator's session and copy/send UI.
   Employee access UI displays the API's company/branch scope, distinguishes the
   account Admin role from department membership, and shows permission loading errors.
 - `src/features/admin-users/` — users, organization/employee fields, permissions,

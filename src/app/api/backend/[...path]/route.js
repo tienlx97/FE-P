@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 
 import { clientAddressHeaders } from '@/shared/api/client-address.js';
 import {
+  clearPasswordChangedSession,
   sessionClaimsFromToken,
   writeSessionCookies,
 } from '@/shared/api/server-session.js';
@@ -121,6 +122,8 @@ async function proxy(request, context) {
       response = retried;
     }
   }
+
+  clearPasswordChangedSession(cookieStore, request.method, path, response);
 
   const responseHeaders = new Headers();
   const contentType = response.headers.get('content-type');

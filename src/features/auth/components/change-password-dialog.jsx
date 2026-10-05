@@ -17,8 +17,7 @@ const MIN_PASSWORD_LENGTH = 8;
 
 /**
  * Self-service counterpart to Admin's `ResetPasswordDialog`
- * (`admin-users/components/reset-password-dialog.jsx`) — same "keep the
- * dialog open on success" shape, but this one needs the caller's current
+ * (`admin-users/components/reset-password-dialog.jsx`) — this one needs the caller's current
  * password (`POST /users/me/password`, unlike the Admin-only reset) and has
  * no target user to name in the title.
  * @param {{ isOpen: boolean, onOpenChange: (isOpen: boolean) => void }} props
@@ -64,9 +63,12 @@ export function ChangePasswordDialog({ isOpen, onOpenChange }) {
       return;
     }
 
-    setSuccessMessage('Đã đổi mật khẩu thành công.');
+    setSuccessMessage('Đã đổi mật khẩu. Đang chuyển về đăng nhập…');
     setCurrentPassword('');
     setNewPassword('');
+    // The proxy already cleared cookies after BE confirmed stamp rotation.
+    // A full navigation discards protected React Query and router caches.
+    window.location.assign('/login?passwordChanged=1');
   }
 
   return (

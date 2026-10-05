@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-05 — Return to login immediately after password change (task 1.1)
+
+- Change: `password-change-signin`. Successful self-service password response clears all six cookies in the BFF proxy (BE has committed password and SecurityStamp), then the dialog reloads `/login?passwordChanged=1` to discard protected caches. Login shows confirmation and asks for the new password; notice dismisses when submitting login.
+- Failed changes retain cookies/form. Admin reset of another employee preserves the administrator session and existing password copy/send workflow.
+- Focused boundary regression test covers success, 400/401/403/500/502, wrong method and Admin reset. Browser :3000 confirmed the destination notice, screenshot and dismissal on empty submit; no shared account password changed. Detailed evidence: `harness/runs/20261005-102429-1029/password-change-evidence.md`.
+- Full verification passed: `harness/runs/20261005-102429-1029/` (lint, typecheck, structure, harness tests, unit tests, build and quality thresholds).
+
 ## 2026-10-05 — Require backend acknowledgement for logout (task 1.1)
 
 - Change: `confirm-backend-logout`. `/api/session` DELETE previously ignored backend HTTP failures and cleared cookies even on transport failure. It now delegates to a tested server boundary that clears cookies only after backend 2xx; failures/timeouts return 503 and preserve credentials for idempotent retry. Wait bounded to ten seconds. Access-only sessions fail closed, already-empty sessions succeed.

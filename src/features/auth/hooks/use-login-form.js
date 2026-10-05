@@ -86,6 +86,10 @@ export function useLoginForm() {
     !isSessionExpiredNoticeDismissed &&
     searchParams.get(SESSION_REVOKED_QUERY_PARAM) === '1';
 
+  const passwordChangedNotice =
+    !isSessionExpiredNoticeDismissed &&
+    searchParams.get('passwordChanged') === '1';
+
   /** @param {import('react').FormEvent<HTMLFormElement>} event */
   async function handleSubmit(event) {
     event.preventDefault();
@@ -141,6 +145,7 @@ export function useLoginForm() {
     sessionExpiredNotice,
     signedInElsewhereNotice,
     sessionRevokedNotice,
+    passwordChangedNotice,
     isSubmitting: loginMutation.isPending,
     handleSubmit,
   };

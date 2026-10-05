@@ -28,7 +28,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 // otherwise get a cookie the browser silently refuses to store. Set
 // `COOKIE_SECURE=false` in that deployment's `.env` to opt out; unset,
 // nothing changes for the TLS-fronted deployment.
-const secureCookies = process.env.COOKIE_SECURE === 'false' ? false : isProduction;
+const secureCookies =
+  process.env.COOKIE_SECURE === 'false' ? false : isProduction;
 
 /**
  * The access-token cookie expires exactly when the token does, so a stale
@@ -58,7 +59,8 @@ function accessTokenMaxAge(token) {
  * @returns {boolean} false when the access token is already expired.
  */
 export function writeSessionCookies(cookieStore, session) {
-  const { token, refreshToken, employeeCode, displayName, roles, permissions } = session;
+  const { token, refreshToken, employeeCode, displayName, roles, permissions } =
+    session;
 
   const maxAge = accessTokenMaxAge(token);
   if (maxAge === null) {
@@ -101,7 +103,11 @@ export function writeSessionCookies(cookieStore, session) {
     cookieStore.set(SESSION_ROLES_KEY, JSON.stringify(roles), sessionCookie);
   }
   if (permissions !== undefined) {
-    cookieStore.set(SESSION_PERMISSIONS_KEY, JSON.stringify(permissions), sessionCookie);
+    cookieStore.set(
+      SESSION_PERMISSIONS_KEY,
+      JSON.stringify(permissions),
+      sessionCookie,
+    );
   }
 
   return true;
@@ -141,5 +147,29 @@ export function clearSessionCookies(cookieStore) {
       sameSite: 'lax',
       secure: secureCookies,
     });
+  }
+}
+
+/**
+ * BE success confirms password and SecurityStamp committed together. Only the
+ * self-service endpoint ends the calling browser's session; Admin resets of
+ * another user must preserve the administrator's cookies.
+ * @param {Awaited<ReturnType<typeof import('next/headers').cookies>>} cookieStore
+ * @param {string} method
+ * @param {string[]} path
+ * @param {Response} response
+ */
+export function clearPasswordChangedSession(
+  cookieStore,
+  method,
+  path,
+  response,
+) {
+  if (
+    method === 'POST' &&
+    path.join('/') === 'api/v1/users/me/password' &&
+    response.ok
+  ) {
+    clearSessionCookies(cookieStore);
   }
 }
