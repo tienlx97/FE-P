@@ -83,11 +83,6 @@ export function NewsSection({
               value={item.value}
               label={item.label}
               panelId={panelId}
-              endContent={
-                <Text type="supporting" hasTabularNumbers>
-                  {articlesInTopic(articles, item.value).length}
-                </Text>
-              }
             />
           ))}
         </TabList>

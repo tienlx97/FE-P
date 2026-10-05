@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-05 — Home news tabs without counts (task 1.1)
+
+- `home-news-tabs-no-counts`, per user: removed the per-tab article count (`endContent`) from the shared `NewsSection` TabList, so both "Tin tức" and "Logistics & xuất nhập khẩu" tabs show labels only. Filtering, lists and "Xem thêm" unchanged.
+- Browser :3000: 15 tabs render label-only, both panels still list 8 stories; screenshot in tool transcript.
+- Full gate passed: `harness/runs/20261005-213136-77065/`. Generated `meta*.d.ts` header churn still left uncommitted.
+
 ## 2026-10-05 — Home calendar card polish (task 1.2)
 
 - `home-calendar-daily-quote` 1.2, per user: quote is now hand-built (native figure/blockquote/figcaption + StyleX tokens, no Astryx component): muted note, oversized faded red Georgia quotation mark, large medium-italic balanced text, red-ruled author caption. Removed day/month Can Chi (`dayCanChi`, `monthCanChi` and their test); year Can Chi stays in the red band. Lunar date is now a pill under the solar day ("Âm lịch Ngày 25 · Tháng 8"), so the divider/two-column grid is gone.
