@@ -62,6 +62,7 @@ import {
   isSectionOpenByDefault,
   sectionCompleteness,
   sectionHasError,
+  sectionsForStage,
   SHIPMENT_FORM_SECTIONS,
 } from '../config/shipment-form-sections.js';
 import {
@@ -121,9 +122,15 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * field (detached) and the body scrolls to the first one. Closing with
  * changes asks first. "Loại hình" is only editable when creating.
  *
+ * `stage` ("Chuyển sang …" on the shipment page) presets "Tình trạng" to
+ * that status and shows only the groups of that stage (`sectionsForStage`)
+ * until "Hiện tất cả mục" — or a validation error elsewhere — reveals the
+ * rest.
+ *
  * @param {{
  *   contract: import('../types/index.js').Contract,
  *   shipment?: import('../types/index.js').Shipment | null,
+ *   stage?: import('../types/index.js').ShipmentStatus | null,
  *   onClose: () => void,
  *   onSaved?: (shipment: import('../types/index.js').Shipment) => void,
  * }} props
@@ -131,11 +138,18 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export function ShipmentFormDrawer({
   contract,
   shipment = null,
+  stage = null,
   onClose,
   onSaved,
 }) {
   const isCreating = shipment === null;
-  const title = isCreating ? 'Thêm Shipment' : 'Chỉnh sửa Shipment';
+  const isStaging = stage !== null && shipment !== null;
+  const title = isCreating
+    ? 'Thêm Shipment'
+    : isStaging
+      ? 'Cập nhật tình trạng'
+      : 'Chỉnh sửa Shipment';
+  const [isShowingAll, setIsShowingAll] = useState(!isStaging);
   const formId = useId();
   const formRef = useRef(/** @type {HTMLFormElement | null} */ (null));
   const toast = useAppToast();
@@ -148,9 +162,14 @@ export function ShipmentFormDrawer({
     contractId: contract.id,
     contract,
     shipment,
+    targetStatus: isStaging ? stage : null,
     onSuccess: (saved) => {
       toast({
-        body: isCreating ? 'Đã tạo Shipment.' : 'Đã cập nhật Shipment.',
+        body: isCreating
+          ? 'Đã tạo Shipment.'
+          : isStaging
+            ? `Đã chuyển sang “${labelForShipmentStatus(saved.status)}”.`
+            : 'Đã cập nhật Shipment.',
       });
       onSaved?.(saved);
       onClose();
@@ -162,7 +181,10 @@ export function ShipmentFormDrawer({
   const customers = /** @type {import('../types/index.js').Supplier[]} */ (
     form.customers
   );
-  const isDirty = JSON.stringify(values) !== JSON.stringify(initialValues);
+  // A preset status is itself the change being saved.
+  const isDirty =
+    (isStaging && values.status !== shipment.status) ||
+    JSON.stringify(values) !== JSON.stringify(initialValues);
   const isDisabled = form.isSubmitting;
 
   // Errors force a group open, then the user's choice, else the status /
@@ -170,26 +192,37 @@ export function ShipmentFormDrawer({
   const [openChoices, setOpenChoices] = useState(
     /** @type {Partial<Record<ShipmentFormSectionId, boolean>>} */ ({}),
   );
+  const stageSections = isStaging ? sectionsForStage(stage) : [];
   const sectionStates = SHIPMENT_FORM_SECTIONS.map((section) => ({
     section,
     completeness: sectionCompleteness(section, values, fieldStatuses),
-  }));
+  })).filter(
+    ({ section }) =>
+      isShowingAll ||
+      stageSections.includes(section.id) ||
+      sectionHasError(section, fieldStatuses),
+  );
   /** @param {ShipmentFormSectionId} id @param {boolean} isOpen */
   const setSectionOpen = (id, isOpen) =>
     setOpenChoices((choices) => ({ ...choices, [id]: isOpen }));
   /** @param {ShipmentFormSectionId} id */
   const sectionProps = (id) => {
-    const index = SHIPMENT_FORM_SECTIONS.findIndex(
-      (section) => section.id === id,
-    );
-    const { section, completeness } = sectionStates[index];
+    const index = sectionStates.findIndex(({ section }) => section.id === id);
+    const { section, completeness } = sectionStates[index] ?? {
+      section: SHIPMENT_FORM_SECTIONS.find((item) => item.id === id),
+      completeness: { state: 'optional', missing: 0 },
+    };
     return {
       id: `${formId}-${id}`,
-      section,
+      section: /** @type {ShipmentFormSection} */ (section),
       index: index + 1,
+      isHidden: index === -1,
+      // A stage's own groups start open; it is what the user came to fill.
       isOpen:
         sectionHasError(section, fieldStatuses) ||
-        (openChoices[id] ?? isSectionOpenByDefault(section, values)),
+        (openChoices[id] ??
+          (stageSections.includes(id) ||
+            isSectionOpenByDefault(section, values))),
       /** @param {boolean} isOpen */
       onOpenChange: (isOpen) => setSectionOpen(id, isOpen),
       completeness,
@@ -345,6 +378,29 @@ export function ShipmentFormDrawer({
                   </VStack>
                   <StackItem size="fill" xstyle={styles.body}>
                     <VStack gap={4} hAlign="stretch">
+                      {isStaging ? (
+                        <Banner
+                          status="info"
+                          container="card"
+                          title={`Chuyển tình trạng: ${labelForShipmentStatus(shipment.status)} → ${labelForShipmentStatus(stage)}`}
+                          description={
+                            stageSections.length > 1
+                              ? 'Bổ sung thông tin của giai đoạn này nếu đã có (không bắt buộc), rồi lưu.'
+                              : 'Thêm ghi chú nếu cần, rồi lưu.'
+                          }
+                          endContent={
+                            isShowingAll ? null : (
+                              <Button
+                                label="Hiện tất cả mục"
+                                variant="secondary"
+                                size="sm"
+                                type="button"
+                                onClick={() => setIsShowingAll(true)}
+                              />
+                            )
+                          }
+                        />
+                      ) : null}
                       {form.submitError ? (
                         <Banner
                           status="error"
@@ -1267,7 +1323,13 @@ export function ShipmentFormDrawer({
                     onClick={requestClose}
                   />
                   <Button
-                    label={isCreating ? 'Tạo Shipment' : 'Lưu thay đổi'}
+                    label={
+                      isCreating
+                        ? 'Tạo Shipment'
+                        : isStaging
+                          ? 'Lưu & chuyển tình trạng'
+                          : 'Lưu thay đổi'
+                    }
                     type="submit"
                     form={formId}
                     variant="primary"

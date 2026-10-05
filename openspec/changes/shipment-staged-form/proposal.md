@@ -1,6 +1,6 @@
 # Proposal: Shipment form by stage
 
-**Status:** in-progress
+**Status:** done
 **Created:** 2026-10-05
 
 ## Why

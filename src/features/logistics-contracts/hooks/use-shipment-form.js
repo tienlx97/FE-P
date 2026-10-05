@@ -183,18 +183,25 @@ function fieldStatus(message) {
  *   contract?: import('../types/index.js').Contract | null,
  *   shipment?: import('../types/index.js').Shipment | null,
  *   onSuccess?: (shipment: import('../types/index.js').Shipment) => void,
- * }} options
+ *   targetStatus?: import('../types/index.js').ShipmentStatus | null,
+ * }} options `targetStatus` presets "Tình trạng" when moving a shipment to
+ * its next stage ("Chuyển sang …" on the shipment page).
  */
 export function useShipmentForm({
   contractId,
   contract = null,
   shipment = null,
   onSuccess,
+  targetStatus = null,
 }) {
+  const initialValues = () => {
+    const base = shipment
+      ? valuesFromShipment(shipment)
+      : emptyValues(contract);
+    return targetStatus ? { ...base, status: targetStatus } : base;
+  };
   const [version, setVersion] = useState(shipment?.version);
-  const [values, setValues] = useState(
-    shipment ? valuesFromShipment(shipment) : emptyValues(contract),
-  );
+  const [values, setValues] = useState(initialValues);
   const [fieldErrors, setFieldErrors] = useState(
     /** @type {Record<string, string>} */ ({}),
   );
@@ -248,7 +255,7 @@ export function useShipmentForm({
 
   function reset() {
     setVersion(shipment?.version);
-    setValues(shipment ? valuesFromShipment(shipment) : emptyValues(contract));
+    setValues(initialValues());
     setFieldErrors({});
     setSubmitError('');
     costLineRows.setRows(

@@ -67,7 +67,12 @@ through them.
 - Shipment: `shipment-form-drawer.jsx` (Meta drawer, create/edit). Viewing
   is the shipment page (`/logistics/contract/[id]/shipment/[shipmentId]`),
   where VGM and costs are managed. The old fullscreen
-  `ShipmentFormDialog` was removed (2026-09-25).
+  `ShipmentFormDialog` was removed (2026-09-25). Since `shipment-staged-form`
+  (2026-10-05) the drawer shows `config/shipment-form-sections.js` groups
+  beside an outline with completeness; groups not yet relevant to the status
+  start collapsed. The shipment page's `shipment-status-flow.jsx` (Stepper of
+  `shipmentStatusFlow(incoterm)`) opens the drawer with `stage` to move to a
+  status while showing only that stage's groups.
 - Commission: `commission-form-dialog.jsx` (create/view/edit); view content
   uses `commission-expanded-details.jsx` with related annex/payment
   actions. 1:1 with its Contract.

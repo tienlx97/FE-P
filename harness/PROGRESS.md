@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-05 — Shipment form by stage (tasks 1.1–1.3)
+
+- `shipment-staged-form`, after the user reviewed a Stepper-wizard idea and chose progressive disclosure A–D. 1.1 `config/shipment-form-sections.js` (7 groups: Thông tin cơ bản incl. POL/POD/delivery, Đơn vị tham gia, Booking & tàu, Lịch trình & cut-off, Hàng hóa & bên nhận, Hải quan & C/O, Ghi chú; completeness, default-open, stage groups) and `shipmentStatusFlow` / `nextShipmentStatus` per Incoterm in `shipment-status.js`; 8 tests.
+- 1.2 Drawer (1120px): collapsible `ShipmentFormSection` ("Bổ sung"/"Thu gọn", state pill) and sticky `ShipmentFormOutline` (≥64rem) grouped by stage with Đủ / Còn N / Có lỗi; clicking opens and scrolls. Goods/customs/note collapsed until their status, data or an error. Validation and required fields unchanged.
+- 1.3 Shipment page `ShipmentStatusFlow` (Astryx Stepper of the Incoterm flow + "Chuyển sang …"); choosing a step opens the drawer with `stage`: status preset via new `useShipmentForm({ targetStatus })`, only that stage's groups + note, info banner, "Hiện tất cả mục", "Lưu & chuyển tình trạng".
+- Browser (production preview :3001 → dev API :8081, test login): create drawer on 26KCT42 (outline, collapsed groups, outline jump, empty-submit errors → "Có lỗi"; nothing created); edit and stage mode (Đã hoàn thành → Shipping) on 26KCT34/LOT-01, cancelled/discarded, status unchanged. A real status save was NOT exercised to avoid changing shared data. Screenshots in tool transcript.
+- Gates passed: `harness/runs/20261005-220504-122727/`, `20261005-221412-137195/`, `20261005-223552-159584/`.
+- Discovered: dev server :3000 (user's terminal) hung on a skeleton at ~6 GB RSS after edits; left running, preview used instead. Open business question: whether declaration rate/quantity/weight should stay required at booking. Generated `meta*.d.ts` header churn still left uncommitted.
+
 ## 2026-10-05 — Home news tabs without counts (task 1.1)
 
 - `home-news-tabs-no-counts`, per user: removed the per-tab article count (`endContent`) from the shared `NewsSection` TabList, so both "Tin tức" and "Logistics & xuất nhập khẩu" tabs show labels only. Filtering, lists and "Xem thêm" unchanged.

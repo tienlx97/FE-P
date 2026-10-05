@@ -70,6 +70,7 @@ import { ShipmentMilestoneDrawer } from './shipment-milestone-drawer.jsx';
 import { ShipmentOverviewPanel } from './shipment-overview-panel.jsx';
 import { ShipmentScheduleDrawer } from './shipment-schedule-drawer.jsx';
 import { ShipmentSchedulePanel } from './shipment-schedule-panel.jsx';
+import { ShipmentStatusFlow } from './shipment-status-flow.jsx';
 import { ShipmentTransshipmentDrawer } from './shipment-transshipment-drawer.jsx';
 import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
 
@@ -494,6 +495,10 @@ function ShipmentDetailBody({
 }) {
   const panelId = useId();
   const [isEditing, setIsEditing] = useState(false);
+  // "Chuyển sang …": the drawer focused on that stage's groups.
+  const [stageTarget, setStageTarget] = useState(
+    /** @type {import('../types/index.js').ShipmentStatus | null} */ (null),
+  );
   const [selectedMilestone, setSelectedMilestone] = useState(
     /** @type {import('../types/index.js').ShipmentJourneyStep | null} */ (
       null
@@ -637,6 +642,12 @@ function ShipmentDetailBody({
           ]}
         />
 
+        <ShipmentStatusFlow
+          incoterm={contract.incoterm}
+          status={shipment.status}
+          onMove={setStageTarget}
+        />
+
         {journeyQuery.data?.success ? (
           <ShipmentAlertsBanner
             alerts={journeyQuery.data.journey.alerts ?? []}
@@ -735,6 +746,15 @@ function ShipmentDetailBody({
             contract={contract}
             shipment={shipment}
             onClose={() => setIsEditing(false)}
+          />
+        ) : null}
+        {stageTarget ? (
+          <ShipmentFormDrawer
+            key={stageTarget}
+            contract={contract}
+            shipment={shipment}
+            stage={stageTarget}
+            onClose={() => setStageTarget(null)}
           />
         ) : null}
         {selectedMilestone ? (

@@ -48,8 +48,9 @@ export function ShipmentSectionStatePill({ completeness }) {
  *   isOpen: boolean,
  *   onOpenChange: (isOpen: boolean) => void,
  *   completeness: Completeness,
+ *   isHidden?: boolean,
  *   children: import('react').ReactNode,
- * }} props
+ * }} props `isHidden`: not part of the stage being filled ("Chuyển sang …").
  */
 export function ShipmentFormSection({
   id,
@@ -58,8 +59,10 @@ export function ShipmentFormSection({
   isOpen,
   onOpenChange,
   completeness,
+  isHidden = false,
   children,
 }) {
+  if (isHidden) return null;
   const canCollapse = section.id !== 'basic';
   return (
     <VStack id={id} hAlign="stretch" xstyle={styles.anchor}>
