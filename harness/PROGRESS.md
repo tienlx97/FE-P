@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-05 — Home calendar daily quote (task 1.1)
+
+- `home-calendar-daily-quote`: removed "Giờ hoàng đạo" (and `auspiciousHours`) from the Home calendar card. The old unattributed saying is replaced by `config/quotes.js`: 60 attributed quotes (well-known people in our own Vietnamese renderings, plus tục ngữ/ca dao), one per Vietnam day via `jd % length`, rendered as a semantic Astryx `Blockquote` with the calendar's red rule/quote mark, large italic text and `cite` author.
+- Tests: quote stable within a day, different next day, full cycle without repeats; removed auspicious-hours test. Browser :3000 confirmed hours gone and the quote block renders (screenshot in tool transcript).
+- Full gate passed: `harness/runs/20261005-211803-56239/`. First gate failed typecheck: StyleX types reject `textWrap: 'pretty'`; switched to `'balance'`. Typecheck already catches it, so no new harness gap.
+- Discovered: during verification the "Câu nói hôm nay" label line was removed from calendar-card.jsx outside this session; kept as found (icon only). `pnpm build` regenerates `meta*.d.ts` headers with POSIX path separators; left uncommitted.
+
 ## 2026-10-05 — Gold prices and Home UX (task 1.1)
 
 - `home-gold-and-layout`: PNJ-published HCM PNJ/SJC buy/sell widgets, explicit triệu đồng/lượng and individual Vietnam quote times. API VND values converted without losing 1,000 VND precision; source link included, nullable source has a retry hint.

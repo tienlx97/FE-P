@@ -2,8 +2,6 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
-  auspiciousHours,
-  dailySaying,
   dayCanChi,
   holidayName,
   jdFromDate,
@@ -37,13 +35,6 @@ test('Can Chi of year, month and day', () => {
   // 2000-01-01 is a Mậu Ngọ day.
   assert.equal(dayCanChi(jdFromDate(1, 1, 2000)), 'Mậu Ngọ');
 });
-test('six auspicious hours per day, Tý day starts with Tý and Sửu', () => {
-  const jd = jdFromDate(1, 1, 2000) + 6; // Tý day
-  assert.equal(dayCanChi(jd).endsWith('Tý'), true);
-  const hours = auspiciousHours(jd);
-  assert.equal(hours.length, 6);
-  assert.deepEqual(hours.slice(0, 2), ['Tý (23–1)', 'Sửu (1–3)']);
-});
 test('solar and lunar observances; leap months have none', () => {
   assert.equal(holidayName(2, 9, solarToLunar(2, 9, 2026)), 'Quốc khánh');
   assert.equal(holidayName(25, 9, solarToLunar(25, 9, 2026)), 'Tết Trung thu');
@@ -52,8 +43,4 @@ test('solar and lunar observances; leap months have none', () => {
     holidayName(8, 8, { day: 15, month: 6, year: 2025, isLeap: true, jd: 0 }),
     null,
   );
-});
-test('saying is stable for a day', () => {
-  assert.equal(dailySaying(2461319), dailySaying(2461319));
-  assert.equal(typeof dailySaying(0), 'string');
 });

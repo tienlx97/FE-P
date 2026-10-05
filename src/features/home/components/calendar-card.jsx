@@ -1,4 +1,5 @@
 'use client';
+import { Blockquote } from '@astryxdesign/core/Blockquote';
 import { Card } from '@astryxdesign/core/Card';
 import { Divider } from '@astryxdesign/core/Divider';
 import { Grid } from '@astryxdesign/core/Grid';
@@ -17,14 +18,13 @@ import * as stylex from '@stylexjs/stylex';
 import { CalendarDays, Quote } from 'lucide-react';
 
 import {
-  auspiciousHours,
-  dailySaying,
   dayCanChi,
   holidayName,
   monthCanChi,
   solarToLunar,
   yearCanChi,
 } from '../config/lunar.js';
+import { dailyQuote } from '../config/quotes.js';
 import { useVietnamToday } from '../hooks/use-vietnam-today.js';
 
 const WEEKDAYS = [
@@ -38,7 +38,7 @@ const WEEKDAYS = [
 ];
 
 // A tear-off wall calendar page ("lịch bloc"): red header band, a large solar
-// day, then the lunar day, Can Chi, auspicious hours and a saying.
+// day, then the lunar day, Can Chi and the quote of the day.
 const styles = stylex.create({
   band: {
     backgroundColor: colorVars['--color-background-red'],
@@ -57,13 +57,17 @@ const styles = stylex.create({
   dayFrame: { fontSize: '4.5rem', fontWeight: 700, lineHeight: 1 },
   day: { color: colorVars['--color-text-accent'] },
   red: { color: colorVars['--color-text-red'] },
-  saying: {
+  // Quote of the day: a tinted note with the calendar's red rule and mark.
+  quote: {
     backgroundColor: colorVars['--color-background-muted'],
+    borderInlineStartColor: colorVars['--color-text-red'],
     borderRadius: radiusVars['--radius-container'],
-    paddingBlock: spacingVars['--spacing-3'],
-    paddingInline: spacingVars['--spacing-3'],
+    color: colorVars['--color-text-primary'],
+    paddingBlock: spacingVars['--spacing-4'],
+    paddingInline: spacingVars['--spacing-4'],
   },
-  italic: { fontStyle: 'italic' },
+  mark: { color: colorVars['--color-text-red'] },
+  quoteText: { fontStyle: 'italic', textWrap: 'balance' },
   region: { minWidth: 0, overflowWrap: 'anywhere' },
 });
 
@@ -82,6 +86,7 @@ export function CalendarCard() {
   const weekday = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
   const holiday = holidayName(day, month, lunar);
   const isRed = weekday === 0 || holiday !== null;
+  const quote = dailyQuote(lunar.jd);
   return (
     <Card padding={0} xstyle={styles.region}>
       <HStack
@@ -151,16 +156,19 @@ export function CalendarCard() {
             </Text>
           </VStack>
         </Grid>
-        <VStack gap={1}>
-          <Text type="label" color="secondary">
-            Giờ hoàng đạo
-          </Text>
-          <Text type="supporting">{auspiciousHours(lunar.jd).join(' · ')}</Text>
-        </VStack>
-        <HStack gap={2} align="start" xstyle={styles.saying}>
-          <Icon icon={Quote} color="secondary" size="sm" />
-          <Text xstyle={styles.italic}>{dailySaying(lunar.jd)}</Text>
-        </HStack>
+        <Blockquote
+          xstyle={styles.quote}
+          cite={<Text type="supporting">— {quote.author}</Text>}
+        >
+          <VStack gap={2}>
+            <HStack gap={2} align="center" xstyle={styles.mark}>
+              <Icon icon={Quote} color="inherit" size="sm" />
+            </HStack>
+            <Text type="large" weight="medium" xstyle={styles.quoteText}>
+              {quote.text}
+            </Text>
+          </VStack>
+        </Blockquote>
       </VStack>
     </Card>
   );

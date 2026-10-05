@@ -1,5 +1,5 @@
 // Vietnamese lunar calendar (Hồ Ngọc Đức's astronomical algorithm, UTC+7).
-// Pure functions: solar date → lunar day/month/year/leap, Can Chi and giờ hoàng đạo.
+// Pure functions: solar date → lunar day/month/year/leap, Can Chi and observances.
 
 const TIME_ZONE = 7;
 const { floor, sin, PI } = Math;
@@ -163,25 +163,6 @@ export function dayCanChi(jd) {
   return `${CAN[(jd + 9) % 10]} ${CHI[(jd + 1) % 12]}`;
 }
 
-// Auspicious hours per day branch, Tý → Hợi; the pattern repeats every six branches.
-const HOANG_DAO = [
-  '110100101100',
-  '001101001011',
-  '110011010010',
-  '101100110100',
-  '001011001101',
-  '010010110011',
-];
-/** Giờ hoàng đạo for a day, e.g. "Tý (23–1)". @param {number} jd */
-export function auspiciousHours(jd) {
-  const pattern = HOANG_DAO[((jd + 1) % 12) % 6];
-  return CHI.flatMap((chi, index) =>
-    pattern[index] === '1'
-      ? [`${chi} (${(index * 2 + 23) % 24}–${(index * 2 + 1) % 24})`]
-      : [],
-  );
-}
-
 const SOLAR_HOLIDAYS = /** @type {Record<string, string>} */ ({
   '1/1': 'Tết Dương lịch',
   '3/2': 'Ngày thành lập Đảng',
@@ -218,43 +199,4 @@ export function holidayName(dd, mm, lunar) {
     (lunar.isLeap ? null : LUNAR_HOLIDAYS[`${lunar.day}/${lunar.month}`]) ??
     null
   );
-}
-
-// Vietnamese proverbs and sayings (folk, public domain), one per day.
-const SAYINGS = [
-  'Có công mài sắt, có ngày nên kim.',
-  'Đi một ngày đàng, học một sàng khôn.',
-  'Uống nước nhớ nguồn.',
-  'Một cây làm chẳng nên non, ba cây chụm lại nên hòn núi cao.',
-  'Thất bại là mẹ thành công.',
-  'Không thầy đố mày làm nên.',
-  'Ăn quả nhớ kẻ trồng cây.',
-  'Chớ thấy sóng cả mà ngã tay chèo.',
-  'Lời nói chẳng mất tiền mua, lựa lời mà nói cho vừa lòng nhau.',
-  'Nước chảy đá mòn.',
-  'Học thầy không tày học bạn.',
-  'Một con ngựa đau, cả tàu bỏ cỏ.',
-  'Tốt gỗ hơn tốt nước sơn.',
-  'Kiến tha lâu cũng đầy tổ.',
-  'Muốn biết phải hỏi, muốn giỏi phải học.',
-  'Gần mực thì đen, gần đèn thì rạng.',
-  'Lá lành đùm lá rách.',
-  'Ăn cây nào, rào cây ấy.',
-  'Cẩn tắc vô áy náy.',
-  'Chậm mà chắc.',
-  'Có chí thì nên.',
-  'Đoàn kết là sức mạnh.',
-  'Biết người biết ta, trăm trận trăm thắng.',
-  'Thương người như thể thương thân.',
-  'Lửa thử vàng, gian nan thử sức.',
-  'Ăn có nhai, nói có nghĩ.',
-  'Một nghề cho chín còn hơn chín nghề.',
-  'Ngọc không mài không sáng, người không học không hay.',
-  'Buôn có bạn, bán có phường.',
-  'Khéo ăn thì no, khéo co thì ấm.',
-  'Nói lời phải giữ lấy lời.',
-];
-/** Saying for a day (stable for the whole day). @param {number} jd */
-export function dailySaying(jd) {
-  return SAYINGS[jd % SAYINGS.length];
 }
