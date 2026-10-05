@@ -72,3 +72,56 @@ export function metaToneForShipmentStatus(status) {
   if (status === 'Shipping' || status === 'DeliveredToPort') return 'accent';
   return 'neutral';
 }
+
+/**
+ * Statuses a shipment normally passes through under `incoterm`, in order
+ * (the four flows documented on `SHIPMENT_STATUSES`). Status stays freely
+ * settable: a `current` status outside the flow is slotted in by its place
+ * in `SHIPMENT_STATUSES`, so the shipment page can always mark it.
+ * @param {import('../types/index.js').Incoterm | string} incoterm
+ * @param {import('../types/index.js').ShipmentStatus} [current]
+ * @returns {import('../types/index.js').ShipmentStatus[]}
+ */
+export function shipmentStatusFlow(incoterm, current) {
+  /** @type {import('../types/index.js').ShipmentStatus[]} */
+  const flow =
+    incoterm === 'EXW'
+      ? ['Booked', 'Packing', 'Completed']
+      : incoterm === 'FOB'
+        ? ['Booked', 'Packing', 'DeliveredToPort', 'Completed']
+        : incoterm === 'DDP'
+          ? [
+              'Booked',
+              'Packing',
+              'AtYardAwaitingExport',
+              'Shipping',
+              'DeliveredToPort',
+              'CustomsDeclaration',
+              'TruckingToSite',
+              'Completed',
+            ]
+          : [
+              'Booked',
+              'Packing',
+              'AtYardAwaitingExport',
+              'Shipping',
+              'DeliveredToPort',
+              'Completed',
+            ];
+  if (!current || flow.includes(current)) return flow;
+  const rank = SHIPMENT_STATUSES.indexOf(current);
+  const at = flow.findIndex(
+    (status) => SHIPMENT_STATUSES.indexOf(status) > rank,
+  );
+  return [...flow.slice(0, at), current, ...flow.slice(at)];
+}
+
+/**
+ * The status after `current` in its Incoterm flow, or null when done.
+ * @param {import('../types/index.js').Incoterm | string} incoterm
+ * @param {import('../types/index.js').ShipmentStatus} current
+ */
+export function nextShipmentStatus(incoterm, current) {
+  const flow = shipmentStatusFlow(incoterm, current);
+  return flow[flow.indexOf(current) + 1] ?? null;
+}
