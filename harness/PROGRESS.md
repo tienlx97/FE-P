@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-06 — Shipments list: port without "Cảng", view in URL (task 1.1)
+
+- `shipments-list-port-and-tab-url`, per user: "Cảng đến" cells drop a leading "Cảng" (`placeWithoutPortWord` in place-options.js, new test); view preset synced with `?tab=basic|value|supplier` (initial key from URL, `router.replace` on change, other params kept), like contract detail.
+- Browser :3000: `?tab=supplier` opens Nhà cung cấp; clicking Cơ bản → URL `?tab=basic`, 0 of the port cells start with "Cảng" (e.g. "Bangkok", "Laem Chabang"); reload `?tab=value` keeps Giá trị & Chi phí.
+- Gate passed: `harness/runs/20261006-104738-307/`.
+
 ## 2026-10-06 — Create shipment stepper (task 1.2)
 
 - `shipment-create-stepper` 1.2: "Thêm Shipment" drawer shows an Astryx Stepper under the title (5 steps, stage label as description; ✓ only when a step is really complete, ! on errors) and only the current step's groups, always open, unnumbered; outline hidden in create. Footer: Huỷ bỏ · Quay lại · Tiếp (checks this step only) · Tạo Shipment (every step; full check, lands on the first step with an error). Last step: "Xem lại trước khi tạo" (status pill + every group's completeness, choosing one goes to its step) + note. Edit and stage mode unchanged.

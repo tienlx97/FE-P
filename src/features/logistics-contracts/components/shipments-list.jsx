@@ -44,7 +44,7 @@ import {
   Trash2,
   Truck,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import {
@@ -69,6 +69,7 @@ import { usePageRowSelection } from '@/shared/hooks/use-page-row-selection.js';
 
 import { searchAllShipments } from '../api/shipments.js';
 import { formatMoney, formatVndAmount } from '../config/currencies.js';
+import { placeWithoutPortWord } from '../config/place-options.js';
 import {
   isContractEligibleForShipment,
   reasonContractIneligibleForShipment,
@@ -395,6 +396,22 @@ const DECLARATION_DATE_OPTIONS = [
  */
 export function ShipmentsList() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // `?tab=` keeps the view (Cơ bản / Giá trị & Chi phí / Nhà cung cấp)
+  // across reloads and links, like the contract detail tabs.
+  const requestedView = searchParams.get('tab');
+  const initialViewKey = VIEW_PRESETS.some(
+    (preset) => preset.key === requestedView,
+  )
+    ? /** @type {string} */ (requestedView)
+    : 'basic';
+  /** @param {string} key */
+  function handleViewPresetChange(key) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', key);
+    router.replace(`${pathname}?${params}`, { scroll: false });
+  }
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   // Only the "Nhà cung cấp" view adds the partner count to the Σ caption.
   const [pageIndex, setPageIndex] = useState(1);
@@ -989,10 +1006,13 @@ export function ShipmentsList() {
       header: 'Cảng đến',
       width: pixel(220),
       // Long addresses ("121 Nhóm 3, Wang Ta Khian, …") end in "…" with
-      // the full text in Text's truncation tooltip.
+      // the full text in Text's truncation tooltip. The header says it is a
+      // port, so a leading "Cảng" is dropped.
       renderCell: (row) => (
         <Text weight="medium" maxLines={1}>
-          {orDash(row.placeOfDischarge)}
+          {orDash(
+            row.placeOfDischarge && placeWithoutPortWord(row.placeOfDischarge),
+          )}
         </Text>
       ),
     },
@@ -1374,7 +1394,8 @@ export function ShipmentsList() {
           columnOptions={COLUMN_OPTIONS}
           initialColumnKeys={DEFAULT_COLUMN_KEYS}
           defaultColumnKeys={DEFAULT_COLUMN_KEYS}
-          initialViewPresetKey="basic"
+          initialViewPresetKey={initialViewKey}
+          onViewPresetChange={handleViewPresetChange}
           viewPresets={VIEW_PRESETS.map((preset) => ({
             ...preset,
             icon: (

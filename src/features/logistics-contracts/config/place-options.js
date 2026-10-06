@@ -38,6 +38,16 @@ export function dedupePlacesByName(options) {
 }
 
 /**
+ * A saved place for a narrow list column, without the leading "Cảng"
+ * ("Cảng Laem Chabang, Thailand" → "Laem Chabang, Thailand"); the column
+ * header already says it is a port.
+ * @param {string} place
+ */
+export function placeWithoutPortWord(place) {
+  return place.replace(/^\s*cảng\s+/iu, '');
+}
+
+/**
  * Keeps a saved free-text value selectable when it is no longer (or never
  * was) in the catalog, so the Selector doesn't render it blank.
  * @param {{value: string, label: string}[]} options
