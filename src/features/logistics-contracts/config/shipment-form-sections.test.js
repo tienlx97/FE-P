@@ -2,10 +2,15 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import {
+  firstStepWithError,
   isSectionOpenByDefault,
   sectionCompleteness,
   sectionsForStage,
+  SHIPMENT_CREATE_STEPS,
   SHIPMENT_FORM_SECTIONS,
+  stepFields,
+  stepOfSection,
+  stepState,
 } from './shipment-form-sections.js';
 import { nextShipmentStatus, shipmentStatusFlow } from './shipment-status.js';
 
@@ -155,4 +160,47 @@ test('completeness: missing key fields, errors win, note is optional', () => {
 test('stage groups always end with the note', () => {
   assert.deepEqual(sectionsForStage('Packing'), ['goods', 'note']);
   assert.deepEqual(sectionsForStage('Completed'), ['note']);
+});
+test('create steps cover every group once, in display order', () => {
+  assert.deepEqual(
+    SHIPMENT_CREATE_STEPS.flatMap((step) => step.sections),
+    SHIPMENT_FORM_SECTIONS.map((item) => item.id),
+  );
+  assert.equal(stepOfSection('customs'), 3);
+  assert.ok(stepFields(SHIPMENT_CREATE_STEPS[0]).includes('supplierCustomerId'));
+  assert.ok(!stepFields(SHIPMENT_CREATE_STEPS[0]).includes('bookingNumber'));
+});
+test('step state: error wins, review step has none', () => {
+  const [, bookingStep, , customsStep, reviewStep] = SHIPMENT_CREATE_STEPS;
+  assert.equal(stepState(customsStep, values(), {}), 'missing');
+  assert.equal(
+    stepState(bookingStep, values(), { 'transshipmentLegs.0.port': 'x' }),
+    'error',
+  );
+  assert.equal(stepState(reviewStep, values(), {}), null);
+  assert.equal(
+    stepState(
+      bookingStep,
+      values({
+        bookingNumber: 'B1',
+        shippingLine: 'KMTC',
+        vesselName: 'V',
+        voyageNumber: '1',
+        siCutoffDate: '2026-10-01',
+        cyCutoffDate: '2026-10-02',
+        etd: '2026-10-03',
+        eta: '2026-10-10',
+      }),
+      {},
+    ),
+    'complete',
+  );
+});
+test('first step with an error', () => {
+  assert.equal(firstStepWithError({}), -1);
+  assert.equal(
+    firstStepWithError({ declarationValue: 'x', bookingNumber: 'y' }),
+    1,
+  );
+  assert.equal(firstStepWithError({ 'goodsLines.a': 'x' }), 2);
 });

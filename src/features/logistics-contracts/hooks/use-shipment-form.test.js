@@ -2,7 +2,38 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import { createShipment } from '../api/shipments.js';
-import { valuesFromShipment } from './use-shipment-form.js';
+import {
+  errorsFromIssues,
+  mergeCheckedErrors,
+  valuesFromShipment,
+} from './use-shipment-form.js';
+
+test('first issue per field path wins', () => {
+  assert.deepEqual(
+    errorsFromIssues([
+      { path: ['name'], message: 'a' },
+      { path: ['name'], message: 'b' },
+      { path: ['transshipmentLegs', 0, 'port'], message: 'c' },
+    ]),
+    { name: 'a', 'transshipmentLegs.0.port': 'c' },
+  );
+});
+
+test('checking a step updates only its fields', () => {
+  const shown = { name: 'old', declarationValue: 'kept' };
+  const next = { bookingNumber: 'new', declarationValue: 'hidden' };
+  assert.deepEqual(
+    mergeCheckedErrors(shown, next, ['name', 'bookingNumber']),
+    { declarationValue: 'kept', bookingNumber: 'new' },
+  );
+  assert.deepEqual(mergeCheckedErrors(shown, next), next);
+  assert.deepEqual(
+    mergeCheckedErrors({}, { 'transshipmentLegs.0.port': 'x' }, [
+      'transshipmentLegs',
+    ]),
+    { 'transshipmentLegs.0.port': 'x' },
+  );
+});
 
 test('sends carried goods lines and the party overrides (null = follow the contract)', async () => {
   const originalFetch = globalThis.fetch;

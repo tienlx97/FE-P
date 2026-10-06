@@ -175,6 +175,36 @@ function fieldStatus(message) {
 }
 
 /**
+ * First message per field path (`transshipmentLegs.0.port`, …).
+ * @param {{ path: PropertyKey[], message: string }[]} issues
+ */
+export function errorsFromIssues(issues) {
+  /** @type {Record<string, string>} */
+  const errors = {};
+  for (const issue of issues) {
+    const key = issue.path.join('.');
+    if (!errors[key]) errors[key] = issue.message;
+  }
+  return errors;
+}
+
+/**
+ * Errors to show after checking `fields` only (all when omitted): theirs
+ * come from `next`, every other field keeps what `shown` had.
+ * @param {Record<string, string>} shown
+ * @param {Record<string, string>} next
+ * @param {string[]} [fields]
+ */
+export function mergeCheckedErrors(shown, next, fields) {
+  /** @param {string} key */
+  const isChecked = (key) => !fields || fields.includes(key.split('.')[0]);
+  return Object.fromEntries([
+    ...Object.entries(shown).filter(([key]) => !isChecked(key)),
+    ...Object.entries(next).filter(([key]) => isChecked(key)),
+  ]);
+}
+
+/**
  * Form state for creating/updating a `Shipment`. Pass `shipment` to edit an
  * existing one — `shipmentNumber`/`shipmentCode` are never editable
  * (backend-assigned), so they never appear in `values`.
@@ -276,12 +306,8 @@ export function useShipmentForm({
     );
   }
 
-  /** @param {import('react').FormEvent<HTMLFormElement>} [event] */
-  async function handleSubmit(event) {
-    event?.preventDefault();
-    setSubmitError('');
-
-    const candidate = {
+  function parse() {
+    return shipmentSchema.safeParse({
       ...values,
       costLines: costLineRows.rows.map((row) => ({
         costCategoryId: row.costCategoryId,
@@ -294,18 +320,35 @@ export function useShipmentForm({
         invoiceDate: row.invoiceDate,
         costNature: row.costNature,
       })),
-    };
+    });
+  }
 
-    const result = shipmentSchema.safeParse(candidate);
+  /**
+   * Checks the values without saving. With `fields` (a step of "Thêm
+   * Shipment"), only errors of those fields are updated; the others keep
+   * what they showed.
+   * @param {(keyof import('../types/index.js').ShipmentFormValues)[]} [fields]
+   * @returns {Record<string, string>} the errors now shown
+   */
+  function validate(fields) {
+    const result = parse();
+    const shown = mergeCheckedErrors(
+      fieldErrors,
+      result.success ? {} : errorsFromIssues(result.error.issues),
+      fields,
+    );
+    setFieldErrors(shown);
+    return shown;
+  }
+
+  /** @param {import('react').FormEvent<HTMLFormElement>} [event] */
+  async function handleSubmit(event) {
+    event?.preventDefault();
+    setSubmitError('');
+
+    const result = parse();
     if (!result.success) {
-      /** @type {Record<string, string>} */
-      const nextFieldErrors = {};
-      for (const issue of result.error.issues) {
-        const key = issue.path.join('.');
-        if (!nextFieldErrors[key]) {
-          nextFieldErrors[key] = issue.message;
-        }
-      }
+      const nextFieldErrors = errorsFromIssues(result.error.issues);
       setFieldErrors(nextFieldErrors);
       return Object.keys(nextFieldErrors).some(
         (key) => !key.startsWith('costLines'),
@@ -367,6 +410,7 @@ export function useShipmentForm({
     costLineRows,
     submitError,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
+    validate,
     handleSubmit,
     reset,
   };

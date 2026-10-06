@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-06 — Create shipment stepper (task 1.1)
+
+- `shipment-create-stepper`, per user (YouTube-Studio-like stepper; chose information steps over status-per-Incoterm steps; no BE change needed — required fields and payload unchanged). 1.1: `SHIPMENT_CREATE_STEPS` (5 steps over the 7 groups, stage labels), `stepFields`, `stepState`, `firstStepWithError`, `stepOfSection`; hook `validate(fields?)` updates only the checked fields' errors (pure `mergeCheckedErrors`, `errorsFromIssues`). 5 new tests.
+- Also committed separately: desktop SideNav 20rem → 15rem (user request); `docs-shell-contract.test.js` asserted the old width and failed the first gate — updated.
+- Gate passed: `harness/runs/20261006-102455-16/`. Generated `meta*.d.ts` header churn still left uncommitted.
+
 ## 2026-10-05 — Declaration figures follow-up (task 1.3)
 
 - `stage-gated-declaration-figures` 1.3, per user ("fix hết"): every cross-field schema check (transshipment ports, SI/CY time without date, free time) now runs with the shared `RUN_DESPITE_FIELD_ERRORS` `when` option, so errors show on an empty form; regression test. Stage-mode banner now says declaration figures are required when moving to a status that requires them (it said "không bắt buộc").

@@ -217,6 +217,94 @@ export function sectionCompleteness(section, values, errors) {
 }
 
 /**
+ * @typedef {Object} ShipmentCreateStep
+ * @property {string} label
+ * @property {string} stageLabel - when its data usually becomes known
+ * @property {ShipmentFormSectionId[]} sections
+ */
+
+/**
+ * Steps of "Thêm Shipment" (`shipment-create-stepper`): the groups in stage
+ * order; the last one also reviews every other group.
+ * @type {ShipmentCreateStep[]}
+ */
+export const SHIPMENT_CREATE_STEPS = [
+  {
+    label: 'Cơ bản & đơn vị',
+    stageLabel: 'Đã book',
+    sections: ['basic', 'parties'],
+  },
+  {
+    label: 'Booking & lịch trình',
+    stageLabel: 'Đã book',
+    sections: ['booking', 'schedule'],
+  },
+  { label: 'Hàng hóa', stageLabel: 'Đang đóng hàng', sections: ['goods'] },
+  {
+    label: 'Hải quan & C/O',
+    stageLabel: 'Hạ bãi chờ xuất',
+    sections: ['customs'],
+  },
+  { label: 'Ghi chú & xem lại', stageLabel: 'Tuỳ chọn', sections: ['note'] },
+];
+
+/** @param {ShipmentCreateStep} step */
+function stepSections(step) {
+  return SHIPMENT_FORM_SECTIONS.filter((section) =>
+    step.sections.includes(section.id),
+  );
+}
+
+/**
+ * Every value a step edits (validating "Tiếp" checks only these).
+ * @param {ShipmentCreateStep} step
+ * @returns {(keyof ShipmentFormValues)[]}
+ */
+export function stepFields(step) {
+  return stepSections(step).flatMap((section) => section.fields);
+}
+
+/**
+ * Stepper mark of a step: an error in any of its groups, complete when every
+ * group with key fields is complete, null when it has only optional groups.
+ * @param {ShipmentCreateStep} step
+ * @param {ShipmentFormValues} values
+ * @param {Record<string, unknown>} errors
+ * @returns {'error' | 'complete' | 'missing' | null}
+ */
+export function stepState(step, values, errors) {
+  const states = stepSections(step).map(
+    (section) => sectionCompleteness(section, values, errors).state,
+  );
+  if (states.includes('error')) return 'error';
+  const required = states.filter((state) => state !== 'optional');
+  if (required.length === 0) return null;
+  return required.every((state) => state === 'complete')
+    ? 'complete'
+    : 'missing';
+}
+
+/**
+ * Index of the first step holding one of `errors`, or -1.
+ * @param {Record<string, unknown>} errors
+ */
+export function firstStepWithError(errors) {
+  return SHIPMENT_CREATE_STEPS.findIndex((step) =>
+    stepSections(step).some((section) => sectionHasError(section, errors)),
+  );
+}
+
+/**
+ * Step index that holds `sectionId`.
+ * @param {ShipmentFormSectionId} sectionId
+ */
+export function stepOfSection(sectionId) {
+  return SHIPMENT_CREATE_STEPS.findIndex((step) =>
+    step.sections.includes(sectionId),
+  );
+}
+
+/**
  * Whether a group starts open: always-relevant groups, groups whose stage
  * the status has reached, and groups that already hold data.
  * @param {ShipmentFormSection} section
