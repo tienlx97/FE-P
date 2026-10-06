@@ -22,14 +22,22 @@ import {
  * marked, and "Chuyển sang …" for the next. Moving (or choosing another
  * step) opens the shipment drawer on that stage's groups only
  * (`shipment-staged-form`), so each stage asks for a little information
- * when it actually becomes known. Status stays freely settable.
+ * when it actually becomes known. Status stays freely settable. The
+ * journey's time-based progress ("Tiến độ lộ trình") sits on the subtitle
+ * line since the journey cards moved to the "Timeline & lịch tàu" tab.
  * @param {{
  *   incoterm: import('../types/index.js').Incoterm | string,
  *   status: import('../types/index.js').ShipmentStatus,
  *   onMove: (status: import('../types/index.js').ShipmentStatus) => void,
+ *   progress?: { percent: number, label: string } | null,
  * }} props
  */
-export function ShipmentStatusFlow({ incoterm, status, onMove }) {
+export function ShipmentStatusFlow({
+  incoterm,
+  status,
+  onMove,
+  progress = null,
+}) {
   const flow = shipmentStatusFlow(incoterm, status);
   const current = flow.indexOf(status);
   const next = flow[current + 1] ?? null;
@@ -43,6 +51,11 @@ export function ShipmentStatusFlow({ incoterm, status, onMove }) {
               Luồng {incoterm} · chọn một bước để chuyển và bổ sung thông tin
               của giai đoạn đó
             </Text>
+            {progress ? (
+              <Text size="sm" weight="semibold" type="code" color="accent">
+                Tiến độ lộ trình: {progress.label}
+              </Text>
+            ) : null}
           </VStack>
           {next ? (
             <Button

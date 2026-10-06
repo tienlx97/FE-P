@@ -68,10 +68,7 @@ export {
 export { MetaPill } from './pill.jsx';
 export { MetaSchedule, MetaScheduleSwatch } from './schedule.jsx';
 export { MetaShipmentDetailSkeleton } from './shipment-detail-skeleton.jsx';
-export {
-  MetaJourneySkeleton,
-  MetaShipmentHeaderCard,
-} from './shipment-header-card.jsx';
+export { MetaShipmentHeaderCard } from './shipment-header-card.jsx';
 export { MetaShipmentListPanel } from './shipment-list-panel.jsx';
 export {
   MetaContainerCard,

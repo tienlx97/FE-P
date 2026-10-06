@@ -184,6 +184,46 @@ export function buildPhysicalTimeline(events, today) {
 }
 
 /**
+ * The physical event that dates each Incoterm journey milestone (none for
+ * "OriginInland", the trucking leg itself).
+ * @type {Partial<Record<import('../types/index.js').ShipmentMilestone, import('../types/index.js').PhysicalJourneyEvent['code']>>}
+ */
+const MILESTONE_EVENT = {
+  EmptyPickup: 'EmptyPickup',
+  CargoReady: 'Packing',
+  ExwHandover: 'ExwHandover',
+  OriginPort: 'OriginGateIn',
+  OnBoard: 'Load',
+  Ocean: 'Departure',
+  DestinationPort: 'Arrival',
+  Discharged: 'Discharge',
+  ImportClearance: 'ImportClearance',
+  DestinationInland: 'DestinationGateOut',
+  Site: 'SiteDelivery',
+  EmptyReturn: 'EmptyReturn',
+};
+
+/**
+ * The milestone strip step (`buildMilestoneStrip`) of a journey milestone:
+ * its event on the main voyage (leg 0) first, else any leg; null when the
+ * milestone has no event or none is dated yet.
+ * @param {string} milestone
+ * @param {MilestoneStripStep[]} strip
+ */
+export function stripStepForMilestone(milestone, strip) {
+  const code =
+    MILESTONE_EVENT[
+      /** @type {import('../types/index.js').ShipmentMilestone} */ (milestone)
+    ];
+  if (!code) return null;
+  return (
+    strip.find((step) => step.id === `${code}|0`) ??
+    strip.find((step) => step.code === code) ??
+    null
+  );
+}
+
+/**
  * @typedef {{
  *   id: string,
  *   code: import('../types/index.js').PhysicalJourneyEvent['code'],

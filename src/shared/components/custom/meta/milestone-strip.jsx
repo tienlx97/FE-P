@@ -2,21 +2,26 @@
 
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { Check } from 'lucide-react';
+import { Check, Pencil, Star } from 'lucide-react';
 
 import { MetaPill } from './pill.jsx';
 
 /**
+ * @typedef {'accent' | 'success' | 'warning' | 'danger' | 'neutral' | 'indigo' | 'muted'} MetaMilestoneTone
  * @typedef {{
  *   id: string,
  *   title: string,
  *   state: import('./event-timeline.jsx').MetaTimelineState,
  *   date: string,
  *   detail?: string,
- *   count?: { label: string, isComplete: boolean },
+ *   caption?: string,
+ *   isOutOfScope?: boolean,
+ *   pills?: Array<{ label: string, tone: MetaMilestoneTone, isMarker?: boolean }>,
+ *   action?: { label: string, onClick: () => void },
  * }} MetaMilestoneStep
  */
 
@@ -24,11 +29,14 @@ import { MetaPill } from './pill.jsx';
  * Horizontal "Meta" milestone strip (a carrier's tracking bar): one step
  * per milestone left → right, each a state dot (same states as
  * `MetaEventTimeline`) on a rail that is solid through the done steps,
- * then the title, the date, a detail line (weekday · time) and the pills
- * (an optional "x/y" count, "Tiếp theo" / "Quá hạn") last, so the dates
- * line up across steps. Scrolls sideways when the steps do not fit. Values
- * arrive formatted. Composed from Astryx `HStack` / `VStack` / `Text` /
- * `Icon` + `MetaPill` (golden rule #15).
+ * then the title (+ an optional edit action), the date, a detail line
+ * (weekday · time, or what the date is), a caption (place / vessel) and
+ * the pills last — counts, markers ("Chuyển rủi ro", star icon), alerts,
+ * "Tiếp theo" / "Quá hạn" — so the dates line up across steps. A step
+ * outside the tracked scope (the buyer's legs) has a dashed hollow dot and
+ * muted text. Scrolls sideways when the steps do not fit. Values arrive
+ * formatted. Composed from Astryx `HStack` / `VStack` / `Text` / `Icon` /
+ * `IconButton` + `MetaPill` (golden rule #15).
  *
  * @param {{ steps: MetaMilestoneStep[], label: string }} props
  */
@@ -44,15 +52,36 @@ export function MetaMilestoneStrip({ steps, label }) {
     >
       {steps.map((step, index) => {
         const isLast = index === steps.length - 1;
-        const isMuted = step.state === 'upcoming';
+        const isMuted = step.state === 'upcoming' || step.isOutOfScope;
+        const pills = [
+          ...(step.pills ?? []),
+          ...(step.state === 'next'
+            ? [{ label: 'Tiếp theo', tone: /** @type {const} */ ('accent') }]
+            : step.state === 'overdue'
+              ? [{ label: 'Quá hạn', tone: /** @type {const} */ ('warning') }]
+              : []),
+        ];
         return (
-          <VStack as="li" key={step.id} gap={2} hAlign="stretch" xstyle={styles.step}>
+          <VStack
+            as="li"
+            key={step.id}
+            gap={2}
+            hAlign="stretch"
+            aria-current={step.state === 'next' ? 'step' : undefined}
+            xstyle={styles.step}
+          >
             <HStack gap={0} vAlign="center" wrap="nowrap">
               <HStack
                 as="span"
                 hAlign="center"
                 vAlign="center"
-                xstyle={[styles.dot, dotStyles[step.state]]}
+                xstyle={[
+                  styles.dot,
+                  dotStyles[step.state],
+                  step.isOutOfScope &&
+                    step.state === 'upcoming' &&
+                    styles.dotOutOfScope,
+                ]}
               >
                 {step.state === 'done' ? (
                   <Icon icon={Check} size="xsm" color="inherit" />
@@ -68,40 +97,62 @@ export function MetaMilestoneStrip({ steps, label }) {
                 />
               )}
             </HStack>
-            <VStack gap={1} hAlign="start" xstyle={styles.body}>
-              <Text
-                size="sm"
-                weight="semibold"
-                color={isMuted ? 'secondary' : 'primary'}
-              >
-                {step.title}
-              </Text>
+            <VStack gap={1} hAlign="stretch" xstyle={styles.body}>
+              <HStack gap={1} vAlign="center" wrap="nowrap">
+                <Text
+                  size="sm"
+                  weight="semibold"
+                  color={isMuted ? 'secondary' : 'primary'}
+                  maxLines={1}
+                >
+                  {step.title}
+                </Text>
+                {step.action ? (
+                  <IconButton
+                    label={step.action.label}
+                    tooltip={step.action.label}
+                    icon={<Icon icon={Pencil} size="xsm" color="secondary" />}
+                    variant="ghost"
+                    size="sm"
+                    onClick={step.action.onClick}
+                  />
+                ) : null}
+              </HStack>
               <Text
                 type="code"
                 weight={step.state === 'done' ? 'bold' : 'medium'}
                 color={isMuted ? 'secondary' : 'primary'}
+                maxLines={1}
               >
                 {step.date}
               </Text>
               {step.detail ? (
-                <Text size="sm" type="code" color="secondary">
+                <Text size="sm" type="code" color="secondary" maxLines={1}>
                   {step.detail}
                 </Text>
               ) : null}
-              {step.count || step.state === 'next' || step.state === 'overdue' ? (
-                <HStack gap={1.5} vAlign="center" wrap="wrap">
-                  {step.count ? (
+              {step.caption ? (
+                <Text
+                  size="sm"
+                  color={/** @type {any} */ ('meta-subtle')}
+                  maxLines={1}
+                >
+                  {step.caption}
+                </Text>
+              ) : null}
+              {pills.length > 0 ? (
+                <HStack gap={1} vAlign="center" wrap="wrap">
+                  {pills.map((pill) => (
                     <MetaPill
-                      label={step.count.label}
-                      tone={step.count.isComplete ? 'success' : 'neutral'}
+                      key={pill.label}
+                      label={pill.label}
+                      tone={pill.tone}
                       size="sm"
+                      icon={
+                        'isMarker' in pill && pill.isMarker ? Star : undefined
+                      }
                     />
-                  ) : null}
-                  {step.state === 'next' ? (
-                    <MetaPill label="Tiếp theo" tone="accent" size="sm" />
-                  ) : step.state === 'overdue' ? (
-                    <MetaPill label="Quá hạn" tone="warning" size="sm" />
-                  ) : null}
+                  ))}
                 </HStack>
               ) : null}
             </VStack>
@@ -120,7 +171,7 @@ const styles = stylex.create({
     padding: 0,
     paddingBottom: 'var(--spacing-1)',
   },
-  // Wide enough for "Gate-in cảng xuất" + a count pill on one or two lines.
+  // Wide enough for "Shipped on Board" + an edit button, or a marker pill.
   step: {
     flexBasis: 0,
     flexGrow: 1,
@@ -144,6 +195,9 @@ const styles = stylex.create({
     flexShrink: 0,
     height: 'var(--spacing-5)',
     width: 'var(--spacing-5)',
+  },
+  dotOutOfScope: {
+    borderStyle: 'dashed',
   },
   line: {
     flexGrow: 1,

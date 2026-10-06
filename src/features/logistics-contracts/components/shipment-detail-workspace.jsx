@@ -4,21 +4,11 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Icon } from '@astryxdesign/core/Icon';
 import { VStack } from '@astryxdesign/core/VStack';
 import {
-  Anchor,
   CalendarClock,
   CalendarRange,
-  Container,
-  Factory,
-  FileCheck2,
   FileText,
-  Flag,
   LayoutGrid,
-  MapPin,
   ReceiptText,
-  RotateCcw,
-  Sailboat,
-  Ship,
-  Truck,
   Weight,
 } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -94,23 +84,6 @@ const TAB_ICONS = {
 
 const TAB_VALUES = /** @type {ShipmentDetailTab[]} */ (Object.keys(TAB_LABELS));
 
-/** @type {Record<import('../types/index.js').ShipmentMilestone, import('react').ComponentType>} */
-const MILESTONE_ICONS = {
-  EmptyPickup: Container,
-  CargoReady: Factory,
-  ExwHandover: Flag,
-  OriginInland: Truck,
-  OriginPort: Anchor,
-  OnBoard: Ship,
-  Ocean: Sailboat,
-  DestinationPort: MapPin,
-  Discharged: Container,
-  ImportClearance: FileCheck2,
-  DestinationInland: Truck,
-  Site: Flag,
-  EmptyReturn: RotateCcw,
-};
-
 const MARKER_TONES = /** @type {const} */ ({
   Risk: 'warning',
   Freight: 'indigo',
@@ -151,8 +124,8 @@ function containerEventLabel(done, total, dates) {
 }
 
 /**
- * Journey cards for the header: legs, scopes and markers from the
- * backend journey, filled with this
+ * Journey steps for the "Timeline & lịch tàu" milestone strip: legs,
+ * scopes and markers from the backend journey, filled with this
  * shipment's places, vessel, dates and providers.
  * @param {{
  *   shipment: import('../types/index.js').Shipment,
@@ -354,49 +327,47 @@ function journeyFor({
 
   return {
     summary,
-    steps: steps.map((step) => ({
-      id: step.milestone,
-      icon: MILESTONE_ICONS[step.milestone],
-      state: /** @type {'done' | 'current' | 'upcoming'} */ (
-        step.state === 'Done'
-          ? 'done'
-          : step.state === 'Current'
-            ? 'current'
-            : 'upcoming'
-      ),
-      scope: /** @type {'seller' | 'buyer'} */ (
-        step.scope === 'Seller' ? 'seller' : 'buyer'
-      ),
-      badge:
-        step.milestone === 'EmptyReturn' && emptyReturn?.overdueDays
-          ? `Quá hạn ${emptyReturn.overdueDays} ngày`
-          : step.milestone === 'OnBoard' &&
-              step.state === 'Done' &&
-              !step.completedOn
-            ? 'Thiếu ngày LOAD'
-            : step.milestone === 'Discharged' &&
-                step.state === 'Done' &&
-                !step.completedOn
-              ? 'Thiếu ngày DISC'
-              : step.state === 'Done'
-                ? 'Hoàn thành'
-                : step.state === 'Current'
-                  ? 'Chặng hiện tại'
-                  : step.scope === 'Buyer'
-                    ? 'Phạm vi Buyer'
-                    : 'Kế hoạch',
-      badgeTone: /** @type {'danger' | undefined} */ (
-        step.milestone === 'EmptyReturn' && emptyReturn?.overdueDays
-          ? 'danger'
-          : undefined
-      ),
-      markerLabel: step.marker ? MARKER_LABELS[step.marker] : undefined,
-      markerTone: step.marker ? MARKER_TONES[step.marker] : undefined,
-      label: step.label,
-      liveLabel: step.milestone === 'EmptyReturn' ? 'TRẢ CONT RỖNG' : undefined,
-      ...stepAction(step),
-      ...content(step),
-    })),
+    steps: steps.map(
+      (step) =>
+        /** @type {import('./shipment-physical-timeline.jsx').JourneyStripStep} */ ({
+          id: step.milestone,
+          state:
+            step.state === 'Done'
+              ? 'done'
+              : step.state === 'Current'
+                ? 'current'
+                : 'upcoming',
+          scope: step.scope === 'Seller' ? 'seller' : 'buyer',
+          // Only what needs attention; done / current / planned is the dot.
+          alert:
+            step.milestone === 'EmptyReturn' && emptyReturn?.overdueDays
+              ? {
+                  label: `Quá hạn ${emptyReturn.overdueDays} ngày`,
+                  tone: 'danger',
+                }
+              : (step.milestone === 'OnBoard' ||
+                    step.milestone === 'Discharged') &&
+                  step.state === 'Done' &&
+                  !step.completedOn
+                ? {
+                    label:
+                      step.milestone === 'OnBoard'
+                        ? 'Thiếu ngày LOAD'
+                        : 'Thiếu ngày DISC',
+                    tone: 'warning',
+                  }
+                : undefined,
+          marker: step.marker
+            ? {
+                label: MARKER_LABELS[step.marker],
+                tone: MARKER_TONES[step.marker],
+              }
+            : undefined,
+          label: step.label,
+          ...stepAction(step),
+          ...content(step),
+        }),
+    ),
   };
 }
 
@@ -590,6 +561,22 @@ function ShipmentDetailBody({
         today: todayIsoDate(),
       })
     : null;
+  // Time-based when the dates allow it, else the steps done (a current one
+  // counts half).
+  const journeyProgress =
+    progress ??
+    (journey && journey.steps.length > 0
+      ? (() => {
+          const done = journey.steps.filter((s) => s.state === 'done').length;
+          const current = journey.steps.filter(
+            (s) => s.state === 'current',
+          ).length;
+          const percent = Math.round(
+            ((done + current * 0.5) / journey.steps.length) * 100,
+          );
+          return { percent, label: `${percent}% hoàn thành` };
+        })()
+      : null);
   // Plain tabs (no count pills), same as the contract detail tab bar.
   const tabs = TAB_VALUES.map((id) => ({
     id,
@@ -606,10 +593,6 @@ function ShipmentDetailBody({
           statusLabel={labelForShipmentStatus(shipment.status)}
           statusTone={metaToneForShipmentStatus(shipment.status)}
           incotermLabel={`${contract.incoterm} ${contract.incotermYear}`}
-          steps={journey?.steps ?? []}
-          journeySummary={journey?.summary}
-          isJourneyLoading={journeyQuery.isLoading}
-          progress={progress}
           onPrint={() => window.print()}
           onEdit={() => setIsEditing(true)}
           moreItems={[
@@ -646,6 +629,7 @@ function ShipmentDetailBody({
           incoterm={contract.incoterm}
           status={shipment.status}
           onMove={setStageTarget}
+          progress={journeyProgress}
         />
 
         {journeyQuery.data?.success ? (
@@ -701,6 +685,8 @@ function ShipmentDetailBody({
               shipmentId={shipment.id}
               placeOfLoading={shipment.placeOfLoading}
               placeOfDischarge={shipment.placeOfDischarge}
+              journeySteps={journey?.steps ?? null}
+              journeySummary={journey?.summary}
               incoterm={contract.incoterm}
               schedule={schedule}
               scheduleError={

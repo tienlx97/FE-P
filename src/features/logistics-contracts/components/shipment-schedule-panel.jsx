@@ -144,7 +144,8 @@ function RouteEnd({
 /**
  * Shipment detail "Timeline & lịch tàu" tab, read top-down like a carrier's
  * tracking page: the route (POL → vessel / transit → POD, then cut-offs),
- * the physical timeline (milestone strip, then per container), B/L and
+ * the journey (Incoterm milestone strip dated by the physical events —
+ * the only journey view on the page — then per container), B/L and
  * transshipment as two cards, carrier tracking, per-container free time
  * and the schedule history (as a timeline). Spec
  * `docs/shipment-journey-incoterms.md` §4, `docs/carrier-tracking-integration-plan.md`.
@@ -153,6 +154,8 @@ function RouteEnd({
  *   shipmentId: string,
  *   placeOfLoading: string | null | undefined,
  *   placeOfDischarge: string | null | undefined,
+ *   journeySteps: import('./shipment-physical-timeline.jsx').JourneyStripStep[] | null,
+ *   journeySummary?: string,
  *   incoterm: import('../types/index.js').Incoterm,
  *   schedule: import('../types/index.js').ShipmentSchedule | null,
  *   scheduleError: string | null,
@@ -170,6 +173,8 @@ export function ShipmentSchedulePanel({
   shipmentId,
   placeOfLoading,
   placeOfDischarge,
+  journeySteps,
+  journeySummary,
   incoterm,
   schedule,
   scheduleError,
@@ -385,7 +390,12 @@ export function ShipmentSchedulePanel({
         </VStack>
       </MetaShipmentSection>
 
-      <ShipmentPhysicalTimeline contractId={contractId} shipmentId={shipmentId} />
+      <ShipmentPhysicalTimeline
+        contractId={contractId}
+        shipmentId={shipmentId}
+        journeySteps={journeySteps}
+        journeySummary={journeySummary}
+      />
 
       <Grid columns={{ minWidth: 320, max: 2 }} gap={4}>
         <MetaShipmentSection

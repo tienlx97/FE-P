@@ -22,6 +22,7 @@ import {
   PHYSICAL_EVENT_CLASSIFIERS,
   PHYSICAL_EVENT_LABELS,
   PHYSICAL_EVENT_SOURCES,
+  stripStepForMilestone,
   weekdayLabel,
   WHOLE_SHIPMENT,
 } from '../config/shipment-journey-events.js';
@@ -67,15 +68,114 @@ function noteFor(item) {
 }
 
 /**
- * "Timeline vận chuyển": first the whole shipment as a horizontal
- * milestone strip (each event once, "x/y cont" done, like a carrier's
- * tracking bar), then the physical events as a vertical timeline, one per
- * container (switched with tabs; "Toàn lô" holds the
+ * One Incoterm journey milestone as the workspace prepares it (places,
+ * vessel, key date, action) for the strip.
+ * @typedef {{
+ *   id: string,
+ *   state: 'done' | 'current' | 'upcoming',
+ *   scope: 'seller' | 'buyer',
+ *   label: string,
+ *   title: string,
+ *   footLabel: string,
+ *   footValue: string,
+ *   alert?: { label: string, tone: 'danger' | 'warning' },
+ *   marker?: { label: string, tone: 'warning' | 'indigo' | 'success' },
+ *   actionLabel?: string,
+ *   onAction?: () => void,
+ * }} JourneyStripStep
+ */
+
+/** @param {import('../types/index.js').PhysicalJourneyEvent} event */
+const whenOf = (event) =>
+  [weekdayLabel(event.eventOn), timeOf(event)].filter(Boolean).join(' · ');
+
+/**
+ * Strip steps: the Incoterm journey (every milestone, the buyer's dashed,
+ * markers, alerts and the confirm / record actions), each dated by its
+ * physical event when there is one (weekday · time, "x/y cont", overdue);
+ * without the journey, the physical events alone.
+ * @param {JourneyStripStep[] | null} journeySteps
+ * @param {import('../config/shipment-journey-events.js').MilestoneStripStep[]} strip
+ * @returns {import('@/shared/components/custom/meta/milestone-strip.jsx').MetaMilestoneStep[]}
+ */
+function stripSteps(journeySteps, strip) {
+  if (!journeySteps?.length) {
+    return strip.map((step) => ({
+      id: step.id,
+      title: PHYSICAL_EVENT_LABELS[step.code] ?? step.code,
+      state: step.state,
+      date: formatDisplayDate(step.shown.eventOn),
+      detail: whenOf(step.shown),
+      pills: step.containerTotal > 0 ? [countPill(step)] : [],
+    }));
+  }
+  return journeySteps.map((step) => {
+    const physical = stripStepForMilestone(step.id, strip);
+    return {
+      id: step.id,
+      title: step.label,
+      state:
+        step.state === 'done'
+          ? 'done'
+          : physical?.state === 'overdue'
+            ? 'overdue'
+            : step.state === 'current'
+              ? 'next'
+              : 'upcoming',
+      date: physical
+        ? formatDisplayDate(physical.shown.eventOn)
+        : step.footValue,
+      detail: physical
+        ? whenOf(physical.shown) || step.footLabel
+        : step.footLabel,
+      // The card title falls back to the label when there is no place.
+      caption: step.title === step.label ? undefined : step.title,
+      isOutOfScope: step.scope === 'buyer',
+      pills: [
+        ...(physical && physical.containerTotal > 1
+          ? [countPill(physical)]
+          : []),
+        ...(step.marker ? [{ ...step.marker, isMarker: true }] : []),
+        ...(step.alert ? [step.alert] : []),
+      ],
+      action:
+        step.onAction && step.actionLabel
+          ? { label: step.actionLabel, onClick: step.onAction }
+          : undefined,
+    };
+  });
+}
+
+/** @param {import('../config/shipment-journey-events.js').MilestoneStripStep} step */
+function countPill(step) {
+  return {
+    label: `${step.containerDone}/${step.containerTotal} cont`,
+    tone: /** @type {'success' | 'neutral'} */ (
+      step.containerDone === step.containerTotal ? 'success' : 'neutral'
+    ),
+  };
+}
+
+/**
+ * "Hành trình vận chuyển": first the whole shipment as a horizontal
+ * milestone strip (the Incoterm journey dated by the physical events, like
+ * a carrier's tracking bar), then the physical events as a vertical
+ * timeline, one per container (switched with tabs; "Toàn lô" holds the
  * vessel facts shared by every container). The planned / estimated and
  * actual dates of one event are merged into one row with the delay.
- * @param {{contractId: string, shipmentId: string}} props
+ * @param {{
+ *   contractId: string,
+ *   shipmentId: string,
+ *   journeySteps?: JourneyStripStep[] | null,
+ *   journeySummary?: string,
+ * }} props
  */
-export function ShipmentPhysicalTimeline({ contractId, shipmentId }) {
+export function ShipmentPhysicalTimeline({
+  contractId,
+  shipmentId,
+  journeySteps = null,
+  journeySummary,
+}) {
   const query = useShipmentJourneyEventsQuery(contractId, shipmentId);
   const [activeId, setActiveId] = useState(/** @type {string | null} */ (null));
 
@@ -94,48 +194,31 @@ export function ShipmentPhysicalTimeline({ contractId, shipmentId }) {
 
   const today = new Date().toISOString().slice(0, 10);
   const groups = buildPhysicalTimeline(query.data.events, today);
-  const strip = buildMilestoneStrip(groups);
+  const steps = stripSteps(journeySteps, buildMilestoneStrip(groups));
   const active =
     groups.find((group) => group.id === activeId) ?? groups[0] ?? null;
-  const done = groups.reduce((sum, group) => sum + group.doneCount, 0);
-  const total = groups.reduce((sum, group) => sum + group.items.length, 0);
+  const done = steps.filter((step) => step.state === 'done').length;
 
   return (
     <MetaShipmentSection
       icon={Route}
-      title="Timeline vận chuyển"
-      subtitle="Mỗi mốc gộp ngày kế hoạch / dự kiến và ngày thực tế"
+      title="Hành trình vận chuyển"
+      subtitle={
+        journeySummary || 'Mỗi mốc gộp ngày kế hoạch / dự kiến và ngày thực tế'
+      }
       pill={{
-        label: `${done}/${total} mốc đã xảy ra`,
-        tone: total > 0 && done === total ? 'success' : 'neutral',
-        hasDot: total > 0 && done === total,
+        label: `${done}/${steps.length} mốc`,
+        tone: steps.length > 0 && done === steps.length ? 'success' : 'neutral',
+        hasDot: steps.length > 0 && done === steps.length,
       }}
     >
       <VStack gap={4} hAlign="stretch">
-        {strip.length > 0 ? (
+        {steps.length > 0 ? (
           <VStack gap={4} hAlign="stretch" xstyle={styles.overview}>
-            <MetaMilestoneStrip
-              label="Tiến trình lô hàng"
-              steps={strip.map((step) => ({
-                id: step.id,
-                title: PHYSICAL_EVENT_LABELS[step.code] ?? step.code,
-                state: step.state,
-                date: formatDisplayDate(step.shown.eventOn),
-                detail: [weekdayLabel(step.shown.eventOn), timeOf(step.shown)]
-                  .filter(Boolean)
-                  .join(' · '),
-                count:
-                  step.containerTotal > 0
-                    ? {
-                        label: `${step.containerDone}/${step.containerTotal} cont`,
-                        isComplete: step.containerDone === step.containerTotal,
-                      }
-                    : undefined,
-              }))}
-            />
+            <MetaMilestoneStrip label="Hành trình vận chuyển" steps={steps} />
           </VStack>
         ) : null}
-        {strip.length > 0 ? (
+        {steps.length > 0 ? (
           <Text size="sm" weight="bold" color="secondary">
             CHI TIẾT THEO CONTAINER
           </Text>

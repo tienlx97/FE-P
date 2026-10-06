@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   buildMilestoneStrip,
   buildPhysicalTimeline,
+  stripStepForMilestone,
   weekdayLabel,
   WHOLE_SHIPMENT,
 } from './shipment-journey-events.js';
@@ -120,18 +121,53 @@ test('the milestone strip counts containers per event across every container', (
   const steps = buildMilestoneStrip(
     buildPhysicalTimeline(
       [
-        fact({ code: 'EmptyPickup', containerNumber: 'CONT1', eventOn: '2026-09-01', source: 'Container' }),
-        fact({ code: 'EmptyPickup', containerNumber: 'CONT2', eventOn: '2026-09-02', location: 'Depot B' }),
-        fact({ code: 'OriginGateIn', containerNumber: 'CONT1', eventOn: '2026-09-03' }),
-        fact({ code: 'Departure', eventOn: '2026-09-05', eventAt: '2026-09-05T19:15:00' }),
-        fact({ code: 'Arrival', classifier: 'Estimated', eventOn: '2026-09-12', location: 'POD' }),
-        fact({ code: 'EmptyReturn', classifier: 'Planned', containerNumber: 'CONT1', eventOn: '2026-09-20', location: 'POD' }),
+        fact({
+          code: 'EmptyPickup',
+          containerNumber: 'CONT1',
+          eventOn: '2026-09-01',
+          source: 'Container',
+        }),
+        fact({
+          code: 'EmptyPickup',
+          containerNumber: 'CONT2',
+          eventOn: '2026-09-02',
+          location: 'Depot B',
+        }),
+        fact({
+          code: 'OriginGateIn',
+          containerNumber: 'CONT1',
+          eventOn: '2026-09-03',
+        }),
+        fact({
+          code: 'Departure',
+          eventOn: '2026-09-05',
+          eventAt: '2026-09-05T19:15:00',
+        }),
+        fact({
+          code: 'Arrival',
+          classifier: 'Estimated',
+          eventOn: '2026-09-12',
+          location: 'POD',
+        }),
+        fact({
+          code: 'EmptyReturn',
+          classifier: 'Planned',
+          containerNumber: 'CONT1',
+          eventOn: '2026-09-20',
+          location: 'POD',
+        }),
       ],
       '2026-09-10',
     ),
   );
   assert.deepEqual(
-    steps.map((step) => [step.code, step.containerDone, step.containerTotal, step.state, step.shown.eventOn]),
+    steps.map((step) => [
+      step.code,
+      step.containerDone,
+      step.containerTotal,
+      step.state,
+      step.shown.eventOn,
+    ]),
     [
       ['EmptyPickup', 2, 2, 'done', '2026-09-02'],
       ['OriginGateIn', 1, 2, 'next', '2026-09-03'],
@@ -140,6 +176,35 @@ test('the milestone strip counts containers per event across every container', (
       ['EmptyReturn', 0, 2, 'upcoming', '2026-09-20'],
     ],
   );
+});
+
+test('journey milestones find their dated event, main voyage first', () => {
+  const strip = buildMilestoneStrip(
+    buildPhysicalTimeline(
+      [
+        fact({
+          code: 'Departure',
+          legSequence: 1,
+          eventOn: '2026-09-08',
+          location: 'HKG',
+        }),
+        fact({ code: 'Departure', eventOn: '2026-09-05' }),
+        fact({
+          code: 'OriginGateIn',
+          containerNumber: 'CONT1',
+          eventOn: '2026-09-03',
+        }),
+      ],
+      '2026-09-10',
+    ),
+  );
+  assert.equal(
+    stripStepForMilestone('Ocean', strip)?.shown.eventOn,
+    '2026-09-05',
+  );
+  assert.equal(stripStepForMilestone('OriginPort', strip)?.containerDone, 1);
+  assert.equal(stripStepForMilestone('OriginInland', strip), null);
+  assert.equal(stripStepForMilestone('Discharged', strip), null);
 });
 
 test('weekday labels use Vietnamese short names', () => {

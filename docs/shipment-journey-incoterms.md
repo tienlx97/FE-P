@@ -3,6 +3,13 @@
 Tài liệu nghiệp vụ cho khối **"Hành trình vận chuyển"** trên trang chi tiết
 lô hàng (`/logistics/contract/[id]/shipment/[shipmentId]`, Figma 115:8469).
 
+> 2026-10-06 (`shipment-journey-in-timeline-tab`): khối này không còn nằm ở
+> đầu trang (trên mọi tab). Hành trình theo Incoterm là thanh mốc ngang ở
+> đầu tab **Timeline & lịch tàu**: mỗi mốc lấy ngày / thứ · giờ / x/y cont từ
+> sự kiện vật lý khi có (API hãng tàu), giữ phạm vi Seller / Buyer (Buyer nét
+> đứt), nhãn "Chuyển rủi ro" / "Hết cước & BH", cảnh báo và nút xác nhận
+> mốc. "Tiến độ lộ trình" là một dòng trong "Tình trạng lô hàng".
+
 - Tài liệu này là nơi **chỉnh sửa / thống nhất nghiệp vụ**.
 - Luồng chạy thực tế do BE-kt-xnk xử lý trong
   `src/CompanyManagement.Domain/Shipments/Journey/IncotermJourneys.cs` và

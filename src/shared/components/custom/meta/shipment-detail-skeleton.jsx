@@ -7,8 +7,6 @@ import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 
-import { MetaJourneySkeleton } from './shipment-header-card.jsx';
-
 const TAB_WIDTHS = ['8rem', '6.5rem', '10rem'];
 const KPI_CARDS = [0, 1, 2];
 // Booking (9 fields) then customs (6), like the overview tab.
@@ -18,7 +16,7 @@ const TABLE_ROWS = [0, 1, 2, 3, 4];
 /**
  * "Meta" shipment-detail page placeholder, shown while the contract /
  * shipment load: the `MetaShipmentHeaderCard` (code + pills + incoterm,
- * action buttons, the journey title and `MetaJourneySkeleton`), the pill
+ * action buttons), the pill
  * tab strip, then the active tab's body — overview: 3 KPI cards and two
  * sections of 3-column field tiles (`MetaShipmentKpiCard` /
  * `MetaShipmentSection` / `MetaShipmentField` shapes); VGM / costs: one
@@ -37,87 +35,58 @@ export function MetaShipmentDetailSkeleton({
   return (
     <VStack gap={4} hAlign="stretch" aria-busy="true" aria-label={label}>
       <Card padding={6} xstyle={styles.card}>
-        <VStack gap={6} hAlign="stretch">
-          <HStack
-            hAlign="between"
-            vAlign="start"
-            gap={4}
-            wrap="wrap"
-            xstyle={styles.titleRow}
-          >
-            <VStack gap={2} hAlign="stretch" xstyle={styles.headerText}>
-              <HStack gap={2} vAlign="center">
-                <Skeleton
-                  width="clamp(8rem, 40%, 13rem)"
-                  height="var(--spacing-10)"
-                  radius={2}
-                />
-                <Skeleton
-                  width="var(--spacing-8)"
-                  height="var(--spacing-8)"
-                  radius={2}
-                />
-                <Skeleton
-                  width="3.5rem"
-                  height="var(--spacing-6)"
-                  radius="rounded"
-                />
-                <Skeleton
-                  width="clamp(4rem, 22%, 7rem)"
-                  height="var(--spacing-6)"
-                  radius="rounded"
-                />
-              </HStack>
-              <Skeleton
-                width="5rem"
-                height="var(--spacing-6)"
-                radius="rounded"
-                index={1}
-              />
-            </VStack>
+        <HStack hAlign="between" vAlign="start" gap={4} wrap="wrap">
+          <VStack gap={2} hAlign="stretch" xstyle={styles.headerText}>
             <HStack gap={2} vAlign="center">
               <Skeleton
-                width="4rem"
-                height="var(--spacing-9)"
-                radius={3}
-                index={1}
-              />
-              <Skeleton
-                width="7rem"
-                height="var(--spacing-9)"
-                radius={3}
-                index={1}
-              />
-              <Skeleton
-                width="var(--spacing-9)"
-                height="var(--spacing-9)"
-                radius={3}
-                index={1}
-              />
-            </HStack>
-          </HStack>
-
-          <VStack gap={4} hAlign="stretch">
-            <HStack gap={3} vAlign="center">
-              <Skeleton
-                width="var(--spacing-9)"
-                height="var(--spacing-9)"
+                width="clamp(8rem, 40%, 13rem)"
+                height="var(--spacing-10)"
                 radius={2}
               />
               <Skeleton
-                width="clamp(8rem, 25%, 12rem)"
-                height="var(--spacing-4)"
+                width="var(--spacing-8)"
+                height="var(--spacing-8)"
                 radius={2}
               />
               <Skeleton
-                width="5rem"
+                width="3.5rem"
+                height="var(--spacing-6)"
+                radius="rounded"
+              />
+              <Skeleton
+                width="clamp(4rem, 22%, 7rem)"
                 height="var(--spacing-6)"
                 radius="rounded"
               />
             </HStack>
-            <MetaJourneySkeleton label="hành trình vận chuyển" />
+            <Skeleton
+              width="5rem"
+              height="var(--spacing-6)"
+              radius="rounded"
+              index={1}
+            />
           </VStack>
-        </VStack>
+          <HStack gap={2} vAlign="center">
+            <Skeleton
+              width="4rem"
+              height="var(--spacing-9)"
+              radius={3}
+              index={1}
+            />
+            <Skeleton
+              width="7rem"
+              height="var(--spacing-9)"
+              radius={3}
+              index={1}
+            />
+            <Skeleton
+              width="var(--spacing-9)"
+              height="var(--spacing-9)"
+              radius={3}
+              index={1}
+            />
+          </HStack>
+        </HStack>
       </Card>
 
       <HStack gap={1.5} vAlign="center" wrap="wrap" xstyle={styles.tabs}>
@@ -320,13 +289,6 @@ function TableSkeleton() {
 const styles = stylex.create({
   card: {
     boxShadow: 'var(--meta-shadow-card)',
-  },
-  // Same hairline as `MetaShipmentHeaderCard`'s title row.
-  titleRow: {
-    borderBottomColor: 'var(--meta-hairline)',
-    borderBottomStyle: 'solid',
-    borderBottomWidth: 'var(--border-width)',
-    paddingBottom: 'var(--spacing-6)',
   },
   // Code / pills / incoterm take what the action buttons leave.
   headerText: {
