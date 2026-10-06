@@ -14,6 +14,7 @@ import {
   scheduleDateLabel,
   scheduleFormErrors,
   scheduleFormValues,
+  scheduleRoute,
   shiftIsoDate,
   shipmentTimeProgress,
   tracksDestinationFreeTime,
@@ -228,6 +229,36 @@ test('revisions: original values and the changes of each', () => {
   assert.equal(original.etd, '2026-10-10');
   assert.equal(original.siCutoff, '2026-10-09T17:00:00');
   assert.equal(original.eta, '2026-10-27');
+});
+
+test('route summary prefers actual dates and keeps the moved estimate', () => {
+  const schedule = {
+    version: 3,
+    current: values({ etd: '2026-10-12', eta: '2026-10-20' }),
+    actualDeparture: '2026-10-13T19:15:00',
+    actualArrival: null,
+    originFreeTime: null,
+    destinationFreeTime: null,
+    summary: {
+      originalEtd: '2026-10-10', originalEta: '2026-10-20', etdChangeCount: 1,
+      etaChangeCount: 0, departureDelayDays: 3, arrivalDelayDays: 0,
+    },
+    revisions: [{
+      id: 'r1', noticeOn: '2026-10-01', reason: /** @type {const} */ ('CarrierDelay'), note: null,
+      recordedAt: '2026-10-01T02:00:00Z',
+      previous: values({ etd: '2026-10-10', eta: '2026-10-20' }),
+      next: values({ etd: '2026-10-12', eta: '2026-10-20' }),
+    }],
+  };
+  assert.deepEqual(scheduleRoute(schedule), {
+    departure: { date: '2026-10-13', isActual: true, planned: '2026-10-12', original: '2026-10-10' },
+    arrival: { date: '2026-10-20', isActual: false, planned: null, original: null },
+    transitDays: 7,
+  });
+  assert.equal(
+    scheduleRoute({ ...schedule, actualDeparture: null, current: values({ etd: '2026-10-12' }) }).transitDays,
+    null,
+  );
 });
 
 test('time-based journey progress', () => {

@@ -57,10 +57,20 @@ function voyageLabel(event) {
 const sortKey = (event) =>
   `${event.eventOn}T${event.eventAt?.slice(11, 16) ?? '99:99'}`;
 
+const WEEKDAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+/** @param {string | null | undefined} iso date → "T2" … "CN", '' when missing */
+export function weekdayLabel(iso) {
+  if (!iso) return '';
+  const day = new Date(`${iso.slice(0, 10)}T00:00:00Z`).getUTCDay();
+  return Number.isNaN(day) ? '' : WEEKDAYS[day];
+}
+
 /**
  * @typedef {{
  *   id: string,
  *   code: import('../types/index.js').PhysicalJourneyEvent['code'],
+ *   leg: number,
  *   location: string | null,
  *   voyage: string,
  *   actual: import('../types/index.js').PhysicalJourneyEvent | null,
@@ -99,6 +109,7 @@ export function buildPhysicalTimeline(events, today) {
     const item = items.get(id) ?? {
       id,
       code: event.code,
+      leg: event.legSequence ?? 0,
       location: event.location,
       voyage: '',
       actual: null,
@@ -168,6 +179,95 @@ export function buildPhysicalTimeline(events, today) {
         label: container,
         items,
         doneCount: items.filter((item) => item.state === 'done').length,
+      };
+    });
+}
+
+/**
+ * @typedef {{
+ *   id: string,
+ *   code: import('../types/index.js').PhysicalJourneyEvent['code'],
+ *   containerDone: number,
+ *   containerTotal: number,
+ *   shown: import('../types/index.js').PhysicalJourneyEvent,
+ *   state: 'done' | 'next' | 'overdue' | 'upcoming',
+ * }} MilestoneStripStep
+ */
+
+/**
+ * The whole shipment at a glance (carrier "Tracking" bar): one step per
+ * event + leg across every container, in date order. A container event
+ * counts its done containers against all containers ("Lấy rỗng 3/4");
+ * 0 total = a vessel / whole-shipment event. Done once nothing is pending
+ * and every container has it; overdue when a pending member is; the first
+ * other pending step is `next`. `shown` = the earliest pending expected
+ * date, else the latest actual one.
+ * @param {ReturnType<typeof buildPhysicalTimeline>} groups
+ * @returns {MilestoneStripStep[]}
+ */
+export function buildMilestoneStrip(groups) {
+  const containerCount = groups.filter(
+    (group) => group.id !== WHOLE_SHIPMENT,
+  ).length;
+  /** @type {Map<string, { code: PhysicalTimelineItem['code'], members: PhysicalTimelineItem[], doneContainers: Set<string>, hasContainers: boolean }>} */
+  const steps = new Map();
+  for (const group of groups) {
+    const isContainer = group.id !== WHOLE_SHIPMENT;
+    for (const item of group.items) {
+      const id = `${item.code}|${item.leg}`;
+      const step = steps.get(id) ?? {
+        code: item.code,
+        members: [],
+        doneContainers: new Set(),
+        hasContainers: false,
+      };
+      step.members.push(item);
+      step.hasContainers ||= isContainer;
+      if (isContainer && item.state === 'done') {
+        step.doneContainers.add(group.id);
+      }
+      steps.set(id, step);
+    }
+  }
+
+  /** @param {PhysicalTimelineItem} item */
+  const eventOf = (item) =>
+    /** @type {import('../types/index.js').PhysicalJourneyEvent} */ (
+      item.actual ?? item.expected
+    );
+  let hasNext = false;
+  return [...steps.entries()]
+    .map(([id, step]) => {
+      const keys = step.members.map((item) => sortKey(eventOf(item))).sort();
+      return { id, step, first: keys[0] };
+    })
+    .sort((a, b) => a.first.localeCompare(b.first))
+    .map(({ id, step }) => {
+      const pending = step.members
+        .filter((item) => item.state !== 'done')
+        .sort((a, b) => sortKey(eventOf(a)).localeCompare(sortKey(eventOf(b))));
+      const actuals = step.members
+        .filter((item) => item.state === 'done')
+        .sort((a, b) => sortKey(eventOf(b)).localeCompare(sortKey(eventOf(a))));
+      const containerTotal = step.hasContainers ? containerCount : 0;
+      const containerDone = step.doneContainers.size;
+      /** @type {MilestoneStripStep['state']} */
+      let state;
+      if (pending.some((item) => item.state === 'overdue')) {
+        state = 'overdue';
+      } else if (pending.length === 0 && containerDone >= containerTotal) {
+        state = 'done';
+      } else {
+        state = hasNext ? 'upcoming' : 'next';
+        hasNext = true;
+      }
+      return {
+        id,
+        code: step.code,
+        containerDone,
+        containerTotal,
+        shown: eventOf(pending[0] ?? actuals[0]),
+        state,
       };
     });
 }

@@ -2,7 +2,9 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  buildMilestoneStrip,
   buildPhysicalTimeline,
+  weekdayLabel,
   WHOLE_SHIPMENT,
 } from './shipment-journey-events.js';
 
@@ -112,6 +114,38 @@ test('an expected date that passed without an actual one is overdue', () => {
       ['next', null],
     ],
   );
+});
+
+test('the milestone strip counts containers per event across every container', () => {
+  const steps = buildMilestoneStrip(
+    buildPhysicalTimeline(
+      [
+        fact({ code: 'EmptyPickup', containerNumber: 'CONT1', eventOn: '2026-09-01', source: 'Container' }),
+        fact({ code: 'EmptyPickup', containerNumber: 'CONT2', eventOn: '2026-09-02', location: 'Depot B' }),
+        fact({ code: 'OriginGateIn', containerNumber: 'CONT1', eventOn: '2026-09-03' }),
+        fact({ code: 'Departure', eventOn: '2026-09-05', eventAt: '2026-09-05T19:15:00' }),
+        fact({ code: 'Arrival', classifier: 'Estimated', eventOn: '2026-09-12', location: 'POD' }),
+        fact({ code: 'EmptyReturn', classifier: 'Planned', containerNumber: 'CONT1', eventOn: '2026-09-20', location: 'POD' }),
+      ],
+      '2026-09-10',
+    ),
+  );
+  assert.deepEqual(
+    steps.map((step) => [step.code, step.containerDone, step.containerTotal, step.state, step.shown.eventOn]),
+    [
+      ['EmptyPickup', 2, 2, 'done', '2026-09-02'],
+      ['OriginGateIn', 1, 2, 'next', '2026-09-03'],
+      ['Departure', 0, 0, 'done', '2026-09-05'],
+      ['Arrival', 0, 0, 'upcoming', '2026-09-12'],
+      ['EmptyReturn', 0, 2, 'upcoming', '2026-09-20'],
+    ],
+  );
+});
+
+test('weekday labels use Vietnamese short names', () => {
+  assert.equal(weekdayLabel('2026-10-04'), 'CN');
+  assert.equal(weekdayLabel('2026-10-05T08:00:00'), 'T2');
+  assert.equal(weekdayLabel(null), '');
 });
 
 test('the voyage label does not repeat a voyage number the vessel name carries', () => {

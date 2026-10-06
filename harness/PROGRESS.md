@@ -16279,3 +16279,12 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - The Meta theme's `scrollbar.css` sets `scrollbar-width: thin` on every element, which put a native scrollbar under overflowing TabList strips (Home news/logistics tabs) even though TabList has its own arrows and edge fades. `.astryx-tab-strip` joins the existing `.astryx-carousel-scroller` exception, so this applies to every TabList in the app.
 - Browser check on a dev server at :3002 (:3000 was down): both Home strips overflow with `scrollbar-width: none` and 0px scrollbar gutter; "›" arrow present. Screenshot: `harness/runs/20261005-home-redesign/tabs-no-scrollbar.jpg`.
 - `./harness/verify.sh` passed: `harness/runs/20261005-142927-370/`.
+
+## 2026-10-06 — Schedule tab as a carrier tracking page, task 1.1 (`shipment-schedule-tab-tracking-layout`)
+
+- User request: fit "Timeline & lịch tàu" to the design, referencing Heung-A e-Service Container → Tracking (schedule row → tracking bar with "Pickup (4/4)" + weekday/time → details).
+- "Lịch tàu" is now a full-width route: POL / POD with ATD/ATA (else ETD/ETA; estimate and first estimate under it when they differ, "API" when carrier-filled), vessel / voyage + dashed sea leg + "n ngày hành trình" in between, cut-offs as two field tiles; stacks under 640px. Fixes the old card showing "—" for ETD/ETA with the ATD/ATA as stray pills.
+- "Timeline vận chuyển" is full width and opens with the new shared `MetaMilestoneStrip`: each event once across containers, "x/y cont", date, weekday (T2…CN) · time, "Tiếp theo" / "Quá hạn"; the per-container timeline follows. `buildMilestoneStrip`, `weekdayLabel`, `scheduleRoute` unit-tested.
+- Browser QA on :3000: 26KCT27/LOT-01 (carrier dates, 8/8 steps), 26KCT29/LOT-02 (empty schedule), 390px iframe (no horizontal page overflow; strip scrolls sideways). Count pills moved under the date after the first screenshot showed dates misaligned between steps with and without a count. Screenshots: `harness/runs/20261006-schedule-tab-tracking/`.
+- Not checked in the browser: a shipment with pending / overdue steps across several containers (covered by unit tests only); dark theme. The Heung-A page could not be screenshotted (renderer timed out); its layout was read from page text.
+- `./harness/verify.sh` passed: `harness/runs/20261006-152940-1183/`.

@@ -45,6 +45,7 @@ export {
   MetaStackedCell,
   MetaTotalsLabel,
 } from './list-parts.jsx';
+export { MetaMilestoneStrip } from './milestone-strip.jsx';
 export {
   MetaMetricsCard,
   MetaOverviewSummaryCard,

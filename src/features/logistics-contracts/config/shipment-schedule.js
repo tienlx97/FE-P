@@ -322,6 +322,47 @@ export function revisionChanges(revision) {
 }
 
 /**
+ * One end of the "Lịch tàu" route: the actual date when known, else the
+ * current estimate; `planned` = the estimate shown beside an actual date,
+ * `original` = the first estimate when it was moved.
+ * @param {string | null} actual
+ * @param {string | null} current
+ * @param {string | null} first
+ */
+function routeEnd(actual, current, first) {
+  return {
+    date: actual?.slice(0, 10) ?? current,
+    isActual: Boolean(actual),
+    planned: actual ? current : null,
+    original: first && first !== current ? first : null,
+  };
+}
+
+/**
+ * "Lịch tàu" route summary (carrier schedule row): departure and arrival
+ * (ATD / ATA over ETD / ETA) and the transit time in whole days.
+ * @param {import('../types/index.js').ShipmentSchedule} schedule
+ */
+export function scheduleRoute(schedule) {
+  const original = originalScheduleValues(schedule);
+  const departure = routeEnd(
+    schedule.actualDeparture,
+    schedule.current.etd,
+    original.etd,
+  );
+  const arrival = routeEnd(
+    schedule.actualArrival,
+    schedule.current.eta,
+    original.eta,
+  );
+  return {
+    departure,
+    arrival,
+    transitDays: daysBetween(departure.date ?? '', arrival.date ?? ''),
+  };
+}
+
+/**
  * Time-based "TIẾN ĐỘ LỘ TRÌNH": where today falls between the first
  * container event (empty pickup, else packing) and the arrival (ATA, else
  * ETA). 100% only when every journey step is done (e.g. CIF empties back);

@@ -14,6 +14,7 @@ import {
   CalendarRange,
   FileText,
   History,
+  Ship,
   Split,
   Timer,
 } from 'lucide-react';
@@ -22,6 +23,7 @@ import {
   MetaCompactTable,
   MetaEventTimeline,
   MetaPill,
+  MetaShipmentField,
   MetaShipmentSection,
 } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
@@ -40,6 +42,7 @@ import {
   originalScheduleValues,
   revisionChanges,
   SCHEDULE_FIELDS,
+  scheduleRoute,
   tracksDestinationFreeTime,
   tracksOriginFreeTime,
 } from '../config/shipment-schedule.js';
@@ -81,14 +84,74 @@ function InfoLine({ label, children }) {
 }
 
 /**
- * Shipment detail "Timeline & lịch tàu" tab. Wide screens: the physical
- * vessel schedule before the physical timeline, side by side only when both
- * columns have room. B/L and transshipment follow as two cards; carrier tracking, per-container
- * free time and the schedule history (as a timeline). Spec
+ * One end of the "Lịch tàu" route: port, then the actual date (ATD / ATA)
+ * when known, else the current estimate, with the estimate and the first
+ * estimate under it when they differ. The arrival end aligns right.
+ * @param {{
+ *   caption: string,
+ *   place: string | null | undefined,
+ *   end: ReturnType<typeof scheduleRoute>['departure'],
+ *   actualLabel: string,
+ *   plannedLabel: string,
+ *   isFromCarrier: boolean,
+ *   isEnd?: boolean,
+ * }} props
+ */
+function RouteEnd({
+  caption,
+  place,
+  end,
+  actualLabel,
+  plannedLabel,
+  isFromCarrier,
+  isEnd = false,
+}) {
+  return (
+    <VStack gap={1} xstyle={[styles.routeEnd, isEnd && styles.routeEndRight]}>
+      <Text size="sm" weight="bold" color="secondary">
+        {caption.toUpperCase()}
+      </Text>
+      <Text weight="semibold" maxLines={2}>
+        {place || '—'}
+      </Text>
+      <HStack gap={1.5} vAlign="center" wrap="wrap">
+        <Text type="code" size="lg" weight="bold" hasTabularNumbers>
+          {end.date ? formatDisplayDate(end.date) : '—'}
+        </Text>
+        <MetaPill
+          label={end.isActual ? actualLabel : plannedLabel}
+          tone={end.isActual ? 'success' : 'neutral'}
+          size="sm"
+          hasDot={end.isActual}
+        />
+        {isFromCarrier ? <CarrierSourceTag /> : null}
+      </HStack>
+      {end.planned ? (
+        <Text size="sm" type="code" color="meta-subtle">
+          {plannedLabel} {formatDisplayDate(end.planned)}
+        </Text>
+      ) : null}
+      {end.original ? (
+        <Text size="sm" type="code" color="meta-subtle">
+          Ban đầu: {formatDisplayDate(end.original)}
+        </Text>
+      ) : null}
+    </VStack>
+  );
+}
+
+/**
+ * Shipment detail "Timeline & lịch tàu" tab, read top-down like a carrier's
+ * tracking page: the route (POL → vessel / transit → POD, then cut-offs),
+ * the physical timeline (milestone strip, then per container), B/L and
+ * transshipment as two cards, carrier tracking, per-container free time
+ * and the schedule history (as a timeline). Spec
  * `docs/shipment-journey-incoterms.md` §4, `docs/carrier-tracking-integration-plan.md`.
  * @param {{
  *   contractId: string,
  *   shipmentId: string,
+ *   placeOfLoading: string | null | undefined,
+ *   placeOfDischarge: string | null | undefined,
  *   incoterm: import('../types/index.js').Incoterm,
  *   schedule: import('../types/index.js').ShipmentSchedule | null,
  *   scheduleError: string | null,
@@ -104,6 +167,8 @@ function InfoLine({ label, children }) {
 export function ShipmentSchedulePanel({
   contractId,
   shipmentId,
+  placeOfLoading,
+  placeOfDischarge,
   incoterm,
   schedule,
   scheduleError,
@@ -140,46 +205,36 @@ export function ShipmentSchedulePanel({
 
   const original = originalScheduleValues(schedule);
   const { summary } = schedule;
-  /** @type {Partial<Record<string, string | null>>} */
-  const actual = {
-    etd: schedule.actualDeparture,
-    eta: schedule.actualArrival,
-  };
-  const scheduleLines = SCHEDULE_FIELDS.map(([field, label]) => {
-    const current = formatScheduleValue(field, schedule.current[field]);
-    const first = formatScheduleValue(field, original[field]);
-    const isChanged = original[field] !== schedule.current[field];
-    const actualValue =
-      field === 'etd' || field === 'eta' ? (actual[field] ?? null) : null;
-    return (
-      <InfoLine key={field} label={label}>
-        <Text type="code" weight="bold">
-          {current}
-        </Text>
-        {isChanged ? (
-          <Text size="sm" type="code" color="meta-subtle">
-            Ban đầu: {first}
-          </Text>
-        ) : null}
-        {actualValue ? (
-          <HStack gap={1.5} vAlign="center" wrap="nowrap">
-            <MetaPill
-              label={`${field === 'etd' ? 'ATD' : 'ATA'} ${formatDisplayDate(actualValue)}`}
-              tone="success"
-              size="sm"
-              hasDot
-            />
-            {isFromCarrier({
-              field: field === 'etd' ? 'ActualDeparture' : 'ActualArrival',
-              value: actualValue,
-            }) ? (
-              <CarrierSourceTag />
-            ) : null}
-          </HStack>
-        ) : null}
-      </InfoLine>
-    );
-  });
+  const route = scheduleRoute(schedule);
+  const vessel = [schedule.current.vesselName, schedule.current.voyageNumber]
+    .filter(Boolean)
+    .join(' / ');
+  const originalVessel = [original.vesselName, original.voyageNumber]
+    .filter(Boolean)
+    .join(' / ');
+  const cutoffs = /** @type {const} */ (['siCutoff', 'cyCutoff']).map(
+    (field) => {
+      const label = SCHEDULE_FIELDS.find(([key]) => key === field)?.[1] ?? '';
+      const isChanged = original[field] !== schedule.current[field];
+      return (
+        <MetaShipmentField
+          key={field}
+          label={label}
+          value={
+            schedule.current[field]
+              ? formatScheduleValue(field, schedule.current[field])
+              : undefined
+          }
+          isCode
+          caption={
+            isChanged
+              ? `Ban đầu: ${formatScheduleValue(field, original[field])}`
+              : undefined
+          }
+        />
+      );
+    },
+  );
 
   const dateFields = containerDateFields(
     incoterm,
@@ -242,45 +297,84 @@ export function ShipmentSchedulePanel({
 
   return (
     <VStack gap={4} hAlign="stretch">
-      <HStack gap={4} vAlign="start" xstyle={styles.split}>
-        <VStack gap={4} hAlign="stretch" xstyle={styles.side}>
-          <MetaShipmentSection
-            icon={CalendarClock}
-            title="Lịch tàu"
-            subtitle="Hiện tại · ban đầu khi đã dời · thực tế"
-            pill={
-              summary.departureDelayDays
-                ? {
-                    label: `ETD trễ ${summary.departureDelayDays} ngày · dời ${summary.etdChangeCount} lần`,
-                    tone: 'warning',
-                  }
-                : { label: 'Đúng lịch', tone: 'success', hasDot: true }
-            }
-            actions={
-              canEdit ? (
-                <Button
-                  label="Cập nhật"
-                  variant="primary"
-                  size="sm"
-                  icon={<Icon icon={CalendarClock} size="sm" />}
-                  onClick={onUpdateSchedule}
-                />
-              ) : null
-            }
-          >
-            <VStack gap={0} hAlign="stretch">
-              {scheduleLines}
+      <MetaShipmentSection
+        icon={CalendarClock}
+        title="Lịch tàu"
+        subtitle="Thực tế khi đã có · dự kiến hiện tại · ban đầu khi đã dời"
+        pill={
+          summary.departureDelayDays
+            ? {
+                label: `ETD trễ ${summary.departureDelayDays} ngày · dời ${summary.etdChangeCount} lần`,
+                tone: 'warning',
+              }
+            : { label: 'Đúng lịch', tone: 'success', hasDot: true }
+        }
+        actions={
+          canEdit ? (
+            <Button
+              label="Cập nhật"
+              variant="primary"
+              size="sm"
+              icon={<Icon icon={CalendarClock} size="sm" />}
+              onClick={onUpdateSchedule}
+            />
+          ) : null
+        }
+      >
+        <VStack gap={4} hAlign="stretch">
+          <HStack gap={4} wrap="nowrap" xstyle={styles.route}>
+            <RouteEnd
+              caption="Cảng xếp · POL"
+              place={placeOfLoading}
+              end={route.departure}
+              actualLabel="ATD"
+              plannedLabel="ETD"
+              isFromCarrier={isFromCarrier({
+                field: 'ActualDeparture',
+                value: schedule.actualDeparture,
+              })}
+            />
+            <VStack gap={1.5} hAlign="center" xstyle={styles.voyage}>
+              <Icon icon={Ship} size="sm" color="accent" />
+              <Text weight="semibold" justify="center" maxLines={2}>
+                {vessel || 'Chưa có tàu'}
+              </Text>
+              {originalVessel && originalVessel !== vessel ? (
+                <Text size="sm" type="code" color="meta-subtle">
+                  Ban đầu: {originalVessel}
+                </Text>
+              ) : null}
+              <HStack as="span" xstyle={styles.voyageLine} />
+              <MetaPill
+                label={
+                  route.transitDays === null
+                    ? 'Chưa đủ ngày đi / đến'
+                    : `${route.transitDays} ngày hành trình`
+                }
+                tone="neutral"
+                size="sm"
+              />
             </VStack>
-          </MetaShipmentSection>
+            <RouteEnd
+              caption="Cảng dỡ · POD"
+              place={placeOfDischarge}
+              end={route.arrival}
+              actualLabel="ATA"
+              plannedLabel="ETA"
+              isFromCarrier={isFromCarrier({
+                field: 'ActualArrival',
+                value: schedule.actualArrival,
+              })}
+              isEnd
+            />
+          </HStack>
+          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
+            {cutoffs}
+          </Grid>
         </VStack>
+      </MetaShipmentSection>
 
-        <VStack gap={4} hAlign="stretch" xstyle={styles.main}>
-          <ShipmentPhysicalTimeline
-            contractId={contractId}
-            shipmentId={shipmentId}
-          />
-        </VStack>
-      </HStack>
+      <ShipmentPhysicalTimeline contractId={contractId} shipmentId={shipmentId} />
 
       <Grid columns={{ minWidth: 320, max: 2 }} gap={4}>
         <MetaShipmentSection
@@ -475,27 +569,46 @@ export function ShipmentSchedulePanel({
 }
 
 const styles = stylex.create({
-  // The page sidebar leaves less room than the viewport implies: split only
-  // when each side can hold dates, badges and action buttons comfortably.
-  split: {
+  // POL | vessel + transit | POD on one row; stacked on phones.
+  route: {
     alignItems: {
-      default: 'stretch',
-      '@media (min-width: 1400px)': 'flex-start',
+      default: 'flex-start',
+      '@media (max-width: 640px)': 'stretch',
     },
     flexDirection: {
-      default: 'column',
-      '@media (min-width: 1400px)': 'row',
+      default: 'row',
+      '@media (max-width: 640px)': 'column',
     },
   },
-  main: {
+  routeEnd: {
+    alignItems: 'flex-start',
     flexBasis: 0,
     flexGrow: 1,
     minWidth: 0,
   },
-  side: {
+  routeEndRight: {
+    alignItems: {
+      default: 'flex-end',
+      '@media (max-width: 640px)': 'flex-start',
+    },
+    textAlign: {
+      default: 'end',
+      '@media (max-width: 640px)': 'start',
+    },
+  },
+  voyage: {
+    alignSelf: 'center',
     flexBasis: 0,
     flexGrow: 1,
     minWidth: 0,
+    paddingBlock: 'var(--spacing-2)',
+  },
+  // The sea leg between the two ports.
+  voyageLine: {
+    borderTopColor: 'var(--color-border-emphasized)',
+    borderTopStyle: 'dashed',
+    borderTopWidth: 'calc(var(--border-width) * 2)',
+    width: '100%',
   },
   infoLine: {
     borderBottomColor: 'var(--color-border)',

@@ -699,6 +699,8 @@ function ShipmentDetailBody({
             <ShipmentSchedulePanel
               contractId={contract.id}
               shipmentId={shipment.id}
+              placeOfLoading={shipment.placeOfLoading}
+              placeOfDischarge={shipment.placeOfDischarge}
               incoterm={contract.incoterm}
               schedule={schedule}
               scheduleError={

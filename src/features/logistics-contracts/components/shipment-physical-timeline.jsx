@@ -2,22 +2,27 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
+import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 import { Container, Route, Ship } from 'lucide-react';
 import { useState } from 'react';
 
 import {
   MetaEventTimeline,
+  MetaMilestoneStrip,
   MetaShipmentSection,
   MetaTabNav,
 } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import {
+  buildMilestoneStrip,
   buildPhysicalTimeline,
   PHYSICAL_EVENT_CLASSIFIERS,
   PHYSICAL_EVENT_LABELS,
   PHYSICAL_EVENT_SOURCES,
+  weekdayLabel,
   WHOLE_SHIPMENT,
 } from '../config/shipment-journey-events.js';
 import { useShipmentJourneyEventsQuery } from '../hooks/use-shipment-journey-query.js';
@@ -62,8 +67,10 @@ function noteFor(item) {
 }
 
 /**
- * "Timeline vận chuyển": the shipment's physical events as a vertical
- * timeline, one per container (switched with tabs; "Toàn lô" holds the
+ * "Timeline vận chuyển": first the whole shipment as a horizontal
+ * milestone strip (each event once, "x/y cont" done, like a carrier's
+ * tracking bar), then the physical events as a vertical timeline, one per
+ * container (switched with tabs; "Toàn lô" holds the
  * vessel facts shared by every container). The planned / estimated and
  * actual dates of one event are merged into one row with the delay.
  * @param {{contractId: string, shipmentId: string}} props
@@ -87,6 +94,7 @@ export function ShipmentPhysicalTimeline({ contractId, shipmentId }) {
 
   const today = new Date().toISOString().slice(0, 10);
   const groups = buildPhysicalTimeline(query.data.events, today);
+  const strip = buildMilestoneStrip(groups);
   const active =
     groups.find((group) => group.id === activeId) ?? groups[0] ?? null;
   const done = groups.reduce((sum, group) => sum + group.doneCount, 0);
@@ -104,6 +112,34 @@ export function ShipmentPhysicalTimeline({ contractId, shipmentId }) {
       }}
     >
       <VStack gap={4} hAlign="stretch">
+        {strip.length > 0 ? (
+          <VStack gap={4} hAlign="stretch" xstyle={styles.overview}>
+            <MetaMilestoneStrip
+              label="Tiến trình lô hàng"
+              steps={strip.map((step) => ({
+                id: step.id,
+                title: PHYSICAL_EVENT_LABELS[step.code] ?? step.code,
+                state: step.state,
+                date: formatDisplayDate(step.shown.eventOn),
+                detail: [weekdayLabel(step.shown.eventOn), timeOf(step.shown)]
+                  .filter(Boolean)
+                  .join(' · '),
+                count:
+                  step.containerTotal > 0
+                    ? {
+                        label: `${step.containerDone}/${step.containerTotal} cont`,
+                        isComplete: step.containerDone === step.containerTotal,
+                      }
+                    : undefined,
+              }))}
+            />
+          </VStack>
+        ) : null}
+        {strip.length > 0 ? (
+          <Text size="sm" weight="bold" color="secondary">
+            CHI TIẾT THEO CONTAINER
+          </Text>
+        ) : null}
         {groups.length > 1 ? (
           <MetaTabNav
             isSticky={false}
@@ -154,3 +190,14 @@ export function ShipmentPhysicalTimeline({ contractId, shipmentId }) {
     </MetaShipmentSection>
   );
 }
+
+const styles = stylex.create({
+  // The strip reads as the section's summary: a hairline under it before
+  // the per-container detail.
+  overview: {
+    borderBottomColor: 'var(--color-border)',
+    borderBottomStyle: 'solid',
+    borderBottomWidth: 'var(--border-width)',
+    paddingBottom: 'var(--spacing-4)',
+  },
+});
