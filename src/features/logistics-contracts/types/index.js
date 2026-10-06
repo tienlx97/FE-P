@@ -1349,6 +1349,8 @@ export {};
  * @property {string | null} lastError
  * @property {string | null} lastCarrierEtd
  * @property {string | null} lastCarrierEta
+ * @property {string | null} [lastCarrierSiCutoff] - local date-time, tracking first then the sailing
+ * @property {string | null} [lastCarrierCyCutoff]
  */
 
 /**

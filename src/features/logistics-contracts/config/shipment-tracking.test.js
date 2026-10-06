@@ -5,6 +5,7 @@ import {
   carrierSourcedDates,
   discrepancyTargetLabel,
   formatDateTime,
+  isCarrierCutoff,
   trackingEventLabel,
   trackingStatus,
   trackingSubtitle,
@@ -122,4 +123,11 @@ test('a date is carrier-sourced only while it still equals the date an event fil
   assert.equal(isFromCarrier({ field: 'TransshipmentAta', value: '2026-10-08', port: 'Port Klang' }), false);
   assert.equal(isFromCarrier({ field: 'ActualDeparture', value: '2026-10-05' }), false, 'stored but filled nothing');
   assert.equal(isFromCarrier({ field: 'ActualDeparture', value: null }), false);
+});
+
+test('a cut-off is the carrier one while it holds the same minute', () => {
+  assert.equal(isCarrierCutoff('2026-05-08T09:00:00', '2026-05-08T09:00'), true);
+  assert.equal(isCarrierCutoff('2026-05-08T09:00:00', '2026-05-08T10:00:00'), false);
+  assert.equal(isCarrierCutoff(null, '2026-05-08T09:00:00'), false);
+  assert.equal(isCarrierCutoff('2026-05-08T09:00:00', null), false);
 });

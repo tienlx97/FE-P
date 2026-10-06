@@ -103,6 +103,17 @@ export function carrierSourcedDates(events) {
     });
 }
 
+/**
+ * Whether a cut-off on the schedule is the carrier's (tracking first, else
+ * its vessel schedule): the same minute as the last value it reported. A
+ * cut-off moved by hand afterwards reads as hand-entered again.
+ * @param {string | null | undefined} carrierValue
+ * @param {string | null | undefined} value
+ */
+export function isCarrierCutoff(carrierValue, value) {
+  return Boolean(carrierValue && value && carrierValue.slice(0, 16) === value.slice(0, 16));
+}
+
 /** Container date key (VGM record) → tracked field. */
 export const CONTAINER_DATE_TRACKED_FIELD = /** @type {const} */ ({
   emptyPickedUpOn: 'EmptyPickedUpOn',

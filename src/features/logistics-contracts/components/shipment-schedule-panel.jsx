@@ -49,6 +49,7 @@ import {
 import {
   carrierSourcedDates,
   CONTAINER_DATE_TRACKED_FIELD,
+  isCarrierCutoff,
 } from '../config/shipment-tracking.js';
 import { useShipmentTrackingQuery } from '../hooks/use-shipment-tracking-query.js';
 import { ShipmentCarrierTrackingSection } from './shipment-carrier-tracking-section.jsx';
@@ -212,29 +213,39 @@ export function ShipmentSchedulePanel({
   const originalVessel = [original.vesselName, original.voyageNumber]
     .filter(Boolean)
     .join(' / ');
-  const cutoffs = /** @type {const} */ (['siCutoff', 'cyCutoff']).map(
-    (field) => {
-      const label = SCHEDULE_FIELDS.find(([key]) => key === field)?.[1] ?? '';
-      const isChanged = original[field] !== schedule.current[field];
-      return (
-        <MetaShipmentField
-          key={field}
-          label={label}
-          value={
-            schedule.current[field]
-              ? formatScheduleValue(field, schedule.current[field])
-              : undefined
-          }
-          isCode
-          caption={
-            isChanged
+  const sync = trackingQuery.data?.success
+    ? trackingQuery.data.tracking.sync
+    : null;
+  // API first (tracking, else the carrier's vessel schedule); a carrier
+  // without one leaves the cut-off to hand entry.
+  const cutoffs = /** @type {const} */ ([
+    ['siCutoff', sync?.lastCarrierSiCutoff],
+    ['cyCutoff', sync?.lastCarrierCyCutoff],
+  ]).map(([field, carrierValue]) => {
+    const label = SCHEDULE_FIELDS.find(([key]) => key === field)?.[1] ?? '';
+    const value = schedule.current[field];
+    const isChanged = original[field] !== value;
+    return (
+      <MetaShipmentField
+        key={field}
+        label={label}
+        value={value ? formatScheduleValue(field, value) : undefined}
+        isCode
+        trailing={
+          isCarrierCutoff(carrierValue, value)
+            ? { label: 'API', tone: 'accent' }
+            : undefined
+        }
+        caption={
+          !value
+            ? 'Hãng chưa báo qua API — nhập ở "Cập nhật"'
+            : isChanged
               ? `Ban đầu: ${formatScheduleValue(field, original[field])}`
               : undefined
-          }
-        />
-      );
-    },
-  );
+        }
+      />
+    );
+  });
 
   const dateFields = containerDateFields(
     incoterm,

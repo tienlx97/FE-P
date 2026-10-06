@@ -16288,3 +16288,11 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Browser QA on :3000: 26KCT27/LOT-01 (carrier dates, 8/8 steps), 26KCT29/LOT-02 (empty schedule), 390px iframe (no horizontal page overflow; strip scrolls sideways). Count pills moved under the date after the first screenshot showed dates misaligned between steps with and without a count. Screenshots: `harness/runs/20261006-schedule-tab-tracking/`.
 - Not checked in the browser: a shipment with pending / overdue steps across several containers (covered by unit tests only); dark theme. The Heung-A page could not be screenshotted (renderer timed out); its layout was read from page text.
 - `./harness/verify.sh` passed: `harness/runs/20261006-152940-1183/`.
+
+## 2026-10-06 — Cut-off source on the schedule tab, task 1.2 (`shipment-schedule-tab-tracking-layout`)
+
+- User choice: tracking API data first, hand entry for carriers without it. Uses BE-P `tracking-cutoffs-first` (`844ae2c`: Heung-A tracking `DOCUDATE` / `CNTRDATE` → SI / CY cut-off, blank cut-offs filled even after ATD).
+- Cut-off tiles show an "API" tag while the value equals `sync.lastCarrierSiCutoff` / `lastCarrierCyCutoff` (same minute, `isCarrierCutoff`, unit-tested); blank → "Hãng chưa báo qua API — nhập ở "Cập nhật"". Types gained the two sync fields.
+- Live check after rebuilding the BE dev API (:8081): 25KCT41/LOT-01 (Heung-A, HASLS21260300819, departed, cut-offs blank) → "Đồng bộ ngay" → SI 13/03/2026 15:00 and CY 14/03/2026 12:00 with "API"; DB matches the raw `DOCUDATE` / `CNTRDATE`; no schedule revision row; vessel schedule not called (ATD). KMTC 26KCT27 still shows the hand-entry hint (its tracking has no closings). Screenshot: `harness/runs/20261006-schedule-tab-tracking/heunga-cutoffs-from-api.jpg`.
+- Discovered: after this sync the route still says "Chưa có tàu" — tracking events carry "POS HOCHIMINH / 1061S" but no adapter fills the shipment's vessel / voyage; ETD / ETA stay blank once ATD / ATA exist (by design).
+- `./harness/verify.sh` passed: `harness/runs/20261006-163650-1799/`.
