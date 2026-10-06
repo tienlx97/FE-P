@@ -70,35 +70,35 @@ export const BULK_CONTAINER_COLUMNS = [
     key: 'maxGross',
     header: 'Max gross (kg)',
     aliases: ['MaxGross'],
-    hint: 'VGM · nhập đủ 5 khối lượng hoặc để trống cả 5',
+    hint: 'Container · > 0 · tare / payload / max gross nhập riêng được; khai VGM (net + bao bì) cần đủ cả 3',
     width: 15,
   },
   {
     key: 'tare',
     header: 'Tare (kg)',
     aliases: ['Tare'],
-    hint: 'VGM · > 0',
+    hint: 'Container · > 0',
     width: 12,
   },
   {
     key: 'payload',
     header: 'Payload (kg)',
     aliases: ['Payload'],
-    hint: 'VGM · > 0',
+    hint: 'Container · > 0',
     width: 14,
   },
   {
     key: 'netWeight',
     header: 'Net weight (kg)',
     aliases: ['NetWeight'],
-    hint: 'VGM · > 0',
+    hint: 'Khai VGM · > 0 · cùng khối lượng bao bì',
     width: 15,
   },
   {
     key: 'packagingWeight',
     header: 'Khối lượng bao bì (kg)',
     aliases: ['PackagingWeight'],
-    hint: 'VGM · ≥ 0',
+    hint: 'Khai VGM · ≥ 0 · cùng net weight',
     width: 20,
   },
   {
@@ -110,7 +110,7 @@ export const BULK_CONTAINER_COLUMNS = [
   },
 ];
 
-/** The five VGM weights — all or none. */
+/** The five weights: the container's three, then the declaration's two. */
 export const VGM_WEIGHT_KEYS = /** @type {const} */ ([
   'maxGross',
   'tare',
@@ -312,13 +312,17 @@ function isIsoDate(value) {
 const isTime = (value) => /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 
 /**
- * VGM status of a row for the drawer's table.
+ * VGM status of a row for the drawer's table: not declared until net weight
+ * or packaging is entered (container weights alone are fine), then declared
+ * once all five are in.
  * @param {import('../types/index.js').BulkContainerRow} row
  * @returns {{ state: 'declared', vgm: number } | { state: 'partial', missing: number } | { state: 'empty' }}
  */
 export function bulkRowVgmState(row) {
   const entered = VGM_WEIGHT_KEYS.filter((key) => row[key] !== undefined);
-  if (entered.length === 0) return { state: 'empty' };
+  if (row.netWeight === undefined && row.packagingWeight === undefined) {
+    return { state: 'empty' };
+  }
   if (entered.length < VGM_WEIGHT_KEYS.length) {
     return {
       state: 'partial',

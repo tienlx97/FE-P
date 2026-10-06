@@ -100,7 +100,7 @@ export function ShipmentVgmDrawer({
         isTitleUppercase={false}
         index={1}
         title="Container"
-        meta="Bắt buộc: số và loại cont"
+        meta="Bắt buộc: số và loại cont · tự điền từ BIC BoxTech khi có"
       >
         <ShipmentVgmContainerFields {...fieldProps} />
       </MetaFormSection>
@@ -115,6 +115,7 @@ export function ShipmentVgmDrawer({
         <ShipmentVgmDeclarationFields
           {...fieldProps}
           customers={form.customers}
+          hasContainerWeights={false}
         />
       </MetaFormSection>
 

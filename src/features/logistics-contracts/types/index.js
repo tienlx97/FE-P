@@ -1231,6 +1231,22 @@ export {};
  */
 
 /**
+ * A container's technical data from BIC BoxTech (`GET
+ * /api/v1/containers/{number}/specs`).
+ * @typedef {Object} ContainerSpecs
+ * @property {string} containerNumber - normalized
+ * @property {'Found' | 'NotFound' | 'Unavailable'} status
+ * @property {string | null} message - why, when not Found
+ * @property {string} source - "BIC BoxTech"
+ * @property {string | null} sizeType - ISO size-type, e.g. "45G1"
+ * @property {ShipmentContainerType | null} containerType
+ * @property {number | null} tareKg
+ * @property {number | null} maxPayloadKg
+ * @property {number | null} maxGrossKg
+ * @property {string | null} alert - owner alert (sold / scrapped / lost / stolen)
+ */
+
+/**
  * @typedef {Object} ShipmentVgmFormValues
  * @property {string} containerNumber
  * @property {string} sealNumber

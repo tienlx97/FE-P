@@ -104,7 +104,12 @@ test('normalizers read Excel serials and Vietnamese / English number text', () =
 test('validation reports each bad cell of each row before save', () => {
   const rows = parseBulkContainerRows(
     [
-      { ContainerNumber: 'TCLU1234567', ContainerType: 'Size20', Tare: 2200 },
+      {
+        ContainerNumber: 'TCLU1234567',
+        ContainerType: 'Size20',
+        Tare: 2200,
+        NetWeight: 18000,
+      },
       {
         ContainerNumber: 'tclu1234567',
         ContainerType: 'bad',
@@ -120,7 +125,22 @@ test('validation reports each bad cell of each row before save', () => {
   /** @param {number} line @param {string} field */
   const has = (line, field) =>
     issues.some((issue) => issue.line === line && issue.field === field);
-  assert.ok(has(1, 'payload'), 'partial VGM weights');
+  assert.ok(has(1, 'payload'), 'a declaration needs the container weights');
+  assert.ok(has(1, 'packagingWeight'), 'net weight needs packaging');
+  assert.deepEqual(
+    validateBulkContainerRows(
+      parseBulkContainerRows([
+        {
+          ContainerNumber: 'SEGU6154506',
+          ContainerType: 'Size40HC',
+          Tare: 3830,
+        },
+      ]),
+      [],
+    ),
+    [],
+    'container weights alone are fine',
+  );
   assert.ok(has(2, 'containerNumber'), 'duplicate');
   assert.ok(has(2, 'containerType'));
   assert.ok(has(2, 'packingDate'));

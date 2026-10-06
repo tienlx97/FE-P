@@ -16304,3 +16304,13 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Browser QA (:3000, BE :8081): tabs start ≈265px from the top instead of ≈520px; 25KCT41 (Heung-A CIF) strip 7/9 with API times; "Xác nhận mốc" on Shipped on Board opens the confirm drawer (closed without saving); 26KCT27 overview shows the KPI cards on the first screen; 390px iframe without horizontal overflow. Screenshots: `harness/runs/20261006-schedule-tab-tracking/{journey-strip-in-timeline-tab,overview-without-header-journey}.jpg`.
 - Known: the progress line appears once the journey loads (small shift under "Tình trạng lô hàng"). Not checked: dark theme; EXW / FOB / DDP lots in the browser.
 - `./harness/verify.sh` passed: `harness/runs/20261006-165851-1950/`.
+
+## 2026-10-06 — Container drawer fills from BIC BoxTech, task 1.1 (`container-specs-autofill`)
+
+- User request: container number → type / tare / payload / max gross from a free API. Uses BE-P `container-specs-boxtech` (`a8bdfda`, `GET /api/v1/containers/{number}/specs`).
+- Container drawer: max gross / tare / payload moved to the "Container" group. Leaving a valid ISO 6346 number fills the blank fields (`specsFill`); the status line shows "BIC BoxTech" + summary, "Điền lại từ BoxTech" when the drawer differs, the not-found / unavailable message, an owner alert, or a check-digit warning (still saveable). A new number replaces or clears what the previous lookup filled, never hand-typed values. Session-long query cache.
+- `shipmentVgmSchema`, bulk table state and Excel hints follow the new weights rule (container weights alone OK; net + packaging together, with the three).
+- Browser QA on the dev stack (BE rebuilt with BoxTech credentials): SEGU6154506 → 40'HC, 32.500 / 3.830 / 28.670; TGBU5261698 → "chưa có dữ liệu — nhập tay" and the previous fill cleared; FCIU9713770 → filled again; TGBU5261690 → check-digit warning; Tare typed 3.700 → "Điền lại" restored 3.830. Drawer discarded each time, nothing saved. Screenshots: `harness/runs/20261006-container-specs/`.
+- Bug caught in the browser: switching numbers kept the previous container's weights; fixed with the `previous` fill rule (unit-tested). Gate first failed on a transient `EPERM` writing `theme.built.css` (dev server holding the file), passed on re-run.
+- Not checked: saving a container through the drawer in the browser (covered by schema and BE HTTP tests); edit drawer of an existing container; bulk / Excel auto-fill (out of scope).
+- `./harness/verify.sh` passed: `harness/runs/20261006-180232-694/`.
