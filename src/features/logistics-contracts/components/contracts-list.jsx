@@ -15,7 +15,7 @@ import { colorVars, spacingVars } from '@astryxdesign/core/theme/tokens.stylex';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Banknote, Eye, List, Pencil, Plus, RotateCcw } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import {
@@ -388,15 +388,30 @@ const commercialYear = new Date().getFullYear();
  * project 6957224641630765183): framed workspace card, pill status tabs
  * with counts, status pill with dot, bold value columns, blue paid / red
  * unpaid amounts, icon-only row actions. The theme itself comes from the
- * `MetaThemeProvider` the page wraps around this component. Opens on the
- * "Cơ bản" view preset, also after a reload (user request, 2026-09-24).
+ * `MetaThemeProvider` the page wraps around this component. The view
+ * preset is kept in `?tab=basic|financial` like the contract detail tabs
+ * (`shipments-list-port-and-tab-url`); without it the list opens on
+ * `defaultViewPresetKey` ("Cơ bản").
  * @param {{ initialViewPresetKey?: 'basic' | 'financial', isFramed?: boolean }} [props]
  */
 export function ContractsList({
-  initialViewPresetKey = 'basic',
+  initialViewPresetKey: defaultViewPresetKey = 'basic',
   isFramed = true,
 } = {}) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const requestedView = searchParams.get('tab');
+  const initialViewPresetKey =
+    requestedView === 'basic' || requestedView === 'financial'
+      ? requestedView
+      : defaultViewPresetKey;
+  /** @param {string} key */
+  function handleViewPresetChange(key) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', key);
+    router.replace(`${pathname}?${params}`, { scroll: false });
+  }
   // Regenerated on every open so a previous create draft never bleeds
   // into the next one.
   const [createSessionKey, setCreateSessionKey] = useState(
@@ -1395,6 +1410,7 @@ export function ContractsList({
               : DEFAULT_COLUMN_KEYS
           }
           initialViewPresetKey={initialViewPresetKey}
+          onViewPresetChange={handleViewPresetChange}
           viewPresets={
             isFramed
               ? VIEW_PRESETS.map((preset) => ({

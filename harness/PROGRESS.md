@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-06 — Contracts list view in URL (task 1.2)
+
+- `shipments-list-port-and-tab-url` 1.2, per user: contracts list view preset synced with `?tab=basic|financial` (same pattern as the shipments list; the `initialViewPresetKey` prop is now the fallback without `?tab=`).
+- Browser :3000: `?tab=financial` opens Giá trị & Dòng tiền; clicking Cơ bản → `?tab=basic` with basic columns.
+- Gate passed: `harness/runs/20261006-105251-1315/`.
+
 ## 2026-10-06 — Shipments list: port without "Cảng", view in URL (task 1.1)
 
 - `shipments-list-port-and-tab-url`, per user: "Cảng đến" cells drop a leading "Cảng" (`placeWithoutPortWord` in place-options.js, new test); view preset synced with `?tab=basic|value|supplier` (initial key from URL, `router.replace` on change, other params kept), like contract detail.
