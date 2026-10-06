@@ -96,7 +96,7 @@ const styles = stylex.create({
   docsLayout: {
     gridTemplateColumns: {
       default: 'minmax(0, 1fr)',
-      '@media (min-width: 1024px)': '20rem minmax(0, 1fr)',
+      '@media (min-width: 1024px)': '15rem minmax(0, 1fr)',
     },
   },
   desktopSideNav: {

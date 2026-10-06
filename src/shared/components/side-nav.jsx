@@ -31,7 +31,7 @@ const styles = stylex.create({
       default: 0,
       '@media (min-width: 1024px)': '20px',
     },
-    width: '20rem',
+    width: '15rem',
   },
   mobileNav: {
     minHeight: '100%',

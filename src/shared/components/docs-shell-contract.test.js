@@ -52,7 +52,7 @@ test('uses the react.dev shell geometry without Astryx shell UI', () => {
   assert.match(shellSource, /minHeight: 'calc\(100vh - 64px\)'/);
   assert.match(
     shellSource,
-    /'@media \(min-width: 1024px\)': '20rem minmax\(0, 1fr\)'/,
+    /'@media \(min-width: 1024px\)': '15rem minmax\(0, 1fr\)'/,
   );
   assert.match(shellSource, /insetBlockStart: '64px'/);
   assert.match(headerSource, /height: '64px'/);
