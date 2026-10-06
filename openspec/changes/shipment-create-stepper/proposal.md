@@ -1,6 +1,6 @@
 # Proposal: Create shipment as a stepper
 
-**Status:** in progress
+**Status:** done
 **Created:** 2026-10-06
 
 ## Why

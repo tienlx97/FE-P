@@ -22,13 +22,17 @@ import {
 } from '@astryxdesign/core/SegmentedControl';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
+import { Step, Stepper } from '@astryxdesign/core/Stepper';
 import { Text } from '@astryxdesign/core/Text';
 import { TimeInput } from '@astryxdesign/core/TimeInput';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Drawer } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
 import {
+  ArrowLeft,
   ArrowRight,
+  CircleAlert,
+  CircleCheck,
   Plus,
   Save,
   ScanLine,
@@ -41,6 +45,7 @@ import { useId, useRef, useState } from 'react';
 import { CommonDialog } from '@/shared/components/common-dialog.jsx';
 import {
   MetaDrawerHeader,
+  MetaFormSection,
   MetaPill,
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
@@ -59,11 +64,16 @@ import {
   MAX_TRANSSHIPMENT_LEGS,
 } from '../config/shipment-documents.js';
 import {
+  firstStepWithError,
   isSectionOpenByDefault,
   sectionCompleteness,
   sectionHasError,
   sectionsForStage,
+  SHIPMENT_CREATE_STEPS,
   SHIPMENT_FORM_SECTIONS,
+  stepFields,
+  stepOfSection,
+  stepState,
 } from '../config/shipment-form-sections.js';
 import {
   metaToneForCustomsChannel,
@@ -122,6 +132,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * field (detached) and the body scrolls to the first one. Closing with
  * changes asks first. "Loại hình" is only editable when creating.
  *
+ * Creating is a stepper instead (`shipment-create-stepper`): one step of
+ * `SHIPMENT_CREATE_STEPS` at a time, any step reachable; "Tiếp" checks
+ * only that step, "Tạo Shipment" (every step) checks everything and lands
+ * on the first step with an error. The last step reviews every group.
+ *
  * `stage` ("Chuyển sang …" on the shipment page) presets "Tình trạng" to
  * that status and shows only the groups of that stage (`sectionsForStage`)
  * until "Hiện tất cả mục" — or a validation error elsewhere — reveals the
@@ -144,6 +159,10 @@ export function ShipmentFormDrawer({
 }) {
   const isCreating = shipment === null;
   const isStaging = stage !== null && shipment !== null;
+  // Creating walks through `SHIPMENT_CREATE_STEPS` (`shipment-create-stepper`).
+  const [stepIndex, setStepIndex] = useState(0);
+  const step = isCreating ? SHIPMENT_CREATE_STEPS[stepIndex] : null;
+  const isLastStep = stepIndex === SHIPMENT_CREATE_STEPS.length - 1;
   const title = isCreating
     ? 'Thêm Shipment'
     : isStaging
@@ -196,29 +215,37 @@ export function ShipmentFormDrawer({
   const sectionStates = SHIPMENT_FORM_SECTIONS.map((section) => ({
     section,
     completeness: sectionCompleteness(section, values, fieldStatuses),
-  })).filter(
-    ({ section }) =>
-      isShowingAll ||
-      stageSections.includes(section.id) ||
-      sectionHasError(section, fieldStatuses),
+  }));
+  const visibleSectionStates = sectionStates.filter(({ section }) =>
+    step
+      ? step.sections.includes(section.id)
+      : isShowingAll ||
+        stageSections.includes(section.id) ||
+        sectionHasError(section, fieldStatuses),
   );
   /** @param {ShipmentFormSectionId} id @param {boolean} isOpen */
   const setSectionOpen = (id, isOpen) =>
     setOpenChoices((choices) => ({ ...choices, [id]: isOpen }));
   /** @param {ShipmentFormSectionId} id */
   const sectionProps = (id) => {
-    const index = sectionStates.findIndex(({ section }) => section.id === id);
-    const { section, completeness } = sectionStates[index] ?? {
+    const index = visibleSectionStates.findIndex(
+      ({ section }) => section.id === id,
+    );
+    const { section, completeness } = visibleSectionStates[index] ?? {
       section: SHIPMENT_FORM_SECTIONS.find((item) => item.id === id),
       completeness: { state: 'optional', missing: 0 },
     };
     return {
       id: `${formId}-${id}`,
       section: /** @type {ShipmentFormSection} */ (section),
-      index: index + 1,
+      // Numbers would restart on every step; the stepper numbers instead.
+      index: step ? undefined : index + 1,
       isHidden: index === -1,
+      // A step shows its groups in full.
+      isCollapsible: !step,
       // A stage's own groups start open; it is what the user came to fill.
       isOpen:
+        Boolean(step) ||
         sectionHasError(section, fieldStatuses) ||
         (openChoices[id] ??
           (stageSections.includes(id) ||
@@ -255,15 +282,45 @@ export function ShipmentFormDrawer({
     else onClose();
   }
 
-  /** @param {import('react').FormEvent<HTMLFormElement>} event */
-  async function handleSubmit(event) {
-    await form.handleSubmit(event);
-    // Bring the first invalid field into view (long form).
+  // Bring the first invalid field into view (long form).
+  function scrollToFirstError() {
     requestAnimationFrame(() => {
       formRef.current
         ?.querySelector('[aria-invalid="true"]')
         ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
+  }
+
+  /** @param {number} index */
+  function goToStep(index) {
+    setStepIndex(index);
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ block: 'start' });
+    });
+  }
+
+  // "Tiếp": only this step's fields must be valid to move on.
+  function goToNextStep() {
+    if (!step) return;
+    const errors = form.validate(stepFields(step));
+    if (stepState(step, values, errors) === 'error') scrollToFirstError();
+    else goToStep(stepIndex + 1);
+  }
+
+  /** @param {import('react').FormEvent<HTMLFormElement>} event */
+  async function handleSubmit(event) {
+    if (step) {
+      // Saving from any step: land on the first step holding an error.
+      const errorStep = firstStepWithError(form.validate());
+      if (errorStep !== -1) {
+        event.preventDefault();
+        setStepIndex(errorStep);
+        scrollToFirstError();
+        return;
+      }
+    }
+    await form.handleSubmit(event);
+    scrollToFirstError();
   }
 
   /**
@@ -315,51 +372,114 @@ export function ShipmentFormDrawer({
           xstyle={styles.layout}
           header={
             <LayoutHeader padding={4}>
-              <MetaDrawerHeader
-                icon={Ship}
-                title={title}
-                meta={
-                  shipment ? (
-                    <HStack gap={2} vAlign="center" wrap="wrap">
-                      <Text size="sm" weight="bold" color="accent" type="code">
-                        {shipment.shipmentCode}
-                      </Text>
-                      <Text size="sm" color="secondary" aria-hidden>
-                        •
-                      </Text>
-                      <MetaPill
-                        label={labelForShipmentType(shipment.type)}
-                        tone="accent"
-                      />
-                      <MetaPill
-                        label={labelForShipmentStatus(shipment.status)}
-                        tone={metaToneForShipmentStatus(shipment.status)}
-                        hasBorder
-                      />
-                    </HStack>
-                  ) : (
-                    <HStack gap={2} vAlign="center" wrap="wrap">
-                      <Text size="sm" color="secondary">
-                        Hợp đồng
-                      </Text>
-                      <Text size="sm" weight="bold" color="accent" type="code">
-                        {contract.contractNumber}
-                      </Text>
-                      <Text size="sm" color="secondary" aria-hidden>
-                        •
-                      </Text>
-                      <MetaPill
-                        label={`${contract.incoterm} ${contract.incotermYear}`}
-                        tone="neutral"
-                      />
-                      <Text size="sm" color="secondary" maxLines={1}>
-                        {contract.projectName}
-                      </Text>
-                    </HStack>
-                  )
-                }
-                onClose={requestClose}
-              />
+              <VStack gap={4} hAlign="stretch">
+                <MetaDrawerHeader
+                  icon={Ship}
+                  title={title}
+                  meta={
+                    shipment ? (
+                      <HStack gap={2} vAlign="center" wrap="wrap">
+                        <Text
+                          size="sm"
+                          weight="bold"
+                          color="accent"
+                          type="code"
+                        >
+                          {shipment.shipmentCode}
+                        </Text>
+                        <Text size="sm" color="secondary" aria-hidden>
+                          •
+                        </Text>
+                        <MetaPill
+                          label={labelForShipmentType(shipment.type)}
+                          tone="accent"
+                        />
+                        <MetaPill
+                          label={labelForShipmentStatus(shipment.status)}
+                          tone={metaToneForShipmentStatus(shipment.status)}
+                          hasBorder
+                        />
+                      </HStack>
+                    ) : (
+                      <HStack gap={2} vAlign="center" wrap="wrap">
+                        <Text size="sm" color="secondary">
+                          Hợp đồng
+                        </Text>
+                        <Text
+                          size="sm"
+                          weight="bold"
+                          color="accent"
+                          type="code"
+                        >
+                          {contract.contractNumber}
+                        </Text>
+                        <Text size="sm" color="secondary" aria-hidden>
+                          •
+                        </Text>
+                        <MetaPill
+                          label={`${contract.incoterm} ${contract.incotermYear}`}
+                          tone="neutral"
+                        />
+                        <Text size="sm" color="secondary" maxLines={1}>
+                          {contract.projectName}
+                        </Text>
+                      </HStack>
+                    )
+                  }
+                  onClose={requestClose}
+                />
+                {step ? (
+                  <Stepper
+                    label="Các bước thêm Shipment"
+                    density="compact"
+                    activeStep={stepIndex}
+                    onStepClick={goToStep}
+                    horizontalOptions={{
+                      minimumStepWidth: 112,
+                      collapsedVariant: 'withLabel',
+                    }}
+                    xstyle={styles.stepper}
+                  >
+                    {SHIPMENT_CREATE_STEPS.map((item, index) => {
+                      const state = stepState(item, values, fieldStatuses);
+                      return (
+                        <Step
+                          key={item.label}
+                          step={index}
+                          label={item.label}
+                          description={item.stageLabel}
+                          status={
+                            state === 'error'
+                              ? 'error'
+                              : state === 'complete'
+                                ? 'success'
+                                : undefined
+                          }
+                          // A check only when the step is really complete,
+                          // not merely passed.
+                          indicator={
+                            state === 'error' ? (
+                              <Icon
+                                icon={CircleAlert}
+                                size="sm"
+                                color="inherit"
+                              />
+                            ) : state === 'complete' ? (
+                              <Icon
+                                icon={CircleCheck}
+                                size="sm"
+                                color="inherit"
+                              />
+                            ) : (
+                              'number'
+                            )
+                          }
+                        />
+                      );
+                    })}
+                  </Stepper>
+                ) : null}
+              </VStack>
             </LayoutHeader>
           }
           content={
@@ -372,12 +492,14 @@ export function ShipmentFormDrawer({
                 {...stylex.props(styles.fields)}
               >
                 <HStack gap={5} vAlign="start" wrap="nowrap">
-                  <VStack hAlign="stretch" xstyle={styles.outline}>
-                    <ShipmentFormOutline
-                      sections={sectionStates}
-                      onSelect={goToSection}
-                    />
-                  </VStack>
+                  {step ? null : (
+                    <VStack hAlign="stretch" xstyle={styles.outline}>
+                      <ShipmentFormOutline
+                        sections={visibleSectionStates}
+                        onSelect={goToSection}
+                      />
+                    </VStack>
+                  )}
                   <StackItem size="fill" xstyle={styles.body}>
                     <VStack gap={4} hAlign="stretch">
                       {isStaging ? (
@@ -1291,6 +1413,33 @@ export function ShipmentFormDrawer({
                         </Grid>
                       </ShipmentFormSection>
 
+                      {step && isLastStep ? (
+                        <MetaFormSection
+                          isBoxed
+                          isTitleUppercase={false}
+                          title="Xem lại trước khi tạo"
+                          action={
+                            <MetaPill
+                              label={labelForShipmentStatus(values.status)}
+                              tone={metaToneForShipmentStatus(values.status)}
+                              hasBorder
+                            />
+                          }
+                        >
+                          <Text size="sm" color="secondary">
+                            Shipment sẽ được tạo với tình trạng trên. Nhóm còn
+                            thiếu có thể bổ sung sau bằng “Chỉnh sửa” — chọn một
+                            nhóm để quay lại bước của nó.
+                          </Text>
+                          <ShipmentFormOutline
+                            sections={sectionStates.filter(
+                              ({ section }) => section.id !== 'note',
+                            )}
+                            onSelect={(id) => goToStep(stepOfSection(id))}
+                          />
+                        </MetaFormSection>
+                      ) : null}
+
                       <ShipmentFormSection {...sectionProps('note')}>
                         <RichTextNoteField
                           label="Ghi chú lô hàng"
@@ -1331,6 +1480,26 @@ export function ShipmentFormDrawer({
                     isDisabled={form.isSubmitting}
                     onClick={requestClose}
                   />
+                  {step && stepIndex > 0 ? (
+                    <Button
+                      label="Quay lại"
+                      variant="secondary"
+                      size="lg"
+                      icon={<Icon icon={ArrowLeft} size="sm" />}
+                      isDisabled={form.isSubmitting}
+                      onClick={() => goToStep(stepIndex - 1)}
+                    />
+                  ) : null}
+                  {step && !isLastStep ? (
+                    <Button
+                      label="Tiếp"
+                      variant="primary"
+                      size="lg"
+                      endContent={<Icon icon={ArrowRight} size="sm" />}
+                      isDisabled={form.isSubmitting}
+                      onClick={goToNextStep}
+                    />
+                  ) : null}
                   <Button
                     label={
                       isCreating
@@ -1341,7 +1510,9 @@ export function ShipmentFormDrawer({
                     }
                     type="submit"
                     form={formId}
-                    variant="primary"
+                    // Before the last step "Tiếp" is the main action; saving
+                    // early stays one click away.
+                    variant={step && !isLastStep ? 'secondary' : 'primary'}
                     size="lg"
                     icon={<Icon icon={isCreating ? Plus : Save} size="sm" />}
                     isLoading={form.isSubmitting}
@@ -1520,6 +1691,8 @@ const styles = stylex.create({
     width: '14rem',
   },
   body: { minWidth: 0 },
+  // Create steps sit under the drawer title, outside the scrolling body.
+  stepper: { minWidth: 0 },
   checkTile: {
     backgroundColor: 'var(--color-background-card)',
     borderColor: 'var(--color-border)',

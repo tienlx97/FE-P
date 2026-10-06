@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-06 — Create shipment stepper (task 1.2)
+
+- `shipment-create-stepper` 1.2: "Thêm Shipment" drawer shows an Astryx Stepper under the title (5 steps, stage label as description; ✓ only when a step is really complete, ! on errors) and only the current step's groups, always open, unnumbered; outline hidden in create. Footer: Huỷ bỏ · Quay lại · Tiếp (checks this step only) · Tạo Shipment (every step; full check, lands on the first step with an error). Last step: "Xem lại trước khi tạo" (status pill + every group's completeness, choosing one goes to its step) + note. Edit and stage mode unchanged.
+- Browser on :3000 (user's dev server for this checkout; `pnpm dev -p 3001` refused: Next allows one dev server per dir), 26KCT42: empty Tiếp → step 1 errors only; jump to step 4 without checks; Tạo Shipment from step 4 → back to step 1, steps 1–2 marked !; review step and row jump to step 2; Tiếp on Hàng hóa → Hải quan. Closed without saving; no shipment created. No console errors. Edit mode not re-checked in browser (26KCT42 has no shipments; code path only gated by `step`).
+- Gate passed: `harness/runs/20261006-103132-1723/`.
+- Discovered: AGENTS.md's "`pnpm dev -p 3001` alongside prod" fails when a `next dev` for the same checkout already runs (Next 16 single dev-server lock), not only prod.
+
 ## 2026-10-06 — Create shipment stepper (task 1.1)
 
 - `shipment-create-stepper`, per user (YouTube-Studio-like stepper; chose information steps over status-per-Incoterm steps; no BE change needed — required fields and payload unchanged). 1.1: `SHIPMENT_CREATE_STEPS` (5 steps over the 7 groups, stage labels), `stepFields`, `stepState`, `firstStepWithError`, `stepOfSection`; hook `validate(fields?)` updates only the checked fields' errors (pure `mergeCheckedErrors`, `errorsFromIssues`). 5 new tests.

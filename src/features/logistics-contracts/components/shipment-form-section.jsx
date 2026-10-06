@@ -44,13 +44,16 @@ export function ShipmentSectionStatePill({ completeness }) {
  * @param {{
  *   id: string,
  *   section: import('../config/shipment-form-sections.js').ShipmentFormSection,
- *   index: number,
+ *   index?: number,
  *   isOpen: boolean,
  *   onOpenChange: (isOpen: boolean) => void,
  *   completeness: Completeness,
  *   isHidden?: boolean,
+ *   isCollapsible?: boolean,
  *   children: import('react').ReactNode,
- * }} props `isHidden`: not part of the stage being filled ("Chuyển sang …").
+ * }} props `isHidden`: not part of the stage being filled ("Chuyển sang …")
+ * or of the current create step. `isCollapsible` false: a create step,
+ * which always shows its groups in full.
  */
 export function ShipmentFormSection({
   id,
@@ -60,10 +63,11 @@ export function ShipmentFormSection({
   onOpenChange,
   completeness,
   isHidden = false,
+  isCollapsible = true,
   children,
 }) {
   if (isHidden) return null;
-  const canCollapse = section.id !== 'basic';
+  const canCollapse = isCollapsible && section.id !== 'basic';
   return (
     <VStack id={id} hAlign="stretch" xstyle={styles.anchor}>
       <MetaFormSection
