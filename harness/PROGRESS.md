@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-07 — "…" menus wide enough for their items (task 1.1)
+
+- `icon-menu-width`, per user (shipment detail "…" next to In / Chỉnh sửa clipped its items). Cause: Astryx `DropdownMenu` sizes the menu to its trigger; icon-only trigger → "Cập...". Shipment header + party detail menus now `menuWidth="max-content"`, `alignment="end"`.
+- Harness: ESLint `no-restricted-syntax` rejects an icon-only `DropdownMenu` without `menuWidth` (added to both restricted-syntax blocks); on the old code it flags exactly the two menus.
+- Claude in Chrome, :3000, 26KCT27/LOT-01: menu shows "Cập nhật lịch tàu", "Chứng từ B/L", "Ngày container", "Mở hợp đồng 26KCT27" in full. Party detail menu: same fix, not opened in the browser.
+- Gate passed: `harness/runs/20261007-223909-143643/`.
+- Discovered: a second Chrome got connected mid-session; Claude in Chrome now asks which browser to use, so the test tab was left open.
+
 ## 2026-10-07 — Bulk container "Chi tiết dòng" redesign (task 1.3)
 
 - `container-add-split-button` 1.3, per user ("design 4. Chi tiết dòng ... quá xấu"). New `shipment-vgm-bulk-row-detail.jsx` (bulk drawer only; the single-container drawer keeps `ShipmentVgmDeclarationFields` / `ShipmentVgmAdditionalFields`): "Khối lượng" — 5 weights in one responsive row (n/5 counter) + a result strip (Gross weight / VGM, accent tint once all 5 are in); "Thời gian & ghi chú" — 3 times in one row, 2-row note. Card action "Đóng" with ×.

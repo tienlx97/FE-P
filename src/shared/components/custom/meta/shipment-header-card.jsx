@@ -107,6 +107,9 @@ export function MetaShipmentHeaderCard({
                 variant: 'secondary',
                 icon: <Icon icon={Ellipsis} size="sm" />,
               }}
+              // An icon-only trigger is narrow; size the menu to its items.
+              menuWidth="max-content"
+              alignment="end"
               items={moreItems}
             />
           ) : null}

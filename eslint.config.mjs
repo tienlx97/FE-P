@@ -122,6 +122,14 @@ const config = [
           message:
             'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/custom/meta/theme.js.',
         },
+        {
+          // Astryx sizes the menu to its trigger by default; an icon-only
+          // "…" trigger then clips every item ("Cập...", user 2026-10-07).
+          selector:
+            "JSXOpeningElement[name.name='DropdownMenu']:has(Property[key.name='isIconOnly']):not(:has(JSXAttribute[name.name='menuWidth']))",
+          message:
+            'An icon-only DropdownMenu needs menuWidth (e.g. "max-content"), otherwise the menu is as narrow as the icon button and clips its items.',
+        },
       ],
     },
   },
@@ -208,6 +216,14 @@ const config = [
             'TemplateElement[value.raw=/#([0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})\\b/]',
           message:
             'No hardcoded hex colors. Use an Astryx theme token (--color-*); define new values in src/shared/components/custom/meta/theme.js.',
+        },
+        {
+          // Astryx sizes the menu to its trigger by default; an icon-only
+          // "…" trigger then clips every item ("Cập...", user 2026-10-07).
+          selector:
+            "JSXOpeningElement[name.name='DropdownMenu']:has(Property[key.name='isIconOnly']):not(:has(JSXAttribute[name.name='menuWidth']))",
+          message:
+            'An icon-only DropdownMenu needs menuWidth (e.g. "max-content"), otherwise the menu is as narrow as the icon button and clips its items.',
         },
         {
           selector: 'Literal[value=/^-?\\d+(\\.\\d+)?px$/]',
