@@ -42,6 +42,7 @@ export async function createShipmentCostItemTemplate(values) {
       Name: values.name,
       CostCategoryId: values.costCategoryId,
       DefaultCostNature: values.defaultCostNature,
+      DefaultPaidOnBehalf: values.defaultPaidOnBehalf ?? false,
     },
   });
 

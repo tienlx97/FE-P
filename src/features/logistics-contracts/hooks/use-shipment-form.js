@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
 import { partyFormValueFrom } from '../config/party-kinds.js';
 import { dedupePlacesByName, portOption } from '../config/place-options.js';
+import { costLineFormValues } from '../config/shipment-cost-lines.js';
 import { blankTransshipmentLeg } from '../config/shipment-documents.js';
 import { splitSiCutoff } from '../config/shipment-operational-details.js';
 import {
@@ -261,15 +262,7 @@ export function useShipmentForm({
     shipment
       ? shipment.costs.map((cost) => ({
           rowKey: cost.id,
-          costCategoryId: cost.costCategoryId,
-          name: cost.name,
-          amount: cost.amount,
-          quantity: cost.quantity ?? 1,
-          note: cost.note ?? '',
-          providerCustomerId: cost.providerCustomerId ?? '',
-          invoiceNumber: cost.invoiceNumber ?? '',
-          invoiceDate: cost.invoiceDate ?? '',
-          costNature: cost.costNature ?? 'Standard',
+          ...costLineFormValues(cost),
         }))
       : undefined,
   );
@@ -292,15 +285,7 @@ export function useShipmentForm({
       shipment
         ? shipment.costs.map((cost) => ({
             rowKey: cost.id,
-            costCategoryId: cost.costCategoryId,
-            name: cost.name,
-            amount: cost.amount,
-            quantity: cost.quantity ?? 1,
-            note: cost.note ?? '',
-            providerCustomerId: cost.providerCustomerId ?? '',
-            invoiceNumber: cost.invoiceNumber ?? '',
-            invoiceDate: cost.invoiceDate ?? '',
-            costNature: cost.costNature ?? 'Standard',
+            ...costLineFormValues(cost),
           }))
         : [],
     );
@@ -309,17 +294,7 @@ export function useShipmentForm({
   function parse() {
     return shipmentSchema.safeParse({
       ...values,
-      costLines: costLineRows.rows.map((row) => ({
-        costCategoryId: row.costCategoryId,
-        name: row.name,
-        amount: row.amount,
-        quantity: row.quantity,
-        note: row.note,
-        providerCustomerId: row.providerCustomerId,
-        invoiceNumber: row.invoiceNumber,
-        invoiceDate: row.invoiceDate,
-        costNature: row.costNature,
-      })),
+      costLines: costLineRows.rows.map(({ rowKey: _rowKey, ...row }) => row),
     });
   }
 

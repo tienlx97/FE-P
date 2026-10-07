@@ -47,6 +47,10 @@ function toCostsRequestBody(costLines) {
     InvoiceNumber: cost.invoiceNumber || null,
     InvoiceDate: cost.invoiceDate || null,
     CostNature: cost.costNature ?? 'Standard',
+    PaidOnBehalf: cost.paidOnBehalf ?? false,
+    PayeeName: cost.payeeName || null,
+    ReimbursedOn: cost.reimbursedOn || null,
+    ReimbursementReference: cost.reimbursementReference || null,
   }));
 }
 

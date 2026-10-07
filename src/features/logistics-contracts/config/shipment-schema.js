@@ -38,27 +38,38 @@ export function addFreeTimeIssues(values, field, context) {
  * hoá đơn") are both optional — not every cost line has a known provider
  * or invoice yet; so is `invoiceDate` ("Ngày xuất hoá đơn", ISO date or
  * ''). `costNature` is Standard or Abnormal (incident cost).
+ * `paidOnBehalf` ("NCC chi hộ") needs a provider; `payeeName` is the party
+ * that collected the fee (e.g. the port).
  */
-export const shipmentCostLineSchema = z.object({
-  costCategoryId: z.string().trim().min(1, 'Vui lòng chọn nhóm chi phí'),
-  name: z
-    .string()
-    .trim()
-    .min(1, 'Vui lòng nhập tên khoản chi phí')
-    .max(200, 'Tối đa 200 ký tự'),
-  amount: z
-    .number({ error: 'Vui lòng nhập số tiền' })
-    .positive('Số tiền phải lớn hơn 0'),
-  quantity: z
-    .number({ error: 'Vui lòng nhập số lượng' })
-    .positive('Số lượng phải lớn hơn 0'),
-  // Markdown from the rich text editor (BE `ShipmentCost.NoteMaxLength`).
-  note: z.string().trim().max(2000, 'Tối đa 2000 ký tự (kể cả định dạng)'),
-  providerCustomerId: z.string().trim(),
-  invoiceNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
-  invoiceDate: z.string(),
-  costNature: z.enum(['Standard', 'Abnormal']),
-});
+export const shipmentCostLineSchema = z
+  .object({
+    costCategoryId: z.string().trim().min(1, 'Vui lòng chọn nhóm chi phí'),
+    name: z
+      .string()
+      .trim()
+      .min(1, 'Vui lòng nhập tên khoản chi phí')
+      .max(200, 'Tối đa 200 ký tự'),
+    amount: z
+      .number({ error: 'Vui lòng nhập số tiền' })
+      .positive('Số tiền phải lớn hơn 0'),
+    quantity: z
+      .number({ error: 'Vui lòng nhập số lượng' })
+      .positive('Số lượng phải lớn hơn 0'),
+    // Markdown from the rich text editor (BE `ShipmentCost.NoteMaxLength`).
+    note: z.string().trim().max(2000, 'Tối đa 2000 ký tự (kể cả định dạng)'),
+    providerCustomerId: z.string().trim(),
+    invoiceNumber: z.string().trim().max(100, 'Tối đa 100 ký tự'),
+    invoiceDate: z.string(),
+    costNature: z.enum(['Standard', 'Abnormal']),
+    paidOnBehalf: z.boolean(),
+    payeeName: z.string().trim().max(200, 'Tối đa 200 ký tự'),
+    reimbursedOn: z.string(),
+    reimbursementReference: z.string().trim().max(100, 'Tối đa 100 ký tự'),
+  })
+  .refine((cost) => !cost.paidOnBehalf || cost.providerCustomerId !== '', {
+    path: ['providerCustomerId'],
+    message: 'Chọn nhà cung cấp đã chi hộ',
+  });
 
 /**
  * Cross-field checks run even when another field fails its type: zod skips

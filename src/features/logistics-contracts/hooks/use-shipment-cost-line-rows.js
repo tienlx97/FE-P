@@ -4,19 +4,14 @@ import { useState } from 'react';
 
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 
+import { emptyCostLineValues } from '../config/shipment-cost-lines.js';
+
 /** @param {string} [costCategoryId] @returns {import('../types/index.js').ShipmentCostLineRow} */
 function emptyRow(costCategoryId = '') {
   return {
+    ...emptyCostLineValues(costCategoryId),
     rowKey: generateRowKey(),
-    costCategoryId,
-    name: '',
     amount: undefined,
-    quantity: 1,
-    note: '',
-    providerCustomerId: '',
-    invoiceNumber: '',
-    invoiceDate: '',
-    costNature: 'Standard',
   };
 }
 
@@ -47,8 +42,8 @@ export function useShipmentCostLineRows(initialRows = []) {
 
   /**
    * @param {string} rowKey
-   * @param {'costCategoryId' | 'name' | 'amount' | 'quantity' | 'note' | 'providerCustomerId' | 'invoiceNumber' | 'invoiceDate' | 'costNature'} field
-   * @param {number | string | undefined} value
+   * @param {Exclude<keyof import('../types/index.js').ShipmentCostLineRow, 'rowKey'>} field
+   * @param {number | string | boolean | undefined} value
    */
   function updateRowField(rowKey, field, value) {
     setRows((current) =>

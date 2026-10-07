@@ -2,6 +2,7 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { CheckboxInput } from '@astryxdesign/core/CheckboxInput';
 import { ComplexSelector } from '@astryxdesign/core/ComplexSelector';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
@@ -36,7 +37,10 @@ import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { RichTextNoteField } from '@/shared/components/rich-text-note-field.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
-import { formatDateInputValue } from '@/shared/config/date-input-format.js';
+import {
+  formatDateInputValue,
+  formatDisplayDate,
+} from '@/shared/config/date-input-format.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { groupMeaning, matchingFee } from '../config/cost-item-templates.js';
@@ -170,6 +174,7 @@ export function ShipmentCostLineDrawer({
         name,
         costCategoryId: values.costCategoryId,
         defaultCostNature: values.costNature,
+        defaultPaidOnBehalf: values.paidOnBehalf,
       },
     });
     if (!result.success) {
@@ -178,6 +183,10 @@ export function ShipmentCostLineDrawer({
     }
     setField('name', result.costItemTemplate.name);
     setField('costNature', result.costItemTemplate.defaultCostNature);
+    setField(
+      'paidOnBehalf',
+      result.costItemTemplate.defaultPaidOnBehalf ?? false,
+    );
     setIsQuickAddOpen(false);
     toast({ body: `Đã thêm loại phí “${result.costItemTemplate.name}”.` });
   }
@@ -499,7 +508,14 @@ export function ShipmentCostLineDrawer({
 
                     <Grid columns={TWO_COLUMNS} gap={3}>
                       <VStack gap={1} hAlign="stretch">
-                        <FieldLabel label="Số hoá đơn" isOptional />
+                        <FieldLabel
+                          label={
+                            values.paidOnBehalf
+                              ? 'Số hoá đơn của đơn vị thu'
+                              : 'Số hoá đơn'
+                          }
+                          isOptional
+                        />
                         <TextInput
                           label="Số hoá đơn"
                           isLabelHidden
@@ -531,7 +547,11 @@ export function ShipmentCostLineDrawer({
                     </Grid>
 
                     <VStack gap={1} hAlign="stretch">
-                      <FieldLabel label="Nhà cung cấp" isOptional />
+                      <FieldLabel
+                        label="Nhà cung cấp"
+                        isRequired={values.paidOnBehalf}
+                        isOptional={!values.paidOnBehalf}
+                      />
                       <Selector
                         label="Nhà cung cấp"
                         isLabelHidden
@@ -546,8 +566,45 @@ export function ShipmentCostLineDrawer({
                           value: provider.id,
                           label: provider.companyName,
                         }))}
+                        status={fieldStatuses.providerCustomerId}
+                        statusVariant="detached"
                         width="100%"
                       />
+                    </VStack>
+
+                    <VStack gap={2} hAlign="stretch">
+                      <CheckboxInput
+                        label="Nhà cung cấp chi hộ"
+                        description="Phí do đơn vị khác thu (cảng, depot…), nhà cung cấp trả trước, mình hoàn lại sau."
+                        value={values.paidOnBehalf}
+                        onChange={(checked) =>
+                          setField('paidOnBehalf', checked)
+                        }
+                      />
+                      {values.paidOnBehalf ? (
+                        <VStack gap={1} hAlign="stretch">
+                          <FieldLabel label="Đơn vị thu" isOptional />
+                          <TextInput
+                            label="Đơn vị thu"
+                            isLabelHidden
+                            value={values.payeeName}
+                            onChange={(value) => setField('payeeName', value)}
+                            placeholder="Ví dụ: Cảng Cát Lái"
+                            status={fieldStatuses.payeeName}
+                            statusVariant="detached"
+                            width="100%"
+                          />
+                          <Text size="sm" color="secondary">
+                            {values.reimbursedOn
+                              ? `Đã hoàn trả ngày ${formatDisplayDate(values.reimbursedOn)}${
+                                  values.reimbursementReference
+                                    ? ` · ${values.reimbursementReference}`
+                                    : ''
+                                }. Đổi trạng thái ở tab “Chi hộ” của nhà cung cấp.`
+                              : 'Chưa hoàn trả. Đánh dấu ở tab “Chi hộ” của nhà cung cấp.'}
+                          </Text>
+                        </VStack>
+                      ) : null}
                     </VStack>
 
                     <RichTextNoteField
@@ -647,6 +704,7 @@ export function ShipmentCostLineDrawer({
             setField('costCategoryId', fee.costCategoryId);
             setField('name', fee.name.slice(0, NAME_MAX));
             setField('costNature', fee.defaultCostNature);
+            setField('paidOnBehalf', fee.defaultPaidOnBehalf ?? false);
             setIsFeePickerOpen(false);
           }}
         />

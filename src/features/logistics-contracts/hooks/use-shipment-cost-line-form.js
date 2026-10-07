@@ -2,32 +2,18 @@
 
 import { useState } from 'react';
 
-import { costLineTotal, costUnitPrice } from '../config/shipment-cost-amount.js';
-import { shipmentCostLineSchema } from '../config/shipment-schema.js';
+import {
+  costLineTotal,
+  costUnitPrice,
+} from '../config/shipment-cost-amount.js';
 import {
   costLineFormValues,
-  useSaveShipmentCostLines,
-} from './use-save-shipment-cost-lines.js';
+  emptyCostLineValues,
+} from '../config/shipment-cost-lines.js';
+import { shipmentCostLineSchema } from '../config/shipment-schema.js';
+import { useSaveShipmentCostLines } from './use-save-shipment-cost-lines.js';
 
 /** @typedef {keyof import('../types/index.js').ShipmentCostLineFormValues} CostLineField */
-
-/**
- * @param {string} [costCategoryId]
- * @returns {import('../types/index.js').ShipmentCostLineFormValues}
- */
-function emptyValues(costCategoryId = '') {
-  return {
-    costCategoryId,
-    name: '',
-    amount: /** @type {number} */ (/** @type {unknown} */ (undefined)),
-    quantity: 1,
-    note: '',
-    providerCustomerId: '',
-    invoiceNumber: '',
-    invoiceDate: '',
-    costNature: 'Standard',
-  };
-}
 
 /**
  * Form state for adding one cost line to a shipment, or editing one
@@ -53,7 +39,7 @@ export function useShipmentCostLineForm({
   const [initialValues] = useState(() =>
     costLine
       ? costLineFormValues(costLine)
-      : emptyValues(initialCostCategoryId),
+      : emptyCostLineValues(initialCostCategoryId),
   );
   const [values, setValues] = useState(initialValues);
   const [unitPrice, setUnitPriceValue] = useState(() =>
@@ -84,7 +70,10 @@ export function useShipmentCostLineForm({
   /** @param {number | undefined} quantity */
   function setQuantity(quantity) {
     setField('quantity', /** @type {number} */ (quantity));
-    setField('amount', /** @type {number} */ (costLineTotal(quantity, unitPrice)));
+    setField(
+      'amount',
+      /** @type {number} */ (costLineTotal(quantity, unitPrice)),
+    );
   }
 
   /** @param {number | undefined} nextUnitPrice */

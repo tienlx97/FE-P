@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-07 — Costs paid on behalf: cost line fields and drawer (task 1.1)
+
+- `shipment-cost-paid-on-behalf`, per user ("phí nâng cont rỗng, hạ cont … cảng thu nhưng nhà cung cấp CHI HỘ … biết nhà cung cấp đó đã CHI HỘ bao nhiêu"; plan accepted as proposed). BE-P 658e2cf / 160da3b. `config/shipment-cost-lines.js` (`emptyCostLineValues`, `costLineFormValues` moved out of the save hook, `costTotalsByPayment`) now feeds every save path (cost drawer, delete, shipment editor rows), so `paidOnBehalf` / `payeeName` / reimbursement survive any shipment save. Schema: paid on behalf needs a provider. Drawer: "Nhà cung cấp chi hộ" checkbox, "Đơn vị thu", collector-invoice label, reimbursement state line; recommended / quick-added fees carry `defaultPaidOnBehalf`. 5 new tests.
+- Browser :3000 → dev API :8081 on a disposable shipment 26KCT42/LOT-01 (created via API, to be deleted after task 1.3): picking "Nâng container rỗng tại depot" ticks chi hộ; no provider → "Chọn nhà cung cấp đã chi hộ"; saved with GIA HUY + Cảng Cát Lái (API shows the fields). Reimbursed via API, then saved the unchanged "Chỉnh sửa" shipment form → reimbursedOn / reference kept.
+- Gate passed: `harness/runs/20261007-175654-497/`. Generated `meta*.d.ts` header churn still left uncommitted.
+
 ## 2026-10-07 — Shipment detail loading measured; cross-field validation confirmed
 
 - User "làm 1 2 3", item 3. Loading (`optimize-shipment-detail-loading` task 2 left open with the measurement): production `next start -p 3001` → TTFB 46 ms, DCL 126 ms, load 506 ms, page fully rendered; BE on load only shipment / schedule / journey / alerts at 10–40 ms (dev API logs), no supplier list. Slowness seen while working = `next dev` (TTFB 3.3 s, ~23 MB chunks). Recommended dropping task 2.

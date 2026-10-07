@@ -5,25 +5,6 @@ import { valuesFromShipment } from './use-shipment-form.js';
 import { useUpdateShipmentMutation } from './use-shipments-query.js';
 
 /**
- * A saved cost line as form values (the shape the shipment PUT takes).
- * @param {import('../types/index.js').ShipmentCostLine} cost
- * @returns {import('../types/index.js').ShipmentCostLineFormValues}
- */
-export function costLineFormValues(cost) {
-  return {
-    costCategoryId: cost.costCategoryId,
-    name: cost.name,
-    amount: cost.amount,
-    quantity: cost.quantity ?? 1,
-    note: cost.note ?? '',
-    providerCustomerId: cost.providerCustomerId ?? '',
-    invoiceNumber: cost.invoiceNumber ?? '',
-    invoiceDate: cost.invoiceDate ?? '',
-    costNature: cost.costNature ?? 'Standard',
-  };
-}
-
-/**
  * Saves a shipment's cost lines. They have no endpoint of their own — the
  * shipment PUT replaces the whole list — so this resends the shipment as
  * it is (same values / parsing as `useShipmentForm`) with `costLines` as

@@ -12,10 +12,8 @@ import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { formatVndAmount } from '../config/currencies.js';
 import { costUnitPrice } from '../config/shipment-cost-amount.js';
-import {
-  costLineFormValues,
-  useSaveShipmentCostLines,
-} from '../hooks/use-save-shipment-cost-lines.js';
+import { costLineFormValues } from '../config/shipment-cost-lines.js';
+import { useSaveShipmentCostLines } from '../hooks/use-save-shipment-cost-lines.js';
 import { ShipmentCostLineDrawer } from './shipment-cost-line-drawer.jsx';
 
 const money = formatVndAmount;
@@ -108,7 +106,9 @@ export function ShipmentCostPanel({
         ? (customersById.get(cost.providerCustomerId)?.companyName ?? null)
         : null,
       invoiceNumber: cost.invoiceNumber || null,
-      invoiceDate: cost.invoiceDate ? formatDisplayDate(cost.invoiceDate) : null,
+      invoiceDate: cost.invoiceDate
+        ? formatDisplayDate(cost.invoiceDate)
+        : null,
     })),
   }));
 

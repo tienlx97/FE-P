@@ -691,6 +691,7 @@ export {};
  * @property {string | null} occurrencePoint - where in the flow it occurs
  * @property {string | null} note - classification rule / scope
  * @property {number} sortOrder - position within the group (server-assigned)
+ * @property {boolean} [defaultPaidOnBehalf] - picking it ticks "NCC chi hộ"
  */
 
 /**
@@ -698,6 +699,7 @@ export {};
  * @property {string} name
  * @property {string} costCategoryId
  * @property {ShipmentCostNature} defaultCostNature
+ * @property {boolean} [defaultPaidOnBehalf]
  */
 
 /**
@@ -718,6 +720,10 @@ export {};
  * @property {string | null} invoiceNumber - "Số hoá đơn", optional
  * @property {string | null} invoiceDate - ISO date, "Ngày xuất hoá đơn", optional
  * @property {ShipmentCostNature} costNature
+ * @property {boolean} [paidOnBehalf] - "NCC chi hộ": the provider paid a third party (`payeeName`, e.g. the port) for us; invoice fields are that party's. Missing on older backends
+ * @property {string | null} [payeeName] - "Đơn vị thu"
+ * @property {string | null} [reimbursedOn] - ISO date the provider was paid back; null = still owed
+ * @property {string | null} [reimbursementReference] - "Số chứng từ hoàn trả"
  */
 
 /**
@@ -731,6 +737,10 @@ export {};
  * @property {string} invoiceNumber
  * @property {string} invoiceDate - ISO date or ''
  * @property {ShipmentCostNature} costNature
+ * @property {boolean} paidOnBehalf
+ * @property {string} payeeName
+ * @property {string} reimbursedOn - ISO date or ''
+ * @property {string} reimbursementReference
  */
 
 /**
@@ -745,6 +755,10 @@ export {};
  * @property {string} invoiceNumber
  * @property {string} invoiceDate - ISO date or ''
  * @property {ShipmentCostNature} costNature
+ * @property {boolean} paidOnBehalf
+ * @property {string} payeeName
+ * @property {string} reimbursedOn - ISO date or ''
+ * @property {string} reimbursementReference
  */
 
 /**
