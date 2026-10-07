@@ -37,6 +37,8 @@ import { MetaPill } from './pill.jsx';
  *   nature: 'Standard' | 'Abnormal',
  *   note: string | null,
  *   provider: string | null,
+ *   paidOnBehalf?: boolean,
+ *   payee?: string | null,
  *   invoiceNumber: string | null,
  *   invoiceDate: string | null,
  * }} MetaCostRow
@@ -52,6 +54,7 @@ import { MetaPill } from './pill.jsx';
  *   abnormal: string,
  *   providers: string,
  *   invoices: string,
+ *   paidOnBehalf?: string,
  * }} MetaCostTotals
  */
 
@@ -83,6 +86,7 @@ const COLUMNS = /** @type {const} */ ([
  * @param {{
  *   count: number,
  *   abnormalTotal: string,
+ *   paidOnBehalfTotal?: string | null,
  *   total: string,
  *   groups: MetaCostGroup[],
  *   totals: MetaCostTotals | null,
@@ -98,6 +102,7 @@ const COLUMNS = /** @type {const} */ ([
 export function MetaCostPanel({
   count,
   abnormalTotal,
+  paidOnBehalfTotal = null,
   total,
   groups,
   totals,
@@ -140,6 +145,22 @@ export function MetaCostPanel({
                   {abnormalTotal}
                 </Text>
               </Text>
+              {paidOnBehalfTotal ? (
+                <>
+                  <HStack as="span" xstyle={styles.divider} />
+                  <Text size="sm" color="secondary">
+                    NCC chi hộ:{' '}
+                    <Text
+                      as="span"
+                      size="sm"
+                      weight="semibold"
+                      hasTabularNumbers
+                    >
+                      {paidOnBehalfTotal}
+                    </Text>
+                  </Text>
+                </>
+              ) : null}
               <HStack as="span" xstyle={styles.divider} />
               <Text size="sm" weight="semibold">
                 Tổng chi phí:{' '}
@@ -328,7 +349,25 @@ export function MetaCostPanel({
                         )}
                       </TableCell>
                       <TableCell xstyle={styles.cell}>
-                        <OptionalText value={row.provider} />
+                        {row.paidOnBehalf ? (
+                          <VStack gap={0.5}>
+                            <HStack gap={1} vAlign="center" wrap="wrap">
+                              <OptionalText value={row.provider} />
+                              <MetaPill
+                                label="Chi hộ"
+                                tone="indigo"
+                                size="sm"
+                              />
+                            </HStack>
+                            {row.payee ? (
+                              <Text size="sm" color="secondary">
+                                {`Thu bởi ${row.payee}`}
+                              </Text>
+                            ) : null}
+                          </VStack>
+                        ) : (
+                          <OptionalText value={row.provider} />
+                        )}
                       </TableCell>
                       <TableCell xstyle={styles.cell}>
                         {row.invoiceDate ? (
@@ -424,9 +463,16 @@ export function MetaCostPanel({
                   </TableCell>
                   <TableCell xstyle={styles.footCell} />
                   <TableCell xstyle={styles.footCell}>
-                    <Text size="sm" color="secondary">
-                      {totals.providers}
-                    </Text>
+                    <VStack gap={0.5}>
+                      <Text size="sm" color="secondary">
+                        {totals.providers}
+                      </Text>
+                      {totals.paidOnBehalf ? (
+                        <Text size="sm" color="secondary" hasTabularNumbers>
+                          {totals.paidOnBehalf}
+                        </Text>
+                      ) : null}
+                    </VStack>
                   </TableCell>
                   <TableCell xstyle={styles.footCell}>
                     <Text size="sm" type="code" weight="bold" color="secondary">

@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-07 — Costs paid on behalf: cost table (task 1.2)
+
+- `shipment-cost-paid-on-behalf` 1.2: `MetaCostPanel` takes `paidOnBehalf` / `payee` per row ("Chi hộ" pill next to the provider, "Thu bởi …"), optional `paidOnBehalfTotal` in the header ("NCC chi hộ") and `totals.paidOnBehalf` in the Σ row; shipment total unchanged.
+- Browser :3000, disposable 26KCT42/LOT-01: row shows GIA HUY + Chi hộ + "Thu bởi Cảng Cát Lái"; header "NCC chi hộ: 500,000 đ", footer "Chi hộ: 500,000 đ", total 500,000 đ.
+- Gate passed: `harness/runs/20261007-175907-1040/`.
+
 ## 2026-10-07 — Costs paid on behalf: cost line fields and drawer (task 1.1)
 
 - `shipment-cost-paid-on-behalf`, per user ("phí nâng cont rỗng, hạ cont … cảng thu nhưng nhà cung cấp CHI HỘ … biết nhà cung cấp đó đã CHI HỘ bao nhiêu"; plan accepted as proposed). BE-P 658e2cf / 160da3b. `config/shipment-cost-lines.js` (`emptyCostLineValues`, `costLineFormValues` moved out of the save hook, `costTotalsByPayment`) now feeds every save path (cost drawer, delete, shipment editor rows), so `paidOnBehalf` / `payeeName` / reimbursement survive any shipment save. Schema: paid on behalf needs a provider. Drawer: "Nhà cung cấp chi hộ" checkbox, "Đơn vị thu", collector-invoice label, reimbursement state line; recommended / quick-added fees carry `defaultPaidOnBehalf`. 5 new tests.

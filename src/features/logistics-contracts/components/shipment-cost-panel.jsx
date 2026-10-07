@@ -12,7 +12,10 @@ import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { formatVndAmount } from '../config/currencies.js';
 import { costUnitPrice } from '../config/shipment-cost-amount.js';
-import { costLineFormValues } from '../config/shipment-cost-lines.js';
+import {
+  costLineFormValues,
+  costTotalsByPayment,
+} from '../config/shipment-cost-lines.js';
 import { useSaveShipmentCostLines } from '../hooks/use-save-shipment-cost-lines.js';
 import { ShipmentCostLineDrawer } from './shipment-cost-line-drawer.jsx';
 
@@ -105,6 +108,8 @@ export function ShipmentCostPanel({
       provider: cost.providerCustomerId
         ? (customersById.get(cost.providerCustomerId)?.companyName ?? null)
         : null,
+      paidOnBehalf: cost.paidOnBehalf ?? false,
+      payee: cost.payeeName || null,
       invoiceNumber: cost.invoiceNumber || null,
       invoiceDate: cost.invoiceDate
         ? formatDisplayDate(cost.invoiceDate)
@@ -113,6 +118,7 @@ export function ShipmentCostPanel({
   }));
 
   const total = sum(shipment.costs);
+  const byPayment = costTotalsByPayment(shipment.costs);
   const abnormal = sum(
     shipment.costs.filter((cost) => cost.costNature === 'Abnormal'),
   );
@@ -142,6 +148,9 @@ export function ShipmentCostPanel({
       <MetaCostPanel
         count={shipment.costs.length}
         abnormalTotal={money(abnormal)}
+        paidOnBehalfTotal={
+          byPayment.paidOnBehalf > 0 ? money(byPayment.paidOnBehalf) : null
+        }
         total={money(total)}
         groups={groups}
         totals={
@@ -152,6 +161,10 @@ export function ShipmentCostPanel({
                 abnormal: `Abnormal: ${money(abnormal)}`,
                 providers: `${providerCount} đối tác`,
                 invoices: `${invoiceCount} số HĐ`,
+                paidOnBehalf:
+                  byPayment.paidOnBehalf > 0
+                    ? `Chi hộ: ${money(byPayment.paidOnBehalf)}`
+                    : undefined,
               }
             : null
         }
