@@ -8,7 +8,6 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Selector } from '@astryxdesign/core/Selector';
-import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import {
@@ -19,6 +18,7 @@ import {
   Plus,
   Save,
   Trash2,
+  X,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -43,10 +43,7 @@ import {
 import { shipmentContainerTypeOptions } from '../config/shipment-container-types.js';
 import { useBulkCreateShipmentVgmsMutation } from '../hooks/use-shipment-vgms-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
-import {
-  ShipmentVgmAdditionalFields,
-  ShipmentVgmDeclarationFields,
-} from './shipment-vgm-fields.jsx';
+import { ShipmentVgmBulkRowDetail } from './shipment-vgm-bulk-row-detail.jsx';
 
 const WEIGHT_FORMATTER = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
@@ -603,38 +600,20 @@ export function ShipmentVgmBulkDrawer({
           title={`Chi tiết dòng ${selectedLine}${selected.containerNumber ? ` · ${selected.containerNumber}` : ''}`}
           action={
             <Button
-              label="Đóng chi tiết"
+              label="Đóng"
               type="button"
               variant="ghost"
               size="sm"
+              icon={<Icon icon={X} size="sm" />}
               onClick={() => setSelectedId(null)}
             />
           }
         >
-          <HStack gap={6} vAlign="start" wrap="wrap">
-            <StackItem size="fill">
-              <VStack gap={3} hAlign="stretch">
-                <Text weight="semibold">Khai VGM</Text>
-                <ShipmentVgmDeclarationFields
-                  values={selected}
-                  setField={setSelectedField}
-                  fieldStatuses={detailStatuses}
-                  customers={carriers}
-                  hasPackingFields={false}
-                />
-              </VStack>
-            </StackItem>
-            <StackItem size="fill">
-              <VStack gap={3} hAlign="stretch">
-                <Text weight="semibold">Thời gian & ghi chú</Text>
-                <ShipmentVgmAdditionalFields
-                  values={selected}
-                  setField={setSelectedField}
-                  fieldStatuses={detailStatuses}
-                />
-              </VStack>
-            </StackItem>
-          </HStack>
+          <ShipmentVgmBulkRowDetail
+            row={selected}
+            setField={setSelectedField}
+            fieldStatuses={detailStatuses}
+          />
         </MetaFormSection>
       ) : null}
     </MetaFormDrawer>

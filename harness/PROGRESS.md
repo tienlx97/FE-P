@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-07 — Bulk container "Chi tiết dòng" redesign (task 1.3)
+
+- `container-add-split-button` 1.3, per user ("design 4. Chi tiết dòng ... quá xấu"). New `shipment-vgm-bulk-row-detail.jsx` (bulk drawer only; the single-container drawer keeps `ShipmentVgmDeclarationFields` / `ShipmentVgmAdditionalFields`): "Khối lượng" — 5 weights in one responsive row (n/5 counter) + a result strip (Gross weight / VGM, accent tint once all 5 are in); "Thời gian & ghi chú" — 3 times in one row, 2-row note. Card action "Đóng" with ×.
+- Claude in Chrome, :3000, 26KCT27/LOT-01 → Thêm bằng bảng → Chi tiết: empty state "—" + hint; 32,500 / 3,850 / 28,650 / 15,000 / 1,142 → Gross 16,142.00 kg, VGM 19,992.00 kg. Discarded, nothing saved.
+- Gate passed: `harness/runs/20261007-223322-135599/`.
+
 ## 2026-10-07 — Bulk container table inputs at small size (task 1.2)
 
 - `container-add-split-button` 1.2, per user ("card 3. Danh sách container > Text input đang to quá"): the 5 inline inputs of "Thêm danh sách container" card 3 use `size="sm"`, matching the row's "Chi tiết" button and pills.
