@@ -91,6 +91,8 @@ export function ShipmentVgmContainerFields({
             onBlur={() => {
               void fillFromSpecs(false);
             }}
+            // Spinner inside the field while BoxTech is asked.
+            isLoading={specs.query.isFetching}
             isRequired
             status={fieldStatuses.containerNumber}
             statusVariant="tooltip"
@@ -144,8 +146,9 @@ export function ShipmentVgmContainerFields({
 }
 
 /**
- * What BoxTech knows about the typed number, under the number field: the
- * lookup, the values it has (+ "Điền lại" when the drawer differs), why
+ * What BoxTech knows about the typed number, under the number field (the
+ * lookup itself is the field's spinner): the values it has (+ "Điền lại"
+ * when the drawer differs), why
  * there is nothing (not in BoxTech / unavailable), an owner alert, or a
  * number failing the ISO 6346 check digit (a warning only — the number is
  * still saved as typed).
@@ -163,14 +166,9 @@ function ContainerSpecsStatus({ values, specs, onFillAgain }) {
       </Text>
     ) : null;
   }
+  // While looking up, the number field shows its own spinner.
   const result = specs.query.data;
-  if (!result) {
-    return specs.query.isFetching ? (
-      <Text size="sm" color="secondary">
-        Đang tra BIC BoxTech…
-      </Text>
-    ) : null;
-  }
+  if (!result) return null;
   if (!result.success) {
     return (
       <Text size="sm" color="secondary">

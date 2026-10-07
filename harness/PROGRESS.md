@@ -16314,3 +16314,10 @@ extra font loading needed), the date note stays on Be Vietnam Pro.
 - Bug caught in the browser: switching numbers kept the previous container's weights; fixed with the `previous` fill rule (unit-tested). Gate first failed on a transient `EPERM` writing `theme.built.css` (dev server holding the file), passed on re-run.
 - Not checked: saving a container through the drawer in the browser (covered by schema and BE HTTP tests); edit drawer of an existing container; bulk / Excel auto-fill (out of scope).
 - `./harness/verify.sh` passed: `harness/runs/20261006-180232-694/`.
+
+## 2026-10-07 — Number field spinner, task 1.2 (`container-specs-autofill`)
+
+- User request: show the loading inside the container number field, on the right. Astryx `TextInput` `isLoading` (spinner + `aria-busy`) bound to the BoxTech query's `isFetching`; the "Đang tra BIC BoxTech…" line under the field is gone.
+- Browser: typing IAAU1821828 (not looked up yet) → `aria-busy="true"` and the spinner at the field's right edge. Drawer discarded, nothing saved. Screenshot: `harness/runs/20261006-container-specs/number-field-spinner.png`.
+- Seen: the lookup starts once a valid number is typed, so the result can arrive before the field is left; the fields still fill on blur.
+- `./harness/verify.sh` passed: `harness/runs/20261007-090404-1568/`.
