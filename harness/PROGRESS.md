@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-07 — Long journey captions end in "…" (task 1.1)
+
+- `journey-long-caption`, per user ("Site Delivery > VỊ TRÍ GIAO HÀNG dài nên để ..."). `MetaMilestoneStrip` step had no max width, so the `maxLines={1}` address caption widened its column (~500px). Its `minWidth` used `--spacing-32`, which Astryx does not define (scale ends at `--spacing-12`) → invalid `calc()`, never applied. Now min 4 × / max 5 × `--spacing-12` (192 / 240px).
+- agent-browser :3000 (Claude in Chrome now asks which of two connected browsers to use): DDP 26KCT28/LOT-01 Site Delivery column 499 → 192px, "121 Mhoo 2, Wang Ta Khia…" (full text in the Text truncation tooltip); "Import Clearance & D…" also truncates. CIF 26KCT27/LOT-01 strip fine.
+- Gate passed: `harness/runs/20261007-225301-160855/`.
+- Harness gap: nothing catches undefined Astryx tokens — `--spacing-40` (shipment-physical-timeline.jsx:183, shipment-schedule-panel.jsx:190–191) and `--spacing-24` (shipment-carrier-tracking-section.jsx:55) are silently invalid today. Needs a lint/check against the token list in `astryx.css`; fixing those values changes their layout, so left for a separate change.
+
 ## 2026-10-07 — "…" menus wide enough for their items (task 1.1)
 
 - `icon-menu-width`, per user (shipment detail "…" next to In / Chỉnh sửa clipped its items). Cause: Astryx `DropdownMenu` sizes the menu to its trigger; icon-only trigger → "Cập...". Shipment header + party detail menus now `menuWidth="max-content"`, `alignment="end"`.

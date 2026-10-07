@@ -171,12 +171,15 @@ const styles = stylex.create({
     padding: 0,
     paddingBottom: 'var(--spacing-1)',
   },
-  // Wide enough for "Shipped on Board" + an edit button, or a marker pill.
+  // Wide enough for "Shipped on Board" + an edit button, or a marker pill;
+  // capped so a long caption (a Site Delivery address) ends in "…" with
+  // its full text in the truncation tooltip instead of widening the column.
   step: {
     flexBasis: 0,
     flexGrow: 1,
     flexShrink: 0,
-    minWidth: 'calc(var(--spacing-32) + var(--spacing-4))',
+    maxWidth: 'calc(var(--spacing-12) * 5)',
+    minWidth: 'calc(var(--spacing-12) * 4)',
   },
   body: {
     minWidth: 0,
