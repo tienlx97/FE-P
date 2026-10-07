@@ -10,7 +10,6 @@ import { StatusDot } from '@astryxdesign/core/StatusDot';
 import {
   pixel,
   proportional,
-  Table,
   useTableRowExpansion,
 } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
@@ -20,6 +19,7 @@ import { Pencil, Plus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { createRowExpansionInteractionPlugin } from '@/shared/components/expandable-row-styles.jsx';
+import { Table } from '@/shared/components/table.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
 

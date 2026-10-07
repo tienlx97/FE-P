@@ -11,12 +11,14 @@ import { Kbd } from '@astryxdesign/core/Kbd';
 import { List, ListItem } from '@astryxdesign/core/List';
 import { Pagination } from '@astryxdesign/core/Pagination';
 import { SelectableCard } from '@astryxdesign/core/SelectableCard';
-import { pixel, proportional, Table } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { Timestamp } from '@astryxdesign/core/Timestamp';
 import { Token } from '@astryxdesign/core/Token';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
+
+import { Table } from '@/shared/components/table.jsx';
 
 import { ShowcaseSection } from '../showcase-section.jsx';
 

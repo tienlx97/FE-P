@@ -2,6 +2,7 @@
 
 - [x] 1.1 Cost table group title spans STT + Nhóm chi phí + Tên khoản chi
   phí — verify: browser (desktop pinned scroll, narrow width), gate.
-- [ ] 1.2 "Chế độ thu gọn" layout preference; tables compact when on —
-  verify: preference test, browser (lists + shipment detail tables on/off,
+- [x] 1.2 "Chế độ thu gọn" layout preference; tables compact when on
+  (shared `Table` wrapper, lint rule against importing Astryx `Table`
+  directly) — verify: browser (lists + shipment detail tables on/off,
   reload keeps it), gate.

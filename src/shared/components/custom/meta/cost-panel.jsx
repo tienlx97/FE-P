@@ -8,7 +8,6 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import { Markdown } from '@astryxdesign/core/Markdown';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import {
-  Table,
   TableBody,
   TableCell,
   TableFooter,
@@ -21,6 +20,8 @@ import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Fragment } from 'react';
+
+import { Table } from '@/shared/components/table.jsx';
 
 import { MetaCountBadge } from './count-badge.jsx';
 import { MetaPill } from './pill.jsx';
@@ -666,7 +667,7 @@ const styles = stylex.create({
   headCell: {
     backgroundColor: 'var(--meta-row-hover)',
     maxWidth: 'none',
-    paddingBlock: 'var(--spacing-3)',
+    paddingBlock: 'var(--table-compact-padding-block,var(--spacing-3))',
     paddingInline: 'var(--spacing-3)',
     position: 'sticky',
     top: 0,
@@ -681,12 +682,12 @@ const styles = stylex.create({
   },
   cell: {
     maxWidth: 'none',
-    paddingBlock: 'var(--spacing-2)',
+    paddingBlock: 'var(--table-compact-padding-block,var(--spacing-2))',
     paddingInline: 'var(--spacing-3)',
   },
   footCell: {
     maxWidth: 'none',
-    paddingBlock: 'var(--spacing-4)',
+    paddingBlock: 'var(--table-compact-padding-block,var(--spacing-4))',
     paddingInline: 'var(--spacing-3)',
   },
   nowrap: {

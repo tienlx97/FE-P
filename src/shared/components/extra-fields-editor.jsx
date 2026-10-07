@@ -4,11 +4,12 @@ import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { pixel, proportional, Table } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
+import { Table } from '@/shared/components/table.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
 /**

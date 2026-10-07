@@ -1,6 +1,6 @@
 # Proposal: Compact mode setting, cost group title across three columns
 
-**Status:** in progress
+**Status:** done
 **Created:** 2026-10-07
 
 ## Why

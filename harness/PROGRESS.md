@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-07 — Compact mode setting (task 1.2)
+
+- `compact-mode-and-cost-group-title` 1.2, per user ("Thêm mode compact trong setting"; chose tables only). "Cài đặt giao diện" → "Chế độ thu gọn" switch (`compactMode` in `use-layout-preferences.js`, localStorage; `useCompactMode` for tables). New `src/shared/components/table.jsx` wraps Astryx `Table`: compact density when on, and defines `--table-compact-padding-block` so cells with their own padding (cost, VGM, compact-table, contract shipments) read `var(--table-compact-padding-block, <own>)`. All 19 direct `Table` imports moved to the wrapper; ESLint `no-restricted-imports` now rejects importing `Table` from `@astryxdesign/core/Table` (probe file → error).
+- Browser :3000: Shipments list rows 45 → 37 px with the switch on, kept after reload (localStorage `compactMode: true`); 26KCT27/LOT-01 cost table 45/57 → 37/49 px; off → back to 45/57. Preference left off afterwards. Hydration warning seen in console was on /login from agent-browser's injected `data-__ab-ci`, not this change.
+- Gate passed: `harness/runs/20261007-215125-82619/`.
+- Not covered: per-table "Mật độ dòng" is overridden (not changed) while compact mode is on.
+
 ## 2026-10-07 — Cost group title across three columns (task 1.1)
 
 - `compact-mode-and-cost-group-title`, per user ("Tên title nhóm phí (title thêm nhanh): LOG-01... hãy cho tên title này span ra 3 ô"; chose STT + Nhóm chi phí + Tên khoản chi phí). `MetaCostPanel` group row: one `colSpan={3}` cell with the label and "+" (now next to the label), sticky left from 900px; subtotal still under Thành tiền.

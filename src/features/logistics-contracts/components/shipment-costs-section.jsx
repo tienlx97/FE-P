@@ -2,12 +2,13 @@
 
 import { useMediaQuery } from '@astryxdesign/core/hooks';
 import { MetadataList } from '@astryxdesign/core/MetadataList';
-import { pixel, proportional, Table } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 
 import { UnderlinedMetadataListItem as MetadataListItem } from '@/shared/components/expandable-row-styles.jsx';
 import { RichTextNote } from '@/shared/components/rich-text-note.jsx';
+import { Table } from '@/shared/components/table.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatMoney } from '../config/currencies.js';

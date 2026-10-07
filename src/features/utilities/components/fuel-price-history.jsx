@@ -4,7 +4,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Selector } from '@astryxdesign/core/Selector';
-import { pixel, proportional, Table } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { History, Plus } from 'lucide-react';
@@ -16,6 +16,7 @@ import {
   MetaRowActions,
   MetaUtilityCard,
 } from '@/shared/components/custom/meta/index.js';
+import { Table } from '@/shared/components/table.jsx';
 
 import {
   formatFuelPrice,

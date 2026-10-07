@@ -42,9 +42,9 @@ const styles = stylex.create({
     paddingBlock: 'var(--spacing-4)',
   },
   headerContent: { fontSize: 'var(--font-size-base)' },
-  bodyCell: { paddingBlock: 'var(--spacing-5)' },
+  bodyCell: { paddingBlock: 'var(--table-compact-padding-block,var(--spacing-5))' },
   totalsRow: { backgroundColor: 'var(--meta-surface-container-low)' },
-  totalsCell: { paddingBlock: 'var(--spacing-4)' },
+  totalsCell: { paddingBlock: 'var(--table-compact-padding-block,var(--spacing-4))' },
 });
 
 /**

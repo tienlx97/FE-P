@@ -8,7 +8,6 @@ import { IconButton } from '@astryxdesign/core/IconButton';
 import {
   pixel,
   proportional,
-  Table,
   useTableStickyColumns,
 } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
@@ -16,6 +15,7 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
+import { Table } from '@/shared/components/table.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { withTotalsRowCells } from '@/shared/config/totals-row.js';
 

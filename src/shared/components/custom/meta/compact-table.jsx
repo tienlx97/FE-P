@@ -2,7 +2,6 @@
 
 import { HStack } from '@astryxdesign/core/HStack';
 import {
-  Table,
   TableBody,
   TableCell,
   TableHeader,
@@ -12,6 +11,8 @@ import {
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
+
+import { Table } from '@/shared/components/table.jsx';
 
 /**
  * Small read-only "Meta" table for a card body — same header / cell look
@@ -158,7 +159,7 @@ const styles = stylex.create({
   headCell: {
     backgroundColor: 'var(--meta-row-hover)',
     maxWidth: 'none',
-    paddingBlock: 'var(--spacing-3)',
+    paddingBlock: 'var(--table-compact-padding-block,var(--spacing-3))',
     paddingInline: 'var(--spacing-2)',
     whiteSpace: 'normal',
   },
@@ -168,7 +169,7 @@ const styles = stylex.create({
   },
   cell: {
     maxWidth: 'none',
-    paddingBlock: 'var(--spacing-3)',
+    paddingBlock: 'var(--table-compact-padding-block,var(--spacing-3))',
     paddingInline: 'var(--spacing-2)',
     whiteSpace: 'nowrap',
   },

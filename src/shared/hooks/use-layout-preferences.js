@@ -3,7 +3,11 @@
 import { useEffect, useSyncExternalStore } from 'react';
 
 const STORAGE_KEY = 'kt-xnk.layout-preferences';
-const DEFAULT_STATE = { hideSideNav: false, focusMode: false };
+const DEFAULT_STATE = {
+  hideSideNav: false,
+  focusMode: false,
+  compactMode: false,
+};
 
 // Module-level store, not per-component state: the Settings toggle lives
 // deep in the header's `endContent` while `ProtectedAppShell` (which
@@ -22,6 +26,7 @@ function readFromStorage() {
     return {
       hideSideNav: Boolean(parsed.hideSideNav),
       focusMode: Boolean(parsed.focusMode),
+      compactMode: Boolean(parsed.compactMode),
     };
   } catch {
     // Corrupt JSON or inaccessible storage (private mode/quota) — fall
@@ -66,10 +71,11 @@ function getServerSnapshot() {
 }
 
 /**
- * App-wide layout preferences: hiding the side nav, and a chromeless
- * "focus mode" (hides both the side nav and the top header). Read by
- * `ProtectedAppShell` to actually apply them; written by the Settings
- * popover trigger rendered in the header's `endContent`.
+ * App-wide layout preferences: hiding the side nav, a chromeless "focus
+ * mode" (hides both the side nav and the top header), and "compact mode"
+ * (every table at compact row density). Read by `ProtectedAppShell` to
+ * apply the first two; written by the Settings popover trigger rendered in
+ * the header's `endContent`.
  */
 export function useLayoutPreferences() {
   const snapshot = useSyncExternalStore(
@@ -82,7 +88,8 @@ export function useLayoutPreferences() {
     const stored = readFromStorage();
     if (
       stored.hideSideNav !== state.hideSideNav ||
-      stored.focusMode !== state.focusMode
+      stored.focusMode !== state.focusMode ||
+      stored.compactMode !== state.compactMode
     ) {
       state = stored;
       notify();
@@ -101,9 +108,23 @@ export function useLayoutPreferences() {
   return {
     hideSideNav: snapshot.hideSideNav,
     focusMode: snapshot.focusMode,
+    compactMode: snapshot.compactMode,
     setHideSideNav: (/** @type {boolean} */ value) =>
       setState({ hideSideNav: value }),
     setFocusMode: (/** @type {boolean} */ value) =>
       setState({ focusMode: value }),
+    setCompactMode: (/** @type {boolean} */ value) =>
+      setState({ compactMode: value }),
   };
+}
+
+/**
+ * Just the "compact mode" flag, for the many tables that read it. No
+ * storage sync of its own: `ProtectedAppShell` mounts
+ * `useLayoutPreferences`, which loads the stored value and follows other
+ * tabs, so every table here stays one store subscription.
+ */
+export function useCompactMode() {
+  return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+    .compactMode;
 }

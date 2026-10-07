@@ -5,7 +5,6 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import {
   pixel,
-  Table,
   TableBody,
   TableCell,
   TableFooter,
@@ -24,6 +23,7 @@ import {
 import { Fragment, useEffect, useMemo, useState } from 'react';
 
 import { expandableRowStyles } from '@/shared/components/expandable-row-styles.jsx';
+import { Table } from '@/shared/components/table.jsx';
 import { resolveTableSizes } from '@/shared/config/tanstack-table-columns.js';
 
 const EXPANSION_COLUMN_KEY = '__expansion';

@@ -12,14 +12,21 @@ import { Settings } from 'lucide-react';
 import { useLayoutPreferences } from '@/shared/hooks/use-layout-preferences.js';
 
 /**
- * Header-level "Cài đặt" trigger: two persisted layout preferences (hide
- * side nav / focus mode), applied by `ProtectedAppShell`. Both live here,
- * one place, instead of scattered per-page toggles — per user request.
+ * Header-level "Cài đặt" trigger: persisted layout preferences (hide
+ * side nav / focus mode, applied by `ProtectedAppShell`; compact tables,
+ * applied by the shared `Table`). All live here, one place, instead of
+ * scattered per-page toggles — per user request.
  * localStorage-only (`use-layout-preferences.js`), no backend involved.
  */
 export function LayoutSettingsMenu() {
-  const { hideSideNav, focusMode, setHideSideNav, setFocusMode } =
-    useLayoutPreferences();
+  const {
+    hideSideNav,
+    focusMode,
+    compactMode,
+    setHideSideNav,
+    setFocusMode,
+    setCompactMode,
+  } = useLayoutPreferences();
 
   return (
     <Popover
@@ -42,6 +49,12 @@ export function LayoutSettingsMenu() {
             description="Ẩn cả thanh điều hướng và thanh trên cùng. Nhấn Esc hoặc nút thu nhỏ để thoát."
             value={focusMode}
             onChange={setFocusMode}
+          />
+          <Switch
+            label="Chế độ thu gọn"
+            description="Thu gọn dòng của mọi bảng để xem được nhiều dữ liệu hơn"
+            value={compactMode}
+            onChange={setCompactMode}
           />
         </VStack>
       }

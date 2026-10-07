@@ -6,11 +6,12 @@ import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { proportional, Table } from '@astryxdesign/core/Table';
+import { proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useState } from 'react';
 
+import { Table } from '@/shared/components/table.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
 import {

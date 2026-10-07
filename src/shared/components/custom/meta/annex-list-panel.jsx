@@ -7,7 +7,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
-import { pixel, proportional, Table } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
@@ -24,6 +24,8 @@ import {
   TrendingDown,
   TrendingUp,
 } from 'lucide-react';
+
+import { Table } from '@/shared/components/table.jsx';
 
 import { MetaPill } from './pill.jsx';
 

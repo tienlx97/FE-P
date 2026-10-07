@@ -165,6 +165,27 @@ const config = [
     },
   },
   {
+    // "Chế độ thu gọn" (compact tables) is applied by the shared `Table`
+    // wrapper; an Astryx `Table` imported directly silently ignores it.
+    files: ['src/**/*.js', 'src/**/*.jsx'],
+    ignores: ['src/shared/components/table.jsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@astryxdesign/core/Table',
+              importNames: ['Table'],
+              message:
+                "Import Table from '@/shared/components/table.jsx' so it follows the compact mode setting; TableRow / TableCell / pixel / … still come from '@astryxdesign/core/Table'.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Golden rule #16: sizes come from Astryx's scales (size props,
     // --font-size-*, --spacing-*, --size-element-*), not px copied from a
     // mockup. Re-declares the hex-color selectors above because a later

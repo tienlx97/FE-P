@@ -4,13 +4,14 @@ import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { pixel, proportional, Table } from '@astryxdesign/core/Table';
+import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
+import { Table } from '@/shared/components/table.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { sumContractAnnexAdjustments } from '../config/annex-settlement.js';

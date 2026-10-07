@@ -8,7 +8,6 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
 import {
-  Table,
   TableBody,
   TableCell,
   TableFooter,
@@ -30,6 +29,8 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+
+import { Table } from '@/shared/components/table.jsx';
 
 import { MetaCountBadge } from './count-badge.jsx';
 import { MetaPill } from './pill.jsx';
@@ -557,13 +558,13 @@ const styles = stylex.create({
   headCell: {
     backgroundColor: 'var(--meta-row-hover)',
     maxWidth: 'none',
-    paddingBlock: 'var(--spacing-3)',
+    paddingBlock: 'var(--table-compact-padding-block,var(--spacing-3))',
     paddingInline: 'var(--spacing-2)',
     whiteSpace: 'normal',
   },
   cell: {
     maxWidth: 'none',
-    paddingBlock: 'var(--spacing-3)',
+    paddingBlock: 'var(--table-compact-padding-block,var(--spacing-3))',
     paddingInline: 'var(--spacing-2)',
     whiteSpace: 'nowrap',
   },
