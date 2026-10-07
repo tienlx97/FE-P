@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-07 — Gate check against format-only churn (task 1.1)
+
+- `no-format-churn-check`, closes the "prettier churn" harness gap (logged 2026-10-05 and 2026-10-07; user: "làm 1 2 3"). `harness/checks/no-format-churn.mjs` in verify: per modified file vs HEAD, raw changed lines vs lines changed after prettier-formatting both sides; fails format-only and mixed (≥ 20 extra, ≥ 3×) diffs with a how-to-fix message. Harness test for the line diff / rule.
+- Reproduced: `prettier --write` on shipment-tracking.js → "format-only (87 lines changed, 0 after formatting both sides)"; with a 2-line edit → "mixed (89, 2)"; restored → pass. Generated `meta*.d.ts` header churn is a content change, not flagged.
+- Gate passed: `harness/runs/20261007-152703-24/`.
+- Also this session, BE-P 5df6c88 (`schedule-port-from-tracking`): an EXW shipment whose POL is the factory now looks up the vessel schedule from the POL tracking reports (26KCT39: ONE no longer fails on "DAI NGHIA 01"; Cái Mép asked as ONE's VNCMP) — schedule Synced live.
+
 ## 2026-10-07 — Vessel / voyage in "Hãng tàu báo khác" (task 1.1)
 
 - `tracking-vessel-discrepancy`, per user ("Đồng bộ ngay có cập nhật Tên tàu, Số chuyến không?" — it did not → "điều chỉnh sao cho phù hợp"). BE-P 333612e (`tracking-vessel-sync`): sync fills a blank vessel / voyage from the POL departure event (same "Hãng tàu cập nhật" revision as ETD / ETA), a different one becomes a `field: "Vessel"` discrepancy; accept = schedule revision. FE: "Tàu / chuyến" row with both vessels and "Tàu chạy …" (`discrepancyValues`, new test), types.

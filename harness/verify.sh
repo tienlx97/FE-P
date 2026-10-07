@@ -42,6 +42,7 @@ step "project-readiness" ./harness/checks/project-readiness.sh
 step "memory-secrets" ./harness/checks/memory-secrets.sh
 step "tanstack-table-only" ./harness/checks/tanstack-table-only.sh
 step "logistics-font-sizes" node harness/checks/logistics-font-sizes.mjs
+step "no-format-churn" node harness/checks/no-format-churn.mjs
 
 # ── 0. Generated sources ──────────────────────────────────────────
 # src/shared/components/custom/meta/meta.{js,d.ts} + theme.built.css are
