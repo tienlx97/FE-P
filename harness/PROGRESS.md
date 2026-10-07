@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-07 — Shipment detail loading measured; cross-field validation confirmed
+
+- User "làm 1 2 3", item 3. Loading (`optimize-shipment-detail-loading` task 2 left open with the measurement): production `next start -p 3001` → TTFB 46 ms, DCL 126 ms, load 506 ms, page fully rendered; BE on load only shipment / schedule / journey / alerts at 10–40 ms (dev API logs), no supplier list. Slowness seen while working = `next dev` (TTFB 3.3 s, ~23 MB chunks). Recommended dropping task 2.
+- 2026-10-05 "Discovered" (transshipment / cut-off / free time errors only after enum fields) was already fixed by `stage-gated-declaration-figures` 1.3 (`RUN_DESPITE_FIELD_ERRORS`); the regression test now also asserts free time.
+- Gate passed: `harness/runs/20261007-153527-889/`.
+- Discovered: on the :3001 preview the session dropped on reload and the login form did not leave /login (no server error logged); not investigated — dev :3000 login works. Worth checking before the next production deploy. `shipment-cost-item-templates` is refetched every few seconds while the detail page is open (dev API log) — likely refetch-on-focus during browser automation; unconfirmed.
+
 ## 2026-10-07 — Gate check against format-only churn (task 1.1)
 
 - `no-format-churn-check`, closes the "prettier churn" harness gap (logged 2026-10-05 and 2026-10-07; user: "làm 1 2 3"). `harness/checks/no-format-churn.mjs` in verify: per modified file vs HEAD, raw changed lines vs lines changed after prettier-formatting both sides; fails format-only and mixed (≥ 20 extra, ≥ 3×) diffs with a how-to-fix message. Harness test for the line diff / rule.

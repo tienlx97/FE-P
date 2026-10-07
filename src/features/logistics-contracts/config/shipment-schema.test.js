@@ -120,7 +120,9 @@ test('route and cut-off errors show even while enum fields are unset', () => {
     isTransshipment: true,
     transshipmentLegs: [],
     siCutoffTime: '17:00',
+    originFreeTime: { ...EMPTY_FREE_TIME, mode: 'Combined' },
   });
   assert.ok(paths.includes('transshipmentLegs'));
   assert.ok(paths.includes('siCutoffDate'));
+  assert.ok(paths.includes('originFreeTime.combinedDays'));
 });
