@@ -40,16 +40,18 @@ import {
   useSupplierRelatedCounts,
 } from '../hooks/use-suppliers-query.js';
 import { SupplierFormDrawer } from './supplier-form-drawer.jsx';
+import { SupplierOnBehalfPanel } from './supplier-on-behalf-panel.jsx';
 import { SupplierOverviewPanel } from './supplier-overview-panel.jsx';
 import { SupplierShipmentsPanel } from './supplier-shipments-panel.jsx';
 
-/** @typedef {'overview' | 'banks' | 'shipments' | 'commissions' | 'notes'} SupplierTab */
+/** @typedef {'overview' | 'banks' | 'shipments' | 'onBehalf' | 'commissions' | 'notes'} SupplierTab */
 
 // Order and labels follow Figma 141:56 ("TAB BAR").
 const TAB_LABELS = {
   overview: 'Tổng quan',
   banks: 'Tài khoản ngân hàng',
   shipments: 'Shipment',
+  onBehalf: 'Chi hộ',
   commissions: 'Commission',
   notes: 'Ghi chú & bổ sung',
 };
@@ -162,6 +164,7 @@ function SupplierDetailBody({
     overview: undefined,
     banks: bankAccounts.length,
     shipments: shipmentCount,
+    onBehalf: undefined,
     commissions: commissionCount,
     notes: undefined,
   };
@@ -240,6 +243,12 @@ function SupplierDetailBody({
           ) : null}
           {activeTab === 'shipments' ? (
             <SupplierShipmentsPanel
+              supplierId={supplier.id}
+              supplierName={supplier.companyName}
+            />
+          ) : null}
+          {activeTab === 'onBehalf' ? (
+            <SupplierOnBehalfPanel
               supplierId={supplier.id}
               supplierName={supplier.companyName}
             />

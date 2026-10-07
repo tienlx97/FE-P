@@ -20,6 +20,7 @@ export const COLUMN_OPTIONS = [
   { key: 'representativeName', label: 'Người đại diện' },
   { key: 'phone', label: 'Điện thoại' },
   { key: 'address', label: 'Địa chỉ' },
+  { key: 'onBehalfOutstanding', label: 'Chi hộ chưa hoàn' },
   { key: 'extraFields', label: 'Tùy ý' },
   { key: 'actions', label: 'Thao tác', isAlwaysVisible: true },
 ];
@@ -52,6 +53,7 @@ export const skeletonRows = Array.from(
     representativeName: '',
     representativeTitle: '',
     address: '',
+    onBehalfOutstanding: null,
     extraFields: [],
   }),
 );

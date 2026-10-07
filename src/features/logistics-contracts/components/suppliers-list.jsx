@@ -30,6 +30,7 @@ import {
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { searchSuppliers } from '../api/suppliers.js';
+import { formatVndAmount } from '../config/currencies.js';
 import {
   COLUMN_OPTIONS,
   DEFAULT_PAGE_SIZE,
@@ -39,6 +40,7 @@ import {
   skeletonRows,
 } from '../config/suppliers-table.js';
 import { usePartyLookupsQuery } from '../hooks/use-party-lookups-query.js';
+import { useOnBehalfCostTotalsQuery } from '../hooks/use-supplier-on-behalf-costs-query.js';
 import {
   useDeleteSupplierMutation,
   useSearchSuppliersQuery,
@@ -174,6 +176,16 @@ export function SuppliersList() {
     listResult?.success ? listResult.totalPages : 1,
   );
 
+  // "Chi hộ chưa hoàn": what we still owe each supplier for fees it paid
+  // on our behalf; suppliers without such fees are absent.
+  const onBehalfTotalsQuery = useOnBehalfCostTotalsQuery();
+  const outstandingBySupplier = new Map(
+    (onBehalfTotalsQuery.data?.success
+      ? onBehalfTotalsQuery.data.totals
+      : []
+    ).map((total) => [total.supplierId, total.outstandingAmount]),
+  );
+
   /** @param {import('../types/index.js').Supplier[]} rawSuppliers */
   function enrichSuppliers(rawSuppliers) {
     return rawSuppliers.map((supplier) => ({
@@ -184,6 +196,7 @@ export function SuppliersList() {
       representativeName: supplier.representativeName ?? '',
       representativeTitle: supplier.representativeTitle ?? '',
       address: supplier.address ?? '',
+      onBehalfOutstanding: outstandingBySupplier.get(supplier.id) ?? null,
     }));
   }
 
@@ -275,6 +288,24 @@ export function SuppliersList() {
       renderCell: (supplier) => <MetaCellText value={supplier.address} />,
     },
     {
+      key: 'onBehalfOutstanding',
+      header: 'Chi hộ chưa hoàn',
+      width: pixel(176),
+      align: 'end',
+      renderCell: (supplier) =>
+        typeof supplier.onBehalfOutstanding === 'number' &&
+        supplier.onBehalfOutstanding > 0 ? (
+          <Link
+            href={`/logistics/suppliers/${supplier.id}?tab=onBehalf`}
+            weight="semibold"
+          >
+            {formatVndAmount(supplier.onBehalfOutstanding)}
+          </Link>
+        ) : (
+          <MetaCellText value={null} />
+        ),
+    },
+    {
       key: 'extraFields',
       header: 'Tùy ý',
       width: pixel(80),
@@ -313,11 +344,13 @@ export function SuppliersList() {
   // "Loại đối tượng" / "Nội bộ" filters.
   const groupTabs = [
     { value: ALL, label: 'Tất cả', count: allSuppliersCount },
-    ...groups.map((/** @type {import('../types/index.js').PartyLookup} */ group) => ({
-      value: group.id,
-      label: group.name,
-      count: group.supplierCount,
-    })),
+    ...groups.map(
+      (/** @type {import('../types/index.js').PartyLookup} */ group) => ({
+        value: group.id,
+        label: group.name,
+        count: group.supplierCount,
+      }),
+    ),
   ];
 
   const groupTabList = (

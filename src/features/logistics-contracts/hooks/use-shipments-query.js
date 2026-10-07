@@ -10,6 +10,7 @@ import {
   updateShipment,
 } from '../api/shipments.js';
 import { invalidateShipmentTracking } from './use-shipment-journey-query.js';
+import { ON_BEHALF_KEY } from './use-supplier-on-behalf-costs-query.js';
 
 /** @param {string} contractId */
 const queryKey = (contractId) => [
@@ -70,6 +71,8 @@ export function useCreateShipmentMutation(contractId) {
           queryClient.invalidateQueries({
             queryKey: ['logistics-contracts', 'shipments-list'],
           }),
+          // Cost lines paid on behalf feed the supplier "Chi hộ" tab.
+          queryClient.invalidateQueries({ queryKey: ON_BEHALF_KEY }),
           invalidateShipmentTracking(queryClient),
         ]);
       }
@@ -97,6 +100,8 @@ export function useUpdateShipmentMutation(contractId) {
           queryClient.invalidateQueries({
             queryKey: ['logistics-contracts', 'shipments-list'],
           }),
+          // Cost lines paid on behalf feed the supplier "Chi hộ" tab.
+          queryClient.invalidateQueries({ queryKey: ON_BEHALF_KEY }),
           invalidateShipmentTracking(queryClient),
         ]);
       }
@@ -126,6 +131,8 @@ export function useDeleteShipmentMutation(contractId) {
           queryClient.invalidateQueries({
             queryKey: ['logistics-contracts', 'shipments-list'],
           }),
+          // Cost lines paid on behalf feed the supplier "Chi hộ" tab.
+          queryClient.invalidateQueries({ queryKey: ON_BEHALF_KEY }),
           invalidateShipmentTracking(queryClient),
         ]);
       }

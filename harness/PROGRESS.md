@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-07 — Costs paid on behalf: supplier "Chi hộ" tab and list column (task 1.3)
+
+- `shipment-cost-paid-on-behalf` 1.3: supplier detail tab "Chi hộ" (`?tab=onBehalf`, `SupplierOnBehalfPanel`): Tổng chi hộ / Đã hoàn trả / Còn phải trả KPI cards, lines across shipments (date, shipment link to its cost tab, fee + "Thu bởi …", invoice, amount, reimbursement pill), period + status filters, row selection → "Đánh dấu đã hoàn trả" (date + reference dialog) / "Chuyển về chưa hoàn trả", Excel export. Supplier list column "Chi hộ chưa hoàn" (link to the tab) from `on-behalf-totals`. Shipment create / update / delete and reimbursement invalidate each other's queries.
+- Browser :3000 → dev API :8081, disposable 26KCT42/LOT-01 (GIA HUY, 500,000 đ): tab showed the line; cleared → Còn phải trả 500,000 đ; marked with UNC-UI-01 via the dialog → Đã hoàn trả 500,000 đ; list column showed 500,000 đ for GIA HUY only. Disposable shipment deleted afterwards (204; 26KCT42 back to 0 shipments, totals `[]`).
+- Gate passed: `harness/runs/20261007-180909-1001/`. First run failed `no-format-churn` on supplier-detail-workspace.jsx (whole-file prettier, 39 vs 11 lines) — the new check caught it; file restored and only the edit re-applied.
+
 ## 2026-10-07 — Costs paid on behalf: cost table (task 1.2)
 
 - `shipment-cost-paid-on-behalf` 1.2: `MetaCostPanel` takes `paidOnBehalf` / `payee` per row ("Chi hộ" pill next to the provider, "Thu bởi …"), optional `paidOnBehalfTotal` in the header ("NCC chi hộ") and `totals.paidOnBehalf` in the Σ row; shipment total unchanged.

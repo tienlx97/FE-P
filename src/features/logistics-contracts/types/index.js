@@ -840,6 +840,50 @@ export {};
  */
 
 /**
+ * @typedef {'all' | 'outstanding' | 'reimbursed'} OnBehalfCostStatus
+ */
+
+/**
+ * One cost line a supplier paid on behalf ("chi hộ"), with its shipment
+ * (BE-P `SupplierOnBehalfCostResponse`). `date` = invoice date, else ETD.
+ * @typedef {Object} SupplierOnBehalfCost
+ * @property {string} costId
+ * @property {string} shipmentId
+ * @property {string} shipmentCode
+ * @property {string} contractId
+ * @property {string} contractNumber
+ * @property {string} costCategoryId
+ * @property {string} name
+ * @property {number} amount
+ * @property {number} quantity
+ * @property {string | null} payeeName
+ * @property {string | null} invoiceNumber
+ * @property {string | null} invoiceDate
+ * @property {string | null} date
+ * @property {string | null} reimbursedOn
+ * @property {string | null} reimbursementReference
+ * @property {string | null} note
+ */
+
+/**
+ * `items` match the period and status; the amounts cover the period.
+ * @typedef {Object} SupplierOnBehalfCosts
+ * @property {SupplierOnBehalfCost[]} items
+ * @property {number} totalAmount
+ * @property {number} reimbursedAmount
+ * @property {number} outstandingAmount
+ */
+
+/**
+ * @typedef {Object} SupplierOnBehalfTotal
+ * @property {string} supplierId
+ * @property {number} totalAmount
+ * @property {number} reimbursedAmount
+ * @property {number} outstandingAmount
+ * @property {number} outstandingCount
+ */
+
+/**
  * @typedef {'Separate' | 'Combined'} FreeTimeMode
  */
 

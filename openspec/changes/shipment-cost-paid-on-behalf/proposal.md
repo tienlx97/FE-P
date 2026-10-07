@@ -1,6 +1,6 @@
 # Proposal: Costs paid on behalf by a supplier ("chi hộ")
 
-**Status:** in progress
+**Status:** done
 **Created:** 2026-10-07
 
 ## Why
