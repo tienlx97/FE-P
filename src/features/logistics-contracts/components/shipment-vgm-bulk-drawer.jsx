@@ -408,7 +408,7 @@ export function ShipmentVgmBulkDrawer({
       onClose={onClose}
       icon={ListPlus}
       title="Thêm danh sách container"
-      width={1240}
+      width={1480}
       meta={
         <HStack gap={2} vAlign="center" wrap="wrap">
           <Text size="sm" weight="bold" color="accent" type="code">
@@ -459,7 +459,8 @@ export function ShipmentVgmBulkDrawer({
       >
         <FileInput
           label="Tệp danh sách container"
-          description={`Đủ ${BULK_CONTAINER_COLUMNS.length} cột: số cont, loại, seal, nhà vận chuyển, ngày & giờ đóng, giờ xe vào, 5 khối lượng VGM, ghi chú. Tệp "Xuất Excel" cũng nhập lại được. .xlsx/.xls, tối đa 5 MB.`}
+          isLabelHidden
+          placeholder="Kéo thả tệp Excel vào đây, hoặc bấm để chọn tệp (.xlsx, .xls)"
           value={file}
           onChange={(next) => {
             void importFile(Array.isArray(next) ? (next[0] ?? null) : next);
@@ -467,7 +468,16 @@ export function ShipmentVgmBulkDrawer({
           accept=".xlsx,.xls"
           maxSize={5 * 1024 * 1024}
           mode="dropzone"
-          status={fileError ? { type: 'error', message: fileError } : undefined}
+          status={
+            fileError
+              ? { type: 'error', message: fileError }
+              : file && rows.length > 0
+                ? {
+                    type: 'success',
+                    message: `Đã đọc ${rows.length} container từ tệp.`,
+                  }
+                : undefined
+          }
           statusVariant="detached"
           width="100%"
         />

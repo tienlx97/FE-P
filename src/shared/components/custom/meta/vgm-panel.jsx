@@ -2,6 +2,7 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
+import { DropdownMenu } from '@astryxdesign/core/DropdownMenu';
 import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
@@ -26,6 +27,7 @@ import {
   Pencil,
   Plus,
   Scale,
+  Table2,
   Trash2,
   Upload,
 } from 'lucide-react';
@@ -149,31 +151,47 @@ export function MetaVgmPanel({
                 onClick={onExport}
               />
             ) : null}
-            {onImport ? (
-              <Button
-                label="Nhập từ Excel"
-                variant="secondary"
-                isDisabled={isReadOnly}
-                icon={<Icon icon={Upload} size="sm" />}
-                onClick={onImport}
-              />
-            ) : null}
-            {onBulkCreate ? (
-              <Button
-                label="Thêm bằng bảng"
-                variant="secondary"
-                isDisabled={isReadOnly}
-                icon={<Icon icon={Plus} size="sm" />}
-                onClick={onBulkCreate}
-              />
-            ) : null}
             {onCreate ? (
-              <Button
-                label="Thêm container"
-                variant="primary"
-                isDisabled={isReadOnly}
-                icon={<Icon icon={Plus} size="sm" />}
-                onClick={onCreate}
+              // One "Thêm container" menu button, like the contracts list's
+              // "Xuất Excel": single container, table or Excel (user,
+              // 2026-10-07).
+              <DropdownMenu
+                button={{
+                  label: 'Thêm container',
+                  variant: 'primary',
+                  icon: <Icon icon={Plus} size="sm" />,
+                  isDisabled: isReadOnly,
+                }}
+                alignment="end"
+                menuWidth={220}
+                items={[
+                  {
+                    id: 'single',
+                    label: 'Thêm 1 container',
+                    icon: <Icon icon={Plus} size="sm" />,
+                    onClick: onCreate,
+                  },
+                  ...(onBulkCreate
+                    ? [
+                        {
+                          id: 'table',
+                          label: 'Thêm bằng bảng',
+                          icon: <Icon icon={Table2} size="sm" />,
+                          onClick: onBulkCreate,
+                        },
+                      ]
+                    : []),
+                  ...(onImport
+                    ? [
+                        {
+                          id: 'excel',
+                          label: 'Nhập từ Excel',
+                          icon: <Icon icon={Upload} size="sm" />,
+                          onClick: onImport,
+                        },
+                      ]
+                    : []),
+                ]}
               />
             ) : null}
           </HStack>

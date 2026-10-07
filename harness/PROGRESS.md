@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-07 — "Thêm container" menu button, simpler Excel import card (task 1.1)
+
+- `container-add-split-button`, per user. VGM header: Xuất Excel + one primary "Thêm container" `DropdownMenu` (Thêm 1 container · Thêm bằng bảng · Nhập từ Excel), same pattern as the contracts list "Xuất Excel". A first ButtonGroup split button was rejected ("Split button xấu"); a richer card 1 (steps panel, column pills) was rejected too ("làm đơn giản thôi, chỉ cần kéo thả vào") — card 1 is now just the dropzone (Vietnamese text) + "Đã đọc N container từ tệp.". Bulk drawer width 1240 → 1480 (renders ~1440 at a 1920 viewport).
+- Claude in Chrome (user's request), :3000, 26KCT27/LOT-01: menu shows the 3 items; "Nhập từ Excel" opens the drawer; a 2-row test .xlsx → 2 rows + success line; closed with "Bỏ thay đổi", nothing saved.
+- Gate passed: `harness/runs/20261007-222245-120724/`.
+
 ## 2026-10-07 — Compact mode setting (task 1.2)
 
 - `compact-mode-and-cost-group-title` 1.2, per user ("Thêm mode compact trong setting"; chose tables only). "Cài đặt giao diện" → "Chế độ thu gọn" switch (`compactMode` in `use-layout-preferences.js`, localStorage; `useCompactMode` for tables). New `src/shared/components/table.jsx` wraps Astryx `Table`: compact density when on, and defines `--table-compact-padding-block` so cells with their own padding (cost, VGM, compact-table, contract shipments) read `var(--table-compact-padding-block, <own>)`. All 19 direct `Table` imports moved to the wrapper; ESLint `no-restricted-imports` now rejects importing `Table` from `@astryxdesign/core/Table` (probe file → error).
