@@ -19,6 +19,7 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import {
   discrepancyTargetLabel,
+  discrepancyValues,
   labelForTrackedField,
   trackingEventLabel,
   trackingStatus,
@@ -83,21 +84,27 @@ export function ShipmentCarrierTrackingSection({ contractId, shipmentId, legs, c
 
   const discrepancyRows = tracking.discrepancies.map((discrepancy) => ({
     id: discrepancy.id,
-    cells: {
+    cells: discrepancyCells(discrepancy),
+  }));
+
+  /** @param {import('../types/index.js').ShipmentTrackingDiscrepancy} discrepancy */
+  function discrepancyCells(discrepancy) {
+    const values = discrepancyValues(discrepancy);
+    return {
       target: <Text weight="semibold">{discrepancyTargetLabel(discrepancy, legs)}</Text>,
       current: (
         <Text type="code" color="secondary">
-          {formatDisplayDate(discrepancy.currentValue ?? undefined)}
+          {values.current}
         </Text>
       ),
       carrier: (
         <VStack gap={0.5}>
           <Text type="code" weight="bold">
-            {formatDisplayDate(discrepancy.carrierValue)}
+            {values.carrier}
           </Text>
-          {discrepancy.carrierDepot ? (
+          {values.note ? (
             <Text size="sm" color="meta-subtle">
-              {discrepancy.carrierDepot}
+              {values.note}
             </Text>
           ) : null}
         </VStack>
@@ -122,8 +129,8 @@ export function ShipmentCarrierTrackingSection({ contractId, shipmentId, legs, c
           />
         </HStack>
       ) : null,
-    },
-  }));
+    };
+  }
 
   const eventRows = tracking.events.slice(0, EVENT_ROWS).map((event) => ({
     id: event.id,

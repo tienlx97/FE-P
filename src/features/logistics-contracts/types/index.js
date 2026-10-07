@@ -1278,7 +1278,7 @@ export {};
  */
 
 /**
- * @typedef {'EmptyPickedUpOn' | 'GatedInOn' | 'DestinationGatedOutOn' | 'EmptyReturnedOn' | 'ActualDeparture' | 'ActualArrival' | 'TransshipmentAta' | 'TransshipmentAtd'} TrackedField
+ * @typedef {'EmptyPickedUpOn' | 'GatedInOn' | 'DestinationGatedOutOn' | 'EmptyReturnedOn' | 'ActualDeparture' | 'ActualArrival' | 'TransshipmentAta' | 'TransshipmentAtd' | 'Vessel'} TrackedField
  */
 
 /**
@@ -1370,7 +1370,8 @@ export {};
  */
 
 /**
- * "Hãng tàu báo khác".
+ * "Hãng tàu báo khác". `field` "Vessel": the vessel / voyage fields,
+ * `carrierValue` = the departure the carrier gives for its vessel.
  * @typedef {Object} ShipmentTrackingDiscrepancy
  * @property {string} id
  * @property {TrackedField} field
@@ -1380,6 +1381,10 @@ export {};
  * @property {string} carrierValue
  * @property {string | null} carrierDepot
  * @property {string} detectedAt
+ * @property {string | null} [currentVesselName]
+ * @property {string | null} [currentVoyageNumber]
+ * @property {string | null} [carrierVesselName]
+ * @property {string | null} [carrierVoyageNumber]
  */
 
 /**

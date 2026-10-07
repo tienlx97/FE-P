@@ -16,6 +16,7 @@ const FIELD_LABELS = {
   ActualArrival: 'ATA',
   TransshipmentAta: 'ATA chuyển tải',
   TransshipmentAtd: 'ATD chuyển tải',
+  Vessel: 'Tàu / chuyến',
 };
 
 /** @param {import('../types/index.js').TrackedField} field */
@@ -37,6 +38,33 @@ export function discrepancyTargetLabel(discrepancy, legs = []) {
     return `${label} · chặng ${discrepancy.legSequence}${port ? ` (${port})` : ''}`;
   }
   return label;
+}
+
+/** "KMTC SEOUL / 2610S"; "—" when neither is known. */
+function vesselText(/** @type {string | null | undefined} */ name, /** @type {string | null | undefined} */ voyage) {
+  return [name, voyage].filter(Boolean).join(' / ') || '—';
+}
+
+/**
+ * The two sides of a discrepancy as text: dates, or vessel / voyage for a
+ * "Tàu / chuyến" one (BE `tracking-vessel-sync`); `note` = the empty-return
+ * depot, or the departure date the carrier gives for its vessel.
+ * @param {import('../types/index.js').ShipmentTrackingDiscrepancy} discrepancy
+ * @returns {{ current: string, carrier: string, note: string | null }}
+ */
+export function discrepancyValues(discrepancy) {
+  if (discrepancy.field === 'Vessel') {
+    return {
+      current: vesselText(discrepancy.currentVesselName, discrepancy.currentVoyageNumber),
+      carrier: vesselText(discrepancy.carrierVesselName, discrepancy.carrierVoyageNumber),
+      note: `Tàu chạy ${formatDisplayDate(discrepancy.carrierValue)}`,
+    };
+  }
+  return {
+    current: formatDisplayDate(discrepancy.currentValue ?? undefined),
+    carrier: formatDisplayDate(discrepancy.carrierValue),
+    note: discrepancy.carrierDepot,
+  };
 }
 
 /**

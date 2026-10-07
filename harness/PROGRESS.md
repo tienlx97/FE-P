@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-07 — Vessel / voyage in "Hãng tàu báo khác" (task 1.1)
+
+- `tracking-vessel-discrepancy`, per user ("Đồng bộ ngay có cập nhật Tên tàu, Số chuyến không?" — it did not → "điều chỉnh sao cho phù hợp"). BE-P 333612e (`tracking-vessel-sync`): sync fills a blank vessel / voyage from the POL departure event (same "Hãng tàu cập nhật" revision as ETD / ETA), a different one becomes a `field: "Vessel"` discrepancy; accept = schedule revision. FE: "Tàu / chuyến" row with both vessels and "Tàu chạy …" (`discrepancyValues`, new test), types.
+- Dev API :8081 rebuilt, migration `TrackingVesselDiscrepancy` applied. Browser :3000, 26KCT39/LOT-01 (ONE FANTASTIC / 011E = carrier): "Đồng bộ ngay" → synced, vessel unchanged, no discrepancy. Read-only DB check: 2 dev shipments without a vessel whose tracking names one (POS HOCHIMINH 1061S, KMTC ULSAN 2614S) will be filled on their next sync; not synced by hand to avoid changing shared data for a test. Conflict + accept covered by BE HTTP test.
+- Gate passed: `harness/runs/20261007-142414-388/`.
+- Discovered: 26KCT39 vessel schedule lookup fails "ONE không có nơi DAI NGHIA 01" (POL is a factory name, not a port) — pre-existing.
+- Harness gap: directory/file-wide `prettier --write` on files not formatted to the repo config rewrites them wholesale (happened again here; reverted before commit). Needs a check or a formatted baseline.
+
 ## 2026-10-07 — Timeline tab without the B/L card (task 1.1)
 
 - `shipment-timeline-without-bl-card`, per user ("Giá trị trong Card Chứng từ B/L không cần thiết"): removed the "Chứng từ B/L" card from "Timeline & lịch tàu"; "Chuyển tải" now full width. The B/L documents dialog moved to the shipment header "more" menu ("Chứng từ B/L") so it stays reachable.

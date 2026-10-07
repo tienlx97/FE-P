@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   carrierSourcedDates,
   discrepancyTargetLabel,
+  discrepancyValues,
   formatDateTime,
   isCarrierCutoff,
   trackingEventLabel,
@@ -81,6 +82,29 @@ test('discrepancy targets name the container or the leg', () => {
     'ATA chuyển tải · chặng 1 (Singapore)',
   );
   assert.equal(discrepancyTargetLabel({ ...base, field: 'ActualArrival', containerNumber: null, legSequence: null }), 'ATA');
+});
+
+test('a vessel discrepancy shows vessel / voyage and the carrier departure date', () => {
+  const vessel = {
+    id: '1',
+    field: /** @type {const} */ ('Vessel'),
+    containerNumber: null,
+    legSequence: null,
+    currentValue: null,
+    carrierValue: '2026-10-09',
+    carrierDepot: null,
+    detectedAt: '',
+    currentVesselName: 'KMTC JAKARTA',
+    currentVoyageNumber: null,
+    carrierVesselName: 'KMTC SEOUL',
+    carrierVoyageNumber: '2610S',
+  };
+  assert.equal(discrepancyTargetLabel(vessel), 'Tàu / chuyến');
+  assert.deepEqual(discrepancyValues(vessel), { current: 'KMTC JAKARTA', carrier: 'KMTC SEOUL / 2610S', note: 'Tàu chạy 09/10/2026' });
+  assert.deepEqual(
+    discrepancyValues({ ...vessel, field: 'EmptyReturnedOn', currentValue: '2026-11-01', carrierValue: '2026-11-02', carrierDepot: 'Depot A' }),
+    { current: '01/11/2026', carrier: '02/11/2026', note: 'Depot A' },
+  );
 });
 
 test('events read like the plan table', () => {
