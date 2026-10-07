@@ -12,7 +12,6 @@ import * as stylex from '@stylexjs/stylex';
 import {
   CalendarClock,
   CalendarRange,
-  FileText,
   History,
   Ship,
   Split,
@@ -29,10 +28,6 @@ import {
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { containerDateFields } from '../config/shipment-container-dates.js';
-import {
-  billOfLadingSteps,
-  labelForBillOfLadingType,
-} from '../config/shipment-documents.js';
 import {
   formatScheduleValue,
   freeTimeClockLabel,
@@ -145,8 +140,8 @@ function RouteEnd({
  * Shipment detail "Timeline & lịch tàu" tab, read top-down like a carrier's
  * tracking page: the route (POL → vessel / transit → POD, then cut-offs),
  * the journey (Incoterm milestone strip dated by the physical events —
- * the only journey view on the page — then per container), B/L and
- * transshipment as two cards, carrier tracking, per-container free time
+ * the only journey view on the page — then per container), transshipment,
+ * carrier tracking, per-container free time
  * and the schedule history (as a timeline). Spec
  * `docs/shipment-journey-incoterms.md` §4, `docs/carrier-tracking-integration-plan.md`.
  * @param {{
@@ -164,7 +159,6 @@ function RouteEnd({
  *   canEdit: boolean,
  *   onUpdateSchedule: () => void,
  *   onEditContainerDates: () => void,
- *   onEditDocuments: () => void,
  *   onEditTransshipment: () => void,
  * }} props
  */
@@ -183,7 +177,6 @@ export function ShipmentSchedulePanel({
   canEdit,
   onUpdateSchedule,
   onEditContainerDates,
-  onEditDocuments,
   onEditTransshipment,
 }) {
   const trackingQuery = useShipmentTrackingQuery(contractId, shipmentId);
@@ -306,9 +299,6 @@ export function ShipmentSchedulePanel({
     },
   }));
 
-  const blSteps = billOfLadingSteps(schedule.documents);
-  const blDone = blSteps.filter((step) => step.date).length;
-  const firstOpenStep = blSteps.findIndex((step) => !step.date);
   const legs = schedule.transshipmentLegs ?? [];
 
   return (
@@ -397,118 +387,73 @@ export function ShipmentSchedulePanel({
         journeySummary={journeySummary}
       />
 
-      <Grid columns={{ minWidth: 320, max: 2 }} gap={4}>
-        <MetaShipmentSection
-          icon={FileText}
-          title="Chứng từ B/L"
-          subtitle={
-            [
-              labelForBillOfLadingType(schedule.documents?.billOfLadingType),
-              schedule.documents?.blReleaseReference,
-            ]
-              .filter(Boolean)
-              .join(' · ') || undefined
-          }
-          pill={{
-            label: `${blDone}/${blSteps.length} bước`,
-            tone: blDone === blSteps.length ? 'success' : 'neutral',
-            hasDot: blDone === blSteps.length,
-          }}
-          actions={
-            canEdit ? (
-              <Button
-                label="Cập nhật"
-                variant="secondary"
-                size="sm"
-                icon={<Icon icon={FileText} size="sm" />}
-                onClick={onEditDocuments}
-              />
-            ) : null
-          }
-        >
-          <MetaEventTimeline
-            emptyLabel="Chưa có bước B/L."
-            items={blSteps.map((step, index) => ({
-              id: step.key,
-              title: step.label,
-              state: step.date
-                ? 'done'
-                : index === firstOpenStep
-                  ? 'next'
-                  : 'upcoming',
-              date: step.date ? formatDisplayDate(step.date) : 'Chưa có',
-            }))}
-          />
-        </MetaShipmentSection>
-
-        <MetaShipmentSection
-          icon={Split}
-          title="Chuyển tải"
-          subtitle={
-            legs.length > 0
-              ? `${legs.length} cảng chuyển tải`
-              : 'Đi thẳng — không chuyển tải'
-          }
-          actions={
-            canEdit ? (
-              <Button
-                label="Sửa"
-                variant="secondary"
-                size="sm"
-                icon={<Icon icon={Split} size="sm" />}
-                onClick={onEditTransshipment}
-              />
-            ) : null
-          }
-        >
-          {legs.length === 0 ? (
-            <Text color="secondary">Tàu đi thẳng từ POL đến POD.</Text>
-          ) : (
-            <VStack gap={0} hAlign="stretch">
-              {legs.map((leg, index) => {
-                const arrival = leg.ata || leg.eta;
-                const departure = leg.atd || leg.etd;
-                return (
-                  <InfoLine
-                    key={`${index}-${leg.port}`}
-                    label={`${index + 1}. ${leg.port}`}
-                  >
-                    <Text size="sm">
-                      {[leg.vesselName, leg.voyageNumber]
-                        .filter(Boolean)
-                        .join(' / ') || 'Chưa có tàu nối'}
-                    </Text>
-                    <HStack gap={1.5} vAlign="center" wrap="wrap" hAlign="end">
-                      <MetaPill
-                        label={`${leg.ata ? 'ATA' : 'ETA'} ${arrival ? formatDisplayDate(arrival) : '—'}`}
-                        tone={leg.ata ? 'success' : 'neutral'}
-                        size="sm"
-                      />
-                      <MetaPill
-                        label={`${leg.atd ? 'ATD' : 'ETD'} ${departure ? formatDisplayDate(departure) : '—'}`}
-                        tone={leg.atd ? 'success' : 'neutral'}
-                        size="sm"
-                      />
-                      {isFromCarrier({
-                        field: 'TransshipmentAta',
-                        value: leg.ata,
-                        port: leg.port,
-                      }) ||
-                      isFromCarrier({
-                        field: 'TransshipmentAtd',
-                        value: leg.atd,
-                        port: leg.port,
-                      }) ? (
-                        <CarrierSourceTag />
-                      ) : null}
-                    </HStack>
-                  </InfoLine>
-                );
-              })}
-            </VStack>
-          )}
-        </MetaShipmentSection>
-      </Grid>
+      <MetaShipmentSection
+        icon={Split}
+        title="Chuyển tải"
+        subtitle={
+          legs.length > 0
+            ? `${legs.length} cảng chuyển tải`
+            : 'Đi thẳng — không chuyển tải'
+        }
+        actions={
+          canEdit ? (
+            <Button
+              label="Sửa"
+              variant="secondary"
+              size="sm"
+              icon={<Icon icon={Split} size="sm" />}
+              onClick={onEditTransshipment}
+            />
+          ) : null
+        }
+      >
+        {legs.length === 0 ? (
+          <Text color="secondary">Tàu đi thẳng từ POL đến POD.</Text>
+        ) : (
+          <VStack gap={0} hAlign="stretch">
+            {legs.map((leg, index) => {
+              const arrival = leg.ata || leg.eta;
+              const departure = leg.atd || leg.etd;
+              return (
+                <InfoLine
+                  key={`${index}-${leg.port}`}
+                  label={`${index + 1}. ${leg.port}`}
+                >
+                  <Text size="sm">
+                    {[leg.vesselName, leg.voyageNumber]
+                      .filter(Boolean)
+                      .join(' / ') || 'Chưa có tàu nối'}
+                  </Text>
+                  <HStack gap={1.5} vAlign="center" wrap="wrap" hAlign="end">
+                    <MetaPill
+                      label={`${leg.ata ? 'ATA' : 'ETA'} ${arrival ? formatDisplayDate(arrival) : '—'}`}
+                      tone={leg.ata ? 'success' : 'neutral'}
+                      size="sm"
+                    />
+                    <MetaPill
+                      label={`${leg.atd ? 'ATD' : 'ETD'} ${departure ? formatDisplayDate(departure) : '—'}`}
+                      tone={leg.atd ? 'success' : 'neutral'}
+                      size="sm"
+                    />
+                    {isFromCarrier({
+                      field: 'TransshipmentAta',
+                      value: leg.ata,
+                      port: leg.port,
+                    }) ||
+                    isFromCarrier({
+                      field: 'TransshipmentAtd',
+                      value: leg.atd,
+                      port: leg.port,
+                    }) ? (
+                      <CarrierSourceTag />
+                    ) : null}
+                  </HStack>
+                </InfoLine>
+              );
+            })}
+          </VStack>
+        )}
+      </MetaShipmentSection>
 
       <ShipmentCarrierTrackingSection
         contractId={contractId}

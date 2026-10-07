@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-07 — Timeline tab without the B/L card (task 1.1)
+
+- `shipment-timeline-without-bl-card`, per user ("Giá trị trong Card Chứng từ B/L không cần thiết"): removed the "Chứng từ B/L" card from "Timeline & lịch tàu"; "Chuyển tải" now full width. The B/L documents dialog moved to the shipment header "more" menu ("Chứng từ B/L") so it stays reachable.
+- Browser :3000, 26KCT39/LOT-01: no B/L card, Chuyển tải full width; menu item opens "Cập nhật B/L", closed without saving.
+- Gate passed: `harness/runs/20261007-134039-847/`. Generated `meta*.d.ts` header churn still left uncommitted.
+
 ## 2026-10-06 — Contracts list view in URL (task 1.2)
 
 - `shipments-list-port-and-tab-url` 1.2, per user: contracts list view preset synced with `?tab=basic|financial` (same pattern as the shipments list; the `initialViewPresetKey` prop is now the fallback without `?tab=`).

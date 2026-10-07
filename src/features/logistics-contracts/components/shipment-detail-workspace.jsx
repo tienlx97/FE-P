@@ -604,6 +604,12 @@ function ShipmentDetailBody({
                     icon: <Icon icon={CalendarClock} size="sm" />,
                     onClick: () => setIsScheduleOpen(true),
                   },
+                  {
+                    id: 'documents',
+                    label: 'Chứng từ B/L',
+                    icon: <Icon icon={FileText} size="sm" />,
+                    onClick: () => setIsDocumentsOpen(true),
+                  },
                 ]
               : []),
             ...(vgmsQuery.data?.success
@@ -701,7 +707,6 @@ function ShipmentDetailBody({
               canEdit={vgmsQuery.data?.success === true}
               onUpdateSchedule={() => setIsScheduleOpen(true)}
               onEditContainerDates={() => setIsContainerDatesOpen(true)}
-              onEditDocuments={() => setIsDocumentsOpen(true)}
               onEditTransshipment={() => setIsTransshipmentOpen(true)}
             />
           ) : null}
