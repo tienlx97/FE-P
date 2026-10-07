@@ -245,16 +245,20 @@ export function MetaCostPanel({
               {groups.map((group) => (
                 <Fragment key={group.id}>
                   <TableRow xstyle={[styles.groupRow]}>
+                    {/* The title spans STT, Nhóm chi phí and Tên khoản chi
+                        phí so the group name has room (user, 2026-10-07). */}
                     <TableCell
-                      xstyle={[styles.cell, ...pinnedCell('no', 'group')]}
-                    />
-                    <TableCell
-                      xstyle={[styles.cell, ...pinnedCell('group', 'group')]}
+                      colSpan={3}
+                      xstyle={[
+                        styles.cell,
+                        styles.pinGroupTitle,
+                        styles.pinGroupSurface,
+                      ]}
                     >
                       <HStack
                         gap={2}
                         vAlign="center"
-                        hAlign="between"
+                        hAlign="start"
                         wrap="nowrap"
                       >
                         <Text
@@ -279,9 +283,6 @@ export function MetaCostPanel({
                         ) : null}
                       </HStack>
                     </TableCell>
-                    <TableCell
-                      xstyle={[styles.cell, ...pinnedCell('name', 'group')]}
-                    />
                     <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={[styles.cell, alignStyles.end]}>
@@ -621,6 +622,15 @@ const styles = stylex.create({
   },
   pinName: {
     left: 'calc(var(--spacing-10) * 6)',
+    position: {
+      default: 'static',
+      '@media (min-width: 900px)': 'sticky',
+    },
+  },
+  // The group title cell covers the three pinned start columns; like
+  // them, it only sticks from 900px so it never fills a phone screen.
+  pinGroupTitle: {
+    left: 0,
     position: {
       default: 'static',
       '@media (min-width: 900px)': 'sticky',

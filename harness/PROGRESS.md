@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-07 — Cost group title across three columns (task 1.1)
+
+- `compact-mode-and-cost-group-title`, per user ("Tên title nhóm phí (title thêm nhanh): LOG-01... hãy cho tên title này span ra 3 ô"; chose STT + Nhóm chi phí + Tên khoản chi phí). `MetaCostPanel` group row: one `colSpan={3}` cell with the label and "+" (now next to the label), sticky left from 900px; subtotal still under Thành tiền.
+- Browser :3000, 26KCT27/LOT-01: "LOG-02 · ORIGIN INLAND TRANSPORTATION & DEPOT" on one line; scrolled right at 1440px the title stays pinned; at 600px it scrolls with the table like the old group column.
+- Gate passed: `harness/runs/20261007-214530-73547/`.
+
 ## 2026-10-07 — Costs paid on behalf: supplier "Chi hộ" tab and list column (task 1.3)
 
 - `shipment-cost-paid-on-behalf` 1.3: supplier detail tab "Chi hộ" (`?tab=onBehalf`, `SupplierOnBehalfPanel`): Tổng chi hộ / Đã hoàn trả / Còn phải trả KPI cards, lines across shipments (date, shipment link to its cost tab, fee + "Thu bởi …", invoice, amount, reimbursement pill), period + status filters, row selection → "Đánh dấu đã hoàn trả" (date + reference dialog) / "Chuyển về chưa hoàn trả", Excel export. Supplier list column "Chi hộ chưa hoàn" (link to the tab) from `on-behalf-totals`. Shipment create / update / delete and reimbursement invalidate each other's queries.
