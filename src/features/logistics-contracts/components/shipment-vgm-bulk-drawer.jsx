@@ -281,6 +281,7 @@ export function ShipmentVgmBulkDrawer({
           <TextInput
             label={`Số container dòng ${line}`}
             isLabelHidden
+            size="sm"
             value={row.containerNumber}
             onChange={(value) => setRowField(row.id, 'containerNumber', value)}
             placeholder="TCLU1234567"
@@ -293,6 +294,7 @@ export function ShipmentVgmBulkDrawer({
           <Selector
             label={`Loại cont dòng ${line}`}
             isLabelHidden
+            size="sm"
             value={row.containerType}
             onChange={(value) =>
               setRowField(
@@ -313,6 +315,7 @@ export function ShipmentVgmBulkDrawer({
           <TextInput
             label={`Số seal dòng ${line}`}
             isLabelHidden
+            size="sm"
             value={row.sealNumber}
             onChange={(value) => setRowField(row.id, 'sealNumber', value)}
             placeholder="Tuỳ chọn"
@@ -325,6 +328,7 @@ export function ShipmentVgmBulkDrawer({
           <Selector
             label={`Nhà vận chuyển dòng ${line}`}
             isLabelHidden
+            size="sm"
             hasSearch
             hasClear
             placeholder={row.carrierName || 'Chọn nhà cung cấp'}
@@ -342,6 +346,7 @@ export function ShipmentVgmBulkDrawer({
           <DateInput
             label={`Ngày đóng dòng ${line}`}
             isLabelHidden
+            size="sm"
             value={isoDate(row.packingDate)}
             onChange={(value) =>
               setRowField(row.id, 'packingDate', value ?? '')

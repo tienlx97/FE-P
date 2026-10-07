@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-07 — Bulk container table inputs at small size (task 1.2)
+
+- `container-add-split-button` 1.2, per user ("card 3. Danh sách container > Text input đang to quá"): the 5 inline inputs of "Thêm danh sách container" card 3 use `size="sm"`, matching the row's "Chi tiết" button and pills.
+- Claude in Chrome, :3000, 26KCT27/LOT-01 → Thêm container ▾ → Thêm bằng bảng: row inputs now the "Chi tiết" button's height; closed with no changes.
+- Gate passed: `harness/runs/20261007-222821-128320/`.
+
 ## 2026-10-07 — "Thêm container" menu button, simpler Excel import card (task 1.1)
 
 - `container-add-split-button`, per user. VGM header: Xuất Excel + one primary "Thêm container" `DropdownMenu` (Thêm 1 container · Thêm bằng bảng · Nhập từ Excel), same pattern as the contracts list "Xuất Excel". A first ButtonGroup split button was rejected ("Split button xấu"); a richer card 1 (steps panel, column pills) was rejected too ("làm đơn giản thôi, chỉ cần kéo thả vào") — card 1 is now just the dropzone (Vietnamese text) + "Đã đọc N container từ tệp.". Bulk drawer width 1240 → 1480 (renders ~1440 at a 1920 viewport).
