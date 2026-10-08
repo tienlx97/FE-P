@@ -153,6 +153,9 @@ export const metaTheme = defineTheme({
     // wash, split into white borderless cards with a 1px drop shadow.
     '--meta-content-wash': '#f2f4f7',
     '--meta-shadow-card': '0 1px 2px 0 rgba(0, 0, 0, 0.2)',
+    // Read-only tiles inside a card (key-value fields, KPI metrics): grey
+    // fill instead of a hairline (facebook.com `--card-background-flat`).
+    '--meta-tile-bg': '#f8f9fb',
 
     // Elevation — only sticky checkout bars / summary panels
     '--meta-shadow-float': 'rgba(20, 22, 26, 0.3) 0px 1px 4px 0px',

@@ -596,8 +596,9 @@ const styles = stylex.create({
     },
   },
   metric: {
-    backgroundColor: 'var(--color-background-surface)',
-    borderColor: 'var(--color-border)',
+    // Facebook-style inner tile (2026-10-08): grey fill, no hairline.
+    backgroundColor: 'var(--meta-tile-bg)',
+    borderColor: 'transparent',
     borderRadius: 'var(--radius-container)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',

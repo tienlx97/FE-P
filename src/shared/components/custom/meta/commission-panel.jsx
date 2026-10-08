@@ -605,8 +605,9 @@ const styles = stylex.create({
     paddingBottom: 'var(--spacing-3)',
   },
   inset: {
-    backgroundColor: 'var(--meta-inset-bg)',
-    borderColor: 'var(--color-border)',
+    // Facebook-style inner tile (2026-10-08): grey fill, no hairline.
+    backgroundColor: 'var(--meta-tile-bg)',
+    borderColor: 'transparent',
     borderRadius: 'var(--meta-radius-inset)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',

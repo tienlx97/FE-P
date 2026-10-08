@@ -267,6 +267,7 @@
     --meta-surface-container-high: #e6e7f2;
     --meta-content-wash: #f2f4f7;
     --meta-shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --meta-tile-bg: #f8f9fb;
     --meta-shadow-float: rgba(20, 22, 26, 0.3) 0px 1px 4px 0px;
     --meta-font-features: "liga" 1, "calt" 1, "tnum" 1, "lnum" 1;
     --table-framed-total-bg: #f0f5ff;

@@ -310,7 +310,9 @@ const styles = stylex.create({
   },
   // `MetaShipmentField` tile frame.
   field: {
-    borderColor: 'var(--color-border)',
+    // Facebook-style inner tile (2026-10-08): grey fill, no hairline.
+    backgroundColor: 'var(--meta-tile-bg)',
+    borderColor: 'transparent',
     borderRadius: 'var(--radius-element)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',

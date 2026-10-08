@@ -428,8 +428,9 @@ const styles = stylex.create({
   },
   // Same white inner card as the contract "Lô hàng" tab's partner cards.
   field: {
-    backgroundColor: 'var(--color-background-card)',
-    borderColor: 'var(--color-border)',
+    // Facebook-style inner tile (2026-10-08): grey fill, no hairline.
+    backgroundColor: 'var(--meta-tile-bg)',
+    borderColor: 'transparent',
     borderRadius: 'var(--radius-element)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',
@@ -437,11 +438,13 @@ const styles = stylex.create({
     padding: 'var(--spacing-3)',
   },
   container: {
+    // Facebook card (2026-10-08): shadow, no hairline.
     backgroundColor: 'var(--color-background-card)',
-    borderColor: 'var(--color-border)',
+    borderColor: 'transparent',
     borderRadius: 'var(--radius-container)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',
+    boxShadow: 'var(--meta-shadow-card)',
     minWidth: 0,
     padding: 'var(--spacing-4)',
   },

@@ -237,6 +237,7 @@ export function BackupList() {
 
         <StackItem size="fill">
           <AdvanceTable
+            isFramed
             toolbarLabel="Thao tác danh sách bản sao lưu"
             searchFieldDefs={SEARCH_FIELD_DEFS}
             entityLabel="Bản sao lưu"

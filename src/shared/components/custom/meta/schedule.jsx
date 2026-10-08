@@ -401,11 +401,13 @@ const styles = stylex.create({
     width: 'var(--spacing-2)',
   },
   card: {
+    // Facebook card (2026-10-08): shadow, no hairline.
     backgroundColor: 'var(--color-background-card)',
-    borderColor: 'var(--color-border)',
+    borderColor: 'transparent',
     borderRadius: 'var(--radius-container)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',
+    boxShadow: 'var(--meta-shadow-card)',
     height: '100%',
     overflow: 'hidden',
   },

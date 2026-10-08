@@ -287,6 +287,7 @@ export function UserList() {
 
       <StackItem size="fill">
         <AdvanceTable
+          isFramed
           title={
             <VStack gap={1}>
               <Heading level={1}>Người dùng</Heading>

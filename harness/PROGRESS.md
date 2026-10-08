@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-08 — Facebook layout everywhere: /admin + inner tiles
+
+- Per user ("Thay đổi hết, điều chỉnh sao cho phù hợp") after the /logistics pass.
+- /admin/* `<main>` also gets `--meta-content-wash`. Users + backups lists now `AdvanceTable isFramed` (white card like the logistics lists); permissions table and "Thêm quyền mới" form wrapped in `Card`.
+- Read-only tiles inside cards (shipment overview fields, contract KPI metrics, VGM tiles, BOQ / commission insets, matching skeletons): hairline → grey fill `--meta-tile-bg` #f8f9fb (facebook.com `--card-background-flat`; #f0f2f5 would hide the `--meta-hairline` progress tracks inside KPI tiles). Section containers (`MetaShipmentSection`, schedule card): hairline → card shadow. Interactive tiles (drawer option / check tiles, tab pills, filters) keep their borders.
+- Checked: in-page iframe scan of 19 /logistics + /admin routes for tables / text / inputs sitting directly on the wash → none left except the utilities tab pills (white pills, fine). Screenshots: shipment 26KCT27/LOT-01, /admin/users, /admin/permissions, /admin/backups.
+- Gate passed: `harness/runs/20261008-140419-1343/`.
+
 ## 2026-10-08 — Facebook-style /logistics layout
 
 - Per user ("trang /logistics/** background content là màu f2f4f7, sau đó phân tách thành các card", reference: a facebook.com group page). Values read from facebook.com itself: `--web-wash` #F2F4F7, cards white, 12px radius, `0 1px 2px rgba(0,0,0,.2)`.

@@ -2,6 +2,7 @@
 
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
 import { Heading } from '@astryxdesign/core/Heading';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Skeleton } from '@astryxdesign/core/Skeleton';
@@ -115,55 +116,59 @@ export function PermissionCatalog() {
           ))}
         </VStack>
       ) : permissions.length > 0 ? (
-        <Table
-          data={permissions}
-          columns={columns}
-          idKey="key"
-          dividers="grid"
-        />
+        <Card padding={0}>
+          <Table
+            data={permissions}
+            columns={columns}
+            idKey="key"
+            dividers="grid"
+          />
+        </Card>
       ) : (
         <Text color="secondary">Chưa có quyền nào trong danh mục.</Text>
       )}
 
-      <form onSubmit={handleSubmit}>
-        <VStack gap={3} hAlign="stretch">
-          <Heading level={2}>Thêm quyền mới</Heading>
+      <Card>
+        <form onSubmit={handleSubmit}>
+          <VStack gap={3} hAlign="stretch">
+            <Heading level={2}>Thêm quyền mới</Heading>
 
-          {error ? (
-            <Banner status="error" title={error} container="card" />
-          ) : null}
-          {success ? (
-            <Banner status="success" title={success} container="card" />
-          ) : null}
+            {error ? (
+              <Banner status="error" title={error} container="card" />
+            ) : null}
+            {success ? (
+              <Banner status="success" title={success} container="card" />
+            ) : null}
 
-          <HStack gap={3} vAlign="end">
-            <StackItem size="fill">
-              <TextInput
-                label="Mã quyền"
-                description="Dạng nhom:hanh-dong, chữ thường không dấu — vd: sales:secret"
-                placeholder="sales:secret"
-                value={key}
-                onChange={setKey}
-                isRequired
+            <HStack gap={3} vAlign="end">
+              <StackItem size="fill">
+                <TextInput
+                  label="Mã quyền"
+                  description="Dạng nhom:hanh-dong, chữ thường không dấu — vd: sales:secret"
+                  placeholder="sales:secret"
+                  value={key}
+                  onChange={setKey}
+                  isRequired
+                />
+              </StackItem>
+              <StackItem size="fill">
+                <TextInput
+                  label="Mô tả"
+                  description="Không bắt buộc — hiển thị kèm quyền khi cấp cho nhân viên"
+                  value={description}
+                  onChange={setDescription}
+                />
+              </StackItem>
+              <Button
+                label="Thêm"
+                type="submit"
+                variant="primary"
+                isLoading={createMutation.isPending}
               />
-            </StackItem>
-            <StackItem size="fill">
-              <TextInput
-                label="Mô tả"
-                description="Không bắt buộc — hiển thị kèm quyền khi cấp cho nhân viên"
-                value={description}
-                onChange={setDescription}
-              />
-            </StackItem>
-            <Button
-              label="Thêm"
-              type="submit"
-              variant="primary"
-              isLoading={createMutation.isPending}
-            />
-          </HStack>
-        </VStack>
-      </form>
+            </HStack>
+          </VStack>
+        </form>
+      </Card>
     </VStack>
   );
 }
