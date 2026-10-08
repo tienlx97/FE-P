@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-08 — Cost Excel: larger font, USD value + rate, new title
+
+- Per user ("Font size lớn hơn, cần giá trị USD và tỷ giá. Không cần ETD/ETA, TÊN LÔ HÀNG. TÊN TITLE: BẢNG KÊ CHI PHÍ LOGISTIC - {MÃ LÔ}").
+- Title "BẢNG KÊ CHI PHÍ LOGISTIC - <code>" (20pt); shipment-name row and ETD/ETA removed. Body 10 → 12pt (`FONT_SIZE`), header / bands / total / signature scaled up, columns widened ~1.2×.
+- Info: Hợp đồng · Điều kiện giao hàng / Giá trị lô hàng (USD) · Tỷ giá (VNĐ/USD) as separate cells / Giá trị quy đổi (VNĐ) · Tuyến / Ngày xuất · ATD/ATA. Breakdown adds "Tổng chi phí quy đổi (USD)" (= total / rate). Whole rates use `#,##0` ("#,##0.##" printed "25,890.").
+- Checked: 6 unit tests; app export for 26KCT27/LOT-01 → Excel 16 → PDF: 1 page, 18,000.00 USD, rate 25,890, 958.90 USD, 5.33%. Note: fit-to-width A4 printing scales the 11 columns down, so the printout is not much larger than before; on screen the text is 12pt.
+- Gate passed: `harness/runs/20261008-160429-1041/`.
+
 ## 2026-10-08 — Cost Excel: shipment value, signature, Vietnamese groups
 
 - Per user ("cần giá trị lô hàng. Người ký phía dưới Lê Văn Chí, Tổng giám đốc. Không cần: Booking, Tàu / chuyến, LOG ... ghi tiếng việt").

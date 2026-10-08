@@ -149,7 +149,6 @@ export function ShipmentCostPanel({
       const details = shipment.operationalDetails;
       const workbook = buildShipmentCostWorkbook(ExcelJS, {
         shipmentCode: shipment.shipmentCode,
-        shipmentName: shipment.name,
         contractNumber,
         incotermLabel,
         shipmentValue: {
@@ -160,8 +159,6 @@ export function ShipmentCostPanel({
         exchangeRate: shipment.declarationExchangeRate ?? null,
         placeOfLoading: shipment.placeOfLoading,
         placeOfDischarge: shipment.placeOfDischarge,
-        etd: shipment.etd,
-        eta: shipment.eta,
         atd: details?.actualDeparture ?? null,
         ata: details?.actualArrival ?? null,
         exportedAt: new Date(),

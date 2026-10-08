@@ -35,7 +35,6 @@
 /**
  * @typedef {Object} CostWorkbookInput
  * @property {string} shipmentCode
- * @property {string} shipmentName
  * @property {string} contractNumber
  * @property {string} incotermLabel
  * @property {{ amount: number, currency: string }} shipmentValue - the
@@ -44,8 +43,6 @@
  * @property {number | null} exchangeRate - customs declaration rate
  * @property {string | null} placeOfLoading
  * @property {string | null} placeOfDischarge
- * @property {string | null} etd - ISO date
- * @property {string | null} eta - ISO date
  * @property {string | null} atd - ISO date, actual departure
  * @property {string | null} ata - ISO date, actual arrival
  * @property {CostWorkbookGroup[]} groups - groups without lines are skipped
@@ -90,20 +87,22 @@ export const COST_REPORT_SIGNER = {
 const VND_FORMAT = '#,##0';
 const DATE_FORMAT = 'dd/mm/yyyy';
 const FONT = 'Arial';
+/** Body text size (user, 2026-10-08: larger than the first 10pt). */
+const FONT_SIZE = 12;
 
 /** `[header, width, horizontal alignment]`, columns A … K. */
 const COLUMNS = /** @type {const} */ ([
-  ['STT', 6, 'center'],
-  ['Tên khoản chi phí', 34, 'left'],
-  ['Số lượng', 9, 'right'],
-  ['Đơn giá (VNĐ)', 15, 'right'],
-  ['Thành tiền (VNĐ)', 17, 'right'],
-  ['Loại phí', 11, 'center'],
-  ['Nhà cung cấp', 26, 'left'],
-  ['Chi hộ (đơn vị thu)', 20, 'left'],
-  ['Số hoá đơn', 15, 'left'],
-  ['Ngày HĐ', 11, 'center'],
-  ['Ghi chú', 34, 'left'],
+  ['STT', 7, 'center'],
+  ['Tên khoản chi phí', 40, 'left'],
+  ['Số lượng', 10, 'right'],
+  ['Đơn giá (VNĐ)', 18, 'right'],
+  ['Thành tiền (VNĐ)', 20, 'right'],
+  ['Loại phí', 13, 'center'],
+  ['Nhà cung cấp', 30, 'left'],
+  ['Chi hộ (đơn vị thu)', 24, 'left'],
+  ['Số hoá đơn', 17, 'left'],
+  ['Ngày HĐ', 14, 'center'],
+  ['Ghi chú', 40, 'left'],
 ]);
 const LAST_COLUMN = 'K';
 const AMOUNT_COLUMN = 'E';
@@ -166,7 +165,7 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
   workbook.created = input.exportedAt;
 
   const sheet = workbook.addWorksheet('Chi phí logistics', {
-    properties: { defaultRowHeight: 18 },
+    properties: { defaultRowHeight: 20 },
     pageSetup: {
       paperSize: 9, // A4
       orientation: 'landscape',
@@ -184,16 +183,16 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
       },
     },
     headerFooter: {
-      // Text after a font-size code must not start with a digit: "&8" +
-      // "26KCT27…" reads as font size 826.
-      oddFooter: `&L&8Chi phí logistics — ${input.shipmentCode}&R&8Trang &P/&N`,
+      // Text after a font-size code must not start with a digit: "&9" +
+      // "26KCT27…" reads as font size 926.
+      oddFooter: `&L&9Bảng kê chi phí logistic — ${input.shipmentCode}&R&9Trang &P/&N`,
     },
   });
   sheet.columns = COLUMNS.map(([, width]) => ({ width }));
 
   const font = (/** @type {Partial<import('exceljs').Font>} */ extra = {}) => ({
     name: FONT,
-    size: 10,
+    size: FONT_SIZE,
     color: { argb: EXCEL_COLORS.ink },
     ...extra,
   });
@@ -201,27 +200,14 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
   // Title block.
   sheet.mergeCells(`A1:${LAST_COLUMN}1`);
   const title = sheet.getCell('A1');
-  title.value = `BẢNG CHI PHÍ LOGISTICS — ${input.shipmentCode}`;
+  title.value = `BẢNG KÊ CHI PHÍ LOGISTIC - ${input.shipmentCode}`;
   title.font = font({
-    size: 16,
+    size: 20,
     bold: true,
     color: { argb: EXCEL_COLORS.accent },
   });
   title.alignment = { vertical: 'middle', horizontal: 'left' };
-  sheet.getRow(1).height = 28;
-
-  sheet.mergeCells(`A2:${LAST_COLUMN}2`);
-  const subtitle = sheet.getCell('A2');
-  // The shipment's own name, when it says more than its code.
-  subtitle.value =
-    input.shipmentName && input.shipmentName !== input.shipmentCode
-      ? input.shipmentName
-      : '';
-  subtitle.font = font({
-    size: 11,
-    italic: true,
-    color: { argb: EXCEL_COLORS.muted },
-  });
+  sheet.getRow(1).height = 34;
 
   // Info block: two label/value pairs per row (A-B | C-E, F-G | H-K).
   const route = [input.placeOfLoading, input.placeOfDischarge]
@@ -237,20 +223,26 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
       input.incotermLabel,
     ],
     [
-      'Giá trị lô hàng',
+      `Giá trị lô hàng (${valueCurrency})`,
       { value: valueAmount, numFmt: `#,##0.00" ${valueCurrency}"` },
-      input.exchangeRate
-        ? `Quy đổi VNĐ (tỷ giá ${input.exchangeRate.toLocaleString('en-US')})`
-        : 'Quy đổi VNĐ',
+      `Tỷ giá (VNĐ/${valueCurrency})`,
+      input.exchangeRate === null
+        ? null
+        : {
+            value: input.exchangeRate,
+            // "#,##0.##" would print a whole rate as "25,890."
+            numFmt: Number.isInteger(input.exchangeRate)
+              ? VND_FORMAT
+              : '#,##0.00',
+          },
+    ],
+    [
+      'Giá trị quy đổi (VNĐ)',
       input.shipmentValueVnd === null
         ? null
         : { value: input.shipmentValueVnd, numFmt: `${VND_FORMAT}" VNĐ"` },
-    ],
-    [
       'Tuyến',
       route,
-      'ETD / ETA',
-      `${displayDate(input.etd)}  →  ${displayDate(input.eta)}`,
     ],
     [
       'Ngày xuất báo cáo',
@@ -268,7 +260,8 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
     ],
   ]);
   info.forEach(([leftLabel, leftValue, rightLabel, rightValue], index) => {
-    const row = 4 + index;
+    const row = 3 + index;
+    sheet.getRow(row).height = 22;
     sheet.mergeCells(`A${row}:B${row}`);
     sheet.mergeCells(`C${row}:E${row}`);
     sheet.mergeCells(`F${row}:G${row}`);
@@ -295,10 +288,10 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
   });
 
   // Column headers, repeated on every printed page.
-  const headerRowNumber = 9;
+  const headerRowNumber = 8;
   const headerRow = sheet.getRow(headerRowNumber);
   headerRow.values = COLUMNS.map(([header]) => header);
-  headerRow.height = 30;
+  headerRow.height = 36;
   headerRow.eachCell((cell, column) => {
     cell.font = font({ bold: true, color: { argb: EXCEL_COLORS.onAccent } });
     cell.fill = solidFill(EXCEL_COLORS.accent);
@@ -342,7 +335,7 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
     };
     subtotalCell.numFmt = VND_FORMAT;
     subtotalCells.push(`${AMOUNT_COLUMN}${bandRow}`);
-    sheet.getRow(bandRow).height = 22;
+    sheet.getRow(bandRow).height = 26;
     for (let column = 1; column <= COLUMNS.length; column += 1) {
       const cell = sheet.getRow(bandRow).getCell(column);
       cell.fill = solidFill(EXCEL_COLORS.groupBand);
@@ -410,11 +403,11 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
     ? { formula: subtotalCells.join('+'), result: total }
     : 0;
   totalCell.numFmt = VND_FORMAT;
-  sheet.getRow(totalRow).height = 24;
+  sheet.getRow(totalRow).height = 30;
   for (let column = 1; column <= COLUMNS.length; column += 1) {
     const cell = sheet.getRow(totalRow).getCell(column);
     cell.fill = solidFill(EXCEL_COLORS.totalBand);
-    cell.font = font({ bold: true, size: 11 });
+    cell.font = font({ bold: true, size: 14 });
     cell.border = {
       ...thinBorder,
       top: { style: 'medium', color: { argb: EXCEL_COLORS.accent } },
@@ -428,7 +421,7 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
   }
   totalCell.font = font({
     bold: true,
-    size: 11,
+    size: 14,
     color: { argb: EXCEL_COLORS.accent },
   });
 
@@ -439,6 +432,16 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
     ['Số nhà cung cấp', providers.size, '0'],
     ['Số hoá đơn', invoices.size, '0'],
   ];
+  if (input.exchangeRate) {
+    breakdown.push([
+      `Tổng chi phí quy đổi (${input.shipmentValue.currency})`,
+      {
+        formula: `${AMOUNT_COLUMN}${totalRow}/${input.exchangeRate}`,
+        result: total / input.exchangeRate,
+      },
+      `#,##0.00" ${input.shipmentValue.currency}"`,
+    ]);
+  }
   if (input.shipmentValueVnd) {
     breakdown.push([
       'Tỷ lệ chi phí / giá trị lô hàng (VNĐ)',
@@ -475,16 +478,16 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
       [
         `Ngày ${String(exported.getDate()).padStart(2, '0')} tháng ${String(exported.getMonth() + 1).padStart(2, '0')} năm ${exported.getFullYear()}`,
         { italic: true },
-        18,
+        22,
       ],
-      [COST_REPORT_SIGNER.title, { bold: true, size: 11 }, 18],
+      [COST_REPORT_SIGNER.title, { bold: true, size: 14 }, 22],
       [
         '(Ký, ghi rõ họ tên)',
-        { italic: true, size: 9, color: { argb: EXCEL_COLORS.muted } },
+        { italic: true, size: 11, color: { argb: EXCEL_COLORS.muted } },
         18,
       ],
-      ['', {}, 60],
-      [COST_REPORT_SIGNER.name, { bold: true, size: 11 }, 18],
+      ['', {}, 72],
+      [COST_REPORT_SIGNER.name, { bold: true, size: 14 }, 22],
     ]);
   signature.forEach(([text, fontExtra, height], index) => {
     const row = signatureTop + index;
