@@ -5,14 +5,12 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { MultiSelector } from '@astryxdesign/core/MultiSelector';
 import { StackItem } from '@astryxdesign/core/Stack';
+import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { useState } from 'react';
 
 import { BankAccountDialog } from '@/shared/components/bank-accounts/bank-account-dialog.jsx';
-import {
-  MetaFormCard,
-  MetaPaymentSplitBar,
-} from '@/shared/components/custom/meta/index.js';
+import { MetaPaymentSplitBar } from '@/shared/components/custom/meta/index.js';
 import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 
 import { formatMoney } from '../config/currencies.js';
@@ -35,7 +33,7 @@ function bankLabel(account) {
 }
 
 /**
- * "4. Điều khoản thanh toán" body of the edit drawer (Figma 103:4983):
+ * "6. Điều khoản thanh toán" body of the edit drawer (Figma 103:4983):
  * beneficiary banks as one multi-select, the ratio split bar, then the
  * shared `PaymentTermsFields` step cards (the section header owns "Thêm
  * điều khoản"). Form state stays owned by `useContractForm`.
@@ -76,7 +74,7 @@ export function ContractDrawerPaymentTerms({
   const isBalanced = Math.abs(totalPercent - 100) < 0.01;
 
   return (
-    <MetaFormCard>
+    <VStack gap={4} hAlign="stretch">
       <HStack gap={2} vAlign="end" wrap="nowrap">
         <StackItem size="fill" xstyle={styles.minZero}>
           <MultiSelector
@@ -140,6 +138,7 @@ export function ContractDrawerPaymentTerms({
         onRemoveRow={onRemoveRow}
         onUpdateRowField={onUpdateRowField}
         hasPaymentType
+        isFlat
       />
 
       {isQuickCreateBankOpen ? (
@@ -150,6 +149,6 @@ export function ContractDrawerPaymentTerms({
           onClose={() => setIsQuickCreateBankOpen(false)}
         />
       ) : null}
-    </MetaFormCard>
+    </VStack>
   );
 }

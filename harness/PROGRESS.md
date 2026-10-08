@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-08 — Contract drawer: flat payment terms (section 6)
+
+- Per user ("6. Điều khoản thanh toán (Payment Terms)", following the card-in-card cleanup). Section 6 had three frames: section card → muted `MetaFormCard` (bank, split bar, steps) → a white bordered card per step.
+- `ContractDrawerPaymentTerms`: `MetaFormCard` → plain `VStack gap={4}`. `PaymentTermsFields` gets `isFlat` (contract drawer only): no step card, a `--meta-hairline` rule + 16px above each step; the tone tile ("01") and tone amount stay, matching the split bar. Commission drawer / contract dialog keep the step cards.
+- Chrome :3000, 26KCT42 → Sửa → section 6: bank, split bar, two steps flat on the section card (nothing saved).
+- Gate passed: `harness/runs/20261008-211817-129133/`.
+
 ## 2026-10-08 — Contract drawer: parties without card-in-card
 
 - Per user ("3. Các bên tham gia hợp đồng > cách thiết kế trong card có card rất rối mắt" → "bạn thấy hợp thì dùng"). Section 3 stacked four frames (section card → party inset → grid-ruled "Trường tùy ý" table → inputs) and four inset cards (Seller, Buyer, Consignee, Notify).

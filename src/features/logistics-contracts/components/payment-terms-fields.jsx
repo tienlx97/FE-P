@@ -65,6 +65,12 @@ const styles = stylex.create({
     borderWidth: 'var(--border-width)',
     padding: 'var(--spacing-4)',
   },
+  flatRow: {
+    borderTopColor: 'var(--meta-hairline)',
+    borderTopStyle: 'solid',
+    borderTopWidth: 'var(--border-width)',
+    paddingTop: 'var(--spacing-4)',
+  },
   tile: {
     borderRadius: 'var(--radius-element)',
     flexShrink: 0,
@@ -130,7 +136,11 @@ function paymentMethod(condition, stored) {
  *   onRemoveRow: (rowKey: string) => void,
  *   onUpdateRowField: (rowKey: string, field: 'paymentRatioPercent' | 'paymentCondition' | 'paymentType', value: number | string | undefined) => void,
  *   hasPaymentType?: boolean,
+ *   isFlat?: boolean,
  * }} props
+ *
+ * `isFlat` drops the per-step card for a hairline above each step, for a
+ * list that already sits on a section card (the contract edit drawer).
  */
 export function PaymentTermsFields({
   rows,
@@ -143,13 +153,14 @@ export function PaymentTermsFields({
   onRemoveRow,
   onUpdateRowField,
   hasPaymentType = false,
+  isFlat = false,
 }) {
   const hasValue =
     typeof contractValue === 'number' && !Number.isNaN(contractValue);
 
   return (
     <MetaThemeProvider>
-      <VStack gap={2} hAlign="stretch">
+      <VStack gap={isFlat ? 4 : 2} hAlign="stretch">
         {rows.map((row, index) => {
           const sequence = index + 1;
           const ratio = row.paymentRatioPercent || 0;
@@ -189,7 +200,7 @@ export function PaymentTermsFields({
               key={row.rowKey}
               gap={3}
               hAlign="stretch"
-              xstyle={[styles.row, rowTones[tone]]}
+              xstyle={isFlat ? styles.flatRow : [styles.row, rowTones[tone]]}
             >
               <HStack hAlign="between" vAlign="center" gap={3} wrap="nowrap">
                 <HStack gap={3} vAlign="center" wrap="nowrap">
