@@ -31,8 +31,13 @@ import {
   Trash2,
   Upload,
 } from 'lucide-react';
+import { useRef } from 'react';
 
 import { Table } from '@/shared/components/table.jsx';
+import {
+  SCREENSHOT_EXCLUDE_ATTRIBUTE,
+  TableScreenshotButton,
+} from '@/shared/components/table-screenshot-button.jsx';
 
 import { MetaCountBadge } from './count-badge.jsx';
 import { MetaPill } from './pill.jsx';
@@ -106,6 +111,7 @@ const COLUMNS = /** @type {const} */ ([
  *   onCreate?: () => void,
  *   onEdit?: (id: string) => void,
  *   onDelete?: (id: string) => void,
+ *   screenshotFileName?: string,
  * }} props
  */
 export function MetaVgmPanel({
@@ -123,7 +129,11 @@ export function MetaVgmPanel({
   onCreate,
   onEdit,
   onDelete,
+  screenshotFileName,
 }) {
+  const tableRef = useRef(/** @type {HTMLTableElement | null} */ (null));
+  // "Thao tác" (edit / delete buttons) is left out of the table picture.
+  const excludeFromScreenshot = { [SCREENSHOT_EXCLUDE_ATTRIBUTE]: '' };
   return (
     <Card padding={6} xstyle={styles.card}>
       <VStack gap={0} hAlign="stretch">
@@ -142,6 +152,13 @@ export function MetaVgmPanel({
             <MetaCountBadge value={count} />
           </HStack>
           <HStack gap={2} vAlign="center" wrap="wrap">
+            {screenshotFileName ? (
+              <TableScreenshotButton
+                targetRef={tableRef}
+                fileName={screenshotFileName}
+                isDisabled={isLoading || rows.length === 0}
+              />
+            ) : null}
             {onExport ? (
               <Button
                 label="Xuất Excel"
@@ -249,13 +266,19 @@ export function MetaVgmPanel({
           <>
             {/* Last child of the card: Astryx `Table` bleeds to its side
                 and bottom edges itself (don't wrap it, or it bleeds up). */}
-            <Table density="compact" dividers="rows" xstyle={styles.table}>
+            <Table
+              ref={tableRef}
+              density="compact"
+              dividers="rows"
+              xstyle={styles.table}
+            >
               <TableHeader>
                 <TableRow isHeaderRow>
                   {COLUMNS.map(([key, header, align]) => (
                     <TableHeaderCell
                       key={key}
                       scope="col"
+                      {...(key === 'actions' ? excludeFromScreenshot : null)}
                       xstyle={[
                         styles.headCell,
                         alignStyles[align],
@@ -324,7 +347,11 @@ export function MetaVgmPanel({
                     )}
                     <TableCell xstyle={[styles.cell, alignStyles.end]}>
                       {row.isVgmDeclared === false ? (
-                        <MetaPill label="Chưa khai VGM" tone="warning" size="sm" />
+                        <MetaPill
+                          label="Chưa khai VGM"
+                          tone="warning"
+                          size="sm"
+                        />
                       ) : (
                         <Text
                           type="code"
@@ -336,7 +363,10 @@ export function MetaVgmPanel({
                         </Text>
                       )}
                     </TableCell>
-                    <TableCell xstyle={[styles.cell, alignStyles.center]}>
+                    <TableCell
+                      xstyle={[styles.cell, alignStyles.center]}
+                      {...excludeFromScreenshot}
+                    >
                       <HStack
                         gap={1}
                         vAlign="center"
@@ -427,7 +457,10 @@ export function MetaVgmPanel({
                         {totals.vgm}
                       </Text>
                     </TableCell>
-                    <TableCell xstyle={styles.cell} />
+                    <TableCell
+                      xstyle={styles.cell}
+                      {...excludeFromScreenshot}
+                    />
                   </TableRow>
                 </TableFooter>
               ) : null}

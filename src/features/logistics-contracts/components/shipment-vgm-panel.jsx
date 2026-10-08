@@ -78,6 +78,9 @@ export function ShipmentVgmPanel({
   const weight = (value) =>
     value === null ? '—' : WEIGHT_FORMATTER.format(value);
 
+  /** Excel export and table picture share one name: "vgm-26KCT27-LOT-01". */
+  const fileName = `vgm-${shipment.shipmentCode.replace(/[/\\]/g, '-')}`;
+
   async function handleConfirmDelete() {
     if (!deletingVgm) return;
     await deleteMutation.mutateAsync(deletingVgm.id);
@@ -93,10 +96,7 @@ export function ShipmentVgmPanel({
     );
     const book = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(book, sheet, 'VGM');
-    XLSX.writeFile(
-      book,
-      `vgm-${shipment.shipmentCode.replace(/[/\\]/g, '-')}.xlsx`,
-    );
+    XLSX.writeFile(book, `${fileName}.xlsx`);
   }
 
   return (
@@ -150,6 +150,7 @@ export function ShipmentVgmPanel({
             : null
         }
         onExport={handleExport}
+        screenshotFileName={fileName}
         onImport={() => setBulkMode('excel')}
         onBulkCreate={() => setBulkMode('table')}
         onCreate={() => setFormDialog({ vgm: null })}

@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-08 — "Chụp bảng": table screenshot on Container & VGM
+
+- Per user ("Thêm tính năng chụp màn hình table ... Chi tiết shipment > Container & VGM > Card Container & VGM"). New shared `TableScreenshotButton` (`src/shared/components/table-screenshot-button.jsx`, `html-to-image` ^1.11.13): menu "Sao chép ảnh" (PNG to clipboard; falls back to a download where the clipboard is missing / refused) and "Tải ảnh (PNG)". 2× pixel ratio, full table size even when scrolled, surface background. Cells with `data-screenshot-exclude` are left out — `MetaVgmPanel` marks "Thao tác". `MetaVgmPanel` gets `screenshotFileName`; the shipment VGM tab passes `vgm-<shipmentCode>` (shared with the Excel file name).
+- Bug caught in testing: revoking the object URL right after `link.click()` made Chrome cancel the download (agent-browser: "Download was canceled") while the toast still said "Đã tải" — now revoked after 60 s.
+- agent-browser :3000 (local test login), 26KCT27/LOT-01 ?tab=vgm: blob captured via page `eval` → 2062×322 PNG, 107 KB, ~1 s, all columns but Thao tác, Inter font, totals row; copy → "Đã sao chép ảnh bảng…" toast.
+- Claude in Chrome: `javascript_tool` runs in an isolated world (page-global patches don't reach the app), so download clicks couldn't be intercepted there — use agent-browser `eval` for that.
+- Gate passed: `harness/runs/20261008-143805-1453/`.
+
 ## 2026-10-08 — Facebook layout everywhere: /admin + inner tiles
 
 - Per user ("Thay đổi hết, điều chỉnh sao cho phù hợp") after the /logistics pass.
