@@ -30,9 +30,6 @@ import {
   useShipmentTrackingQuery,
 } from '../hooks/use-shipment-tracking-query.js';
 
-/** Events shown in the table, newest first. */
-const EVENT_ROWS = 30;
-
 /**
  * "Theo dõi hãng tàu" on the schedule tab (plan
  * `docs/carrier-tracking-integration-plan.md`): carrier + adapter version,
@@ -132,7 +129,8 @@ export function ShipmentCarrierTrackingSection({ contractId, shipmentId, legs, c
     };
   }
 
-  const eventRows = tracking.events.slice(0, EVENT_ROWS).map((event) => ({
+  // Every event, newest first (user, 2026-10-08: "lấy full").
+  const eventRows = tracking.events.map((event) => ({
     id: event.id,
     cells: {
       at: (

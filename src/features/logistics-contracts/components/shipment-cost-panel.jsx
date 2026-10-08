@@ -104,8 +104,10 @@ export function ShipmentCostPanel({
   const groups = groupedCosts.map((group) => ({
     id: group.id,
     label: group.label,
-    // Hover text of the group title (the catalog names are English).
+    // Hover card of the group title (the catalog names are English).
+    code: group.code || undefined,
     nameVi: COST_GROUP_NAMES_VI[group.code] ?? group.name,
+    nameEn: COST_GROUP_NAMES_VI[group.code] ? group.name : undefined,
     subtotal: money(sum(group.costs)),
     rows: group.costs.map((cost) => ({
       id: cost.id,

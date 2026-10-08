@@ -1,5 +1,6 @@
 'use client';
 
+import { Carousel } from '@astryxdesign/core/Carousel';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
@@ -7,6 +8,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Check, Pencil, Star } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 import { MetaPill } from './pill.jsx';
 
@@ -34,20 +36,42 @@ import { MetaPill } from './pill.jsx';
  * the pills last — counts, markers ("Chuyển rủi ro", star icon), alerts,
  * "Tiếp theo" / "Quá hạn" — so the dates line up across steps. A step
  * outside the tracked scope (the buyer's legs) has a dashed hollow dot and
- * muted text. Scrolls sideways when the steps do not fit. Values arrive
- * formatted. Composed from Astryx `HStack` / `VStack` / `Text` / `Icon` /
- * `IconButton` + `MetaPill` (golden rule #15).
+ * muted text. The steps sit in an Astryx `Carousel` (user, 2026-10-08):
+ * fixed-width slides that snap, prev / next buttons and edge fades when
+ * they do not fit, opened on the next (else the last done) step. Values
+ * arrive formatted. Composed from Astryx `Carousel` / `HStack` / `VStack` /
+ * `Text` / `Icon` / `IconButton` + `MetaPill` (golden rule #15).
  *
  * @param {{ steps: MetaMilestoneStep[], label: string }} props
  */
 export function MetaMilestoneStrip({ steps, label }) {
+  const carousel = useRef(
+    /** @type {import('@astryxdesign/core/Carousel').CarouselHandle | null} */ (
+      null
+    ),
+  );
+  // Open on where the shipment is: the next step, else the last done one.
+  const nextIndex = steps.findIndex(
+    (step) => step.state === 'next' || step.state === 'overdue',
+  );
+  const focusIndex =
+    nextIndex !== -1
+      ? nextIndex
+      : steps.reduce(
+          (last, step, index) => (step.state === 'done' ? index : last),
+          0,
+        );
+  useEffect(() => {
+    // Keep one done step in view before it, so the rail reads as progress.
+    carousel.current?.scrollTo(Math.max(focusIndex - 1, 0));
+  }, [focusIndex]);
+
   return (
-    <HStack
-      as="ol"
-      gap={0}
-      vAlign="start"
-      wrap="nowrap"
+    <Carousel
       aria-label={label}
+      gap={0}
+      hasSnap
+      handleRef={carousel}
       xstyle={styles.list}
     >
       {steps.map((step, index) => {
@@ -63,7 +87,6 @@ export function MetaMilestoneStrip({ steps, label }) {
         ];
         return (
           <VStack
-            as="li"
             key={step.id}
             gap={2}
             hAlign="stretch"
@@ -159,27 +182,20 @@ export function MetaMilestoneStrip({ steps, label }) {
           </VStack>
         );
       })}
-    </HStack>
+    </Carousel>
   );
 }
 
 const styles = stylex.create({
   list: {
-    listStyle: 'none',
-    margin: 0,
-    overflowX: 'auto',
-    padding: 0,
     paddingBottom: 'var(--spacing-1)',
   },
   // Wide enough for "Shipped on Board" + an edit button, or a marker pill;
   // capped so a long caption (a Site Delivery address) ends in "…" with
   // its full text in the truncation tooltip instead of widening the column.
+  // One slide per step, all the same width so the rail joins up.
   step: {
-    flexBasis: 0,
-    flexGrow: 1,
-    flexShrink: 0,
-    maxWidth: 'calc(var(--spacing-12) * 5)',
-    minWidth: 'calc(var(--spacing-12) * 4)',
+    width: 'calc(var(--spacing-12) * 4.5)',
   },
   body: {
     minWidth: 0,

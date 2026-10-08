@@ -37,6 +37,7 @@ export {
   MetaFormSection,
   MetaTintButton,
 } from './form-section.jsx';
+export { MetaInfoTip } from './info-tip.jsx';
 export {
   MetaCellText,
   MetaListTitle,

@@ -17,7 +17,6 @@ import {
 } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { InfoTip } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
 import { Download, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Fragment } from 'react';
@@ -25,6 +24,7 @@ import { Fragment } from 'react';
 import { Table } from '@/shared/components/table.jsx';
 
 import { MetaCountBadge } from './count-badge.jsx';
+import { MetaInfoTip } from './info-tip.jsx';
 import { MetaPill } from './pill.jsx';
 
 /**
@@ -46,7 +46,9 @@ import { MetaPill } from './pill.jsx';
  * @typedef {{
  *   id: string,
  *   label: string,
+ *   code?: string,
  *   nameVi?: string,
+ *   nameEn?: string,
  *   subtotal: string,
  *   rows: MetaCostRow[],
  * }} MetaCostGroup
@@ -288,8 +290,10 @@ export function MetaCostPanel({
                           {group.label}
                         </Text>
                         {group.nameVi ? (
-                          <InfoTip
-                            content={group.nameVi}
+                          <MetaInfoTip
+                            eyebrow={group.code}
+                            title={group.nameVi}
+                            description={group.nameEn}
                             label={`${group.label}: ${group.nameVi}`}
                           />
                         ) : null}
