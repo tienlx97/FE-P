@@ -77,12 +77,16 @@ export function ShipmentCostPanel({
 
   const groupedCosts = categories.map((category) => ({
     id: category.id,
+    code: category.code,
+    name: category.name,
     label: `${category.code} · ${category.name.toLocaleUpperCase('vi')}`,
     costs: shipment.costs.filter((cost) => cost.costCategoryId === category.id),
   }));
   if (orphanCosts.length > 0) {
     groupedCosts.push({
       id: 'uncategorized',
+      code: '',
+      name: 'Chưa phân nhóm',
       label: 'CHƯA PHÂN NHÓM',
       costs: orphanCosts,
     });
@@ -148,11 +152,12 @@ export function ShipmentCostPanel({
         shipmentName: shipment.name,
         contractNumber,
         incotermLabel,
-        bookingNumber: shipment.bookingNumber || null,
-        vessel:
-          [shipment.vesselName, details?.voyageNumber]
-            .filter(Boolean)
-            .join(' // ') || null,
+        shipmentValue: {
+          amount: shipment.invoiceValue,
+          currency: shipment.invoiceCurrency,
+        },
+        shipmentValueVnd: shipment.declarationValueVnd ?? null,
+        exchangeRate: shipment.declarationExchangeRate ?? null,
         placeOfLoading: shipment.placeOfLoading,
         placeOfDischarge: shipment.placeOfDischarge,
         etd: shipment.etd,
@@ -161,7 +166,8 @@ export function ShipmentCostPanel({
         ata: details?.actualArrival ?? null,
         exportedAt: new Date(),
         groups: groupedCosts.map((group) => ({
-          label: group.label,
+          code: group.code,
+          name: group.name,
           lines: group.costs.map((cost) => ({
             name: cost.name,
             quantity: cost.quantity ?? 1,

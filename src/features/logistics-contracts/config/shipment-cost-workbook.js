@@ -2,7 +2,8 @@
  * "Xuất Excel" of a shipment's "Chi phí logistics" tab: one A4-landscape
  * sheet — title + shipment info block, a header row repeated on every
  * printed page, a tinted band per cost group with its SUM subtotal, the
- * group's lines, then a TỔNG CỘNG row and its breakdown. Amounts are real
+ * group's lines, then a TỔNG CỘNG row, its breakdown and the director's
+ * signature block. Group names are Vietnamese. Amounts are real
  * numbers in VNĐ number format (subtotals / total are live formulas, with
  * cached results so previews show them too); dates are real dates.
  *
@@ -26,7 +27,9 @@
  */
 /**
  * @typedef {Object} CostWorkbookGroup
- * @property {string} label - "LOG-01 · ORIGIN …"
+ * @property {string} code - "LOG-01" … "LOG-08"; '' for uncategorized lines
+ * @property {string} name - catalog name, used when the code has no
+ *   Vietnamese name in {@link COST_GROUP_NAMES_VI}
  * @property {CostWorkbookLine[]} lines
  */
 /**
@@ -35,8 +38,10 @@
  * @property {string} shipmentName
  * @property {string} contractNumber
  * @property {string} incotermLabel
- * @property {string | null} bookingNumber
- * @property {string | null} vessel
+ * @property {{ amount: number, currency: string }} shipmentValue - the
+ *   commercial invoice value ("Giá trị lô hàng")
+ * @property {number | null} shipmentValueVnd - declared value in VNĐ
+ * @property {number | null} exchangeRate - customs declaration rate
  * @property {string | null} placeOfLoading
  * @property {string | null} placeOfDischarge
  * @property {string | null} etd - ISO date
@@ -59,6 +64,27 @@ const EXCEL_COLORS = {
   ink: 'FF1C1E21',
   muted: 'FF65676B',
   abnormal: 'FFB94500',
+};
+
+/**
+ * Vietnamese names of the fixed LOG groups (the BE catalog's names are
+ * English), for the exported report (user request, 2026-10-08).
+ */
+export const COST_GROUP_NAMES_VI = /** @type {Record<string, string>} */ ({
+  'LOG-01': 'Chuẩn bị hàng & đóng gói xuất khẩu',
+  'LOG-02': 'Vận chuyển nội địa đầu xuất & depot',
+  'LOG-03': 'Phí cảng & thủ tục xuất khẩu',
+  'LOG-04': 'Cước vận chuyển quốc tế & bảo hiểm',
+  'LOG-05': 'Phí cảng đích',
+  'LOG-06': 'Vận chuyển nội địa đầu nhập',
+  'LOG-07': 'Thủ tục hải quan nhập khẩu',
+  'LOG-08': 'Thuế & phí nhập khẩu',
+});
+
+/** Signs the report (user request, 2026-10-08). */
+export const COST_REPORT_SIGNER = {
+  title: 'TỔNG GIÁM ĐỐC',
+  name: 'Lê Văn Chí',
 };
 
 const VND_FORMAT = '#,##0';
@@ -201,9 +227,25 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
   const route = [input.placeOfLoading, input.placeOfDischarge]
     .filter(Boolean)
     .join(' → ');
-  const info = [
-    ['Hợp đồng', input.contractNumber, 'Booking', input.bookingNumber],
-    ['Điều kiện giao hàng', input.incotermLabel, 'Tàu / chuyến', input.vessel],
+  const { amount: valueAmount, currency: valueCurrency } = input.shipmentValue;
+  /** @typedef {string | { value: number, numFmt: string } | null} InfoValue */
+  const info = /** @type {[string, InfoValue, string, InfoValue][]} */ ([
+    [
+      'Hợp đồng',
+      input.contractNumber,
+      'Điều kiện giao hàng',
+      input.incotermLabel,
+    ],
+    [
+      'Giá trị lô hàng',
+      { value: valueAmount, numFmt: `#,##0.00" ${valueCurrency}"` },
+      input.exchangeRate
+        ? `Quy đổi VNĐ (tỷ giá ${input.exchangeRate.toLocaleString('en-US')})`
+        : 'Quy đổi VNĐ',
+      input.shipmentValueVnd === null
+        ? null
+        : { value: input.shipmentValueVnd, numFmt: `${VND_FORMAT}" VNĐ"` },
+    ],
     [
       'Tuyến',
       route,
@@ -224,7 +266,7 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
       'ATD / ATA',
       `${displayDate(input.atd)}  →  ${displayDate(input.ata)}`,
     ],
-  ];
+  ]);
   info.forEach(([leftLabel, leftValue, rightLabel, rightValue], index) => {
     const row = 4 + index;
     sheet.mergeCells(`A${row}:B${row}`);
@@ -238,7 +280,12 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
       ['H', rightValue, false],
     ])) {
       const cell = sheet.getCell(`${column}${row}`);
-      cell.value = value || '—';
+      if (value && typeof value === 'object') {
+        cell.value = value.value;
+        cell.numFmt = value.numFmt;
+      } else {
+        cell.value = value || '—';
+      }
       cell.font = isLabel
         ? font({ color: { argb: EXCEL_COLORS.muted } })
         : font({ bold: true });
@@ -286,7 +333,8 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
 
     sheet.mergeCells(`A${bandRow}:D${bandRow}`);
     const label = sheet.getCell(`A${bandRow}`);
-    label.value = `${group.label}  (${group.lines.length} khoản)`;
+    const groupName = COST_GROUP_NAMES_VI[group.code] ?? group.name;
+    label.value = `${group.code ? `${group.code} · ` : ''}${groupName}  (${group.lines.length} khoản)`;
     const subtotalCell = sheet.getCell(`${AMOUNT_COLUMN}${bandRow}`);
     subtotalCell.value = {
       formula: `SUM(${AMOUNT_COLUMN}${firstLine}:${AMOUNT_COLUMN}${lastLine})`,
@@ -384,13 +432,24 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
     color: { argb: EXCEL_COLORS.accent },
   });
 
-  const breakdown = /** @type {[string, number | string][]} */ ([
-    ['Trong đó: chi phí phát sinh (Abnormal)', abnormalTotal],
-    ['Trong đó: NCC chi hộ', paidOnBehalfTotal],
-    ['Số nhà cung cấp', providers.size],
-    ['Số hoá đơn', invoices.size],
-  ]);
-  breakdown.forEach(([caption, value], index) => {
+  /** @type {[string, import('exceljs').CellValue, string][]} */
+  const breakdown = [
+    ['Trong đó: chi phí phát sinh (Abnormal)', abnormalTotal, VND_FORMAT],
+    ['Trong đó: NCC chi hộ', paidOnBehalfTotal, VND_FORMAT],
+    ['Số nhà cung cấp', providers.size, '0'],
+    ['Số hoá đơn', invoices.size, '0'],
+  ];
+  if (input.shipmentValueVnd) {
+    breakdown.push([
+      'Tỷ lệ chi phí / giá trị lô hàng (VNĐ)',
+      {
+        formula: `${AMOUNT_COLUMN}${totalRow}/${input.shipmentValueVnd}`,
+        result: total / input.shipmentValueVnd,
+      },
+      '0.00%',
+    ]);
+  }
+  breakdown.forEach(([caption, value, numFmt], index) => {
     const row = totalRow + 1 + index;
     sheet.mergeCells(`A${row}:D${row}`);
     const captionCell = sheet.getCell(`A${row}`);
@@ -402,10 +461,39 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
     captionCell.alignment = { horizontal: 'right', indent: 1 };
     const valueCell = sheet.getCell(`${AMOUNT_COLUMN}${row}`);
     valueCell.value = value;
-    valueCell.numFmt = index < 2 ? VND_FORMAT : '0';
+    valueCell.numFmt = numFmt;
     valueCell.font = font({ color: { argb: EXCEL_COLORS.muted } });
     valueCell.alignment = { horizontal: 'right' };
   });
 
+  // Signature block, right-aligned under the table (H … K): date line,
+  // title, a gap to sign in, name.
+  const signatureTop = totalRow + breakdown.length + 3;
+  const exported = input.exportedAt;
+  const signature =
+    /** @type {[string, Partial<import('exceljs').Font>, number][]} */ ([
+      [
+        `Ngày ${String(exported.getDate()).padStart(2, '0')} tháng ${String(exported.getMonth() + 1).padStart(2, '0')} năm ${exported.getFullYear()}`,
+        { italic: true },
+        18,
+      ],
+      [COST_REPORT_SIGNER.title, { bold: true, size: 11 }, 18],
+      [
+        '(Ký, ghi rõ họ tên)',
+        { italic: true, size: 9, color: { argb: EXCEL_COLORS.muted } },
+        18,
+      ],
+      ['', {}, 60],
+      [COST_REPORT_SIGNER.name, { bold: true, size: 11 }, 18],
+    ]);
+  signature.forEach(([text, fontExtra, height], index) => {
+    const row = signatureTop + index;
+    sheet.mergeCells(`H${row}:${LAST_COLUMN}${row}`);
+    const cell = sheet.getCell(`H${row}`);
+    cell.value = text;
+    cell.font = font(fontExtra);
+    cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    sheet.getRow(row).height = height;
+  });
   return workbook;
 }

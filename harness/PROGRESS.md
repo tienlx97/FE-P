@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-08 — Cost Excel: shipment value, signature, Vietnamese groups
+
+- Per user ("cần giá trị lô hàng. Người ký phía dưới Lê Văn Chí, Tổng giám đốc. Không cần: Booking, Tàu / chuyến, LOG ... ghi tiếng việt").
+- Info block: Hợp đồng · Điều kiện giao hàng / Giá trị lô hàng (invoice value, `#,##0.00" USD"`) · Quy đổi VNĐ (declaration value, rate in the label) / Tuyến · ETD/ETA / Ngày xuất · ATD/ATA. Booking and Tàu / chuyến removed. Breakdown adds "Tỷ lệ chi phí / giá trị lô hàng (VNĐ)" (formula, `0.00%`) when a VNĐ value exists.
+- Group bands use `COST_GROUP_NAMES_VI` by code (the BE catalog names are English), e.g. "LOG-01 · Chuẩn bị hàng & đóng gói xuất khẩu"; uncategorized → "Chưa phân nhóm". Groups now pass `code` + `name` instead of `label`.
+- Signature block (H…K, centred under the table): "Ngày dd tháng mm năm yyyy", "TỔNG GIÁM ĐỐC", "(Ký, ghi rõ họ tên)", gap, "Lê Văn Chí" — `COST_REPORT_SIGNER` constant in `shipment-cost-workbook.js`.
+- Checked: 6 unit tests; app export for 26KCT27/LOT-01 opened in Excel 16 → PDF: 1 page, 18,000.00 USD / 466,020,000 VNĐ, ratio 5.33%, signature bottom right.
+- Gate passed: `harness/runs/20261008-155427-290/`.
+
 ## 2026-10-08 — "Xuất Excel" for a shipment's logistics costs
 
 - Per user ("xuất excel table chi phí logistics của 1 shipment ... format kỹ càng, chỉn chu"); asked FE vs BE → user chose FE + ExcelJS (SheetJS CE, used elsewhere, can't style cells; BE-P has no Excel library).

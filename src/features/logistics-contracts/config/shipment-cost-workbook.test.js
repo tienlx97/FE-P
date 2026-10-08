@@ -29,8 +29,9 @@ const input = {
   shipmentName: 'Lô 1',
   contractNumber: '26KCT27',
   incotermLabel: 'CIF 2010',
-  bookingNumber: 'VN01159030',
-  vessel: 'SAWASDEE CAPELLA // 2609S',
+  shipmentValue: { amount: 18_000, currency: 'USD' },
+  shipmentValueVnd: 466_020_000,
+  exchangeRate: 25_890,
   placeOfLoading: 'Cảng Cát Lái',
   placeOfDischarge: 'Cảng Bangkok',
   etd: '2026-09-08',
@@ -40,7 +41,8 @@ const input = {
   exportedAt: new Date(2026, 9, 8, 22, 30),
   groups: [
     {
-      label: 'LOG-01 · ORIGIN',
+      code: 'LOG-01',
+      name: 'Packing & Export Preparation',
       lines: [
         baseLine,
         {
@@ -57,9 +59,10 @@ const input = {
         },
       ],
     },
-    { label: 'LOG-02 · EMPTY', lines: [] },
+    { code: 'LOG-02', name: 'Origin Inland', lines: [] },
     {
-      label: 'LOG-03 · DEST',
+      code: '',
+      name: 'Chưa phân nhóm',
       lines: [
         { ...baseLine, name: 'D/O', amount: 500_000, unitPrice: 500_000 },
       ],
@@ -85,6 +88,11 @@ test('title, info block and frozen header row', async () => {
     'BẢNG CHI PHÍ LOGISTICS — 26KCT27/LOT-01',
   );
   assert.equal(sheet.getCell('C4').value, '26KCT27');
+  assert.equal(sheet.getCell('H4').value, 'CIF 2010');
+  assert.equal(sheet.getCell('C5').value, 18_000);
+  assert.equal(sheet.getCell('C5').numFmt, '#,##0.00" USD"');
+  assert.equal(sheet.getCell('F5').value, 'Quy đổi VNĐ (tỷ giá 25,890)');
+  assert.equal(sheet.getCell('H5').value, 466_020_000);
   assert.equal(sheet.getCell('H6').value, '08/09/2026  →  11/09/2026');
   // Local day of the export, even late in the evening.
   assert.equal(sheet.getCell('C7').value, '08/10/2026');
@@ -104,13 +112,17 @@ test('title, info block and frozen header row', async () => {
 
 test('group bands sum their lines; empty groups are skipped', async () => {
   const sheet = await roundTrip();
-  assert.equal(sheet.getCell('A10').value, 'LOG-01 · ORIGIN  (2 khoản)');
+  assert.equal(
+    sheet.getCell('A10').value,
+    'LOG-01 · Chuẩn bị hàng & đóng gói xuất khẩu  (2 khoản)',
+  );
   assert.deepEqual(sheet.getCell('E10').value, {
     formula: 'SUM(E11:E12)',
     result: 12_500_000,
   });
   // LOG-02 has no lines → LOG-03 band follows LOG-01's lines directly.
-  assert.equal(sheet.getCell('A13').value, 'LOG-03 · DEST  (1 khoản)');
+  // No code → the catalog name alone.
+  assert.equal(sheet.getCell('A13').value, 'Chưa phân nhóm  (1 khoản)');
   assert.equal(sheet.getCell('E10').numFmt, '#,##0');
 });
 
@@ -139,6 +151,18 @@ test('total row adds the subtotals; breakdown below it', async () => {
   assert.equal(sheet.getCell('E17').value, 9_000_000); // chi hộ
   assert.equal(sheet.getCell('E18').value, 1); // providers
   assert.equal(sheet.getCell('E19').value, 2); // invoices
+});
+
+test('cost / shipment value ratio and the signature block', async () => {
+  const sheet = await roundTrip();
+  assert.deepEqual(sheet.getCell('E20').value, {
+    formula: 'E15/466020000',
+    result: 13_000_000 / 466_020_000,
+  });
+  assert.equal(sheet.getCell('E20').numFmt, '0.00%');
+  assert.equal(sheet.getCell('H23').value, 'Ngày 08 tháng 10 năm 2026');
+  assert.equal(sheet.getCell('H24').value, 'TỔNG GIÁM ĐỐC');
+  assert.equal(sheet.getCell('H27').value, 'Lê Văn Chí');
 });
 
 test('markdownToPlainText', () => {
