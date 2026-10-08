@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-08 — Container timeline: process order, packing time vs gate-in
+
+- Per user ("CHI TIẾT THEO CONTAINER: Đóng hàng rồi mới tới Gate-in cảng xuất … bổ sung thêm thời gian đóng hàng thực tế (nếu có) để so sánh với thời gian gate in"). `buildPhysicalTimeline` sorts by process (`PHYSICAL_EVENT_LABELS` order, transshipment events leg by leg) before dates — a gate-in with a time sorted ahead of a day-only packing. BE-P now sends the packing event with the actual packing time (`eventAt`), shown like the other times.
+- `packingToGateIn` → pill on "Gate-in cảng xuất": "Sau đóng hàng 5 giờ 20 phút" (both times), "Cùng ngày đóng hàng" / "Sau đóng hàng N ngày" (dates), warning "Gate-in trước giờ / ngày đóng hàng". 3 new tests (process order, transshipment legs, gap).
+- Chrome :3000, 26KCT27/LOT-01 → Timeline, BMOU6934486: Lấy rỗng → Đóng hàng → Gate-in (pill "Cùng ngày đóng hàng"; this container has no actual packing time yet).
+- Gate passed: `harness/runs/20261008-231225-292377/`.
+
 ## 2026-10-08 — Quick fill columns, edit shipment = create stepper, no status card
 
 - Dev DB: user confirmed they had restored an older backup. Re-added `ShipmentVgms.EmptyPickupDepotId` (+ index, FK) with the migration's DDL; depots already re-seeded (13). Container & VGM tab loads again.

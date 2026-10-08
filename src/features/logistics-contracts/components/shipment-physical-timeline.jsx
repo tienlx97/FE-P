@@ -19,6 +19,7 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import {
   buildMilestoneStrip,
   buildPhysicalTimeline,
+  packingToGateIn,
   PHYSICAL_EVENT_CLASSIFIERS,
   PHYSICAL_EVENT_LABELS,
   PHYSICAL_EVENT_SOURCES,
@@ -198,6 +199,8 @@ export function ShipmentPhysicalTimeline({
   const active =
     groups.find((group) => group.id === activeId) ?? groups[0] ?? null;
   const done = steps.filter((step) => step.state === 'done').length;
+  // Gate-in set against the actual packing (time when both have one).
+  const gateInGap = active ? packingToGateIn(active.items) : null;
 
   return (
     <MetaShipmentSection
@@ -262,10 +265,14 @@ export function ShipmentPhysicalTimeline({
                 .filter(Boolean)
                 .join(' · '),
               note: noteFor(item),
-              tags:
-                shown?.source === 'Carrier'
-                  ? [{ label: 'API', tone: 'accent' }]
-                  : undefined,
+              tags: [
+                ...(shown?.source === 'Carrier'
+                  ? [{ label: 'API', tone: /** @type {const} */ ('accent') }]
+                  : []),
+                ...(item.code === 'OriginGateIn' && gateInGap
+                  ? [gateInGap]
+                  : []),
+              ],
             };
           })}
         />

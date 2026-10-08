@@ -57,6 +57,26 @@ function voyageLabel(event) {
 const sortKey = (event) =>
   `${event.eventOn}T${event.eventAt?.slice(11, 16) ?? '99:99'}`;
 
+const EVENT_ORDER = Object.keys(PHYSICAL_EVENT_LABELS);
+const TRANSSHIPMENT_PHASE = EVENT_ORDER.indexOf('TransshipmentArrival');
+
+/**
+ * Where an event sits in the physical process (`PHYSICAL_EVENT_LABELS`
+ * order: pickup → packing → gate-in → … → empty return), the transshipment
+ * events grouped leg by leg. A container's timeline follows the process,
+ * not the dates — a gate-in dated before packing (a typo, or packing
+ * logged by day only) must not jump ahead of it (user, 2026-10-08).
+ * @param {{ code: string, leg: number }} item
+ * @returns {[number, number, number]}
+ */
+function processRank(item) {
+  const index = EVENT_ORDER.indexOf(item.code);
+  const rank = index === -1 ? EVENT_ORDER.length : index;
+  return item.code.startsWith('Transshipment')
+    ? [TRANSSHIPMENT_PHASE, item.leg, rank]
+    : [rank, 0, 0];
+}
+
 const WEEKDAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
 
 /** @param {string | null | undefined} iso date → "T2" … "CN", '' when missing */
@@ -135,6 +155,11 @@ export function buildPhysicalTimeline(events, today) {
     )
     .map(([container, map]) => {
       const sorted = [...map.values()].sort((a, b) => {
+        const rankA = processRank(a);
+        const rankB = processRank(b);
+        const byProcess =
+          rankA[0] - rankB[0] || rankA[1] - rankB[1] || rankA[2] - rankB[2];
+        if (byProcess !== 0) return byProcess;
         const keyA = sortKey(
           /** @type {import('../types/index.js').PhysicalJourneyEvent} */ (
             a.actual ?? a.expected
@@ -310,4 +335,43 @@ export function buildMilestoneStrip(groups) {
         state,
       };
     });
+}
+
+/**
+ * Gate-in at the port of loading measured from the actual packing of the
+ * same container: hours / minutes when both have a time, else days; a
+ * gate-in before packing is flagged. Null unless both are done.
+ * @param {PhysicalTimelineItem[]} items one container's timeline
+ * @returns {{ label: string, tone: 'neutral' | 'warning' } | null}
+ */
+export function packingToGateIn(items) {
+  const packing = items.find((item) => item.code === 'Packing')?.actual;
+  const gateIn = items.find((item) => item.code === 'OriginGateIn')?.actual;
+  if (!packing || !gateIn) return null;
+  if (packing.eventAt && gateIn.eventAt) {
+    const minutes = Math.round(
+      (Date.parse(gateIn.eventAt) - Date.parse(packing.eventAt)) / 60_000,
+    );
+    if (minutes < 0) {
+      return {
+        label: `Gate-in trước giờ đóng hàng ${packing.eventAt.slice(11, 16)}`,
+        tone: 'warning',
+      };
+    }
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    const span = [
+      hours > 0 ? `${hours} giờ` : '',
+      rest > 0 || hours === 0 ? `${rest} phút` : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    return { label: `Sau đóng hàng ${span}`, tone: 'neutral' };
+  }
+  const days = daysBetween(packing.eventOn, gateIn.eventOn);
+  if (days < 0) return { label: 'Gate-in trước ngày đóng hàng', tone: 'warning' };
+  return {
+    label: days === 0 ? 'Cùng ngày đóng hàng' : `Sau đóng hàng ${days} ngày`,
+    tone: 'neutral',
+  };
 }

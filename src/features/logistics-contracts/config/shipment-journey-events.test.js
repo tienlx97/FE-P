@@ -4,6 +4,7 @@ import test from 'node:test';
 import {
   buildMilestoneStrip,
   buildPhysicalTimeline,
+  packingToGateIn,
   stripStepForMilestone,
   weekdayLabel,
   WHOLE_SHIPMENT,
@@ -227,4 +228,94 @@ test('the voyage label does not repeat a voyage number the vessel name carries',
   );
   assert.equal(plain.items[0].voyage, 'Vessel A / 001');
   assert.equal(embedded.items[0].voyage, 'KMTC JAKARTA // 2604S');
+});
+
+test('a container timeline follows the process, not the dates', () => {
+  const [, container] = buildPhysicalTimeline(
+    [
+      fact({}),
+      fact({
+        code: 'OriginGateIn',
+        containerNumber: 'CONT1',
+        eventOn: '2026-09-01',
+        eventAt: '2026-09-01T06:00:00',
+      }),
+      fact({
+        code: 'Packing',
+        containerNumber: 'CONT1',
+        eventOn: '2026-09-01',
+        eventAt: '2026-09-01T08:30:00',
+      }),
+      fact({ code: 'EmptyPickup', containerNumber: 'CONT1', eventOn: '2026-09-02' }),
+    ],
+    '2026-09-20',
+  );
+  assert.deepEqual(
+    container.items.map((item) => item.code),
+    ['EmptyPickup', 'Packing', 'OriginGateIn'],
+  );
+});
+
+test('transshipment events stay together leg by leg', () => {
+  const [whole] = buildPhysicalTimeline(
+    [
+      fact({ code: 'TransshipmentDeparture', legSequence: 2, eventOn: '2026-09-12' }),
+      fact({ code: 'TransshipmentArrival', legSequence: 2, eventOn: '2026-09-11' }),
+      fact({ code: 'TransshipmentDeparture', legSequence: 1, eventOn: '2026-09-08' }),
+      fact({ code: 'TransshipmentArrival', legSequence: 1, eventOn: '2026-09-06' }),
+      fact({ code: 'Arrival', eventOn: '2026-09-20' }),
+      fact({ code: 'Departure', eventOn: '2026-09-02' }),
+    ],
+    '2026-09-30',
+  );
+  assert.deepEqual(
+    whole.items.map((item) => `${item.code}${item.leg || ''}`),
+    [
+      'Departure',
+      'TransshipmentArrival1',
+      'TransshipmentDeparture1',
+      'TransshipmentArrival2',
+      'TransshipmentDeparture2',
+      'Arrival',
+    ],
+  );
+});
+
+test('gate-in is measured from the actual packing', () => {
+  /** @param {string | null} packedAt @param {string} gateOn @param {string | null} gateAt */
+  const items = (packedAt, gateOn, gateAt) =>
+    buildPhysicalTimeline(
+      [
+        fact({
+          code: 'Packing',
+          containerNumber: 'C1',
+          eventOn: '2026-09-01',
+          eventAt: packedAt,
+        }),
+        fact({
+          code: 'OriginGateIn',
+          containerNumber: 'C1',
+          eventOn: gateOn,
+          eventAt: gateAt,
+        }),
+      ],
+      '2026-09-20',
+    )[0].items;
+  assert.deepEqual(
+    packingToGateIn(items('2026-09-01T08:30:00', '2026-09-01', '2026-09-01T13:50:00')),
+    { label: 'Sau đóng hàng 5 giờ 20 phút', tone: 'neutral' },
+  );
+  assert.deepEqual(
+    packingToGateIn(items('2026-09-01T08:30:00', '2026-09-01', '2026-09-01T06:00:00')),
+    { label: 'Gate-in trước giờ đóng hàng 08:30', tone: 'warning' },
+  );
+  assert.deepEqual(packingToGateIn(items(null, '2026-09-03', null)), {
+    label: 'Sau đóng hàng 2 ngày',
+    tone: 'neutral',
+  });
+  assert.deepEqual(packingToGateIn(items(null, '2026-09-01', '2026-09-01T09:00:00')), {
+    label: 'Cùng ngày đóng hàng',
+    tone: 'neutral',
+  });
+  assert.equal(packingToGateIn([]), null);
 });
