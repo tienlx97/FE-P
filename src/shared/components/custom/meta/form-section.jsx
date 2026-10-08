@@ -17,6 +17,7 @@ import * as stylex from '@stylexjs/stylex';
  *   index?: number,
  *   title: string,
  *   meta?: import('react').ReactNode,
+ *   badge?: import('react').ReactNode,
  *   action?: import('react').ReactNode,
  *   isBoxed?: boolean,
  *   isTitleUppercase?: boolean,
@@ -25,6 +26,7 @@ import * as stylex from '@stylexjs/stylex';
  *
  * `isTitleUppercase={false}` keeps the title as written (Figma 125:11995,
  * the cost drawer's "Phân loại" / "Khoản chi phí").
+ * `badge` sits right after the title (e.g. the buyer's country pill).
  * `isBoxed` puts the section on its own white card (Figma 104:5399, the
  * "Tạo Commission" drawer, whose body is a muted canvas of section cards).
  */
@@ -32,6 +34,7 @@ export function MetaFormSection({
   index,
   title,
   meta,
+  badge,
   action,
   isBoxed = false,
   isTitleUppercase = true,
@@ -56,6 +59,7 @@ export function MetaFormSection({
           >
             {index === undefined ? title : `${index}. ${title}`}
           </Text>
+          {badge ?? null}
         </HStack>
         {action ??
           (typeof meta === 'string' ? (

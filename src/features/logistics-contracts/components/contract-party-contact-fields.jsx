@@ -3,6 +3,7 @@
 import { Grid } from '@astryxdesign/core/Grid';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 
 import {
   MetaFormCard,
@@ -27,7 +28,11 @@ const NONE = '__none__';
  *   onChange: (next: import('../types/index.js').PartyFormValue) => void,
  *   nameStatus?: { type: 'error' | 'success', message: string },
  *   isReadOnly?: boolean,
+ *   isFlat?: boolean,
  * }} props
+ *
+ * `isFlat` drops the card: the title becomes a small heading, for a section
+ * that is already a card (the contract drawer's Consignee / Notify columns).
  */
 export function ContractPartyContactFields({
   title,
@@ -36,13 +41,12 @@ export function ContractPartyContactFields({
   onChange,
   nameStatus,
   isReadOnly = false,
+  isFlat = false,
 }) {
   const needsName = partyKindNeedsName(value.kind);
 
-  return (
-    <MetaFormCard
-      header={<MetaPill label={title} tone="neutral" />}
-    >
+  const fields = (
+    <>
       <Grid columns={TWO_COLUMNS} gap={4}>
         <Selector
           label="Cách ghi trên B/L"
@@ -87,6 +91,19 @@ export function ContractPartyContactFields({
             .join(' · ')}
         </Text>
       ) : null}
+    </>
+  );
+
+  return isFlat ? (
+    <VStack gap={3} hAlign="stretch">
+      <Text type="label" weight="bold" color="secondary">
+        {title}
+      </Text>
+      {fields}
+    </VStack>
+  ) : (
+    <MetaFormCard header={<MetaPill label={title} tone="neutral" />}>
+      {fields}
     </MetaFormCard>
   );
 }

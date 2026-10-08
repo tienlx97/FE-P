@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-08 — Contract drawer: parties without card-in-card
+
+- Per user ("3. Các bên tham gia hợp đồng > cách thiết kế trong card có card rất rối mắt" → "bạn thấy hợp thì dùng"). Section 3 stacked four frames (section card → party inset → grid-ruled "Trường tùy ý" table → inputs) and four inset cards (Seller, Buyer, Consignee, Notify).
+- Split into flat boxed sections: 3. Bên bán (Seller) and 4. Bên mua (Buyer) — "Đã ký kết hợp đồng" checkbox in the section `action`, buyer country pill in the new `MetaFormSection` `badge` slot; 5. Consignee & Notify Party ("Ghi trên B/L") as two flat columns (`ContractPartyContactFields isFlat`, `PARTY_COLUMNS` min 320 → stacks when narrow). Payment terms / goods renumbered 6 / 7. The shipment drawer keeps the carded party block (`isFlat` defaults false).
+- Shared `ExtraFieldsEditor` (6 forms: contract parties, customer, seller, party A, bank account, private info): grid-ruled `Table` → plain rows of key / value inputs (1 : 1.4) + delete, placeholders "Tên trường, ví dụ: Mã số thuế" / "Giá trị", "+ Thêm trường".
+- Chrome :3000: 26KCT42 → Sửa (sections 3–5 as above, nothing saved); a customer's "Sửa khách hàng" drawer → "Thêm trường" adds a plain row (not saved).
+- Gate passed: `harness/runs/20261008-211303-121917/`.
+
 ## 2026-10-08 — No card-in-card in the contract / shipment drawers
 
 - Per user ("Card lồng card có thể xấu đúng không" → "cung cấp giải pháp rồi fix đi"). After the contract drawer's sections became white cards, the white bordered `MetaFormCard variant="default"` blocks inside them read as card-in-card. Dropped `variant="default"` → the muted inset (Figma 103:4983) in 5 places: Seller / Buyer (`contract-drawer-profile-fields`), `contract-party-contact-fields` (also the shipment drawer's Consignee / Notify), payment terms, goods lines.

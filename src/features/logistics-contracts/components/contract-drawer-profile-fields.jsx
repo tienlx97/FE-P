@@ -15,7 +15,6 @@ import { CirclePlus } from 'lucide-react';
 import { useState } from 'react';
 
 import {
-  MetaFormCard,
   MetaFormSection,
   MetaPill,
   MetaTintButton,
@@ -46,6 +45,8 @@ import { QuickCreatePortDialog } from './quick-create-port-dialog.jsx';
 import { SellerPickerFields } from './seller-picker-fields.jsx';
 
 const TWO_COLUMNS = { minWidth: 240, max: 2 };
+// Consignee | Notify Party side by side; stacks when the drawer is narrow.
+const PARTY_COLUMNS = { minWidth: 320, max: 2 };
 const CURRENCY_WIDTH = 104;
 
 const styles = stylex.create({
@@ -441,88 +442,99 @@ export function ContractDrawerProfileFields({
           ) : null}
         </MetaFormSection>
 
-        <MetaFormSection isBoxed index={3} title="Các bên tham gia hợp đồng">
-          <MetaFormCard
-            header={
-              <>
-                <MetaPill label="BÊN BÁN (SELLER)" tone="accent" />
-                <CheckboxInput
-                  label="Đã ký kết hợp đồng"
-                  size="sm"
-                  value={values.sellerSigned}
-                  onChange={(checked) => setField('sellerSigned', checked)}
-                />
-              </>
-            }
-          >
-            <SellerPickerFields
-              sellers={sellers}
-              sourceSellerId={values.sourceSellerId}
-              inlineValues={values.sellerInline}
-              sourceSellerIdStatus={fieldStatuses.sourceSellerId}
-              fieldStatuses={sellerFieldStatuses}
-              onSelectExisting={selectExistingSeller}
-              onSwitchToInline={switchToInlineSeller}
-              onInlineFieldChange={setSellerInlineField}
-              extraFieldRows={sellerExtraFieldRows}
-              isDetailsCollapsible={false}
-              actionSize="lg"
+        <MetaFormSection
+          isBoxed
+          index={3}
+          title="Bên bán (Seller)"
+          action={
+            <CheckboxInput
+              label="Đã ký kết hợp đồng"
+              size="sm"
+              value={values.sellerSigned}
+              onChange={(checked) => setField('sellerSigned', checked)}
             />
-          </MetaFormCard>
-          <MetaFormCard
-            header={
-              <>
-                <HStack gap={2} vAlign="center" wrap="wrap">
-                  <MetaPill label="BÊN MUA (BUYER)" tone="neutral" />
-                  {buyerCountryName ? (
-                    <MetaPill
-                      label={buyerCountryName.toLocaleUpperCase('vi')}
-                      tone="accent"
-                    />
-                  ) : null}
-                </HStack>
-                <CheckboxInput
-                  label="Đã ký kết hợp đồng"
-                  size="sm"
-                  value={values.buyerSigned}
-                  onChange={(checked) => setField('buyerSigned', checked)}
-                />
-              </>
-            }
-          >
-            <BuyerFields
-              customers={customers}
-              sourceCustomerId={values.sourceCustomerId}
-              inlineValues={values.buyerInline}
-              sourceCustomerIdStatus={fieldStatuses.sourceCustomerId}
-              fieldStatuses={buyerFieldStatuses}
-              onSelectExisting={selectExistingCustomer}
-              onSwitchToInline={switchToInlineBuyer}
-              onInlineFieldChange={setBuyerInlineField}
-              extraFieldRows={buyerExtraFieldRows}
-              isDetailsCollapsible={false}
-              actionSize="lg"
-            />
-          </MetaFormCard>
-          <ContractPartyContactFields
-            title="CONSIGNEE"
-            value={values.consignee}
-            kindOptions={consigneeKindOptions}
-            onChange={(party) => setParty('consignee', party)}
-            nameStatus={fieldStatuses['consignee.name']}
-          />
-          <ContractPartyContactFields
-            title="NOTIFY PARTY"
-            value={values.notifyParty}
-            kindOptions={notifyPartyKindOptions}
-            onChange={(party) => setParty('notifyParty', party)}
-            nameStatus={fieldStatuses['notifyParty.name']}
+          }
+        >
+          <SellerPickerFields
+            sellers={sellers}
+            sourceSellerId={values.sourceSellerId}
+            inlineValues={values.sellerInline}
+            sourceSellerIdStatus={fieldStatuses.sourceSellerId}
+            fieldStatuses={sellerFieldStatuses}
+            onSelectExisting={selectExistingSeller}
+            onSwitchToInline={switchToInlineSeller}
+            onInlineFieldChange={setSellerInlineField}
+            extraFieldRows={sellerExtraFieldRows}
+            isDetailsCollapsible={false}
+            actionSize="lg"
           />
         </MetaFormSection>
 
         <MetaFormSection
           isBoxed
           index={4}
+          title="Bên mua (Buyer)"
+          badge={
+            buyerCountryName ? (
+              <MetaPill
+                label={buyerCountryName.toLocaleUpperCase('vi')}
+                tone="accent"
+              />
+            ) : undefined
+          }
+          action={
+            <CheckboxInput
+              label="Đã ký kết hợp đồng"
+              size="sm"
+              value={values.buyerSigned}
+              onChange={(checked) => setField('buyerSigned', checked)}
+            />
+          }
+        >
+          <BuyerFields
+            customers={customers}
+            sourceCustomerId={values.sourceCustomerId}
+            inlineValues={values.buyerInline}
+            sourceCustomerIdStatus={fieldStatuses.sourceCustomerId}
+            fieldStatuses={buyerFieldStatuses}
+            onSelectExisting={selectExistingCustomer}
+            onSwitchToInline={switchToInlineBuyer}
+            onInlineFieldChange={setBuyerInlineField}
+            extraFieldRows={buyerExtraFieldRows}
+            isDetailsCollapsible={false}
+            actionSize="lg"
+          />
+        </MetaFormSection>
+
+        <MetaFormSection
+          isBoxed
+          index={5}
+          title="Consignee & Notify Party"
+          meta="Ghi trên B/L"
+        >
+          <Grid columns={PARTY_COLUMNS} gap={6}>
+            <ContractPartyContactFields
+              isFlat
+              title="CONSIGNEE"
+              value={values.consignee}
+              kindOptions={consigneeKindOptions}
+              onChange={(party) => setParty('consignee', party)}
+              nameStatus={fieldStatuses['consignee.name']}
+            />
+            <ContractPartyContactFields
+              isFlat
+              title="NOTIFY PARTY"
+              value={values.notifyParty}
+              kindOptions={notifyPartyKindOptions}
+              onChange={(party) => setParty('notifyParty', party)}
+              nameStatus={fieldStatuses['notifyParty.name']}
+            />
+          </Grid>
+        </MetaFormSection>
+
+        <MetaFormSection
+          isBoxed
+          index={6}
           title="Điều khoản thanh toán (Payment Terms)"
           action={
             <MetaTintButton
@@ -552,7 +564,7 @@ export function ContractDrawerProfileFields({
 
         <MetaFormSection
           isBoxed
-          index={5}
+          index={7}
           title="Danh mục hàng hóa"
           action={
             <MetaTintButton

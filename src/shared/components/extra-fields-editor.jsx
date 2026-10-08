@@ -4,12 +4,13 @@ import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
+import { Plus } from 'lucide-react';
 
 import { IconTrash } from '@/shared/components/icon/icon-trash.jsx';
-import { Table } from '@/shared/components/table.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
 /**
@@ -32,57 +33,9 @@ export function ExtraFieldsEditor({
   onRemoveRow,
   onUpdateRowField,
 }) {
-  /** @type {import('@astryxdesign/core/Table').TableColumn<{ rowKey: string, key: string, value: string } & Record<string, unknown>>[]} */
-  const columns = [
-    {
-      key: 'key',
-      header: 'Tên trường',
-      width: proportional(1),
-      renderCell: (row) => (
-        <TextInput
-          label="Tên trường"
-          isLabelHidden
-          value={row.key}
-          onChange={(value) => onUpdateRowField(row.rowKey, 'key', value)}
-          placeholder="Ví dụ: Mã số thuế"
-          isReadOnly={isReadOnly}
-        />
-      ),
-    },
-    {
-      key: 'value',
-      header: 'Giá trị',
-      width: proportional(1.4),
-      renderCell: (row) => (
-        <TextInput
-          label="Giá trị"
-          isLabelHidden
-          value={row.value}
-          onChange={(value) => onUpdateRowField(row.rowKey, 'value', value)}
-          isReadOnly={isReadOnly}
-        />
-      ),
-    },
-  ];
-
-  columns.push({
-    key: 'actions',
-    header: '',
-    width: pixel(48),
-    align: 'end',
-    renderCell: (row) => (
-      <IconButton
-        isDisabled={isReadOnly}
-        label="Xoá dòng này"
-        tooltip="Xoá"
-        icon={<Icon icon={IconTrash} size="sm" />}
-        type="button"
-        variant="ghost"
-        onClick={() => onRemoveRow(row.rowKey)}
-      />
-    ),
-  });
-
+  // Plain rows, not a grid-ruled `Table`: inputs already draw their own
+  // boxes, and table rules around them (inside a form card) read as boxes
+  // within boxes. Key / value are clear from the content and placeholders.
   return (
     <VStack gap={2} hAlign="stretch">
       <Text type="label" color="secondary">
@@ -90,7 +43,45 @@ export function ExtraFieldsEditor({
       </Text>
 
       {rows.length > 0 ? (
-        <Table data={rows} columns={columns} idKey="rowKey" dividers="grid" />
+        <VStack gap={2} hAlign="stretch">
+          {rows.map((row) => (
+            <HStack key={row.rowKey} gap={2} vAlign="center" wrap="nowrap">
+              <StackItem size="fill" xstyle={styles.keyColumn}>
+                <TextInput
+                  label="Tên trường"
+                  isLabelHidden
+                  value={row.key}
+                  onChange={(value) =>
+                    onUpdateRowField(row.rowKey, 'key', value)
+                  }
+                  placeholder="Tên trường, ví dụ: Mã số thuế"
+                  isReadOnly={isReadOnly}
+                />
+              </StackItem>
+              <StackItem size="fill" xstyle={styles.valueColumn}>
+                <TextInput
+                  label="Giá trị"
+                  isLabelHidden
+                  value={row.value}
+                  onChange={(value) =>
+                    onUpdateRowField(row.rowKey, 'value', value)
+                  }
+                  placeholder="Giá trị"
+                  isReadOnly={isReadOnly}
+                />
+              </StackItem>
+              <IconButton
+                isDisabled={isReadOnly}
+                label="Xoá dòng này"
+                tooltip="Xoá"
+                icon={<Icon icon={IconTrash} size="sm" />}
+                type="button"
+                variant="ghost"
+                onClick={() => onRemoveRow(row.rowKey)}
+              />
+            </HStack>
+          ))}
+        </VStack>
       ) : (
         <Text color="secondary">Chưa có trường tùy ý nào.</Text>
       )}
@@ -99,6 +90,7 @@ export function ExtraFieldsEditor({
         <Button
           isDisabled={isReadOnly}
           label="Thêm trường"
+          icon={<Icon icon={Plus} size="sm" />}
           type="button"
           variant="secondary"
           size="sm"
@@ -108,3 +100,16 @@ export function ExtraFieldsEditor({
     </VStack>
   );
 }
+
+const styles = stylex.create({
+  keyColumn: {
+    flexBasis: 0,
+    flexGrow: 1,
+    minWidth: 0,
+  },
+  valueColumn: {
+    flexBasis: 0,
+    flexGrow: 1.4,
+    minWidth: 0,
+  },
+});
