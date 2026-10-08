@@ -101,7 +101,7 @@ export const metaTheme = {
     "--radius-none": "0px",
     "--radius-inner": "4px",
     "--radius-element": "8px",
-    "--radius-container": "16px",
+    "--radius-container": "12px",
     "--radius-page": "28px",
     "--radius-chat": "28px",
     "--radius-full": "9999px",
@@ -139,6 +139,8 @@ export const metaTheme = {
     "--meta-surface-container-low": "#f2f3fe",
     "--meta-surface-container": "#ecedf8",
     "--meta-surface-container-high": "#e6e7f2",
+    "--meta-content-wash": "#f2f4f7",
+    "--meta-shadow-card": "0 1px 2px 0 rgba(0, 0, 0, 0.2)",
     "--meta-shadow-float": "rgba(20, 22, 26, 0.3) 0px 1px 4px 0px",
     "--meta-font-features": "\"liga\" 1, \"calt\" 1, \"tnum\" 1, \"lnum\" 1",
     "--table-framed-total-bg": "#f0f5ff",
@@ -183,7 +185,6 @@ export const metaTheme = {
     "--meta-teal-wash": "#f0fdfa",
     "--meta-teal-border": "#99f6e4",
     "--meta-teal-deep": "#115e59",
-    "--meta-shadow-card": "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
     "--meta-shadow-drawer": "-10px 0 35px 0 rgba(0, 0, 0, 0.09)"
   },
   __localTokenOwners: {
@@ -210,6 +211,8 @@ export const metaTheme = {
     "--meta-surface-container-low": "meta",
     "--meta-surface-container": "meta",
     "--meta-surface-container-high": "meta",
+    "--meta-content-wash": "meta",
+    "--meta-shadow-card": "meta",
     "--meta-shadow-float": "meta",
     "--meta-font-features": "meta",
     "--table-framed-total-bg": "meta",
@@ -254,7 +257,6 @@ export const metaTheme = {
     "--meta-teal-wash": "meta",
     "--meta-teal-border": "meta",
     "--meta-teal-deep": "meta",
-    "--meta-shadow-card": "meta",
     "--meta-shadow-drawer": "meta"
   },
   __localTokenLineage: ["meta"],
@@ -583,6 +585,10 @@ export const metaTheme = {
         "borderStyle": "solid",
         "borderColor": "var(--color-border)",
         "boxShadow": "none"
+      },
+      "variant:default": {
+        "borderColor": "transparent",
+        "boxShadow": "var(--meta-shadow-card)"
       }
     }
   },

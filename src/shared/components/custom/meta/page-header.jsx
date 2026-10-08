@@ -73,7 +73,8 @@ export function MetaPageHeader({ trail, icon, title, description, meta }) {
 
 const styles = stylex.create({
   card: {
-    borderColor: 'var(--color-border-emphasized)',
+    // Facebook card: shadow only, no hairline (user request, 2026-10-08).
+    borderColor: 'transparent',
     borderRadius: 'var(--meta-radius-inset)',
     boxShadow: 'var(--meta-shadow-card)',
   },

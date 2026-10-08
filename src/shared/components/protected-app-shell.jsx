@@ -121,6 +121,12 @@ const styles = stylex.create({
   paddedMain: {
     padding: spacingVars['--spacing-6'],
   },
+  // Facebook-style layout for /logistics (user request, 2026-10-08):
+  // header and side nav stay white, the content area is the Meta theme's
+  // grey wash and pages split into white cards on it.
+  contentWash: {
+    backgroundColor: `var(--meta-content-wash, ${colorVars['--color-background-surface']})`,
+  },
   mobileOverlay: {
     backgroundColor: colorVars['--color-background-surface'],
     display: {
@@ -198,11 +204,10 @@ export function ProtectedAppShell({
   // `shared/components/page-content-shell.jsx`): same self-managed
   // padding/max-width contract, so it also opts out of `paddedMain` below
   // — the page itself wraps its content in `PageContentShell` instead.
+  const isLogistics =
+    pathname === '/logistics' || pathname.startsWith('/logistics/');
   const isAdminOrLogistics =
-    pathname === '/admin' ||
-    pathname.startsWith('/admin/') ||
-    pathname === '/logistics' ||
-    pathname.startsWith('/logistics/');
+    pathname === '/admin' || pathname.startsWith('/admin/') || isLogistics;
   const hasSelfManagedPadding =
     pathname === '/' || hasMdxLayout || isAdminOrLogistics;
   // Grid columns follow side-nav presence in general (any side-nav'd
@@ -331,6 +336,7 @@ export function ProtectedAppShell({
           {...stylex.props(
             styles.main,
             !hasSelfManagedPadding && styles.paddedMain,
+            isLogistics && styles.contentWash,
           )}
         >
           {children}

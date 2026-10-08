@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-08 — Facebook-style /logistics layout
+
+- Per user ("trang /logistics/** background content là màu f2f4f7, sau đó phân tách thành các card", reference: a facebook.com group page). Values read from facebook.com itself: `--web-wash` #F2F4F7, cards white, 12px radius, `0 1px 2px rgba(0,0,0,.2)`.
+- Meta theme: new `--meta-content-wash` #f2f4f7; `--meta-shadow-card` 0.05 → 0.2 (it already existed lower in `localTokens`; the duplicate was removed, so its 22 users follow); `--radius-container` 16 → 12px; `card` override: default variant has a transparent border + card shadow (muted / tinted cards keep the hairline).
+- `ProtectedAppShell`: `<main>` on /logistics/* gets the wash; header + side nav stay white. `AdvanceTable` frame, `MetaPageHeader` and utility cards: border → shadow. `MetaTabNav` band is transparent, wash only when sticky.
+- Claude in Chrome :3000: shipments list, contract 26KCT27, shipment 26KCT27/LOT-01 — grey content, white shadowed cards, tab row no longer a white strip. Screenshots can't be taken while the tab is hidden (CDP timeout); computed styles via JS were used meanwhile.
+- A first attempt added a second `card:` key to `components` → the old one silently won; caught by ESLint `no-dupe-keys` + tsc in the gate.
+- Gate passed: `harness/runs/20261008-135429-1663/`.
+
 ## 2026-10-08 — No invoice number in shipment edit; Facebook-grey body
 
 - Per user ("Chỉnh sửa shipment không cần Số hoá đơn thương mại"): the "Số hoá đơn thương mại" input is gone from the shipment drawer (`shipment-form-drawer.jsx`, `basic` section fields). The value is still loaded from details and sent on save, so existing invoice numbers are kept; overview / table / cost-line invoice numbers unchanged.

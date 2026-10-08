@@ -526,7 +526,8 @@ const styles = stylex.create({
     // Astryx's small element radius.
     // eslint-disable-next-line @stylexjs/valid-styles
     '--meta-field-radius': 'var(--meta-radius-inset)',
-    borderColor: 'var(--color-border-emphasized)',
+    // Facebook card: shadow only, no hairline (user request, 2026-10-08).
+    borderColor: 'transparent',
     borderRadius: 'var(--meta-radius-inset)',
     boxShadow: 'var(--meta-shadow-card)',
   },

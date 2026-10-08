@@ -85,12 +85,14 @@ const styles = stylex.create({
     '--meta-tab-selected-bg': 'var(--color-background-surface)',
     // eslint-disable-next-line @stylexjs/valid-styles
     '--meta-tab-selected-text': 'var(--color-accent)',
-    backgroundColor: 'var(--color-background-surface)',
     gap: 'var(--spacing-1-5)',
     paddingBlock: 'var(--spacing-1)',
   },
-  // Sticks just under the app's fixed top bar (4rem high).
+  // Sticks just under the app's fixed top bar (4rem high), on the page's
+  // grey wash (Facebook-style layout) so content scrolls under it.
   sticky: {
+    backgroundColor:
+      'var(--meta-content-wash, var(--color-background-surface))',
     position: 'sticky',
     top: '4rem',
     zIndex: 10,

@@ -108,7 +108,9 @@ export const metaTheme = defineTheme({
     '--color-success': '#1f883d', // mockup: success
     '--color-on-success': '#ffffff',
     '--color-success-muted': '#dafbe1', // mockup: success-container
-    '--radius-container': '16px', // mockup: rounded-2xl workspace card
+    // Facebook card corner (user request, 2026-10-08; was the mockup's
+    // 16px rounded-2xl workspace card).
+    '--radius-container': '12px',
   },
 
   localTokens: {
@@ -145,6 +147,12 @@ export const metaTheme = defineTheme({
     '--meta-surface-container-low': '#f2f3fe', // spec: surface-container-low
     '--meta-surface-container': '#ecedf8', // spec: surface-container
     '--meta-surface-container-high': '#e6e7f2', // spec: surface-container-high
+
+    // Facebook-style layout (user request, 2026-10-08, from facebook.com's
+    // own `--web-wash` / card styles): /logistics content sits on a grey
+    // wash, split into white borderless cards with a 1px drop shadow.
+    '--meta-content-wash': '#f2f4f7',
+    '--meta-shadow-card': '0 1px 2px 0 rgba(0, 0, 0, 0.2)',
 
     // Elevation — only sticky checkout bars / summary panels
     '--meta-shadow-float': 'rgba(20, 22, 26, 0.3) 0px 1px 4px 0px',
@@ -212,7 +220,6 @@ export const metaTheme = defineTheme({
     '--meta-teal-wash': '#f0fdfa',
     '--meta-teal-border': '#99f6e4',
     '--meta-teal-deep': '#115e59',
-    '--meta-shadow-card': '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // figma: header / summary card
     '--meta-shadow-drawer': '-10px 0 35px 0 rgba(0, 0, 0, 0.09)', // figma 103:4983: edit drawer
   },
 
@@ -458,6 +465,10 @@ export const metaTheme = defineTheme({
         color: 'var(--color-on-success)',
       },
     },
+    // Facebook card (user request, 2026-10-08): the default (white) card
+    // drops its hairline for a 1px drop shadow; the border stays,
+    // transparent, so Card's border-adjusted padding is unchanged. Muted /
+    // tinted cards keep the hairline.
     card: {
       base: {
         borderRadius: 'var(--radius-container)',
@@ -465,6 +476,10 @@ export const metaTheme = defineTheme({
         borderStyle: 'solid',
         borderColor: 'var(--color-border)',
         boxShadow: 'none',
+      },
+      'variant:default': {
+        borderColor: 'transparent',
+        boxShadow: 'var(--meta-shadow-card)',
       },
     },
   },

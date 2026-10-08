@@ -155,10 +155,13 @@ const styles = stylex.create({
     paddingBlock: spacingVars['--spacing-2'],
     paddingInline: spacingVars['--spacing-4'],
   },
+  // Same Facebook card as the theme's `card` (user request, 2026-10-08):
+  // transparent hairline + the Meta theme's 1px drop shadow.
   frame: {
     backgroundColor: colorVars['--color-background-card'],
-    borderColor: colorVars['--color-border'],
+    borderColor: 'transparent',
     borderRadius: radiusVars['--radius-container'],
+    boxShadow: 'var(--meta-shadow-card)',
     borderStyle: 'solid',
     borderWidth: 1,
     minHeight: 0,
