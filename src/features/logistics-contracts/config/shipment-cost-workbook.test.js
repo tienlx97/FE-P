@@ -180,6 +180,30 @@ test('USD total, cost / value ratio and the signature block', async () => {
   assert.equal(sheet.getCell('H27').value, 'Lê Văn Chí');
 });
 
+test('no grey: text and borders are black (or brand colours)', async () => {
+  const sheet = await roundTrip();
+  const allowed = new Set(['FF000000', 'FFFFFFFF', 'FF0064E0', 'FFB94500']);
+  const colors = new Set();
+  sheet.eachRow((row) =>
+    row.eachCell({ includeEmpty: true }, (cell) => {
+      if (cell.font?.color?.argb) colors.add(cell.font.color.argb);
+      for (const side of /** @type {const} */ ([
+        'top',
+        'left',
+        'bottom',
+        'right',
+      ])) {
+        const argb = cell.border?.[side]?.color?.argb;
+        if (argb) colors.add(argb);
+      }
+    }),
+  );
+  assert.deepEqual(
+    [...colors].filter((argb) => !allowed.has(argb)),
+    [],
+  );
+});
+
 test('markdownToPlainText', () => {
   assert.equal(markdownToPlainText(null), '');
   assert.equal(

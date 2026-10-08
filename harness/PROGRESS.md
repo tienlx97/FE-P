@@ -1,5 +1,10 @@
 # Progress Log
 
+## 2026-10-08 — Cost Excel: no grey
+
+- Per user ("thay màu xám bằng màu đen"). Workbook text colour `#1C1E21` / grey `#65676B` (info labels, breakdown captions, "(Ký, ghi rõ họ tên)") → black; cell borders `#D0D5DD` → black; the light-grey info-label fill dropped (a black fill would hide the text). Brand colours stay (cobalt header / bands / total, orange "Phát sinh").
+- New test scans every cell's font and border colours: only black, white, cobalt, orange allowed. App export → Excel 16 → PDF checked: 1 page, no grey left.
+
 ## 2026-10-08 — Cost Excel: larger font, USD value + rate, new title
 
 - Per user ("Font size lớn hơn, cần giá trị USD và tỷ giá. Không cần ETD/ETA, TÊN LÔ HÀNG. TÊN TITLE: BẢNG KÊ CHI PHÍ LOGISTIC - {MÃ LÔ}").

@@ -49,17 +49,16 @@
  * @property {Date} exportedAt
  */
 
-// Excel ARGB colours mirroring the Meta theme (cobalt accent, group band,
-// totals wash, hairline, ink / muted text, abnormal orange).
+// Excel ARGB colours: Meta theme cobalt accent, group band and totals
+// wash, abnormal orange; text and borders black — no grey (user,
+// 2026-10-08).
 const EXCEL_COLORS = {
   accent: 'FF0064E0',
   onAccent: 'FFFFFFFF',
   groupBand: 'FFEBF3FE',
   totalBand: 'FFF0F5FF',
-  infoLabel: 'FFF8F9FB',
-  border: 'FFD0D5DD',
-  ink: 'FF1C1E21',
-  muted: 'FF65676B',
+  border: 'FF000000',
+  ink: 'FF000000',
   abnormal: 'FFB94500',
 };
 
@@ -279,10 +278,7 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
       } else {
         cell.value = value || '—';
       }
-      cell.font = isLabel
-        ? font({ color: { argb: EXCEL_COLORS.muted } })
-        : font({ bold: true });
-      if (isLabel) cell.fill = solidFill(EXCEL_COLORS.infoLabel);
+      cell.font = isLabel ? font() : font({ bold: true });
       cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
     }
   });
@@ -459,13 +455,12 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
     captionCell.value = caption;
     captionCell.font = font({
       italic: true,
-      color: { argb: EXCEL_COLORS.muted },
     });
     captionCell.alignment = { horizontal: 'right', indent: 1 };
     const valueCell = sheet.getCell(`${AMOUNT_COLUMN}${row}`);
     valueCell.value = value;
     valueCell.numFmt = numFmt;
-    valueCell.font = font({ color: { argb: EXCEL_COLORS.muted } });
+    valueCell.font = font();
     valueCell.alignment = { horizontal: 'right' };
   });
 
@@ -481,11 +476,7 @@ export function buildShipmentCostWorkbook(ExcelJS, input) {
         22,
       ],
       [COST_REPORT_SIGNER.title, { bold: true, size: 14 }, 22],
-      [
-        '(Ký, ghi rõ họ tên)',
-        { italic: true, size: 11, color: { argb: EXCEL_COLORS.muted } },
-        18,
-      ],
+      ['(Ký, ghi rõ họ tên)', { italic: true, size: 11 }, 18],
       ['', {}, 72],
       [COST_REPORT_SIGNER.name, { bold: true, size: 14 }, 22],
     ]);
