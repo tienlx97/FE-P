@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-08 — No card-in-card in the contract / shipment drawers
+
+- Per user ("Card lồng card có thể xấu đúng không" → "cung cấp giải pháp rồi fix đi"). After the contract drawer's sections became white cards, the white bordered `MetaFormCard variant="default"` blocks inside them read as card-in-card. Dropped `variant="default"` → the muted inset (Figma 103:4983) in 5 places: Seller / Buyer (`contract-drawer-profile-fields`), `contract-party-contact-fields` (also the shipment drawer's Consignee / Notify), payment terms, goods lines.
+- Rule of thumb: `variant="default"` only when the section sits directly on a white surface; inside an `isBoxed` section use the muted default.
+- Chrome :3000: 26KCT42 → Sửa: Seller card `#faf8ff` + hairline, no shadow, inside the white shadowed section; custom-fields table header matches. 26KCT27/LOT-01 → Sửa, Consignee ticked (not saved): same muted inset.
+- Gate passed: `harness/runs/20261008-204451-90466/`.
+
 ## 2026-10-08 — "Chỉnh sửa hợp đồng" drawer: section cards on a muted canvas
 
 - Per user ("Drawer Chỉnh sửa hợp đồng: chưa giống các drawer khác, có các card rồi background color"). Matched `commission-form-drawer` (the Figma reference): `LayoutContent` gets `--color-background-muted` (`drawerCanvas`), the five `MetaFormSection`s in `ContractDrawerProfileFields` are `isBoxed` (white cards), section gap 8 → 5. Seller / Buyer `MetaFormCard`s unchanged inside section 3.

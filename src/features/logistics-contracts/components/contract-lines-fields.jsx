@@ -58,7 +58,7 @@ export function ContractLinesFields({
   const gap = hasValue ? total - contractValue : 0;
 
   return (
-    <MetaFormCard variant="default">
+    <MetaFormCard>
       {rows.length === 0 ? (
         <Text color="secondary">
           Chưa có dòng hàng — bấm &quot;Thêm dòng hàng&quot;.

@@ -41,7 +41,6 @@ export function ContractPartyContactFields({
 
   return (
     <MetaFormCard
-      variant="default"
       header={<MetaPill label={title} tone="neutral" />}
     >
       <Grid columns={TWO_COLUMNS} gap={4}>
