@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-08 — AdvanceTable can't scroll (Astryx 0.6.6 regression)
+
+- Per user ("bug: Advance không thể scroll"). Cause: Astryx 0.6.6 rebuilt `Table`'s scroll wrapper on `useScrollableArea({axis: 'inline'})`, which sets `overflow-y: hidden` through a high-specificity atomic class (`:not(#\#)` ×4) and strips caller `overflow*` styles. 0.6.2 only set `overflow-x: auto` (→ y auto), and AdvanceTable's fixed-height list (sticky header / Σ row) scrolled through that wrapper.
+- Fix: meta theme `table-scroll-wrapper` adds `overflowY: 'auto !important'` (the only way past that class; Table has no vertical-scroll option). Guard test `theme-table-scroll.test.js` checks the built CSS keeps it.
+- Chrome :3000 /logistics/contracts: before — wrapper 601px / content 1466px, `overflow-y: hidden`, wheel did nothing; after — `overflow-y: auto`, wheel scrolls 500px, header + Σ row stay pinned (th offset 0).
+- Gate passed: `harness/runs/20261008-202738-66792/`.
+
 ## 2026-10-08 — Astryx 0.6.2 → 0.6.6
 
 - Per user ("update atryx lên version mới"). `@astryxdesign/core` + `cli` 0.6.6 (latest), `lab` + `richtext` 0.6.6-canary.dc3a939 (same Astryx commit, as before).

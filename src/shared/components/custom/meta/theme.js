@@ -437,6 +437,12 @@ export const metaTheme = defineTheme({
         // horizontal scrollbar flashes until the width is re-measured.
         height: '100%',
         scrollbarGutter: 'stable',
+        // Astryx 0.6.6 made this wrapper an inline-only `ScrollableArea`
+        // (overflow-y: hidden via a high-specificity atomic class), so a
+        // fixed-height list (AdvanceTable) could no longer scroll its rows.
+        // `!important` is the only way past that class; vertical scrolling
+        // here is what keeps the sticky header working.
+        overflowY: 'auto !important',
       },
     },
     'table-header-cell': {

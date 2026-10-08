@@ -552,7 +552,8 @@ export const metaTheme = {
     "table-scroll-wrapper": {
       "base": {
         "height": "100%",
-        "scrollbarGutter": "stable"
+        "scrollbarGutter": "stable",
+        "overflowY": "auto !important"
       }
     },
     "table-header-cell": {
