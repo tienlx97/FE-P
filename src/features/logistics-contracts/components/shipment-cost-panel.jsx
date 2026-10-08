@@ -17,7 +17,10 @@ import {
   costLineFormValues,
   costTotalsByPayment,
 } from '../config/shipment-cost-lines.js';
-import { buildShipmentCostWorkbook } from '../config/shipment-cost-workbook.js';
+import {
+  buildShipmentCostWorkbook,
+  COST_GROUP_NAMES_VI,
+} from '../config/shipment-cost-workbook.js';
 import { useSaveShipmentCostLines } from '../hooks/use-save-shipment-cost-lines.js';
 import { ShipmentCostLineDrawer } from './shipment-cost-line-drawer.jsx';
 
@@ -101,14 +104,12 @@ export function ShipmentCostPanel({
   const groups = groupedCosts.map((group) => ({
     id: group.id,
     label: group.label,
+    // Hover text of the group title (the catalog names are English).
+    nameVi: COST_GROUP_NAMES_VI[group.code] ?? group.name,
     subtotal: money(sum(group.costs)),
     rows: group.costs.map((cost) => ({
       id: cost.id,
       no: numberById.get(cost.id) ?? '',
-      groupName:
-        costCategoriesById
-          .get(cost.costCategoryId)
-          ?.name.toLocaleUpperCase('vi') ?? '—',
       name: cost.name,
       quantity: String(cost.quantity ?? 1),
       unitPrice: money(costUnitPrice(cost)),

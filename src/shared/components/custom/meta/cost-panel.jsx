@@ -17,6 +17,7 @@ import {
 } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { InfoTip } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
 import { Download, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Fragment } from 'react';
@@ -30,7 +31,6 @@ import { MetaPill } from './pill.jsx';
  * @typedef {{
  *   id: string,
  *   no: string,
- *   groupName: string,
  *   name: string,
  *   quantity: string,
  *   unitPrice: string,
@@ -46,6 +46,7 @@ import { MetaPill } from './pill.jsx';
  * @typedef {{
  *   id: string,
  *   label: string,
+ *   nameVi?: string,
  *   subtotal: string,
  *   rows: MetaCostRow[],
  * }} MetaCostGroup
@@ -59,18 +60,21 @@ import { MetaPill } from './pill.jsx';
  * }} MetaCostTotals
  */
 
-/** `[key, header, align]` — Figma 124:9687 header row. */
+/**
+ * `[key, header, align]` — Figma 124:9687 header row, without "Nhóm chi
+ * phí" (the group title row already names it) and with Nhà cung cấp /
+ * Hoá đơn before Ghi chú (user, 2026-10-08), as in the Excel export.
+ */
 const COLUMNS = /** @type {const} */ ([
   ['no', 'STT', 'center'],
-  ['group', 'Nhóm chi phí', 'start'],
   ['name', 'Tên khoản chi phí', 'start'],
   ['quantity', 'Số lượng', 'end'],
   ['unitPrice', 'Đơn giá (VNĐ)', 'end'],
   ['amount', 'Thành tiền (VNĐ)', 'end'],
   ['nature', 'Cost Nature', 'start'],
-  ['note', 'Ghi chú', 'start'],
   ['provider', 'Nhà cung cấp', 'start'],
   ['invoice', 'Hoá đơn', 'start'],
+  ['note', 'Ghi chú', 'start'],
   ['actions', 'Thao tác', 'center'],
 ]);
 
@@ -231,7 +235,6 @@ export function MetaCostPanel({
                     scope="col"
                     data-meta-cost-pinned={
                       key === 'no' ||
-                      key === 'group' ||
                       key === 'name' ||
                       key === 'actions'
                         ? ''
@@ -260,10 +263,10 @@ export function MetaCostPanel({
               {groups.map((group) => (
                 <Fragment key={group.id}>
                   <TableRow xstyle={[styles.groupRow]}>
-                    {/* The title spans STT, Nhóm chi phí and Tên khoản chi
-                        phí so the group name has room (user, 2026-10-07). */}
+                    {/* The title spans STT and Tên khoản chi phí so the
+                        group name has room (user, 2026-10-07). */}
                     <TableCell
-                      colSpan={3}
+                      colSpan={2}
                       xstyle={[
                         styles.cell,
                         styles.pinGroupTitle,
@@ -284,6 +287,12 @@ export function MetaCostPanel({
                         >
                           {group.label}
                         </Text>
+                        {group.nameVi ? (
+                          <InfoTip
+                            content={group.nameVi}
+                            label={`${group.label}: ${group.nameVi}`}
+                          />
+                        ) : null}
                         {onCreateInGroup ? (
                           <IconButton
                             isDisabled={isReadOnly}
@@ -330,9 +339,6 @@ export function MetaCostPanel({
                           {row.no}
                         </Text>
                       </TableCell>
-                      <TableCell xstyle={[styles.cell, ...pinnedCell('group')]}>
-                        <Text color="secondary">{row.groupName}</Text>
-                      </TableCell>
                       <TableCell xstyle={[styles.cell, ...pinnedCell('name')]}>
                         <Text weight="medium">{row.name}</Text>
                       </TableCell>
@@ -354,15 +360,6 @@ export function MetaCostPanel({
                           hasBorder
                           size="sm"
                         />
-                      </TableCell>
-                      <TableCell xstyle={[styles.cell, styles.noteCell]}>
-                        {row.note ? (
-                          <Markdown density="compact" contentWidth="100%">
-                            {row.note}
-                          </Markdown>
-                        ) : (
-                          <OptionalText value={null} />
-                        )}
                       </TableCell>
                       <TableCell xstyle={styles.cell}>
                         {row.paidOnBehalf ? (
@@ -395,6 +392,15 @@ export function MetaCostPanel({
                           </VStack>
                         ) : (
                           <OptionalText value={row.invoiceNumber} isCode />
+                        )}
+                      </TableCell>
+                      <TableCell xstyle={[styles.cell, styles.noteCell]}>
+                        {row.note ? (
+                          <Markdown density="compact" contentWidth="100%">
+                            {row.note}
+                          </Markdown>
+                        ) : (
+                          <OptionalText value={null} />
                         )}
                       </TableCell>
                       <TableCell
@@ -447,18 +453,16 @@ export function MetaCostPanel({
                     xstyle={[styles.footCell, ...pinnedCell('no', 'footer')]}
                   />
                   <TableCell
-                    xstyle={[styles.footCell, ...pinnedCell('group', 'footer')]}
-                  >
-                    <Text size="sm" weight="bold" xstyle={styles.caps}>
-                      Σ Tổng cộng chi phí
-                    </Text>
-                  </TableCell>
-                  <TableCell
                     xstyle={[styles.footCell, ...pinnedCell('name', 'footer')]}
                   >
-                    <Text size="sm" color="secondary">
-                      {totals.lines}
-                    </Text>
+                    <VStack gap={0.5}>
+                      <Text size="sm" weight="bold" xstyle={styles.caps}>
+                        Σ Tổng cộng chi phí
+                      </Text>
+                      <Text size="sm" color="secondary">
+                        {totals.lines}
+                      </Text>
+                    </VStack>
                   </TableCell>
                   <TableCell xstyle={styles.footCell} />
                   <TableCell xstyle={styles.footCell} />
@@ -477,7 +481,6 @@ export function MetaCostPanel({
                       {totals.abnormal}
                     </Text>
                   </TableCell>
-                  <TableCell xstyle={styles.footCell} />
                   <TableCell xstyle={styles.footCell}>
                     <VStack gap={0.5}>
                       <Text size="sm" color="secondary">
@@ -495,6 +498,7 @@ export function MetaCostPanel({
                       {totals.invoices}
                     </Text>
                   </TableCell>
+                  <TableCell xstyle={styles.footCell} />
                   <TableCell
                     xstyle={[
                       styles.footCell,
@@ -563,13 +567,11 @@ function pinnedCell(key, surface = 'body') {
   const position =
     key === 'no'
       ? styles.pinNo
-      : key === 'group'
-        ? styles.pinGroup
-        : key === 'name'
-          ? styles.pinName
-          : key === 'actions'
-            ? styles.pinActions
-            : null;
+      : key === 'name'
+        ? styles.pinName
+        : key === 'actions'
+          ? styles.pinActions
+          : null;
   if (!position) return [];
   const background =
     surface === 'header'
@@ -609,7 +611,7 @@ const styles = stylex.create({
   },
   // A fixed width keeps sticky offsets aligned with their columns.
   table: {
-    minWidth: 'calc(var(--spacing-10) * 45)',
+    minWidth: 'calc(var(--spacing-10) * 44.5)',
     tableLayout: 'fixed',
   },
   scrollRegion: {
@@ -628,21 +630,14 @@ const styles = stylex.create({
     left: 0,
     position: 'sticky',
   },
-  pinGroup: {
+  pinName: {
     left: 'calc(var(--spacing-10) * 1.5)',
     position: {
       default: 'static',
       '@media (min-width: 900px)': 'sticky',
     },
   },
-  pinName: {
-    left: 'calc(var(--spacing-10) * 6)',
-    position: {
-      default: 'static',
-      '@media (min-width: 900px)': 'sticky',
-    },
-  },
-  // The group title cell covers the three pinned start columns; like
+  // The group title cell covers the two pinned start columns; like
   // them, it only sticks from 900px so it never fills a phone screen.
   pinGroupTitle: {
     left: 0,
@@ -749,8 +744,7 @@ const alignStyles = stylex.create({
 /** Column widths use 40px spacing units; pinned offsets sum the first columns. */
 const columnWidths = stylex.create({
   no: { width: 'calc(var(--spacing-10) * 1.5)' },
-  group: { width: 'calc(var(--spacing-10) * 4.5)' },
-  name: { width: 'calc(var(--spacing-10) * 6)' },
+  name: { width: 'calc(var(--spacing-10) * 10)' },
   quantity: { width: 'calc(var(--spacing-10) * 2.5)' },
   unitPrice: { width: 'calc(var(--spacing-10) * 4)' },
   amount: { width: 'calc(var(--spacing-10) * 4)' },

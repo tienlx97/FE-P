@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-08 — Cost table: no group column, provider / invoice before note, group info tip
+
+- Per user ("Xoá cột nhóm chi phí … cột Nhà cung cấp, Hoá đơn hiện phía trước Ghi chú … Title LOG-... hãy thêm info list kế bên (hover vào hiện tên tiếng việt) … nhớ cập nhật lại excel").
+- `MetaCostPanel`: "Nhóm chi phí" column removed (`groupName` dropped from rows; group title now spans STT + Tên khoản chi phí, pinned name offset 1.5 units); order … Cost Nature · Nhà cung cấp · Hoá đơn · Ghi chú · Thao tác; footer label "Σ Tổng cộng chi phí" moved over the line count in the name column. Name column 6 → 10 units so every LOG title fits one line (table min width 45 → 44.5 units). Group title gets a lab `InfoTip` with `nameVi` (`COST_GROUP_NAMES_VI`, same names as the Excel bands).
+- Excel already had this layout (no group column, provider / invoice before note, Vietnamese group bands) — no workbook change needed.
+- Chrome :3000, 26KCT27/LOT-01 ?tab=costs: columns as above, titles on one line, hover on LOG-02's (i) → "Vận chuyển nội địa đầu xuất & depot".
+- Gate passed: `harness/runs/20261008-234115-339007/`.
+
 ## 2026-10-08 — Container timeline: process order, packing time vs gate-in
 
 - Per user ("CHI TIẾT THEO CONTAINER: Đóng hàng rồi mới tới Gate-in cảng xuất … bổ sung thêm thời gian đóng hàng thực tế (nếu có) để so sánh với thời gian gate in"). `buildPhysicalTimeline` sorts by process (`PHYSICAL_EVENT_LABELS` order, transshipment events leg by leg) before dates — a gate-in with a time sorted ahead of a day-only packing. BE-P now sends the packing event with the actual packing time (`eventAt`), shown like the other times.
