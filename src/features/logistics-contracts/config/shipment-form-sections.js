@@ -1,4 +1,3 @@
-import { SHIPMENT_STATUSES } from './shipment-status.js';
 
 /** @typedef {import('../types/index.js').ShipmentFormValues} ShipmentFormValues */
 /** @typedef {import('../types/index.js').ShipmentStatus} ShipmentStatus */
@@ -140,35 +139,6 @@ export const SHIPMENT_FORM_SECTIONS = [
   },
 ];
 
-/**
- * Groups to fill when moving a shipment to `status` ("Chuyển sang …").
- * @type {Record<ShipmentStatus, ShipmentFormSectionId[]>}
- */
-const STAGE_SECTIONS = {
-  Booked: ['parties', 'booking', 'schedule'],
-  Packing: ['goods'],
-  AtYardAwaitingExport: ['schedule', 'customs'],
-  Shipping: ['booking', 'schedule'],
-  DeliveredToPort: ['schedule'],
-  CustomsDeclaration: ['customs'],
-  TruckingToSite: ['parties'],
-  Completed: [],
-};
-
-/** @param {ShipmentStatus} status @returns {ShipmentFormSectionId[]} */
-export function sectionsForStage(status) {
-  return [...(STAGE_SECTIONS[status] ?? []), 'note'];
-}
-
-// Fields that always start with a value (currency, status, …): they say
-// nothing about whether the user has filled a group in.
-const PRESET_FIELDS = new Set([
-  'status',
-  'type',
-  'invoiceCurrency',
-  'declarationCurrency',
-]);
-
 /** @param {unknown} value */
 function isFilled(value) {
   if (value === undefined || value === null || value === false) return false;
@@ -303,24 +273,3 @@ export function stepOfSection(sectionId) {
   );
 }
 
-/**
- * Whether a group starts open: always-relevant groups, groups whose stage
- * the status has reached, and groups that already hold data.
- * @param {ShipmentFormSection} section
- * @param {ShipmentFormValues} values
- */
-export function isSectionOpenByDefault(section, values) {
-  if (section.stage === 'Booked') return true;
-  if (
-    section.fields.some(
-      (field) => !PRESET_FIELDS.has(field) && isFilled(values[field]),
-    )
-  ) {
-    return true;
-  }
-  if (!section.stage || !values.status) return false;
-  return (
-    SHIPMENT_STATUSES.indexOf(values.status) >=
-    SHIPMENT_STATUSES.indexOf(section.stage)
-  );
-}

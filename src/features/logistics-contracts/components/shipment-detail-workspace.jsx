@@ -23,22 +23,15 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
 import { shipmentTrail } from '@/shared/config/breadcrumbs.js';
-import {
-  formatDisplayDate,
-  todayIsoDate,
-} from '@/shared/config/date-input-format.js';
+import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { dateRange } from '../config/shipment-container-dates.js';
 import { transshipmentRoute } from '../config/shipment-documents.js';
 import {
   isConfirmableMilestone,
-  isSellerScopeDone,
   packingDateRange,
 } from '../config/shipment-journey.js';
-import {
-  scheduleDateLabel,
-  shipmentTimeProgress,
-} from '../config/shipment-schedule.js';
+import { scheduleDateLabel } from '../config/shipment-schedule.js';
 import {
   labelForShipmentStatus,
   metaToneForShipmentStatus,
@@ -60,7 +53,6 @@ import { ShipmentMilestoneDrawer } from './shipment-milestone-drawer.jsx';
 import { ShipmentOverviewPanel } from './shipment-overview-panel.jsx';
 import { ShipmentScheduleDrawer } from './shipment-schedule-drawer.jsx';
 import { ShipmentSchedulePanel } from './shipment-schedule-panel.jsx';
-import { ShipmentStatusFlow } from './shipment-status-flow.jsx';
 import { ShipmentTransshipmentDrawer } from './shipment-transshipment-drawer.jsx';
 import { ShipmentVgmPanel } from './shipment-vgm-panel.jsx';
 
@@ -466,10 +458,6 @@ function ShipmentDetailBody({
 }) {
   const panelId = useId();
   const [isEditing, setIsEditing] = useState(false);
-  // "Chuyển sang …": the drawer focused on that stage's groups.
-  const [stageTarget, setStageTarget] = useState(
-    /** @type {import('../types/index.js').ShipmentStatus | null} */ (null),
-  );
   const [selectedMilestone, setSelectedMilestone] = useState(
     /** @type {import('../types/index.js').ShipmentJourneyStep | null} */ (
       null
@@ -547,36 +535,6 @@ function ShipmentDetailBody({
         },
       })
     : null;
-  const journeyData = journeyQuery.data?.success
-    ? journeyQuery.data.journey
-    : null;
-  const progress = journeyData
-    ? shipmentTimeProgress({
-        startOn: dateRange(
-          vgms.flatMap((vgm) => [vgm.emptyPickedUpOn, vgm.packingDate]),
-        )?.from,
-        actualArrival: shipment.operationalDetails?.actualArrival,
-        eta: shipment.eta,
-        isJourneyDone: isSellerScopeDone(journeyData),
-        today: todayIsoDate(),
-      })
-    : null;
-  // Time-based when the dates allow it, else the steps done (a current one
-  // counts half).
-  const journeyProgress =
-    progress ??
-    (journey && journey.steps.length > 0
-      ? (() => {
-          const done = journey.steps.filter((s) => s.state === 'done').length;
-          const current = journey.steps.filter(
-            (s) => s.state === 'current',
-          ).length;
-          const percent = Math.round(
-            ((done + current * 0.5) / journey.steps.length) * 100,
-          );
-          return { percent, label: `${percent}% hoàn thành` };
-        })()
-      : null);
   // Plain tabs (no count pills), same as the contract detail tab bar.
   const tabs = TAB_VALUES.map((id) => ({
     id,
@@ -629,13 +587,6 @@ function ShipmentDetailBody({
               onClick: onOpenContract,
             },
           ]}
-        />
-
-        <ShipmentStatusFlow
-          incoterm={contract.incoterm}
-          status={shipment.status}
-          onMove={setStageTarget}
-          progress={journeyProgress}
         />
 
         {journeyQuery.data?.success ? (
@@ -740,15 +691,6 @@ function ShipmentDetailBody({
             contract={contract}
             shipment={shipment}
             onClose={() => setIsEditing(false)}
-          />
-        ) : null}
-        {stageTarget ? (
-          <ShipmentFormDrawer
-            key={stageTarget}
-            contract={contract}
-            shipment={shipment}
-            stage={stageTarget}
-            onClose={() => setStageTarget(null)}
           />
         ) : null}
         {selectedMilestone ? (

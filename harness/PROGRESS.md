@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-08 — Quick fill columns, edit shipment = create stepper, no status card
+
+- Dev DB: user confirmed they had restored an older backup. Re-added `ShipmentVgms.EmptyPickupDepotId` (+ index, FK) with the migration's DDL; depots already re-seeded (13). Container & VGM tab loads again.
+- Per user ("CARD 2. Nhập nhanh phân tách các mục … các chữ áp dụng kế bên dễ hiểu lầm"): bulk drawer "Nhập nhanh" is three equal columns (`QuickFill`) split by vertical `Divider`s, each with its own "Áp dụng cho N dòng" under its field. A vertical Divider has no height in a row → `alignSelf: stretch`.
+- Per user ("Chỉnh sửa shipment dùng lại mẫu của thêm shipment"): `ShipmentFormDrawer` editing uses the create stepper (5 steps, "Tiếp" / "Lưu thay đổi", review step "Xem lại trước khi lưu"). The outline + collapsible-group layout is gone.
+- Per user ("Không cần card Tình trạng lô hàng, xoá đi"): removed `ShipmentStatusFlow` and with it the staged "Chuyển sang …" drawer — `stage` prop, `targetStatus` (useShipmentForm), `sectionsForStage`, `isSectionOpenByDefault`, journey progress (`shipmentTimeProgress`, `isSellerScopeDone`) and their tests, all unused now. Status is still set in "Chỉnh sửa" (Tình trạng field).
+- Chrome :3000, 26KCT27/LOT-01: no status card; drawer gross weight "16,142.02 kg"; quick-fill rules 1×100 px; edit drawer shows the stepper. Nothing saved.
+- Gate passed: `harness/runs/20261008-224849-260202/`.
+
 ## 2026-10-08 — Container drawer: formatted gross weight / VGM; Cảng Đồng Nai depot
 
 - Per user ("Gross weight: 16142.02 kg VGM: 19992.02 kg — CHƯA FORMAT TEXT"): the "Khai VGM" result line used `toFixed(2)`; now `Intl.NumberFormat('en-US', 2 decimals)` like the VGM table → "16,142.02 kg" / "19,992.02 kg", tabular numbers.

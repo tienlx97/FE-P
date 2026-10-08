@@ -65,10 +65,7 @@ import {
 } from '../config/shipment-documents.js';
 import {
   firstStepWithError,
-  isSectionOpenByDefault,
   sectionCompleteness,
-  sectionHasError,
-  sectionsForStage,
   SHIPMENT_CREATE_STEPS,
   SHIPMENT_FORM_SECTIONS,
   stepFields,
@@ -124,28 +121,20 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  * are managed on the shipment page after creating. Data and rules come
  * from `useShipmentForm` (validation, create / update call, supplier list,
  * defaults such as the contract's ports; on edit the cost lines are resent
- * unchanged) — laid out as the boxed groups of `SHIPMENT_FORM_SECTIONS`
- * beside an outline of how complete each one is. Groups not yet relevant
- * to the status start collapsed ("Bổ sung"), so a new shipment asks for
- * booking-time data only; a group opens once its stage is reached, it has
- * data or an error, or the user opens it. Field errors sit under each
- * field (detached) and the body scrolls to the first one. Closing with
- * changes asks first. "Loại hình" is only editable when creating.
+ * unchanged), laid out as the boxed groups of `SHIPMENT_FORM_SECTIONS`.
+ * Field errors sit under each field (detached) and the body scrolls to the
+ * first one. Closing with changes asks first. "Loại hình" is only editable
+ * when creating.
  *
- * Creating is a stepper instead (`shipment-create-stepper`): one step of
- * `SHIPMENT_CREATE_STEPS` at a time, any step reachable; "Tiếp" checks
- * only that step, "Tạo Shipment" (every step) checks everything and lands
- * on the first step with an error. The last step reviews every group.
- *
- * `stage` ("Chuyển sang …" on the shipment page) presets "Tình trạng" to
- * that status and shows only the groups of that stage (`sectionsForStage`)
- * until "Hiện tất cả mục" — or a validation error elsewhere — reveals the
- * rest.
+ * Creating and editing are the same stepper (`shipment-create-stepper`;
+ * editing reuses it, user 2026-10-08): one step of `SHIPMENT_CREATE_STEPS`
+ * at a time, any step reachable; "Tiếp" checks only that step, "Tạo
+ * Shipment" / "Lưu thay đổi" (every step) checks everything and lands on
+ * the first step with an error. The last step reviews every group.
  *
  * @param {{
  *   contract: import('../types/index.js').Contract,
  *   shipment?: import('../types/index.js').Shipment | null,
- *   stage?: import('../types/index.js').ShipmentStatus | null,
  *   onClose: () => void,
  *   onSaved?: (shipment: import('../types/index.js').Shipment) => void,
  * }} props
@@ -153,22 +142,14 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export function ShipmentFormDrawer({
   contract,
   shipment = null,
-  stage = null,
   onClose,
   onSaved,
 }) {
   const isCreating = shipment === null;
-  const isStaging = stage !== null && shipment !== null;
-  // Creating walks through `SHIPMENT_CREATE_STEPS` (`shipment-create-stepper`).
   const [stepIndex, setStepIndex] = useState(0);
-  const step = isCreating ? SHIPMENT_CREATE_STEPS[stepIndex] : null;
+  const step = SHIPMENT_CREATE_STEPS[stepIndex];
   const isLastStep = stepIndex === SHIPMENT_CREATE_STEPS.length - 1;
-  const title = isCreating
-    ? 'Thêm Shipment'
-    : isStaging
-      ? 'Cập nhật tình trạng'
-      : 'Chỉnh sửa Shipment';
-  const [isShowingAll, setIsShowingAll] = useState(!isStaging);
+  const title = isCreating ? 'Thêm Shipment' : 'Chỉnh sửa Shipment';
   const formId = useId();
   const formRef = useRef(/** @type {HTMLFormElement | null} */ (null));
   const toast = useAppToast();
@@ -181,14 +162,9 @@ export function ShipmentFormDrawer({
     contractId: contract.id,
     contract,
     shipment,
-    targetStatus: isStaging ? stage : null,
     onSuccess: (saved) => {
       toast({
-        body: isCreating
-          ? 'Đã tạo Shipment.'
-          : isStaging
-            ? `Đã chuyển sang “${labelForShipmentStatus(saved.status)}”.`
-            : 'Đã cập nhật Shipment.',
+        body: isCreating ? 'Đã tạo Shipment.' : 'Đã cập nhật Shipment.',
       });
       onSaved?.(saved);
       onClose();
@@ -200,70 +176,29 @@ export function ShipmentFormDrawer({
   const customers = /** @type {import('../types/index.js').Supplier[]} */ (
     form.customers
   );
-  // A preset status is itself the change being saved.
-  const isDirty =
-    (isStaging && values.status !== shipment.status) ||
-    JSON.stringify(values) !== JSON.stringify(initialValues);
+  const isDirty = JSON.stringify(values) !== JSON.stringify(initialValues);
   const isDisabled = form.isSubmitting;
 
-  // Errors force a group open, then the user's choice, else the status /
-  // data rule.
-  const [openChoices, setOpenChoices] = useState(
-    /** @type {Partial<Record<ShipmentFormSectionId, boolean>>} */ ({}),
-  );
-  const stageSections = isStaging ? sectionsForStage(stage) : [];
   const sectionStates = SHIPMENT_FORM_SECTIONS.map((section) => ({
     section,
     completeness: sectionCompleteness(section, values, fieldStatuses),
   }));
-  const visibleSectionStates = sectionStates.filter(({ section }) =>
-    step
-      ? step.sections.includes(section.id)
-      : isShowingAll ||
-        stageSections.includes(section.id) ||
-        sectionHasError(section, fieldStatuses),
-  );
-  /** @param {ShipmentFormSectionId} id @param {boolean} isOpen */
-  const setSectionOpen = (id, isOpen) =>
-    setOpenChoices((choices) => ({ ...choices, [id]: isOpen }));
   /** @param {ShipmentFormSectionId} id */
   const sectionProps = (id) => {
-    const index = visibleSectionStates.findIndex(
-      ({ section }) => section.id === id,
+    const { section, completeness } = /** @type {(typeof sectionStates)[number]} */ (
+      sectionStates.find((item) => item.section.id === id)
     );
-    const { section, completeness } = visibleSectionStates[index] ?? {
-      section: SHIPMENT_FORM_SECTIONS.find((item) => item.id === id),
-      completeness: { state: 'optional', missing: 0 },
-    };
+    // A step shows its groups in full; the stepper numbers them.
     return {
       id: `${formId}-${id}`,
-      section: /** @type {ShipmentFormSection} */ (section),
-      // Numbers would restart on every step; the stepper numbers instead.
-      index: step ? undefined : index + 1,
-      isHidden: index === -1,
-      // A step shows its groups in full.
-      isCollapsible: !step,
-      // A stage's own groups start open; it is what the user came to fill.
-      isOpen:
-        Boolean(step) ||
-        sectionHasError(section, fieldStatuses) ||
-        (openChoices[id] ??
-          (stageSections.includes(id) ||
-            isSectionOpenByDefault(section, values))),
-      /** @param {boolean} isOpen */
-      onOpenChange: (isOpen) => setSectionOpen(id, isOpen),
+      section,
+      isHidden: !step.sections.includes(id),
+      isCollapsible: false,
+      isOpen: true,
+      onOpenChange: () => {},
       completeness,
     };
   };
-  /** @param {ShipmentFormSectionId} id */
-  function goToSection(id) {
-    setSectionOpen(id, true);
-    requestAnimationFrame(() => {
-      document
-        .getElementById(`${formId}-${id}`)
-        ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  }
 
   const supplierOptions = customers.map((customer) => ({
     value: customer.id,
@@ -301,7 +236,6 @@ export function ShipmentFormDrawer({
 
   // "Tiếp": only this step's fields must be valid to move on.
   function goToNextStep() {
-    if (!step) return;
     const errors = form.validate(stepFields(step));
     if (stepState(step, values, errors) === 'error') scrollToFirstError();
     else goToStep(stepIndex + 1);
@@ -309,15 +243,13 @@ export function ShipmentFormDrawer({
 
   /** @param {import('react').FormEvent<HTMLFormElement>} event */
   async function handleSubmit(event) {
-    if (step) {
-      // Saving from any step: land on the first step holding an error.
-      const errorStep = firstStepWithError(form.validate());
-      if (errorStep !== -1) {
-        event.preventDefault();
-        setStepIndex(errorStep);
-        scrollToFirstError();
-        return;
-      }
+    // Saving from any step: land on the first step holding an error.
+    const errorStep = firstStepWithError(form.validate());
+    if (errorStep !== -1) {
+      event.preventDefault();
+      setStepIndex(errorStep);
+      scrollToFirstError();
+      return;
     }
     await form.handleSubmit(event);
     scrollToFirstError();
@@ -427,9 +359,12 @@ export function ShipmentFormDrawer({
                   }
                   onClose={requestClose}
                 />
-                {step ? (
-                  <Stepper
-                    label="Các bước thêm Shipment"
+                <Stepper
+                    label={
+                      isCreating
+                        ? 'Các bước thêm Shipment'
+                        : 'Các bước chỉnh sửa Shipment'
+                    }
                     density="compact"
                     activeStep={stepIndex}
                     onStepClick={goToStep}
@@ -476,8 +411,7 @@ export function ShipmentFormDrawer({
                         />
                       );
                     })}
-                  </Stepper>
-                ) : null}
+                </Stepper>
               </VStack>
             </LayoutHeader>
           }
@@ -491,41 +425,8 @@ export function ShipmentFormDrawer({
                 {...stylex.props(styles.fields)}
               >
                 <HStack gap={5} vAlign="start" wrap="nowrap">
-                  {step ? null : (
-                    <VStack hAlign="stretch" xstyle={styles.outline}>
-                      <ShipmentFormOutline
-                        sections={visibleSectionStates}
-                        onSelect={goToSection}
-                      />
-                    </VStack>
-                  )}
                   <StackItem size="fill" xstyle={styles.body}>
                     <VStack gap={4} hAlign="stretch">
-                      {isStaging ? (
-                        <Banner
-                          status="info"
-                          container="card"
-                          title={`Chuyển tình trạng: ${labelForShipmentStatus(shipment.status)} → ${labelForShipmentStatus(stage)}`}
-                          description={
-                            figuresRequired
-                              ? 'Từ giai đoạn này số liệu tờ khai (giá trị, tỷ giá, số lượng, khối lượng) là bắt buộc; các thông tin khác bổ sung nếu đã có, rồi lưu.'
-                              : stageSections.length > 1
-                                ? 'Bổ sung thông tin của giai đoạn này nếu đã có (không bắt buộc), rồi lưu.'
-                                : 'Thêm ghi chú nếu cần, rồi lưu.'
-                          }
-                          endContent={
-                            isShowingAll ? null : (
-                              <Button
-                                label="Hiện tất cả mục"
-                                variant="secondary"
-                                size="sm"
-                                type="button"
-                                onClick={() => setIsShowingAll(true)}
-                              />
-                            )
-                          }
-                        />
-                      ) : null}
                       {form.submitError ? (
                         <Banner
                           status="error"
@@ -1400,11 +1301,15 @@ export function ShipmentFormDrawer({
                         </Grid>
                       </ShipmentFormSection>
 
-                      {step && isLastStep ? (
+                      {isLastStep ? (
                         <MetaFormSection
                           isBoxed
                           isTitleUppercase={false}
-                          title="Xem lại trước khi tạo"
+                          title={
+                            isCreating
+                              ? 'Xem lại trước khi tạo'
+                              : 'Xem lại trước khi lưu'
+                          }
                           action={
                             <MetaPill
                               label={labelForShipmentStatus(values.status)}
@@ -1414,9 +1319,9 @@ export function ShipmentFormDrawer({
                           }
                         >
                           <Text size="sm" color="secondary">
-                            Shipment sẽ được tạo với tình trạng trên. Nhóm còn
-                            thiếu có thể bổ sung sau bằng “Chỉnh sửa” — chọn một
-                            nhóm để quay lại bước của nó.
+                            {isCreating
+                              ? 'Shipment sẽ được tạo với tình trạng trên. Nhóm còn thiếu có thể bổ sung sau bằng “Chỉnh sửa” — chọn một nhóm để quay lại bước của nó.'
+                              : 'Shipment sẽ được lưu với tình trạng trên. Chọn một nhóm để quay lại bước của nó.'}
                           </Text>
                           <ShipmentFormOutline
                             sections={sectionStates.filter(
@@ -1467,7 +1372,7 @@ export function ShipmentFormDrawer({
                     isDisabled={form.isSubmitting}
                     onClick={requestClose}
                   />
-                  {step && stepIndex > 0 ? (
+                  {stepIndex > 0 ? (
                     <Button
                       label="Quay lại"
                       variant="secondary"
@@ -1477,7 +1382,7 @@ export function ShipmentFormDrawer({
                       onClick={() => goToStep(stepIndex - 1)}
                     />
                   ) : null}
-                  {step && !isLastStep ? (
+                  {!isLastStep ? (
                     <Button
                       label="Tiếp"
                       variant="primary"
@@ -1489,17 +1394,13 @@ export function ShipmentFormDrawer({
                   ) : null}
                   <Button
                     label={
-                      isCreating
-                        ? 'Tạo Shipment'
-                        : isStaging
-                          ? 'Lưu & chuyển tình trạng'
-                          : 'Lưu thay đổi'
+                      isCreating ? 'Tạo Shipment' : 'Lưu thay đổi'
                     }
                     type="submit"
                     form={formId}
                     // Before the last step "Tiếp" is the main action; saving
                     // early stays one click away.
-                    variant={step && !isLastStep ? 'secondary' : 'primary'}
+                    variant={isLastStep ? 'primary' : 'secondary'}
                     size="lg"
                     icon={<Icon icon={isCreating ? Plus : Save} size="sm" />}
                     isLoading={form.isSubmitting}
@@ -1668,14 +1569,6 @@ const styles = stylex.create({
   },
   fullRow: {
     gridColumn: '1 / -1',
-  },
-  // Section outline: sticky beside the groups, hidden on narrow drawers.
-  outline: {
-    display: { default: 'none', '@media (min-width: 64rem)': 'flex' },
-    flexShrink: 0,
-    insetBlockStart: 0,
-    position: 'sticky',
-    width: '14rem',
   },
   body: { minWidth: 0 },
   // Create steps sit under the drawer title, outside the scrolling body.

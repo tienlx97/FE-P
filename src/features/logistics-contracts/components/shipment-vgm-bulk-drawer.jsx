@@ -3,13 +3,16 @@
 import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { DateInput } from '@astryxdesign/core/DateInput';
+import { Divider } from '@astryxdesign/core/Divider';
 import { FileInput } from '@astryxdesign/core/FileInput';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Selector } from '@astryxdesign/core/Selector';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 import {
   CopyCheck,
   Download,
@@ -448,6 +451,7 @@ export function ShipmentVgmBulkDrawer({
     };
   });
 
+  const applyLabel = `Áp dụng cho ${rows.length} dòng`;
   const detailStatuses = selected ? statusesFor(selected.id) : {};
   /** @type {import('./shipment-vgm-fields.jsx').VgmFieldProps['setField']} */
   const setSelectedField = (field, value) => {
@@ -541,61 +545,58 @@ export function ShipmentVgmBulkDrawer({
         title="Nhập nhanh"
         meta="Điền một giá trị cho mọi dòng"
       >
-        <HStack gap={3} vAlign="end" wrap="wrap">
-          <Selector
-            label="Nhà vận chuyển"
-            hasSearch
-            hasClear
-            placeholder="Chọn nhà cung cấp"
-            value={quickCarrier || null}
-            onChange={(value) => setQuickCarrier(value ?? '')}
-            options={carrierOptions}
-            width={280}
-          />
-          <Button
-            label="Áp dụng"
-            type="button"
-            variant="secondary"
-            size="lg"
-            icon={<Icon icon={CopyCheck} size="sm" />}
-            isDisabled={!quickCarrier || rows.length === 0}
-            onClick={() => applyToAll('carrierCustomerId', quickCarrier)}
-          />
-          <Selector
-            label="Depot lấy rỗng"
-            hasSearch
-            hasClear
-            placeholder="Chọn depot"
-            value={quickDepot || null}
-            onChange={(value) => setQuickDepot(value ?? '')}
-            options={depotOptions}
-            width={240}
-          />
-          <Button
-            label="Áp dụng"
-            type="button"
-            variant="secondary"
-            size="lg"
-            icon={<Icon icon={CopyCheck} size="sm" />}
-            isDisabled={!quickDepot || rows.length === 0}
-            onClick={() => applyToAll('emptyPickupDepotId', quickDepot)}
-          />
-          <DateInput
-            label="Ngày đóng hàng"
-            value={isoDate(quickDate)}
-            onChange={(value) => setQuickDate(value ?? '')}
-            format={formatDateInputValue}
-            hasClear
-          />
-          <Button
-            label="Áp dụng"
-            type="button"
-            variant="secondary"
-            size="lg"
-            icon={<Icon icon={CopyCheck} size="sm" />}
-            isDisabled={!quickDate || rows.length === 0}
-            onClick={() => applyToAll('packingDate', quickDate)}
-          />
+        {/* One column per field, its own "Áp dụng" under it, columns
+            split by a rule — a button beside the next field's label read
+            as belonging to it (user, 2026-10-08). */}
+        <HStack gap={5} vAlign="stretch" wrap="nowrap">
+          <QuickFill
+            applyLabel={applyLabel}
+            isApplyDisabled={!quickCarrier || rows.length === 0}
+            onApply={() => applyToAll('carrierCustomerId', quickCarrier)}
+          >
+            <Selector
+              label="Nhà vận chuyển"
+              hasSearch
+              hasClear
+              placeholder="Chọn nhà cung cấp"
+              value={quickCarrier || null}
+              onChange={(value) => setQuickCarrier(value ?? '')}
+              options={carrierOptions}
+              width="100%"
+            />
+          </QuickFill>
+          <Divider orientation="vertical" xstyle={styles.quickRule} />
+          <QuickFill
+            applyLabel={applyLabel}
+            isApplyDisabled={!quickDepot || rows.length === 0}
+            onApply={() => applyToAll('emptyPickupDepotId', quickDepot)}
+          >
+            <Selector
+              label="Depot lấy rỗng"
+              hasSearch
+              hasClear
+              placeholder="Chọn depot"
+              value={quickDepot || null}
+              onChange={(value) => setQuickDepot(value ?? '')}
+              options={depotOptions}
+              width="100%"
+            />
+          </QuickFill>
+          <Divider orientation="vertical" xstyle={styles.quickRule} />
+          <QuickFill
+            applyLabel={applyLabel}
+            isApplyDisabled={!quickDate || rows.length === 0}
+            onApply={() => applyToAll('packingDate', quickDate)}
+          >
+            <DateInput
+              label="Ngày đóng hàng"
+              value={isoDate(quickDate)}
+              onChange={(value) => setQuickDate(value ?? '')}
+              format={formatDateInputValue}
+              hasClear
+              width="100%"
+            />
+          </QuickFill>
         </HStack>
       </MetaFormSection>
 
@@ -688,3 +689,40 @@ export function ShipmentVgmBulkDrawer({
     </MetaFormDrawer>
   );
 }
+
+/**
+ * One "Nhập nhanh" column: the field, then its own apply button under it.
+ * @param {{
+ *   applyLabel: string,
+ *   isApplyDisabled: boolean,
+ *   onApply: () => void,
+ *   children: import('react').ReactNode,
+ * }} props
+ */
+function QuickFill({ applyLabel, isApplyDisabled, onApply, children }) {
+  return (
+    <StackItem size="fill" xstyle={styles.quickFill}>
+      <VStack gap={2} hAlign="stretch">
+        {children}
+        <HStack>
+          <Button
+            label={applyLabel}
+            type="button"
+            variant="secondary"
+            size="sm"
+            icon={<Icon icon={CopyCheck} size="sm" />}
+            isDisabled={isApplyDisabled}
+            onClick={onApply}
+          />
+        </HStack>
+      </VStack>
+    </StackItem>
+  );
+}
+
+const styles = stylex.create({
+  // Equal columns that may shrink below their content width.
+  quickFill: { flexBasis: 0, minWidth: 0 },
+  // A vertical Divider has no height of its own in a row.
+  quickRule: { alignSelf: 'stretch', height: 'auto' },
+});

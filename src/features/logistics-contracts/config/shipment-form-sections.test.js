@@ -3,9 +3,7 @@ import { test } from 'node:test';
 
 import {
   firstStepWithError,
-  isSectionOpenByDefault,
   sectionCompleteness,
-  sectionsForStage,
   SHIPMENT_CREATE_STEPS,
   SHIPMENT_FORM_SECTIONS,
   stepFields,
@@ -80,50 +78,6 @@ test('every form value belongs to exactly one section', () => {
     for (const key of item.keyFields) assert.ok(item.fields.includes(key));
   }
 });
-test('booking-time groups open on create, later ones wait for their stage', () => {
-  assert.equal(isSectionOpenByDefault(section('booking'), values()), true);
-  assert.equal(isSectionOpenByDefault(section('goods'), values()), false);
-  assert.equal(isSectionOpenByDefault(section('customs'), values()), false);
-  assert.equal(isSectionOpenByDefault(section('note'), values()), false);
-  assert.equal(
-    isSectionOpenByDefault(section('goods'), values({ status: 'Packing' })),
-    true,
-  );
-  assert.equal(
-    isSectionOpenByDefault(section('customs'), values({ status: 'Packing' })),
-    false,
-  );
-  assert.equal(
-    isSectionOpenByDefault(
-      section('customs'),
-      values({ status: 'DeliveredToPort' }),
-    ),
-    true,
-  );
-});
-test('a preset currency does not count as data', () => {
-  assert.equal(
-    isSectionOpenByDefault(
-      section('customs'),
-      values({ declarationCurrency: 'USD' }),
-    ),
-    false,
-  );
-});
-test('a group with data opens whatever the status', () => {
-  assert.equal(
-    isSectionOpenByDefault(section('customs'), values({ coNumber: 'VN-1' })),
-    true,
-  );
-  assert.equal(
-    isSectionOpenByDefault(section('goods'), values({ goodsLines: { a: 0 } })),
-    false,
-  );
-  assert.equal(
-    isSectionOpenByDefault(section('goods'), values({ goodsLines: { a: 5 } })),
-    true,
-  );
-});
 test('completeness: missing key fields, errors win, note is optional', () => {
   const customs = section('customs');
   assert.deepEqual(sectionCompleteness(customs, values(), {}), {
@@ -156,10 +110,6 @@ test('completeness: missing key fields, errors win, note is optional', () => {
     sectionCompleteness(section('note'), values(), {}).state,
     'optional',
   );
-});
-test('stage groups always end with the note', () => {
-  assert.deepEqual(sectionsForStage('Packing'), ['goods', 'note']);
-  assert.deepEqual(sectionsForStage('Completed'), ['note']);
 });
 test('create steps cover every group once, in display order', () => {
   assert.deepEqual(

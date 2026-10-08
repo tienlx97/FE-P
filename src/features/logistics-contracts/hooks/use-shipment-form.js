@@ -218,23 +218,16 @@ export function mergeCheckedErrors(shown, next, fields) {
  *   contract?: import('../types/index.js').Contract | null,
  *   shipment?: import('../types/index.js').Shipment | null,
  *   onSuccess?: (shipment: import('../types/index.js').Shipment) => void,
- *   targetStatus?: import('../types/index.js').ShipmentStatus | null,
- * }} options `targetStatus` presets "Tình trạng" when moving a shipment to
- * its next stage ("Chuyển sang …" on the shipment page).
+ * }} options
  */
 export function useShipmentForm({
   contractId,
   contract = null,
   shipment = null,
   onSuccess,
-  targetStatus = null,
 }) {
-  const initialValues = () => {
-    const base = shipment
-      ? valuesFromShipment(shipment)
-      : emptyValues(contract);
-    return targetStatus ? { ...base, status: targetStatus } : base;
-  };
+  const initialValues = () =>
+    shipment ? valuesFromShipment(shipment) : emptyValues(contract);
   const [version, setVersion] = useState(shipment?.version);
   const [values, setValues] = useState(initialValues);
   const [fieldErrors, setFieldErrors] = useState(

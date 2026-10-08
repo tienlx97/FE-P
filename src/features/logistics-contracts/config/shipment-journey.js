@@ -22,23 +22,6 @@ export function isConfirmableMilestone(milestone) {
 }
 
 /**
- * The seller's part of the journey is over: no step is current and every
- * seller step is done — buyer legs don't count, nor an empty return with
- * no container recorded (not tracked). Drives the 100% of the progress bar.
- * @param {Pick<import('../types/index.js').ShipmentJourney, 'steps' | 'emptyReturn'>} journey
- */
-export function isSellerScopeDone(journey) {
-  const tracksEmptyReturn = (journey.emptyReturn?.containerCount ?? 0) > 0;
-  return journey.steps.every(
-    (step) =>
-      step.state === 'Done' ||
-      (step.state === 'Upcoming' &&
-        (step.scope === 'Buyer' ||
-          (step.milestone === 'EmptyReturn' && !tracksEmptyReturn))),
-  );
-}
-
-/**
  * First and last packing date across the containers (packing can take
  * several days), as ISO dates; null when no container has one.
  * @param {Pick<import('../types/index.js').ShipmentVgm, 'packingDate'>[]} vgms
