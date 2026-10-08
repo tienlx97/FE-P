@@ -22,7 +22,7 @@ export const metaTheme = {
     "--color-on-accent": "#ffffff",
     "--color-neutral": "light-dark(#1B1B221A, #E1E2EB33)",
     "--color-background-surface": "#ffffff",
-    "--color-background-body": "#faf8ff",
+    "--color-background-body": "#e9ebf4",
     "--color-overlay": "light-dark(#1B1B2266, #1B1B2299)",
     "--color-overlay-hover": "light-dark(#1B1B220D, #FFFFFF0D)",
     "--color-overlay-pressed": "light-dark(#1B1B221A, #FFFFFF1A)",

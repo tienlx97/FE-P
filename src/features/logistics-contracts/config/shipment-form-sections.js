@@ -33,7 +33,6 @@ export const SHIPMENT_FORM_SECTIONS = [
       'paymentCondition',
       'letterOfCreditNumber',
       'status',
-      'invoiceNumber',
       'invoiceValue',
       'invoiceCurrency',
       'placeOfLoading',

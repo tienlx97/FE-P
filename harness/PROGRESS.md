@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-08 — No invoice number in shipment edit; Facebook-grey body
+
+- Per user ("Chỉnh sửa shipment không cần Số hoá đơn thương mại"): the "Số hoá đơn thương mại" input is gone from the shipment drawer (`shipment-form-drawer.jsx`, `basic` section fields). The value is still loaded from details and sent on save, so existing invoice numbers are kept; overview / table / cost-line invoice numbers unchanged.
+- Per user ("giao diện ... tương tự facebook, background color: e9ebf4"): Meta theme `--color-background-body` `#faf8ff` → `#e9ebf4` (grey canvas under white cards); muted bands stay `#faf8ff`. Theme rebuilt with `pnpm theme:build`.
+- Generated `meta.d.ts` / `meta.variants.d.ts` had uncommitted header-only Windows-path (`\`) churn from a raw `astryx theme build`; restored.
+- Not checked in a browser this session.
+- Gate passed: `harness/runs/20261008-133559-1714/`.
+
 ## 2026-10-07 — Long journey captions end in "…" (task 1.1)
 
 - `journey-long-caption`, per user ("Site Delivery > VỊ TRÍ GIAO HÀNG dài nên để ..."). `MetaMilestoneStrip` step had no max width, so the `maxLines={1}` address caption widened its column (~500px). Its `minWidth` used `--spacing-32`, which Astryx does not define (scale ends at `--spacing-12`) → invalid `calc()`, never applied. Now min 4 × / max 5 × `--spacing-12` (192 / 240px).

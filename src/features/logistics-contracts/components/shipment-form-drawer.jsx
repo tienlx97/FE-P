@@ -638,18 +638,6 @@ export function ShipmentFormDrawer({
                             width="100%"
                             {...statusOf('status')}
                           />
-                          <TextInput
-                            label="Số hoá đơn thương mại"
-                            placeholder="Ví dụ: INV-26KCT-01"
-                            value={values.invoiceNumber}
-                            onChange={(value) =>
-                              setField('invoiceNumber', value)
-                            }
-                            isOptional
-                            isDisabled={isDisabled}
-                            width="100%"
-                            {...statusOf('invoiceNumber')}
-                          />
                           <MoneyWithCurrency
                             label="Giá trị invoice"
                             amount={values.invoiceValue}

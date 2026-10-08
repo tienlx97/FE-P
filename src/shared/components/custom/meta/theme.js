@@ -21,7 +21,8 @@ const INTER =
  *   hover shade → `--meta-accent-hover`.
  * - `ink` (`#1C1E21`) → text/icon primary; `muted-text` (`#65676B`) →
  *   text/icon secondary. `outline-border` (`#DEE3E9`) → `--color-border`.
- * - `background`/`surface-bright` (`#FAF8FF`) → body + muted bands
+ * - Body canvas → `#E9EBF4` (Facebook-style grey, user request
+ *   2026-10-08); `surface-bright` (`#FAF8FF`) → muted bands
  *   (filter band, table header); `surface-container-lowest` (`#FFFFFF`) →
  *   card/surface/popover.
  * - `success`/`success-container` (`#1F883D`/`#DAFBE1`) → success role;
@@ -89,7 +90,7 @@ export const metaTheme = defineTheme({
     // rgb(0, 88, 210), not the mockup's exact cobalt.
     '--color-accent': '#0064e0', // spec: primary-container
     '--color-on-accent': '#ffffff', // spec: on-primary
-    '--color-background-body': '#faf8ff', // spec: background / surface
+    '--color-background-body': '#e9ebf4', // Facebook-style grey canvas under white cards (user request, 2026-10-08)
     '--color-background-surface': '#ffffff', // spec: surface-container-lowest
     '--color-background-card': '#ffffff',
     '--color-background-popover': '#ffffff',
