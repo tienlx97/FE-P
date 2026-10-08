@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-08 — "Chỉnh sửa hợp đồng" drawer: section cards on a muted canvas
+
+- Per user ("Drawer Chỉnh sửa hợp đồng: chưa giống các drawer khác, có các card rồi background color"). Matched `commission-form-drawer` (the Figma reference): `LayoutContent` gets `--color-background-muted` (`drawerCanvas`), the five `MetaFormSection`s in `ContractDrawerProfileFields` are `isBoxed` (white cards), section gap 8 → 5. Seller / Buyer `MetaFormCard`s unchanged inside section 3.
+- Chrome :3000, 26KCT42 → Sửa: grey canvas, sections 1–5 as white cards; nothing saved.
+- Gate passed: `harness/runs/20261008-203932-83067/`.
+
 ## 2026-10-08 — Contracts list: wrapped customer name centred
 
 - Per user ("Cột Khách hàng table danh sách hợp đồng: giá trị bị lệch"). The customer cell is an Astryx `Link` with no `href` → `<button>`; Link's button reset sets no `text-align`, so a wrapped name (ROVILEEDA BUY AND SELL OF AGRI PRODUCT) was centred by the UA default while one-line names looked left-aligned.

@@ -51,6 +51,10 @@ const styles = stylex.create({
   drawerLayout: {
     height: '100%',
   },
+  // Muted canvas under white section cards, like the other form drawers.
+  drawerCanvas: {
+    backgroundColor: colorVars['--color-background-muted'],
+  },
   // The native `hidden` attribute alone does NOT hide a `VStack` — its own
   // compiled `display: flex` class is author-origin CSS, which the cascade
   // always prefers over the user-agent's `[hidden] { display: none }`
@@ -208,7 +212,7 @@ export function ContractFormDialog({
               </LayoutHeader>
             }
             content={
-              <LayoutContent padding={6}>
+              <LayoutContent padding={6} xstyle={styles.drawerCanvas}>
                 <ContractDrawerProfileFields
                   form={form}
                   formId={formId}

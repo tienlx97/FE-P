@@ -139,12 +139,13 @@ export function ContractDrawerProfileFields({
       }}
       {...stylex.props(styles.fields, !isActive && styles.hidden)}
     >
-      <VStack gap={8} hAlign="stretch">
+      <VStack gap={5} hAlign="stretch">
         {submitError ? (
           <Banner status="error" title={submitError} container="card" />
         ) : null}
 
         <MetaFormSection
+          isBoxed
           index={1}
           title="Thông tin chung & pháp lý"
           meta="Bắt buộc"
@@ -262,6 +263,7 @@ export function ContractDrawerProfileFields({
         </MetaFormSection>
 
         <MetaFormSection
+          isBoxed
           index={2}
           title="Giá trị tài chính, Incoterm & địa điểm"
           meta="Thông tin cốt lõi"
@@ -439,7 +441,7 @@ export function ContractDrawerProfileFields({
           ) : null}
         </MetaFormSection>
 
-        <MetaFormSection index={3} title="Các bên tham gia hợp đồng">
+        <MetaFormSection isBoxed index={3} title="Các bên tham gia hợp đồng">
           <MetaFormCard
             variant="default"
             header={
@@ -521,6 +523,7 @@ export function ContractDrawerProfileFields({
         </MetaFormSection>
 
         <MetaFormSection
+          isBoxed
           index={4}
           title="Điều khoản thanh toán (Payment Terms)"
           action={
@@ -550,6 +553,7 @@ export function ContractDrawerProfileFields({
         </MetaFormSection>
 
         <MetaFormSection
+          isBoxed
           index={5}
           title="Danh mục hàng hóa"
           action={
