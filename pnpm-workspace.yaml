@@ -10,3 +10,7 @@ allowBuilds:
 minimumReleaseAgeExclude:
   - '@astryxdesign/core@0.3.0'
   - '@astryxdesign/cli@0.3.0'
+  - '@astryxdesign/core@0.6.6'
+  - '@astryxdesign/lab@0.6.6-canary.dc3a939'
+  - '@astryxdesign/richtext@0.6.6-canary.dc3a939'
+  - '@astryxdesign/cli@0.6.6'

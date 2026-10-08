@@ -104,7 +104,6 @@ export function PartyFormDrawer({
           width={width}
           isFullWidthOnMobile
           label={title}
-          hasCloseButton={false}
           xstyle={styles.surface}
         >
           <Layout

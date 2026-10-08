@@ -125,7 +125,6 @@ export function VesselSailingDrawer({ carrier, sailing, now, onClose }) {
         width={560}
         isFullWidthOnMobile
         label={title}
-        hasCloseButton={false}
         xstyle={styles.surface}
       >
         <Layout

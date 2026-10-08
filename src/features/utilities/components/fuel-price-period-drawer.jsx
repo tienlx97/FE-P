@@ -108,7 +108,6 @@ export function FuelPricePeriodDrawer({ market, products, period, onClose }) {
         width={DRAWER_WIDTH}
         isFullWidthOnMobile
         label={title}
-        hasCloseButton={false}
         xstyle={styles.surface}
       >
         <Layout

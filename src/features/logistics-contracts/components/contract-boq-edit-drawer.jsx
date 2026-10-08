@@ -94,7 +94,6 @@ export function ContractBoqEditDrawer({ contract, privateInfo, onClose }) {
         width={DRAWER_WIDTH}
         isFullWidthOnMobile
         label="Chỉnh sửa BOQ"
-        hasCloseButton={false}
         xstyle={styles.surface}
       >
         <Layout

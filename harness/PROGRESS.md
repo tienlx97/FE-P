@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-10-08 — Astryx 0.6.2 → 0.6.6
+
+- Per user ("update atryx lên version mới"). `@astryxdesign/core` + `cli` 0.6.6 (latest), `lab` + `richtext` 0.6.6-canary.dc3a939 (same Astryx commit, as before).
+- `astryx upgrade --from 0.6.2 --apply`: the v0.6.4 codemods (theme descriptors, nativePicker → presentation) changed nothing; the CLAUDE.md ASTRYX block was refreshed (v0.6.6 · 168 components, template-first workflow). Lab note count 155 → 168. `pnpm theme:build` regenerated `meta*` headers + a `:scope { font-family: var(--font-family-body) }` rule.
+- Breaking: `Drawer` dropped `hasCloseButton` (it renders no close button at all now; `DrawerHeader` with `onOpenChange` adds one). Removed `hasCloseButton={false}` from the 10 drawers — behaviour unchanged. `user-menu.jsx` keeps it (not a Drawer).
+- Release-age policy: core/cli 0.6.6 were published 2026-10-07 23:24 UTC, under the 24 h `minimumReleaseAge`. All four are in `minimumReleaseAgeExclude`, but pnpm 11.5.3's lockfile check still rejects core/cli (lab/richtext pass), so `pnpm install` / `pnpm exec` fail until ~2026-10-08 23:24 UTC. Workaround meanwhile: `pnpm_config_minimum_release_age=0`.
+- `astryx doctor`: 9 richtext warnings (upstream plugins without `.doc.mjs` metadata) — upstream, ignore.
+- Not checked in the browser (dev server down, no test login this session): drawers should look the same, worth a glance.
+- Gate passed: `harness/runs/20261008-194654-19496/`.
+
 ## 2026-10-08 — Cost Excel: no grey
 
 - Per user ("thay màu xám bằng màu đen"). Workbook text colour `#1C1E21` / grey `#65676B` (info labels, breakdown captions, "(Ký, ghi rõ họ tên)") → black; cell borders `#D0D5DD` → black; the light-grey info-label fill dropped (a black fill would hide the text). Brand colours stay (cobalt header / bands / total, orange "Phát sinh").

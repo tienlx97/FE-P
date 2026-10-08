@@ -60,7 +60,6 @@ export function ShipmentOverviewDrawer({ rows, selected, onSelect, onBack, onClo
         width={720}
         isFullWidthOnMobile
         label={selected ? selected.shipmentCode : 'Lô hàng đang làm'}
-        hasCloseButton={false}
         xstyle={styles.surface}
       >
         <Layout

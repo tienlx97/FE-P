@@ -84,7 +84,6 @@ export function MetaFormDrawer({
         width={width}
         isFullWidthOnMobile
         label={title}
-        hasCloseButton={false}
         xstyle={styles.surface}
       >
         <Layout

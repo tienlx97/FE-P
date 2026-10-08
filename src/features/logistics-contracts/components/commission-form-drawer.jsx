@@ -239,7 +239,6 @@ export function CommissionFormDrawer({
               ? 'Cập nhật Commission'
               : 'Tạo Commission'
         }
-        hasCloseButton={false}
         xstyle={styles.surface}
       >
         <Layout

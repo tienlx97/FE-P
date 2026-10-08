@@ -223,7 +223,6 @@ export function ShipmentCostLineDrawer({
         width={DRAWER_WIDTH}
         isFullWidthOnMobile
         label={isEditing ? 'Sửa chi phí logistics' : 'Thêm chi phí logistics'}
-        hasCloseButton={false}
         xstyle={styles.surface}
       >
         <Layout
