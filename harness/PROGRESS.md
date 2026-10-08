@@ -4,7 +4,7 @@
 
 - Per user ("Chỉnh sửa shipment không cần Số hoá đơn thương mại"): the "Số hoá đơn thương mại" input is gone from the shipment drawer (`shipment-form-drawer.jsx`, `basic` section fields). The value is still loaded from details and sent on save, so existing invoice numbers are kept; overview / table / cost-line invoice numbers unchanged.
 - Per user ("giao diện ... tương tự facebook, background color: e9ebf4"): Meta theme `--color-background-body` `#faf8ff` → `#e9ebf4` (grey canvas under white cards); muted bands stay `#faf8ff`. Theme rebuilt with `pnpm theme:build`.
-- Generated `meta.d.ts` / `meta.variants.d.ts` had uncommitted header-only Windows-path (`\`) churn from a raw `astryx theme build`; restored.
+- Harness gap fixed: `scripts/normalize-theme-build.mjs` skipped `meta.d.ts` / `meta.variants.d.ts`, so every Windows theme build rewrote their headers with `\` paths (it slipped into the first commit). Both are now normalized; gate re-run `harness/runs/20261008-134043-1021/`.
 - Not checked in a browser this session.
 - Gate passed: `harness/runs/20261008-133559-1714/`.
 
