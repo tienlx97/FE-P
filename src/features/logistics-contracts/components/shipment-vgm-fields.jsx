@@ -29,6 +29,12 @@ import {
 import { shipmentContainerTypeOptions } from '../config/shipment-container-types.js';
 import { useContainerSpecsQuery } from '../hooks/use-container-specs-query.js';
 
+
+/** "16,142.02" — same as the Container & VGM table. */
+const WEIGHT_FORMATTER = new Intl.NumberFormat('en-US', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
 /**
  * @typedef {{
  *   values: import('../types/index.js').ShipmentVgmFormValues,
@@ -394,11 +400,15 @@ export function ShipmentVgmDeclarationFields({
         <HStack gap={5} wrap="wrap">
           <HStack gap={1} vAlign="center">
             <Text color="secondary">Gross weight:</Text>
-            <Text weight="semibold">{grossWeight.toFixed(2)} kg</Text>
+            <Text weight="semibold" hasTabularNumbers>
+              {WEIGHT_FORMATTER.format(grossWeight)} kg
+            </Text>
           </HStack>
           <HStack gap={1} vAlign="center">
             <Text color="secondary">VGM:</Text>
-            <Text weight="semibold">{vgm.toFixed(2)} kg</Text>
+            <Text weight="semibold" hasTabularNumbers>
+              {WEIGHT_FORMATTER.format(vgm)} kg
+            </Text>
           </HStack>
         </HStack>
       ) : (

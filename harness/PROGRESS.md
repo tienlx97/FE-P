@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-08 — Container drawer: formatted gross weight / VGM; Cảng Đồng Nai depot
+
+- Per user ("Gross weight: 16142.02 kg VGM: 19992.02 kg — CHƯA FORMAT TEXT"): the "Khai VGM" result line used `toFixed(2)`; now `Intl.NumberFormat('en-US', 2 decimals)` like the VGM table → "16,142.02 kg" / "19,992.02 kg", tabular numbers.
+- Per user ("depot thiếu: DONG NAI PORT( NGAY CHAN CAU DONG NAI)"): BE-P migration `EmptyPickupDepotDongNai` (13 depots).
+- Dev DB found without `ShipmentVgms.EmptyPickupDepotId` (older backup restored over the tables, migration history kept) → the Container & VGM tab shows "Không thể tải danh sách VGM" until the column is re-added; see BE-P PROGRESS. Browser check of the formatted line pending on that.
+- Gate passed: `harness/runs/20261008-223710-244696/`.
+
 ## 2026-10-08 — Depot lấy cont rỗng + container Excel template / export
 
 - Per user ("1. Container & VGM bổ sung thêm depot lấy cont rỗng … thêm các depot / nơi lấy cont rỗng 2. Container nhập excel: hãy tạo template đẹp, có data ở depot/nơi lấy cont 3. Container xuất excel: tạo template đẹp"). Asked: depots in the Port catalog (kind Depot) + per container — user chose both recommended options. BE-P `empty-pickup-depot` (fa5694f): `PortKind.Depot`, `ShipmentVgm.EmptyPickupDepotId`, 12 seeded southern depots / ICDs; dev API rebuilt so :8081 has them.
