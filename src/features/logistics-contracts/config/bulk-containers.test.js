@@ -3,7 +3,6 @@ import test from 'node:test';
 
 import {
   bulkRowVgmState,
-  containerExportRecords,
   normalizeContainerDate,
   normalizeContainerTime,
   normalizeWeight,
@@ -14,8 +13,15 @@ import {
 const carriers = [
   { id: 'carrier-1', companyName: 'Công ty CP Giao Nhận Sao Việt' },
 ];
+const depots = [
+  {
+    id: 'depot-1',
+    name: 'ICD Phước Long',
+    fullName: 'ICD Phước Long, Thủ Đức, TP. Hồ Chí Minh',
+  },
+];
 
-test('template columns become full editable rows with the carrier resolved', () => {
+test('template columns become full editable rows with carrier and depot resolved', () => {
   const [row] = parseBulkContainerRows(
     [
       {
@@ -23,6 +29,7 @@ test('template columns become full editable rows with the carrier resolved', () 
         'Loại cont': "40'HC",
         'Số seal': 'S-01',
         'Nhà vận chuyển': ' công ty cp giao nhận sao việt ',
+        'Depot lấy rỗng': 'icd phước long',
         'Ngày đóng': '01/10/2026',
         'Giờ đóng dự kiến': '8:00',
         'Giờ đóng thực tế': 0.3958333333,
@@ -36,6 +43,7 @@ test('template columns become full editable rows with the carrier resolved', () 
       },
     ],
     carriers,
+    depots,
   );
   assert.deepEqual(row, {
     id: 'excel-0',
@@ -44,6 +52,8 @@ test('template columns become full editable rows with the carrier resolved', () 
     sealNumber: 'S-01',
     carrierName: 'công ty cp giao nhận sao việt',
     carrierCustomerId: 'carrier-1',
+    depotName: 'icd phước long',
+    emptyPickupDepotId: 'depot-1',
     packingDate: '2026-10-01',
     plannedPackingTime: '08:00',
     actualPackingTime: '09:30',
@@ -56,40 +66,6 @@ test('template columns become full editable rows with the carrier resolved', () 
     note: 'Hàng dễ vỡ',
   });
   assert.deepEqual(bulkRowVgmState(row), { state: 'declared', vgm: 21900 });
-});
-
-test('an exported file imports back with the same values', () => {
-  const vgm = /** @type {import('../types/index.js').ShipmentVgm} */ ({
-    id: 'v1',
-    shipmentId: 's1',
-    sequenceNumber: 1,
-    containerNumber: 'MSCU7654321',
-    sealNumber: null,
-    containerType: 'Size20',
-    tare: 2200,
-    payload: 28000,
-    maxGross: 30200,
-    netWeight: 15000,
-    packagingWeight: 300,
-    grossWeight: 15300,
-    vgm: 17500,
-    packingDate: '2026-10-02',
-    plannedPackingTime: '08:00:00',
-    actualPackingTime: null,
-    truckArrivalTime: null,
-    carrierCustomerId: 'carrier-1',
-    note: null,
-  });
-  const [row] = parseBulkContainerRows(
-    containerExportRecords([vgm], () => carriers[0].companyName),
-    carriers,
-  );
-  assert.equal(row.containerType, 'Size20');
-  assert.equal(row.packingDate, '2026-10-02');
-  assert.equal(row.plannedPackingTime, '08:00');
-  assert.equal(row.carrierCustomerId, 'carrier-1');
-  assert.equal(row.packagingWeight, 300);
-  assert.deepEqual(validateBulkContainerRows([row], []), []);
 });
 
 test('normalizers read Excel serials and Vietnamese / English number text', () => {
@@ -150,4 +126,31 @@ test('validation reports each bad cell of each row before save', () => {
   assert.ok(
     validateBulkContainerRows([], []).some((issue) => issue.rowId === null),
   );
+});
+
+test('a depot is matched by its full name; an unknown depot is reported', () => {
+  const rows = parseBulkContainerRows(
+    [
+      {
+        'Số container': 'TCLU1234567',
+        'Loại cont': "20'",
+        'Depot lấy rỗng': 'ICD Phước Long, Thủ Đức, TP. Hồ Chí Minh',
+      },
+      {
+        'Số container': 'MSCU7654321',
+        'Loại cont': "20'",
+        'Depot lấy rỗng': 'Depot không có',
+      },
+    ],
+    carriers,
+    depots,
+  );
+  assert.equal(rows[0].emptyPickupDepotId, 'depot-1');
+  assert.equal(rows[1].emptyPickupDepotId, '');
+  const issues = validateBulkContainerRows(rows, []);
+  assert.deepEqual(
+    issues.map((issue) => [issue.line, issue.field]),
+    [[2, 'emptyPickupDepotId']],
+  );
+  assert.match(issues[0].message, /Depot không có/u);
 });

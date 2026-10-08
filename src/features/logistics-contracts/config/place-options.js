@@ -1,3 +1,5 @@
+import { PORT_KIND_LABELS } from './port-kinds.js';
+
 /**
  * One option of the POL / POD place pickers (contract and shipment forms).
  * `placeOfLoading` / `placeOfDischarge` are plain strings on the wire, so
@@ -15,10 +17,17 @@ export function portOption(port) {
   return {
     id: port.id,
     name: port.fullName || port.name,
-    label: port.code
-      ? `${port.name} (${port.code})`
-      : `${port.name} (Nhà máy / Kho)`,
+    label: `${port.name} (${port.code ?? PORT_KIND_LABELS[port.kind]})`,
   };
+}
+
+/**
+ * Ports and factories / warehouses a POL / POD can be — empty-container
+ * depots are not places of loading or discharge.
+ * @param {import('../types/index.js').Port[]} ports
+ */
+export function placePorts(ports) {
+  return ports.filter((port) => port.kind !== 'Depot');
 }
 
 /**

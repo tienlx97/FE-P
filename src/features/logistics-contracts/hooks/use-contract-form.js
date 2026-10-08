@@ -14,7 +14,11 @@ import {
   emptyPartyFormValue,
   partyFormValueFrom,
 } from '../config/party-kinds.js';
-import { dedupePlacesByName, portOption } from '../config/place-options.js';
+import {
+  dedupePlacesByName,
+  placePorts,
+  portOption,
+} from '../config/place-options.js';
 import { findVietnamCountry } from '../config/vietnam-country.js';
 import {
   contractLineRowsFrom,
@@ -614,13 +618,13 @@ export function useContractForm({ contract = null, onSuccess } = {}) {
     vietnamCountryId,
     loadingPlaces: dedupePlacesByName(
       loadingPortsQuery.data?.success
-        ? loadingPortsQuery.data.ports.map(portOption)
+        ? placePorts(loadingPortsQuery.data.ports).map(portOption)
         : [],
     ),
     isPlaceOfDeliveryApplicable: requiresPlaceOfDelivery(values.incoterm),
     dischargePlaces: dedupePlacesByName(
       dischargePortsQuery.data?.success
-        ? dischargePortsQuery.data.ports.map(portOption)
+        ? placePorts(dischargePortsQuery.data.ports).map(portOption)
         : [],
     ),
     banks: sellerBankAccounts,

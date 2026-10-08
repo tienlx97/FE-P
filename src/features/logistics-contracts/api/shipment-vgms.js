@@ -38,6 +38,7 @@ function toRequestBody(values) {
       ? withSeconds(values.truckArrivalTime)
       : null,
     CarrierCustomerId: values.carrierCustomerId || null,
+    EmptyPickupDepotId: values.emptyPickupDepotId || null,
     Note: values.note || null,
   };
 }
@@ -102,7 +103,8 @@ export async function bulkCreateShipmentVgms(contractId, shipmentId, rows) {
       method: 'POST',
       errorMessage: 'Không thể thêm danh sách container',
       body: {
-        Containers: rows.map(({ id: _id, carrierName: _name, ...values }) =>
+        Containers: rows.map(
+          ({ id: _id, carrierName: _name, depotName: _depot, ...values }) =>
           toRequestBody({
             ...values,
             containerNumber: values.containerNumber.trim(),

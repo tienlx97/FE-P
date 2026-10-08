@@ -43,13 +43,15 @@ import { useContainerSpecsQuery } from '../hooks/use-container-specs-query.js';
  * pickup, with its own weights (max gross / tare / payload, CSC plate).
  * Leaving a valid ISO 6346 number fills the blank type and weights from
  * BIC BoxTech (BE-P `container-specs-boxtech`); "Điền lại" overwrites
- * what differs. Not in BoxTech → hand entry.
- * @param {VgmFieldProps} props
+ * what differs. Not in BoxTech → hand entry. "Depot lấy rỗng" picks from
+ * the Port catalog's depots (`useEmptyDepots`).
+ * @param {VgmFieldProps & { depots?: import('../types/index.js').Port[] }} props
  */
 export function ShipmentVgmContainerFields({
   values,
   setField,
   fieldStatuses,
+  depots = [],
 }) {
   const specs = useContainerSpecsQuery(values.containerNumber);
   // What the last lookup put in the drawer: replaced (or cleared) when
@@ -127,14 +129,36 @@ export function ShipmentVgmContainerFields({
         }}
       />
 
-      <TextInput
-        label="Số seal"
-        value={values.sealNumber}
-        onChange={(value) => setField('sealNumber', value)}
-        isOptional
-        status={fieldStatuses.sealNumber}
-        statusVariant="tooltip"
-      />
+      <FormGrid>
+        <StackItem size="fill">
+          <TextInput
+            label="Số seal"
+            value={values.sealNumber}
+            onChange={(value) => setField('sealNumber', value)}
+            isOptional
+            status={fieldStatuses.sealNumber}
+            statusVariant="tooltip"
+          />
+        </StackItem>
+        <StackItem size="fill">
+          <Selector
+            label="Depot lấy rỗng"
+            hasSearch
+            hasClear
+            placeholder="Chọn depot"
+            value={values.emptyPickupDepotId || null}
+            onChange={(value) => setField('emptyPickupDepotId', value ?? '')}
+            options={depots.map((depot) => ({
+              value: depot.id,
+              label: depot.name,
+            }))}
+            isOptional
+            status={fieldStatuses.emptyPickupDepotId}
+            statusVariant="tooltip"
+            width="100%"
+          />
+        </StackItem>
+      </FormGrid>
 
       <ContainerWeightFields
         values={values}

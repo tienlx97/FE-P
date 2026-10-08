@@ -52,6 +52,7 @@ import { MetaPill } from './pill.jsx';
  *   typeLabel: string,
  *   containerNumber: string,
  *   sealNumber: string,
+ *   depot: string,
  *   maxGross: string,
  *   tare: string,
  *   grossWeight: string,
@@ -74,6 +75,7 @@ const COLUMNS = /** @type {const} */ ([
   ['typeLabel', 'Loại cont', 'center'],
   ['containerNumber', 'Số container', 'start'],
   ['sealNumber', 'Số seal', 'start'],
+  ['depot', 'Depot lấy rỗng', 'start'],
   ['maxGross', 'Max gross (kg)', 'end'],
   ['tare', 'Tare (kg)', 'end'],
   ['grossWeight', 'G.W (kg)', 'end'],
@@ -328,6 +330,9 @@ export function MetaVgmPanel({
                         </Text>
                       </HStack>
                     </TableCell>
+                    <TableCell xstyle={styles.cell}>
+                      <Text color="secondary">{row.depot}</Text>
+                    </TableCell>
                     {[row.maxGross, row.tare, row.grossWeight].map(
                       (value, index) => (
                         <TableCell
@@ -412,8 +417,9 @@ export function MetaVgmPanel({
                         {totals.types}
                       </Text>
                     </TableCell>
-                    {/* No totals for Số container, Số seal, Max gross and
-                        Tare (user, 2026-10-08). */}
+                    {/* No totals for Số container, Số seal, Depot, Max
+                        gross and Tare (user, 2026-10-08). */}
+                    <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={styles.cell} />
@@ -630,15 +636,16 @@ const alignStyles = stylex.create({
 /** Column shares measured from the Figma 120:9267 header row (sum 100%). */
 const columnWidths = stylex.create({
   no: { width: '4%' },
-  carrier: { width: '15%' },
-  packingDate: { width: '9%' },
+  carrier: { width: '12%' },
+  packingDate: { width: '8%' },
   typeLabel: { width: '7%' },
-  containerNumber: { width: '10%' },
-  sealNumber: { width: '9%' },
-  maxGross: { width: '11%' },
-  tare: { width: '9%' },
+  containerNumber: { width: '9%' },
+  sealNumber: { width: '8%' },
+  depot: { width: '11%' },
+  maxGross: { width: '9%' },
+  tare: { width: '8%' },
   grossWeight: { width: '9%' },
-  vgm: { width: '10%' },
+  vgm: { width: '8%' },
   actions: { width: '7%' },
 });
 

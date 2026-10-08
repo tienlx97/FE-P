@@ -102,7 +102,7 @@ export function ShipmentVgmDrawer({
         title="Container"
         meta="Bắt buộc: số và loại cont · tự điền từ BIC BoxTech khi có"
       >
-        <ShipmentVgmContainerFields {...fieldProps} />
+        <ShipmentVgmContainerFields {...fieldProps} depots={form.depots} />
       </MetaFormSection>
 
       <MetaFormSection

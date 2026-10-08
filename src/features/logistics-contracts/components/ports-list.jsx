@@ -22,6 +22,7 @@ import {
 } from '@/shared/components/custom/meta/list-parts.jsx';
 
 import { searchPorts } from '../api/ports.js';
+import { PORT_KIND_LABELS } from '../config/port-kinds.js';
 import { useCountriesQuery } from '../hooks/use-countries-query.js';
 import { useSearchPortsQuery } from '../hooks/use-ports-query.js';
 import { PortFormDialog } from './port-form-dialog.jsx';
@@ -193,7 +194,7 @@ export function PortsList() {
       filter: 'code',
       renderCell: (port) => (
         <Text weight="medium" hasTabularNumbers xstyle={styles.nowrap}>
-          {port.code ?? 'Nhà máy / Kho'}
+          {port.code ?? PORT_KIND_LABELS[port.kind]}
         </Text>
       ),
     },

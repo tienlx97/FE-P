@@ -14,6 +14,7 @@ function values(overrides) {
     actualPackingTime: '',
     truckArrivalTime: '',
     carrierCustomerId: '',
+    emptyPickupDepotId: '',
     note: '',
     ...overrides,
   };

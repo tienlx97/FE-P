@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { shipmentVgmSchema } from '../config/shipment-vgm-schema.js';
+import { useEmptyDepots } from './use-empty-depots.js';
 import {
   useCreateShipmentVgmMutation,
   useUpdateShipmentVgmMutation,
@@ -25,6 +26,7 @@ function emptyValues() {
     actualPackingTime: '',
     truckArrivalTime: '',
     carrierCustomerId: '',
+    emptyPickupDepotId: '',
     note: '',
   };
 }
@@ -45,6 +47,7 @@ function valuesFromVgm(vgm) {
     actualPackingTime: vgm.actualPackingTime ?? '',
     truckArrivalTime: vgm.truckArrivalTime ?? '',
     carrierCustomerId: vgm.carrierCustomerId ?? '',
+    emptyPickupDepotId: vgm.emptyPickupDepotId ?? '',
     note: vgm.note ?? '',
   };
 }
@@ -82,6 +85,7 @@ export function useShipmentVgmForm({
   const [submitError, setSubmitError] = useState('');
 
   const suppliersQuery = useSuppliersQuery();
+  const { depots } = useEmptyDepots();
   const createMutation = useCreateShipmentVgmMutation(contractId, shipmentId);
   const updateMutation = useUpdateShipmentVgmMutation(contractId, shipmentId);
 
@@ -143,6 +147,7 @@ export function useShipmentVgmForm({
     customers: suppliersQuery.data?.success
       ? suppliersQuery.data.suppliers
       : [],
+    depots,
     submitError,
     isSubmitting: createMutation.isPending || updateMutation.isPending,
     handleSubmit,

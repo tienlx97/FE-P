@@ -30,17 +30,22 @@ import {
 import { MetaFormDrawer } from '@/shared/components/meta-form-drawer.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
+import { downloadBlob } from '@/shared/config/download-blob.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import {
   BULK_CONTAINER_COLUMNS,
-  bulkContainerGuideRows,
   bulkRowVgmState,
   emptyBulkContainerRow,
   parseBulkContainerRows,
   validateBulkContainerRows,
 } from '../config/bulk-containers.js';
+import {
+  buildContainerTemplateWorkbook,
+  findContainerHeaderRow,
+} from '../config/container-workbook.js';
 import { shipmentContainerTypeOptions } from '../config/shipment-container-types.js';
+import { useEmptyDepots } from '../hooks/use-empty-depots.js';
 import { useBulkCreateShipmentVgmsMutation } from '../hooks/use-shipment-vgms-query.js';
 import { useSuppliersQuery } from '../hooks/use-suppliers-query.js';
 import { ShipmentVgmBulkRowDetail } from './shipment-vgm-bulk-row-detail.jsx';
@@ -55,15 +60,22 @@ const isoDate = (value) =>
     value || undefined
   );
 
+/** Issue fields that are ids, reported under their Excel name column. */
+const ISSUE_COLUMNS = /** @type {Record<string, string>} */ ({
+  carrierCustomerId: 'carrierName',
+  emptyPickupDepotId: 'depotName',
+});
+
 /**
  * "Thêm danh sách container" (`MetaFormDrawer`): up to 100 containers in
  * one atomic save, typed in or imported from Excel. The Excel template has
- * every container field (`BULK_CONTAINER_COLUMNS`) plus guide and carrier
+ * every container field (`BULK_CONTAINER_COLUMNS`) plus guide and list
  * sheets; a "Xuất Excel" file imports back too. The table edits the
  * identity columns inline and shows each row's VGM state; "Chi tiết"
  * opens that row's VGM weights, times and note below the table (the same
- * fields as `ShipmentVgmDrawer`). "Nhập nhanh" fills the carrier or
- * packing date of every row. Rows are validated with the single-container
+ * fields as `ShipmentVgmDrawer`). "Nhập nhanh" fills the carrier, depot
+ * or packing date of every row. The template and "Xuất Excel" files are
+ * built by `container-workbook.js`; the reader skips their title block. Rows are validated with the single-container
  * rules before the request; invalid cells show inline.
  * @param {{
  *   contractId: string,
@@ -92,6 +104,11 @@ export function ShipmentVgmBulkDrawer({
     value: carrier.id,
     label: carrier.companyName,
   }));
+  const { depots } = useEmptyDepots();
+  const depotOptions = depots.map((depot) => ({
+    value: depot.id,
+    label: depot.name,
+  }));
 
   const [rows, setRows] = useState(
     /** @type {import('../types/index.js').BulkContainerRow[]} */ (
@@ -108,6 +125,7 @@ export function ShipmentVgmBulkDrawer({
     /** @type {import('../config/bulk-containers.js').BulkContainerIssue[]} */ ([]),
   );
   const [quickCarrier, setQuickCarrier] = useState('');
+  const [quickDepot, setQuickDepot] = useState('');
   const [quickDate, setQuickDate] = useState('');
 
   const selected = rows.find((row) => row.id === selectedId) ?? null;
@@ -140,9 +158,10 @@ export function ShipmentVgmBulkDrawer({
           ? {
               ...row,
               [field]: value,
-              // A carrier picked from the catalog replaces an unmatched
-              // Excel name.
+              // A carrier / depot picked from the catalog replaces an
+              // unmatched Excel name.
               ...(field === 'carrierCustomerId' ? { carrierName: '' } : {}),
+              ...(field === 'emptyPickupDepotId' ? { depotName: '' } : {}),
             }
           : row,
       ),
@@ -166,40 +185,45 @@ export function ShipmentVgmBulkDrawer({
     if (selectedId === rowId) setSelectedId(null);
   }
 
-  /** @param {'carrierCustomerId' | 'packingDate'} field @param {string} value */
+  /** @param {'carrierCustomerId' | 'emptyPickupDepotId' | 'packingDate'} field @param {string} value */
   function applyToAll(field, value) {
     setRows((current) =>
       current.map((row) => ({
         ...row,
         [field]: value,
         ...(field === 'carrierCustomerId' ? { carrierName: '' } : {}),
+        ...(field === 'emptyPickupDepotId' ? { depotName: '' } : {}),
       })),
     );
     setIssues((current) => current.filter((issue) => issue.field !== field));
   }
 
   async function downloadTemplate() {
-    const XLSX = await import('xlsx');
-    const book = XLSX.utils.book_new();
-    const sheet = XLSX.utils.aoa_to_sheet([
-      BULK_CONTAINER_COLUMNS.map((column) => column.header),
-    ]);
-    sheet['!cols'] = BULK_CONTAINER_COLUMNS.map((column) => ({
-      wch: column.width,
-    }));
-    XLSX.utils.book_append_sheet(book, sheet, 'Containers');
-    const guide = XLSX.utils.aoa_to_sheet(
-      bulkContainerGuideRows(shipmentContainerTypeOptions),
-    );
-    guide['!cols'] = [{ wch: 26 }, { wch: 90 }];
-    XLSX.utils.book_append_sheet(book, guide, 'Hướng dẫn');
-    const carrierSheet = XLSX.utils.aoa_to_sheet([
-      ['Nhà vận chuyển'],
-      ...carriers.map((carrier) => [carrier.companyName]),
-    ]);
-    carrierSheet['!cols'] = [{ wch: 60 }];
-    XLSX.utils.book_append_sheet(book, carrierSheet, 'Nhà vận chuyển');
-    XLSX.writeFile(book, 'mau-danh-sach-container.xlsx');
+    try {
+      const excelModule = await import('exceljs');
+      const ExcelJS = /** @type {typeof import('exceljs')} */ (
+        'default' in excelModule ? excelModule.default : excelModule
+      );
+      const workbook = buildContainerTemplateWorkbook(ExcelJS, {
+        shipmentCode,
+        typeLabels: shipmentContainerTypeOptions.map((option) => option.label),
+        carriers: carriers.map((carrier) => carrier.companyName),
+        depots: depots.map((depot) => ({
+          name: depot.name,
+          fullName: depot.fullName,
+        })),
+        createdAt: new Date(),
+      });
+      const buffer = await workbook.xlsx.writeBuffer();
+      downloadBlob(
+        new Blob([buffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+        `mau-container-${shipmentCode.replace(/[/\\]/g, '-')}.xlsx`,
+      );
+    } catch {
+      toast({ body: 'Không tạo được tệp mẫu Excel.', type: 'error' });
+    }
   }
 
   /** @param {File | null} next */
@@ -213,10 +237,17 @@ export function ShipmentVgmBulkDrawer({
       const workbook = XLSX.read(await next.arrayBuffer(), { type: 'array' });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       if (!sheet) throw new Error('Tệp Excel không có sheet dữ liệu.');
-      const records = /** @type {Record<string, unknown>[]} */ (
-        XLSX.utils.sheet_to_json(sheet, { defval: '' })
+      // The template and the export have a title block above the header.
+      const cells = /** @type {unknown[][]} */ (
+        XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
       );
-      const parsed = parseBulkContainerRows(records, carriers);
+      const records = /** @type {Record<string, unknown>[]} */ (
+        XLSX.utils.sheet_to_json(sheet, {
+          range: findContainerHeaderRow(cells),
+          defval: '',
+        })
+      );
+      const parsed = parseBulkContainerRows(records, carriers, depots);
       if (parsed.length === 0) {
         throw new Error(
           'Không tìm thấy dòng container. Kiểm tra tên cột theo tệp mẫu.',
@@ -337,6 +368,24 @@ export function ShipmentVgmBulkDrawer({
             status={statuses.carrierCustomerId}
             statusVariant="tooltip"
             width={220}
+          />
+        ),
+        depot: (
+          <Selector
+            label={`Depot lấy rỗng dòng ${line}`}
+            isLabelHidden
+            size="sm"
+            hasSearch
+            hasClear
+            placeholder={row.depotName || 'Chọn depot'}
+            value={row.emptyPickupDepotId || null}
+            onChange={(value) =>
+              setRowField(row.id, 'emptyPickupDepotId', value ?? '')
+            }
+            options={depotOptions}
+            status={statuses.emptyPickupDepotId}
+            statusVariant="tooltip"
+            width={190}
           />
         ),
         packingDate: (
@@ -512,6 +561,25 @@ export function ShipmentVgmBulkDrawer({
             isDisabled={!quickCarrier || rows.length === 0}
             onClick={() => applyToAll('carrierCustomerId', quickCarrier)}
           />
+          <Selector
+            label="Depot lấy rỗng"
+            hasSearch
+            hasClear
+            placeholder="Chọn depot"
+            value={quickDepot || null}
+            onChange={(value) => setQuickDepot(value ?? '')}
+            options={depotOptions}
+            width={240}
+          />
+          <Button
+            label="Áp dụng"
+            type="button"
+            variant="secondary"
+            size="lg"
+            icon={<Icon icon={CopyCheck} size="sm" />}
+            isDisabled={!quickDepot || rows.length === 0}
+            onClick={() => applyToAll('emptyPickupDepotId', quickDepot)}
+          />
           <DateInput
             label="Ngày đóng hàng"
             value={isoDate(quickDate)}
@@ -558,7 +626,7 @@ export function ShipmentVgmBulkDrawer({
               {issues.slice(0, 8).map((issue) => (
                 <Text key={`${issue.rowId}-${issue.field}`} size="sm">
                   {issue.line
-                    ? `Dòng ${issue.line}${issue.field ? ` · ${columnLabel[issue.field === 'carrierCustomerId' ? 'carrierName' : issue.field] ?? issue.field}` : ''}: `
+                    ? `Dòng ${issue.line}${issue.field ? ` · ${columnLabel[ISSUE_COLUMNS[issue.field] ?? issue.field] ?? issue.field}` : ''}: `
                     : ''}
                   {issue.message}
                 </Text>
@@ -578,6 +646,7 @@ export function ShipmentVgmBulkDrawer({
             { key: 'containerType', header: 'Loại *' },
             { key: 'sealNumber', header: 'Số seal' },
             { key: 'carrier', header: 'Nhà vận chuyển' },
+            { key: 'depot', header: 'Depot lấy rỗng' },
             { key: 'packingDate', header: 'Ngày đóng' },
             { key: 'vgm', header: 'VGM' },
             { key: 'actions', header: '' },

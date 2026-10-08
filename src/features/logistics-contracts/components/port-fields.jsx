@@ -10,8 +10,21 @@ import { VStack } from '@astryxdesign/core/VStack';
 
 import { TextInput } from '@/shared/components/text-input.jsx';
 
+/** Example names per kind, as input placeholders. */
+const PLACEHOLDERS = {
+  Port: { name: 'VD: Cát Lái', fullName: 'VD: Cảng Cát Lái, TP. Hồ Chí Minh' },
+  Facility: {
+    name: 'VD: Nhà máy Tân Uyên',
+    fullName: 'VD: Nhà máy ABC, KCN Tân Uyên, Bình Dương',
+  },
+  Depot: {
+    name: 'VD: ICD Phước Long',
+    fullName: 'VD: ICD Phước Long, Thủ Đức, TP. Hồ Chí Minh',
+  },
+};
+
 /**
- * `Port` field-set: kind (cảng / nhà máy-kho), country, UN/LOCODE (ports
+ * `Port` field-set: kind (cảng / nhà máy-kho / depot), country, UN/LOCODE (ports
  * only), short and long name.
  * @param {{
  *   values: import('../types/index.js').PortFormValues,
@@ -37,6 +50,7 @@ export function PortFields({
       >
         <SegmentedControlItem value="Port" label="Cảng" />
         <SegmentedControlItem value="Facility" label="Nhà máy / Kho" />
+        <SegmentedControlItem value="Depot" label="Depot cont rỗng" />
       </SegmentedControl>
       <Selector
         label="Nước"
@@ -71,7 +85,7 @@ export function PortFields({
         <TextInput
           label="Tên ngắn"
           placeholder={
-            values.kind === 'Port' ? 'VD: Cát Lái' : 'VD: Nhà máy Tân Uyên'
+            PLACEHOLDERS[values.kind].name
           }
           value={values.name}
           onChange={(value) => setField('name', value)}
@@ -83,9 +97,7 @@ export function PortFields({
       <TextInput
         label="Tên đầy đủ"
         placeholder={
-          values.kind === 'Port'
-            ? 'VD: Cảng Cát Lái, TP. Hồ Chí Minh'
-            : 'VD: Nhà máy ABC, KCN Tân Uyên, Bình Dương'
+          PLACEHOLDERS[values.kind].fullName
         }
         value={values.fullName}
         onChange={(value) => setField('fullName', value)}

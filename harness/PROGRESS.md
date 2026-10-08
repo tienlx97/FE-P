@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-10-08 — Depot lấy cont rỗng + container Excel template / export
+
+- Per user ("1. Container & VGM bổ sung thêm depot lấy cont rỗng … thêm các depot / nơi lấy cont rỗng 2. Container nhập excel: hãy tạo template đẹp, có data ở depot/nơi lấy cont 3. Container xuất excel: tạo template đẹp"). Asked: depots in the Port catalog (kind Depot) + per container — user chose both recommended options. BE-P `empty-pickup-depot` (fa5694f): `PortKind.Depot`, `ShipmentVgm.EmptyPickupDepotId`, 12 seeded southern depots / ICDs; dev API rebuilt so :8081 has them.
+- Ports: kind `Depot` ("Depot cont rỗng" segment, placeholders per kind, `PORT_KIND_LABELS` in `config/port-kinds.js` for the list's code column and place-picker labels). POL / POD pickers drop depots (`placePorts`); the vessel schedule already keeps UN/LOCODE ports only.
+- `useEmptyDepots` (VN ports of kind Depot, by name). Container drawer: "Depot lấy rỗng" beside Số seal (group 1). `MetaVgmPanel`: "Depot lấy rỗng" column after Số seal (widths rebalanced, empty in the Σ row). Bulk drawer: depot column per row + "Nhập nhanh" depot; Excel column "Depot lấy rỗng" matched by short or full name, unknown → row issue.
+- New `config/container-workbook.js` (ExcelJS, like the cost report): shared sheet frame — title, description, tinted group band (Container · Đóng hàng · Khối lượng container · Khai VGM · Kết quả VGM), cobalt header with each column's hint as a cell note, frozen + repeated header, A4 landscape fit-to-width, compact widths. Template: 100 framed rows (required columns tinted), drop-downs for Loại cont / Nhà vận chuyển / Depot from a "Danh mục" sheet (depot + address), "Hướng dẫn" sheet. Export: real dates and numbers, "Có / Chưa" coloured, G.W / VGM SUM total row (label in STT…Loại cont, so the file still imports back), autofilter. Import finds the header row below the title block (`findContainerHeaderRow`).
+- Removed the SheetJS-only `containerExportRecords` / `bulkContainerGuideRows` (replaced; round trip now tested on a real workbook).
+- Checked: 4 workbook tests (export → SheetJS → `parseBulkContainerRows` incl. depot / carrier / date / time / decimals, total row ignored; template validations, notes, sheets) + depot parse tests. Both files built from Node, opened in Excel 16 via COM → PDF: export 1 page; template header wraps fully, side sheets one page wide. Chrome :3000, 26KCT27/LOT-01 ?tab=vgm: depot column, container drawer depot list (12, sorted), bulk drawer depot column + quick fill; /logistics/ports shows the depots. Nothing saved on the shipment.
+- Gate passed: `harness/runs/20261008-222217-219932/`.
+
 ## 2026-10-08 — Contract drawer: flat payment terms (section 6)
 
 - Per user ("6. Điều khoản thanh toán (Payment Terms)", following the card-in-card cleanup). Section 6 had three frames: section card → muted `MetaFormCard` (bank, split bar, steps) → a white bordered card per step.

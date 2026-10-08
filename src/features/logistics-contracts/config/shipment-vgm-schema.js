@@ -40,6 +40,7 @@ export const shipmentVgmSchema = z
     actualPackingTime: z.string(),
     truckArrivalTime: z.string(),
     carrierCustomerId: z.string(),
+    emptyPickupDepotId: z.string(),
     note: z.string().trim().max(2000, 'Tối đa 2000 ký tự'),
   })
   .superRefine((values, context) => {

@@ -8,10 +8,13 @@ import {
   MetaVgmPanel,
 } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
+import { downloadBlob } from '@/shared/config/download-blob.js';
+import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
-import { containerExportRecords } from '../config/bulk-containers.js';
+import { buildContainerExportWorkbook } from '../config/container-workbook.js';
 import { labelForShipmentContainerType } from '../config/shipment-container-types.js';
 import { summarizeShipmentVgms } from '../config/shipment-vgm-summary.js';
+import { useEmptyDepots } from '../hooks/use-empty-depots.js';
 import { useDeleteShipmentVgmMutation } from '../hooks/use-shipment-vgms-query.js';
 import { ShipmentVgmBulkDrawer } from './shipment-vgm-bulk-drawer.jsx';
 import { ShipmentVgmDrawer } from './shipment-vgm-drawer.jsx';
@@ -58,6 +61,8 @@ export function ShipmentVgmPanel({
     /** @type {'table' | 'excel' | null} */ (null),
   );
   const deleteMutation = useDeleteShipmentVgmMutation(contractId, shipment.id);
+  const { depots } = useEmptyDepots();
+  const toast = useAppToast();
 
   const summary = summarizeShipmentVgms(vgms, shipment);
   /** "2×40'HC, 2×20'" */
@@ -74,6 +79,9 @@ export function ShipmentVgmPanel({
   /** @param {string | null} customerId */
   const carrierName = (customerId) =>
     (customerId && customersById.get(customerId)?.companyName) || '—';
+  /** @param {string | null | undefined} depotId */
+  const depotName = (depotId) =>
+    (depotId && depots.find((depot) => depot.id === depotId)?.name) || '';
   /** @param {number | null} value */
   const weight = (value) =>
     value === null ? '—' : WEIGHT_FORMATTER.format(value);
@@ -88,15 +96,49 @@ export function ShipmentVgmPanel({
   }
 
   async function handleExport() {
-    const XLSX = await import('xlsx');
-    const sheet = XLSX.utils.json_to_sheet(
-      containerExportRecords(vgms, (customerId) =>
-        customerId ? (customersById.get(customerId)?.companyName ?? '') : '',
-      ),
-    );
-    const book = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(book, sheet, 'VGM');
-    XLSX.writeFile(book, `${fileName}.xlsx`);
+    try {
+      const excelModule = await import('exceljs');
+      const ExcelJS = /** @type {typeof import('exceljs')} */ (
+        'default' in excelModule ? excelModule.default : excelModule
+      );
+      const workbook = buildContainerExportWorkbook(ExcelJS, {
+        shipmentCode: shipment.shipmentCode,
+        typeMix: typeMix(', '),
+        exportedAt: new Date(),
+        rows: vgms.map((vgm) => ({
+          sequenceNumber: vgm.sequenceNumber,
+          containerNumber: vgm.containerNumber,
+          typeLabel: labelForShipmentContainerType(vgm.containerType),
+          sealNumber: vgm.sealNumber ?? '',
+          carrier: vgm.carrierCustomerId
+            ? (customersById.get(vgm.carrierCustomerId)?.companyName ?? '')
+            : '',
+          depot: depotName(vgm.emptyPickupDepotId),
+          packingDate: vgm.packingDate,
+          plannedPackingTime: vgm.plannedPackingTime?.slice(0, 5) ?? '',
+          actualPackingTime: vgm.actualPackingTime?.slice(0, 5) ?? '',
+          truckArrivalTime: vgm.truckArrivalTime?.slice(0, 5) ?? '',
+          maxGross: vgm.maxGross,
+          tare: vgm.tare,
+          payload: vgm.payload,
+          netWeight: vgm.netWeight,
+          packagingWeight: vgm.packagingWeight,
+          note: vgm.note ?? '',
+          grossWeight: vgm.grossWeight,
+          vgm: vgm.vgm,
+          isVgmDeclared: vgm.isVgmDeclared ?? vgm.vgm !== null,
+        })),
+      });
+      const buffer = await workbook.xlsx.writeBuffer();
+      downloadBlob(
+        new Blob([buffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+        `${fileName}.xlsx`,
+      );
+    } catch {
+      toast({ body: 'Không xuất được file Excel.', type: 'error' });
+    }
   }
 
   return (
@@ -128,6 +170,7 @@ export function ShipmentVgmPanel({
           typeLabel: labelForShipmentContainerType(vgm.containerType),
           containerNumber: vgm.containerNumber,
           sealNumber: vgm.sealNumber || '—',
+          depot: depotName(vgm.emptyPickupDepotId) || '—',
           maxGross: weight(vgm.maxGross),
           tare: weight(vgm.tare),
           grossWeight: weight(vgm.grossWeight),

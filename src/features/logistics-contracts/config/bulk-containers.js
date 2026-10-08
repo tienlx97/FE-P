@@ -1,4 +1,3 @@
-import { labelForShipmentContainerType } from './shipment-container-types.js';
 import { shipmentVgmSchema } from './shipment-vgm-schema.js';
 
 /**
@@ -6,7 +5,8 @@ import { shipmentVgmSchema } from './shipment-vgm-schema.js';
  * template, the import and the "Xuất Excel" export all use these headers,
  * so an exported file can be edited and imported again. `aliases` also
  * accept the API field names. `key` is the `BulkContainerRow` field the
- * column fills (`carrierName` is resolved to `carrierCustomerId`).
+ * column fills (`carrierName` is resolved to `carrierCustomerId`,
+ * `depotName` to `emptyPickupDepotId`).
  * @type {ReadonlyArray<{ key: keyof import('../types/index.js').BulkContainerRow, header: string, aliases: string[], hint: string, width: number }>}
  */
 export const BULK_CONTAINER_COLUMNS = [
@@ -35,8 +35,15 @@ export const BULK_CONTAINER_COLUMNS = [
     key: 'carrierName',
     header: 'Nhà vận chuyển',
     aliases: ['Carrier', 'CarrierName'],
-    hint: 'Tuỳ chọn · tên đúng như danh mục Nhà cung cấp (xem sheet "Nhà vận chuyển")',
+    hint: 'Tuỳ chọn · tên đúng như danh mục Nhà cung cấp (chọn trong ô, hoặc xem sheet "Danh mục")',
     width: 36,
+  },
+  {
+    key: 'depotName',
+    header: 'Depot lấy rỗng',
+    aliases: ['EmptyPickupDepot', 'Depot'],
+    hint: 'Tuỳ chọn · tên depot đúng như danh mục Cảng (chọn trong ô, hoặc xem sheet "Danh mục")',
+    width: 28,
   },
   {
     key: 'packingDate',
@@ -128,6 +135,8 @@ export function emptyBulkContainerRow(id = 'manual-0') {
     sealNumber: '',
     carrierName: '',
     carrierCustomerId: '',
+    depotName: '',
+    emptyPickupDepotId: '',
     packingDate: '',
     plannedPackingTime: '',
     actualPackingTime: '',
@@ -240,16 +249,25 @@ function cell(record, column) {
  * Rows of the template, or of a "Xuất Excel" export (extra columns such as
  * STT / G.W / VGM are ignored). Every nonblank source row is kept so it can
  * be corrected in the drawer. A carrier name is matched to the supplier
- * catalog case-insensitively; an unknown name keeps `carrierCustomerId`
- * empty and `validateBulkContainerRows` reports it.
+ * catalog case-insensitively, a depot by its short or full name; an
+ * unknown name keeps the id empty and `validateBulkContainerRows` reports it.
  * @param {Record<string, unknown>[]} records
  * @param {{ id: string, companyName: string }[]} carriers
+ * @param {{ id: string, name: string, fullName?: string | null }[]} [depots]
  * @returns {import('../types/index.js').BulkContainerRow[]}
  */
-export function parseBulkContainerRows(records, carriers = []) {
+export function parseBulkContainerRows(records, carriers = [], depots = []) {
   const carrierIds = new Map(
     carriers.map((carrier) => [nameKey(carrier.companyName), carrier.id]),
   );
+  /** @type {Map<string, string>} */
+  const depotIds = new Map();
+  for (const depot of depots) {
+    // The short name wins over another depot's identical full name.
+    if (depot.fullName) depotIds.set(nameKey(depot.fullName), depot.id);
+  }
+  for (const depot of depots) depotIds.set(nameKey(depot.name), depot.id);
+
   /** @param {Record<string, unknown>} record @param {string} key */
   const read = (record, key) =>
     cell(
@@ -264,6 +282,7 @@ export function parseBulkContainerRows(records, carriers = []) {
   return records
     .map((record, index) => {
       const carrierName = text(read(record, 'carrierName'));
+      const depotName = text(read(record, 'depotName'));
       return {
         id: `excel-${index}`,
         containerNumber: text(read(record, 'containerNumber')),
@@ -272,6 +291,10 @@ export function parseBulkContainerRows(records, carriers = []) {
         carrierName,
         carrierCustomerId: carrierName
           ? (carrierIds.get(nameKey(carrierName)) ?? '')
+          : '',
+        depotName,
+        emptyPickupDepotId: depotName
+          ? (depotIds.get(nameKey(depotName)) ?? '')
           : '',
         packingDate: normalizeContainerDate(read(record, 'packingDate')),
         plannedPackingTime: normalizeContainerTime(
@@ -387,6 +410,12 @@ export function validateBulkContainerRows(rows, existingNumbers) {
         `Không tìm thấy nhà vận chuyển “${row.carrierName}” trong danh mục.`,
       );
     }
+    if (row.depotName && !row.emptyPickupDepotId) {
+      add(
+        'emptyPickupDepotId',
+        `Không tìm thấy depot “${row.depotName}” trong danh mục Cảng.`,
+      );
+    }
     for (const key of VGM_WEIGHT_KEYS) {
       if (Number.isNaN(row[key])) add(key, 'Khối lượng không phải là số.');
     }
@@ -400,7 +429,7 @@ export function validateBulkContainerRows(rows, existingNumbers) {
       if (row[key] && !isTime(row[key])) add(key, 'Giờ không hợp lệ (HH:mm).');
     }
 
-    const { id: _id, carrierName: _name, ...values } = row;
+    const { id: _id, carrierName: _name, depotName: _depot, ...values } = row;
     const result = shipmentVgmSchema.safeParse({
       ...values,
       ...Object.fromEntries(
@@ -416,57 +445,4 @@ export function validateBulkContainerRows(rows, existingNumbers) {
     }
   });
   return issues;
-}
-
-/** @param {string | null | undefined} iso `yyyy-mm-dd` */
-const toDisplayDate = (iso) =>
-  iso ? `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}` : '';
-
-/**
- * One export record per container, keyed by the template headers (plus
- * the read-only STT / G.W / VGM / "Đã khai VGM"), so the file imports back.
- * @param {import('../types/index.js').ShipmentVgm[]} vgms
- * @param {(customerId: string | null) => string} carrierName
- * @returns {Record<string, string | number>[]}
- */
-export function containerExportRecords(vgms, carrierName) {
-  return vgms.map((vgm) => ({
-    STT: vgm.sequenceNumber,
-    'Số container': vgm.containerNumber,
-    'Loại cont': labelForShipmentContainerType(vgm.containerType),
-    'Số seal': vgm.sealNumber ?? '',
-    'Nhà vận chuyển': carrierName(vgm.carrierCustomerId),
-    'Ngày đóng': toDisplayDate(vgm.packingDate),
-    'Giờ đóng dự kiến': vgm.plannedPackingTime?.slice(0, 5) ?? '',
-    'Giờ đóng thực tế': vgm.actualPackingTime?.slice(0, 5) ?? '',
-    'Giờ xe vào nhà máy': vgm.truckArrivalTime?.slice(0, 5) ?? '',
-    'Max gross (kg)': vgm.maxGross ?? '',
-    'Tare (kg)': vgm.tare ?? '',
-    'Payload (kg)': vgm.payload ?? '',
-    'Net weight (kg)': vgm.netWeight ?? '',
-    'Khối lượng bao bì (kg)': vgm.packagingWeight ?? '',
-    'Ghi chú': vgm.note ?? '',
-    'G.W (kg)': vgm.grossWeight ?? '',
-    'VGM (kg)': vgm.vgm ?? '',
-    'Đã khai VGM': (vgm.isVgmDeclared ?? vgm.vgm !== null) ? 'Có' : 'Chưa',
-  }));
-}
-
-/**
- * The template's guide sheet: one row per column with what it accepts,
- * then the accepted container types.
- * @param {{ value: string, label: string }[]} typeOptions
- * @returns {string[][]}
- */
-export function bulkContainerGuideRows(typeOptions) {
-  return [
-    ['Cột', 'Cách nhập'],
-    ...BULK_CONTAINER_COLUMNS.map((column) => [column.header, column.hint]),
-    [],
-    ['Loại cont hợp lệ', typeOptions.map((option) => option.label).join(' · ')],
-    [
-      'Lưu ý',
-      'Mỗi lần nhập tối đa 100 container. Dòng trống bị bỏ qua. Có thể nhập lại tệp "Xuất Excel" (các cột STT, G.W, VGM, Đã khai VGM được bỏ qua).',
-    ],
-  ];
 }

@@ -215,8 +215,9 @@ export {};
 
 /**
  * `Port` = UN/LOCODE port ("Cảng"); `Facility` = factory/warehouse
- * ("Nhà máy / Kho", e.g. the EXW place of loading) with no UN/LOCODE.
- * @typedef {'Port' | 'Facility'} PortKind
+ * ("Nhà máy / Kho", e.g. the EXW place of loading); `Depot` = empty-
+ * container depot ("Depot lấy / trả cont rỗng"). Only `Port` has a UN/LOCODE.
+ * @typedef {'Port' | 'Facility' | 'Depot'} PortKind
  */
 
 /**
@@ -225,7 +226,7 @@ export {};
  * constrain `Contract.placeOfLoading` / `placeOfDischarge`, which stay free text.
  * @typedef {Object} Port
  * @property {string} id
- * @property {string | null} code - UN/LOCODE, e.g. "VNCLI"; null for a factory/warehouse
+ * @property {string | null} code - UN/LOCODE, e.g. "VNCLI"; null for a factory/warehouse or depot
  * @property {PortKind} kind
  * @property {string} name - short name, e.g. "Cát Lái"
  * @property {string | null} fullName - long / display name
@@ -1268,6 +1269,7 @@ export {};
  * @property {string | null} actualPackingTime
  * @property {string | null} truckArrivalTime
  * @property {string | null} carrierCustomerId
+ * @property {string | null} [emptyPickupDepotId] - Port catalog depot the empty container is picked up from
  * @property {string | null} note
  * @property {string | null} [emptyReturnedOn] - ISO date the empty container went back; null = not yet
  * @property {string | null} [emptyReturnDepot]
@@ -1319,14 +1321,16 @@ export {};
  * @property {string} actualPackingTime
  * @property {string} truckArrivalTime
  * @property {string} carrierCustomerId
+ * @property {string} emptyPickupDepotId - '' = none
  * @property {string} note
  */
 
 /**
  * One row of the bulk container drawer / Excel import: every field of the
- * single-container form, plus a local key and the carrier name as typed in
- * Excel (resolved to `carrierCustomerId` against the supplier catalog).
- * @typedef {ShipmentVgmFormValues & { id: string, carrierName: string }} BulkContainerRow
+ * single-container form, plus a local key and the carrier / depot names as
+ * typed in Excel (resolved to `carrierCustomerId` against the supplier
+ * catalog and `emptyPickupDepotId` against the depots).
+ * @typedef {ShipmentVgmFormValues & { id: string, carrierName: string, depotName: string }} BulkContainerRow
  */
 
 // ── Carrier tracking (BE-kt-xnk `add-carrier-tracking`) ─────────────────

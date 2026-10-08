@@ -4,7 +4,11 @@ import { useState } from 'react';
 
 import { DEFAULT_CURRENCY } from '../config/currencies.js';
 import { partyFormValueFrom } from '../config/party-kinds.js';
-import { dedupePlacesByName, portOption } from '../config/place-options.js';
+import {
+  dedupePlacesByName,
+  placePorts,
+  portOption,
+} from '../config/place-options.js';
 import { costLineFormValues } from '../config/shipment-cost-lines.js';
 import { blankTransshipmentLeg } from '../config/shipment-documents.js';
 import { splitSiCutoff } from '../config/shipment-operational-details.js';
@@ -374,12 +378,12 @@ export function useShipmentForm({
     dischargeCountryId,
     loadingPlaces: dedupePlacesByName(
       loadingPortsQuery.data?.success
-        ? loadingPortsQuery.data.ports.map(portOption)
+        ? placePorts(loadingPortsQuery.data.ports).map(portOption)
         : [],
     ),
     dischargePlaces: dedupePlacesByName(
       dischargePortsQuery.data?.success
-        ? dischargePortsQuery.data.ports.map(portOption)
+        ? placePorts(dischargePortsQuery.data.ports).map(portOption)
         : [],
     ),
     costLineRows,

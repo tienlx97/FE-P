@@ -5,11 +5,11 @@ import { z } from 'zod';
  * `port-catalog-unlocode`): UN/LOCODE = 2-letter country code + 3
  * characters (A–Z, 2–9); the BE also checks the prefix against the
  * country's ISO code and uniqueness (409). A `Facility` (nhà máy / kho)
- * has no UN/LOCODE — its code is dropped.
+ * or `Depot` (depot cont rỗng) has no UN/LOCODE — its code is dropped.
  */
 export const portSchema = z
   .object({
-    kind: z.enum(['Port', 'Facility']),
+    kind: z.enum(['Port', 'Facility', 'Depot']),
     countryId: z.string().trim().min(1, 'Vui lòng chọn nước'),
     code: z.string().trim().toUpperCase(),
     name: z
@@ -29,5 +29,5 @@ export const portSchema = z
     }
   })
   .transform((values) =>
-    values.kind === 'Facility' ? { ...values, code: '' } : values,
+    values.kind === 'Port' ? values : { ...values, code: '' },
   );
