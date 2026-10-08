@@ -426,6 +426,14 @@ export const metaTheme = defineTheme({
         fontWeight: 'var(--font-weight-semibold)',
       },
     },
+    // A Link without href renders a <button>, whose UA default centres a
+    // wrapped label (a long customer name in a table cell). No effect on an
+    // inline <a>.
+    link: {
+      base: {
+        textAlign: 'start',
+      },
+    },
     // The framed list card clips its overflow, so the table's own scroller
     // must fill the card's content area to scroll;
     // header cells stay pinned while the body scrolls under them.

@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-08 — Contracts list: wrapped customer name centred
+
+- Per user ("Cột Khách hàng table danh sách hợp đồng: giá trị bị lệch"). The customer cell is an Astryx `Link` with no `href` → `<button>`; Link's button reset sets no `text-align`, so a wrapped name (ROVILEEDA BUY AND SELL OF AGRI PRODUCT) was centred by the UA default while one-line names looked left-aligned.
+- Fix: meta theme `link` base `textAlign: 'start'` — covers every button-Link in every table; no effect on inline `<a>` links.
+- Chrome :3000 /logistics/contracts: the two-line name now starts at the cell's 8px inset like the others (`text-align: start`).
+- Gate passed: `harness/runs/20261008-203047-71935/`.
+
 ## 2026-10-08 — AdvanceTable can't scroll (Astryx 0.6.6 regression)
 
 - Per user ("bug: Advance không thể scroll"). Cause: Astryx 0.6.6 rebuilt `Table`'s scroll wrapper on `useScrollableArea({axis: 'inline'})`, which sets `overflow-y: hidden` through a high-specificity atomic class (`:not(#\#)` ×4) and strips caller `overflow*` styles. 0.6.2 only set `overflow-x: auto` (→ y auto), and AdvanceTable's fixed-height list (sticky header / Σ row) scrolled through that wrapper.

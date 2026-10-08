@@ -549,6 +549,11 @@ export const metaTheme = {
         "fontWeight": "var(--font-weight-semibold)"
       }
     },
+    "link": {
+      "base": {
+        "textAlign": "start"
+      }
+    },
     "table-scroll-wrapper": {
       "base": {
         "height": "100%",
