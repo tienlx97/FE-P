@@ -60,12 +60,7 @@ import { MetaPill } from './pill.jsx';
  * }} MetaVgmRow
  * @typedef {{
  *   label: string,
- *   containers: string,
  *   types: string,
- *   containerNumbers: string,
- *   seals: string,
- *   maxGross: string,
- *   tare: string,
  *   grossWeight: string,
  *   vgm: string,
  * }} MetaVgmTotals
@@ -405,11 +400,8 @@ export function MetaVgmPanel({
                         {totals.label}
                       </Text>
                     </TableCell>
-                    <TableCell xstyle={styles.cell}>
-                      <Text size="sm" color="secondary">
-                        {totals.containers}
-                      </Text>
-                    </TableCell>
+                    {/* No total for Ngày đóng (user, 2026-10-08). */}
+                    <TableCell xstyle={styles.cell} />
                     <TableCell xstyle={[styles.cell, alignStyles.center]}>
                       <Text
                         size="sm"
@@ -420,33 +412,22 @@ export function MetaVgmPanel({
                         {totals.types}
                       </Text>
                     </TableCell>
-                    <TableCell xstyle={styles.cell}>
-                      <Text size="sm" color="secondary">
-                        {totals.containerNumbers}
+                    {/* No totals for Số container, Số seal, Max gross and
+                        Tare (user, 2026-10-08). */}
+                    <TableCell xstyle={styles.cell} />
+                    <TableCell xstyle={styles.cell} />
+                    <TableCell xstyle={styles.cell} />
+                    <TableCell xstyle={styles.cell} />
+                    <TableCell xstyle={[styles.cell, alignStyles.end]}>
+                      <Text
+                        size="sm"
+                        type="code"
+                        weight="bold"
+                        hasTabularNumbers
+                      >
+                        {totals.grossWeight}
                       </Text>
                     </TableCell>
-                    <TableCell xstyle={styles.cell}>
-                      <Text size="sm" color="secondary">
-                        {totals.seals}
-                      </Text>
-                    </TableCell>
-                    {[totals.maxGross, totals.tare, totals.grossWeight].map(
-                      (value, index) => (
-                        <TableCell
-                          key={index}
-                          xstyle={[styles.cell, alignStyles.end]}
-                        >
-                          <Text
-                            size="sm"
-                            type="code"
-                            weight="bold"
-                            hasTabularNumbers
-                          >
-                            {value}
-                          </Text>
-                        </TableCell>
-                      ),
-                    )}
                     <TableCell xstyle={[styles.cell, alignStyles.end]}>
                       <Text
                         type="code"

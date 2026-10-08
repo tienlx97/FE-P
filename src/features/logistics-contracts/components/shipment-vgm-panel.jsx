@@ -138,12 +138,7 @@ export function ShipmentVgmPanel({
           vgms.length > 0
             ? {
                 label: 'Σ Tổng cộng',
-                containers: `${summary.containerCount} Cont`,
                 types: typeMix(' / '),
-                containerNumbers: `${summary.containerCount} số cont`,
-                seals: `${summary.sealCount} chì niêm`,
-                maxGross: `${WEIGHT_FORMATTER.format(summary.maxGross)} kg`,
-                tare: `${WEIGHT_FORMATTER.format(summary.tare)} kg`,
                 grossWeight: `${WEIGHT_FORMATTER.format(summary.grossWeight)} kg`,
                 vgm: `${WEIGHT_FORMATTER.format(summary.vgm)} kg`,
               }

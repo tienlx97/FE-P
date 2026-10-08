@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-08 — VGM table: fewer totals
+
+- Per user ("Table container VGM: không cần tính tổng Ngày đóng, Số container, Số seal, Max gross (kg), Tare (kg)"). `MetaVgmPanel` Σ row keeps only the label, Loại cont mix, G.W and VGM; the five cells are empty. `MetaVgmTotals` dropped `containers` / `containerNumbers` / `seals` / `maxGross` / `tare` (the shipment VGM tab no longer passes them); `summarizeShipmentVgms` still computes them (tested, unused by this table).
+- agent-browser :3000, 26KCT27/LOT-01 ?tab=vgm: tfoot = ∅ | Σ Tổng cộng | ∅ | 1×40' | ∅ | ∅ | ∅ | ∅ | 16,142.02 kg | 19,992.02 kg | ∅.
+- Gate passed: `harness/runs/20261008-144124-1245/`.
+
 ## 2026-10-08 — "Chụp bảng": table screenshot on Container & VGM
 
 - Per user ("Thêm tính năng chụp màn hình table ... Chi tiết shipment > Container & VGM > Card Container & VGM"). New shared `TableScreenshotButton` (`src/shared/components/table-screenshot-button.jsx`, `html-to-image` ^1.11.13): menu "Sao chép ảnh" (PNG to clipboard; falls back to a download where the clipboard is missing / refused) and "Tải ảnh (PNG)". 2× pixel ratio, full table size even when scrolled, surface background. Cells with `data-screenshot-exclude` are left out — `MetaVgmPanel` marks "Thao tác". `MetaVgmPanel` gets `screenshotFileName`; the shipment VGM tab passes `vgm-<shipmentCode>` (shared with the Excel file name).
