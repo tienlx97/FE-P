@@ -74,6 +74,7 @@ import {
   isContractEligibleForShipment,
   reasonContractIneligibleForShipment,
 } from '../config/shipment-contract-eligibility.js';
+import { markdownToPlainText } from '../config/shipment-cost-workbook.js';
 import {
   formatFigure,
   invoiceValueVnd,
@@ -1207,7 +1208,8 @@ export function ShipmentsList() {
       header: 'Ghi chú',
       width: pixel(320),
       renderCell: (row) => <RichTextNote value={row.note} />,
-      exportValue: (row) => row.note ?? '',
+      // Rich-text Markdown → plain text in the Excel cell.
+      exportValue: (row) => markdownToPlainText(row.note ?? null),
     },
     {
       key: 'actions',
@@ -1385,6 +1387,7 @@ export function ShipmentsList() {
           toolbarLabel="Thao tác danh sách Shipment"
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Shipment"
+          exportTitle="Danh sách Shipment"
           contentSearchFieldKey="shipmentCode"
           onContentSearchChange={handleContentSearchChange}
           searchPlaceholder="Tìm mã, tên lô hàng, số hợp đồng, booking…"

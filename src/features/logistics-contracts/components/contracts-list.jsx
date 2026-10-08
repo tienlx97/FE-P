@@ -56,6 +56,7 @@ import {
   describePaymentTerm,
   labelForPaymentMethod,
 } from '../config/party-kinds.js';
+import { markdownToPlainText } from '../config/shipment-cost-workbook.js';
 import { missingRateNote } from '../config/shipment-figures.js';
 import { useContractPrivateInfosListQuery } from '../hooks/use-contract-private-infos-list-query.js';
 import {
@@ -1212,7 +1213,8 @@ export function ContractsList({
       width: pixel(320),
       filter: 'note',
       renderCell: (contract) => <RichTextNote value={contract.note} />,
-      exportValue: (contract) => contract.note ?? '',
+      // Rich-text Markdown → plain text in the Excel cell.
+      exportValue: (contract) => markdownToPlainText(contract.note),
     },
     {
       key: 'paymentTerms',

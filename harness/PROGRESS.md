@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-09 — Styled "Xuất Excel" for the contract / shipment lists
+
+- Per user ("update template xuất danh sách shipment, hợp đồng"). `AdvanceTable`'s Excel export was a bare SheetJS "Data" sheet. New `src/shared/config/list-workbook.js` `buildListWorkbook(ExcelJS, …)` (same style as the container / cost reports): title, "N dòng · đang lọc theo K điều kiện · Xuất ngày …", cobalt header frozen + repeated + autofilter, black thin borders, ISO dates → real dates dd/mm/yyyy, numbers `#,##0` (`#,##0.00` only in a column with fractions), widths from content (×1.15 for Arial, max 48), landscape fit-to-width — A3 when the columns exceed ~180 characters, page numbers.
+- `AdvanceTable`: Excel export (page / all) uses it, ExcelJS lazy-loaded, `downloadBlob`; new `exportTitle` prop (contracts "Danh sách hợp đồng" via entityLabel, shipments "Danh sách Shipment"). Applies to every AdvanceTable list. CSV / print unchanged. Contract / shipment "Ghi chú" export as plain text (`markdownToPlainText`) instead of Markdown.
+- Checked: 2 tests (cell values; title block, header, frozen / print titles, date + number formats). An 18-column contract sample rendered in Excel 16 → PDF: 1 page A3, names not clipped. Not clicked in the app (dev server :3000 down).
+- Gate passed: `harness/runs/20261009-012040-460199/`.
+
 ## 2026-10-09 — Cost group info tip, journey carousel, all carrier events
 
 - Per user ("info list chỉnh màu sắc và thiết kế cho đẹp · Hành trình vận chuyển dùng Carousel · Sự kiện từ hãng tàu … lấy full").

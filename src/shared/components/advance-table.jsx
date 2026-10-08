@@ -37,7 +37,6 @@ import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Download, FileSpreadsheet, Printer } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import * as XLSX from 'xlsx';
 
 import { IconRefresh } from '@/shared/components/icon/icon-refresh.jsx';
 import {
@@ -46,6 +45,8 @@ import {
 } from '@/shared/components/table-view-options-popover.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { applyFiltersDiacriticInsensitive } from '@/shared/config/diacritic-insensitive-filters.js';
+import { downloadBlob } from '@/shared/config/download-blob.js';
+import { buildListWorkbook } from '@/shared/config/list-workbook.js';
 import { resolveResultCount } from '@/shared/config/table-pagination.js';
 import { usePersistedTableViewOptions } from '@/shared/hooks/use-persisted-table-view-options.js';
 
@@ -161,9 +162,9 @@ const styles = stylex.create({
     backgroundColor: colorVars['--color-background-card'],
     borderColor: 'transparent',
     borderRadius: radiusVars['--radius-container'],
-    boxShadow: 'var(--meta-shadow-card)',
     borderStyle: 'solid',
     borderWidth: 1,
+    boxShadow: 'var(--meta-shadow-card)',
     minHeight: 0,
     overflow: 'hidden',
   },
@@ -250,6 +251,7 @@ const styles = stylex.create({
  *   toolbarLabel: string,
  *   searchFieldDefs: ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>,
  *   entityLabel: string,
+ *   exportTitle?: string,
  *   contentSearchFieldKey: string,
  *   searchPlaceholder: string,
  *   onContentSearchChange?: (value: string) => void,
@@ -319,6 +321,7 @@ export function AdvanceTable({
   toolbarLabel,
   searchFieldDefs,
   entityLabel,
+  exportTitle,
   contentSearchFieldKey,
   searchPlaceholder,
   onContentSearchChange,
@@ -768,14 +771,29 @@ export function AdvanceTable({
     URL.revokeObjectURL(url);
   }
 
-  /** @param {T[]} rows @param {{ allColumns?: boolean }} [options] */
-  function exportExcel(rows, options) {
+  /**
+   * Formatted workbook (`buildListWorkbook`: title, header band, real dates
+   * and numbers, print setup); ExcelJS is loaded on first use.
+   * @param {T[]} rows @param {{ allColumns?: boolean }} [options]
+   */
+  async function exportExcel(rows, options) {
     const { headerRow, dataRows } = buildExportTable(rows, options);
-    const worksheet = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Data');
-    XLSX.writeFile(
-      workbook,
+    const excelModule = await import('exceljs');
+    const ExcelJS = /** @type {typeof import('exceljs')} */ (
+      'default' in excelModule ? excelModule.default : excelModule
+    );
+    const workbook = buildListWorkbook(ExcelJS, {
+      title: (exportTitle ?? entityLabel).toLocaleUpperCase('vi'),
+      headerRow: headerRow.map(String),
+      dataRows,
+      exportedAt: new Date(),
+      filterCount: activeFilterCount,
+    });
+    const buffer = await workbook.xlsx.writeBuffer();
+    downloadBlob(
+      new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      }),
       `${entityLabel}-${new Date().toISOString().slice(0, 10)}.xlsx`,
     );
   }
@@ -832,7 +850,7 @@ export function AdvanceTable({
         )
       );
       if (format === 'excel')
-        exportExcel(filteredAllRows, { allColumns: true });
+        await exportExcel(filteredAllRows, { allColumns: true });
       else exportCsv(filteredAllRows, { allColumns: true });
     } finally {
       setIsExportingAll(false);
