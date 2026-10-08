@@ -554,6 +554,11 @@ export const metaTheme = {
         "textAlign": "start"
       }
     },
+    "carousel-scroller": {
+      "base": {
+        "alignItems": "flex-start !important"
+      }
+    },
     "table-scroll-wrapper": {
       "base": {
         "height": "100%",

@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-09 — Cost group info tip, journey carousel, all carrier events
+
+- Per user ("info list chỉnh màu sắc và thiết kế cho đẹp · Hành trình vận chuyển dùng Carousel · Sự kiện từ hãng tàu … lấy full").
+- New `MetaInfoTip` (`custom/meta/info-tip.jsx`): Astryx `Tooltip` + `IconButton` — 20 px round accent-tint "i", solid accent / on-accent icon on hover or focus; card with eyebrow (LOG-01), Vietnamese name (semibold) and the catalog's English name (muted). Replaces the lab `InfoTip` (no colour / content hooks) on the cost group titles; groups carry `code` / `nameVi` / `nameEn`.
+- `MetaMilestoneStrip` now renders its steps in an Astryx `Carousel` (snap, prev / next, edge fade; fixed 4.5×48 px slides so the rail joins) and opens on the next step (else the last done one, one done step before it). The scroller centred shorter slides, bending the rail: meta theme `carousel-scroller` `alignItems: 'flex-start !important'`.
+- "Sự kiện từ hãng tàu": the 30-row cap is gone (BE-P also returns every event).
+- Chrome :3000 (own dev server; the user's had stopped), shipment 26KCT29/LOT-01: 100/100 event rows, carousel slides share one top (741 px) after a reload — the rebuilt theme CSS needs a page reload, HMR does not pick it up; hover on LOG-01 (i) → 3-line card, solid accent button.
+- Gate passed: `harness/runs/20261009-005605-430441/` (code: c97740a + this theme commit).
+
 ## 2026-10-08 — Cost table: no group column, provider / invoice before note, group info tip
 
 - Per user ("Xoá cột nhóm chi phí … cột Nhà cung cấp, Hoá đơn hiện phía trước Ghi chú … Title LOG-... hãy thêm info list kế bên (hover vào hiện tên tiếng việt) … nhớ cập nhật lại excel").

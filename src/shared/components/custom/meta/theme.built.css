@@ -637,6 +637,10 @@
     text-align: start;
   }
 
+  .astryx-carousel-scroller {
+    align-items: flex-start !important;
+  }
+
   .astryx-table-scroll-wrapper {
     height: 100%;
     scrollbar-gutter: stable;

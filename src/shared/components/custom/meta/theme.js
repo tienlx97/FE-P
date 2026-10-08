@@ -434,6 +434,14 @@ export const metaTheme = defineTheme({
         textAlign: 'start',
       },
     },
+    // Slides of different heights sit on one line from the top, so the
+    // journey strip's rail (MetaMilestoneStrip) stays straight. The
+    // scroller centres them through a higher-specificity class.
+    'carousel-scroller': {
+      base: {
+        alignItems: 'flex-start !important',
+      },
+    },
     // The framed list card clips its overflow, so the table's own scroller
     // must fill the card's content area to scroll;
     // header cells stay pinned while the body scrolls under them.
