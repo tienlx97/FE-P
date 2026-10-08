@@ -722,6 +722,7 @@ function ShipmentDetailBody({
           {activeTab === 'costs' ? (
             <ShipmentCostPanel
               contractId={contract.id}
+              contractNumber={contract.contractNumber}
               shipment={shipment}
               costCategoriesById={costCategoriesById}
               isCategoriesLoading={costCategoriesQuery.isLoading}

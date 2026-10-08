@@ -18,7 +18,7 @@ import {
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
-import { Info, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Download, Info, Pencil, Plus, Trash2 } from 'lucide-react';
 import { Fragment } from 'react';
 
 import { Table } from '@/shared/components/table.jsx';
@@ -94,6 +94,8 @@ const COLUMNS = /** @type {const} */ ([
  *   shipmentCode: string,
  *   isLoading?: boolean,
  *   isReadOnly?: boolean,
+ *   isExporting?: boolean,
+ *   onExport?: () => void,
  *   onCreate?: () => void,
  *   onCreateInGroup?: (groupId: string) => void,
  *   onEdit?: (id: string) => void,
@@ -110,6 +112,8 @@ export function MetaCostPanel({
   shipmentCode,
   isLoading = false,
   isReadOnly = false,
+  isExporting = false,
+  onExport,
   onCreate,
   onCreateInGroup,
   onEdit,
@@ -176,6 +180,16 @@ export function MetaCostPanel({
                 </Text>
               </Text>
             </HStack>
+            {onExport ? (
+              <Button
+                label="Xuất Excel"
+                variant="secondary"
+                isDisabled={isLoading || count === 0}
+                isLoading={isExporting}
+                icon={<Icon icon={Download} size="sm" />}
+                onClick={onExport}
+              />
+            ) : null}
             {onCreate ? (
               <Button
                 label="Thêm chi phí"

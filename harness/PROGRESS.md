@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-10-08 — "Xuất Excel" for a shipment's logistics costs
+
+- Per user ("xuất excel table chi phí logistics của 1 shipment ... format kỹ càng, chỉn chu"); asked FE vs BE → user chose FE + ExcelJS (SheetJS CE, used elsewhere, can't style cells; BE-P has no Excel library).
+- `config/shipment-cost-workbook.js` `buildShipmentCostWorkbook(ExcelJS, input)` (ExcelJS passed in: lazy-loaded in the browser, Node build in tests): A4 landscape fit-to-width, title + info block (Hợp đồng, Booking, Incoterm, Tàu / chuyến, Tuyến, ETD/ETA, ATD/ATA, export day), cobalt header row frozen + repeated on printed pages, tinted band per non-empty group with `SUM` subtotal, lines (VNĐ `#,##0`, real dates, Phát sinh in orange, chi hộ payee, Markdown note → plain text), TỔNG CỘNG (sum of subtotals, cached results) + breakdown (Abnormal, NCC chi hộ, providers, invoices), footer "Chi phí logistics — <code> · Trang &P/&N". 5 unit tests round-trip the file through ExcelJS.
+- `MetaCostPanel` gets `onExport` / `isExporting` ("Xuất Excel" before "Thêm chi phí"); `ShipmentCostPanel` takes `contractNumber`. File `chi-phi-<code>.xlsx`.
+- New `src/shared/config/download-blob.js` (revokes the object URL after 60 s); `TableScreenshotButton` uses it.
+- Checked: agent-browser :3000, 26KCT27/LOT-01 ?tab=costs → blob captured via page `eval` (9.5 KB) → opened in Excel 16 via COM → PDF. First render showed a giant "26KCT27/LOT" across the page: footer `&8` + "26…" = font size 826. Fixed (text after a size code starts with a letter) + test. Second render: 1 page, all groups / totals correct.
+- Discovered: `contract-detail-workspace.jsx`, `customer-contract-history.jsx` and `advance-table.jsx` CSV exports revoke the object URL right after `click()` (the bug that cancelled the "Chụp bảng" download) — switch them to `downloadBlob`.
+- Gate passed: `harness/runs/20261008-154510-242/`.
+
 ## 2026-10-08 — VGM table: fewer totals
 
 - Per user ("Table container VGM: không cần tính tổng Ngày đóng, Số container, Số seal, Max gross (kg), Tare (kg)"). `MetaVgmPanel` Σ row keeps only the label, Loại cont mix, G.W and VGM; the five cells are empty. `MetaVgmTotals` dropped `containers` / `containerNumbers` / `seals` / `maxGross` / `tare` (the shipment VGM tab no longer passes them); `summarizeShipmentVgms` still computes them (tested, unused by this table).

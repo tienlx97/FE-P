@@ -6,6 +6,7 @@ import { toBlob } from 'html-to-image';
 import { Camera, Copy, Download } from 'lucide-react';
 import { useState } from 'react';
 
+import { downloadBlob } from '@/shared/config/download-blob.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 /**
@@ -68,17 +69,6 @@ async function copyImage(image) {
   }
 }
 
-/** @param {Blob} blob @param {string} fileName */
-function downloadBlob(blob, fileName) {
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${fileName}.png`;
-  link.click();
-  // Revoking in the same task cancels the download before Chrome reads it.
-  setTimeout(() => URL.revokeObjectURL(url), 60_000);
-}
-
 /**
  * "Chụp bảng" menu button: copies a PNG of the target element (usually a
  * `<table>`) to the clipboard, or downloads it. Falls back to a download
@@ -110,7 +100,7 @@ export function TableScreenshotButton({
         toast({ body: 'Đã sao chép ảnh bảng — dán (Ctrl + V) để gửi.' });
         return;
       }
-      downloadBlob(await image, fileName);
+      downloadBlob(await image, `${fileName}.png`);
       toast(
         mode === 'copy'
           ? {

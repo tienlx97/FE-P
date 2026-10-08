@@ -8,6 +8,7 @@ import {
   MetaThemeProvider,
 } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
+import { downloadBlob } from '@/shared/config/download-blob.js';
 import { useAppToast } from '@/shared/hooks/use-app-toast.js';
 
 import { formatVndAmount } from '../config/currencies.js';
@@ -16,6 +17,7 @@ import {
   costLineFormValues,
   costTotalsByPayment,
 } from '../config/shipment-cost-lines.js';
+import { buildShipmentCostWorkbook } from '../config/shipment-cost-workbook.js';
 import { useSaveShipmentCostLines } from '../hooks/use-save-shipment-cost-lines.js';
 import { ShipmentCostLineDrawer } from './shipment-cost-line-drawer.jsx';
 
@@ -27,10 +29,12 @@ const money = formatVndAmount;
  * eight, so each group's "+" is always there) and feeds `MetaCostPanel`.
  * "Thêm chi phí", a group's "+" (group pre-selected) and a line's edit
  * open `ShipmentCostLineDrawer` (Figma 125:11995); deleting a line
- * resends the shipment without it.
+ * resends the shipment without it. "Xuất Excel" downloads the same groups
+ * as a formatted workbook (`buildShipmentCostWorkbook`).
  *
  * @param {{
  *   contractId: string,
+ *   contractNumber: string,
  *   shipment: import('../types/index.js').Shipment,
  *   costCategoriesById: Map<string, import('../types/index.js').ShipmentCostCategory>,
  *   isCategoriesLoading: boolean,
@@ -40,6 +44,7 @@ const money = formatVndAmount;
  */
 export function ShipmentCostPanel({
   contractId,
+  contractNumber,
   shipment,
   costCategoriesById,
   isCategoriesLoading,
@@ -55,6 +60,7 @@ export function ShipmentCostPanel({
   const [deletingCost, setDeletingCost] = useState(
     /** @type {import('../types/index.js').ShipmentCostLine | null} */ (null),
   );
+  const [isExporting, setIsExporting] = useState(false);
   const { saveCostLines } = useSaveShipmentCostLines(contractId);
   const toast = useAppToast();
 
@@ -129,6 +135,65 @@ export function ShipmentCostPanel({
     shipment.costs.map((cost) => cost.invoiceNumber).filter(Boolean),
   ).size;
 
+  async function handleExport() {
+    setIsExporting(true);
+    try {
+      const excelModule = await import('exceljs');
+      const ExcelJS = /** @type {typeof import('exceljs')} */ (
+        'default' in excelModule ? excelModule.default : excelModule
+      );
+      const details = shipment.operationalDetails;
+      const workbook = buildShipmentCostWorkbook(ExcelJS, {
+        shipmentCode: shipment.shipmentCode,
+        shipmentName: shipment.name,
+        contractNumber,
+        incotermLabel,
+        bookingNumber: shipment.bookingNumber || null,
+        vessel:
+          [shipment.vesselName, details?.voyageNumber]
+            .filter(Boolean)
+            .join(' // ') || null,
+        placeOfLoading: shipment.placeOfLoading,
+        placeOfDischarge: shipment.placeOfDischarge,
+        etd: shipment.etd,
+        eta: shipment.eta,
+        atd: details?.actualDeparture ?? null,
+        ata: details?.actualArrival ?? null,
+        exportedAt: new Date(),
+        groups: groupedCosts.map((group) => ({
+          label: group.label,
+          lines: group.costs.map((cost) => ({
+            name: cost.name,
+            quantity: cost.quantity ?? 1,
+            unitPrice: costUnitPrice(cost),
+            amount: cost.amount,
+            isAbnormal: cost.costNature === 'Abnormal',
+            provider: cost.providerCustomerId
+              ? (customersById.get(cost.providerCustomerId)?.companyName ??
+                null)
+              : null,
+            paidOnBehalf: cost.paidOnBehalf ?? false,
+            payee: cost.payeeName || null,
+            invoiceNumber: cost.invoiceNumber || null,
+            invoiceDate: cost.invoiceDate || null,
+            note: cost.note || null,
+          })),
+        })),
+      });
+      const buffer = await workbook.xlsx.writeBuffer();
+      downloadBlob(
+        new Blob([buffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        }),
+        `chi-phi-${shipment.shipmentCode.replace(/[/\\]/g, '-')}.xlsx`,
+      );
+    } catch {
+      toast({ body: 'Không xuất được file Excel.', type: 'error' });
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   async function handleConfirmDelete() {
     if (!deletingCost) return;
     const result = await saveCostLines(
@@ -170,6 +235,8 @@ export function ShipmentCostPanel({
         }
         shipmentCode={shipment.shipmentCode}
         isLoading={isCategoriesLoading}
+        isExporting={isExporting}
+        onExport={handleExport}
         onCreate={() => setDrawer({ costLine: null })}
         onCreateInGroup={(groupId) =>
           setDrawer({
