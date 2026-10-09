@@ -22,6 +22,8 @@ const styles = stylex.create({
     borderBottomColor: 'var(--color-border)',
     borderBottomStyle: 'solid',
     borderBottomWidth: 'var(--border-width)',
+    // A bounded (scrolling) table below must not squeeze the header band.
+    flexShrink: 0,
     marginInline: 'calc(-1 * var(--container-padding-inline-start))',
     marginTop: 'calc(-1 * var(--container-padding-block-start))',
     paddingBlock: 'var(--spacing-5)',
@@ -34,6 +36,13 @@ const styles = stylex.create({
     flexShrink: 0,
     height: 'var(--spacing-8)',
     width: 'var(--spacing-8)',
+  },
+  // The Astryx `Table` bleeds to the card's edges with a negative top margin
+  // equal to the card padding, which pulls it up under the header band; this
+  // gives that much room back so the column headers do not touch the title
+  // and the action buttons.
+  headerAboveTable: {
+    marginBottom: 'var(--container-padding-block-start)',
   },
   bodyPadded: {
     paddingTop: 'var(--spacing-5)',
@@ -96,7 +105,10 @@ export function MetaTableCard({
           vAlign="center"
           gap={4}
           wrap="wrap"
-          xstyle={styles.header}
+          xstyle={[
+            styles.header,
+            !isEmpty && !isBodyPadded && styles.headerAboveTable,
+          ]}
         >
           <HStack gap={3} vAlign="center" wrap="nowrap">
             <HStack

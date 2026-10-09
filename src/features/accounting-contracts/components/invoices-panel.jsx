@@ -6,6 +6,7 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import * as stylex from '@stylexjs/stylex';
 import { CirclePlus, ReceiptText } from 'lucide-react';
 import { useState } from 'react';
 
@@ -23,6 +24,15 @@ import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 import { InvoiceFormDialog } from './invoice-form-dialog.jsx';
 
 /** @typedef {import('../types/index.js').AccountingInvoice} Invoice */
+
+/** More invoices than this scroll inside the card, header row pinned. */
+const PINNED_HEADER_MIN_ROWS = 8;
+
+const styles = stylex.create({
+  // The table's own scroller needs a definite height to scroll its rows
+  // (its header cells are sticky inside it); a long list gets one.
+  bounded: { height: 'min(65vh, calc(var(--spacing-10) * 12))' },
+});
 
 /**
  * "Hoá đơn" tab: quyết toán / đã xuất / còn phải xuất cards, then the
@@ -59,7 +69,7 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
     {
       key: 'invoiceNumber',
       header: 'Số hoá đơn',
-      width: pixel(170),
+      width: pixel(220),
       renderCell: (i) => (
         <Text weight="bold" color="accent">
           {i.invoiceNumber}
@@ -155,13 +165,22 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
           </HStack>
         }
       >
-        <Table
-          columns={columns}
-          data={detail.invoices}
-          idKey="id"
-          dividers="rows"
-          density="spacious"
-        />
+        <VStack
+          hAlign="stretch"
+          xstyle={
+            detail.invoices.length > PINNED_HEADER_MIN_ROWS
+              ? styles.bounded
+              : undefined
+          }
+        >
+          <Table
+            columns={columns}
+            data={detail.invoices}
+            idKey="id"
+            dividers="rows"
+            density="spacious"
+          />
+        </VStack>
       </MetaTableCard>
 
       <InvoiceFormDialog

@@ -573,6 +573,7 @@ function InstallmentChip({
           weight="bold"
           color={/** @type {any} */ (INSTALLMENT_AMOUNT_COLOR[status])}
           hasTabularNumbers
+          textWrap="nowrap"
         >
           {amount}
         </Text>
@@ -699,19 +700,23 @@ const styles = stylex.create({
     height: '100%',
   },
   width: (percent) => ({ width: `${percent}%` }),
-  // Fixed chip width: every installment reads the same in the carousel.
+  // Minimum chip width: every installment reads the same in the carousel,
+  // and a long amount widens its chip instead of wrapping (which made the
+  // chips uneven in height).
   installment: {
     borderRadius: 'var(--radius-container)',
     borderStyle: 'solid',
     borderWidth: 'var(--border-width)',
     flexShrink: 0,
-    minWidth: 0,
+    minWidth: 'calc(var(--spacing-10) * 4.5)',
     padding: 'var(--spacing-3)',
-    width: 'calc(var(--spacing-10) * 4.5)',
+    width: 'max-content',
   },
   installmentHeader: {
     borderBottomStyle: 'solid',
     borderBottomWidth: 'var(--border-width)',
+    // Room for the "ĐANG THU" tag, so every chip's header is as tall.
+    minHeight: 'var(--spacing-6)',
     paddingBottom: 'var(--spacing-1)',
   },
 });
@@ -750,13 +755,11 @@ const installmentTones = stylex.create({
   },
   active: {
     backgroundColor: 'var(--meta-blue-active-bg)',
-
-    borderBottomWidth: 'calc(var(--border-width) * 2)',
     borderColor: 'var(--color-accent)',
-    borderLeftWidth: 'calc(var(--border-width) * 2)',
-    borderRightWidth: 'calc(var(--border-width) * 2)',
-    borderTopWidth: 'calc(var(--border-width) * 2)',
-    boxShadow: 'var(--meta-shadow-card)',
+    // The second ring is inset, not a wider border, so the active chip keeps
+    // the same height as the others.
+    boxShadow:
+      'inset 0 0 0 var(--border-width) var(--color-accent), var(--meta-shadow-card)',
   },
   upcoming: {
     backgroundColor: 'var(--color-background-surface)',

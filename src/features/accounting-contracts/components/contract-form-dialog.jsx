@@ -1,7 +1,7 @@
 'use client';
 
 import { DateInput } from '@astryxdesign/core/DateInput';
-import { Grid } from '@astryxdesign/core/Grid';
+import { Grid, GridSpan } from '@astryxdesign/core/Grid';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -151,92 +151,108 @@ export function ContractFormDialog({
           title="Thông tin hợp đồng"
           meta="Bắt buộc"
         >
-          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
-            <Selector
-              label="Công ty"
-              placeholder="Chọn công ty"
-              value={values.companyId}
-              onChange={(value) => setField('companyId', value ?? '')}
-              options={companies.map((company) => ({
-                value: company.id,
-                label: company.name,
-              }))}
-              isRequired
-              isDisabled={contract !== null}
-              status={fieldStatuses.companyId}
-              statusVariant="tooltip"
-            />
-            <TextInput
-              label="Số hợp đồng"
-              value={values.contractNumber}
-              onChange={(value) => setField('contractNumber', value)}
-              isRequired
-              status={fieldStatuses.contractNumber}
-              statusVariant="tooltip"
-            />
-            <DateInput
-              label="Ngày ký"
-              value={/** @type {ISODateString} */ (values.signedDate)}
-              onChange={(value) => setField('signedDate', value ?? '')}
-              format={formatDateInputValue}
-              isRequired
-              status={fieldStatuses.signedDate}
-              statusVariant="tooltip"
-            />
-            <TextInput
-              label="Mã công trình"
-              value={values.projectCode}
-              onChange={(value) => setField('projectCode', value)}
-              isRequired
-              status={fieldStatuses.projectCode}
-              statusVariant="tooltip"
-            />
-            <TextInput
-              label="Tên dự án"
-              value={values.projectName}
-              onChange={(value) => setField('projectName', value)}
-              isRequired
-              status={fieldStatuses.projectName}
-              statusVariant="tooltip"
-            />
+          <Grid columns={10} gap={3}>
+            <GridSpan columns={10}>
+              <Selector
+                label="Công ty"
+                placeholder="Chọn công ty"
+                value={values.companyId}
+                onChange={(value) => setField('companyId', value ?? '')}
+                options={companies.map((company) => ({
+                  value: company.id,
+                  label: company.name,
+                }))}
+                isRequired
+                isDisabled={contract !== null}
+                status={fieldStatuses.companyId}
+                statusVariant="tooltip"
+              />
+            </GridSpan>
+            <GridSpan columns={5}>
+              <TextInput
+                label="Số hợp đồng"
+                value={values.contractNumber}
+                onChange={(value) => setField('contractNumber', value)}
+                isRequired
+                status={fieldStatuses.contractNumber}
+                statusVariant="tooltip"
+              />
+            </GridSpan>
+            <GridSpan columns={5}>
+              <TextInput
+                label="Mã công trình"
+                value={values.projectCode}
+                onChange={(value) => setField('projectCode', value)}
+                isRequired
+                status={fieldStatuses.projectCode}
+                statusVariant="tooltip"
+              />
+            </GridSpan>
+            <GridSpan columns={7}>
+              <TextInput
+                label="Tên dự án"
+                value={values.projectName}
+                onChange={(value) => setField('projectName', value)}
+                isRequired
+                status={fieldStatuses.projectName}
+                statusVariant="tooltip"
+              />
+            </GridSpan>
+            <GridSpan columns={3}>
+              <DateInput
+                label="Ngày ký"
+                value={/** @type {ISODateString} */ (values.signedDate)}
+                onChange={(value) => setField('signedDate', value ?? '')}
+                format={formatDateInputValue}
+                isRequired
+                status={fieldStatuses.signedDate}
+                statusVariant="tooltip"
+              />
+            </GridSpan>
           </Grid>
         </MetaFormSection>
         <MetaFormSection isBoxed index={2} title="Khách hàng & thanh toán">
-          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
-            <Selector
-              label="Khách hàng"
-              placeholder="Chọn khách hàng"
-              value={values.customerId}
-              onChange={(value) => setField('customerId', value ?? '')}
-              options={customers.map((customer) => ({
-                value: customer.id,
-                label: customer.name,
-              }))}
-              isRequired
-              status={fieldStatuses.customerId}
-              statusVariant="tooltip"
-            />
-            <Selector
-              label="Nguồn"
-              placeholder="Chọn nguồn"
-              value={values.sourceId}
-              onChange={(value) => setField('sourceId', value ?? '')}
-              options={[
-                { value: '', label: '— Không có —' },
-                ...sources.map((source) => ({
-                  value: source.id,
-                  label: source.name,
-                })),
-              ]}
-              isOptional
-            />
-            <DateInput
-              label="Ngày tới hạn thanh toán"
-              value={/** @type {ISODateString} */ (values.paymentDueDate)}
-              onChange={(value) => setField('paymentDueDate', value ?? '')}
-              format={formatDateInputValue}
-              isOptional
-            />
+          <Grid columns={10} gap={3}>
+            <GridSpan columns={10}>
+              <Selector
+                label="Khách hàng"
+                placeholder="Chọn khách hàng"
+                value={values.customerId}
+                onChange={(value) => setField('customerId', value ?? '')}
+                options={customers.map((customer) => ({
+                  value: customer.id,
+                  label: customer.name,
+                }))}
+                isRequired
+                status={fieldStatuses.customerId}
+                statusVariant="tooltip"
+              />
+            </GridSpan>
+            <GridSpan columns={7}>
+              <Selector
+                label="Nguồn"
+                placeholder="Chọn nguồn"
+                value={values.sourceId}
+                onChange={(value) => setField('sourceId', value ?? '')}
+                options={[
+                  { value: '', label: '— Không có —' },
+                  ...sources.map((source) => ({
+                    value: source.id,
+                    label: source.name,
+                  })),
+                ]}
+                isOptional
+              />
+            </GridSpan>
+            <GridSpan columns={3}>
+              <DateInput
+                label="Hạn thanh toán"
+                value={/** @type {ISODateString} */ (values.paymentDueDate)}
+                onChange={(value) => setField('paymentDueDate', value ?? '')}
+                format={formatDateInputValue}
+                isOptional
+              />
+            </GridSpan>
           </Grid>
         </MetaFormSection>
         <MetaFormSection isBoxed index={3} title="Giá trị hợp đồng">

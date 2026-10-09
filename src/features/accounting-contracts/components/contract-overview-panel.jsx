@@ -43,7 +43,7 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
         metrics={[
           metrics.settlement,
           metrics.invoiced,
-          metrics.remainingToInvoice,
+          metrics.paid,
           metrics.unpaid,
         ]}
         paidPercent={payments.paidPercent}
@@ -59,7 +59,7 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
       <Grid columns={{ minWidth: 280, max: 3 }} gap={5}>
         <VStack gap={4} hAlign="stretch">
           <Text weight="bold" color="secondary">
-            1. KHÁCH HÀNG & NGUỒN
+            1. KHÁCH HÀNG
           </Text>
           <MetaTableCard icon={Building2} title="Khách hàng" isBodyPadded>
             <VStack gap={4} hAlign="stretch">
@@ -81,9 +81,6 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
                 </MetadataListItem>
                 <MetadataListItem label="Email">
                   {customer?.email ?? '—'}
-                </MetadataListItem>
-                <MetadataListItem label="Nguồn">
-                  {c.sourceName ?? '—'}
                 </MetadataListItem>
               </MetadataList>
               {customersQuery.data && !customersQuery.data.success ? (
@@ -115,6 +112,9 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
               </MetadataListItem>
               <MetadataListItem label="Ngày ký">
                 {formatDisplayDate(c.signedDate)}
+              </MetadataListItem>
+              <MetadataListItem label="Nguồn">
+                {c.sourceName ?? '—'}
               </MetadataListItem>
               <MetadataListItem label="Trước thuế">
                 <Text hasTabularNumbers>{formatVnd(c.valueBeforeTax)} VND</Text>

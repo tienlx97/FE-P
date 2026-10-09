@@ -1,5 +1,15 @@
 # Progress Log
 
+## 2026-10-10 — Kế toán: payment stages UI, Excel export, overview tweaks
+
+- Per user. Drawer "Thêm hợp đồng": 10-column grids (Công ty 100 %; Số HĐ / Mã công trình 50 / 50; Tên dự án / Ngày ký 70 / 30; Khách hàng 100 %; Nguồn / "Hạn thanh toán" 70 / 30).
+- "Đợt thanh toán" tab: one `MetaTableCard` per stage (payments as table rows, totals in the footer) instead of an expandable `TanStackDataTable` (its `height: 100%` wrapper squeezed the card header and clipped the expanded rows); the add-stage drawer edits each lần as a card (`PaymentEditTable`, no horizontal scroll). New "Xuất Excel" (`config/installments-workbook.js`: title block, summary, stage bands with SUM formulas, indented lần rows with outline level, grand total).
+- Overview: "Nguồn" moved to "Thông tin hợp đồng"; the "Còn phải xuất hoá đơn" card became "Đã thanh toán"; installment chips have a min-width (long amounts widen, no wrapping) and the active chip's extra ring is inset so chips share one height.
+- Invoices: a list over 8 rows scrolls inside the card with the column header pinned (the Astryx table scroller needs a definite height). `MetaTableCard` now returns the 24 px the table's negative margin took from the header band, so title / buttons no longer touch the column headers (invoices, appendices, stages).
+- Dev data (not code): test sources, customers, 6 contracts `TEST-HD-001…006`, stages, appendices, invoices (23 on `TEST-CT-003`).
+- Harness gap: `PaymentEditTable` keeps its name though it is a list of cards now. Not checked: the shared `MetaTableCard` / overview card on the Logistics pages; the Excel file was only read back in Node (no Excel on the machine).
+- Gate passed: `harness/runs/20261010-002750-87187/`.
+
 ## 2026-10-09 — Kế toán: Logistics look and side nav
 
 - Per user ("Dựa vào giao diện trong các trang /logistics/** để chỉnh lại UI/UX trang kế toán … Thêm side nav cho trang kế toán"). `ProtectedAppShell`: `/accounting` gets the side nav (`sidebarAccounting.json`) and the Meta grey wash, like `/logistics`.

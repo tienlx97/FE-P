@@ -131,8 +131,8 @@ function InstallmentFormSession({
           </Card>
           <HStack hAlign="between" gap={3} wrap="wrap">
             <Text color="secondary" size="sm">
-              Nhập từng lần trên bảng. Chọn Chi tiết để bổ sung điều kiện và ghi
-              chú.
+              Mỗi lần thanh toán có tỷ lệ hoặc giá trị, trạng thái, ngày thanh
+              toán, điều kiện và ghi chú riêng.
             </Text>
             {installment ? null : (
               <Button
