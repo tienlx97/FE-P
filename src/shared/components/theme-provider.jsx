@@ -1,5 +1,6 @@
 'use client';
 
+import './custom/meta/compact-mode.css';
 import './custom/meta/scrollbar.css';
 import './custom/meta/theme.built.css';
 

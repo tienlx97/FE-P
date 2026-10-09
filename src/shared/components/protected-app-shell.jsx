@@ -186,7 +186,8 @@ export function ProtectedAppShell({
   const mobileOverlayRef = useRef(/** @type {HTMLElement | null} */ (null));
   const wasMobileNavOpenRef = useRef(false);
   const isMobileNavOpen = openMobileNavPathname === pathname;
-  const { hideSideNav, focusMode, setFocusMode } = useLayoutPreferences();
+  const { hideSideNav, focusMode, compactMode, setFocusMode } =
+    useLayoutPreferences();
   const hasSideNav =
     SIDE_NAV_ROUTES.some((href) => isNavLinkActive(pathname, href)) &&
     !hideSideNav &&
@@ -218,6 +219,13 @@ export function ProtectedAppShell({
   // its own.
   const hasSideNavLayout = hasSideNav || hasMdxLayout;
   const closeMobileNav = () => setOpenMobileNavPathname(null);
+
+  // Compact mode's 1px-smaller text (`custom/meta/compact-mode.css`) keys
+  // off <html> so portaled dialogs / popovers shrink too.
+  useEffect(() => {
+    document.documentElement.toggleAttribute('data-compact-mode', compactMode);
+    return () => document.documentElement.removeAttribute('data-compact-mode');
+  }, [compactMode]);
 
   useEffect(() => {
     if (!focusMode) return undefined;

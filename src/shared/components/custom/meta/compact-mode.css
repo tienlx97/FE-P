@@ -1,0 +1,21 @@
+/* "Chế độ thu gọn" (Cài đặt giao diện), like Facebook's compact mode: every
+ * text size one pixel smaller. `ProtectedAppShell` sets `data-compact-mode`
+ * on <html> while the preference is on.
+ *
+ * Each value is the Meta theme's own size (`meta.js`) minus 1px — a custom
+ * property cannot read its own previous value, hence the copies
+ * (`compact-mode.test.js` keeps them in step with `meta.js`). Unlayered, so
+ * it beats the theme's `@layer astryx-theme` declarations; the 2xs–4xs
+ * steps (6–8px, decorative only) stay as they are. Line heights are ratios
+ * and follow the smaller size. */
+html[data-compact-mode] [data-astryx-theme='meta'] {
+  --font-size-xs: calc(0.75rem - 1px);
+  --font-size-sm: calc(0.8125rem - 1px);
+  --font-size-base: calc(0.875rem - 1px);
+  --font-size-lg: calc(1.0625rem - 1px);
+  --font-size-xl: calc(1.25rem - 1px);
+  --font-size-2xl: calc(1.5rem - 1px);
+  --font-size-3xl: calc(1.8125rem - 1px);
+  --font-size-4xl: calc(2.1875rem - 1px);
+  --font-size-5xl: calc(2.625rem - 1px);
+}

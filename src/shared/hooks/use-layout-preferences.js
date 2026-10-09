@@ -73,7 +73,7 @@ function getServerSnapshot() {
 /**
  * App-wide layout preferences: hiding the side nav, a chromeless "focus
  * mode" (hides both the side nav and the top header), and "compact mode"
- * (every table at compact row density). Read by `ProtectedAppShell` to
+ * (every table at compact row density, text 1px smaller). Read by `ProtectedAppShell` to
  * apply the first two; written by the Settings popover trigger rendered in
  * the header's `endContent`.
  */
