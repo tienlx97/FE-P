@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-10 — Kế toán: contract list Excel report
+
+- Per user ("xuất Excel (trang hiện tại, toàn bộ) ở Kế toán > Danh sách hợp đồng sao cho đẹp nhất"). `config/contracts-workbook.js`: fixed grouped layout whatever columns are visible — title + scope line, four headline figures, group band (Thông tin / Giá trị / Thanh toán & hoá đơn / Tiến độ) over the cobalt header, zebra rows, overdue days in red, "% đã thanh toán" formula per row, SUBTOTAL totals row (follows the autofilter), frozen first 3 columns, A3 landscape fit to width.
+- `AdvanceTable` gets optional `exportWorkbook` / `exportFileName` (a list with its own report layout receives the real rows, minus the Σ row); the list now passes `fetchAllRows` (pages of 500 through `searchContracts`), so "Xuất Excel (toàn bộ dữ liệu)" exists too.
+- Checked earlier: `MetaTableCard` is used only by the Kế toán contract tabs (not Logistics); measured stage / appendix / invoice cards — no footer overlap, 10 px gap under the last row.
+- Chrome :3000: menu shows page + all; "toàn bộ" built a 9.8 KB .xlsx (download intercepted, not opened in Excel — none on this machine).
+- Gate passed: `harness/runs/20261010-003316-96973/`.
+
 ## 2026-10-10 — Kế toán: payment stages UI, Excel export, overview tweaks
 
 - Per user. Drawer "Thêm hợp đồng": 10-column grids (Công ty 100 %; Số HĐ / Mã công trình 50 / 50; Tên dự án / Ngày ký 70 / 30; Khách hàng 100 %; Nguồn / "Hạn thanh toán" 70 / 30).

@@ -23,6 +23,11 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
+import { searchContracts } from '../api/contracts.js';
+import {
+  buildContractsWorkbook,
+  contractsWorkbookFileName,
+} from '../config/contracts-workbook.js';
 import { formatVnd } from '../config/money.js';
 import { useContractsSearchQuery } from '../hooks/use-contracts.js';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
@@ -201,6 +206,19 @@ export function AccountingContractsList() {
       contract: null,
     }),
   );
+
+  /** Every contract, page by page, in the list's current sort (the backend caps a page). */
+  async function fetchAllContracts() {
+    /** @type {Summary[]} */
+    const all = [];
+    for (let page = 1, totalPages = 1; page <= totalPages; page += 1) {
+      const result = await searchContracts({ page, pageSize: 500, sort });
+      if (!result.success) throw new Error(result.message);
+      all.push(...result.data.items);
+      totalPages = result.data.totalPages;
+    }
+    return /** @type {(Summary & Record<string, unknown>)[]} */ (all);
+  }
 
   const searchQuery = useContractsSearchQuery({
     page: pageIndex + 1,
@@ -394,6 +412,14 @@ export function AccountingContractsList() {
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Hợp đồng Kế toán"
           exportTitle="Danh sách hợp đồng Kế toán"
+          exportWorkbook={(ExcelJS, input) =>
+            buildContractsWorkbook(ExcelJS, {
+              ...input,
+              rows: /** @type {Summary[]} */ (input.rows),
+            })
+          }
+          exportFileName={contractsWorkbookFileName}
+          fetchAllRows={fetchAllContracts}
           itemLabel="hợp đồng"
           contentSearchFieldKey="contractNumber"
           searchPlaceholder="Tìm nhanh theo số hợp đồng, mã công trình, khách hàng..."

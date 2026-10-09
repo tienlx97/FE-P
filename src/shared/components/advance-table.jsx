@@ -252,6 +252,8 @@ const styles = stylex.create({
  *   searchFieldDefs: ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>,
  *   entityLabel: string,
  *   exportTitle?: string,
+ *   exportWorkbook?: (ExcelJS: typeof import('exceljs'), input: { rows: T[], exportedAt: Date, scope: 'page' | 'all', filterCount: number }) => import('exceljs').Workbook,
+ *   exportFileName?: (day: Date) => string,
  *   contentSearchFieldKey: string,
  *   searchPlaceholder: string,
  *   onContentSearchChange?: (value: string) => void,
@@ -322,6 +324,8 @@ export function AdvanceTable({
   searchFieldDefs,
   entityLabel,
   exportTitle,
+  exportWorkbook,
+  exportFileName,
   contentSearchFieldKey,
   searchPlaceholder,
   onContentSearchChange,
@@ -777,24 +781,38 @@ export function AdvanceTable({
    * @param {T[]} rows @param {{ allColumns?: boolean }} [options]
    */
   async function exportExcel(rows, options) {
-    const { headerRow, dataRows } = buildExportTable(rows, options);
     const excelModule = await import('exceljs');
     const ExcelJS = /** @type {typeof import('exceljs')} */ (
       'default' in excelModule ? excelModule.default : excelModule
     );
-    const workbook = buildListWorkbook(ExcelJS, {
-      title: (exportTitle ?? entityLabel).toLocaleUpperCase('vi'),
-      headerRow: headerRow.map(String),
-      dataRows,
-      exportedAt: new Date(),
-      filterCount: activeFilterCount,
-    });
+    const exportedAt = new Date();
+    // A list with its own report layout (`exportWorkbook`) gets the real rows
+    // (without the Σ row) instead of the visible-columns table.
+    const workbook = exportWorkbook
+      ? exportWorkbook(ExcelJS, {
+          rows: rows.filter((row) => !(/** @type {any} */ (row).__isTotalsRow)),
+          exportedAt,
+          scope: options?.allColumns ? 'all' : 'page',
+          filterCount: activeFilterCount,
+        })
+      : (() => {
+          const { headerRow, dataRows } = buildExportTable(rows, options);
+          return buildListWorkbook(ExcelJS, {
+            title: (exportTitle ?? entityLabel).toLocaleUpperCase('vi'),
+            headerRow: headerRow.map(String),
+            dataRows,
+            exportedAt,
+            filterCount: activeFilterCount,
+          });
+        })();
     const buffer = await workbook.xlsx.writeBuffer();
     downloadBlob(
       new Blob([buffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       }),
-      `${entityLabel}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      exportFileName
+        ? exportFileName(exportedAt)
+        : `${entityLabel}-${exportedAt.toISOString().slice(0, 10)}.xlsx`,
     );
   }
 
