@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { AccountingContractDetailWorkspace } from '@/features/accounting-contracts/index.js';
 
 export const metadata = {
@@ -12,5 +14,10 @@ export const metadata = {
 export default async function AccountingContractDetailPage({ params }) {
   const { id } = await params;
 
-  return <AccountingContractDetailWorkspace contractId={id} />;
+  // The workspace reads `?tab=` (useSearchParams), which needs a Suspense boundary.
+  return (
+    <Suspense>
+      <AccountingContractDetailWorkspace contractId={id} />
+    </Suspense>
+  );
 }

@@ -7,6 +7,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useEffect } from 'react';
 
+import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
@@ -141,119 +142,132 @@ export function ContractFormDialog({
       onSubmit={form.handleSubmit}
     >
       <VStack gap={4} hAlign="stretch">
-        <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
-          <Selector
-            label="Công ty"
-            placeholder="Chọn công ty"
-            value={values.companyId}
-            onChange={(value) => setField('companyId', value ?? '')}
-            options={companies.map((company) => ({
-              value: company.id,
-              label: company.name,
-            }))}
-            isRequired
-            isDisabled={contract !== null}
-            status={fieldStatuses.companyId}
-            statusVariant="tooltip"
-          />
-          <TextInput
-            label="Số hợp đồng"
-            value={values.contractNumber}
-            onChange={(value) => setField('contractNumber', value)}
-            isRequired
-            status={fieldStatuses.contractNumber}
-            statusVariant="tooltip"
-          />
-          <DateInput
-            label="Ngày ký"
-            value={/** @type {ISODateString} */ (values.signedDate)}
-            onChange={(value) => setField('signedDate', value ?? '')}
-            format={formatDateInputValue}
-            isRequired
-            status={fieldStatuses.signedDate}
-            statusVariant="tooltip"
-          />
-          <TextInput
-            label="Mã công trình"
-            value={values.projectCode}
-            onChange={(value) => setField('projectCode', value)}
-            isRequired
-            status={fieldStatuses.projectCode}
-            statusVariant="tooltip"
-          />
-          <TextInput
-            label="Tên dự án"
-            value={values.projectName}
-            onChange={(value) => setField('projectName', value)}
-            isRequired
-            status={fieldStatuses.projectName}
-            statusVariant="tooltip"
-          />
-          <Selector
-            label="Khách hàng"
-            placeholder="Chọn khách hàng"
-            value={values.customerId}
-            onChange={(value) => setField('customerId', value ?? '')}
-            options={customers.map((customer) => ({
-              value: customer.id,
-              label: customer.name,
-            }))}
-            isRequired
-            status={fieldStatuses.customerId}
-            statusVariant="tooltip"
-          />
-          <Selector
-            label="Nguồn"
-            placeholder="Chọn nguồn"
-            value={values.sourceId}
-            onChange={(value) => setField('sourceId', value ?? '')}
-            options={[
-              { value: '', label: '— Không có —' },
-              ...sources.map((source) => ({
-                value: source.id,
-                label: source.name,
-              })),
-            ]}
+        <MetaFormSection index={1} title="Thông tin hợp đồng" meta="Bắt buộc">
+          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
+            <Selector
+              label="Công ty"
+              placeholder="Chọn công ty"
+              value={values.companyId}
+              onChange={(value) => setField('companyId', value ?? '')}
+              options={companies.map((company) => ({
+                value: company.id,
+                label: company.name,
+              }))}
+              isRequired
+              isDisabled={contract !== null}
+              status={fieldStatuses.companyId}
+              statusVariant="tooltip"
+            />
+            <TextInput
+              label="Số hợp đồng"
+              value={values.contractNumber}
+              onChange={(value) => setField('contractNumber', value)}
+              isRequired
+              status={fieldStatuses.contractNumber}
+              statusVariant="tooltip"
+            />
+            <DateInput
+              label="Ngày ký"
+              value={/** @type {ISODateString} */ (values.signedDate)}
+              onChange={(value) => setField('signedDate', value ?? '')}
+              format={formatDateInputValue}
+              isRequired
+              status={fieldStatuses.signedDate}
+              statusVariant="tooltip"
+            />
+            <TextInput
+              label="Mã công trình"
+              value={values.projectCode}
+              onChange={(value) => setField('projectCode', value)}
+              isRequired
+              status={fieldStatuses.projectCode}
+              statusVariant="tooltip"
+            />
+            <TextInput
+              label="Tên dự án"
+              value={values.projectName}
+              onChange={(value) => setField('projectName', value)}
+              isRequired
+              status={fieldStatuses.projectName}
+              statusVariant="tooltip"
+            />
+          </Grid>
+        </MetaFormSection>
+        <MetaFormSection index={2} title="Khách hàng & thanh toán">
+          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
+            <Selector
+              label="Khách hàng"
+              placeholder="Chọn khách hàng"
+              value={values.customerId}
+              onChange={(value) => setField('customerId', value ?? '')}
+              options={customers.map((customer) => ({
+                value: customer.id,
+                label: customer.name,
+              }))}
+              isRequired
+              status={fieldStatuses.customerId}
+              statusVariant="tooltip"
+            />
+            <Selector
+              label="Nguồn"
+              placeholder="Chọn nguồn"
+              value={values.sourceId}
+              onChange={(value) => setField('sourceId', value ?? '')}
+              options={[
+                { value: '', label: '— Không có —' },
+                ...sources.map((source) => ({
+                  value: source.id,
+                  label: source.name,
+                })),
+              ]}
+              isOptional
+            />
+            <DateInput
+              label="Ngày tới hạn thanh toán"
+              value={/** @type {ISODateString} */ (values.paymentDueDate)}
+              onChange={(value) => setField('paymentDueDate', value ?? '')}
+              format={formatDateInputValue}
+              isOptional
+            />
+          </Grid>
+        </MetaFormSection>
+        <MetaFormSection index={3} title="Giá trị hợp đồng">
+          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
+            <FormattedNumberTextInput
+              label="Giá trị hợp đồng (trước thuế)"
+              value={values.valueBeforeTax}
+              onChange={(value) => setField('valueBeforeTax', value)}
+              units="VND"
+              isRequired
+              status={fieldStatuses.valueBeforeTax}
+            />
+            <FormattedNumberTextInput
+              label="Thuế (%)"
+              value={values.taxRatePercent}
+              onChange={(value) => setField('taxRatePercent', value)}
+              units="%"
+              placeholder="8"
+              isRequired
+              status={fieldStatuses.taxRatePercent}
+            />
+          </Grid>
+          <Text color="secondary">
+            Giá trị hợp đồng (sau thuế):{' '}
+            <Text weight="semibold">{formatVnd(afterTax)}</Text>
+          </Text>
+        </MetaFormSection>
+        <MetaFormSection index={4} title="Ghi chú">
+          <TextArea
+            label="Ghi chú"
+            isLabelHidden
+            value={values.note}
+            onChange={(value) => setField('note', value)}
             isOptional
+            maxLength={2000}
+            status={fieldStatuses.note}
+            statusVariant="tooltip"
           />
-          <DateInput
-            label="Ngày tới hạn thanh toán"
-            value={/** @type {ISODateString} */ (values.paymentDueDate)}
-            onChange={(value) => setField('paymentDueDate', value ?? '')}
-            format={formatDateInputValue}
-            isOptional
-          />
-          <FormattedNumberTextInput
-            label="Giá trị hợp đồng (trước thuế)"
-            value={values.valueBeforeTax}
-            onChange={(value) => setField('valueBeforeTax', value)}
-            units="VND"
-            isRequired
-            status={fieldStatuses.valueBeforeTax}
-          />
-          <FormattedNumberTextInput
-            label="Thuế (%)"
-            value={values.taxRatePercent}
-            onChange={(value) => setField('taxRatePercent', value)}
-            units="%"
-            placeholder="8"
-            isRequired
-            status={fieldStatuses.taxRatePercent}
-          />
-        </Grid>
-        <Text color="secondary">
-          Giá trị hợp đồng (sau thuế):{' '}
-          <Text weight="semibold">{formatVnd(afterTax)}</Text>
-        </Text>
-        <TextArea
-          label="Ghi chú"
-          value={values.note}
-          onChange={(value) => setField('note', value)}
-          isOptional
-          maxLength={2000}
-          status={fieldStatuses.note}
-          statusVariant="tooltip"
-        />
+        </MetaFormSection>
       </VStack>
     </FormDialog>
   );

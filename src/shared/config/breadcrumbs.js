@@ -94,3 +94,21 @@ export function customerTrail({ customerCode }) {
     fallbackHref: CUSTOMERS.href,
   };
 }
+
+const ACCOUNTING = { label: 'Kế toán', href: '/accounting' };
+const ACCOUNTING_CONTRACTS = {
+  label: 'Hợp đồng',
+  href: '/accounting/contracts',
+};
+
+/**
+ * Kế toán contract page: Kế toán › Hợp đồng › {contractNumber}.
+ * @param {{ contractNumber?: string }} params
+ * @returns {BreadcrumbTrail}
+ */
+export function accountingContractTrail({ contractNumber }) {
+  return {
+    items: [ACCOUNTING, ACCOUNTING_CONTRACTS, { label: contractNumber ?? '…' }],
+    fallbackHref: ACCOUNTING_CONTRACTS.href,
+  };
+}

@@ -15,6 +15,7 @@ import {
   MetaCellText,
   MetaListTitle,
   MetaPrimaryCell,
+  MetaRowActions,
 } from '@/shared/components/custom/meta/list-parts.jsx';
 
 import {
@@ -23,7 +24,6 @@ import {
 } from '../hooks/use-catalogs.js';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 import { CustomerFormDialog } from './customer-form-dialog.jsx';
-import { RowActions } from './row-actions.jsx';
 
 /** @satisfies {ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>} */
 const SEARCH_FIELD_DEFS = [
@@ -97,11 +97,12 @@ export function AccountingCustomersList() {
     textColumn('address', 'Địa chỉ', 2),
     {
       key: 'actions',
-      header: '',
-      width: pixel(90),
+      header: 'Thao tác',
+      width: pixel(96),
+      align: 'end',
       renderCell: (customer) => (
-        <RowActions
-          name={customer.name}
+        <MetaRowActions
+          recordLabel={customer.name}
           onEdit={() => openForm(customer)}
           onDelete={() => setDeleting(customer)}
         />
@@ -144,7 +145,7 @@ export function AccountingCustomersList() {
           isLoading={customersQuery.isLoading}
           onRefresh={() => customersQuery.refetch()}
           isRefreshing={customersQuery.isFetching}
-          defaultStickyEnd="none"
+          fixedEndColumnKeys={['actions']}
         />
       </StackItem>
 

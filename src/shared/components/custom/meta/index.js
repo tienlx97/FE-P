@@ -79,6 +79,7 @@ export {
 } from './shipment-overview-blocks.jsx';
 export { MetaStatusBadge } from './status-badge.jsx';
 export { MetaTabNav } from './tab-nav.jsx';
+export { MetaTableCard } from './table-card.jsx';
 export { MetaThemeProvider } from './theme-provider.jsx';
 export {
   MetaAllocationBar,

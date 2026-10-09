@@ -1,38 +1,52 @@
 'use client';
 
+import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { IconButton } from '@astryxdesign/core/IconButton';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Plus } from 'lucide-react';
+import { CirclePlus, Paperclip, TrendingDown, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 
+import {
+  MetaMetricsCard,
+  MetaPill,
+  MetaRowActions,
+  MetaTableCard,
+} from '@/shared/components/custom/meta/index.js';
 import { Table } from '@/shared/components/table.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { APPENDIX_TYPE_OPTIONS, labelOf } from '../config/child-schemas.js';
+import { appendixTotals } from '../config/contract-view.js';
 import { formatVnd } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { AppendixFormDialog } from './appendix-form-dialog.jsx';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
-import { RowActions } from './row-actions.jsx';
 
 /** @typedef {import('../types/index.js').AccountingAppendix} Appendix */
 
 /** @param {Appendix} appendix */
-function signedAmount(appendix) {
-  if (appendix.type === 'Increase') return `+ ${formatVnd(appendix.amount)}`;
-  if (appendix.type === 'Decrease') return `− ${formatVnd(appendix.amount)}`;
-  return '—';
+function typePill(appendix) {
+  const label = labelOf(APPENDIX_TYPE_OPTIONS, appendix.type);
+  if (appendix.type === 'Increase')
+    return <MetaPill label={label} tone="success" icon={TrendingUp} />;
+  if (appendix.type === 'Decrease')
+    return <MetaPill label={label} tone="neutral" icon={TrendingDown} />;
+  return <MetaPill label={label} tone="accent" />;
 }
 
 /**
- * "Phụ lục" tab.
- * @param {{ detail: import('../types/index.js').AccountingContractDetail }} props
+ * "Phụ lục" tab: HĐ sau thuế / phát sinh tăng / giảm cards, then the
+ * appendix table card (type pill, signing pills, signed amount, actions).
+ * @param {{
+ *   detail: import('../types/index.js').AccountingContractDetail,
+ *   metrics: ReturnType<typeof import('../config/contract-view.js').contractMetrics>,
+ *   createKey: number | null,
+ * }} props
  */
-export function AppendicesPanel({ detail }) {
+export function AppendicesPanel({ detail, metrics, createKey }) {
   const contractId = detail.contract.id;
   const [editing, setEditing] = useState(/** @type {Appendix | null} */ (null));
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -40,53 +54,91 @@ export function AppendicesPanel({ detail }) {
     /** @type {Appendix | null} */ (null),
   );
   const mutation = useContractChildMutation(contractId);
+  const { increase, decrease } = appendixTotals(detail.appendices);
+
+  // "+ Thao tác" in the header asks for the create dialog by bumping `createKey`.
+  const [handledCreateKey, setHandledCreateKey] = useState(
+    /** @type {number | null} */ (null),
+  );
+  if (createKey !== handledCreateKey) {
+    setHandledCreateKey(createKey);
+    if (createKey !== null) {
+      setEditing(null);
+      setIsFormOpen(true);
+    }
+  }
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<Appendix & Record<string, unknown>>[]} */
   const columns = [
     {
       key: 'type',
-      header: 'Loại phụ lục',
-      width: proportional(1),
-      renderCell: (a) => labelOf(APPENDIX_TYPE_OPTIONS, a.type),
+      header: 'Phân loại',
+      width: pixel(190),
+      renderCell: (a) => typePill(a),
+    },
+    {
+      key: 'note',
+      header: 'Nội dung',
+      width: proportional(2),
+      renderCell: (a) => <Text color="secondary">{a.note ?? '—'}</Text>,
+    },
+    {
+      key: 'amount',
+      header: 'Giá trị (VND)',
+      width: pixel(160),
+      align: 'end',
+      renderCell: (a) =>
+        a.type === 'InfoChange' ? (
+          <Text color="secondary">—</Text>
+        ) : (
+          <Text
+            weight="bold"
+            hasTabularNumbers
+            color={
+              a.type === 'Increase'
+                ? /** @type {any} */ ('meta-success')
+                : 'primary'
+            }
+          >
+            {a.type === 'Increase' ? '+' : '−'}
+            {formatVnd(a.amount)}
+          </Text>
+        ),
     },
     {
       key: 'signedDate',
       header: 'Ngày ký',
-      width: pixel(110),
-      renderCell: (a) => formatDisplayDate(a.signedDate),
+      width: pixel(120),
+      renderCell: (a) => (
+        <Text hasTabularNumbers>{formatDisplayDate(a.signedDate)}</Text>
+      ),
     },
     {
-      key: 'buyerSigned',
-      header: 'Bên mua',
-      width: pixel(90),
-      renderCell: (a) => (a.buyerSigned ? 'Đã ký' : 'Chưa ký'),
-    },
-    {
-      key: 'sellerSigned',
-      header: 'Bên bán',
-      width: pixel(90),
-      renderCell: (a) => (a.sellerSigned ? 'Đã ký' : 'Chưa ký'),
-    },
-    {
-      key: 'note',
-      header: 'Ghi chú',
-      width: proportional(1.5),
-      renderCell: (a) => a.note ?? '—',
-    },
-    {
-      key: 'amount',
-      header: 'Số tiền',
-      width: pixel(150),
-      align: 'end',
-      renderCell: (a) => signedAmount(a),
+      key: 'signing',
+      header: 'Tình trạng chữ ký',
+      width: pixel(200),
+      renderCell: (a) => (
+        <VStack gap={1} hAlign="start">
+          <MetaPill
+            label={a.sellerSigned ? 'Bên bán đã ký' : 'Bên bán chưa ký'}
+            tone={a.sellerSigned ? 'success' : 'muted'}
+            size="sm"
+          />
+          <MetaPill
+            label={a.buyerSigned ? 'Bên mua đã ký' : 'Bên mua chưa ký'}
+            tone={a.buyerSigned ? 'success' : 'muted'}
+            size="sm"
+          />
+        </VStack>
+      ),
     },
     {
       key: 'actions',
-      header: '',
-      width: pixel(90),
+      header: 'Thao tác',
+      width: pixel(110),
       renderCell: (a) => (
-        <RowActions
-          name="phụ lục"
+        <MetaRowActions
+          recordLabel="phụ lục"
           onEdit={() => {
             setEditing(a);
             setIsFormOpen(true);
@@ -98,32 +150,56 @@ export function AppendicesPanel({ detail }) {
   ];
 
   return (
-    <VStack gap={3} hAlign="stretch">
-      <HStack hAlign="between" vAlign="center">
-        <Text weight="semibold">Phụ lục hợp đồng</Text>
-        <IconButton
-          label="Thêm phụ lục"
-          tooltip="Thêm phụ lục"
-          icon={<Icon icon={Plus} size="sm" />}
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            setEditing(null);
-            setIsFormOpen(true);
-          }}
-        />
-      </HStack>
-      {detail.appendices.length === 0 ? (
-        <Text color="secondary">Chưa có phụ lục</Text>
-      ) : (
+    <VStack gap={5} hAlign="stretch">
+      <MetaMetricsCard
+        title="GIÁ TRỊ & PHỤ LỤC"
+        metrics={[metrics.base, metrics.increase, metrics.decrease]}
+        maxColumns={3}
+      />
+
+      <MetaTableCard
+        icon={Paperclip}
+        title="Danh sách phụ lục"
+        subtitle="Phát sinh tăng / giảm làm thay đổi giá trị quyết toán"
+        actions={
+          <Button
+            label="Thêm phụ lục"
+            variant="primary"
+            icon={<Icon icon={CirclePlus} size="sm" />}
+            onClick={() => {
+              setEditing(null);
+              setIsFormOpen(true);
+            }}
+          />
+        }
+        isEmpty={detail.appendices.length === 0}
+        emptyLabel="Chưa có phụ lục"
+        footerStart={
+          <Text weight="medium" color="secondary">
+            Tổng số {detail.appendices.length} phụ lục
+          </Text>
+        }
+        footerEnd={
+          <HStack gap={2} vAlign="center" wrap="nowrap">
+            <Text size="sm" weight="bold">
+              TỔNG ĐIỀU CHỈNH:
+            </Text>
+            <Text weight="bold" color="accent" hasTabularNumbers>
+              {increase - decrease >= 0 ? '+' : '−'}
+              {formatVnd(Math.abs(increase - decrease))} VND
+            </Text>
+          </HStack>
+        }
+      >
         <Table
           columns={columns}
           data={detail.appendices}
           idKey="id"
           dividers="rows"
-          density="compact"
+          density="spacious"
         />
-      )}
+      </MetaTableCard>
+
       <AppendixFormDialog
         contractId={contractId}
         isOpen={isFormOpen}

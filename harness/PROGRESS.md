@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-09 — Kế toán: Logistics look and side nav
+
+- Per user ("Dựa vào giao diện trong các trang /logistics/** để chỉnh lại UI/UX trang kế toán … Thêm side nav cho trang kế toán"). `ProtectedAppShell`: `/accounting` gets the side nav (`sidebarAccounting.json`) and the Meta grey wash, like `/logistics`.
+- Contract page rebuilt from the Logistics contract page's parts: `MetaContractBreadcrumb` (Quay lại, `accountingContractTrail`), `MetaContractHeaderCard` (status pill: quá hạn N ngày / đã thanh toán đủ / đang thực hiện — header card now also takes `danger`; "+ Thao tác" opens the tab's create dialog or deletes), `MetaTabNav` (Tổng quan / Đợt thanh toán / Hoá đơn / Phụ lục, `?tab=`), `MetaMetricsCard` KPI cards per tab (`config/contract-view.js`), skeleton while loading. New shared `MetaTableCard` (icon bubble header + actions, edge-to-edge table, tinted footer totals) for the instalment / invoice / appendix / info cards.
+- Contract list: heading + count badge, "Cơ bản" / "Giá trị & Thanh toán" presets, Σ row (`__isTotalsRow`), pinned Ngày ký + Số HĐ and "Thao tác" (Xem / Sửa). Catalog lists use `MetaRowActions` in a pinned "Thao tác" column; the contract form is split into numbered `MetaFormSection`s.
+- Chrome :3000 against dev API: side nav on every Kế toán page; temp contract → "+ Thao tác › Thêm đợt thanh toán" opens the instalment dialog on its tab; 30 % paid → 32.4M / 75.6M with the Logistics-style cards; Σ row; temp data deleted. Found while checking: a table wrapped in an `overflow: auto` flex child collapsed to 0 height — `MetaTableCard` renders the table directly. The dev server took 2–5 min per recompile during this session.
+- Gate passed: `harness/runs/20261009-152735-907/`.
+
 ## 2026-10-09 — accounting-contracts tasks 1.2–1.3: hợp đồng Kế toán list + detail
 
 - `/accounting/contracts`: server-paged list (sort on the backend's allow-list) with every derived value and a red "N ngày" token for overdue; `/accounting` redirects here. Create / edit dialog (company, số HĐ, ngày ký, mã công trình, tên dự án, khách hàng, nguồn, tới hạn, trước thuế, thuế %, ghi chú) with a live "sau thuế" preview; before saving it calls `check-codes` and marks the duplicate field (contract number, project code, or project code = Logistics contract number).

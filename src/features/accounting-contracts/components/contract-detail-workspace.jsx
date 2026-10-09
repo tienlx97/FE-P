@@ -1,30 +1,37 @@
 'use client';
 
 import { Banner } from '@astryxdesign/core/Banner';
-import { BreadcrumbItem, Breadcrumbs } from '@astryxdesign/core/Breadcrumbs';
-import { Button } from '@astryxdesign/core/Button';
-import { Card } from '@astryxdesign/core/Card';
-import { Heading } from '@astryxdesign/core/Heading';
-import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import {
-  MetadataList,
-  MetadataListItem,
-} from '@astryxdesign/core/MetadataList';
-import { Skeleton } from '@astryxdesign/core/Skeleton';
-import { Tab, TabList } from '@astryxdesign/core/TabList';
-import { Text } from '@astryxdesign/core/Text';
-import { Token } from '@astryxdesign/core/Token';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Pencil, Trash2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import {
+  Banknote,
+  CircleCheck,
+  CirclePlus,
+  ClipboardClock,
+  FileCheck2,
+  FileText,
+  LayoutGrid,
+  ListChecks,
+  Paperclip,
+  ReceiptText,
+  Trash2,
+  TrendingDown,
+  TrendingUp,
+} from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useId, useState } from 'react';
 
-import { MetaThemeProvider } from '@/shared/components/custom/meta/theme-provider.jsx';
+import {
+  MetaContractBreadcrumb,
+  MetaContractDetailSkeleton,
+  MetaContractHeaderCard,
+  MetaTabNav,
+  MetaThemeProvider,
+} from '@/shared/components/custom/meta/index.js';
 import { PageContentShell } from '@/shared/components/page-content-shell.jsx';
-import { formatDisplayDate } from '@/shared/config/date-input-format.js';
+import { accountingContractTrail } from '@/shared/config/breadcrumbs.js';
 
-import { formatVnd } from '../config/money.js';
+import { contractMetrics, contractStatus } from '../config/contract-view.js';
 import {
   useContractQuery,
   useDeleteContractMutation,
@@ -32,163 +39,209 @@ import {
 import { AppendicesPanel } from './appendices-panel.jsx';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
+import { ContractOverviewPanel } from './contract-overview-panel.jsx';
 import { InstallmentsPanel } from './installments-panel.jsx';
 import { InvoicesPanel } from './invoices-panel.jsx';
 
-/** @param {string | null | undefined} iso */
-function dateOrDash(iso) {
-  return iso ? formatDisplayDate(iso) : '—';
-}
+/** @typedef {'overview' | 'installments' | 'invoices' | 'appendices'} DetailTab */
+
+const TAB_LABELS = {
+  overview: 'Tổng quan',
+  installments: 'Đợt thanh toán',
+  invoices: 'Hoá đơn',
+  appendices: 'Phụ lục',
+};
+
+const TAB_ICONS = {
+  overview: LayoutGrid,
+  installments: ListChecks,
+  invoices: ReceiptText,
+  appendices: Paperclip,
+};
+
+const TAB_VALUES = /** @type {DetailTab[]} */ (Object.keys(TAB_LABELS));
+
+const METRIC_ICONS = {
+  settlement: FileCheck2,
+  invoice: ReceiptText,
+  paid: CircleCheck,
+  unpaid: ClipboardClock,
+  base: Banknote,
+  up: TrendingUp,
+  down: TrendingDown,
+};
 
 /**
- * Accounting contract page: header facts, every derived value, then the
- * Phụ lục / Hoá đơn / Đợt thanh toán tabs.
+ * Kế toán contract page, laid out like the Logistics contract page:
+ * breadcrumb with "Quay lại", header card (number, status pill, project,
+ * "Chỉnh sửa" and "+ Thao tác"), pill tabs — Tổng quan (KPI cards +
+ * contract information), Đợt thanh toán, Hoá đơn, Phụ lục. `?tab=` keeps
+ * the tab across reloads.
  * @param {{ contractId: string }} props
  */
 export function AccountingContractDetailWorkspace({ contractId }) {
   const router = useRouter();
-  const [tab, setTab] = useState('installments');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const panelId = useId();
+
+  const requestedTab = /** @type {DetailTab} */ (searchParams.get('tab'));
+  const [activeTab, setActiveTabState] = useState(
+    /** @type {DetailTab} */ (
+      TAB_VALUES.includes(requestedTab) ? requestedTab : 'overview'
+    ),
+  );
+  /** Opens a tab's create dialog from "+ Thao tác". */
+  const [createRequest, setCreateRequest] = useState(
+    /** @type {{ tab: DetailTab, key: number } | null} */ (null),
+  );
+  /** @param {DetailTab} tab */
+  function setActiveTab(tab) {
+    setActiveTabState(tab);
+    // A pending "+ Thao tác" create belongs to the click that asked for it.
+    setCreateRequest(null);
+    router.replace(`${pathname}?tab=${tab}`, { scroll: false });
+  }
+
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
   const contractQuery = useContractQuery(contractId);
   const deleteMutation = useDeleteContractMutation();
-
   const result = contractQuery.data;
   const detail = result?.success ? result.data : null;
   const contract = detail?.contract ?? null;
 
-  return (
-    <PageContentShell isFullWidth>
-      <MetaThemeProvider>
-        <VStack gap={4} hAlign="stretch">
-          <Breadcrumbs>
-            <BreadcrumbItem href="/accounting">Kế toán</BreadcrumbItem>
-            <BreadcrumbItem href="/accounting/contracts">
-              Hợp đồng
-            </BreadcrumbItem>
-            <BreadcrumbItem isCurrent>
-              {contract?.contractNumber ?? '…'}
-            </BreadcrumbItem>
-          </Breadcrumbs>
+  /** @param {DetailTab} tab */
+  function requestCreate(tab) {
+    setActiveTabState(tab);
+    router.replace(`${pathname}?tab=${tab}`, { scroll: false });
+    setCreateRequest({ tab, key: Date.now() });
+  }
 
-          {result && !result.success ? (
-            <Banner status="error" title={result.message} />
+  return (
+    <MetaThemeProvider>
+      <PageContentShell isFullWidth>
+        <VStack gap={4} hAlign="stretch">
+          <MetaContractBreadcrumb
+            trail={accountingContractTrail({
+              contractNumber: contract?.contractNumber,
+            })}
+          />
+
+          {contractQuery.isLoading ? (
+            <MetaContractDetailSkeleton label="Đang tải hợp đồng" tab="other" />
           ) : null}
-          {contractQuery.isLoading ? <Skeleton height={240} /> : null}
+          {result && !result.success ? (
+            <Banner status="error" title={result.message} container="card" />
+          ) : null}
 
           {detail && contract ? (
             <>
-              <HStack hAlign="between" vAlign="center" gap={3}>
-                <VStack gap={1}>
-                  <Heading level={2}>
-                    Hợp đồng {contract.contractNumber}
-                  </Heading>
-                  <Text color="secondary">
-                    {contract.projectCode} · {contract.projectName}
-                  </Text>
-                </VStack>
-                <HStack gap={2}>
-                  <Button
-                    label="Sửa"
-                    icon={<Icon icon={Pencil} size="sm" />}
-                    variant="secondary"
-                    onClick={() => setIsEditOpen(true)}
-                  />
-                  <Button
-                    label="Xoá"
-                    icon={<Icon icon={Trash2} size="sm" />}
-                    variant="secondary"
-                    onClick={() => setIsDeleting(true)}
-                  />
-                </HStack>
-              </HStack>
+              <MetaContractHeaderCard
+                contractCode={contract.contractNumber}
+                projectName={`${contract.projectCode} · ${contract.projectName}`}
+                projectIcon={FileText}
+                typeLabel={contract.customerName ?? 'Kế toán'}
+                typeTone="neutral"
+                statusLabel={contractStatus(contract).label}
+                statusTone={contractStatus(contract).tone}
+                incotermLabel={`Thuế ${contract.taxRatePercent}%`}
+                copyAriaLabel="Sao chép số hợp đồng"
+                copyAnnounce="Đã sao chép số hợp đồng"
+                onEdit={() => setIsEditOpen(true)}
+                actionItems={[
+                  {
+                    id: 'installment',
+                    label: 'Thêm đợt thanh toán',
+                    icon: <Icon icon={CirclePlus} size="sm" />,
+                    onClick: () => requestCreate('installments'),
+                  },
+                  {
+                    id: 'invoice',
+                    label: 'Thêm hoá đơn',
+                    icon: <Icon icon={ReceiptText} size="sm" />,
+                    onClick: () => requestCreate('invoices'),
+                  },
+                  {
+                    id: 'appendix',
+                    label: 'Thêm phụ lục',
+                    icon: <Icon icon={Paperclip} size="sm" />,
+                    onClick: () => requestCreate('appendices'),
+                  },
+                  {
+                    id: 'delete',
+                    label: 'Xoá hợp đồng',
+                    icon: <Icon icon={Trash2} size="sm" />,
+                    onClick: () => setIsDeleting(true),
+                  },
+                ]}
+              />
 
-              <Card>
-                <VStack gap={4} hAlign="stretch">
-                  <MetadataList columns={4} label={{ position: 'top' }}>
-                    <MetadataListItem label="Khách hàng">
-                      {contract.customerName ?? '—'}
-                    </MetadataListItem>
-                    <MetadataListItem label="Nguồn">
-                      {contract.sourceName ?? '—'}
-                    </MetadataListItem>
-                    <MetadataListItem label="Ngày ký">
-                      {dateOrDash(contract.signedDate)}
-                    </MetadataListItem>
-                    <MetadataListItem label="Ngày tới hạn thanh toán">
-                      {dateOrDash(contract.paymentDueDate)}
-                    </MetadataListItem>
-                    <MetadataListItem label="Giá trị hợp đồng (trước thuế)">
-                      {formatVnd(contract.valueBeforeTax)}
-                    </MetadataListItem>
-                    <MetadataListItem label="Thuế">
-                      {contract.taxRatePercent}%
-                    </MetadataListItem>
-                    <MetadataListItem label="Giá trị hợp đồng (sau thuế)">
-                      {formatVnd(contract.valueAfterTax)}
-                    </MetadataListItem>
-                    <MetadataListItem label="Giá trị quyết toán">
-                      <Text weight="semibold">
-                        {formatVnd(contract.settlementValue)}
-                      </Text>
-                    </MetadataListItem>
-                    <MetadataListItem label="Đã xuất hoá đơn">
-                      {formatVnd(contract.invoicedValue)}
-                    </MetadataListItem>
-                    <MetadataListItem label="Còn phải xuất hoá đơn">
-                      {formatVnd(contract.remainingToInvoice)}
-                    </MetadataListItem>
-                    <MetadataListItem label="Đã thanh toán">
-                      {formatVnd(contract.paidValue)}
-                    </MetadataListItem>
-                    <MetadataListItem label="Chưa thanh toán">
-                      <Text weight="semibold">
-                        {formatVnd(contract.unpaidValue)}
-                      </Text>
-                    </MetadataListItem>
-                    <MetadataListItem label="Số ngày quá hạn">
-                      {contract.overdueDays ? (
-                        <Token
-                          size="sm"
-                          color="red"
-                          label={`${contract.overdueDays} ngày`}
+              <MetaTabNav
+                tabs={TAB_VALUES.map((id) => ({
+                  id,
+                  label: TAB_LABELS[id],
+                  icon: TAB_ICONS[id],
+                  count:
+                    id === 'installments'
+                      ? `${detail.installments.length} đợt`
+                      : id === 'invoices' && detail.invoices.length > 0
+                        ? String(detail.invoices.length)
+                        : id === 'appendices' && detail.appendices.length > 0
+                          ? String(detail.appendices.length)
+                          : undefined,
+                }))}
+                activeId={activeTab}
+                panelId={panelId}
+                onChange={(tab) => setActiveTab(/** @type {DetailTab} */ (tab))}
+              />
+
+              <section
+                id={panelId}
+                role="tabpanel"
+                aria-label={TAB_LABELS[activeTab]}
+              >
+                {(() => {
+                  const metrics = contractMetrics(detail, METRIC_ICONS);
+                  const createKey =
+                    createRequest?.tab === activeTab ? createRequest.key : null;
+                  switch (activeTab) {
+                    case 'overview':
+                      return (
+                        <ContractOverviewPanel
+                          detail={detail}
+                          metrics={metrics}
+                          onOpenTab={setActiveTab}
                         />
-                      ) : (
-                        '—'
-                      )}
-                    </MetadataListItem>
-                    <MetadataListItem label="Ghi chú">
-                      {contract.note ?? '—'}
-                    </MetadataListItem>
-                  </MetadataList>
-                </VStack>
-              </Card>
-
-              <TabList value={tab} onChange={setTab} hasDivider>
-                <Tab
-                  value="installments"
-                  label="Đợt thanh toán"
-                  endContent={String(detail.installments.length)}
-                />
-                <Tab
-                  value="invoices"
-                  label="Hoá đơn"
-                  endContent={String(detail.invoices.length)}
-                />
-                <Tab
-                  value="appendices"
-                  label="Phụ lục"
-                  endContent={String(detail.appendices.length)}
-                />
-              </TabList>
-
-              {tab === 'installments' ? (
-                <InstallmentsPanel detail={detail} />
-              ) : null}
-              {tab === 'invoices' ? <InvoicesPanel detail={detail} /> : null}
-              {tab === 'appendices' ? (
-                <AppendicesPanel detail={detail} />
-              ) : null}
+                      );
+                    case 'installments':
+                      return (
+                        <InstallmentsPanel
+                          detail={detail}
+                          metrics={metrics}
+                          createKey={createKey}
+                        />
+                      );
+                    case 'invoices':
+                      return (
+                        <InvoicesPanel
+                          detail={detail}
+                          metrics={metrics}
+                          createKey={createKey}
+                        />
+                      );
+                    case 'appendices':
+                      return (
+                        <AppendicesPanel
+                          detail={detail}
+                          metrics={metrics}
+                          createKey={createKey}
+                        />
+                      );
+                  }
+                })()}
+              </section>
 
               <ContractFormDialog
                 isOpen={isEditOpen}
@@ -211,7 +264,7 @@ export function AccountingContractDetailWorkspace({ contractId }) {
             </>
           ) : null}
         </VStack>
-      </MetaThemeProvider>
-    </PageContentShell>
+      </PageContentShell>
+    </MetaThemeProvider>
   );
 }

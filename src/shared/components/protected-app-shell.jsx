@@ -21,7 +21,13 @@ import { AppSideNav } from './side-nav.jsx';
 
 /** @typedef {import('../types/index.js').NavLink} NavLink */
 
-const SIDE_NAV_ROUTES = ['/tutorial', '/docs', '/admin', '/logistics'];
+const SIDE_NAV_ROUTES = [
+  '/tutorial',
+  '/docs',
+  '/admin',
+  '/logistics',
+  '/accounting',
+];
 
 // react.dev sets its document body to 17px (text-lg) and sidebar links to
 // 15px (text-base) — noticeably larger than Astryx's neutral default
@@ -210,7 +216,10 @@ export function ProtectedAppShell({
     pathname === '/admin' ||
     pathname.startsWith('/admin/') ||
     pathname === '/logistics' ||
-    pathname.startsWith('/logistics/');
+    pathname.startsWith('/logistics/') ||
+    // Kế toán (accounting) is laid out exactly like Logistics.
+    pathname === '/accounting' ||
+    pathname.startsWith('/accounting/');
   const hasSelfManagedPadding =
     pathname === '/' || hasMdxLayout || isAdminOrLogistics;
   // Grid columns follow side-nav presence in general (any side-nav'd

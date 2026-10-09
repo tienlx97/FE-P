@@ -88,7 +88,7 @@ export function MetaContractBreadcrumb({ trail, backLabel = 'Quay lại' }) {
  *   typeLabel: string,
  *   typeTone?: 'accent' | 'neutral',
  *   statusLabel: string,
- *   statusTone?: 'accent' | 'success' | 'neutral',
+ *   statusTone?: 'accent' | 'success' | 'neutral' | 'danger',
  *   incotermLabel?: string,
  *   copyAriaLabel?: string,
  *   copyTooltip?: string,

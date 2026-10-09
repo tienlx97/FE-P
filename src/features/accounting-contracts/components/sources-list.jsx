@@ -15,6 +15,7 @@ import {
   MetaCellText,
   MetaListTitle,
   MetaPrimaryCell,
+  MetaRowActions,
 } from '@/shared/components/custom/meta/list-parts.jsx';
 
 import {
@@ -22,7 +23,6 @@ import {
   useSourcesQuery,
 } from '../hooks/use-catalogs.js';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
-import { RowActions } from './row-actions.jsx';
 import { SourceFormDialog } from './source-form-dialog.jsx';
 
 /** @satisfies {ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>} */
@@ -76,11 +76,12 @@ export function SourcesList() {
     },
     {
       key: 'actions',
-      header: '',
-      width: pixel(90),
+      header: 'Thao tác',
+      width: pixel(96),
+      align: 'end',
       renderCell: (source) => (
-        <RowActions
-          name={source.name}
+        <MetaRowActions
+          recordLabel={source.name}
           onEdit={() => openForm(source)}
           onDelete={() => setDeleting(source)}
         />
@@ -123,7 +124,7 @@ export function SourcesList() {
           isLoading={sourcesQuery.isLoading}
           onRefresh={() => sourcesQuery.refetch()}
           isRefreshing={sourcesQuery.isFetching}
-          defaultStickyEnd="none"
+          fixedEndColumnKeys={['actions']}
         />
       </StackItem>
 

@@ -1,13 +1,13 @@
 'use client';
 
+import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
 import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
-import { Text } from '@astryxdesign/core/Text';
-import { Token } from '@astryxdesign/core/Token';
+import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Plus } from 'lucide-react';
+import { Banknote, List, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -17,8 +17,10 @@ import {
 } from '@/shared/components/advance-table.jsx';
 import {
   MetaCellText,
-  MetaListTitle,
-} from '@/shared/components/custom/meta/list-parts.jsx';
+  MetaPill,
+  MetaRowActions,
+  MetaStatusBadge,
+} from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatVnd } from '../config/money.js';
@@ -26,6 +28,8 @@ import { useContractsSearchQuery } from '../hooks/use-contracts.js';
 import { ContractFormDialog } from './contract-form-dialog.jsx';
 
 /** @typedef {import('../types/index.js').AccountingContractSummary} Summary */
+
+const TOTALS_ID = '__totals__';
 
 /** @satisfies {ReadonlyArray<import('@astryxdesign/core/PowerSearch').FieldDefinition>} */
 const SEARCH_FIELD_DEFS = [
@@ -35,28 +39,67 @@ const SEARCH_FIELD_DEFS = [
   { key: 'customerName', type: 'string', label: 'Khách hàng' },
 ];
 
-/** @type {Array<{ key: keyof Summary & string, label: string }>} */
+/** @type {Array<{ key: 'valueBeforeTax' | 'valueAfterTax' | 'settlementValue' | 'invoicedValue' | 'remainingToInvoice' | 'paidValue' | 'unpaidValue', label: string, tone?: 'success' | 'accent' }>} */
 const MONEY_COLUMNS = [
   { key: 'valueBeforeTax', label: 'Trước thuế' },
   { key: 'valueAfterTax', label: 'Sau thuế' },
   { key: 'settlementValue', label: 'Quyết toán' },
   { key: 'invoicedValue', label: 'Đã xuất HĐ' },
   { key: 'remainingToInvoice', label: 'Còn phải xuất HĐ' },
-  { key: 'paidValue', label: 'Đã thanh toán' },
-  { key: 'unpaidValue', label: 'Chưa thanh toán' },
+  { key: 'paidValue', label: 'Đã thanh toán', tone: 'success' },
+  { key: 'unpaidValue', label: 'Chưa thanh toán', tone: 'accent' },
 ];
 
 const COLUMN_OPTIONS = [
-  { key: 'contractNumber', label: 'Số hợp đồng', isAlwaysVisible: true },
   { key: 'signedDate', label: 'Ngày ký' },
+  { key: 'contractNumber', label: 'Số hợp đồng', isAlwaysVisible: true },
   { key: 'projectCode', label: 'Mã công trình' },
-  { key: 'projectName', label: 'Tên dự án' },
   { key: 'customerName', label: 'Khách hàng' },
+  { key: 'projectName', label: 'Dự án' },
   { key: 'sourceName', label: 'Nguồn' },
   { key: 'taxRatePercent', label: 'Thuế' },
   ...MONEY_COLUMNS,
   { key: 'paymentDueDate', label: 'Tới hạn' },
   { key: 'overdueDays', label: 'Quá hạn' },
+  { key: 'actions', label: 'Thao tác', isAlwaysVisible: true },
+];
+
+const BASIC_COLUMN_KEYS = [
+  'signedDate',
+  'contractNumber',
+  'projectCode',
+  'customerName',
+  'projectName',
+  'sourceName',
+  'settlementValue',
+  'paymentDueDate',
+  'overdueDays',
+  'actions',
+];
+
+const FINANCIAL_COLUMN_KEYS = [
+  'signedDate',
+  'contractNumber',
+  'customerName',
+  'taxRatePercent',
+  ...MONEY_COLUMNS.map((column) => column.key),
+  'overdueDays',
+  'actions',
+];
+
+const VIEW_PRESETS = [
+  {
+    key: 'basic',
+    label: 'Cơ bản',
+    columnKeys: BASIC_COLUMN_KEYS,
+    icon: <Icon icon={List} size="sm" />,
+  },
+  {
+    key: 'financial',
+    label: 'Giá trị & Thanh toán',
+    columnKeys: FINANCIAL_COLUMN_KEYS,
+    icon: <Icon icon={Banknote} size="sm" />,
+  },
 ];
 
 const SORTABLE = [
@@ -68,17 +111,54 @@ const SORTABLE = [
   'paymentDueDate',
 ];
 
-/** Contract list of the Kế toán area — paged on the server, values derived by the backend. */
+/** @param {Partial<Summary>} row */
+function isTotals(row) {
+  return /** @type {any} */ (row).__isTotalsRow === true;
+}
+
+/**
+ * Σ row of the visible page: every money column summed.
+ * @param {Summary[]} rows
+ * @returns {Partial<Summary>[]}
+ */
+function totalsOf(rows) {
+  if (rows.length === 0) return [];
+  /** @type {Partial<Summary>} */
+  const totals = /** @type {Partial<Summary>} */ ({
+    id: TOTALS_ID,
+    __isTotalsRow: true,
+  });
+  for (const column of MONEY_COLUMNS) {
+    totals[column.key] = rows.reduce(
+      (sum, row) => sum + (row[column.key] ?? 0),
+      0,
+    );
+  }
+  return [totals];
+}
+
+/**
+ * Contract list of the Kế toán area, with the Logistics contract list's
+ * chrome: heading + count badge, "Cơ bản" / "Giá trị & Thanh toán" column
+ * presets, Σ row, pinned Ngày ký + Số hợp đồng and a pinned "Thao tác"
+ * column (Xem / Sửa). Paged and sorted on the server; every value is the
+ * backend's.
+ */
 export function AccountingContractsList() {
   const router = useRouter();
   const [pageIndex, setPageIndex] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(100);
   const [sort, setSort] = useState(
     /** @type {{ field: string, direction: 'Ascending' | 'Descending' } | null} */ (
       null
     ),
   );
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [form, setForm] = useState(
+    /** @type {{ isOpen: boolean, contract: Summary | null }} */ ({
+      isOpen: false,
+      contract: null,
+    }),
+  );
 
   const searchQuery = useContractsSearchQuery({
     page: pageIndex + 1,
@@ -89,86 +169,124 @@ export function AccountingContractsList() {
   const page = result?.success ? result.data : null;
   const contracts = page?.items ?? [];
 
-  /** @type {import('@astryxdesign/core/Table').TableColumn<Summary & Record<string, unknown>>[]} */
+  /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<Summary & Record<string, unknown>>[]} */
   const columns = [
+    {
+      key: 'signedDate',
+      header: 'Ngày ký',
+      width: pixel(110),
+      renderCell: (c) =>
+        isTotals(c) ? null : (
+          <Text hasTabularNumbers>{formatDisplayDate(c.signedDate)}</Text>
+        ),
+    },
     {
       key: 'contractNumber',
       header: 'Số hợp đồng',
       width: pixel(150),
       filter: 'contractNumber',
-      renderCell: (contract) => (
-        <Link href={`/accounting/contract/${contract.id}`}>
-          <Text weight="semibold">{contract.contractNumber}</Text>
-        </Link>
-      ),
-    },
-    {
-      key: 'signedDate',
-      header: 'Ngày ký',
-      width: pixel(110),
-      renderCell: (contract) => formatDisplayDate(contract.signedDate),
+      renderCell: (c) =>
+        isTotals(c) ? null : (
+          <Link href={`/accounting/contract/${c.id}`}>
+            <Text weight="bold" color="accent">
+              {c.contractNumber}
+            </Text>
+          </Link>
+        ),
     },
     {
       key: 'projectCode',
       header: 'Mã công trình',
-      width: pixel(130),
+      width: pixel(140),
       filter: 'projectCode',
-      renderCell: (contract) => contract.projectCode,
-    },
-    {
-      key: 'projectName',
-      header: 'Tên dự án',
-      width: proportional(2),
-      filter: 'projectName',
-      renderCell: (contract) => contract.projectName,
+      renderCell: (c) =>
+        isTotals(c) ? null : <Text weight="semibold">{c.projectCode}</Text>,
     },
     {
       key: 'customerName',
       header: 'Khách hàng',
-      width: proportional(1.5),
+      width: proportional(1.6),
       filter: 'customerName',
-      renderCell: (contract) => <MetaCellText value={contract.customerName} />,
+      renderCell: (c) =>
+        isTotals(c) ? null : <MetaCellText value={c.customerName} />,
+    },
+    {
+      key: 'projectName',
+      header: 'Dự án',
+      width: proportional(1.6),
+      filter: 'projectName',
+      renderCell: (c) => (isTotals(c) ? null : c.projectName),
     },
     {
       key: 'sourceName',
       header: 'Nguồn',
-      width: pixel(130),
-      renderCell: (contract) => <MetaCellText value={contract.sourceName} />,
+      width: pixel(140),
+      renderCell: (c) =>
+        isTotals(c) ? null : <MetaCellText value={c.sourceName} />,
     },
     {
       key: 'taxRatePercent',
       header: 'Thuế',
-      width: pixel(70),
+      width: pixel(80),
       align: 'end',
-      renderCell: (contract) => `${contract.taxRatePercent}%`,
+      renderCell: (c) => (isTotals(c) ? null : `${c.taxRatePercent}%`),
     },
     ...MONEY_COLUMNS.map((column) => ({
       key: column.key,
       header: column.label,
-      width: pixel(140),
+      width: pixel(150),
       align: /** @type {const} */ ('end'),
-      renderCell: (/** @type {Summary} */ contract) =>
-        formatVnd(/** @type {number} */ (contract[column.key])),
+      exportValue: (/** @type {Summary} */ c) => c[column.key],
+      renderCell: (/** @type {Summary} */ c) => (
+        <Text
+          hasTabularNumbers
+          weight={
+            isTotals(c) || column.key === 'settlementValue' ? 'bold' : undefined
+          }
+          color={
+            column.tone === 'success'
+              ? /** @type {any} */ ('meta-success')
+              : column.tone
+          }
+        >
+          {formatVnd(c[column.key])}
+        </Text>
+      ),
     })),
     {
       key: 'paymentDueDate',
       header: 'Tới hạn',
       width: pixel(110),
-      renderCell: (contract) =>
-        contract.paymentDueDate
-          ? formatDisplayDate(contract.paymentDueDate)
-          : '—',
+      renderCell: (c) =>
+        isTotals(c) ? null : (
+          <Text hasTabularNumbers>
+            {c.paymentDueDate ? formatDisplayDate(c.paymentDueDate) : '—'}
+          </Text>
+        ),
     },
     {
       key: 'overdueDays',
       header: 'Quá hạn',
-      width: pixel(100),
-      align: 'end',
-      renderCell: (contract) =>
-        contract.overdueDays ? (
-          <Token size="sm" color="red" label={`${contract.overdueDays} ngày`} />
+      width: pixel(110),
+      renderCell: (c) =>
+        isTotals(c) ? null : c.overdueDays ? (
+          <MetaPill label={`${c.overdueDays} ngày`} tone="danger" hasDot />
         ) : (
-          '—'
+          <Text color="secondary">—</Text>
+        ),
+    },
+    {
+      key: 'actions',
+      header: 'Thao tác',
+      width: pixel(96),
+      align: 'end',
+      renderCell: (c) =>
+        isTotals(c) ? null : (
+          <MetaRowActions
+            recordLabel={c.contractNumber}
+            onView={() => router.push(`/accounting/contract/${c.id}`)}
+            onEdit={() => setForm({ isOpen: true, contract: c })}
+          />
         ),
     },
   ];
@@ -182,33 +300,57 @@ export function AccountingContractsList() {
       <StackItem size="fill">
         <AdvanceTable
           title={
-            <MetaListTitle
-              title="Hợp đồng Kế toán"
-              count={page?.totalCount}
-              unit="hợp đồng"
-            />
+            <HStack gap={2} vAlign="center" wrap="wrap">
+              <Heading level={1}>Danh sách hợp đồng</Heading>
+              <MetaStatusBadge
+                label={`${page?.totalCount ?? 0} hợp đồng`}
+                tone="accent"
+                hasBorder
+              />
+            </HStack>
           }
+          viewPresets={VIEW_PRESETS}
+          viewPresetsInHeader
+          initialViewPresetKey="basic"
+          initialColumnKeys={BASIC_COLUMN_KEYS}
+          defaultColumnKeys={BASIC_COLUMN_KEYS}
           isFramed
           isStriped
+          dividers="rows"
           primaryAction={{
-            label: 'Thêm hợp đồng',
+            label: 'Tạo hợp đồng mới',
             icon: <Icon icon={Plus} size="sm" />,
-            onClick: () => setIsCreateOpen(true),
+            onClick: () => setForm({ isOpen: true, contract: null }),
           }}
           toolbarLabel="Thao tác danh sách hợp đồng"
           searchFieldDefs={SEARCH_FIELD_DEFS}
           entityLabel="Hợp đồng Kế toán"
           exportTitle="Danh sách hợp đồng Kế toán"
+          itemLabel="hợp đồng"
           contentSearchFieldKey="contractNumber"
-          searchPlaceholder="Tìm trong trang theo số hợp đồng..."
+          searchPlaceholder="Tìm nhanh theo số hợp đồng, mã công trình, khách hàng..."
           columnOptions={COLUMN_OPTIONS}
           tableColumns={columns}
           data={contracts}
           idKey="id"
+          totalsRows={(visibleRows) =>
+            totalsOf(/** @type {Summary[]} */ (visibleRows))
+          }
+          totalsRowLabel={() => (
+            <HStack gap={2} vAlign="center" wrap="nowrap">
+              <Text size="lg" weight="bold" color="accent">
+                Σ
+              </Text>
+              <Text weight="bold" color="accent">
+                {contracts.length}
+              </Text>
+            </HStack>
+          )}
+          defaultStickyStart="two"
+          fixedEndColumnKeys={['actions']}
           isLoading={searchQuery.isLoading}
           onRefresh={() => searchQuery.refetch()}
           isRefreshing={searchQuery.isFetching}
-          defaultStickyEnd="none"
           pagination={{
             pageIndex,
             pageSize,
@@ -229,12 +371,15 @@ export function AccountingContractsList() {
       </StackItem>
 
       <ContractFormDialog
-        isOpen={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        contract={null}
-        onSaved={(detail) =>
-          router.push(`/accounting/contract/${detail.contract.id}`)
+        isOpen={form.isOpen}
+        onOpenChange={(isOpen) =>
+          setForm((current) => ({ ...current, isOpen }))
         }
+        contract={form.contract}
+        onSaved={(detail) => {
+          if (!form.contract)
+            router.push(`/accounting/contract/${detail.contract.id}`);
+        }}
       />
     </VStack>
   );
