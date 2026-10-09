@@ -134,7 +134,7 @@ export function AccountingCustomersList() {
           }}
           toolbarLabel="Thao tác danh sách khách hàng"
           searchFieldDefs={SEARCH_FIELD_DEFS}
-          entityLabel="Khách hàng"
+          entityLabel="Khách hàng Kế toán"
           contentSearchFieldKey="name"
           searchPlaceholder="Tìm tên khách hàng..."
           columnOptions={COLUMN_OPTIONS}

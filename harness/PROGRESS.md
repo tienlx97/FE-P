@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-09 — accounting-contracts tasks 1.2–1.3: hợp đồng Kế toán list + detail
+
+- `/accounting/contracts`: server-paged list (sort on the backend's allow-list) with every derived value and a red "N ngày" token for overdue; `/accounting` redirects here. Create / edit dialog (company, số HĐ, ngày ký, mã công trình, tên dự án, khách hàng, nguồn, tới hạn, trước thuế, thuế %, ghi chú) with a live "sau thuế" preview; before saving it calls `check-codes` and marks the duplicate field (contract number, project code, or project code = Logistics contract number).
+- `/accounting/contract/[id]`: value summary (trước / sau thuế, quyết toán, đã xuất / còn phải xuất HĐ, đã / chưa thanh toán, quá hạn) and tabs Đợt thanh toán (instalments as groups of 2.1 / 2.2 rows with Kế hoạch / Đã thanh toán, add / edit / delete at both levels, several sub-instalments in one create), Hoá đơn, Phụ lục. Child saves put the backend's refreshed contract straight into the cache. Done in one commit: the list links into the detail page.
+- Found while clicking: AdvanceTable persists column visibility per `entityLabel`, and "Hợp đồng" was the Logistics list's key (only 4 columns showed) → accounting lists use "… Kế toán" labels. Harness gap: nothing warns when two lists share an `entityLabel`.
+- Tests: money (after tax, sub-instalment amount, vi-VN format), contract / child schemas, request bodies.
+- Chrome :3000 against dev API :8081: customer → contract (project code 26KCT27 refused as a Logistics number, then CT-UI-THU-01) → 108M, overdue 8 days → appendix +10M → settlement 118M → instalment 1.1 30 % paid + 1.2 5M planned → paid 32.4M, unpaid 85.6M → invoice 50M → remaining 68M; list row matches; deleting the customer while used shows the Vietnamese refusal; test contract and customer deleted afterwards.
+- Gate passed: `harness/runs/20261009-150727-1807/`.
+
 ## 2026-10-09 — accounting-contracts task 1.1: Kế toán area, Nguồn, Khách hàng
 
 - User request: Quản lý hợp đồng cho phòng Kế toán (BE-P `accounting-contracts` 1.1–1.6). New feature `src/features/accounting-contracts/` (no Logistics imports): top nav "Kế toán" (`accounting:contracts:view`), `sidebarAccounting.json`, route rule `/accounting`; pages `/accounting/sources` and `/accounting/customers` with create / edit / delete dialogs (`useZodForm`, `ConfirmDeleteDialog` keeps the backend refusal, e.g. still used by a contract). Backend 404 / 409 texts shown in Vietnamese (`config/error-messages.js`).

@@ -113,7 +113,7 @@ export function SourcesList() {
           }}
           toolbarLabel="Thao tác danh sách nguồn"
           searchFieldDefs={SEARCH_FIELD_DEFS}
-          entityLabel="Nguồn"
+          entityLabel="Nguồn Kế toán"
           contentSearchFieldKey="name"
           searchPlaceholder="Tìm tên nguồn..."
           columnOptions={COLUMN_OPTIONS}

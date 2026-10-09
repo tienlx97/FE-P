@@ -1,6 +1,6 @@
 # Proposal: Quản lý hợp đồng — phòng Kế toán
 
-**Status:** in progress
+**Status:** done
 **Created:** 2026-10-09
 
 ## Why
