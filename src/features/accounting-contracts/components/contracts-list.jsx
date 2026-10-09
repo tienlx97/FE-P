@@ -8,7 +8,7 @@ import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Banknote, List, Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
 import {
@@ -172,6 +172,18 @@ function totalsOf(rows) {
  */
 export function AccountingContractsList() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const initialView =
+    searchParams.get('tab') === 'financial' ? 'financial' : 'basic';
+  const initialColumns =
+    initialView === 'financial' ? FINANCIAL_COLUMN_KEYS : BASIC_COLUMN_KEYS;
+  /** @param {string} key */
+  function changeView(key) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', key);
+    router.replace(`${pathname}?${params}`, { scroll: false });
+  }
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(100);
   const [sort, setSort] = useState(
@@ -360,8 +372,9 @@ export function AccountingContractsList() {
           }
           viewPresets={VIEW_PRESETS}
           viewPresetsInHeader
-          initialViewPresetKey="basic"
-          initialColumnKeys={BASIC_COLUMN_KEYS}
+          initialViewPresetKey={initialView}
+          onViewPresetChange={changeView}
+          initialColumnKeys={initialColumns}
           defaultColumnKeys={BASIC_COLUMN_KEYS}
           isFramed
           isStriped

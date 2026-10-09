@@ -1,25 +1,31 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
-import { Divider } from '@astryxdesign/core/Divider';
+import { Card } from '@astryxdesign/core/Card';
+import { Collapsible } from '@astryxdesign/core/Collapsible';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { IconButton } from '@astryxdesign/core/IconButton';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Plus, Trash2 } from 'lucide-react';
-import { useEffect } from 'react';
+import { useState } from 'react';
 
+import {
+  MetaFormCard,
+  MetaFormSection,
+} from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 
 import { installmentSchema } from '../config/child-schemas.js';
-import { useContractChildMutation } from '../hooks/use-contract-children.js';
-import { useZodForm } from '../hooks/use-zod-form.js';
+import { formatVnd, subInstallmentAmount } from '../config/money.js';
 import {
   emptySubInstallment,
-  SubInstallmentFields,
-} from './sub-installment-fields.jsx';
+  initialPaymentStage,
+} from '../config/payment-draft.js';
+import { useContractChildMutation } from '../hooks/use-contract-children.js';
+import { useZodForm } from '../hooks/use-zod-form.js';
+import { SubInstallmentFields } from './sub-installment-fields.jsx';
 
 /** @typedef {import('../types/index.js').AccountingSubInstallmentFormValues} SubValues */
 
@@ -35,7 +41,7 @@ import {
  *   valueAfterTax: number,
  * }} props
  */
-export function InstallmentFormDialog({
+function InstallmentFormSession({
   contractId,
   isOpen,
   onOpenChange,
@@ -44,10 +50,14 @@ export function InstallmentFormDialog({
   valueAfterTax,
 }) {
   const mutation = useContractChildMutation(contractId);
-  const initial = () => ({
-    note: installment?.note ?? '',
-    subInstallments: installment ? [] : [emptySubInstallment()],
-  });
+  const [openIndex, setOpenIndex] = useState(0);
+  const initial = () =>
+    installment
+      ? {
+          note: installment.note ?? '',
+          subInstallments: /** @type {SubValues[]} */ ([]),
+        }
+      : initialPaymentStage();
   const form = useZodForm({
     initialValues: initial(),
     schema: installment
@@ -62,13 +72,7 @@ export function InstallmentFormDialog({
       }),
     onSuccess: () => onOpenChange(false),
   });
-  const { reset, values, setField, fieldStatuses } = form;
-
-  useEffect(() => {
-    if (isOpen) reset(initial());
-    // Reload the values each time the dialog opens on a (possibly other) instalment.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, installment]);
+  const { values, setField, fieldStatuses } = form;
 
   /**
    * @template {keyof SubValues} K
@@ -90,73 +94,152 @@ export function InstallmentFormDialog({
       variant="drawer"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      title={installment ? `Sửa đợt ${number}` : `Thêm đợt ${number}`}
-      submitLabel={installment ? 'Lưu' : 'Thêm'}
+      title={
+        installment
+          ? `Sửa đợt thanh toán ${number}`
+          : `Thêm đợt thanh toán ${number}`
+      }
+      subtitle="Một đợt có thể thanh toán một lần hoặc chia thành nhiều lần."
+      submitLabel={installment ? 'Lưu thay đổi' : 'Tạo đợt'}
       width={installment ? 480 : 820}
       draft={{ values }}
       isSubmitting={form.isSubmitting}
       submitError={form.submitError || fieldStatuses.subInstallments?.message}
       fieldStatuses={fieldStatuses}
+      onValidation={() => {
+        const parsed = installmentSchema.safeParse(values);
+        if (!parsed.success) {
+          const issue = parsed.error.issues.find(
+            (item) => item.path[0] === 'subInstallments',
+          );
+          if (typeof issue?.path[1] === 'number') setOpenIndex(issue.path[1]);
+        }
+      }}
       onSubmit={form.handleSubmit}
     >
       <VStack gap={4} hAlign="stretch">
-        <TextInput
-          label="Ghi chú của đợt"
-          value={values.note}
-          onChange={(value) => setField('note', value)}
-          isOptional
-          status={fieldStatuses.note}
-          statusVariant="tooltip"
-        />
-        {values.subInstallments.map((sub, index) => (
-          <VStack key={index} gap={2} hAlign="stretch">
-            <Divider />
-            <HStack hAlign="between" vAlign="center">
-              <Text weight="semibold">
-                Đợt {number}.{index + 1}
-              </Text>
-              {values.subInstallments.length > 1 ? (
-                <IconButton
-                  label={`Bỏ đợt ${number}.${index + 1}`}
-                  tooltip="Bỏ đợt con"
-                  icon={<Icon icon={Trash2} size="sm" />}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    setField(
-                      'subInstallments',
-                      values.subInstallments.filter((_, i) => i !== index),
-                    )
-                  }
-                />
-              ) : null}
-            </HStack>
-            <SubInstallmentFields
-              values={sub}
-              onChange={(field, value) => setSub(index, field, value)}
-              fieldStatuses={fieldStatuses}
-              statusPrefix={`subInstallments.${index}.`}
-              valueAfterTax={valueAfterTax}
-            />
-          </VStack>
-        ))}
+        <MetaFormSection
+          title="Thông tin đợt thanh toán"
+          isTitleUppercase={false}
+        >
+          <TextInput
+            label="Ghi chú của đợt"
+            placeholder="Ví dụ: Tạm ứng, nghiệm thu, quyết toán"
+            value={values.note}
+            onChange={(value) => setField('note', value)}
+            isOptional
+            status={fieldStatuses.note}
+          />
+        </MetaFormSection>
         {installment ? null : (
-          <HStack>
+          <MetaFormSection
+            title="Các lần thanh toán"
+            isTitleUppercase={false}
+            meta={`${values.subInstallments.length} lần`}
+          >
+            <Text color="secondary" size="sm">
+              Mặc định một lần thanh toán toàn bộ. Thêm lần khi cần chia nhỏ số
+              tiền.
+            </Text>
+            <MetaFormCard>
+              <HStack hAlign="between" gap={3} wrap="wrap">
+                <Text weight="semibold">Tổng kế hoạch của đợt</Text>
+                <Text weight="bold" color="accent" hasTabularNumbers>
+                  {formatVnd(
+                    values.subInstallments.reduce(
+                      (sum, sub) =>
+                        sum +
+                        subInstallmentAmount(
+                          sub.kind,
+                          sub.percent,
+                          sub.amount,
+                          valueAfterTax,
+                        ),
+                      0,
+                    ),
+                  )}{' '}
+                  VND
+                </Text>
+              </HStack>
+            </MetaFormCard>
+            {values.subInstallments.map((sub, index) => (
+              <Card key={index} padding={3}>
+                <Collapsible
+                  isOpen={openIndex === index}
+                  onOpenChange={(open) => setOpenIndex(open ? index : -1)}
+                  trigger={
+                    <HStack gap={3} hAlign="between" wrap="wrap" width="100%">
+                      <Text weight="bold">
+                        Lần {index + 1} · {number}.{index + 1}
+                      </Text>
+                      <Text color="secondary" hasTabularNumbers>
+                        {formatVnd(
+                          subInstallmentAmount(
+                            sub.kind,
+                            sub.percent,
+                            sub.amount,
+                            valueAfterTax,
+                          ),
+                        )}{' '}
+                        VND ·{' '}
+                        {sub.status === 'Paid' ? 'Đã thanh toán' : 'Kế hoạch'}
+                      </Text>
+                    </HStack>
+                  }
+                >
+                  <VStack gap={3} hAlign="stretch">
+                    <SubInstallmentFields
+                      values={sub}
+                      onChange={(field, value) => setSub(index, field, value)}
+                      fieldStatuses={fieldStatuses}
+                      statusPrefix={`subInstallments.${index}.`}
+                      valueAfterTax={valueAfterTax}
+                    />
+                    {values.subInstallments.length > 1 ? (
+                      <HStack hAlign="end">
+                        <Button
+                          label={`Xoá lần ${index + 1}`}
+                          icon={<Icon icon={Trash2} size="sm" />}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setField(
+                              'subInstallments',
+                              values.subInstallments.filter(
+                                (_, i) => i !== index,
+                              ),
+                            );
+                            setOpenIndex(Math.max(0, index - 1));
+                          }}
+                        />
+                      </HStack>
+                    ) : null}
+                  </VStack>
+                </Collapsible>
+              </Card>
+            ))}
             <Button
-              label="Thêm đợt con"
+              label="Thêm lần thanh toán"
               icon={<Icon icon={Plus} size="sm" />}
               variant="secondary"
-              size="sm"
-              onClick={() =>
+              onClick={() => {
+                setOpenIndex(values.subInstallments.length);
                 setField('subInstallments', [
                   ...values.subInstallments,
                   emptySubInstallment(),
-                ])
-              }
+                ]);
+              }}
             />
-          </HStack>
+          </MetaFormSection>
         )}
       </VStack>
     </FormDialog>
   );
+}
+
+/** @param {Parameters<typeof InstallmentFormSession>[0]} props */
+export function InstallmentFormDialog(props) {
+  return props.isOpen ? (
+    <InstallmentFormSession key={props.installment?.id ?? 'new'} {...props} />
+  ) : null;
 }

@@ -9,7 +9,7 @@ export const APPENDIX_TYPE_OPTIONS = [
 
 export const PAYMENT_KIND_OPTIONS = [
   { value: 'Percent', label: 'Theo %' },
-  { value: 'Quantity', label: 'Theo khối lượng' },
+  { value: 'Quantity', label: 'Theo số tiền' },
 ];
 
 export const PAYMENT_STATUS_OPTIONS = [
@@ -98,5 +98,5 @@ export const installmentSchema = z.object({
   note: z.string().max(1000, 'Tối đa 1000 ký tự'),
   subInstallments: z
     .array(subInstallmentSchema)
-    .min(1, 'Cần ít nhất một đợt con'),
+    .min(1, 'Cần ít nhất một lần thanh toán'),
 });

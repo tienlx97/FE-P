@@ -79,7 +79,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
     const columns = [
       {
         key: 'code',
-        header: 'Mã đợt',
+        header: 'Lần thanh toán',
         width: pixel(90),
         renderCell: (s) => (
           <Text
@@ -222,7 +222,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
           actions={
             <>
               <MetaTintButton
-                label="Đợt con"
+                label="Thêm lần thanh toán"
                 icon={<Icon icon={Plus} size="sm" />}
                 onClick={() =>
                   setSubForm({ isOpen: true, installment, sub: null })
@@ -233,7 +233,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
                 onEdit={() => setInstallmentForm({ isOpen: true, installment })}
                 onDelete={() =>
                   setDeleting({
-                    title: `Xoá đợt ${installment.number} và các đợt con?`,
+                    title: `Xoá đợt ${installment.number} và các lần thanh toán?`,
                     path: `installments/${installment.id}`,
                   })
                 }
@@ -242,7 +242,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
           }
           footerStart={
             <Text weight="medium" color="secondary">
-              {installment.subInstallments.length} đợt con · Tổng{' '}
+              {installment.subInstallments.length} lần thanh toán · Tổng{' '}
               {formatVnd(installment.amount)} VND
             </Text>
           }
@@ -278,7 +278,9 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
           setInstallmentForm((current) => ({ ...current, isOpen }))
         }
         installment={installmentForm.installment}
-        nextNumber={detail.installments.length + 1}
+        nextNumber={
+          Math.max(0, ...detail.installments.map((stage) => stage.number)) + 1
+        }
         valueAfterTax={valueAfterTax}
       />
       <SubInstallmentFormDialog

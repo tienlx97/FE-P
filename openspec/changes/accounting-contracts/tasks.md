@@ -5,3 +5,5 @@
 - [x] 1.3 Contract detail: value summary, Phụ lục / Hoá đơn / Đợt thanh toán tabs with their dialogs.
 
 - [x] 1.4 Prefer accounting form drawers, match Logistics financial grouped headers (GIÁ TRỊ / THANH TOÁN / HOÁ ĐƠN), comma-group VND display, and create development test data with browser evidence.
+
+- [x] 1.5 Persist table tabs in URL; redesign payment/invoice drawers, default one payment per stage and project-based invoice numbering; adapt Logistics detail overview for Accounting.

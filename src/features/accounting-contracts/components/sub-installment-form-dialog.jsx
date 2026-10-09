@@ -1,16 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
-
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { subInstallmentSchema } from '../config/child-schemas.js';
+import { emptySubInstallment } from '../config/payment-draft.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
-import {
-  emptySubInstallment,
-  SubInstallmentFields,
-} from './sub-installment-fields.jsx';
+import { SubInstallmentFields } from './sub-installment-fields.jsx';
 
 /**
  * @param {import('../types/index.js').AccountingSubInstallment | null} sub
@@ -40,7 +36,7 @@ function valuesOf(sub) {
  *   valueAfterTax: number,
  * }} props
  */
-export function SubInstallmentFormDialog({
+function SubInstallmentFormSession({
   contractId,
   isOpen,
   onOpenChange,
@@ -61,13 +57,7 @@ export function SubInstallmentFormDialog({
       }),
     onSuccess: () => onOpenChange(false),
   });
-  const { reset, values, setField, fieldStatuses } = form;
-
-  useEffect(() => {
-    if (isOpen) reset(valuesOf(sub));
-    // Reload the values each time the dialog opens on a (possibly other) sub-instalment.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, sub]);
+  const { values, setField, fieldStatuses } = form;
 
   const code =
     sub?.code ??
@@ -78,7 +68,7 @@ export function SubInstallmentFormDialog({
       variant="drawer"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      title={sub ? `Sửa đợt ${code}` : `Thêm đợt ${code}`}
+      title={sub ? `Sửa lần thanh toán ${code}` : `Thêm lần thanh toán ${code}`}
       submitLabel={sub ? 'Lưu' : 'Thêm'}
       width={820}
       draft={{ values }}
@@ -95,4 +85,11 @@ export function SubInstallmentFormDialog({
       />
     </FormDialog>
   );
+}
+
+/** @param {Parameters<typeof SubInstallmentFormSession>[0]} props */
+export function SubInstallmentFormDialog(props) {
+  return props.isOpen ? (
+    <SubInstallmentFormSession key={props.sub?.id ?? 'new'} {...props} />
+  ) : null;
 }

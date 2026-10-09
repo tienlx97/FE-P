@@ -165,6 +165,9 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
 
       <InvoiceFormDialog
         contractId={contractId}
+        projectCode={detail.contract.projectCode}
+        invoices={detail.invoices}
+        remainingToInvoice={detail.contract.remainingToInvoice}
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
         invoice={editing}

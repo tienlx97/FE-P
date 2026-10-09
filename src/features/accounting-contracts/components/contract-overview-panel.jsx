@@ -1,116 +1,228 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
+import { Grid } from '@astryxdesign/core/Grid';
 import {
   MetadataList,
   MetadataListItem,
 } from '@astryxdesign/core/MetadataList';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Info, ListChecks } from 'lucide-react';
+import { Building2, FileText, Paperclip, ReceiptText } from 'lucide-react';
 
 import {
-  MetaMetricsCard,
+  MetaOverviewSummaryCard,
   MetaPill,
   MetaTableCard,
 } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatVnd } from '../config/money.js';
-
-/** @param {string | null | undefined} iso */
-function dateOrDash(iso) {
-  return iso ? formatDisplayDate(iso) : '—';
-}
+import { paymentOverview } from '../config/payment-overview.js';
+import { useCustomersQuery } from '../hooks/use-catalogs.js';
 
 /**
- * "Tổng quan" tab: the five value KPI cards, then the contract's own facts.
+ * Logistics overview summary and payment strip, adapted to accounting:
+ * customer, project/value facts, invoices and signed appendices.
  * @param {{
- *   detail: import('../types/index.js').AccountingContractDetail,
- *   metrics: ReturnType<typeof import('../config/contract-view.js').contractMetrics>,
- *   onOpenTab: (tab: 'installments') => void,
+ * detail: import('../types/index.js').AccountingContractDetail,
+ * metrics: ReturnType<typeof import('../config/contract-view.js').contractMetrics>,
+ * onOpenTab: (tab: 'overview' | 'installments' | 'invoices' | 'appendices') => void,
  * }} props
  */
 export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
-  const contract = detail.contract;
-
+  const c = detail.contract;
+  const payments = paymentOverview(detail);
+  const customersQuery = useCustomersQuery();
+  const customer = customersQuery.data?.success
+    ? customersQuery.data.data.find((item) => item.id === c.customerId)
+    : null;
   return (
     <VStack gap={5} hAlign="stretch">
-      <MetaMetricsCard
-        title="GIÁ TRỊ & TIẾN ĐỘ HỢP ĐỒNG"
+      <MetaOverviewSummaryCard
         metrics={[
           metrics.settlement,
           metrics.invoiced,
-          metrics.paid,
+          metrics.remainingToInvoice,
           metrics.unpaid,
         ]}
-        maxColumns={4}
+        paidPercent={payments.paidPercent}
+        currentPercent={payments.currentPercent}
+        paidPercentLabel={`${Math.round(payments.paidPercent)}% đã thanh toán`}
+        paidAmountValue={`${formatVnd(c.paidValue)} VND`}
+        totalAmountValue={`${formatVnd(c.settlementValue)} VND`}
+        installments={payments.installments}
+        installmentsLabel="Các lần thanh toán"
+        installmentTermLabel="Điều kiện"
+        onViewDetail={() => onOpenTab('installments')}
       />
-
-      <MetaTableCard
-        icon={Info}
-        title="Thông tin hợp đồng"
-        isBodyPadded
-        actions={
-          <Button
-            label="Xem đợt thanh toán"
-            variant="secondary"
-            size="sm"
-            icon={<ListChecks size={16} />}
-            onClick={() => onOpenTab('installments')}
-          />
-        }
-      >
-        <MetadataList columns={4} label={{ position: 'top' }}>
-          <MetadataListItem label="Số hợp đồng">
-            <Text weight="semibold">{contract.contractNumber}</Text>
-          </MetadataListItem>
-          <MetadataListItem label="Mã công trình">
-            {contract.projectCode}
-          </MetadataListItem>
-          <MetadataListItem label="Tên dự án">
-            {contract.projectName}
-          </MetadataListItem>
-          <MetadataListItem label="Khách hàng">
-            {contract.customerName ?? '—'}
-          </MetadataListItem>
-          <MetadataListItem label="Nguồn">
-            {contract.sourceName ?? '—'}
-          </MetadataListItem>
-          <MetadataListItem label="Ngày ký">
-            {dateOrDash(contract.signedDate)}
-          </MetadataListItem>
-          <MetadataListItem label="Ngày tới hạn thanh toán">
-            {dateOrDash(contract.paymentDueDate)}
-          </MetadataListItem>
-          <MetadataListItem label="Số ngày quá hạn">
-            {contract.overdueDays ? (
-              <MetaPill
-                label={`${contract.overdueDays} ngày`}
-                tone="danger"
-                hasDot
+      <Grid columns={{ minWidth: 280, max: 3 }} gap={5}>
+        <VStack gap={4} hAlign="stretch">
+          <Text weight="bold" color="secondary">
+            1. KHÁCH HÀNG & NGUỒN
+          </Text>
+          <MetaTableCard icon={Building2} title="Khách hàng" isBodyPadded>
+            <VStack gap={4} hAlign="stretch">
+              <Text weight="bold" color="accent">
+                {c.customerName ?? '—'}
+              </Text>
+              <MetadataList columns={1}>
+                <MetadataListItem label="Mã số thuế">
+                  {customer?.taxCode ?? '—'}
+                </MetadataListItem>
+                <MetadataListItem label="Địa chỉ">
+                  {customer?.address ?? '—'}
+                </MetadataListItem>
+                <MetadataListItem label="Người liên hệ">
+                  {customer?.contactPerson ?? '—'}
+                </MetadataListItem>
+                <MetadataListItem label="Điện thoại">
+                  {customer?.phone ?? '—'}
+                </MetadataListItem>
+                <MetadataListItem label="Email">
+                  {customer?.email ?? '—'}
+                </MetadataListItem>
+                <MetadataListItem label="Nguồn">
+                  {c.sourceName ?? '—'}
+                </MetadataListItem>
+              </MetadataList>
+              {customersQuery.data && !customersQuery.data.success ? (
+                <Text color="secondary">{customersQuery.data.message}</Text>
+              ) : null}
+            </VStack>
+          </MetaTableCard>
+        </VStack>
+        <VStack gap={4} hAlign="stretch">
+          <Text weight="bold" color="secondary">
+            2. CÔNG TRÌNH & GIÁ TRỊ
+          </Text>
+          <MetaTableCard
+            icon={FileText}
+            title="Thông tin hợp đồng"
+            isBodyPadded
+          >
+            <MetadataList columns={1}>
+              <MetadataListItem label="Số hợp đồng">
+                {c.contractNumber}
+              </MetadataListItem>
+              <MetadataListItem label="Mã công trình">
+                <Text weight="bold" color="accent">
+                  {c.projectCode}
+                </Text>
+              </MetadataListItem>
+              <MetadataListItem label="Tên công trình">
+                {c.projectName}
+              </MetadataListItem>
+              <MetadataListItem label="Ngày ký">
+                {formatDisplayDate(c.signedDate)}
+              </MetadataListItem>
+              <MetadataListItem label="Trước thuế">
+                <Text hasTabularNumbers>{formatVnd(c.valueBeforeTax)} VND</Text>
+              </MetadataListItem>
+              <MetadataListItem label="Thuế">
+                {c.taxRatePercent}%
+              </MetadataListItem>
+              <MetadataListItem label="Sau thuế">
+                <Text weight="bold" hasTabularNumbers>
+                  {formatVnd(c.valueAfterTax)} VND
+                </Text>
+              </MetadataListItem>
+              <MetadataListItem label="Ghi chú">
+                {c.note ?? '—'}
+              </MetadataListItem>
+            </MetadataList>
+          </MetaTableCard>
+        </VStack>
+        <VStack gap={4} hAlign="stretch">
+          <Text weight="bold" color="secondary">
+            3. CÔNG NỢ & CHỨNG TỪ
+          </Text>
+          <MetaTableCard
+            icon={ReceiptText}
+            title="Thanh toán & hoá đơn"
+            isBodyPadded
+            actions={
+              <Button
+                label="Xem hoá đơn"
+                size="sm"
+                variant="ghost"
+                onClick={() => onOpenTab('invoices')}
               />
-            ) : (
-              '—'
-            )}
-          </MetadataListItem>
-          <MetadataListItem label="Giá trị HĐ (trước thuế)">
-            {formatVnd(contract.valueBeforeTax)}
-          </MetadataListItem>
-          <MetadataListItem label="Thuế">
-            {contract.taxRatePercent}%
-          </MetadataListItem>
-          <MetadataListItem label="Giá trị HĐ (sau thuế)">
-            {formatVnd(contract.valueAfterTax)}
-          </MetadataListItem>
-          <MetadataListItem label="Còn phải xuất hoá đơn">
-            {formatVnd(contract.remainingToInvoice)}
-          </MetadataListItem>
-          <MetadataListItem label="Ghi chú">
-            {contract.note ?? '—'}
-          </MetadataListItem>
-        </MetadataList>
-      </MetaTableCard>
+            }
+          >
+            <MetadataList columns={1}>
+              <MetadataListItem label="Hạn thanh toán">
+                {c.paymentDueDate ? formatDisplayDate(c.paymentDueDate) : '—'}
+              </MetadataListItem>
+              <MetadataListItem label="Quá hạn">
+                {c.overdueDays ? (
+                  <MetaPill label={`${c.overdueDays} ngày`} tone="danger" />
+                ) : (
+                  '—'
+                )}
+              </MetadataListItem>
+              <MetadataListItem label="Đã thanh toán">
+                <Text
+                  color={/** @type {any} */ ('meta-success')}
+                  weight="bold"
+                  hasTabularNumbers
+                >
+                  {formatVnd(c.paidValue)} VND
+                </Text>
+              </MetadataListItem>
+              <MetadataListItem label="Chưa thanh toán">
+                <Text
+                  color={/** @type {any} */ ('meta-danger')}
+                  weight="bold"
+                  hasTabularNumbers
+                >
+                  {formatVnd(c.unpaidValue)} VND
+                </Text>
+              </MetadataListItem>
+              <MetadataListItem label="Hoá đơn đã xuất">
+                {detail.invoices.length} hoá đơn
+              </MetadataListItem>
+              <MetadataListItem label="Đợt thanh toán">
+                {detail.installments.length} đợt ·{' '}
+                {payments.installments.length} lần
+              </MetadataListItem>
+            </MetadataList>
+          </MetaTableCard>
+          <MetaTableCard
+            icon={Paperclip}
+            title="Phụ lục hợp đồng"
+            isBodyPadded
+            actions={
+              <Button
+                label="Xem phụ lục"
+                size="sm"
+                variant="ghost"
+                onClick={() => onOpenTab('appendices')}
+              />
+            }
+          >
+            <MetadataList columns={1}>
+              <MetadataListItem label="Số lượng">
+                {detail.appendices.length} phụ lục
+              </MetadataListItem>
+              <MetadataListItem label="Đã ký đủ">
+                {
+                  detail.appendices.filter(
+                    (a) => a.buyerSigned && a.sellerSigned,
+                  ).length
+                }{' '}
+                phụ lục
+              </MetadataListItem>
+              <MetadataListItem label="Phát sinh tăng">
+                {metrics.increase.value} VND
+              </MetadataListItem>
+              <MetadataListItem label="Phát sinh giảm">
+                {metrics.decrease.value} VND
+              </MetadataListItem>
+            </MetadataList>
+          </MetaTableCard>
+        </VStack>
+      </Grid>
     </VStack>
   );
 }

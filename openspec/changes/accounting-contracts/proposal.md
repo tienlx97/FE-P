@@ -36,3 +36,10 @@ granted to the "Kế toán" department and Admin).
 - Match Logistics financial table: grouped GIÁ TRỊ (before tax, tax, after tax, settlement), THANH TOÁN (paid, unpaid), HOÁ ĐƠN (issued, remaining); tabular numbers, minimum money column widths, pinned identifiers/actions, and page totals.
 - Accounting VND displays comma grouping and decimal points, e.g. `123,456.78`, including summaries, tables, previews and existing formatted inputs.
 - Seed development-only TEST records through the authenticated API: unpaid, partially paid/invoiced, fully paid/invoiced, overdue and signed increase/decrease appendices.
+
+## Follow-up — Payment and invoice UX (task 1.5)
+
+- Contract list opens from `?tab=basic|financial` and writes the selected preset to the URL while preserving other query parameters.
+- Payment model: a contract has numbered payment stages; each stage has one or more actual/planned payment occurrences. The create-stage drawer starts with exactly one planned occurrence (100% of after-tax value); additional occurrences are optional. No draft is persisted before Save. UI calls sub-instalments "lần thanh toán", uses a running total and collapsible occurrence sections, and opens the first invalid occurrence on validation. The last occurrence cannot be removed.
+- Invoice creation suggests `<projectCode>/HĐ-<sequence>` (e.g. `26KCT10/HĐ-01`), advancing after the highest existing matching suffix. Legacy/edited invoice numbers stay intact. This is a front-end suggestion, editable before save. Drawer sections: invoice facts, remaining-to-invoice/value, notes.
+- Accounting detail reuses Logistics' shared header, tabs, overview summary, payment progress and occurrence carousel. Information beneath uses three accounting-specific columns: customer/source, project/value, receivables/documents. Tab selection follows the URL and summary links open the relevant accounting tab.

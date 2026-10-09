@@ -86,18 +86,15 @@ export function AccountingContractDetailWorkspace({ contractId }) {
   const panelId = useId();
 
   const requestedTab = /** @type {DetailTab} */ (searchParams.get('tab'));
-  const [activeTab, setActiveTabState] = useState(
-    /** @type {DetailTab} */ (
-      TAB_VALUES.includes(requestedTab) ? requestedTab : 'overview'
-    ),
-  );
+  const activeTab = TAB_VALUES.includes(requestedTab)
+    ? requestedTab
+    : 'overview';
   /** Opens a tab's create dialog from "+ Thao tác". */
   const [createRequest, setCreateRequest] = useState(
     /** @type {{ tab: DetailTab, key: number } | null} */ (null),
   );
   /** @param {DetailTab} tab */
   function setActiveTab(tab) {
-    setActiveTabState(tab);
     // A pending "+ Thao tác" create belongs to the click that asked for it.
     setCreateRequest(null);
     router.replace(`${pathname}?tab=${tab}`, { scroll: false });
@@ -114,7 +111,6 @@ export function AccountingContractDetailWorkspace({ contractId }) {
 
   /** @param {DetailTab} tab */
   function requestCreate(tab) {
-    setActiveTabState(tab);
     router.replace(`${pathname}?tab=${tab}`, { scroll: false });
     setCreateRequest({ tab, key: Date.now() });
   }
@@ -122,7 +118,7 @@ export function AccountingContractDetailWorkspace({ contractId }) {
   return (
     <MetaThemeProvider>
       <PageContentShell isFullWidth>
-        <VStack gap={4} hAlign="stretch">
+        <VStack gap={3} hAlign="stretch">
           <MetaContractBreadcrumb
             trail={accountingContractTrail({
               contractNumber: contract?.contractNumber,
@@ -142,13 +138,14 @@ export function AccountingContractDetailWorkspace({ contractId }) {
                 contractCode={contract.contractNumber}
                 projectName={`${contract.projectCode} · ${contract.projectName}`}
                 projectIcon={FileText}
-                typeLabel={contract.customerName ?? 'Kế toán'}
+                typeLabel="KẾ TOÁN"
                 typeTone="neutral"
                 statusLabel={contractStatus(contract).label}
                 statusTone={contractStatus(contract).tone}
                 incotermLabel={`Thuế ${contract.taxRatePercent}%`}
                 copyAriaLabel="Sao chép số hợp đồng"
                 copyAnnounce="Đã sao chép số hợp đồng"
+                onExportPdf={() => window.print()}
                 onEdit={() => setIsEditOpen(true)}
                 actionItems={[
                   {
@@ -183,14 +180,6 @@ export function AccountingContractDetailWorkspace({ contractId }) {
                   id,
                   label: TAB_LABELS[id],
                   icon: TAB_ICONS[id],
-                  count:
-                    id === 'installments'
-                      ? `${detail.installments.length} đợt`
-                      : id === 'invoices' && detail.invoices.length > 0
-                        ? String(detail.invoices.length)
-                        : id === 'appendices' && detail.appendices.length > 0
-                          ? String(detail.appendices.length)
-                          : undefined,
                 }))}
                 activeId={activeTab}
                 panelId={panelId}
