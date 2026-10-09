@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import { generateRowKey } from '@/shared/config/generate-row-key.js';
 import { useExtraFieldRows } from '@/shared/hooks/use-extra-field-rows.js';
@@ -8,7 +8,6 @@ import { useExtraFieldRows } from '@/shared/hooks/use-extra-field-rows.js';
 import { customerSchema } from '../config/customer-schema.js';
 import {
   useCreateCustomerMutation,
-  useNextCustomerCodeQuery,
   useUpdateCustomerMutation,
 } from './use-customers-query.js';
 import { usePartyLookupsQuery } from './use-party-lookups-query.js';
@@ -21,9 +20,8 @@ import {
 function emptyValues(kind) {
   return {
     companyName: '',
-    // A new customer's code is the next "KH-0042" (filled in by `usePartyForm`
-    // once the backend answers); suppliers keep a timestamp placeholder.
-    code: kind === 'customer' ? '' : `NCC-${Date.now()}`,
+    // Codes are unique timestamps ("KH-1760000000000"), not a running number.
+    code: `${kind === 'customer' ? 'KH' : 'NCC'}-${Date.now()}`,
     isOrganization: true,
     taxCode: '',
     budgetUnitCode: '',
@@ -115,22 +113,6 @@ export function usePartyForm({ kind, party = null, onSuccess }) {
   const [submitError, setSubmitError] = useState('');
   const extraFieldRows = useExtraFieldRows(withKeys(party?.extraFields ?? []));
   const lookups = usePartyLookupsQuery(kind);
-  // New customer: pre-fill the next running code. A code the user has not
-  // touched follows the backend's answer (it is refetched after every save),
-  // one they typed stays.
-  const nextCode = useNextCustomerCodeQuery(kind === 'customer' && !party);
-  const lastAutoCode = useRef('');
-  const isCodeEmpty = values.code === '';
-  useEffect(() => {
-    if (party || kind !== 'customer' || !nextCode.data?.success) return;
-    const code = nextCode.data.code;
-    setValues((current) =>
-      current.code === '' || current.code === lastAutoCode.current
-        ? { ...current, code }
-        : current,
-    );
-    lastAutoCode.current = code;
-  }, [party, kind, nextCode.data, nextCode.dataUpdatedAt, isCodeEmpty]);
   const customerCreate = useCreateCustomerMutation();
   const customerUpdate = useUpdateCustomerMutation();
   const supplierCreate = useCreateSupplierMutation();
@@ -157,7 +139,6 @@ export function usePartyForm({ kind, party = null, onSuccess }) {
     setRows((rows) => rows.filter((row) => row.rowKey !== rowKey));
   }
   function reset() {
-    lastAutoCode.current = '';
     setValues(party ? valuesFromParty(party, kind) : emptyValues(kind));
     setBankAccounts(withKeys(party?.bankAccounts ?? []));
     setDeliveryAddresses(withKeys(party?.deliveryAddresses ?? []));

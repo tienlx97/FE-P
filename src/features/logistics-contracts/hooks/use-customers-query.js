@@ -6,7 +6,6 @@ import {
   createCustomer,
   deleteCustomer,
   getCustomer,
-  getNextCustomerCode,
   listCustomers,
   searchCustomers,
   updateCustomer,
@@ -68,22 +67,6 @@ export function useCustomerBankAccountsChanged(customerId) {
     });
     queryClient.invalidateQueries({ queryKey: SEARCH_QUERY_KEY });
   };
-}
-
-/**
- * The next running code ("KH-0042") for the create form; refetched on
- * mount and after every customer change (the key sits under `QUERY_KEY`),
- * so it never offers a code that was just taken.
- * @param {boolean} enabled
- */
-export function useNextCustomerCodeQuery(enabled) {
-  return useQuery({
-    queryKey: [...QUERY_KEY, 'next-code'],
-    queryFn: getNextCustomerCode,
-    enabled,
-    staleTime: 0,
-    refetchOnMount: 'always',
-  });
 }
 
 export function useDeleteCustomerMutation() {

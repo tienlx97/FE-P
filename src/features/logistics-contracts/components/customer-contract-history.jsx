@@ -24,6 +24,19 @@ function orDash(value) {
 
 const CSV_BOM = String.fromCharCode(0xfeff);
 
+/**
+ * One line of the merged contract table, whichever area it came from.
+ * @typedef {object} CustomerContractRow
+ * @property {string} id
+ * @property {string} href
+ * @property {string} contractNumber
+ * @property {string} signedDate
+ * @property {number} settlementValue
+ * @property {number} paidValue
+ * @property {number} exportedValue
+ * @property {string} currency
+ */
+
 /** @param {string} value */
 function escapeCsvCell(value) {
   const needsQuoting = /[",\n\r]/.test(value);
@@ -32,33 +45,26 @@ function escapeCsvCell(value) {
 }
 
 /**
- * "Xuất file" for the contract-history table — same CSV-with-BOM approach
- * as `AdvanceTable`'s own export (see its doc comment), sized down to this
- * table's fixed 4 columns since it has no column picker of its own.
+ * "Xuất file" for the contract table — same CSV-with-BOM approach as
+ * `AdvanceTable`'s own export (see its doc comment), sized down to this
+ * table's fixed columns since it has no column picker of its own.
  * @param {string} customerName
- * @param {import('../types/index.js').Contract[]} contracts
- * @param {(contractId: string, field: 'settlementValue' | 'paidValue' | 'exportedValue') => number} settlementOf
+ * @param {CustomerContractRow[]} rows
  */
-function exportContractHistoryCsv(customerName, contracts, settlementOf) {
+function exportContractHistoryCsv(customerName, rows) {
   const headerRow = [
-    'Số hợp đồng',
-    'Giá trị',
-    'Giá trị quyết toán',
-    'Đã thanh toán',
-    'Giá trị đã xuất',
+    'Mã hợp đồng',
     'Ngày ký',
-    'Ngày hoàn thành',
+    'Giá trị quyết toán',
+    'Giá trị đã thanh toán',
+    'Giá trị đã xuất (hóa đơn)',
   ];
-  const dataRows = contracts.map((contract) => [
-    contract.contractNumber,
-    formatMoney(contract.contractValue, contract.currency),
-    formatMoney(settlementOf(contract.id, 'settlementValue'), contract.currency),
-    formatMoney(settlementOf(contract.id, 'paidValue'), contract.currency),
-    formatMoney(settlementOf(contract.id, 'exportedValue'), contract.currency),
-    formatDisplayDate(contract.createdDate),
-    contract.projectCompletionDate
-      ? formatDisplayDate(contract.projectCompletionDate)
-      : '—',
+  const dataRows = rows.map((row) => [
+    row.contractNumber,
+    formatDisplayDate(row.signedDate),
+    formatMoney(row.settlementValue, row.currency),
+    formatMoney(row.paidValue, row.currency),
+    formatMoney(row.exportedValue, row.currency),
   ]);
   const csv = [headerRow, ...dataRows]
     .map((cells) =>
@@ -75,19 +81,25 @@ function exportContractHistoryCsv(customerName, contracts, settlementOf) {
 }
 
 /**
- * "Hợp đồng đã làm" — a customer's contract history (number/value/sign
- * date/completion date) + CSV export, shared by `CustomerDetailDialog`
- * (opened from a Contract's Buyer link) and `customers-list.jsx`'s own
- * inline row-expansion panel, so both surfaces show the exact same data
- * and can never drift apart. "Số hợp đồng" links to
- * `/logistics/contract/[id]` (`openspec/changes/add-contract-detail-page/`)
- * instead of opening its own `ContractFormDialog` — that dialog usage used
- * to render with dead "Phụ lục"/"Thanh toán"/"Liên quan"/"Xem đầy đủ" tabs
- * (no `children` wired), the same bug `shipments-list.jsx`/
- * `commissions-list.jsx`'s own contract-number links had.
- * @param {{ customerId: string, customerName: string }} props
+ * "Hợp đồng" — one table of a customer's contracts (mã hợp đồng, ngày ký,
+ * giá trị quyết toán / đã thanh toán / đã xuất hoá đơn) + CSV export,
+ * shared by `CustomerDetailDialog` (opened from a Contract's Buyer link),
+ * `customers-list.jsx`'s inline row-expansion panel and the customer
+ * detail page, so every surface shows the same data. The Logistics
+ * contracts come from this feature; `extraRows` carries the Kế toán ones
+ * (composed by the page — a feature may not import another) into the same
+ * table. Each "Mã hợp đồng" links to its own detail page.
+ * @param {{
+ *   customerId: string,
+ *   customerName: string,
+ *   extraRows?: { rows: CustomerContractRow[], isLoading?: boolean, message?: string },
+ * }} props
  */
-export function CustomerContractHistory({ customerId, customerName }) {
+export function CustomerContractHistory({
+  customerId,
+  customerName,
+  extraRows,
+}) {
   const contractsQuery = useCustomerContractsQuery(customerId);
 
   const contracts = contractsQuery.data?.success
@@ -99,127 +111,111 @@ export function CustomerContractHistory({ customerId, customerName }) {
       (settlement) => [settlement.contractId, settlement],
     ),
   );
-  /** @param {string} contractId @param {'settlementValue' | 'paidValue' | 'exportedValue'} field */
-  const settlementOf = (contractId, field) =>
-    settlementByContractId.get(contractId)?.[field] ?? 0;
+  /** @type {CustomerContractRow[]} */
+  const logisticsRows = contracts.map((contract) => {
+    const settlement = settlementByContractId.get(contract.id);
+    return {
+      id: `logistics-${contract.id}`,
+      href: `/logistics/contract/${contract.id}`,
+      contractNumber: contract.contractNumber,
+      signedDate: contract.createdDate,
+      settlementValue: settlement?.settlementValue ?? 0,
+      paidValue: settlement?.paidValue ?? 0,
+      exportedValue: settlement?.exportedValue ?? 0,
+      currency: contract.currency,
+    };
+  });
+  const rows = [...logisticsRows, ...(extraRows?.rows ?? [])];
+  const isLoading = contractsQuery.isLoading || Boolean(extraRows?.isLoading);
 
-  /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Contract & Record<string, unknown>>[]} */
+  /** @type {import('@astryxdesign/core/Table').TableColumn<CustomerContractRow & Record<string, unknown>>[]} */
   const columns = [
     {
       key: 'contractNumber',
-      header: 'Số hợp đồng',
-      width: pixel(160),
-      renderCell: (contract) => (
-        <Link
-          href={`/logistics/contract/${contract.id}`}
-          xstyle={recordLinkStyles.link}
-        >
-          {contract.contractNumber}
+      header: 'Mã hợp đồng',
+      width: proportional(1.2, { minWidth: 180 }),
+      renderCell: (row) => (
+        <Link href={row.href} xstyle={recordLinkStyles.link}>
+          {row.contractNumber}
         </Link>
       ),
     },
     {
-      key: 'contractValue',
-      header: 'Giá trị',
-      width: pixel(160),
-      align: 'end',
-      renderCell: (contract) =>
-        formatMoney(contract.contractValue, contract.currency),
+      key: 'signedDate',
+      header: 'Ngày ký',
+      width: pixel(130),
+      renderCell: (row) => formatDisplayDate(row.signedDate),
     },
     {
       key: 'settlementValue',
       header: 'Giá trị quyết toán',
-      width: pixel(170),
+      width: pixel(190),
       align: 'end',
-      renderCell: (contract) => (
+      renderCell: (row) => (
         <Text weight="bold" hasTabularNumbers>
-          {formatMoney(
-            settlementOf(contract.id, 'settlementValue'),
-            contract.currency,
-          )}
+          {formatMoney(row.settlementValue, row.currency)}
         </Text>
       ),
     },
     {
       key: 'paidValue',
-      header: 'Đã thanh toán',
-      width: pixel(170),
+      header: 'Giá trị đã thanh toán',
+      width: pixel(190),
       align: 'end',
-      renderCell: (contract) => (
+      renderCell: (row) => (
         <Text
           color={/** @type {any} */ ('meta-success')}
           weight="bold"
           hasTabularNumbers
         >
-          {formatMoney(settlementOf(contract.id, 'paidValue'), contract.currency)}
+          {formatMoney(row.paidValue, row.currency)}
         </Text>
       ),
     },
     {
       key: 'exportedValue',
-      header: 'Giá trị đã xuất',
-      width: pixel(170),
+      header: 'Giá trị đã xuất (hóa đơn)',
+      width: pixel(210),
       align: 'end',
-      renderCell: (contract) => (
+      renderCell: (row) => (
         <Text hasTabularNumbers>
-          {formatMoney(
-            settlementOf(contract.id, 'exportedValue'),
-            contract.currency,
-          )}
+          {formatMoney(row.exportedValue, row.currency)}
         </Text>
       ),
-    },
-    {
-      key: 'createdDate',
-      header: 'Ngày ký',
-      width: pixel(140),
-      renderCell: (contract) => formatDisplayDate(contract.createdDate),
-    },
-    {
-      key: 'projectCompletionDate',
-      header: 'Ngày hoàn thành',
-      width: proportional(1, { minWidth: 140 }),
-      renderCell: (contract) =>
-        orDash(
-          contract.projectCompletionDate
-            ? formatDisplayDate(contract.projectCompletionDate)
-            : null,
-        ),
     },
   ];
 
   return (
     <VStack gap={3} hAlign="stretch">
-      <HStack hAlign="between" vAlign="center">
-        <Text weight="semibold">Hợp đồng Logistics</Text>
+      <HStack hAlign="end" vAlign="center">
         <Button
           label="Xuất file"
           variant="secondary"
           size="sm"
           icon={<Icon icon={Download} size="sm" />}
-          isDisabled={contractsQuery.isLoading || contracts.length === 0}
-          onClick={() =>
-            exportContractHistoryCsv(customerName, contracts, settlementOf)
-          }
+          isDisabled={isLoading || rows.length === 0}
+          onClick={() => exportContractHistoryCsv(customerName, rows)}
         />
       </HStack>
 
-      {contractsQuery.isLoading ? (
+      {isLoading ? (
         <HStack hAlign="center" paddingBlock={4}>
           <Spinner label="Đang tải danh sách hợp đồng" />
         </HStack>
       ) : (
         // The Astryx table bleeds 24px past itself; the padding gives that
-        // back so it does not cover the title above.
+        // back so it does not cover the button above.
         <VStack hAlign="stretch" paddingBlock={6}>
           <Table
-            data={contracts}
+            data={rows}
             columns={columns}
             idKey="id"
             density="compact"
             dividers="rows"
             emptyState={
-              <Text color="secondary">Khách hàng này chưa có hợp đồng nào.</Text>
+              <Text color="secondary">
+                {extraRows?.message ?? 'Khách hàng này chưa có hợp đồng nào.'}
+              </Text>
             }
           />
         </VStack>

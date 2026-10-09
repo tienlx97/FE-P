@@ -1,5 +1,10 @@
 # Progress Log
 
+## 2026-10-10 — Unique customer codes, hover card, one contract table
+
+- Per user: (1) customer codes are unique timestamps again (`KH-<Date.now()>`, like `NCC-…`), not a running "KH-0001"; the form pre-fills it, `next-code` api/hook removed (BE endpoint now unused by the FE). (2) Customers list "Tùy ý" column opens an Astryx `HoverCard` (key / value stack) instead of a Tooltip. (3) Customer detail › Hợp đồng is ONE table (Mã hợp đồng / Ngày ký / Giá trị quyết toán / Giá trị đã thanh toán / Giá trị đã xuất (hóa đơn)); `CustomerContractHistory` takes `extraRows`, the page (`customer-detail-with-contracts.jsx`) maps the Kế toán contracts into it; `CustomerAccountingContracts` deleted. The shared table also shows in the customer dialog / list expansion (dropped Giá trị + Ngày hoàn thành columns there too).
+- Not checked in Chrome (dev server recompile is slow); gate only: `harness/runs/20261010-020341-242795/`. Existing KH-000N codes from the renumbering stay as they are.
+
 ## 2026-10-10 — Customer detail contracts, Ctrl+K search, customer codes
 
 - Per user: (1) customer codes "KH-0001": the create form pre-fills the backend's `next-code` (the code field is not shown; it is saved), supplier keeps its placeholder; BE-P renumbered the old ugly codes. (2) Customer detail › Hợp đồng lists Kế toán contracts (số HĐ, ngày ký, quyết toán, đã thanh toán, đã xuất hoá đơn) and Logistics ones with new quyết toán / đã thanh toán / đã xuất columns; the page composes both (`app/(protected)/_components/customer-detail-with-contracts.jsx`) because a feature may not import another; tab badge sums both. (3) Ctrl+K also finds Kế toán contracts by project code or number and customers by company name (client wrapper `app-quick-search.jsx` passes the accounting search in; each part needs its own permission). (4) Excel export of Kế toán › Danh sách hợp đồng was already in place (commit 58abdfd); in Chrome both "trang hiện tại" and "toàn bộ" built a file — asked the user what they found missing.

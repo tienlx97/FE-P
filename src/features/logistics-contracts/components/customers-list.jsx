@@ -2,6 +2,7 @@
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Button } from '@astryxdesign/core/Button';
 import { Carousel } from '@astryxdesign/core/Carousel';
+import { HoverCard } from '@astryxdesign/core/HoverCard';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Link } from '@astryxdesign/core/Link';
@@ -10,7 +11,6 @@ import { StackItem } from '@astryxdesign/core/Stack';
 import { pixel, proportional } from '@astryxdesign/core/Table';
 import { Tab, TabList } from '@astryxdesign/core/TabList';
 import { Text } from '@astryxdesign/core/Text';
-import { Tooltip } from '@astryxdesign/core/Tooltip';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
 import { Plus, RotateCcw } from 'lucide-react';
@@ -310,13 +310,27 @@ export function CustomersList({ basePath = '/logistics/customers' }) {
         customer.extraFields.length === 0 ? (
           <MetaCellText value={null} />
         ) : (
-          <Tooltip
-            content={customer.extraFields
-              .map((field) => `${field.key}: ${field.value}`)
-              .join(' · ')}
+          <HoverCard
+            label="Thông tin bổ sung"
+            placement="below"
+            hasHoverIndication={false}
+            content={
+              <VStack gap={2} hAlign="stretch" padding={3}>
+                {customer.extraFields.map((field) => (
+                  <VStack key={`${field.key}-${field.value}`} gap={0}>
+                    <Text size="sm" color="secondary">
+                      {field.key}
+                    </Text>
+                    <Text weight="medium">{field.value}</Text>
+                  </VStack>
+                ))}
+              </VStack>
+            }
           >
-            <MetaCountBadge value={`+${customer.extraFields.length}`} />
-          </Tooltip>
+            <HStack hAlign="center">
+              <MetaCountBadge value={`+${customer.extraFields.length}`} />
+            </HStack>
+          </HoverCard>
         ),
     },
     {

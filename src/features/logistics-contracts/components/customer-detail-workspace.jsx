@@ -60,13 +60,13 @@ const TAB_VALUES = /** @type {CustomerTab[]} */ (Object.keys(TAB_LABELS));
  * tabs Tổng quan / Tài khoản ngân hàng / Hợp đồng / Ghi chú & bổ sung.
  * Also `/accounting/customers/[id]` (`area="accounting"`): the directory is
  * shared with Kế toán, only the breadcrumb and the list to return to differ.
- * `extraContracts` adds another list to the "Hợp đồng" tab (the Kế toán
+ * `extraContracts` merges more rows into the "Hợp đồng" table (the Kế toán
  * contracts, composed by the page — a feature may not import another) with
- * its count for the tab badge; the page's own area comes first.
+ * their count for the tab badge.
  * @param {{
  *   customerId: string,
  *   area?: 'logistics' | 'accounting',
- *   extraContracts?: { count?: number | null, node: import('react').ReactNode },
+ *   extraContracts?: { count?: number | null, rows: import('./customer-contract-history.jsx').CustomerContractRow[], isLoading?: boolean, message?: string },
  * }} props
  */
 export function CustomerDetailWorkspace({
@@ -141,7 +141,7 @@ export function CustomerDetailWorkspace({
  *   onActiveTabChange: (tab: CustomerTab) => void,
  *   onDeleted: () => void,
  *   area: 'logistics' | 'accounting',
- *   extraContracts?: { count?: number | null, node: import('react').ReactNode },
+ *   extraContracts?: { count?: number | null, rows: import('./customer-contract-history.jsx').CustomerContractRow[], isLoading?: boolean, message?: string },
  * }} props
  */
 function CustomerDetailBody({
@@ -262,12 +262,11 @@ function CustomerDetailBody({
               subtitle="Các hợp đồng khách hàng này là bên mua"
             >
               <VStack gap={6} hAlign="stretch">
-                {area === 'accounting' ? extraContracts?.node : null}
                 <CustomerContractHistory
                   customerId={customer.id}
                   customerName={customer.companyName}
+                  extraRows={extraContracts}
                 />
-                {area === 'accounting' ? null : extraContracts?.node}
               </VStack>
             </MetaShipmentSection>
           ) : null}
