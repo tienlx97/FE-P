@@ -16,13 +16,14 @@ test('navLinks each have a label and href', () => {
   }
 });
 
-test('topNavLinks exposes Tin tức, Tài liệu, Logistics, and Quản trị', () => {
+test('topNavLinks exposes Tin tức, Tài liệu, Logistics, Kế toán, and Quản trị', () => {
   assert.deepEqual(
     topNavLinks.map(({ label, href }) => ({ label, href })),
     [
       { label: 'Tin tức', href: '/news' },
       { label: 'Tài liệu', href: '/docs' },
       { label: 'Logistics', href: '/logistics' },
+      { label: 'Kế toán', href: '/accounting' },
       { label: 'Quản trị', href: '/admin' },
     ],
   );
@@ -36,4 +37,11 @@ test('the Quản trị link is gated behind the users:manage permission', () => 
 test('the Logistics link is gated behind the logistics:view permission', () => {
   const logisticsLink = topNavLinks.find(({ href }) => href === '/logistics');
   assert.deepEqual(logisticsLink?.allowedPermissions, ['logistics:view']);
+});
+
+test('the Kế toán link is gated behind the accounting:contracts:view permission', () => {
+  const accountingLink = topNavLinks.find(({ href }) => href === '/accounting');
+  assert.deepEqual(accountingLink?.allowedPermissions, [
+    'accounting:contracts:view',
+  ]);
 });

@@ -16,6 +16,11 @@
  */
 export const routeAccessRules = [
   { pathPrefix: '/admin', allowedPermissions: ['users:manage'] },
+  // Kế toán area (BE-P `accounting-contracts`): every page needs the view permission.
+  {
+    pathPrefix: '/accounting',
+    allowedPermissions: ['accounting:contracts:view'],
+  },
   {
     pathPrefix: '/logistics/contracts-overview',
     allowedPermissions: ['logistics:contracts:view'],

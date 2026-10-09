@@ -1,0 +1,29 @@
+{
+  "title": "Kế toán",
+  "path": "/accounting",
+  "routes": [
+    {
+      "hasSectionHeader": true,
+      "sectionHeader": "NGHIỆP VỤ"
+    },
+    {
+      "title": "Hợp đồng",
+      "path": "/accounting/contracts",
+      "allowedPermissions": ["accounting:contracts:view"]
+    },
+    {
+      "hasSectionHeader": true,
+      "sectionHeader": "DANH MỤC"
+    },
+    {
+      "title": "Khách hàng",
+      "path": "/accounting/customers",
+      "allowedPermissions": ["accounting:contracts:view"]
+    },
+    {
+      "title": "Nguồn",
+      "path": "/accounting/sources",
+      "allowedPermissions": ["accounting:contracts:view"]
+    }
+  ]
+}

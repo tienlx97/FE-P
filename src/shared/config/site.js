@@ -25,6 +25,11 @@ export const navLinks = [
     allowedPermissions: ['logistics:view'],
   },
   {
+    label: 'Kế toán',
+    href: '/accounting',
+    allowedPermissions: ['accounting:contracts:view'],
+  },
+  {
     label: 'Quản trị',
     href: '/admin',
     allowedPermissions: ['users:manage'],
@@ -34,5 +39,5 @@ export const navLinks = [
 
 /** @type {NavLink[]} */
 export const topNavLinks = navLinks.filter(({ href }) =>
-  ['/news', '/docs', '/logistics', '/admin'].includes(href),
+  ['/news', '/docs', '/logistics', '/accounting', '/admin'].includes(href),
 );

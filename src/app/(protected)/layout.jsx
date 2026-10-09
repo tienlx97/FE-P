@@ -19,6 +19,7 @@ import {
   SESSION_PERMISSIONS_KEY,
 } from '../../shared/config/session-keys.js';
 import { site, topNavLinks } from '../../shared/config/site.js';
+import sidebarAccounting from '../../sidebarAccounting.json';
 import sidebarAdmin from '../../sidebarAdmin.json';
 import sidebarLogistics from '../../sidebarLogistics.json';
 import sidebarPost from '../../sidebarPost.json';
@@ -69,6 +70,13 @@ export default async function ProtectedLayout({ children }) {
           ...sidebarLogistics,
           routes: filterSidebarRoutesByPermissions(
             sidebarLogistics.routes,
+            permissions,
+          ),
+        },
+        {
+          ...sidebarAccounting,
+          routes: filterSidebarRoutesByPermissions(
+            sidebarAccounting.routes,
             permissions,
           ),
         },

@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-09 — accounting-contracts task 1.1: Kế toán area, Nguồn, Khách hàng
+
+- User request: Quản lý hợp đồng cho phòng Kế toán (BE-P `accounting-contracts` 1.1–1.6). New feature `src/features/accounting-contracts/` (no Logistics imports): top nav "Kế toán" (`accounting:contracts:view`), `sidebarAccounting.json`, route rule `/accounting`; pages `/accounting/sources` and `/accounting/customers` with create / edit / delete dialogs (`useZodForm`, `ConfirmDeleteDialog` keeps the backend refusal, e.g. still used by a contract). Backend 404 / 409 texts shown in Vietnamese (`config/error-messages.js`).
+- Tests: schemas, customer body, message translation; `site.test.js` for the new nav link.
+- Chrome :3000 (the existing dev server, dev API :8081): Nguồn list → add "Nguồn thử UI" → edit dialog prefilled → delete; Khách hàng list renders.
+- Gate passed: `harness/runs/20261009-145422-568/`.
+
 ## 2026-10-09 — Excel exports in Inter
 
 - Per user ("ở mục xuất excel, font mặc định là \"Inter\""). The three ExcelJS builders (`list-workbook.js` — every AdvanceTable list; `container-workbook.js` — container export + template; `shipment-cost-workbook.js`) use `Inter` instead of Arial. List auto widths ×1.15 → ×1.2 (Inter is wider). The SheetJS exports (contract / supplier shipments, chi hộ) carry no font — SheetJS community cannot style.
