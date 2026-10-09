@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 
-import { CustomerDetailWorkspace } from '@/features/logistics-contracts/index.js';
+import { CustomerDetailWithContracts } from '../../../_components/customer-detail-with-contracts.jsx';
 
 export const metadata = {
   title: 'Khách hàng · Kế toán · KT-XNK',
@@ -17,7 +17,7 @@ export default async function AccountingCustomerDetailPage({ params }) {
 
   return (
     <Suspense>
-      <CustomerDetailWorkspace customerId={id} area="accounting" />
+      <CustomerDetailWithContracts customerId={id} area="accounting" />
     </Suspense>
   );
 }

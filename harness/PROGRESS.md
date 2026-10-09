@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-10 — Customer detail contracts, Ctrl+K search, customer codes
+
+- Per user: (1) customer codes "KH-0001": the create form pre-fills the backend's `next-code` (the code field is not shown; it is saved), supplier keeps its placeholder; BE-P renumbered the old ugly codes. (2) Customer detail › Hợp đồng lists Kế toán contracts (số HĐ, ngày ký, quyết toán, đã thanh toán, đã xuất hoá đơn) and Logistics ones with new quyết toán / đã thanh toán / đã xuất columns; the page composes both (`app/(protected)/_components/customer-detail-with-contracts.jsx`) because a feature may not import another; tab badge sums both. (3) Ctrl+K also finds Kế toán contracts by project code or number and customers by company name (client wrapper `app-quick-search.jsx` passes the accounting search in; each part needs its own permission). (4) Excel export of Kế toán › Danh sách hợp đồng was already in place (commit 58abdfd); in Chrome both "trang hiện tại" and "toàn bộ" built a file — asked the user what they found missing.
+- Found: the Astryx table's −24px bleed margins cover a title / the next block; tables stacked in a section get `paddingBlock` back.
+- Chrome :3000: codes KH-0001…; Hòa Bình customer tab shows its accounting contract; Ctrl+K `TEST-CT-003` → TEST-HD-003, `thép` → the customer; new customer got KH-0028 (deleted afterwards).
+- Gate passed: `harness/runs/20261010-015302-225733/`.
+
 ## 2026-10-10 — Kế toán: shared customer directory, overview card order
 
 - Per user ("GIÁ TRỊ QUYẾT TOÁN / ĐÃ THANH TOÁN / CHƯA THANH TOÁN / ĐÃ XUẤT HOÁ ĐƠN"): overview metric cards in that order.

@@ -23,6 +23,20 @@ export async function listCustomers() {
 }
 
 /**
+ * The code a new customer gets ("KH-0042") — the create form pre-fills it.
+ * @returns {Promise<{ success: true, code: string } | { success: false, message: string }>}
+ */
+export async function getNextCustomerCode() {
+  const result = await apiRequest('/api/v1/customers/next-code', {
+    errorMessage: 'Không thể lấy mã khách hàng kế tiếp',
+  });
+
+  return result.success
+    ? { success: true, code: /** @type {{ code: string }} */ (result.data).code }
+    : { success: false, message: result.message };
+}
+
+/**
  * @param {string} customerId
  * @returns {Promise<{ success: true, customer: import('../types/index.js').Customer } | { success: false, message: string }>}
  */

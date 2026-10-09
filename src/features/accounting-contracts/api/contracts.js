@@ -8,13 +8,22 @@ const BASE = '/api/v1/accounting/contracts';
 /** @typedef {import('../types/index.js').AccountingContractDetail} Detail */
 
 /**
- * @param {{ page: number, pageSize: number, sort?: { field: string, direction: 'Ascending' | 'Descending' } | null }} query
+ * @param {{ page: number, pageSize: number, sort?: { field: string, direction: 'Ascending' | 'Descending' } | null,
+ *   conditions?: { field: string, operator: string, value: string }[] }} query
  * @returns {Promise<import('../types/index.js').AccountingResult<{ items: import('../types/index.js').AccountingContractSummary[], totalCount: number, totalPages: number }>>}
  */
-export function searchContracts({ page, pageSize, sort }) {
+export function searchContracts({ page, pageSize, sort, conditions = [] }) {
   return accountingRequest(`${BASE}/search`, {
     method: 'POST',
-    body: { page, pageSize, conditions: [], sort: sort ?? null },
+    body: {
+      page,
+      pageSize,
+      conditions: conditions.map((condition) => ({
+        ...condition,
+        connector: 'And',
+      })),
+      sort: sort ?? null,
+    },
     errorMessage: 'Không thể tải danh sách hợp đồng',
   });
 }

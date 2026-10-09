@@ -3,10 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 import { UserMenu } from '../../features/auth/index.js';
-import {
-  QuickSearchPalette,
-  ShipmentAlertsBell,
-} from '../../features/logistics-contracts/index.js';
+import { ShipmentAlertsBell } from '../../features/logistics-contracts/index.js';
 import { parsePermissionsCookie } from '../../shared/api/jwt.js';
 import {
   filterNavLinksByPermissions,
@@ -24,6 +21,7 @@ import sidebarAdmin from '../../sidebarAdmin.json';
 import sidebarLogistics from '../../sidebarLogistics.json';
 import sidebarPost from '../../sidebarPost.json';
 import sidebarTutorial from '../../sidebarTutorial.json';
+import { AppQuickSearch } from './_components/app-quick-search.jsx';
 
 /**
  * Server-side gate for every route in this group (everything except
@@ -49,8 +47,12 @@ export default async function ProtectedLayout({ children }) {
   );
 
   // "Tra cứu nhanh" (Ctrl + K) and the shipment alerts bell open contract /
-  // shipment detail pages, which need the same permission.
+  // shipment detail pages, which need the same permission; the palette also
+  // finds Kế toán contracts for users who can view those.
   const canQuickSearch = permissions.includes('logistics:contracts:view');
+  const canQuickSearchAccounting = permissions.includes(
+    'accounting:contracts:view',
+  );
 
   return (
     <ProtectedAppShell
@@ -84,7 +86,12 @@ export default async function ProtectedLayout({ children }) {
       site={site}
     >
       {children}
-      {canQuickSearch ? <QuickSearchPalette /> : null}
+      {canQuickSearch || canQuickSearchAccounting ? (
+        <AppQuickSearch
+          canLogistics={canQuickSearch}
+          canAccounting={canQuickSearchAccounting}
+        />
+      ) : null}
     </ProtectedAppShell>
   );
 }

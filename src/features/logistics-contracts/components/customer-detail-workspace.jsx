@@ -60,9 +60,20 @@ const TAB_VALUES = /** @type {CustomerTab[]} */ (Object.keys(TAB_LABELS));
  * tabs Tổng quan / Tài khoản ngân hàng / Hợp đồng / Ghi chú & bổ sung.
  * Also `/accounting/customers/[id]` (`area="accounting"`): the directory is
  * shared with Kế toán, only the breadcrumb and the list to return to differ.
- * @param {{ customerId: string, area?: 'logistics' | 'accounting' }} props
+ * `extraContracts` adds another list to the "Hợp đồng" tab (the Kế toán
+ * contracts, composed by the page — a feature may not import another) with
+ * its count for the tab badge; the page's own area comes first.
+ * @param {{
+ *   customerId: string,
+ *   area?: 'logistics' | 'accounting',
+ *   extraContracts?: { count?: number | null, node: import('react').ReactNode },
+ * }} props
  */
-export function CustomerDetailWorkspace({ customerId, area = 'logistics' }) {
+export function CustomerDetailWorkspace({
+  customerId,
+  area = 'logistics',
+  extraContracts,
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -113,6 +124,8 @@ export function CustomerDetailWorkspace({ customerId, area = 'logistics' }) {
               activeTab={activeTab}
               onActiveTabChange={setActiveTab}
               onDeleted={() => router.push(`/${area}/customers`)}
+              area={area}
+              extraContracts={extraContracts}
             />
           )}
         </VStack>
@@ -127,6 +140,8 @@ export function CustomerDetailWorkspace({ customerId, area = 'logistics' }) {
  *   activeTab: CustomerTab,
  *   onActiveTabChange: (tab: CustomerTab) => void,
  *   onDeleted: () => void,
+ *   area: 'logistics' | 'accounting',
+ *   extraContracts?: { count?: number | null, node: import('react').ReactNode },
  * }} props
  */
 function CustomerDetailBody({
@@ -134,6 +149,8 @@ function CustomerDetailBody({
   activeTab,
   onActiveTabChange,
   onDeleted,
+  area,
+  extraContracts,
 }) {
   const panelId = useId();
   const toast = useAppToast();
@@ -153,7 +170,7 @@ function CustomerDetailBody({
   )?.name;
   const isOrganization = profile?.isOrganization ?? true;
   const contractCount = contractsQuery.data?.success
-    ? contractsQuery.data.totalCount
+    ? contractsQuery.data.totalCount + (extraContracts?.count ?? 0)
     : undefined;
 
   /** @type {Record<CustomerTab, number | undefined>} */
@@ -244,10 +261,14 @@ function CustomerDetailBody({
               title="Hợp đồng"
               subtitle="Các hợp đồng khách hàng này là bên mua"
             >
-              <CustomerContractHistory
-                customerId={customer.id}
-                customerName={customer.companyName}
-              />
+              <VStack gap={6} hAlign="stretch">
+                {area === 'accounting' ? extraContracts?.node : null}
+                <CustomerContractHistory
+                  customerId={customer.id}
+                  customerName={customer.companyName}
+                />
+                {area === 'accounting' ? null : extraContracts?.node}
+              </VStack>
             </MetaShipmentSection>
           ) : null}
           {activeTab === 'notes' ? (

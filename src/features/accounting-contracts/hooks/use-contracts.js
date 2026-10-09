@@ -32,6 +32,31 @@ export function useContractsSearchQuery(query) {
   });
 }
 
+/**
+ * Every accounting contract of one customer, newest signed first (the
+ * customer detail page's "Hợp đồng" tab).
+ * @param {string | null | undefined} customerId
+ */
+export function useCustomerAccountingContractsQuery(customerId) {
+  return useQuery({
+    queryKey: [...CONTRACTS_KEY, 'by-customer', customerId],
+    queryFn: () =>
+      searchContracts({
+        page: 1,
+        pageSize: 100,
+        sort: { field: 'signedDate', direction: 'Descending' },
+        conditions: [
+          {
+            field: 'customerId',
+            operator: 'Equals',
+            value: /** @type {string} */ (customerId),
+          },
+        ],
+      }),
+    enabled: Boolean(customerId),
+  });
+}
+
 /** @param {string} id */
 export function useContractQuery(id) {
   return useQuery({

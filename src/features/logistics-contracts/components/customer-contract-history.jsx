@@ -37,12 +37,24 @@ function escapeCsvCell(value) {
  * table's fixed 4 columns since it has no column picker of its own.
  * @param {string} customerName
  * @param {import('../types/index.js').Contract[]} contracts
+ * @param {(contractId: string, field: 'settlementValue' | 'paidValue' | 'exportedValue') => number} settlementOf
  */
-function exportContractHistoryCsv(customerName, contracts) {
-  const headerRow = ['Số hợp đồng', 'Giá trị', 'Ngày ký', 'Ngày hoàn thành'];
+function exportContractHistoryCsv(customerName, contracts, settlementOf) {
+  const headerRow = [
+    'Số hợp đồng',
+    'Giá trị',
+    'Giá trị quyết toán',
+    'Đã thanh toán',
+    'Giá trị đã xuất',
+    'Ngày ký',
+    'Ngày hoàn thành',
+  ];
   const dataRows = contracts.map((contract) => [
     contract.contractNumber,
     formatMoney(contract.contractValue, contract.currency),
+    formatMoney(settlementOf(contract.id, 'settlementValue'), contract.currency),
+    formatMoney(settlementOf(contract.id, 'paidValue'), contract.currency),
+    formatMoney(settlementOf(contract.id, 'exportedValue'), contract.currency),
     formatDisplayDate(contract.createdDate),
     contract.projectCompletionDate
       ? formatDisplayDate(contract.projectCompletionDate)
@@ -81,6 +93,15 @@ export function CustomerContractHistory({ customerId, customerName }) {
   const contracts = contractsQuery.data?.success
     ? contractsQuery.data.contracts
     : [];
+  // Per-contract settlement / paid / exported values come beside the page.
+  const settlementByContractId = new Map(
+    (contractsQuery.data?.success ? contractsQuery.data.settlements : []).map(
+      (settlement) => [settlement.contractId, settlement],
+    ),
+  );
+  /** @param {string} contractId @param {'settlementValue' | 'paidValue' | 'exportedValue'} field */
+  const settlementOf = (contractId, field) =>
+    settlementByContractId.get(contractId)?.[field] ?? 0;
 
   /** @type {import('@astryxdesign/core/Table').TableColumn<import('../types/index.js').Contract & Record<string, unknown>>[]} */
   const columns = [
@@ -106,6 +127,49 @@ export function CustomerContractHistory({ customerId, customerName }) {
         formatMoney(contract.contractValue, contract.currency),
     },
     {
+      key: 'settlementValue',
+      header: 'Giá trị quyết toán',
+      width: pixel(170),
+      align: 'end',
+      renderCell: (contract) => (
+        <Text weight="bold" hasTabularNumbers>
+          {formatMoney(
+            settlementOf(contract.id, 'settlementValue'),
+            contract.currency,
+          )}
+        </Text>
+      ),
+    },
+    {
+      key: 'paidValue',
+      header: 'Đã thanh toán',
+      width: pixel(170),
+      align: 'end',
+      renderCell: (contract) => (
+        <Text
+          color={/** @type {any} */ ('meta-success')}
+          weight="bold"
+          hasTabularNumbers
+        >
+          {formatMoney(settlementOf(contract.id, 'paidValue'), contract.currency)}
+        </Text>
+      ),
+    },
+    {
+      key: 'exportedValue',
+      header: 'Giá trị đã xuất',
+      width: pixel(170),
+      align: 'end',
+      renderCell: (contract) => (
+        <Text hasTabularNumbers>
+          {formatMoney(
+            settlementOf(contract.id, 'exportedValue'),
+            contract.currency,
+          )}
+        </Text>
+      ),
+    },
+    {
       key: 'createdDate',
       header: 'Ngày ký',
       width: pixel(140),
@@ -127,14 +191,16 @@ export function CustomerContractHistory({ customerId, customerName }) {
   return (
     <VStack gap={3} hAlign="stretch">
       <HStack hAlign="between" vAlign="center">
-        <Text weight="semibold">Hợp đồng đã làm</Text>
+        <Text weight="semibold">Hợp đồng Logistics</Text>
         <Button
           label="Xuất file"
           variant="secondary"
           size="sm"
           icon={<Icon icon={Download} size="sm" />}
           isDisabled={contractsQuery.isLoading || contracts.length === 0}
-          onClick={() => exportContractHistoryCsv(customerName, contracts)}
+          onClick={() =>
+            exportContractHistoryCsv(customerName, contracts, settlementOf)
+          }
         />
       </HStack>
 
@@ -143,16 +209,20 @@ export function CustomerContractHistory({ customerId, customerName }) {
           <Spinner label="Đang tải danh sách hợp đồng" />
         </HStack>
       ) : (
-        <Table
-          data={contracts}
-          columns={columns}
-          idKey="id"
-          density="compact"
-          dividers="rows"
-          emptyState={
-            <Text color="secondary">Khách hàng này chưa có hợp đồng nào.</Text>
-          }
-        />
+        // The Astryx table bleeds 24px past itself; the padding gives that
+        // back so it does not cover the title above.
+        <VStack hAlign="stretch" paddingBlock={6}>
+          <Table
+            data={contracts}
+            columns={columns}
+            idKey="id"
+            density="compact"
+            dividers="rows"
+            emptyState={
+              <Text color="secondary">Khách hàng này chưa có hợp đồng nào.</Text>
+            }
+          />
+        </VStack>
       )}
     </VStack>
   );
