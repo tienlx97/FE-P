@@ -11,9 +11,11 @@ export {};
 /** @typedef {{ name: string, note: string }} AccountingSourceFormValues */
 
 /**
- * Accounting customer — its own directory, not the Logistics customers.
+ * A customer of the shared directory (`/api/v1/customers`, same as
+ * Logistics), in the shape the accounting screens use.
  * @typedef {Object} AccountingCustomer
  * @property {string} id
+ * @property {string | null} code
  * @property {string} name
  * @property {string | null} taxCode
  * @property {string | null} address
@@ -21,17 +23,6 @@ export {};
  * @property {string | null} email
  * @property {string | null} contactPerson
  * @property {string | null} note
- */
-
-/**
- * @typedef {Object} AccountingCustomerFormValues
- * @property {string} name
- * @property {string} taxCode
- * @property {string} address
- * @property {string} phone
- * @property {string} email
- * @property {string} contactPerson
- * @property {string} note
  */
 
 /** @typedef {{ id: string, name: string }} Company */

@@ -58,9 +58,11 @@ const TAB_VALUES = /** @type {CustomerTab[]} */ (Object.keys(TAB_LABELS));
  * `/logistics/customers/[id]` — customer detail page, laid out like the
  * supplier detail page (`supplier-detail-workspace.jsx`): header card,
  * tabs Tổng quan / Tài khoản ngân hàng / Hợp đồng / Ghi chú & bổ sung.
- * @param {{ customerId: string }} props
+ * Also `/accounting/customers/[id]` (`area="accounting"`): the directory is
+ * shared with Kế toán, only the breadcrumb and the list to return to differ.
+ * @param {{ customerId: string, area?: 'logistics' | 'accounting' }} props
  */
-export function CustomerDetailWorkspace({ customerId }) {
+export function CustomerDetailWorkspace({ customerId, area = 'logistics' }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -86,7 +88,7 @@ export function CustomerDetailWorkspace({ customerId }) {
       <PageContentShell isFullWidth>
         <VStack gap={4} hAlign="stretch">
           <MetaContractBreadcrumb
-            trail={customerTrail({ customerCode: customer?.profile?.code })}
+            trail={customerTrail({ customerCode: customer?.profile?.code, area })}
           />
 
           {customerQuery.isLoading ? (
@@ -110,7 +112,7 @@ export function CustomerDetailWorkspace({ customerId }) {
               customer={customer}
               activeTab={activeTab}
               onActiveTabChange={setActiveTab}
-              onDeleted={() => router.push('/logistics/customers')}
+              onDeleted={() => router.push(`/${area}/customers`)}
             />
           )}
         </VStack>

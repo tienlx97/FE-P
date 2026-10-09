@@ -42,9 +42,9 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
       <MetaOverviewSummaryCard
         metrics={[
           metrics.settlement,
-          metrics.invoiced,
           metrics.paid,
           metrics.unpaid,
+          metrics.invoiced,
         ]}
         paidPercent={payments.paidPercent}
         currentPercent={payments.currentPercent}

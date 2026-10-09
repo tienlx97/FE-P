@@ -111,10 +111,12 @@ const styles = stylex.create({
 /**
  * Khách hàng list — same layout as the Khách hàng list
  * (`suppliers-list.jsx`): group tabs with counts, "Loại đối tượng" /
- * "Nội bộ" filters, code + name linking to `/logistics/customers/[id]`,
- * edit / delete row actions.
+ * "Nội bộ" filters, code + name linking to `{basePath}/[id]`,
+ * edit / delete row actions. Kế toán shows the same directory with
+ * `basePath="/accounting/customers"`.
+ * @param {{ basePath?: string }} props
  */
-export function CustomersList() {
+export function CustomersList({ basePath = '/logistics/customers' }) {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [hasOpenedCreate, setHasOpenedCreate] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(
@@ -249,7 +251,7 @@ export function CustomersList() {
       filter: 'companyName',
       renderCell: (customer) => (
         <Link
-          href={`/logistics/customers/${customer.id}`}
+          href={`${basePath}/${customer.id}`}
           weight="bold"
           color="accent"
           xstyle={styles.companyName}

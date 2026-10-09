@@ -2,11 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import {
-  deleteCustomer,
-  listCustomers,
-  saveCustomer,
-} from '../api/customers.js';
+import { listCustomers } from '../api/customers.js';
 import { deleteSource, listSources, saveSource } from '../api/sources.js';
 
 export const SOURCES_KEY = ['accounting', 'sources'];
@@ -43,33 +39,6 @@ export function useDeleteSourceMutation() {
     onSuccess: (result) => {
       if (result.success)
         queryClient.invalidateQueries({ queryKey: SOURCES_KEY });
-    },
-  });
-}
-
-export function useSaveCustomerMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (
-      /** @type {{ values: import('../types/index.js').AccountingCustomerFormValues, id?: string }} */ {
-        values,
-        id,
-      },
-    ) => saveCustomer(values, id),
-    onSuccess: (result) => {
-      if (result.success)
-        queryClient.invalidateQueries({ queryKey: ['accounting'] });
-    },
-  });
-}
-
-export function useDeleteCustomerMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (/** @type {string} */ id) => deleteCustomer(id),
-    onSuccess: (result) => {
-      if (result.success)
-        queryClient.invalidateQueries({ queryKey: CUSTOMERS_KEY });
     },
   });
 }

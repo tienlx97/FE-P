@@ -1,56 +1,47 @@
-import { blankToNull } from '../config/catalog-schemas.js';
 import { accountingRequest } from './request.js';
 
-const BASE = '/api/v1/accounting/customers';
+/**
+ * Customers of accounting contracts are the shared customer directory
+ * (`/api/v1/customers`, the Logistics "Khách hàng" catalog — BE-P
+ * accounting-contracts task 1.7). Managed on the Khách hàng pages; this
+ * feature only reads them, in the shape its screens use.
+ */
+const BASE = '/api/v1/customers';
+
+/**
+ * @param {{ id: string, companyName: string, address?: string | null,
+ *   representativeName?: string | null,
+ *   profile?: { code?: string | null, taxCode?: string | null, phone?: string | null,
+ *     contactName?: string | null, contactEmail?: string | null, notes?: string | null } | null }} customer
+ * @returns {import('../types/index.js').AccountingCustomer}
+ */
+export function toAccountingCustomer(customer) {
+  const profile = customer.profile ?? {};
+  return {
+    id: customer.id,
+    code: profile.code || null,
+    name: customer.companyName,
+    taxCode: profile.taxCode || null,
+    address: customer.address || null,
+    phone: profile.phone || null,
+    email: profile.contactEmail || null,
+    contactPerson: profile.contactName || customer.representativeName || null,
+    note: profile.notes || null,
+  };
+}
 
 /** @returns {Promise<import('../types/index.js').AccountingResult<import('../types/index.js').AccountingCustomer[]>>} */
 export async function listCustomers() {
+  /** @type {import('../types/index.js').AccountingResult<Parameters<typeof toAccountingCustomer>[0][]>} */
   const result = await accountingRequest(BASE, {
     errorMessage: 'Không thể tải danh sách khách hàng',
   });
   return result.success
     ? {
         success: true,
-        data: /** @type {import('../types/index.js').AccountingCustomer[]} */ (
-          result.data ?? []
-        ),
+        data: (result.data ?? [])
+          .map(toAccountingCustomer)
+          .sort((a, b) => a.name.localeCompare(b.name, 'vi')),
       }
     : result;
-}
-
-/** @param {import('../types/index.js').AccountingCustomerFormValues} values */
-export function customerBody(values) {
-  return {
-    name: values.name.trim(),
-    taxCode: blankToNull(values.taxCode),
-    address: blankToNull(values.address),
-    phone: blankToNull(values.phone),
-    email: blankToNull(values.email),
-    contactPerson: blankToNull(values.contactPerson),
-    note: blankToNull(values.note),
-  };
-}
-
-/**
- * @param {import('../types/index.js').AccountingCustomerFormValues} values
- * @param {string} [id] Update when given, else create.
- * @returns {Promise<import('../types/index.js').AccountingResult<import('../types/index.js').AccountingCustomer>>}
- */
-export function saveCustomer(values, id) {
-  return accountingRequest(id ? `${BASE}/${id}` : BASE, {
-    method: id ? 'PUT' : 'POST',
-    body: customerBody(values),
-    errorMessage: 'Không thể lưu khách hàng',
-  });
-}
-
-/**
- * @param {string} id
- * @returns {Promise<import('../types/index.js').AccountingResult<null>>}
- */
-export function deleteCustomer(id) {
-  return accountingRequest(`${BASE}/${id}`, {
-    method: 'DELETE',
-    errorMessage: 'Không thể xoá khách hàng',
-  });
 }

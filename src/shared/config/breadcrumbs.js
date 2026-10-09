@@ -85,17 +85,27 @@ export function supplierTrail({ supplierCode }) {
 }
 
 /**
- * @param {{ customerCode?: string }} params
+ * @param {{ customerCode?: string, area?: 'logistics' | 'accounting' }} params
  * @returns {BreadcrumbTrail}
  */
-export function customerTrail({ customerCode }) {
+export function customerTrail({ customerCode, area = 'logistics' }) {
+  // The customer directory is shared with Kế toán (BE-P accounting-contracts
+  // task 1.7); there the trail is Kế toán › Khách hàng.
+  const [root, list] =
+    area === 'accounting'
+      ? [ACCOUNTING, ACCOUNTING_CUSTOMERS]
+      : [LOGISTICS, CUSTOMERS];
   return {
-    items: [LOGISTICS, CUSTOMERS, { label: customerCode ?? '…' }],
-    fallbackHref: CUSTOMERS.href,
+    items: [root, list, { label: customerCode ?? '…' }],
+    fallbackHref: list.href,
   };
 }
 
 const ACCOUNTING = { label: 'Kế toán', href: '/accounting' };
+const ACCOUNTING_CUSTOMERS = {
+  label: 'Khách hàng',
+  href: '/accounting/customers',
+};
 const ACCOUNTING_CONTRACTS = {
   label: 'Hợp đồng',
   href: '/accounting/contracts',

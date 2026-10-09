@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-10 — Kế toán: shared customer directory, overview card order
+
+- Per user ("GIÁ TRỊ QUYẾT TOÁN / ĐÃ THANH TOÁN / CHƯA THANH TOÁN / ĐÃ XUẤT HOÁ ĐƠN"): overview metric cards in that order.
+- Per user ("Kế toán > Khách hàng sử dụng cách thiết kế và các trường của Logistics > Khách hàng"; chose sharing the Logistics customers). Needed BE-P first: accounting-contracts task 1.7 (BE-P 9283ac5) — contracts reference `Customers`, accounting customers migrated, `/api/v1/accounting/customers` removed.
+- `/accounting/customers` renders the Logistics `CustomersList basePath="/accounting/customers"`; new `/accounting/customers/[id]` renders `CustomerDetailWorkspace area="accounting"` (breadcrumb Kế toán › Khách hàng, back to the Kế toán list). The accounting feature no longer has its own customer list / dialog / schema; its `api/customers.js` reads `/api/v1/customers` and maps to the shape the contract form and overview use (no cross-feature import).
+- Mistake caught: a `prettier --write src/features` reformatted ~75 unrelated files; reverted to HEAD before committing (the repo is not fully prettier-formatted — format only touched files).
+- Chrome :3000 (dev API rebuilt with the migration): Kế toán › Khách hàng lists the 27 shared customers (the 4 migrated ones included); detail page opens with the Kế toán breadcrumb; TEST-HD-001 overview shows its customer's tax code / address / contact / phone / email. Not checked: creating / editing a customer from the Kế toán page (same Logistics drawer).
+- Gate passed: `harness/runs/20261010-010608-148740/`.
+
 ## 2026-10-10 — Kế toán: contract list Excel report
 
 - Per user ("xuất Excel (trang hiện tại, toàn bộ) ở Kế toán > Danh sách hợp đồng sao cho đẹp nhất"). `config/contracts-workbook.js`: fixed grouped layout whatever columns are visible — title + scope line, four headline figures, group band (Thông tin / Giá trị / Thanh toán & hoá đơn / Tiến độ) over the cobalt header, zebra rows, overdue days in red, "% đã thanh toán" formula per row, SUBTOTAL totals row (follows the autofilter), frozen first 3 columns, A3 landscape fit to width.
