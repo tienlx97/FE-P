@@ -19,7 +19,7 @@ const COLORS = {
   ink: 'FF000000',
   border: 'FF000000',
 };
-const FONT = 'Arial';
+const FONT = 'Inter';
 const FONT_SIZE = 11;
 const HEADER_ROW = 4;
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/u;
@@ -126,9 +126,9 @@ export function buildListWorkbook(ExcelJS, input) {
           : undefined,
       isNumeric: numbers.length > 0 && !isDate,
       isDate,
-      // Arial runs ~15% wider than Excel's character unit.
+      // Inter runs ~20% wider than Excel's character unit.
       width: Math.min(
-        Math.ceil(Math.max(textLength, headerFloor, 6) * 1.15) + 2,
+        Math.ceil(Math.max(textLength, headerFloor, 6) * 1.2) + 2,
         48,
       ),
     };

@@ -85,7 +85,7 @@ export const COST_REPORT_SIGNER = {
 
 const VND_FORMAT = '#,##0';
 const DATE_FORMAT = 'dd/mm/yyyy';
-const FONT = 'Arial';
+const FONT = 'Inter';
 /** Body text size (user, 2026-10-08: larger than the first 10pt). */
 const FONT_SIZE = 12;
 

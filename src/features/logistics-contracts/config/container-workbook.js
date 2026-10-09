@@ -52,7 +52,7 @@ const COLORS = {
   border: 'FF000000',
   pending: 'FFB94500',
 };
-const FONT = 'Arial';
+const FONT = 'Inter';
 const FONT_SIZE = 11;
 const DATE_FORMAT = 'dd/mm/yyyy';
 const WEIGHT_FORMAT = '#,##0.00';

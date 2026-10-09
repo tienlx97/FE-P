@@ -1,5 +1,17 @@
 # Progress Log
 
+## 2026-10-09 — Excel exports in Inter
+
+- Per user ("ở mục xuất excel, font mặc định là \"Inter\""). The three ExcelJS builders (`list-workbook.js` — every AdvanceTable list; `container-workbook.js` — container export + template; `shipment-cost-workbook.js`) use `Inter` instead of Arial. List auto widths ×1.15 → ×1.2 (Inter is wider). The SheetJS exports (contract / supplier shipments, chi hộ) carry no font — SheetJS community cannot style.
+- Checked: sample files built from Node, opened in Excel 16 via COM: font Inter, no `####`, every data cell fits its column (AutoFit on data rows), container export / list / cost 1 page each; container-template unchanged layout. Inter must be installed on the reader's machine, else Excel substitutes.
+- Gate passed: `harness/runs/20261009-105431-1220/`.
+
+## 2026-10-09 — Compact mode: text 1px smaller
+
+- Per user ("Theo như mode Compact ở facebook. Khi compact on sẽ giảm đi kích thước font size đi 1"). "Chế độ thu gọn" now also shrinks every Meta font-size step xs…5xl by 1px (base 14 → 13 px); 2xs–4xs unchanged. New `custom/meta/compact-mode.css` (unlayered, `html[data-compact-mode] [data-astryx-theme='meta']`, values = `meta.js` − 1px, guarded by `compact-mode.test.js`), imported by the root `ThemeProvider`; `ProtectedAppShell` toggles `data-compact-mode` on <html>, so portaled dialogs / popovers shrink too. /docs' large-typography inline scale is unaffected. Switch description updated.
+- Not clicked in the app (Chrome extension not connected).
+- Gate passed: `harness/runs/20261009-082810-751/`.
+
 ## 2026-10-09 — Styled "Xuất Excel" for the contract / shipment lists
 
 - Per user ("update template xuất danh sách shipment, hợp đồng"). `AdvanceTable`'s Excel export was a bare SheetJS "Data" sheet. New `src/shared/config/list-workbook.js` `buildListWorkbook(ExcelJS, …)` (same style as the container / cost reports): title, "N dòng · đang lọc theo K điều kiện · Xuất ngày …", cobalt header frozen + repeated + autofilter, black thin borders, ISO dates → real dates dd/mm/yyyy, numbers `#,##0` (`#,##0.00` only in a column with fractions), widths from content (×1.15 for Arial, max 48), landscape fit-to-width — A3 when the columns exceed ~180 characters, page numbers.
