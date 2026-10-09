@@ -178,6 +178,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
   return (
     <VStack gap={5} hAlign="stretch">
       <MetaMetricsCard
+        isStandalone
         title="TIẾN ĐỘ THANH TOÁN"
         metrics={[metrics.settlement, metrics.paid, metrics.unpaid]}
         maxColumns={3}

@@ -152,6 +152,7 @@ export function AppendicesPanel({ detail, metrics, createKey }) {
   return (
     <VStack gap={5} hAlign="stretch">
       <MetaMetricsCard
+        isStandalone
         title="GIÁ TRỊ & PHỤ LỤC"
         metrics={[metrics.base, metrics.increase, metrics.decrease]}
         maxColumns={3}

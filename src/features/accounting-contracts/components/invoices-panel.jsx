@@ -113,6 +113,7 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
   return (
     <VStack gap={5} hAlign="stretch">
       <MetaMetricsCard
+        isStandalone
         title="TIẾN ĐỘ XUẤT HOÁ ĐƠN"
         metrics={[
           metrics.settlement,

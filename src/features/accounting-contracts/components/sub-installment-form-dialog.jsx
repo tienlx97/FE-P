@@ -1,5 +1,8 @@
 'use client';
 
+import { Banknote } from 'lucide-react';
+
+import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { subInstallmentSchema } from '../config/child-schemas.js';
@@ -66,6 +69,7 @@ function SubInstallmentFormSession({
   return (
     <FormDialog
       variant="drawer"
+      drawerIcon={Banknote}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={sub ? `Sửa lần thanh toán ${code}` : `Thêm lần thanh toán ${code}`}
@@ -77,12 +81,18 @@ function SubInstallmentFormSession({
       fieldStatuses={fieldStatuses}
       onSubmit={form.handleSubmit}
     >
-      <SubInstallmentFields
-        values={values}
-        onChange={setField}
-        fieldStatuses={fieldStatuses}
-        valueAfterTax={valueAfterTax}
-      />
+      <MetaFormSection
+        isBoxed
+        title="Thông tin lần thanh toán"
+        isTitleUppercase={false}
+      >
+        <SubInstallmentFields
+          values={values}
+          onChange={setField}
+          fieldStatuses={fieldStatuses}
+          valueAfterTax={valueAfterTax}
+        />
+      </MetaFormSection>
     </FormDialog>
   );
 }

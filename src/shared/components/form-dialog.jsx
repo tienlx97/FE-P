@@ -5,7 +5,12 @@ import { Banner } from '@astryxdesign/core/Banner';
 import { Button } from '@astryxdesign/core/Button';
 import { DialogHeader } from '@astryxdesign/core/Dialog';
 import { HStack } from '@astryxdesign/core/HStack';
-import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
+import {
+  Layout,
+  LayoutContent,
+  LayoutFooter,
+  LayoutHeader,
+} from '@astryxdesign/core/Layout';
 import { Text } from '@astryxdesign/core/Text';
 import { Theme, ThemeContext } from '@astryxdesign/core/theme';
 import { VStack } from '@astryxdesign/core/VStack';
@@ -15,6 +20,7 @@ import { use, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 
 import { CommonDialog } from './common-dialog.jsx';
+import { MetaDrawerHeader } from './custom/meta/drawer-header.jsx';
 import { metaTheme } from './custom/meta/meta.js';
 import { ThemeProvider } from './theme-provider.jsx';
 
@@ -32,6 +38,9 @@ const styles = stylex.create({
     height: '100%',
     maxHeight: 'inherit',
     minHeight: 0,
+  },
+  drawerCanvas: {
+    backgroundColor: 'var(--meta-row-hover)',
   },
 });
 
@@ -51,6 +60,7 @@ const getServerSnapshot = () => false;
  * isSubmitting?: boolean, isReady?: boolean, submitError?: string,
  * fieldStatuses?: Record<string, { type: string, message: string } | undefined>,
  * successMessage?: string, variant?: 'fullscreen' | 'drawer', width?: number,
+ * drawerIcon?: import('lucide-react').LucideIcon,
  * navigation?: import('react').ReactNode,
  * onValidation?: () => void,
  * isReadOnly?: boolean, onEdit?: () => void,
@@ -98,6 +108,7 @@ function FormDialogSession({
   fieldStatuses = {},
   successMessage = '',
   variant,
+  drawerIcon,
   width,
   navigation,
   onValidation,
@@ -218,16 +229,34 @@ function FormDialogSession({
           <Layout
             header={
               <VStack hAlign="stretch" gap={2}>
-                <Header
-                  title={title}
-                  subtitle={subtitle}
-                  onOpenChange={requestClose}
-                />
+                {variant === 'drawer' && drawerIcon ? (
+                  <LayoutHeader padding={4}>
+                    <MetaDrawerHeader
+                      icon={drawerIcon}
+                      title={title}
+                      meta={subtitle}
+                      onClose={requestClose}
+                    />
+                  </LayoutHeader>
+                ) : (
+                  <Header
+                    title={title}
+                    subtitle={subtitle}
+                    onOpenChange={requestClose}
+                  />
+                )}
                 {navigation}
               </VStack>
             }
             content={
-              <LayoutContent padding={4}>
+              <LayoutContent
+                padding={variant === 'drawer' && drawerIcon ? 5 : 4}
+                xstyle={
+                  variant === 'drawer' && drawerIcon
+                    ? styles.drawerCanvas
+                    : undefined
+                }
+              >
                 <VStack gap={4} hAlign="stretch">
                   {error ? (
                     <Banner status="error" title={error} container="card" />

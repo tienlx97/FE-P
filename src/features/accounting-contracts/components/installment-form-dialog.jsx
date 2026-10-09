@@ -7,7 +7,7 @@ import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
-import { Plus, Trash2 } from 'lucide-react';
+import { ListChecks, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import {
@@ -92,6 +92,7 @@ function InstallmentFormSession({
   return (
     <FormDialog
       variant="drawer"
+      drawerIcon={ListChecks}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={

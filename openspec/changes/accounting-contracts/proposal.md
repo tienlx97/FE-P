@@ -43,3 +43,9 @@ granted to the "Kế toán" department and Admin).
 - Payment model: a contract has numbered payment stages; each stage has one or more actual/planned payment occurrences. The create-stage drawer starts with exactly one planned occurrence (100% of after-tax value); additional occurrences are optional. No draft is persisted before Save. UI calls sub-instalments "lần thanh toán", uses a running total and collapsible occurrence sections, and opens the first invalid occurrence on validation. The last occurrence cannot be removed.
 - Invoice creation suggests `<projectCode>/HĐ-<sequence>` (e.g. `26KCT10/HĐ-01`), advancing after the highest existing matching suffix. Legacy/edited invoice numbers stay intact. This is a front-end suggestion, editable before save. Drawer sections: invoice facts, remaining-to-invoice/value, notes.
 - Accounting detail reuses Logistics' shared header, tabs, overview summary, payment progress and occurrence carousel. Information beneath uses three accounting-specific columns: customer/source, project/value, receivables/documents. Tab selection follows the URL and summary links open the relevant accounting tab.
+
+## Follow-up — Logistics presentation consistency (task 1.6)
+
+- All accounting drawers use the shared Logistics icon/title/context header, tinted canvas and grouped form sections. Appendix signatures and customer contact details have separate sections.
+- Payment, invoice and appendix detail tabs show separate metric cards using the shared overview metrics component. Accounting fields, actions and payment/invoice rules remain the source of their content.
+- Catalog and appendix drawers mount a fresh form session when opened, following the payment/invoice drawer pattern and avoiding effect-based draft resets.

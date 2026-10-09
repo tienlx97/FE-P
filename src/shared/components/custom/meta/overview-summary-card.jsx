@@ -237,6 +237,7 @@ const SKELETON_CHIPS = [0, 1, 2, 3];
  *   metrics: MetaMetric[],
  *   maxColumns?: number,
  *   isLoading?: boolean,
+ *   isStandalone?: boolean,
  * }} props
  */
 export function MetaMetricsCard({
@@ -245,7 +246,29 @@ export function MetaMetricsCard({
   metrics,
   maxColumns = 4,
   isLoading = false,
+  isStandalone = false,
 }) {
+  if (isStandalone) {
+    return (
+      <Grid
+        columns={{ minWidth: 280, max: maxColumns }}
+        gap={5}
+        maxWidth={`calc(${maxColumns} * var(--meta-panel-card-max) + ${maxColumns - 1} * var(--spacing-5))`}
+        xstyle={styles.metricGrid}
+        role="group"
+        aria-label={title}
+      >
+        {metrics.map((metric) => (
+          <MetricCard
+            key={metric.id}
+            {...metric}
+            isLoading={isLoading}
+            isStandalone
+          />
+        ))}
+      </Grid>
+    );
+  }
   return (
     <Card padding={6} xstyle={styles.card}>
       <VStack gap={5} hAlign="stretch">
@@ -305,7 +328,7 @@ function InstallmentSkeleton({ index }) {
   );
 }
 
-/** @param {MetaMetric & { isLoading?: boolean }} props */
+/** @param {MetaMetric & { isLoading?: boolean, isStandalone?: boolean }} props */
 function MetricCard({
   label,
   hasLabelDot = false,
@@ -318,9 +341,14 @@ function MetricCard({
   end,
   segments,
   isLoading = false,
+  isStandalone = false,
 }) {
   return (
-    <VStack gap={3} hAlign="stretch" xstyle={styles.metric}>
+    <VStack
+      gap={3}
+      hAlign="stretch"
+      xstyle={[styles.metric, isStandalone && styles.metricStandalone]}
+    >
       <HStack gap={2} vAlign="center" hAlign="between" wrap="nowrap">
         <HStack gap={1.5} vAlign="center">
           {hasLabelDot ? (
@@ -604,6 +632,11 @@ const styles = stylex.create({
     borderWidth: 'var(--border-width)',
     minWidth: 0,
     padding: 'var(--spacing-4)',
+  },
+  metricStandalone: {
+    backgroundColor: 'var(--color-background-surface)',
+    boxShadow: 'var(--meta-shadow-card)',
+    padding: 'var(--spacing-5)',
   },
   caps: {
     letterSpacing: '0.05em',

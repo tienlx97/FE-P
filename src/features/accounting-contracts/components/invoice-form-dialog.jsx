@@ -5,6 +5,7 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { ReceiptText } from 'lucide-react';
 
 import {
   MetaFormCard,
@@ -73,6 +74,7 @@ function InvoiceFormSession({
   return (
     <FormDialog
       variant="drawer"
+      drawerIcon={ReceiptText}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={invoice ? 'Sửa hoá đơn' : 'Thêm hoá đơn'}
@@ -86,7 +88,11 @@ function InvoiceFormSession({
       onSubmit={form.handleSubmit}
     >
       <VStack gap={4} hAlign="stretch">
-        <MetaFormSection title="Thông tin hoá đơn" isTitleUppercase={false}>
+        <MetaFormSection
+          isBoxed
+          title="Thông tin hoá đơn"
+          isTitleUppercase={false}
+        >
           <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
             <TextInput
               label="Số hoá đơn"
@@ -115,7 +121,11 @@ function InvoiceFormSession({
             khi lưu.
           </Text>
         </MetaFormSection>
-        <MetaFormSection title="Giá trị xuất hoá đơn" isTitleUppercase={false}>
+        <MetaFormSection
+          isBoxed
+          title="Giá trị xuất hoá đơn"
+          isTitleUppercase={false}
+        >
           <MetaFormCard>
             <HStack hAlign="between" gap={3} wrap="wrap">
               <Text color="secondary">Còn phải xuất hoá đơn</Text>
@@ -133,7 +143,11 @@ function InvoiceFormSession({
             status={fieldStatuses.amount}
           />
         </MetaFormSection>
-        <MetaFormSection title="Thông tin bổ sung" isTitleUppercase={false}>
+        <MetaFormSection
+          isBoxed
+          title="Thông tin bổ sung"
+          isTitleUppercase={false}
+        >
           <TextArea
             label="Ghi chú"
             value={values.note}

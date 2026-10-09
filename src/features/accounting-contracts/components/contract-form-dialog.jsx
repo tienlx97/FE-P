@@ -5,6 +5,7 @@ import { Grid } from '@astryxdesign/core/Grid';
 import { Selector } from '@astryxdesign/core/Selector';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { FileText } from 'lucide-react';
 import { useEffect } from 'react';
 
 import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
@@ -129,6 +130,7 @@ export function ContractFormDialog({
   return (
     <FormDialog
       variant="drawer"
+      drawerIcon={FileText}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={
@@ -143,7 +145,12 @@ export function ContractFormDialog({
       onSubmit={form.handleSubmit}
     >
       <VStack gap={4} hAlign="stretch">
-        <MetaFormSection index={1} title="Thông tin hợp đồng" meta="Bắt buộc">
+        <MetaFormSection
+          isBoxed
+          index={1}
+          title="Thông tin hợp đồng"
+          meta="Bắt buộc"
+        >
           <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
             <Selector
               label="Công ty"
@@ -194,7 +201,7 @@ export function ContractFormDialog({
             />
           </Grid>
         </MetaFormSection>
-        <MetaFormSection index={2} title="Khách hàng & thanh toán">
+        <MetaFormSection isBoxed index={2} title="Khách hàng & thanh toán">
           <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
             <Selector
               label="Khách hàng"
@@ -232,7 +239,7 @@ export function ContractFormDialog({
             />
           </Grid>
         </MetaFormSection>
-        <MetaFormSection index={3} title="Giá trị hợp đồng">
+        <MetaFormSection isBoxed index={3} title="Giá trị hợp đồng">
           <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
             <FormattedNumberTextInput
               label="Giá trị hợp đồng (trước thuế)"
@@ -257,7 +264,7 @@ export function ContractFormDialog({
             <Text weight="semibold">{formatVnd(afterTax)}</Text>
           </Text>
         </MetaFormSection>
-        <MetaFormSection index={4} title="Ghi chú">
+        <MetaFormSection isBoxed index={4} title="Ghi chú">
           <TextArea
             label="Ghi chú"
             isLabelHidden

@@ -1,8 +1,9 @@
 'use client';
 
 import { VStack } from '@astryxdesign/core/VStack';
-import { useEffect } from 'react';
+import { FolderInput } from 'lucide-react';
 
+import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
@@ -24,7 +25,7 @@ function valuesOf(source) {
  *   source: import('../types/index.js').AccountingSource | null,
  * }} props
  */
-export function SourceFormDialog({ isOpen, onOpenChange, source }) {
+function SourceFormSession({ isOpen, onOpenChange, source }) {
   const saveMutation = useSaveSourceMutation();
   const form = useZodForm({
     initialValues: valuesOf(source),
@@ -32,17 +33,11 @@ export function SourceFormDialog({ isOpen, onOpenChange, source }) {
     submit: (values) => saveMutation.mutateAsync({ values, id: source?.id }),
     onSuccess: () => onOpenChange(false),
   });
-  const { reset } = form;
-
-  useEffect(() => {
-    if (isOpen) reset(valuesOf(source));
-    // Reload the values each time the dialog opens on a (possibly other) source.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, source]);
 
   return (
     <FormDialog
       variant="drawer"
+      drawerIcon={FolderInput}
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={source ? 'Sửa nguồn' : 'Thêm nguồn'}
@@ -54,25 +49,34 @@ export function SourceFormDialog({ isOpen, onOpenChange, source }) {
       fieldStatuses={form.fieldStatuses}
       onSubmit={form.handleSubmit}
     >
-      <VStack gap={3} hAlign="stretch">
-        <TextInput
-          label="Tên nguồn"
-          value={form.values.name}
-          onChange={(value) => form.setField('name', value)}
-          isRequired
-          status={form.fieldStatuses.name}
-          statusVariant="tooltip"
-        />
-        <TextArea
-          label="Ghi chú"
-          value={form.values.note}
-          onChange={(value) => form.setField('note', value)}
-          isOptional
-          maxLength={1000}
-          status={form.fieldStatuses.note}
-          statusVariant="tooltip"
-        />
-      </VStack>
+      <MetaFormSection isBoxed title="Thông tin nguồn" isTitleUppercase={false}>
+        <VStack gap={3} hAlign="stretch">
+          <TextInput
+            label="Tên nguồn"
+            value={form.values.name}
+            onChange={(value) => form.setField('name', value)}
+            isRequired
+            status={form.fieldStatuses.name}
+            statusVariant="tooltip"
+          />
+          <TextArea
+            label="Ghi chú"
+            value={form.values.note}
+            onChange={(value) => form.setField('note', value)}
+            isOptional
+            maxLength={1000}
+            status={form.fieldStatuses.note}
+            statusVariant="tooltip"
+          />
+        </VStack>
+      </MetaFormSection>
     </FormDialog>
   );
+}
+
+/** @param {Parameters<typeof SourceFormSession>[0]} props */
+export function SourceFormDialog(props) {
+  return props.isOpen ? (
+    <SourceFormSession key={props.source?.id ?? 'new'} {...props} />
+  ) : null;
 }
