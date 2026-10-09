@@ -61,6 +61,7 @@ export function CustomerFormDialog({ isOpen, onOpenChange, customer }) {
 
   return (
     <FormDialog
+      variant="drawer"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={customer ? 'Sửa khách hàng' : 'Thêm khách hàng'}

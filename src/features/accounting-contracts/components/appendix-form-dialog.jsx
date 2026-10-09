@@ -69,6 +69,7 @@ export function AppendixFormDialog({
 
   return (
     <FormDialog
+      variant="drawer"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={appendix ? 'Sửa phụ lục' : 'Thêm phụ lục'}

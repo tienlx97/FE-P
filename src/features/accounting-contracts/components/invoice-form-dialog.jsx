@@ -60,6 +60,7 @@ export function InvoiceFormDialog({
 
   return (
     <FormDialog
+      variant="drawer"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={invoice ? 'Sửa hoá đơn' : 'Thêm hoá đơn'}

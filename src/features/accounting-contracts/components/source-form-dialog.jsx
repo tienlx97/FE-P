@@ -42,6 +42,7 @@ export function SourceFormDialog({ isOpen, onOpenChange, source }) {
 
   return (
     <FormDialog
+      variant="drawer"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={source ? 'Sửa nguồn' : 'Thêm nguồn'}

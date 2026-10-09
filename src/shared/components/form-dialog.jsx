@@ -9,6 +9,7 @@ import { Layout, LayoutContent, LayoutFooter } from '@astryxdesign/core/Layout';
 import { Text } from '@astryxdesign/core/Text';
 import { Theme, ThemeContext } from '@astryxdesign/core/theme';
 import { VStack } from '@astryxdesign/core/VStack';
+import { Drawer, DrawerHeader } from '@astryxdesign/lab';
 import * as stylex from '@stylexjs/stylex';
 import { use, useId, useRef, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
@@ -49,7 +50,7 @@ const getServerSnapshot = () => false;
  * children: import('react').ReactNode, draft: unknown,
  * isSubmitting?: boolean, isReady?: boolean, submitError?: string,
  * fieldStatuses?: Record<string, { type: string, message: string } | undefined>,
- * successMessage?: string, variant?: 'fullscreen', width?: number,
+ * successMessage?: string, variant?: 'fullscreen' | 'drawer', width?: number,
  * navigation?: import('react').ReactNode,
  * onValidation?: () => void,
  * isReadOnly?: boolean, onEdit?: () => void,
@@ -189,14 +190,23 @@ function FormDialogSession({
     }
   }
 
+  const Frame = variant === 'drawer' ? Drawer : CommonDialog;
+  const Header = variant === 'drawer' ? DrawerHeader : DialogHeader;
+
   return (
     <>
-      <CommonDialog
+      <Frame
         isOpen
+        label={title}
         onOpenChange={(open) => {
           if (!open) requestClose();
         }}
-        variant={variant}
+        {...(variant === 'drawer'
+          ? {
+              purpose: /** @type {const} */ ('form'),
+              isFullWidthOnMobile: true,
+            }
+          : { variant })}
         width={width}
       >
         <form
@@ -208,7 +218,7 @@ function FormDialogSession({
           <Layout
             header={
               <VStack hAlign="stretch" gap={2}>
-                <DialogHeader
+                <Header
                   title={title}
                   subtitle={subtitle}
                   onOpenChange={requestClose}
@@ -284,7 +294,7 @@ function FormDialogSession({
             }
           />
         </form>
-      </CommonDialog>
+      </Frame>
       <AlertDialog
         isOpen={confirmDiscard}
         onOpenChange={setConfirmDiscard}

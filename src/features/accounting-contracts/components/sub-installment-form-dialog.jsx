@@ -75,6 +75,7 @@ export function SubInstallmentFormDialog({
 
   return (
     <FormDialog
+      variant="drawer"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={sub ? `Sửa đợt ${code}` : `Thêm đợt ${code}`}

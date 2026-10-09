@@ -39,15 +39,38 @@ const SEARCH_FIELD_DEFS = [
   { key: 'customerName', type: 'string', label: 'Khách hàng' },
 ];
 
-/** @type {Array<{ key: 'valueBeforeTax' | 'valueAfterTax' | 'settlementValue' | 'invoicedValue' | 'remainingToInvoice' | 'paidValue' | 'unpaidValue', label: string, tone?: 'success' | 'accent' }>} */
+/** @type {Array<{ key: 'valueBeforeTax' | 'valueAfterTax' | 'settlementValue' | 'invoicedValue' | 'remainingToInvoice' | 'paidValue' | 'unpaidValue', label: string, tone?: 'success' | 'danger' }>} */
 const MONEY_COLUMNS = [
   { key: 'valueBeforeTax', label: 'Trước thuế' },
   { key: 'valueAfterTax', label: 'Sau thuế' },
   { key: 'settlementValue', label: 'Quyết toán' },
+  { key: 'paidValue', label: 'Đã thanh toán', tone: 'success' },
+  { key: 'unpaidValue', label: 'Chưa thanh toán', tone: 'danger' },
   { key: 'invoicedValue', label: 'Đã xuất HĐ' },
   { key: 'remainingToInvoice', label: 'Còn phải xuất HĐ' },
-  { key: 'paidValue', label: 'Đã thanh toán', tone: 'success' },
-  { key: 'unpaidValue', label: 'Chưa thanh toán', tone: 'accent' },
+];
+
+const HEADER_GROUPS = [
+  {
+    id: 'value',
+    label: 'GIÁ TRỊ',
+    columnKeys: [
+      'valueBeforeTax',
+      'taxRatePercent',
+      'valueAfterTax',
+      'settlementValue',
+    ],
+  },
+  {
+    id: 'payment',
+    label: 'THANH TOÁN',
+    columnKeys: ['paidValue', 'unpaidValue'],
+  },
+  {
+    id: 'invoice',
+    label: 'HOÁ ĐƠN',
+    columnKeys: ['invoicedValue', 'remainingToInvoice'],
+  },
 ];
 
 const COLUMN_OPTIONS = [
@@ -81,8 +104,11 @@ const FINANCIAL_COLUMN_KEYS = [
   'signedDate',
   'contractNumber',
   'customerName',
+  'valueBeforeTax',
   'taxRatePercent',
-  ...MONEY_COLUMNS.map((column) => column.key),
+  ...MONEY_COLUMNS.filter((column) => column.key !== 'valueBeforeTax').map(
+    (column) => column.key,
+  ),
   'overdueDays',
   'actions',
 ];
@@ -224,35 +250,58 @@ export function AccountingContractsList() {
       renderCell: (c) =>
         isTotals(c) ? null : <MetaCellText value={c.sourceName} />,
     },
-    {
-      key: 'taxRatePercent',
-      header: 'Thuế',
-      width: pixel(80),
-      align: 'end',
-      renderCell: (c) => (isTotals(c) ? null : `${c.taxRatePercent}%`),
-    },
-    ...MONEY_COLUMNS.map((column) => ({
-      key: column.key,
-      header: column.label,
-      width: pixel(150),
-      align: /** @type {const} */ ('end'),
-      exportValue: (/** @type {Summary} */ c) => c[column.key],
-      renderCell: (/** @type {Summary} */ c) => (
-        <Text
-          hasTabularNumbers
-          weight={
-            isTotals(c) || column.key === 'settlementValue' ? 'bold' : undefined
-          }
-          color={
-            column.tone === 'success'
-              ? /** @type {any} */ ('meta-success')
-              : column.tone
-          }
-        >
-          {formatVnd(c[column.key])}
-        </Text>
-      ),
-    })),
+    ...MONEY_COLUMNS.flatMap((column) => [
+      ...(column.key === 'valueAfterTax'
+        ? [
+            {
+              key: 'taxRatePercent',
+              header: 'Thuế',
+              width: pixel(80),
+              align: /** @type {const} */ ('end'),
+              renderCell: (/** @type {Summary} */ c) =>
+                isTotals(c) ? null : `${c.taxRatePercent}%`,
+            },
+          ]
+        : []),
+      {
+        key: column.key,
+        header: column.tone ? (
+          <Text
+            color={
+              column.tone === 'success'
+                ? /** @type {any} */ ('meta-success')
+                : /** @type {any} */ ('meta-danger')
+            }
+          >
+            {column.label}
+          </Text>
+        ) : (
+          column.label
+        ),
+        width: proportional(1, { minWidth: 180 }),
+        align: /** @type {const} */ ('end'),
+        exportValue: (/** @type {Summary} */ c) => c[column.key],
+        renderCell: (/** @type {Summary} */ c) => (
+          <Text
+            hasTabularNumbers
+            weight={
+              isTotals(c) || column.key === 'settlementValue'
+                ? 'bold'
+                : undefined
+            }
+            color={
+              column.tone === 'success'
+                ? /** @type {any} */ ('meta-success')
+                : column.tone === 'danger'
+                  ? /** @type {any} */ ('meta-danger')
+                  : undefined
+            }
+          >
+            {formatVnd(c[column.key])}
+          </Text>
+        ),
+      },
+    ]),
     {
       key: 'paymentDueDate',
       header: 'Tới hạn',
@@ -330,6 +379,7 @@ export function AccountingContractsList() {
           contentSearchFieldKey="contractNumber"
           searchPlaceholder="Tìm nhanh theo số hợp đồng, mã công trình, khách hàng..."
           columnOptions={COLUMN_OPTIONS}
+          headerGroups={HEADER_GROUPS}
           tableColumns={columns}
           data={contracts}
           idKey="id"

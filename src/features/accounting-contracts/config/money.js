@@ -1,7 +1,7 @@
-const VND = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2 });
+const VND = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 
 /**
- * VND amount as "108.000.000" (2 decimals only when present).
+ * VND amount as "108,000,000" (2 decimals only when present).
  * @param {number | null | undefined} value
  */
 export function formatVnd(value) {

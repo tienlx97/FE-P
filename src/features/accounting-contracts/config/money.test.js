@@ -25,8 +25,12 @@ test('sub-instalment amount follows its kind', () => {
   );
 });
 
-test('money rounds half away from zero and formats in vi-VN', () => {
+test('money rounds half away from zero and formats with comma groups and decimal point', () => {
   assert.equal(roundMoney(0.125), 0.13);
-  assert.equal(formatVnd(108000000), '108.000.000');
+  assert.equal(formatVnd(108000000), '108,000,000');
+  assert.equal(formatVnd(123456.78), '123,456.78');
+  assert.equal(formatVnd(0), '0');
+  assert.equal(formatVnd(-123456.78), '-123,456.78');
+  assert.equal(formatVnd(undefined), '—');
   assert.equal(formatVnd(null), '—');
 });

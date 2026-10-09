@@ -87,6 +87,7 @@ export function InstallmentFormDialog({
 
   return (
     <FormDialog
+      variant="drawer"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       title={installment ? `Sửa đợt ${number}` : `Thêm đợt ${number}`}

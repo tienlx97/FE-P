@@ -19,7 +19,7 @@ granted to the "Kế toán" department and Admin).
 - Catalog pages: Nguồn (sources) and Khách hàng (accounting customers),
   each with create / edit / delete.
 - Contract list (server paged) with every derived value and overdue days;
-  create / edit dialog with duplicate checks (contract number, project code
+  create / edit drawer with duplicate checks (contract number, project code
   — also against Logistics contract numbers).
 - Contract detail: value summary, tabs Phụ lục / Hoá đơn / Đợt thanh toán
   (instalments with sub-instalments 2.1, 2.2…, Planned / Paid status).
@@ -29,3 +29,10 @@ granted to the "Kế toán" department and Admin).
 ## Out of scope
 
 - Exporting, attachments, multiple currencies (VND only).
+
+## Follow-up — 2026-10-09 (task 1.4)
+
+- Use end-side drawers for all accounting edit/create forms, retaining validation, save locking, and discard confirmation. Short delete confirmations remain AlertDialog.
+- Match Logistics financial table: grouped GIÁ TRỊ (before tax, tax, after tax, settlement), THANH TOÁN (paid, unpaid), HOÁ ĐƠN (issued, remaining); tabular numbers, minimum money column widths, pinned identifiers/actions, and page totals.
+- Accounting VND displays comma grouping and decimal points, e.g. `123,456.78`, including summaries, tables, previews and existing formatted inputs.
+- Seed development-only TEST records through the authenticated API: unpaid, partially paid/invoiced, fully paid/invoiced, overdue and signed increase/decrease appendices.
