@@ -9,3 +9,5 @@
 - [x] 1.5 Persist table tabs in URL; redesign payment/invoice drawers, default one payment per stage and project-based invoice numbering; adapt Logistics detail overview for Accounting.
 
 - [x] 1.6 Align accounting drawer chrome/sections and detail-tab KPI/table treatment with Logistics, keeping accounting workflow and data intact.
+
+- [x] 1.7 Show payment stages in overview and one stage per table row; wide editable payment tables with rich-text notes; settlement label and grouped code/due-date financial columns.

@@ -60,7 +60,7 @@ export function subInstallmentBody(values) {
 /**
  * @typedef {{ kind: 'appendix', values: import('../types/index.js').AccountingAppendixFormValues, id?: string }
  *   | { kind: 'invoice', values: import('../types/index.js').AccountingInvoiceFormValues, id?: string }
- *   | { kind: 'installment', note: string, subInstallments?: import('../types/index.js').AccountingSubInstallmentFormValues[], id?: string }
+ *   | { kind: 'installment', note: string, subInstallments?: import('../types/index.js').AccountingSubInstallmentFormValues[], id?: string, existingSubs?: {id: string, values: import('../types/index.js').AccountingSubInstallmentFormValues}[] }
  *   | { kind: 'sub', installmentId: string, values: import('../types/index.js').AccountingSubInstallmentFormValues, id?: string }
  *   | { kind: 'delete', path: string }} ChildChange
  */
@@ -92,9 +92,12 @@ export function saveContractChild(contractId, change) {
         : send(contractId, 'invoices', 'POST', invoiceBody(change.values));
     case 'installment':
       return change.id
-        ? send(contractId, `installments/${change.id}`, 'PUT', {
-            note: blankToNull(change.note),
-          })
+        ? saveInstallmentRows(
+            contractId,
+            change.id,
+            change.note,
+            change.existingSubs ?? [],
+          )
         : send(contractId, 'installments', 'POST', {
             note: blankToNull(change.note),
             subInstallments: (change.subInstallments ?? []).map(
@@ -115,4 +118,37 @@ export function saveContractChild(contractId, change) {
     case 'delete':
       return send(contractId, change.path, 'DELETE');
   }
+}
+
+/** Updates existing rows by ID, so retrying after a partial failure cannot create duplicates.
+ * The backend offers separate PUTs, not an atomic stage update.
+ * @param {string} contractId @param {string} stageId @param {string} note
+ * @param {{id: string, values: import('../types/index.js').AccountingSubInstallmentFormValues}[]} rows
+ * @param {typeof send} [request]
+ * @returns {Promise<DetailResult>} */
+export async function saveInstallmentRows(
+  contractId,
+  stageId,
+  note,
+  rows,
+  request = send,
+) {
+  let result = await request(contractId, `installments/${stageId}`, 'PUT', {
+    note: blankToNull(note),
+  });
+  if (!result.success) return result;
+  for (const row of rows) {
+    result = await request(
+      contractId,
+      `installments/${stageId}/sub-installments/${row.id}`,
+      'PUT',
+      subInstallmentBody(row.values),
+    );
+    if (!result.success)
+      return {
+        ...result,
+        message: `Một phần thay đổi đã được lưu. ${result.message} Hãy kiểm tra và lưu lại để hoàn tất.`,
+      };
+  }
+  return result;
 }

@@ -23,3 +23,17 @@ export function initialPaymentStage() {
     ],
   };
 }
+
+/** @param {import('../types/index.js').AccountingSubInstallment} sub
+ * @returns {import('../types/index.js').AccountingSubInstallmentFormValues} */
+export function paymentValues(sub) {
+  return {
+    kind: sub.kind,
+    percent: sub.percent ?? undefined,
+    amount: sub.kind === 'Quantity' ? sub.amount : undefined,
+    condition: sub.condition ?? '',
+    paymentDate: sub.paymentDate ?? '',
+    status: sub.status,
+    note: sub.note ?? '',
+  };
+}

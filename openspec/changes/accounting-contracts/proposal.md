@@ -49,3 +49,11 @@ granted to the "Kế toán" department and Admin).
 - All accounting drawers use the shared Logistics icon/title/context header, tinted canvas and grouped form sections. Appendix signatures and customer contact details have separate sections.
 - Payment, invoice and appendix detail tabs show separate metric cards using the shared overview metrics component. Accounting fields, actions and payment/invoice rules remain the source of their content.
 - Catalog and appendix drawers mount a fresh form session when opened, following the payment/invoice drawer pattern and avoiding effect-based draft resets.
+
+## Follow-up — Stage tables and rich-text payment entry (task 1.7)
+
+- Overview payment progress shows one item per numbered stage (Đợt 1, 2, 3…), aggregating its occurrences, paid amount and next planned date. The first stage with unpaid occurrences is active.
+- Payment tab has one summary row per stage: occurrence count, planned/paid/remaining values, status, rich-text note and add/edit/delete actions.
+- Create/edit payment drawers use a 1440-wide table, constrained to the viewport. New stages start with one occurrence and permit more rows; editing a stage updates all existing occurrences by ID. Additional occurrences for an existing stage are added through its row action and a matching table drawer. Notes use the shared Markdown-backed RichText editor and renderer.
+- Basic list labels settlement as “Giá trị Quyết toán”. Financial list adds grouped MÃ (Hợp đồng, Công trình) and NGÀY (Tới hạn, Quá hạn), retaining GIÁ TRỊ / THANH TOÁN / HOÁ ĐƠN.
+- Existing-stage saves use separate backend PUTs. Stop on the first error, refresh detail, and explain partial persistence; retries update IDs and never create duplicate occurrences.

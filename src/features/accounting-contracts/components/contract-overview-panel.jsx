@@ -52,8 +52,8 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
         paidAmountValue={`${formatVnd(c.paidValue)} VND`}
         totalAmountValue={`${formatVnd(c.settlementValue)} VND`}
         installments={payments.installments}
-        installmentsLabel="Các lần thanh toán"
-        installmentTermLabel="Điều kiện"
+        installmentsLabel="Các đợt thanh toán"
+        installmentTermLabel="Thanh toán"
         onViewDetail={() => onOpenTab('installments')}
       />
       <Grid columns={{ minWidth: 280, max: 3 }} gap={5}>
@@ -184,7 +184,11 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
               </MetadataListItem>
               <MetadataListItem label="Đợt thanh toán">
                 {detail.installments.length} đợt ·{' '}
-                {payments.installments.length} lần
+                {detail.installments.reduce(
+                  (sum, stage) => sum + stage.subInstallments.length,
+                  0,
+                )}{' '}
+                lần
               </MetadataListItem>
             </MetadataList>
           </MetaTableCard>

@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { appendixBody, subInstallmentBody } from './contract-children.js';
+import {
+  appendixBody,
+  saveInstallmentRows,
+  subInstallmentBody,
+} from './contract-children.js';
 
 test('an information-change appendix sends amount 0', () => {
   assert.equal(
@@ -15,6 +19,46 @@ test('an information-change appendix sends amount 0', () => {
     }).amount,
     0,
   );
+});
+
+test('stage table updates preserve row IDs and stop on partial failure', async () => {
+  const requests = [];
+  const values = {
+    kind: /** @type {const} */ ('Percent'),
+    percent: 50,
+    amount: undefined,
+    condition: '',
+    paymentDate: '',
+    status: /** @type {const} */ ('Planned'),
+    note: '**Ghi chú**',
+  };
+  const result = await saveInstallmentRows(
+    'contract',
+    'stage',
+    'note',
+    [
+      { id: 'first', values },
+      { id: 'second', values },
+      { id: 'third', values },
+    ],
+    async (_contract, path, method, body) => {
+      requests.push({ path, method, body });
+      return path.endsWith('second')
+        ? { success: false, message: 'Không thể lưu' }
+        : { success: true, data: /** @type {any} */ ({}) };
+    },
+  );
+  assert.equal(result.success, false);
+  if (!result.success) assert.match(result.message, /Một phần thay đổi/);
+  assert.deepEqual(
+    requests.map((r) => [r.path, r.method]),
+    [
+      ['installments/stage', 'PUT'],
+      ['installments/stage/sub-installments/first', 'PUT'],
+      ['installments/stage/sub-installments/second', 'PUT'],
+    ],
+  );
+  assert.equal(requests[1].body.note, '**Ghi chú**');
 });
 
 test('a sub-instalment sends only the value its kind uses', () => {

@@ -51,6 +51,8 @@ const MONEY_COLUMNS = [
 ];
 
 const HEADER_GROUPS = [
+  { id: 'codes', label: 'MÃ', columnKeys: ['contractNumber', 'projectCode'] },
+  { id: 'dates', label: 'NGÀY', columnKeys: ['paymentDueDate', 'overdueDays'] },
   {
     id: 'value',
     label: 'GIÁ TRỊ',
@@ -101,14 +103,16 @@ const BASIC_COLUMN_KEYS = [
 ];
 
 const FINANCIAL_COLUMN_KEYS = [
-  'signedDate',
   'contractNumber',
+  'projectCode',
+  'signedDate',
   'customerName',
   'valueBeforeTax',
   'taxRatePercent',
   ...MONEY_COLUMNS.filter((column) => column.key !== 'valueBeforeTax').map(
     (column) => column.key,
   ),
+  'paymentDueDate',
   'overdueDays',
   'actions',
 ];
@@ -220,7 +224,7 @@ export function AccountingContractsList() {
     },
     {
       key: 'contractNumber',
-      header: 'Số hợp đồng',
+      header: initialView === 'financial' ? 'Hợp đồng' : 'Số hợp đồng',
       width: pixel(150),
       filter: 'contractNumber',
       renderCell: (c) =>
@@ -234,7 +238,7 @@ export function AccountingContractsList() {
     },
     {
       key: 'projectCode',
-      header: 'Mã công trình',
+      header: initialView === 'financial' ? 'Công trình' : 'Mã công trình',
       width: pixel(140),
       filter: 'projectCode',
       renderCell: (c) =>
@@ -287,6 +291,8 @@ export function AccountingContractsList() {
           >
             {column.label}
           </Text>
+        ) : column.key === 'settlementValue' && initialView === 'basic' ? (
+          'Giá trị Quyết toán'
         ) : (
           column.label
         ),
@@ -392,7 +398,7 @@ export function AccountingContractsList() {
           contentSearchFieldKey="contractNumber"
           searchPlaceholder="Tìm nhanh theo số hợp đồng, mã công trình, khách hàng..."
           columnOptions={COLUMN_OPTIONS}
-          headerGroups={HEADER_GROUPS}
+          headerGroups={initialView === 'financial' ? HEADER_GROUPS : []}
           tableColumns={columns}
           data={contracts}
           idKey="id"

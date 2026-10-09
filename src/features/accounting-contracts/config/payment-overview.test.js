@@ -3,12 +3,15 @@ import { test } from 'node:test';
 
 import { paymentOverview } from './payment-overview.js';
 
-test('overview orders payments, keeps paid status and highlights only the first planned payment', () => {
+test('overview aggregates occurrences into ordered stages and highlights only the first unpaid stage', () => {
   const result = paymentOverview(
     /** @type {any} */ ({
       contract: { settlementValue: 100, paidValue: 30 },
       installments: [
         {
+          id: 'stage-2',
+          amount: 20,
+          paidAmount: 0,
           number: 2,
           subInstallments: [
             {
@@ -21,6 +24,9 @@ test('overview orders payments, keeps paid status and highlights only the first 
           ],
         },
         {
+          id: 'stage-1',
+          amount: 80,
+          paidAmount: 30,
           number: 1,
           subInstallments: [
             {
@@ -44,12 +50,11 @@ test('overview orders payments, keeps paid status and highlights only the first 
   assert.deepEqual(
     result.installments.map((p) => [p.id, p.status]),
     [
-      ['paid', 'paid'],
-      ['active', 'active'],
-      ['next', 'upcoming'],
+      ['stage-1', 'active'],
+      ['stage-2', 'upcoming'],
     ],
   );
-  assert.equal(result.installments[1].dueDate, '09/10/2026');
+  assert.equal(result.installments[0].dueDate, '09/10/2026');
 });
 
 test('empty and overpaid contracts have bounded progress', () => {
@@ -67,6 +72,9 @@ test('empty and overpaid contracts have bounded progress', () => {
       contract: { settlementValue: 100, paidValue: 120 },
       installments: [
         {
+          id: 'stage',
+          amount: 50,
+          paidAmount: 0,
           number: 1,
           subInstallments: [
             { id: 'p', number: 1, status: 'Planned', amount: 50 },
@@ -77,4 +85,39 @@ test('empty and overpaid contracts have bounded progress', () => {
   );
   assert.equal(result.paidPercent, 100);
   assert.equal(result.currentPercent, 0);
+});
+
+test('a fully paid stage is paid, and a partially paid stage keeps its remaining amount active', () => {
+  const result = paymentOverview(
+    /** @type {any} */ ({
+      contract: { settlementValue: 100, paidValue: 50 },
+      installments: [
+        {
+          id: 'one',
+          number: 1,
+          amount: 30,
+          paidAmount: 30,
+          subInstallments: [{ status: 'Paid' }],
+        },
+        {
+          id: 'two',
+          number: 2,
+          amount: 70,
+          paidAmount: 20,
+          subInstallments: [
+            { status: 'Paid' },
+            { status: 'Planned', paymentDate: '2026-10-15' },
+          ],
+        },
+      ],
+    }),
+  );
+  assert.equal(result.currentPercent, 50);
+  assert.deepEqual(
+    result.installments.map((s) => [s.label, s.status]),
+    [
+      ['Đợt 1', 'paid'],
+      ['Đợt 2', 'active'],
+    ],
+  );
 });

@@ -21,5 +21,7 @@ export function useContractChildMutation(contractId) {
       queryClient.setQueryData(contractKey(contractId), result);
       queryClient.invalidateQueries({ queryKey: [...CONTRACTS_KEY, 'search'] });
     },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: contractKey(contractId) }),
   });
 }

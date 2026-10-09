@@ -9,7 +9,7 @@ import { subInstallmentSchema } from '../config/child-schemas.js';
 import { emptySubInstallment } from '../config/payment-draft.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
-import { SubInstallmentFields } from './sub-installment-fields.jsx';
+import { PaymentEditTable } from './payment-edit-table.jsx';
 
 /**
  * @param {import('../types/index.js').AccountingSubInstallment | null} sub
@@ -64,7 +64,7 @@ function SubInstallmentFormSession({
 
   const code =
     sub?.code ??
-    `${installment?.number ?? ''}.${(installment?.subInstallments.length ?? 0) + 1}`;
+    `${installment?.number ?? ''}.${Math.max(0, ...(installment?.subInstallments.map((s) => s.number) ?? [])) + 1}`;
 
   return (
     <FormDialog
@@ -74,7 +74,7 @@ function SubInstallmentFormSession({
       onOpenChange={onOpenChange}
       title={sub ? `Sửa lần thanh toán ${code}` : `Thêm lần thanh toán ${code}`}
       submitLabel={sub ? 'Lưu' : 'Thêm'}
-      width={820}
+      width={1440}
       draft={{ values }}
       isSubmitting={form.isSubmitting}
       submitError={form.submitError}
@@ -86,10 +86,11 @@ function SubInstallmentFormSession({
         title="Thông tin lần thanh toán"
         isTitleUppercase={false}
       >
-        <SubInstallmentFields
-          values={values}
-          onChange={setField}
+        <PaymentEditTable
+          rows={[{ id: sub?.id ?? 'new', code, values }]}
+          onChange={(_index, field, value) => setField(field, value)}
           fieldStatuses={fieldStatuses}
+          statusPrefix=""
           valueAfterTax={valueAfterTax}
         />
       </MetaFormSection>

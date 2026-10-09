@@ -49,15 +49,12 @@ export function contractMetrics(detail, icons) {
   const basePercent = percentOf(c.valueAfterTax, c.settlementValue);
   const invoicedPercent = percentOf(c.invoicedValue, c.settlementValue);
   const paidPercent = percentOf(c.paidValue, c.settlementValue);
-  const subCount = detail.installments.reduce(
-    (sum, i) => sum + i.subInstallments.length,
-    0,
-  );
-  const paidCount = detail.installments.reduce(
-    (sum, i) =>
-      sum + i.subInstallments.filter((s) => s.status === 'Paid').length,
-    0,
-  );
+  const stageCount = detail.installments.length;
+  const paidCount = detail.installments.filter(
+    (stage) =>
+      stage.subInstallments.length > 0 &&
+      stage.subInstallments.every((sub) => sub.status === 'Paid'),
+  ).length;
 
   return {
     settlement: {
@@ -132,7 +129,7 @@ export function contractMetrics(detail, icons) {
         value: `${paidPercent}%`,
         tone: /** @type {const} */ ('success'),
       },
-      end: { hint: `(${paidCount}/${subCount} đợt)` },
+      end: { hint: `(${paidCount}/${stageCount} đợt)` },
       segments: [
         { percent: paidPercent, tone: /** @type {const} */ ('success') },
       ],
