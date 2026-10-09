@@ -3,7 +3,7 @@
 ## 2026-10-10 — Unique customer codes, hover card, one contract table
 
 - Per user: (1) customer codes are unique timestamps again (`KH-<Date.now()>`, like `NCC-…`), not a running "KH-0001"; the form pre-fills it, `next-code` api/hook removed (BE endpoint now unused by the FE). (2) Customers list "Tùy ý" column opens an Astryx `HoverCard` (key / value stack) instead of a Tooltip. (3) Customer detail › Hợp đồng is ONE table (Mã hợp đồng / Ngày ký / Giá trị quyết toán / Giá trị đã thanh toán / Giá trị đã xuất (hóa đơn)); `CustomerContractHistory` takes `extraRows`, the page (`customer-detail-with-contracts.jsx`) maps the Kế toán contracts into it; `CustomerAccountingContracts` deleted. The shared table also shows in the customer dialog / list expansion (dropped Giá trị + Ngày hoàn thành columns there too).
-- Not checked in Chrome (dev server recompile is slow); gate only: `harness/runs/20261010-020341-242795/`. Existing KH-000N codes from the renumbering stay as they are.
+- Chrome :3000: "+1" in Tùy ý opens the hover card (Tax code …); Hòa Bình (Kế toán only) and NEWPLAN (4 Logistics) show the one table; last header was cut → column 240 px. BE-P migrated the existing codes to timestamps (dev DB); a customer created from the drawer got `KH-1791574201958` (deleted).
 
 ## 2026-10-10 — Customer detail contracts, Ctrl+K search, customer codes
 

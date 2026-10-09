@@ -175,7 +175,7 @@ export function CustomerContractHistory({
     {
       key: 'exportedValue',
       header: 'Giá trị đã xuất (hóa đơn)',
-      width: pixel(210),
+      width: pixel(240),
       align: 'end',
       renderCell: (row) => (
         <Text hasTabularNumbers>
