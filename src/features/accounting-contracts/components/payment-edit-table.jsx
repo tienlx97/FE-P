@@ -2,16 +2,19 @@
 
 import { Button } from '@astryxdesign/core/Button';
 import { DateInput } from '@astryxdesign/core/DateInput';
+import { Grid } from '@astryxdesign/core/Grid';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Selector } from '@astryxdesign/core/Selector';
 import { pixel } from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
+import { VStack } from '@astryxdesign/core/VStack';
 import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
+import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
-import { RichTextNoteField } from '@/shared/components/rich-text-note-field.jsx';
 import { TanStackDataTable } from '@/shared/components/tanstack-data-table.jsx';
-import { TextInput } from '@/shared/components/text-input.jsx';
+import { TextArea } from '@/shared/components/text-area.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import {
@@ -28,7 +31,7 @@ const NO_SORT_COLUMNS = [];
 /** @typedef {{ id: string, code: string, values: Values, index: number, valueAfterTax: number,
  * onChange: <K extends keyof Values>(index: number, field: K, value: Values[K]) => void,
  * status: (field: string) => { type: 'error', message: string } | undefined,
- * onRemove?: (index: number) => void, canRemove: boolean }} EditRow */
+ * onRemove?: (index: number) => void, canRemove: boolean, onSelect: (id: string) => void, isSelected: boolean }} EditRow */
 // Cell renderer identities stay stable while values change, preserving editor/input focus.
 /** @type {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<EditRow>[]} */
 const COLUMNS = [
@@ -45,7 +48,7 @@ const COLUMNS = [
   {
     key: 'kind',
     header: 'Hình thức',
-    width: pixel(145),
+    width: pixel(180),
     renderCell: (r) => (
       <Selector
         label={`Hình thức ${r.code}`}
@@ -87,7 +90,7 @@ const COLUMNS = [
   {
     key: 'amount',
     header: 'Số tiền (VND)',
-    width: pixel(155),
+    width: pixel(190),
     align: 'end',
     renderCell: (r) => (
       <Text weight="bold" hasTabularNumbers>
@@ -105,7 +108,7 @@ const COLUMNS = [
   {
     key: 'status',
     header: 'Trạng thái',
-    width: pixel(155),
+    width: pixel(190),
     renderCell: (r) => (
       <Selector
         label={`Trạng thái ${r.code}`}
@@ -125,7 +128,7 @@ const COLUMNS = [
   {
     key: 'paymentDate',
     header: 'Ngày thanh toán',
-    width: pixel(180),
+    width: pixel(210),
     renderCell: (r) => (
       <DateInput
         label={`Ngày thanh toán ${r.code}`}
@@ -141,31 +144,15 @@ const COLUMNS = [
     ),
   },
   {
-    key: 'condition',
-    header: 'Điều kiện',
-    width: pixel(200),
+    key: 'details',
+    header: 'Bổ sung',
+    width: pixel(130),
     renderCell: (r) => (
-      <TextInput
-        label={`Điều kiện ${r.code}`}
-        isLabelHidden
-        value={r.values.condition}
-        onChange={(v) => r.onChange(r.index, 'condition', v)}
-        status={r.status('condition')}
-      />
-    ),
-  },
-  {
-    key: 'note',
-    header: 'Ghi chú',
-    width: pixel(300),
-    renderCell: (r) => (
-      <RichTextNoteField
-        label={`Ghi chú ${r.code}`}
-        isLabelHidden
-        value={r.values.note}
-        onChange={(v) => r.onChange(r.index, 'note', v)}
-        maxLength={1000}
-        status={r.status('note')}
+      <Button
+        label="Chi tiết"
+        variant={r.isSelected ? 'secondary' : 'ghost'}
+        size="sm"
+        onClick={() => r.onSelect(r.id)}
       />
     ),
   },
@@ -186,6 +173,7 @@ const COLUMNS = [
       ) : null,
   },
 ];
+const EDIT_COLUMNS = COLUMNS.filter((column) => column.key !== 'actions');
 
 /** @param {{ rows: { id: string, code: string, values: Values }[], valueAfterTax: number,
  * onChange: <K extends keyof Values>(index: number, field: K, value: Values[K]) => void,
@@ -199,10 +187,16 @@ export function PaymentEditTable({
   onRemove,
   statusPrefix = 'subInstallments.',
 }) {
+  const [selectedId, setSelectedId] = useState(rows[0]?.id ?? '');
+  const activeId = rows.some((row) => row.id === selectedId)
+    ? selectedId
+    : rows[0]?.id;
   const data = rows.map((row, index) => ({
     ...row,
     index,
     valueAfterTax,
+    onSelect: setSelectedId,
+    isSelected: row.id === activeId,
     onChange,
     onRemove,
     canRemove: rows.length > 1,
@@ -211,18 +205,52 @@ export function PaymentEditTable({
         `${statusPrefix}${statusPrefix ? `${index}.` : ''}${field}`
       ],
   }));
+  const active = data.find((row) => row.id === activeId);
   return (
-    <TanStackDataTable
-      data={data}
-      columns={COLUMNS}
-      headerGroups={NO_HEADER_GROUPS}
-      sortableColumnKeys={NO_SORT_COLUMNS}
-      idKey="id"
-      density="balanced"
-      dividers="rows"
-      startKeys={['code']}
-      ariaLabel="Nhập các lần thanh toán"
-      emptyState={<Text>Chưa có lần thanh toán</Text>}
-    />
+    <VStack gap={4} hAlign="stretch">
+      <TanStackDataTable
+        data={data}
+        columns={onRemove ? COLUMNS : EDIT_COLUMNS}
+        headerGroups={NO_HEADER_GROUPS}
+        sortableColumnKeys={NO_SORT_COLUMNS}
+        idKey="id"
+        density="compact"
+        dividers="rows"
+        startKeys={['code']}
+        endKeys={onRemove ? ['details', 'actions'] : ['details']}
+        ariaLabel="Nhập các lần thanh toán"
+        emptyState={<Text>Chưa có lần thanh toán</Text>}
+      />
+      {active ? (
+        <MetaFormSection
+          isBoxed
+          title={`Chi tiết lần thanh toán ${active.code}`}
+          isTitleUppercase={false}
+        >
+          <Grid columns={{ minWidth: 260, max: 2 }} gap={4}>
+            <TextArea
+              label="Điều kiện thanh toán"
+              placeholder="Điều kiện, hồ sơ cần hoàn tất…"
+              rows={3}
+              value={active.values.condition}
+              onChange={(v) => onChange(active.index, 'condition', v)}
+              maxLength={1000}
+              isOptional
+              status={active.status('condition')}
+            />
+            <TextArea
+              label="Ghi chú lần thanh toán"
+              placeholder="Nhập ghi chú…"
+              rows={3}
+              value={active.values.note}
+              onChange={(v) => onChange(active.index, 'note', v)}
+              maxLength={1000}
+              isOptional
+              status={active.status('note')}
+            />
+          </Grid>
+        </MetaFormSection>
+      ) : null}
+    </VStack>
   );
 }

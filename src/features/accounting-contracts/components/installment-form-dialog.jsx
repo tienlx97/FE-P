@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@astryxdesign/core/Button';
+import { Card } from '@astryxdesign/core/Card';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Text } from '@astryxdesign/core/Text';
@@ -9,7 +10,7 @@ import { ListChecks, Plus } from 'lucide-react';
 
 import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
-import { RichTextNoteField } from '@/shared/components/rich-text-note-field.jsx';
+import { TextArea } from '@/shared/components/text-area.jsx';
 
 import { installmentSchema } from '../config/child-schemas.js';
 import { formatVnd, subInstallmentAmount } from '../config/money.js';
@@ -95,25 +96,43 @@ function InstallmentFormSession({
       }
       subtitle="Một đợt có thể thanh toán một lần hoặc chia thành nhiều lần."
       submitLabel={installment ? 'Lưu thay đổi' : 'Tạo đợt'}
-      width={1440}
+      width={1120}
       draft={{ values }}
       isSubmitting={form.isSubmitting}
       submitError={form.submitError || fieldStatuses.subInstallments?.message}
       fieldStatuses={fieldStatuses}
       onSubmit={form.handleSubmit}
     >
-      <VStack gap={5} hAlign="stretch">
+      <VStack gap={4} hAlign="stretch">
         <MetaFormSection
           title="Các lần thanh toán"
           isTitleUppercase={false}
           meta={`${values.subInstallments.length} lần`}
         >
+          <Card padding={4}>
+            <HStack hAlign="between" gap={4} wrap="wrap">
+              <VStack gap={1}>
+                <Text color="secondary" size="sm">
+                  Tổng giá trị đợt {number}
+                </Text>
+                <Text size="xl" weight="bold" color="accent" hasTabularNumbers>
+                  {formatVnd(total)} VND
+                </Text>
+              </VStack>
+              <VStack gap={1}>
+                <Text color="secondary" size="sm">
+                  Giá trị hợp đồng sau thuế
+                </Text>
+                <Text weight="semibold" hasTabularNumbers>
+                  {formatVnd(valueAfterTax)} VND
+                </Text>
+              </VStack>
+            </HStack>
+          </Card>
           <HStack hAlign="between" gap={3} wrap="wrap">
-            <Text color="secondary">
-              Nhập trực tiếp trên bảng. Tổng kế hoạch:{' '}
-              <Text weight="bold" color="accent">
-                {formatVnd(total)} VND
-              </Text>
+            <Text color="secondary" size="sm">
+              Nhập từng lần trên bảng. Chọn Chi tiết để bổ sung điều kiện và ghi
+              chú.
             </Text>
             {installment ? null : (
               <Button
@@ -156,9 +175,10 @@ function InstallmentFormSession({
           title="Ghi chú của đợt"
           isTitleUppercase={false}
         >
-          <RichTextNoteField
+          <TextArea
             label="Ghi chú của đợt"
             isLabelHidden
+            rows={3}
             value={values.note}
             onChange={(v) => setField('note', v)}
             placeholder="Tạm ứng, nghiệm thu, quyết toán…"

@@ -74,7 +74,7 @@ function SubInstallmentFormSession({
       onOpenChange={onOpenChange}
       title={sub ? `Sửa lần thanh toán ${code}` : `Thêm lần thanh toán ${code}`}
       submitLabel={sub ? 'Lưu' : 'Thêm'}
-      width={1440}
+      width={1120}
       draft={{ values }}
       isSubmitting={form.isSubmitting}
       submitError={form.submitError}

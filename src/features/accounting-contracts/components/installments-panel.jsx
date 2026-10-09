@@ -15,7 +15,6 @@ import {
   MetaRowActions,
   MetaTableCard,
 } from '@/shared/components/custom/meta/index.js';
-import { RichTextNote } from '@/shared/components/rich-text-note.jsx';
 import { TanStackDataTable } from '@/shared/components/tanstack-data-table.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
@@ -107,7 +106,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         key: 'note',
         header: 'Ghi chú',
         width: proportional(2),
-        renderCell: (sub) => <RichTextNote value={sub.note} />,
+        renderCell: (sub) => <Text color="secondary">{sub.note ?? '—'}</Text>,
       },
       {
         key: 'actions',
@@ -226,8 +225,8 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
     {
       key: 'note',
       header: 'Ghi chú',
-      width: proportional(2, { minWidth: 240 }),
-      renderCell: (stage) => <RichTextNote value={stage.note} />,
+      width: pixel(300),
+      renderCell: (stage) => <Text color="secondary">{stage.note ?? '—'}</Text>,
     },
     {
       key: 'actions',

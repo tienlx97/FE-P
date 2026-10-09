@@ -90,9 +90,9 @@ const COLUMN_OPTIONS = [
 ];
 
 const BASIC_COLUMN_KEYS = [
-  'signedDate',
   'contractNumber',
   'projectCode',
+  'signedDate',
   'customerName',
   'projectName',
   'sourceName',
@@ -216,7 +216,7 @@ export function AccountingContractsList() {
     {
       key: 'signedDate',
       header: 'Ngày ký',
-      width: pixel(110),
+      width: pixel(150),
       renderCell: (c) =>
         isTotals(c) ? null : (
           <Text hasTabularNumbers>{formatDisplayDate(c.signedDate)}</Text>
@@ -224,8 +224,8 @@ export function AccountingContractsList() {
     },
     {
       key: 'contractNumber',
-      header: initialView === 'financial' ? 'Hợp đồng' : 'Số hợp đồng',
-      width: pixel(150),
+      header: 'Hợp đồng',
+      width: pixel(210),
       filter: 'contractNumber',
       renderCell: (c) =>
         isTotals(c) ? null : (
@@ -238,8 +238,8 @@ export function AccountingContractsList() {
     },
     {
       key: 'projectCode',
-      header: initialView === 'financial' ? 'Công trình' : 'Mã công trình',
-      width: pixel(140),
+      header: 'Công trình',
+      width: pixel(200),
       filter: 'projectCode',
       renderCell: (c) =>
         isTotals(c) ? null : <Text weight="semibold">{c.projectCode}</Text>,
@@ -247,7 +247,7 @@ export function AccountingContractsList() {
     {
       key: 'customerName',
       header: 'Khách hàng',
-      width: proportional(1.6),
+      width: proportional(1.6, { minWidth: 240 }),
       filter: 'customerName',
       renderCell: (c) =>
         isTotals(c) ? null : <MetaCellText value={c.customerName} />,
@@ -255,14 +255,14 @@ export function AccountingContractsList() {
     {
       key: 'projectName',
       header: 'Dự án',
-      width: proportional(1.6),
+      width: proportional(1.6, { minWidth: 240 }),
       filter: 'projectName',
       renderCell: (c) => (isTotals(c) ? null : c.projectName),
     },
     {
       key: 'sourceName',
       header: 'Nguồn',
-      width: pixel(140),
+      width: pixel(200),
       renderCell: (c) =>
         isTotals(c) ? null : <MetaCellText value={c.sourceName} />,
     },
@@ -296,7 +296,7 @@ export function AccountingContractsList() {
         ) : (
           column.label
         ),
-        width: proportional(1, { minWidth: 180 }),
+        width: proportional(1, { minWidth: 210 }),
         align: /** @type {const} */ ('end'),
         exportValue: (/** @type {Summary} */ c) => c[column.key],
         renderCell: (/** @type {Summary} */ c) => (
@@ -323,7 +323,7 @@ export function AccountingContractsList() {
     {
       key: 'paymentDueDate',
       header: 'Tới hạn',
-      width: pixel(110),
+      width: pixel(150),
       renderCell: (c) =>
         isTotals(c) ? null : (
           <Text hasTabularNumbers>
@@ -334,7 +334,7 @@ export function AccountingContractsList() {
     {
       key: 'overdueDays',
       header: 'Quá hạn',
-      width: pixel(110),
+      width: pixel(150),
       renderCell: (c) =>
         isTotals(c) ? null : c.overdueDays ? (
           <MetaPill label={`${c.overdueDays} ngày`} tone="danger" hasDot />
@@ -398,7 +398,11 @@ export function AccountingContractsList() {
           contentSearchFieldKey="contractNumber"
           searchPlaceholder="Tìm nhanh theo số hợp đồng, mã công trình, khách hàng..."
           columnOptions={COLUMN_OPTIONS}
-          headerGroups={initialView === 'financial' ? HEADER_GROUPS : []}
+          headerGroups={
+            initialView === 'financial'
+              ? HEADER_GROUPS
+              : HEADER_GROUPS.filter((group) => group.id === 'codes')
+          }
           tableColumns={columns}
           data={contracts}
           idKey="id"

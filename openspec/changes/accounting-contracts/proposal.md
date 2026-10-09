@@ -57,3 +57,9 @@ granted to the "Kế toán" department and Admin).
 - Create/edit payment drawers use a 1440-wide table, constrained to the viewport. New stages start with one occurrence and permit more rows; editing a stage updates all existing occurrences by ID. Additional occurrences for an existing stage are added through its row action and a matching table drawer. Notes use the shared Markdown-backed RichText editor and renderer.
 - Basic list labels settlement as “Giá trị Quyết toán”. Financial list adds grouped MÃ (Hợp đồng, Công trình) and NGÀY (Tới hạn, Quá hạn), retaining GIÁ TRỊ / THANH TOÁN / HOÁ ĐƠN.
 - Existing-stage saves use separate backend PUTs. Stop on the first error, refresh detail, and explain partial persistence; retries update IDs and never create duplicate occurrences.
+
+## Follow-up — Compact payment drawers (task 1.8)
+
+- Both contract-list presets group Hợp đồng and Công trình under MÃ. Keep readable column minimum widths and native horizontal scrolling rather than compressing every column into the viewport.
+- Supersedes task 1.7's RichText notes: accounting notes use ordinary textarea inputs and plain-text table rendering.
+- Payment drawers are 1120 wide, bounded by the viewport. Show the running total and contract reference value above compact editable rows. A pinned Chi tiết action selects the occurrence whose condition and note appear in a separate panel beneath the table; the stage note has its own section. Pinned deletion is present only for removable draft rows.
