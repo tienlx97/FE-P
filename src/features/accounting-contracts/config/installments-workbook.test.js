@@ -28,63 +28,110 @@ const contract = /** @type {any} */ ({
   projectCode: 'CT-01',
   projectName: 'Nhà xưởng',
   signedDate: '2026-08-05',
-  settlementValue: 1000,
+  valueBeforeTax: 1000,
+  taxRatePercent: 8,
+  valueAfterTax: 1080,
+  settlementValue: 1180,
   paidValue: 300,
-  unpaidValue: 700,
+  unpaidValue: 880,
 });
+const appendices = /** @type {any} */ ([
+  { type: 'Decrease', valueAfterTax: 50, signedDate: '2026-09-02' },
+  { type: 'InfoChange', valueAfterTax: 0, signedDate: '2026-08-20' },
+  { type: 'Increase', valueAfterTax: 150, signedDate: '2026-08-10' },
+]);
 const installments = /** @type {any} */ ([
   {
     number: 2,
-    note: null,
+    note: 'Quyết toán',
     subInstallments: [
       sub({
         code: '2.1',
+        percent: 40,
         status: 'Planned',
-        valueAfterTax: 700,
+        valueAfterTax: 400,
         actualPaidAmount: null,
+        paymentDate: null,
       }),
-    ],
-  },
-  {
-    number: 1,
-    note: 'Tạm ứng',
-    subInstallments: [
-      sub({}),
       sub({
-        code: '1.2',
-        valueAfterTax: 0,
-        actualPaidAmount: null,
+        code: '2.2',
+        kind: 'Quantity',
+        percent: null,
         status: 'Planned',
+        valueAfterTax: 480,
+        actualPaidAmount: null,
+        paymentDate: null,
       }),
     ],
   },
+  { number: 1, note: null, subInstallments: [sub({})] },
 ]);
 
-test('stage bands carry totals and their payments sit indented below', async () => {
+test('template content in the report style: value block, đợt and lần rows, totals', async () => {
   const workbook = buildInstallmentWorkbook(ExcelJS, {
     contract,
+    appendices,
     installments,
     exportedAt: new Date('2026-10-10T03:00:00Z'),
   });
   const sheet = workbook.worksheets[0];
-  const labels = [];
+  assert.equal(sheet.getCell('A1').value, 'BẢNG CÁC ĐỢT THANH TOÁN');
+  assert.equal(sheet.getCell('B8').value, 'NỘI DUNG THANH TOÁN THEO HỢP ĐỒNG');
+  const rows = [];
   sheet.eachRow((row, number) => {
-    if (number > 8) labels.push([row.getCell(1).value, row.outlineLevel]);
+    if (number > 8) {
+      rows.push([row.getCell(1).value, row.getCell(2).value, row.outlineLevel]);
+    }
   });
-  assert.deepEqual(labels, [
-    ['Đợt 1', 0],
-    ['Lần 1.1', 1],
-    ['Lần 1.2', 1],
-    ['Đợt 2', 0],
-    ['Lần 2.1', 1],
-    ['TỔNG CỘNG', 0],
+  assert.deepEqual(rows, [
+    ['I. GIÁ TRỊ HỢP ĐỒNG', 'I. GIÁ TRỊ HỢP ĐỒNG', 0],
+    [null, 'Giá trị hợp đồng trước VAT', 0],
+    [null, 'VAT 8%', 0],
+    [null, 'Giá trị hợp đồng sau VAT', 0],
+    [null, 'Phụ lục số 01  ·  Phát sinh tăng  ·  ký ngày 10/08/2026', 0],
+    [null, 'Phụ lục số 02  ·  Phát sinh giảm  ·  ký ngày 02/09/2026', 0],
+    [null, 'GIÁ TRỊ QUYẾT TOÁN', 0],
+    ['II. CÁC ĐỢT THANH TOÁN', 'II. CÁC ĐỢT THANH TOÁN', 0],
+    ['Đợt 1', 'Tạm ứng', 0],
+    ['Đợt 2', 'Quyết toán', 0],
+    ['2.1', 'Tạm ứng', 1],
+    ['2.2', 'Tạm ứng', 1],
+    ['TỔNG CỘNG  ·  2 đợt', 'TỔNG CỘNG  ·  2 đợt', 0],
   ]);
-  // Band totals are formulas over the payment rows, with cached results.
-  const band = sheet.getRow(9).getCell(4).value;
-  assert.deepEqual(band, { formula: 'SUM(D10:D11)', result: 300 });
-  assert.equal(sheet.getRow(9).getCell(7).value, 'Thanh toán một phần');
-  const total = sheet.getRow(14).getCell(4).value;
-  assert.deepEqual(total, { formula: 'D9+D12', result: 1000 });
+  // Contract value = before tax + VAT; decreases are negative.
+  assert.deepEqual(sheet.getCell('D12').value, {
+    formula: 'D10+D11',
+    result: 1080,
+  });
+  assert.equal(sheet.getCell('D11').value, 80);
+  assert.equal(sheet.getCell('D14').value, -50);
+  assert.deepEqual(sheet.getCell('D15').value, {
+    formula: 'D12+D13+D14',
+    result: 1180,
+  });
+  // "Còn lại" runs previous + số tiền − đã TT; a đợt with lần sums them.
+  assert.equal(sheet.getCell('G17').formula, 'D17-F17');
+  assert.deepEqual(sheet.getCell('D18').value, {
+    formula: 'SUM(D19:D20)',
+    result: 880,
+  });
+  assert.deepEqual(sheet.getCell('G18').value, {
+    formula: 'G17+D18-F18',
+    result: 880,
+  });
+  assert.equal(sheet.getCell('C17').value, 0.3);
+  assert.equal(sheet.getCell('C18').value, null);
+  // Totals over the đợt rows; the settlement row and headline figures follow.
+  assert.deepEqual(sheet.getCell('D21').value, {
+    formula: 'D17+D18',
+    result: 1180,
+  });
+  assert.deepEqual(sheet.getCell('F15').value, { formula: 'F21', result: 300 });
+  assert.deepEqual(sheet.getCell('G15').value, {
+    formula: 'D15-F15',
+    result: 880,
+  });
+  assert.deepEqual(sheet.getCell('A6').value, { formula: 'D15', result: 1180 });
   const buffer = await workbook.xlsx.writeBuffer();
   assert.ok(buffer.byteLength > 1000);
 });

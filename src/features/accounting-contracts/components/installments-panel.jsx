@@ -213,6 +213,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
       const contractNumber = detail.contract.contractNumber;
       const workbook = buildInstallmentWorkbook(ExcelJS, {
         contract: detail.contract,
+        appendices: detail.appendices,
         installments: detail.installments,
         exportedAt,
       });

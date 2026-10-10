@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-10 — "Đợt thanh toán" Excel: template content, report styling (`accounting-contracts`)
+
+- Per user: follow `F:\Copy of SALE NOI DIA_BANG TONG HOP DOANH THU_2026.xlsx` (sheet "Sale nội địa"), then "điều chỉnh màu sắc, font, cách thiết kế cho phù hợp — cái tôi gửi là mẫu cơ bản". So `config/installments-workbook.js` keeps the template's CONTENT and drops its look (Times New Roman, red header, yellow fill, STT merged down, hidden column C).
+- Content from the template: columns Đợt / Nội dung thanh toán theo hợp đồng / % / Số tiền / Ngày thanh toán / Thực tế đã thanh toán / Còn lại / Ghi chú; value block (trước VAT, VAT n%, sau VAT = formula, one row per Phát sinh tăng / giảm appendix with giảm negative, GIÁ TRỊ QUYẾT TOÁN = formula with paid / còn lại); one row per đợt, several lần → "n.1", "n.2" rows (outline level 1) under a SUM đợt row; "Còn lại" runs previous + số tiền − đã TT.
+- Styling like the other reports: Inter 11, title + contract / customer lines, four headline figures (quyết toán, đã TT, còn lại, tiến độ %, live formulas), cobalt header, navy section bands "I. GIÁ TRỊ HỢP ĐỒNG" / "II. CÁC ĐỢT THANH TOÁN", grey value rows, light-blue settlement row, paid green, còn lại red while > 0, cobalt TỔNG CỘNG row, soft grey borders, no gridlines, row heights from text length, A4 landscape fit to width, page numbers. The panel passes `appendices`.
+- The two typecheck errors from 70c1044 found here (sticky `plugins` array, invoice Σ row fields) were committed separately in 1f01e21.
+- Amounts come from the stored payment / appendix values (BE-P tasks 1.13 / 1.14), so typed values export as typed.
+- ExcelJS drops a cached formula result of 0 (Excel recomputes it). Sample read back in Node only (no Excel / LibreOffice here); sample .xlsx sent to the user. Gate passed: `harness/runs/20261010-115251-866/`.
+
 ## 2026-10-10 — Contract value after tax typeable, "sửa tay" marks, task 1.15 (`accounting-contracts`)
 
 - Per user ("chỉnh tiếp cho xong"), finishing 1.14's open items. Needs BE-P task 1.14 (contract `valueAfterTax` / `isValueAfterTaxManual`).
