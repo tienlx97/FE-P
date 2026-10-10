@@ -39,7 +39,14 @@ test('overview aggregates occurrences into ordered stages and highlights only th
               kind: 'Percent',
               percent: 50,
             },
-            { id: 'paid', number: 1, code: '1.1', status: 'Paid', amount: 30 },
+            {
+              id: 'paid',
+              number: 1,
+              code: '1.1',
+              status: 'Paid',
+              amount: 30,
+              actualPaidAmount: 30,
+            },
           ],
         },
       ],
@@ -55,6 +62,26 @@ test('overview aggregates occurrences into ordered stages and highlights only th
     ],
   );
   assert.equal(result.installments[0].dueDate, '09/10/2026');
+});
+
+test('a planned payment counts for nothing even with an amount typed', () => {
+  const result = paymentOverview(
+    /** @type {any} */ ({
+      contract: { settlementValue: 100, paidValue: 0 },
+      installments: [
+        {
+          id: 'one',
+          number: 1,
+          amount: 50,
+          paidAmount: 50,
+          subInstallments: [
+            { status: 'Planned', amount: 50, actualPaidAmount: 50 },
+          ],
+        },
+      ],
+    }),
+  );
+  assert.equal(result.installments[0].status, 'active');
 });
 
 test('empty and overpaid contracts have bounded progress', () => {
@@ -97,7 +124,7 @@ test('a fully paid stage is paid, and a partially paid stage keeps its remaining
           number: 1,
           amount: 30,
           paidAmount: 30,
-          subInstallments: [{ status: 'Paid' }],
+          subInstallments: [{ status: 'Paid', actualPaidAmount: 30 }],
         },
         {
           id: 'two',
@@ -105,7 +132,7 @@ test('a fully paid stage is paid, and a partially paid stage keeps its remaining
           amount: 70,
           paidAmount: 20,
           subInstallments: [
-            { status: 'Paid' },
+            { status: 'Paid', actualPaidAmount: 20 },
             { status: 'Planned', paymentDate: '2026-10-15' },
           ],
         },

@@ -10,6 +10,7 @@
  * module as an argument so the caller can lazy-load it and tests can pass
  * the Node build.
  */
+import { paidOf } from './paid.js';
 
 const COLORS = {
   accent: 'FF0064E0',
@@ -113,10 +114,6 @@ function heightFor(/** @type {(string | null | undefined)[]} */ texts) {
   );
   return Math.max(24, lines * 15 + 9);
 }
-
-/** What was actually received ("Giá trị thực tế thanh toán").
- * @param {import('../types/index.js').AccountingSubInstallment} sub */
-const paidOf = (sub) => sub.actualPaidAmount ?? 0;
 
 /** @param {string} contractNumber @param {Date} day */
 export function installmentWorkbookFileName(contractNumber, day) {

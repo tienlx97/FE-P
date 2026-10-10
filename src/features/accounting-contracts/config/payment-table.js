@@ -4,6 +4,8 @@
  * has several; "Còn lại" runs previous + số tiền − đã thanh toán per đợt.
  */
 
+import { paidOf } from './paid.js';
+
 /** @typedef {import('../types/index.js').AccountingContractDetail} Detail */
 
 /**
@@ -19,6 +21,7 @@
  * @property {string | null} date Only on a lần, or a đợt with a single lần.
  * @property {number} paid
  * @property {number | null} remaining Running "còn lại"; đợt rows only.
+ * @property {'Planned' | 'Partial' | 'Paid'} status A lần's own status; a đợt with several lần is Paid when all are, Partial when some are.
  * @property {string} note
  * @property {boolean} isParent A đợt with several lần (summary row).
  */
@@ -43,13 +46,17 @@ export function paymentTableRows(detail) {
     const single = subs.length === 1 ? subs[0] : null;
     const isParent = subs.length > 1;
     const amount = subs.reduce((sum, sub) => sum + sub.valueAfterTax, 0);
-    const paid = subs.reduce(
-      (sum, sub) => sum + (sub.actualPaidAmount ?? 0),
-      0,
-    );
+    const paid = subs.reduce((sum, sub) => sum + paidOf(sub), 0);
     totalAmount += amount;
     totalPaid += paid;
     remaining += amount - paid;
+    const paidCount = subs.filter((sub) => sub.status === 'Paid').length;
+    const stageStatus =
+      subs.length > 0 && paidCount === subs.length
+        ? 'Paid'
+        : paidCount > 0
+          ? 'Partial'
+          : 'Planned';
     const percents = subs.map((sub) =>
       sub.kind === 'Percent' ? sub.percent : null,
     );
@@ -68,6 +75,7 @@ export function paymentTableRows(detail) {
       date: single?.paymentDate ?? null,
       paid,
       remaining,
+      status: stageStatus,
       note: (single ? single.note : null) ?? '',
       isParent,
     });
@@ -83,8 +91,9 @@ export function paymentTableRows(detail) {
         percent: sub.kind === 'Percent' ? sub.percent : null,
         amount: sub.valueAfterTax,
         date: sub.paymentDate,
-        paid: sub.actualPaidAmount ?? 0,
+        paid: paidOf(sub),
         remaining: null,
+        status: sub.status,
         note: sub.note ?? '',
         isParent: false,
       });

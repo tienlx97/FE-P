@@ -14,6 +14,7 @@ import * as stylex from '@stylexjs/stylex';
 import { ListChecks, Plus } from 'lucide-react';
 
 import {
+  MetaPill,
   MetaRowActions,
   MetaTableCard,
 } from '@/shared/components/custom/meta/index.js';
@@ -23,6 +24,12 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { formatVnd } from '../config/money.js';
 import { paymentTableRows } from '../config/payment-table.js';
 import { QuickEditValue } from './quick-edit-value.jsx';
+
+const STATUS_PILLS = {
+  Paid: { label: 'Đã thanh toán', tone: 'success' },
+  Partial: { label: 'Thanh toán một phần', tone: 'accent' },
+  Planned: { label: 'Kế hoạch', tone: 'muted' },
+};
 
 const styles = stylex.create({
   indent: { paddingInlineStart: 'var(--spacing-6)' },
@@ -156,6 +163,15 @@ const paymentColumns = (actions) => [
           {formatVnd(row.remaining)}
         </Text>
       ),
+  },
+  {
+    key: 'status',
+    header: 'Trạng thái',
+    width: pixel(190),
+    renderCell: (row) => {
+      const { label, tone } = STATUS_PILLS[row.status];
+      return <MetaPill label={label} tone={tone} hasDot />;
+    },
   },
   {
     key: 'note',

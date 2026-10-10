@@ -1,4 +1,5 @@
 import { formatVnd } from './money.js';
+import { paidOf } from './paid.js';
 
 /**
  * Share of `part` in `total` as a whole percent, 0–100.
@@ -55,7 +56,7 @@ export function contractMetrics(detail, icons) {
   ).length;
   const paidPaymentCount = detail.installments
     .flatMap((stage) => stage.subInstallments)
-    .filter((sub) => (sub.actualPaidAmount ?? 0) > 0).length;
+    .filter((sub) => paidOf(sub) > 0).length;
 
   return {
     settlement: {

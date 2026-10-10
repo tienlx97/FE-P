@@ -125,6 +125,43 @@ test('a single-lần đợt carries its lần; a multi-lần đợt sums them', 
   assert.deepEqual([third.content, third.percent], ['Sau quyết toán', null]);
 });
 
+test('status: a lần keeps its own; a đợt is Paid / Partial / Planned', () => {
+  const rows = paymentTableRows(detail).rows;
+  assert.deepEqual(
+    rows.map((r) => r.status),
+    ['Paid', 'Planned', 'Planned', 'Planned', 'Planned'],
+  );
+  const partial = paymentTableRows({
+    ...detail,
+    installments: [
+      {
+        ...detail.installments[2],
+        subInstallments: [
+          { ...detail.installments[2].subInstallments[0], status: 'Paid' },
+          detail.installments[2].subInstallments[1],
+        ],
+      },
+    ],
+  });
+  assert.equal(partial.rows[0].status, 'Partial');
+});
+
+test('only a "Đã thanh toán" lần adds to the paid amount', () => {
+  const planned = paymentTableRows({
+    ...detail,
+    installments: [
+      {
+        ...detail.installments[1],
+        subInstallments: [
+          { ...detail.installments[1].subInstallments[0], status: 'Planned' },
+        ],
+      },
+    ],
+  });
+  assert.equal(planned.totalPaid, 0);
+  assert.equal(planned.rows[0].remaining, 264_000_000);
+});
+
 test('no installments: no rows, zero totals', () => {
   const empty = paymentTableRows({ ...detail, installments: [] });
   assert.deepEqual(empty, {

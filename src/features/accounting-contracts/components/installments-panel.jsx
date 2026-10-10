@@ -36,6 +36,7 @@ import {
   percentLabel,
   subInstallmentValues,
 } from '../config/money.js';
+import { stagePaid } from '../config/paid.js';
 import { paymentValues } from '../config/payment-draft.js';
 import { isStagePaid } from '../config/payment-overview.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
@@ -302,7 +303,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
     if (isStagePaid(stage)) {
       return <MetaPill label="Đã thanh toán" tone="success" hasDot />;
     }
-    if (stage.paidAmount > 0) {
+    if (stagePaid(stage) > 0) {
       return <MetaPill label="Thanh toán một phần" tone="accent" hasDot />;
     }
     return <MetaPill label="Kế hoạch" tone="muted" hasDot />;
@@ -402,7 +403,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
       ) : null}
 
       {(view === 'detail' ? stages : []).map((stage) => {
-        const unpaid = Math.max(0, stage.amount - stage.paidAmount);
+        const unpaid = Math.max(0, stage.amount - stagePaid(stage));
         return (
           <MetaTableCard
             key={stage.id}
@@ -458,7 +459,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
                     weight="bold"
                     hasTabularNumbers
                   >
-                    {formatVnd(stage.paidAmount)} VND
+                    {formatVnd(stagePaid(stage))} VND
                   </Text>
                 </HStack>
                 <HStack gap={2} vAlign="center" wrap="nowrap">
