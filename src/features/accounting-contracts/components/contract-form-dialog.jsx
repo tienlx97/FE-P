@@ -232,6 +232,7 @@ export function ContractFormDialog({
                 <StackItem size="fill">
                   <Selector
                     label="Khách hàng"
+                    hasSearch
                     placeholder="Chọn khách hàng"
                     value={values.customerId}
                     onChange={(value) => setField('customerId', value ?? '')}

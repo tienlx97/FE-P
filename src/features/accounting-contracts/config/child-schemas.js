@@ -25,24 +25,24 @@ export function labelOf(options, value) {
   return options.find((option) => option.value === value)?.label ?? value;
 }
 
-/** "Thay đổi thông tin" carries no money; the others need an amount > 0. */
+/** "Thay đổi thông tin" carries no money; the others need a value before tax > 0. */
 export const appendixSchema = z
   .object({
     type: z.enum(['Increase', 'Decrease', 'InfoChange'], {
       error: 'Vui lòng chọn loại phụ lục',
     }),
-    amount: z.number().nonnegative().optional(),
+    valueBeforeTax: z.number().nonnegative().optional(),
     signedDate: z.string().min(1, 'Vui lòng chọn ngày ký'),
     buyerSigned: z.boolean(),
     sellerSigned: z.boolean(),
     note: z.string().max(1000, 'Tối đa 1000 ký tự'),
   })
   .superRefine((values, ctx) => {
-    if (values.type !== 'InfoChange' && !((values.amount ?? 0) > 0)) {
+    if (values.type !== 'InfoChange' && !((values.valueBeforeTax ?? 0) > 0)) {
       ctx.addIssue({
         code: 'custom',
-        path: ['amount'],
-        message: 'Số tiền phải lớn hơn 0',
+        path: ['valueBeforeTax'],
+        message: 'Giá trị trước thuế phải lớn hơn 0',
       });
     }
   });

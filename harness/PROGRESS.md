@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-10 — Searchable customer selector; appendix before / after tax, task 1.11 (`accounting-contracts`)
+
+- Per user ("Selector khách hàng trong kế toán: thêm nút search"; "Phụ lục hợp đồng: Giá trị bao gồm 2 loại: Giá trị trước thuế, Giá trị sau thuế"). Contract drawer Khách hàng selector gets `hasSearch`.
+- Appendix: form field `valueBeforeTax` ("Giá trị trước thuế") + disabled "Giá trị sau thuế" preview (`valueAfterTax(before, contract taxRatePercent)`); table columns "Giá trị trước thuế" / "Giá trị sau thuế"; `appendixTotals` (KPI cards) sum the after-tax values the settlement uses. Needs BE-P task 1.10 (request/response field rename).
+- Not checked live (Chrome extension still refuses localhost). Gate passed: `harness/runs/20261010-095510-2141/` (first run: `weight="regular"` is not a TextWeight, and a test fixture still had `amount`).
+
 ## 2026-10-10 — Quick-create customer in the Kế toán contract drawer, task 1.10 (`accounting-contracts`)
 
 - Per user ("Thêm nút thêm nhanh khách hàng trong Kế toán > Drawer Hợp đồng"). An IconButton "Thêm khách hàng" beside the Khách hàng selector opens Logistics' `QuickCreateCustomerDialog` (same directory, BE-P task 1.7); on create the accounting customers query is invalidated and the new id selected.

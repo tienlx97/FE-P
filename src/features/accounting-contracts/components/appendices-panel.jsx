@@ -27,6 +27,31 @@ import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 
 /** @typedef {import('../types/index.js').AccountingAppendix} Appendix */
 
+/**
+ * "+10,000,000" / "−2,000,000" (green when it increases the settlement); "—"
+ * for an information change.
+ * @param {Appendix} appendix
+ * @param {number} value
+ * @param {'normal' | 'bold'} weight
+ */
+function signedValue(appendix, value, weight) {
+  if (appendix.type === 'InfoChange') return <Text color="secondary">—</Text>;
+  return (
+    <Text
+      weight={weight}
+      hasTabularNumbers
+      color={
+        appendix.type === 'Increase'
+          ? /** @type {any} */ ('meta-success')
+          : 'primary'
+      }
+    >
+      {appendix.type === 'Increase' ? '+' : '−'}
+      {formatVnd(value)}
+    </Text>
+  );
+}
+
 /** @param {Appendix} appendix */
 function typePill(appendix) {
   const label = labelOf(APPENDIX_TYPE_OPTIONS, appendix.type);
@@ -83,27 +108,18 @@ export function AppendicesPanel({ detail, metrics, createKey }) {
       renderCell: (a) => <Text color="secondary">{a.note ?? '—'}</Text>,
     },
     {
-      key: 'amount',
-      header: 'Giá trị (VND)',
+      key: 'valueBeforeTax',
+      header: 'Giá trị trước thuế',
       width: pixel(160),
       align: 'end',
-      renderCell: (a) =>
-        a.type === 'InfoChange' ? (
-          <Text color="secondary">—</Text>
-        ) : (
-          <Text
-            weight="bold"
-            hasTabularNumbers
-            color={
-              a.type === 'Increase'
-                ? /** @type {any} */ ('meta-success')
-                : 'primary'
-            }
-          >
-            {a.type === 'Increase' ? '+' : '−'}
-            {formatVnd(a.amount)}
-          </Text>
-        ),
+      renderCell: (a) => signedValue(a, a.valueBeforeTax, 'normal'),
+    },
+    {
+      key: 'valueAfterTax',
+      header: 'Giá trị sau thuế',
+      width: pixel(160),
+      align: 'end',
+      renderCell: (a) => signedValue(a, a.valueAfterTax, 'bold'),
     },
     {
       key: 'signedDate',
@@ -203,6 +219,7 @@ export function AppendicesPanel({ detail, metrics, createKey }) {
 
       <AppendixFormDialog
         contractId={contractId}
+        taxRatePercent={detail.contract.taxRatePercent}
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
         appendix={editing}

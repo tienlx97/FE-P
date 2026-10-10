@@ -26,7 +26,8 @@ function send(contractId, path, method, body) {
 export function appendixBody(values) {
   return {
     type: values.type,
-    amount: values.type === 'InfoChange' ? 0 : (values.amount ?? 0),
+    valueBeforeTax:
+      values.type === 'InfoChange' ? 0 : (values.valueBeforeTax ?? 0),
     signedDate: values.signedDate,
     buyerSigned: values.buyerSigned,
     sellerSigned: values.sellerSigned,

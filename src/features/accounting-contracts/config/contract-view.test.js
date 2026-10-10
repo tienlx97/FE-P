@@ -53,7 +53,8 @@ test('appendix totals split by direction; metrics show paid progress', () => {
     {
       id: '1',
       type: /** @type {const} */ ('Increase'),
-      amount: 10,
+      valueBeforeTax: 10,
+      valueAfterTax: 10,
       signedDate: '',
       buyerSigned: true,
       sellerSigned: true,
@@ -62,7 +63,8 @@ test('appendix totals split by direction; metrics show paid progress', () => {
     {
       id: '2',
       type: /** @type {const} */ ('Decrease'),
-      amount: 2,
+      valueBeforeTax: 2,
+      valueAfterTax: 2,
       signedDate: '',
       buyerSigned: true,
       sellerSigned: true,
@@ -71,7 +73,8 @@ test('appendix totals split by direction; metrics show paid progress', () => {
     {
       id: '3',
       type: /** @type {const} */ ('InfoChange'),
-      amount: 0,
+      valueBeforeTax: 0,
+      valueAfterTax: 0,
       signedDate: '',
       buyerSigned: true,
       sellerSigned: true,

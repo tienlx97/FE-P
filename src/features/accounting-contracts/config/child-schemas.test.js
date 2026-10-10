@@ -10,7 +10,7 @@ import {
 
 const appendix = {
   type: 'Increase',
-  amount: 10,
+  valueBeforeTax: 10,
   signedDate: '2026-02-01',
   buyerSigned: true,
   sellerSigned: false,
@@ -26,17 +26,17 @@ const sub = {
   note: '',
 };
 
-test('an appendix needs an amount unless it only changes information', () => {
+test('an appendix needs a value before tax unless it only changes information', () => {
   assert.equal(appendixSchema.safeParse(appendix).success, true);
   assert.equal(
-    appendixSchema.safeParse({ ...appendix, amount: 0 }).success,
+    appendixSchema.safeParse({ ...appendix, valueBeforeTax: 0 }).success,
     false,
   );
   assert.equal(
     appendixSchema.safeParse({
       ...appendix,
       type: 'InfoChange',
-      amount: undefined,
+      valueBeforeTax: undefined,
     }).success,
     true,
   );

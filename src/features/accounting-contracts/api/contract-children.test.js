@@ -7,16 +7,16 @@ import {
   subInstallmentBody,
 } from './contract-children.js';
 
-test('an information-change appendix sends amount 0', () => {
+test('an information-change appendix sends value before tax 0', () => {
   assert.equal(
     appendixBody({
       type: 'InfoChange',
-      amount: 5,
+      valueBeforeTax: 5,
       signedDate: '2026-02-01',
       buyerSigned: true,
       sellerSigned: true,
       note: '',
-    }).amount,
+    }).valueBeforeTax,
     0,
   );
 });

@@ -17,3 +17,4 @@
 - [x] 1.9 Access: Kế toán area opens for the BE-P "Kế toán HCM" department (and Admin); the shared customer detail only loads Logistics / Kế toán contract lists the user may see, and counts whichever loaded.
 
 - [x] 1.10 Contract drawer: "Thêm khách hàng" button beside Khách hàng opens the shared quick-create customer drawer (composed in `src/app/(protected)/accounting/layout.jsx`) and selects the new customer.
+- [x] 1.11 Contract drawer customer selector is searchable; appendix drawer takes Giá trị trước thuế and previews Giá trị sau thuế (contract tax rate), appendix table shows both (BE-P task 1.10).

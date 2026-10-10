@@ -19,6 +19,7 @@ import {
   APPENDIX_TYPE_OPTIONS,
   appendixSchema,
 } from '../config/child-schemas.js';
+import { valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
 
@@ -29,8 +30,10 @@ import { useZodForm } from '../hooks/use-zod-form.js';
 function valuesOf(appendix) {
   return {
     type: appendix?.type ?? 'Increase',
-    amount:
-      appendix && appendix.type !== 'InfoChange' ? appendix.amount : undefined,
+    valueBeforeTax:
+      appendix && appendix.type !== 'InfoChange'
+        ? appendix.valueBeforeTax
+        : undefined,
     signedDate: appendix?.signedDate ?? '',
     buyerSigned: appendix?.buyerSigned ?? false,
     sellerSigned: appendix?.sellerSigned ?? false,
@@ -41,12 +44,19 @@ function valuesOf(appendix) {
 /**
  * @param {{
  *   contractId: string,
+ *   taxRatePercent: number,
  *   isOpen: boolean,
  *   onOpenChange: (isOpen: boolean) => void,
  *   appendix: import('../types/index.js').AccountingAppendix | null,
  * }} props
  */
-function AppendixFormSession({ contractId, isOpen, onOpenChange, appendix }) {
+function AppendixFormSession({
+  contractId,
+  taxRatePercent,
+  isOpen,
+  onOpenChange,
+  appendix,
+}) {
   const mutation = useContractChildMutation(contractId);
   const form = useZodForm({
     initialValues: valuesOf(appendix),
@@ -58,6 +68,10 @@ function AppendixFormSession({ contractId, isOpen, onOpenChange, appendix }) {
   const { values, setField, fieldStatuses } = form;
 
   const isInfoChange = values.type === 'InfoChange';
+  // Preview of the backend's value after tax (contract tax rate).
+  const afterTax = isInfoChange
+    ? undefined
+    : valueAfterTax(values.valueBeforeTax, taxRatePercent);
 
   return (
     <FormDialog
@@ -111,20 +125,30 @@ function AppendixFormSession({ contractId, isOpen, onOpenChange, appendix }) {
               statusVariant="tooltip"
             />
           </Grid>
-          <FormattedNumberTextInput
-            label="Số tiền"
-            value={isInfoChange ? undefined : values.amount}
-            onChange={(value) => setField('amount', value)}
-            units="VND"
-            isDisabled={isInfoChange}
-            isRequired={!isInfoChange}
-            description={
-              isInfoChange
-                ? 'Thay đổi thông tin không làm đổi giá trị hợp đồng'
-                : undefined
-            }
-            status={fieldStatuses.amount}
-          />
+          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
+            <FormattedNumberTextInput
+              label="Giá trị trước thuế"
+              value={isInfoChange ? undefined : values.valueBeforeTax}
+              onChange={(value) => setField('valueBeforeTax', value)}
+              units="VND"
+              isDisabled={isInfoChange}
+              isRequired={!isInfoChange}
+              description={
+                isInfoChange
+                  ? 'Thay đổi thông tin không làm đổi giá trị hợp đồng'
+                  : undefined
+              }
+              status={fieldStatuses.valueBeforeTax}
+            />
+            <FormattedNumberTextInput
+              label="Giá trị sau thuế"
+              value={afterTax}
+              onChange={() => {}}
+              units="VND"
+              isDisabled
+              description={`Tự tính theo thuế ${taxRatePercent}% của hợp đồng`}
+            />
+          </Grid>
         </MetaFormSection>
         <MetaFormSection isBoxed title="Tình trạng ký" isTitleUppercase={false}>
           <Text size="sm" color="secondary">

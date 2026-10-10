@@ -24,15 +24,16 @@ export function contractStatus(contract) {
 }
 
 /**
- * Sums of the appendices by direction (Phát sinh tăng / giảm).
+ * Sums of the appendices by direction (Phát sinh tăng / giảm), after tax —
+ * what the settlement value adds / subtracts.
  * @param {import('../types/index.js').AccountingAppendix[]} appendices
  */
 export function appendixTotals(appendices) {
   let increase = 0;
   let decrease = 0;
   for (const appendix of appendices) {
-    if (appendix.type === 'Increase') increase += appendix.amount;
-    if (appendix.type === 'Decrease') decrease += appendix.amount;
+    if (appendix.type === 'Increase') increase += appendix.valueAfterTax;
+    if (appendix.type === 'Decrease') decrease += appendix.valueAfterTax;
   }
   return { increase, decrease };
 }
