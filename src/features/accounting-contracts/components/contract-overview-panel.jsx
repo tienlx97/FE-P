@@ -17,10 +17,12 @@ import {
 } from '@/shared/components/custom/meta/index.js';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
-import { formatVnd } from '../config/money.js';
+import { contractFormValues } from '../config/edit-values.js';
+import { formatVnd, valueAfterTax } from '../config/money.js';
 import { paymentOverview } from '../config/payment-overview.js';
 import { useCustomersQuery } from '../hooks/use-catalogs.js';
-import { TypedMark } from './typed-mark.jsx';
+import { useSaveContractMutation } from '../hooks/use-contracts.js';
+import { QuickEditValue } from './quick-edit-value.jsx';
 
 /**
  * Logistics overview summary and payment strip, adapted to accounting:
@@ -33,6 +35,7 @@ import { TypedMark } from './typed-mark.jsx';
  */
 export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
   const c = detail.contract;
+  const saveContract = useSaveContractMutation();
   const payments = paymentOverview(detail);
   const customersQuery = useCustomersQuery();
   const customer = customersQuery.data?.success
@@ -124,11 +127,24 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
                 {c.taxRatePercent}%
               </MetadataListItem>
               <MetadataListItem label="Sau thuế">
-                <TypedMark isTyped={c.isValueAfterTaxManual} hAlign="start">
-                  <Text weight="bold" hasTabularNumbers>
-                    {formatVnd(c.valueAfterTax)} VND
-                  </Text>
-                </TypedMark>
+                <QuickEditValue
+                  label="Giá trị hợp đồng (sau thuế)"
+                  value={c.valueAfterTax}
+                  computed={valueAfterTax(c.valueBeforeTax, c.taxRatePercent)}
+                  isTyped={c.isValueAfterTaxManual}
+                  text={`${formatVnd(c.valueAfterTax)} VND`}
+                  isBold
+                  onSave={(typed) =>
+                    saveContract.mutateAsync({
+                      id: c.id,
+                      version: c.version,
+                      values: {
+                        ...contractFormValues(c, c.companyId),
+                        valueAfterTax: typed,
+                      },
+                    })
+                  }
+                />
               </MetadataListItem>
               <MetadataListItem label="Ghi chú">
                 {c.note ?? '—'}

@@ -18,11 +18,12 @@ import {
 import { Table } from '@/shared/components/table.jsx';
 import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
-import { formatVnd } from '../config/money.js';
+import { invoiceFormValues } from '../config/edit-values.js';
+import { formatVnd, valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 import { InvoiceFormDialog } from './invoice-form-dialog.jsx';
-import { TypedMark } from './typed-mark.jsx';
+import { QuickEditValue } from './quick-edit-value.jsx';
 
 /** @typedef {import('../types/index.js').AccountingInvoice} Invoice */
 
@@ -132,13 +133,31 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
       header: 'Sau thuế (VND)',
       width: pixel(170),
       align: 'end',
-      renderCell: (i) => (
-        <TypedMark isTyped={!isTotals(i) && i.isValueAfterTaxManual}>
+      renderCell: (i) =>
+        isTotals(i) ? (
           <Text weight="bold" hasTabularNumbers>
             {formatVnd(i.valueAfterTax)}
           </Text>
-        </TypedMark>
-      ),
+        ) : (
+          <QuickEditValue
+            label={`Giá trị sau thuế hoá đơn ${i.invoiceNumber}`}
+            value={i.valueAfterTax}
+            computed={valueAfterTax(i.valueBeforeTax, i.taxRatePercent)}
+            isTyped={i.isValueAfterTaxManual}
+            text={formatVnd(i.valueAfterTax)}
+            isBold
+            onSave={(typed) =>
+              mutation.mutateAsync({
+                kind: 'invoice',
+                id: i.id,
+                values: {
+                  ...invoiceFormValues(i, detail.contract.taxRatePercent),
+                  valueAfterTax: typed,
+                },
+              })
+            }
+          />
+        ),
     },
     {
       key: 'issuedDate',

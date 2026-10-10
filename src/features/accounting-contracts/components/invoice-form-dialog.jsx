@@ -18,44 +18,11 @@ import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { invoiceSchema } from '../config/child-schemas.js';
-import { formatVnd, roundMoney, valueAfterTax } from '../config/money.js';
+import { invoiceFormValues } from '../config/edit-values.js';
+import { formatVnd, valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
 import { TypedValueInput } from './typed-value-input.jsx';
-
-/**
- * A new invoice starts with an empty number (the user types it), the
- * contract's tax rate and what is left to invoice, backed out of that rate.
- * @param {import('../types/index.js').AccountingInvoice | null} invoice
- * @param {number} remainingToInvoice After tax.
- * @param {number} contractTaxRatePercent
- * @returns {import('../types/index.js').AccountingInvoiceFormValues}
- */
-function valuesOf(invoice, remainingToInvoice, contractTaxRatePercent) {
-  if (invoice) {
-    return {
-      invoiceNumber: invoice.invoiceNumber,
-      issuedDate: invoice.issuedDate,
-      valueBeforeTax: invoice.valueBeforeTax,
-      taxRatePercent: invoice.taxRatePercent,
-      valueAfterTax: invoice.isValueAfterTaxManual
-        ? invoice.valueAfterTax
-        : undefined,
-      note: invoice.note ?? '',
-    };
-  }
-  return {
-    invoiceNumber: '',
-    issuedDate: '',
-    valueBeforeTax:
-      remainingToInvoice > 0
-        ? roundMoney(remainingToInvoice / (1 + contractTaxRatePercent / 100))
-        : undefined,
-    taxRatePercent: contractTaxRatePercent,
-    valueAfterTax: undefined,
-    note: '',
-  };
-}
 
 /**
  * @param {{
@@ -79,11 +46,7 @@ function InvoiceFormSession({
 }) {
   const mutation = useContractChildMutation(contractId);
   const form = useZodForm({
-    initialValues: valuesOf(
-      invoice,
-      remainingToInvoice,
-      contractTaxRatePercent,
-    ),
+    initialValues: invoiceFormValues(invoice, contractTaxRatePercent),
     schema: invoiceSchema,
     submit: (_parsed, values) =>
       mutation.mutateAsync({ kind: 'invoice', values, id: invoice?.id }),

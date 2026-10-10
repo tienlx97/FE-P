@@ -22,6 +22,7 @@ import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { checkContractCodes } from '../api/contracts.js';
 import { contractSchema } from '../config/contract-schema.js';
+import { contractFormValues } from '../config/edit-values.js';
 import { valueAfterTax } from '../config/money.js';
 import {
   CUSTOMERS_KEY,
@@ -38,30 +39,6 @@ import { TypedValueInput } from './typed-value-input.jsx';
 
 /** @typedef {import('../types/index.js').AccountingContractFormValues} FormValues */
 /** @typedef {import('@astryxdesign/core/Calendar').ISODateString} ISODateString */
-
-/**
- * @param {import('../types/index.js').AccountingContractSummary | null} contract
- * @param {string} defaultCompanyId
- * @returns {FormValues}
- */
-function valuesOf(contract, defaultCompanyId) {
-  return {
-    companyId: contract?.companyId ?? defaultCompanyId,
-    contractNumber: contract?.contractNumber ?? '',
-    signedDate: contract?.signedDate ?? '',
-    projectCode: contract?.projectCode ?? '',
-    projectName: contract?.projectName ?? '',
-    sourceId: contract?.sourceId ?? '',
-    customerId: contract?.customerId ?? '',
-    valueBeforeTax: contract?.valueBeforeTax,
-    taxRatePercent: contract?.taxRatePercent ?? 8,
-    valueAfterTax: contract?.isValueAfterTaxManual
-      ? contract.valueAfterTax
-      : undefined,
-    paymentDueDate: contract?.paymentDueDate ?? '',
-    note: contract?.note ?? '',
-  };
-}
 
 /**
  * Create (no `contract`) or edit an accounting contract. Before saving, the
@@ -97,7 +74,7 @@ export function ContractFormDialog({
   const sources = sourcesQuery.data?.success ? sourcesQuery.data.data : [];
 
   const form = useZodForm({
-    initialValues: valuesOf(contract, defaultCompanyId),
+    initialValues: contractFormValues(contract, defaultCompanyId),
     schema: contractSchema,
     submit: async (_parsed, values) => {
       const check = await checkContractCodes({
@@ -137,7 +114,7 @@ export function ContractFormDialog({
   const { reset, values, setField, fieldStatuses } = form;
 
   useEffect(() => {
-    if (isOpen) reset(valuesOf(contract, defaultCompanyId));
+    if (isOpen) reset(contractFormValues(contract, defaultCompanyId));
     // Reload the values each time the dialog opens on a (possibly other) contract.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, contract, defaultCompanyId]);

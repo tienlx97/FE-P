@@ -22,34 +22,11 @@ import {
   APPENDIX_TYPE_OPTIONS,
   appendixSchema,
 } from '../config/child-schemas.js';
+import { appendixFormValues } from '../config/edit-values.js';
 import { formatVnd, valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
 import { TypedValueInput } from './typed-value-input.jsx';
-
-/**
- * A new appendix starts at the contract's tax rate; it can be changed.
- * @param {import('../types/index.js').AccountingAppendix | null} appendix
- * @param {number} contractTaxRatePercent
- * @returns {import('../types/index.js').AccountingAppendixFormValues}
- */
-function valuesOf(appendix, contractTaxRatePercent) {
-  return {
-    type: appendix?.type ?? 'Increase',
-    valueBeforeTax:
-      appendix && appendix.type !== 'InfoChange'
-        ? appendix.valueBeforeTax
-        : undefined,
-    taxRatePercent: appendix?.taxRatePercent ?? contractTaxRatePercent,
-    valueAfterTax: appendix?.isValueAfterTaxManual
-      ? appendix.valueAfterTax
-      : undefined,
-    signedDate: appendix?.signedDate ?? '',
-    buyerSigned: appendix?.buyerSigned ?? false,
-    sellerSigned: appendix?.sellerSigned ?? false,
-    note: appendix?.note ?? '',
-  };
-}
 
 /**
  * @param {{
@@ -69,7 +46,7 @@ function AppendixFormSession({
 }) {
   const mutation = useContractChildMutation(contractId);
   const form = useZodForm({
-    initialValues: valuesOf(appendix, taxRatePercent),
+    initialValues: appendixFormValues(appendix, taxRatePercent),
     schema: appendixSchema,
     submit: (_parsed, values) =>
       mutation.mutateAsync({ kind: 'appendix', values, id: appendix?.id }),

@@ -27,13 +27,18 @@ import {
   buildInstallmentWorkbook,
   installmentWorkbookFileName,
 } from '../config/installments-workbook.js';
-import { formatVnd, percentLabel } from '../config/money.js';
+import {
+  formatVnd,
+  percentLabel,
+  subInstallmentValues,
+} from '../config/money.js';
+import { paymentValues } from '../config/payment-draft.js';
 import { isStagePaid } from '../config/payment-overview.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 import { InstallmentFormDialog } from './installment-form-dialog.jsx';
+import { QuickEditValue } from './quick-edit-value.jsx';
 import { SubInstallmentFormDialog } from './sub-installment-form-dialog.jsx';
-import { TypedMark } from './typed-mark.jsx';
 
 /** @typedef {import('../types/index.js').AccountingInstallment} Installment */
 /** @typedef {import('../types/index.js').AccountingSubInstallment} Sub */
@@ -74,6 +79,25 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
       useTableStickyColumns({ endKeys: ['actions'] })
     );
 
+  /** What the payment's values would be if not typed (the editor's reference). @param {Sub} sub */
+  function autoValues(sub) {
+    return subInstallmentValues(paymentValues(sub), detail.contract).auto;
+  }
+
+  /**
+   * Quick edit of one typed value; the rest of the payment is sent as saved.
+   * @param {Installment} stage @param {Sub} sub
+   * @param {'valueBeforeTax' | 'valueAfterTax'} field @param {number | undefined} typed
+   */
+  function savePayment(stage, sub, field, typed) {
+    return mutation.mutateAsync({
+      kind: 'sub',
+      installmentId: stage.id,
+      id: sub.id,
+      values: { ...paymentValues(sub), [field]: typed },
+    });
+  }
+
   /** @param {Installment} stage @returns {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<Sub>[]} */
   function paymentColumns(stage) {
     return [
@@ -112,13 +136,21 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         header: 'Trước thuế',
         width: pixel(160),
         align: 'end',
-        renderCell: (sub) => (
-          <TypedMark
-            isTyped={sub.kind === 'Percent' && sub.isValueBeforeTaxManual}
-          >
+        renderCell: (sub) =>
+          sub.kind === 'Percent' ? (
+            <QuickEditValue
+              label={`Giá trị trước thuế lần ${sub.code}`}
+              value={sub.valueBeforeTax}
+              computed={autoValues(sub).beforeTax}
+              isTyped={sub.isValueBeforeTaxManual}
+              text={formatVnd(sub.valueBeforeTax)}
+              onSave={(typed) =>
+                savePayment(stage, sub, 'valueBeforeTax', typed)
+              }
+            />
+          ) : (
             <Text hasTabularNumbers>{formatVnd(sub.valueBeforeTax)}</Text>
-          </TypedMark>
-        ),
+          ),
       },
       {
         key: 'taxRatePercent',
@@ -135,11 +167,15 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         width: pixel(160),
         align: 'end',
         renderCell: (sub) => (
-          <TypedMark isTyped={sub.isValueAfterTaxManual}>
-            <Text weight="bold" hasTabularNumbers>
-              {formatVnd(sub.valueAfterTax)}
-            </Text>
-          </TypedMark>
+          <QuickEditValue
+            label={`Giá trị sau thuế lần ${sub.code}`}
+            value={sub.valueAfterTax}
+            computed={autoValues(sub).afterTax}
+            isTyped={sub.isValueAfterTaxManual}
+            text={formatVnd(sub.valueAfterTax)}
+            isBold
+            onSave={(typed) => savePayment(stage, sub, 'valueAfterTax', typed)}
+          />
         ),
       },
       {

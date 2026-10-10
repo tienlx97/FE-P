@@ -20,11 +20,12 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { APPENDIX_TYPE_OPTIONS, labelOf } from '../config/child-schemas.js';
 import { appendixTotals } from '../config/contract-view.js';
-import { formatVnd } from '../config/money.js';
+import { appendixFormValues } from '../config/edit-values.js';
+import { formatVnd, valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { AppendixFormDialog } from './appendix-form-dialog.jsx';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
-import { TypedMark } from './typed-mark.jsx';
+import { QuickEditValue } from './quick-edit-value.jsx';
 
 /** @typedef {import('../types/index.js').AccountingAppendix} Appendix */
 
@@ -127,11 +128,32 @@ export function AppendicesPanel({ detail, metrics, createKey }) {
       header: 'Giá trị sau thuế',
       width: pixel(160),
       align: 'end',
-      renderCell: (a) => (
-        <TypedMark isTyped={a.isValueAfterTaxManual}>
-          {signedValue(a, a.valueAfterTax, 'bold')}
-        </TypedMark>
-      ),
+      renderCell: (a) =>
+        a.type === 'InfoChange' ? (
+          signedValue(a, a.valueAfterTax, 'bold')
+        ) : (
+          <QuickEditValue
+            label="Giá trị sau thuế của phụ lục"
+            value={a.valueAfterTax}
+            computed={valueAfterTax(a.valueBeforeTax, a.taxRatePercent)}
+            isTyped={a.isValueAfterTaxManual}
+            text={`${a.type === 'Increase' ? '+' : '−'}${formatVnd(a.valueAfterTax)}`}
+            isBold
+            toneColor={
+              a.type === 'Increase' ? 'var(--meta-emerald-text)' : undefined
+            }
+            onSave={(typed) =>
+              mutation.mutateAsync({
+                kind: 'appendix',
+                id: a.id,
+                values: {
+                  ...appendixFormValues(a, detail.contract.taxRatePercent),
+                  valueAfterTax: typed,
+                },
+              })
+            }
+          />
+        ),
     },
     {
       key: 'signedDate',

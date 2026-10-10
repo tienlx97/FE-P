@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-10 — Click-to-edit values, empty new invoice, task 1.16 (`accounting-contracts`)
+
+- Per user ("các giá trị có thể chỉnh sửa phải nổi bật, ví dụ như click vào thì edit được"; then "Bạn điều chỉnh sao cho tối ưu"; "Hoá đơn, Giá trị trước thuế ... không cần để giá trị mặc định").
+- `QuickEditValue`: an editable value has a dashed underline (hover tint, "Bấm để sửa"); a typed one is accent-coloured with a solid underline and a pencil. Click opens a popover: the value (focused), "Tự tính: …" for reference, Lưu (Enter) / Hủy (Esc) / "Tự tính lại" (typed only); errors show on the field. Typing exactly the computed value stores "computed" (`typedOrComputed`). Each save PUTs the record as saved with one field changed.
+- Used for payments (before tax for percent, after tax), invoices and appendices (after tax; not the Σ row, not Thay đổi thông tin) and the contract's Sau thuế on the overview (with its version; a stale one is the backend's 409). Replaces the read-only `TypedMark` (deleted).
+- `config/edit-values.js`: `contractFormValues` / `invoiceFormValues` / `appendixFormValues` moved out of the drawers so drawers and quick edits build the same bodies. A new invoice no longer pre-fills Giá trị trước thuế from what is left to invoice.
+- Live on :3000 (TEST-KT-02): 2.2 after tax 396,000,001 via Enter → before 360,000,000.91, Σ đợt 792,000,001, typed styling; "Tự tính lại" → back. Contract Sau thuế 1,320,000,001 → settlement 1,210,000,001 and 2.2 (30 % sau thuế) 396,000,000.30; reset. Invoice editor and Esc; "Thêm hoá đơn" opens with an empty value before tax. All test data restored. Gate passed: `harness/runs/20261010-133627-251/`.
+
 ## 2026-10-10 — "Đợt thanh toán" Excel: template content, report styling (`accounting-contracts`)
 
 - Per user: follow `F:\Copy of SALE NOI DIA_BANG TONG HOP DOANH THU_2026.xlsx` (sheet "Sale nội địa"), then "điều chỉnh màu sắc, font, cách thiết kế cho phù hợp — cái tôi gửi là mẫu cơ bản". So `config/installments-workbook.js` keeps the template's CONTENT and drops its look (Times New Roman, red header, yellow fill, STT merged down, hidden column C).
