@@ -62,6 +62,16 @@ const paymentColumns = (actions) => [
       ),
   },
   {
+    key: 'date',
+    header: 'Ngày thanh toán',
+    width: pixel(170),
+    renderCell: (row) => (
+      <Text hasTabularNumbers>
+        {row.date ? formatDisplayDate(row.date) : '—'}
+      </Text>
+    ),
+  },
+  {
     key: 'content',
     header: 'Nội dung thanh toán theo hợp đồng',
     width: proportional(2, { minWidth: 260 }),
@@ -115,16 +125,6 @@ const paymentColumns = (actions) => [
         />
       );
     },
-  },
-  {
-    key: 'date',
-    header: 'Ngày thanh toán',
-    width: pixel(170),
-    renderCell: (row) => (
-      <Text hasTabularNumbers>
-        {row.date ? formatDisplayDate(row.date) : '—'}
-      </Text>
-    ),
   },
   {
     key: 'paid',
