@@ -7,6 +7,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
+import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
+
 import {
   createContract,
   deleteContract,
@@ -38,6 +40,8 @@ export function useContractsSearchQuery(query) {
  * @param {string | null | undefined} customerId
  */
 export function useCustomerAccountingContractsQuery(customerId) {
+  // Logistics users open the same customer page without Kế toán access.
+  const canView = useSessionPermissions().includes('accounting:contracts:view');
   return useQuery({
     queryKey: [...CONTRACTS_KEY, 'by-customer', customerId],
     queryFn: () =>
@@ -53,7 +57,7 @@ export function useCustomerAccountingContractsQuery(customerId) {
           },
         ],
       }),
-    enabled: Boolean(customerId),
+    enabled: Boolean(customerId) && canView,
   });
 }
 

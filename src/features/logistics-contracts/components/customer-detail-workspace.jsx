@@ -166,9 +166,12 @@ function CustomerDetailBody({
   const groupName = groups.find((group) => group.id === profile?.groupId)?.name;
   const groupNames = groupName ? [groupName] : [];
   const isOrganization = profile?.isOrganization ?? true;
-  const contractCount = contractsQuery.data?.success
-    ? contractsQuery.data.totalCount + (extraContracts?.count ?? 0)
-    : undefined;
+  // Either list may be skipped (no permission for that area); count what loaded.
+  const contractCount =
+    contractsQuery.isLoading || extraContracts?.isLoading
+      ? undefined
+      : (contractsQuery.data?.success ? contractsQuery.data.totalCount : 0) +
+        (extraContracts?.count ?? 0);
 
   /** @type {Record<CustomerTab, number | undefined>} */
   const counts = {

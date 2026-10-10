@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-10 — Kế toán access for "Kế toán HCM", task 1.9 (`accounting-contracts`)
+
+- Per user ("Ai có quyền truy cập ở phòng ban Kế toán HCM là truy cập được" → "Thêm phòng ban tên là 'Kế toán HCM'. Admin vẫn vào được"; Kế toán may view + add / edit / delete customers). BE-P task 1.8 maps only the "Kế toán HCM" department to `accounting:contracts:*` and opens the customer directory to either area's permission. Route / nav gating here was already permission-based (`accounting:contracts:view`), so no route change.
+- `useCustomerContractsQuery` runs only with `logistics:contracts:view`, `useCustomerAccountingContractsQuery` only with `accounting:contracts:view` (no 403 on the shared customer detail); the "Hợp đồng" badge counts whichever list loaded.
+- Not checked live: the Chrome extension refused every page ("browser-internal or unparseable URLs"); the dev DB has no Kế toán HCM user and `.ai-login.local.md` forbids adding data just to test. Gate passed: `harness/runs/20261010-084810-1441/`.
+
 ## 2026-10-10 — Party profile without paymentTermId / debtAccount
 
 - Per user ("bỏ và xóa" the fields no longer shown). Removed from `customerSchema`, party form values, the create / update payload (`api/suppliers.js`), typedefs, the overview card's "Hình thức thanh toán" line (card stays with Thời hạn công nợ / Hạn mức tối đa), and the payment-terms lookup fetch in `usePartyLookupsQuery` (customer + supplier detail pages no longer read terms). Contract payment terms (`describePaymentTerm`) are a different thing and untouched.

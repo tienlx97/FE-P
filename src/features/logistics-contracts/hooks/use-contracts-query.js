@@ -8,6 +8,8 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
+import { useSessionPermissions } from '@/shared/hooks/use-session-permissions.js';
+
 import {
   createContract,
   getContract,
@@ -127,6 +129,9 @@ export function useContractListTabCounts(conditions) {
  * @param {string | null | undefined} customerId
  */
 export function useCustomerContractsQuery(customerId) {
+  // The customer directory is shared with Kế toán, whose users may not see
+  // Logistics contracts — skip the request instead of drawing a 403.
+  const canView = useSessionPermissions().includes('logistics:contracts:view');
   return useQuery({
     queryKey: [...QUERY_KEY, 'by-customer', customerId],
     queryFn: () =>
@@ -145,7 +150,7 @@ export function useCustomerContractsQuery(customerId) {
         ],
         sort: { field: 'createdDate', direction: 'Descending' },
       }),
-    enabled: Boolean(customerId),
+    enabled: Boolean(customerId) && canView,
   });
 }
 

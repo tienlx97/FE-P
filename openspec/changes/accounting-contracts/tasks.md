@@ -13,3 +13,5 @@
 - [x] 1.7 Show payment stages in overview and one stage per table row; wide editable payment tables with rich-text notes; settlement label and grouped code/due-date financial columns.
 
 - [x] 1.8 Share MÃ headers, preserve scrollable accounting table widths, restore plain textarea notes and redesign payment drawers with compact rows and a selected-occurrence detail panel.
+
+- [x] 1.9 Access: Kế toán area opens for the BE-P "Kế toán HCM" department (and Admin); the shared customer detail only loads Logistics / Kế toán contract lists the user may see, and counts whichever loaded.
