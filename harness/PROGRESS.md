@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-10 — Party form: no payment term / debt account fields
+
+- Per user ("khách hàng (nhà cung cấp) không cần trường Tài khoản công nợ, Điều khoản thanh toán. Trong chi tiết khách hàng không cần ẩn card"). `PartyFormFields` (customer + supplier drawers) "Điều khoản thanh toán" section keeps only Số ngày được nợ / Số nợ tối đa. Saved values for the removed fields are left as they were (still sent from the loaded profile; new parties keep debtAccount 131 / 331). Detail overview card unchanged.
+- First read the request as "hide the section for customers" and also hid the overview card; reverted after the user clarified mid-turn.
+- Chrome :3000: Thêm nhà cung cấp drawer shows the two fields. Gate passed: `harness/runs/20261010-073331-668507/`.
+
 ## 2026-10-10 — Unique customer codes, hover card, one contract table
 
 - Per user: (1) customer codes are unique timestamps again (`KH-<Date.now()>`, like `NCC-…`), not a running "KH-0001"; the form pre-fills it, `next-code` api/hook removed (BE endpoint now unused by the FE). (2) Customers list "Tùy ý" column opens an Astryx `HoverCard` (key / value stack) instead of a Tooltip. (3) Customer detail › Hợp đồng is ONE table (Mã hợp đồng / Ngày ký / Giá trị quyết toán / Giá trị đã thanh toán / Giá trị đã xuất (hóa đơn)); `CustomerContractHistory` takes `extraRows`, the page (`customer-detail-with-contracts.jsx`) maps the Kế toán contracts into it; `CustomerAccountingContracts` deleted. The shared table also shows in the customer dialog / list expansion (dropped Giá trị + Ngày hoàn thành columns there too).

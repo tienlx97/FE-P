@@ -184,22 +184,6 @@ export function PartyFormFields({
       {tab === 'payment' ? (
         <FormGrid>
           <StackItem size="fill">
-            <Selector
-              label="Điều khoản thanh toán"
-              hasSearch
-              hasClear
-              value={values.paymentTermId || null}
-              onChange={(value) => setField('paymentTermId', value ?? '')}
-              options={form.lookups.paymentTerms.map(
-                (/** @type {any} */ item) => ({
-                  value: item.id,
-                  label: item.name,
-                }),
-              )}
-              width="100%"
-            />
-          </StackItem>
-          <StackItem size="fill">
             <NumberInput
               label="Số ngày được nợ"
               value={values.dueDays}
@@ -214,15 +198,6 @@ export function PartyFormFields({
               onChange={(value) => setField('creditLimit', value)}
               status={fieldStatuses.creditLimit}
             />
-          </StackItem>
-          <StackItem size="fill">
-            {input(
-              'Tài khoản công nợ phải trả/thu',
-              'debtAccount',
-              values,
-              setField,
-              fieldStatuses,
-            )}
           </StackItem>
         </FormGrid>
       ) : null}
