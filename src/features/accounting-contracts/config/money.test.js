@@ -21,24 +21,29 @@ const payment = (overrides) => ({
   kind: /** @type {const} */ ('Percent'),
   percent: 30,
   percentBasis: /** @type {const} */ ('BeforeTax'),
-  valueBeforeTax: 999,
+  valueBeforeTax: /** @type {number | undefined} */ (undefined),
+  valueAfterTax: /** @type {number | undefined} */ (undefined),
   taxRatePercent: 8,
   ...overrides,
 });
+/** @param {ReturnType<typeof subInstallmentValues>} values */
+const effective = ({ beforeTax, afterTax }) => ({ beforeTax, afterTax });
 
 test('sub-instalment values follow its kind and its own tax rate', () => {
-  assert.deepEqual(subInstallmentValues(payment({}), contract), {
+  assert.deepEqual(effective(subInstallmentValues(payment({}), contract)), {
     beforeTax: 30_000_000,
     afterTax: 32_400_000,
   });
   assert.deepEqual(
-    subInstallmentValues(
-      payment({
-        kind: 'Quantity',
-        valueBeforeTax: 5_000_000,
-        taxRatePercent: 10,
-      }),
-      contract,
+    effective(
+      subInstallmentValues(
+        payment({
+          kind: 'Quantity',
+          valueBeforeTax: 5_000_000,
+          taxRatePercent: 10,
+        }),
+        contract,
+      ),
     ),
     { beforeTax: 5_000_000, afterTax: 5_500_000 },
   );
@@ -46,28 +51,87 @@ test('sub-instalment values follow its kind and its own tax rate', () => {
 
 test('a percent of the value after tax anchors the value after tax', () => {
   assert.deepEqual(
-    subInstallmentValues(
-      payment({ percent: 15, percentBasis: 'AfterTax' }),
-      contract,
+    effective(
+      subInstallmentValues(
+        payment({ percent: 15, percentBasis: 'AfterTax' }),
+        contract,
+      ),
     ),
     { beforeTax: 15_000_000, afterTax: 16_200_000 },
   );
   assert.deepEqual(
-    subInstallmentValues(
-      payment({ percent: 15, percentBasis: 'AfterTax', taxRatePercent: 10 }),
-      contract,
+    effective(
+      subInstallmentValues(
+        payment({ percent: 15, percentBasis: 'AfterTax', taxRatePercent: 10 }),
+        contract,
+      ),
     ),
     { beforeTax: 14_727_272.73, afterTax: 16_200_000 },
   );
   assert.deepEqual(
-    subInstallmentValues(
-      payment({ percent: 33.33, percentBasis: 'AfterTax' }),
-      {
-        valueBeforeTax: 1000,
-        valueAfterTax: 1080,
-      },
+    effective(
+      subInstallmentValues(
+        payment({ percent: 33.33, percentBasis: 'AfterTax' }),
+        {
+          valueBeforeTax: 1000,
+          valueAfterTax: 1080,
+        },
+      ),
     ),
     { beforeTax: 333.3, afterTax: 359.96 },
+  );
+});
+
+test('a typed value wins and feeds the other one; auto keeps the computed value', () => {
+  // 123,456.78 rounded by hand to 123,457 after tax.
+  const typedAfter = subInstallmentValues(
+    payment({ valueAfterTax: 32_400_001 }),
+    contract,
+  );
+  assert.deepEqual(typedAfter, {
+    beforeTax: 30_000_000,
+    afterTax: 32_400_001,
+    auto: { beforeTax: 30_000_000, afterTax: 32_400_000 },
+  });
+  // A typed value before tax gives the value after tax at the payment's rate.
+  assert.deepEqual(
+    subInstallmentValues(payment({ valueBeforeTax: 30_000_000.4 }), contract),
+    {
+      beforeTax: 30_000_000.4,
+      afterTax: 32_400_000.43,
+      auto: { beforeTax: 30_000_000, afterTax: 32_400_000.43 },
+    },
+  );
+  // After tax basis: a typed value after tax gives the value before tax.
+  assert.deepEqual(
+    subInstallmentValues(
+      payment({
+        percent: 15,
+        percentBasis: 'AfterTax',
+        valueAfterTax: 16_200_108,
+      }),
+      contract,
+    ),
+    {
+      beforeTax: 15_000_100,
+      afterTax: 16_200_108,
+      auto: { beforeTax: 15_000_100, afterTax: 16_200_000 },
+    },
+  );
+  assert.deepEqual(
+    subInstallmentValues(
+      payment({
+        kind: 'Quantity',
+        valueBeforeTax: 114_311.83,
+        valueAfterTax: 123_457,
+      }),
+      contract,
+    ),
+    {
+      beforeTax: 114_311.83,
+      afterTax: 123_457,
+      auto: { beforeTax: undefined, afterTax: 123_456.78 },
+    },
   );
 });
 

@@ -42,6 +42,7 @@ export const appendixSchema = z
       .number({ error: 'Vui lòng nhập thuế' })
       .min(0, 'Thuế từ 0 đến 100%')
       .max(100, 'Thuế từ 0 đến 100%'),
+    valueAfterTax: z.number().nonnegative('Giá trị không được âm').optional(),
     signedDate: z.string().min(1, 'Vui lòng chọn ngày ký'),
     buyerSigned: z.boolean(),
     sellerSigned: z.boolean(),
@@ -71,6 +72,7 @@ export const invoiceSchema = z.object({
     .number({ error: 'Vui lòng nhập thuế' })
     .min(0, 'Thuế từ 0 đến 100%')
     .max(100, 'Thuế từ 0 đến 100%'),
+  valueAfterTax: z.number().nonnegative('Giá trị không được âm').optional(),
   note: z.string().max(1000, 'Tối đa 1000 ký tự'),
 });
 
@@ -80,7 +82,8 @@ export const subInstallmentSchema = z
     kind: z.enum(['Percent', 'Quantity']),
     percent: z.number().optional(),
     percentBasis: z.enum(['BeforeTax', 'AfterTax']),
-    valueBeforeTax: z.number().optional(),
+    valueBeforeTax: z.number().nonnegative('Giá trị không được âm').optional(),
+    valueAfterTax: z.number().nonnegative('Giá trị không được âm').optional(),
     taxRatePercent: z
       .number({ error: 'Vui lòng nhập thuế' })
       .min(0, 'Thuế từ 0 đến 100%')

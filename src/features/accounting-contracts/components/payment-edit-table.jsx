@@ -23,6 +23,7 @@ import {
   PERCENT_BASIS_OPTIONS,
 } from '../config/child-schemas.js';
 import { formatVnd, subInstallmentValues } from '../config/money.js';
+import { TypedValueInput } from './typed-value-input.jsx';
 
 /** @typedef {import('../types/index.js').AccountingSubInstallmentFormValues} Values */
 
@@ -133,6 +134,24 @@ function PaymentCard({ row, index, contract, onChange, status, onRemove }) {
             />
           </Grid>
         </VStack>
+        <Grid columns={2} gap={4}>
+          {isPercent ? (
+            <TypedValueInput
+              label="Giá trị trước thuế"
+              computed={computed.auto.beforeTax}
+              typed={values.valueBeforeTax}
+              onChange={(v) => onChange(index, 'valueBeforeTax', v)}
+              status={status('valueBeforeTax')}
+            />
+          ) : null}
+          <TypedValueInput
+            label="Giá trị sau thuế"
+            computed={computed.auto.afterTax}
+            typed={values.valueAfterTax}
+            onChange={(v) => onChange(index, 'valueAfterTax', v)}
+            status={status('valueAfterTax')}
+          />
+        </Grid>
         <VStack gap={2} hAlign="stretch">
           <Text color="secondary" size="sm" weight="semibold">
             Thanh toán

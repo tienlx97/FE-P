@@ -17,6 +17,7 @@ import { formatVnd, subInstallmentValues } from '../config/money.js';
 import {
   emptySubInstallment,
   initialPaymentStage,
+  paymentFieldPatch,
   paymentValues,
 } from '../config/payment-draft.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
@@ -75,7 +76,7 @@ function InstallmentFormSession({
     setField(
       'subInstallments',
       values.subInstallments.map((sub, i) =>
-        i === index ? { ...sub, [field]: value } : sub,
+        i === index ? { ...sub, ...paymentFieldPatch(sub, field, value) } : sub,
       ),
     );
   }

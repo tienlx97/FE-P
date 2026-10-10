@@ -25,6 +25,7 @@ import {
 import { formatVnd, valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
+import { TypedValueInput } from './typed-value-input.jsx';
 
 /**
  * A new appendix starts at the contract's tax rate; it can be changed.
@@ -40,6 +41,9 @@ function valuesOf(appendix, contractTaxRatePercent) {
         ? appendix.valueBeforeTax
         : undefined,
     taxRatePercent: appendix?.taxRatePercent ?? contractTaxRatePercent,
+    valueAfterTax: appendix?.isValueAfterTaxManual
+      ? appendix.valueAfterTax
+      : undefined,
     signedDate: appendix?.signedDate ?? '',
     buyerSigned: appendix?.buyerSigned ?? false,
     sellerSigned: appendix?.sellerSigned ?? false,
@@ -154,6 +158,16 @@ function AppendixFormSession({
           <Text color="secondary" size="sm">
             Thuế mặc định theo hợp đồng ({taxRatePercent}%).
           </Text>
+          <Grid columns={2} gap={4}>
+            <TypedValueInput
+              label="Giá trị sau thuế"
+              computed={afterTax}
+              typed={isInfoChange ? undefined : values.valueAfterTax}
+              onChange={(value) => setField('valueAfterTax', value)}
+              isDisabled={isInfoChange}
+              status={fieldStatuses.valueAfterTax}
+            />
+          </Grid>
           <MetaFormCard>
             <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
               <VStack gap={0}>
@@ -161,11 +175,15 @@ function AppendixFormSession({
                 <Text color="secondary" size="sm">
                   {isInfoChange
                     ? 'Thay đổi thông tin không làm đổi giá trị hợp đồng'
-                    : `Tự tính theo thuế ${values.taxRatePercent ?? 0}%`}
+                    : values.valueAfterTax !== undefined
+                      ? 'Đã sửa tay'
+                      : `Tự tính theo thuế ${values.taxRatePercent ?? 0}%`}
                 </Text>
               </VStack>
               <Text size="xl" weight="bold" color="accent" hasTabularNumbers>
-                {isInfoChange ? '—' : `${formatVnd(afterTax)} VND`}
+                {isInfoChange
+                  ? '—'
+                  : `${formatVnd(values.valueAfterTax ?? afterTax)} VND`}
               </Text>
             </HStack>
           </MetaFormCard>

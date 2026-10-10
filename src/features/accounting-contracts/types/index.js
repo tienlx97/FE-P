@@ -65,7 +65,8 @@ export {};
  * @property {AppendixType} type
  * @property {number} valueBeforeTax
  * @property {number} taxRatePercent Own rate; the contract's when none was given.
- * @property {number} valueAfterTax At `taxRatePercent` (backend-derived).
+ * @property {number} valueAfterTax At `taxRatePercent`, unless typed by the user.
+ * @property {boolean} isValueAfterTaxManual
  * @property {string} signedDate
  * @property {boolean} buyerSigned
  * @property {boolean} sellerSigned
@@ -79,7 +80,8 @@ export {};
  * @property {string} issuedDate
  * @property {number} valueBeforeTax
  * @property {number} taxRatePercent The invoice's own rate (the contract's by default).
- * @property {number} valueAfterTax
+ * @property {number} valueAfterTax At `taxRatePercent`, unless typed by the user.
+ * @property {boolean} isValueAfterTaxManual
  * @property {string | null} note
  */
 
@@ -95,6 +97,8 @@ export {};
  * @property {number} valueBeforeTax Percent BeforeTax: contract value before tax × percent; Percent AfterTax: value after tax ÷ (1 + rate); Quantity: entered.
  * @property {number} taxRatePercent The payment's own rate (the contract's by default).
  * @property {number} valueAfterTax
+ * @property {boolean} isValueBeforeTaxManual Typed by the user (always for Quantity).
+ * @property {boolean} isValueAfterTaxManual Typed by the user.
  * @property {number | null} actualPaidAmount "Giá trị thực tế thanh toán"; the contract's paid value sums these.
  * @property {string | null} condition
  * @property {string | null} paymentDate
@@ -140,6 +144,7 @@ export {};
  * @property {AppendixType | ''} type
  * @property {number | undefined} valueBeforeTax
  * @property {number | undefined} taxRatePercent
+ * @property {number | undefined} valueAfterTax Typed by the user, undefined = computed.
  * @property {string} signedDate
  * @property {boolean} buyerSigned
  * @property {boolean} sellerSigned
@@ -152,6 +157,7 @@ export {};
  * @property {string} issuedDate
  * @property {number | undefined} valueBeforeTax
  * @property {number | undefined} taxRatePercent
+ * @property {number | undefined} valueAfterTax Typed by the user, undefined = computed.
  * @property {string} note
  */
 
@@ -160,7 +166,8 @@ export {};
  * @property {PaymentKind} kind
  * @property {number | undefined} percent
  * @property {PercentBasis} percentBasis Percent only.
- * @property {number | undefined} valueBeforeTax Quantity only.
+ * @property {number | undefined} valueBeforeTax Quantity: entered; Percent: typed by the user, undefined = computed.
+ * @property {number | undefined} valueAfterTax Typed by the user, undefined = computed.
  * @property {number | undefined} taxRatePercent
  * @property {number | undefined} actualPaidAmount
  * @property {string} condition

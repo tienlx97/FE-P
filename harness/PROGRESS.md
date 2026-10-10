@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-10 — Typed (hand-rounded) values, task 1.14 (`accounting-contracts`)
+
+- Per user ("các giá trị sau khi tính toán có thể chỉnh sửa được. Ví dụ ... 123,456.78 ... 123,456 hoặc 123,457. Tương tự cho hoá đơn"). Needs BE-P task 1.13 (`valueAfterTax` / percent `valueBeforeTax` in requests, `is…Manual` flags).
+- `TypedValueInput`: empty shows the computed value as placeholder ("Tự tính — gõ để sửa") and sends null; a typed value is kept ("Đã sửa tay · tự tính: …") until "Tự tính lại". Used for the payment card (Giá trị trước thuế for percent, Giá trị sau thuế), invoice and appendix (Giá trị sau thuế; disabled for Thay đổi thông tin).
+- `subInstallmentValues` mirrors the backend: a typed value wins and feeds the other one; `auto` gives the placeholders. Forms load only typed values (`paymentValues`, invoice / appendix `isValueAfterTaxManual`); switching Hình thức drops typed values (`paymentFieldPatch`).
+- Live on :3000 against the BE dev API: TEST-KT-02 2.2 (30 % sau thuế, 10 %) typed 396,000,001 → before 360,000,000.91, saved and reloaded as typed; "Tự tính lại" → 360,000,000 / 396,000,000. Invoice TEST-0101 typed 660,000,001 → invoiced 660,000,001 / remaining 549,999,999; reset back. Appendix drawer shows the field. Gate passed: `harness/runs/20261010-122932-256/`.
+- Another session's uncommitted invoice totals row (`invoices-panel.jsx`) needed `isValueAfterTaxManual: false` for typecheck; added in the working copy only, not committed.
+
 ## 2026-10-10 — Percent payment basis, task 1.13 (`accounting-contracts`)
 
 - Per user ("Giá trị thanh toán theo 30% giá trị hợp đồng trước thuế. Hoặc ... 15% giá trị hợp đồng sau thuế"). Needs BE-P task 1.12 (`percentBasis`).

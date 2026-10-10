@@ -21,6 +21,7 @@ import { invoiceSchema } from '../config/child-schemas.js';
 import { formatVnd, roundMoney, valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
+import { TypedValueInput } from './typed-value-input.jsx';
 
 /**
  * A new invoice starts with an empty number (the user types it), the
@@ -37,6 +38,9 @@ function valuesOf(invoice, remainingToInvoice, contractTaxRatePercent) {
       issuedDate: invoice.issuedDate,
       valueBeforeTax: invoice.valueBeforeTax,
       taxRatePercent: invoice.taxRatePercent,
+      valueAfterTax: invoice.isValueAfterTaxManual
+        ? invoice.valueAfterTax
+        : undefined,
       note: invoice.note ?? '',
     };
   }
@@ -48,6 +52,7 @@ function valuesOf(invoice, remainingToInvoice, contractTaxRatePercent) {
         ? roundMoney(remainingToInvoice / (1 + contractTaxRatePercent / 100))
         : undefined,
     taxRatePercent: contractTaxRatePercent,
+    valueAfterTax: undefined,
     note: '',
   };
 }
@@ -167,11 +172,20 @@ function InvoiceFormSession({
           <Text color="secondary" size="sm">
             Thuế mặc định theo hợp đồng ({contractTaxRatePercent}%).
           </Text>
+          <Grid columns={2} gap={4}>
+            <TypedValueInput
+              label="Giá trị sau thuế"
+              computed={afterTax}
+              typed={values.valueAfterTax}
+              onChange={(value) => setField('valueAfterTax', value)}
+              status={fieldStatuses.valueAfterTax}
+            />
+          </Grid>
           <MetaFormCard>
             <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
               <Text weight="semibold">Giá trị sau thuế</Text>
               <Text size="xl" weight="bold" color="accent" hasTabularNumbers>
-                {formatVnd(afterTax)} VND
+                {formatVnd(values.valueAfterTax ?? afterTax)} VND
               </Text>
             </HStack>
           </MetaFormCard>

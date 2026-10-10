@@ -6,7 +6,11 @@ import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { subInstallmentSchema } from '../config/child-schemas.js';
-import { emptySubInstallment, paymentValues } from '../config/payment-draft.js';
+import {
+  emptySubInstallment,
+  paymentFieldPatch,
+  paymentValues,
+} from '../config/payment-draft.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
 import { PaymentEditTable } from './payment-edit-table.jsx';
@@ -80,7 +84,13 @@ function SubInstallmentFormSession({
       >
         <PaymentEditTable
           rows={[{ id: sub?.id ?? 'new', code, values }]}
-          onChange={(_index, field, value) => setField(field, value)}
+          onChange={(_index, field, value) => {
+            for (const [key, next] of Object.entries(
+              paymentFieldPatch(values, field, value),
+            )) {
+              setField(/** @type {keyof typeof values} */ (key), next);
+            }
+          }}
           fieldStatuses={fieldStatuses}
           statusPrefix=""
           contract={contract}

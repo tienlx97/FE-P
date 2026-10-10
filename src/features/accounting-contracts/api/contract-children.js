@@ -29,6 +29,8 @@ export function appendixBody(values) {
     valueBeforeTax:
       values.type === 'InfoChange' ? 0 : (values.valueBeforeTax ?? 0),
     taxRatePercent: values.taxRatePercent ?? null,
+    valueAfterTax:
+      values.type === 'InfoChange' ? null : (values.valueAfterTax ?? null),
     signedDate: values.signedDate,
     buyerSigned: values.buyerSigned,
     sellerSigned: values.sellerSigned,
@@ -43,6 +45,7 @@ export function invoiceBody(values) {
     issuedDate: values.issuedDate,
     valueBeforeTax: values.valueBeforeTax,
     taxRatePercent: values.taxRatePercent ?? null,
+    valueAfterTax: values.valueAfterTax ?? null,
     note: blankToNull(values.note),
   };
 }
@@ -53,8 +56,9 @@ export function subInstallmentBody(values) {
     kind: values.kind,
     percent: values.kind === 'Percent' ? values.percent : null,
     percentBasis: values.kind === 'Percent' ? values.percentBasis : null,
-    valueBeforeTax: values.kind === 'Quantity' ? values.valueBeforeTax : null,
+    valueBeforeTax: values.valueBeforeTax ?? null,
     taxRatePercent: values.taxRatePercent ?? null,
+    valueAfterTax: values.valueAfterTax ?? null,
     actualPaidAmount: values.actualPaidAmount ?? null,
     condition: blankToNull(values.condition),
     paymentDate: values.paymentDate || null,
