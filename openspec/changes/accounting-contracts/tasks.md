@@ -25,3 +25,4 @@
 - [x] 1.16 Typed values are edited in place: click a value (dashed underline; typed ones accent + pencil) for a popover with the computed value, Lưu / Hủy / Tự tính lại; a new invoice starts with an empty value before tax.
 - [x] 1.17 Drawers (hoá đơn, đợt thanh toán, phụ lục, hợp đồng) edit computed values the same click-to-edit way ("Áp dụng" sets the form field); Enter in the editor never submits the drawer.
 - [x] 1.18 Đợt thanh toán tab: "Bảng tổng hợp" view — one table of đợt / lần like the Excel export (running còn lại, totals in the footer) with row actions (thêm lần, sửa, xoá).
+- [x] 1.19 Summary table: "Đợt" and "Thao tác" columns pinned, row action buttons aligned, click-to-edit amount per lần, opens by default.

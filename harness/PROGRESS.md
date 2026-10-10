@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-10 — Summary table: pinned columns, aligned actions, quick edit, default view, task 1.19 (`accounting-contracts`)
+
+- Per user ("Table này nhớ pin thanh thao tác cuối, và cột đầu tiên. Nút xóa lệch nhau. Thêm tự sửa giống bên card chi tiết. Default là tab bảng tổng hợp").
+- Pinned: `useTableStickyColumns({ startKeys: ['code'], endKeys: ['actions'] })` — "Đợt" (left 0) and "Thao tác" (right 0) are `position: sticky` on every row (checked via computed style; the browser tool could not shrink the window to scroll).
+- Aligned: lần rows had only ✎ 🗑 while đợt rows have ＋ ✎ 🗑, so the buttons did not line up; lần rows now keep an invisible ＋ slot (`hidden`, same Button) in front.
+- Quick edit: Số tiền of a lần (and of a single-lần đợt) is a `QuickEditValue` like the detail cards (dashed underline, typed = accent + pencil, Lưu / Hủy / Tự tính lại); a multi-lần đợt row is a sum and stays plain. `PaymentRow.subId` says which lần a row edits (null on a summary row). The panel reuses its `savePayment` / `autoValues`.
+- Default view is "Bảng tổng hợp" ("Chi tiết" one click away).
+- Live on :3000 (TEST-KT-02; the session had expired, logged in again with the local test account): 2.2 typed 396,000,001 → typed styling, Đợt 2 792,000,001, còn lại 792,000,001, footer 1,188,000,001 / 924,000,001; "Tự tính lại" restored everything. Gate passed: `harness/runs/20261010-143443-349/`.
+
 ## 2026-10-10 — "Bảng tổng hợp" view of the payments, task 1.18 (`accounting-contracts`)
 
 - Per user ("thêm tab xem đợt thanh toán / lần thanh toán kiểu table giống file Excel ... đơn giản, đẹp"; then "chỉ cần table các đợt thanh toán, không cần card Giá trị hợp đồng. Ngoài ra thêm các button sửa ... ở các row").

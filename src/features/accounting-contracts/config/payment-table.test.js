@@ -101,6 +101,11 @@ test('payment rows follow the Excel layout and run "còn lại" per đợt', () 
     rows.map((r) => r.stageId),
     ['s1', 's2', 's2', 's2', 's3'],
   );
+  // A summary row (several lần) has no single lần to edit.
+  assert.deepEqual(
+    rows.map((r) => r.subId),
+    ['1.1', null, '2.1', '2.2', '3.1'],
+  );
   assert.equal(totalAmount, 1_188_000_000);
   assert.equal(totalPaid, 264_000_000);
   assert.equal(stageCount, 3);

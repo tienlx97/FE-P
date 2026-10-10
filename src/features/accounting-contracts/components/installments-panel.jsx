@@ -91,7 +91,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
 
   /**
    * Quick edit of one typed value; the rest of the payment is sent as saved.
-   * @param {Installment} stage @param {Sub} sub
+   * @param {{ id: string }} stage @param {Sub} sub
    * @param {'valueBeforeTax' | 'valueAfterTax'} field @param {number | undefined} typed
    */
   function savePayment(stage, sub, field, typed) {
@@ -242,9 +242,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
 
   const [isExporting, setIsExporting] = useState(false);
   // "Chi tiết": a card per đợt (editable); "Bảng tổng hợp": one table like the Excel export.
-  const [view, setView] = useState(
-    /** @type {'detail' | 'table'} */ ('detail'),
-  );
+  const [view, setView] = useState(/** @type {'detail' | 'table'} */ ('table'));
 
   /** ExcelJS is loaded on first use, like the list exports. */
   async function exportExcel() {
@@ -355,6 +353,14 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
       {view === 'table' && stages.length > 0 ? (
         <PaymentSummaryTable
           detail={detail}
+          findSub={(stageId, subId) =>
+            findStage(stageId)?.subInstallments.find((s) => s.id === subId) ??
+            null
+          }
+          autoAfterTax={(sub) => autoValues(sub).afterTax}
+          onSaveAfterTax={(stageId, sub, typed) =>
+            savePayment({ id: stageId }, sub, 'valueAfterTax', typed)
+          }
           onAddSub={(stageId) =>
             setSubForm({
               isOpen: true,

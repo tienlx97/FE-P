@@ -11,6 +11,7 @@
  * @property {string} id
  * @property {'stage' | 'sub'} kind
  * @property {string} stageId The đợt the row belongs to (its own id on a đợt row).
+ * @property {string | null} subId The lần whose values the row shows: a lần row, or a đợt with a single lần; null on a summary row.
  * @property {string} code "Đợt 2" or "2.1"
  * @property {string} content
  * @property {number | null} percent Whole percent; a đợt shows the sum of its lần when all are percent.
@@ -55,6 +56,7 @@ export function paymentTableRows(detail) {
     rows.push({
       id: stage.id,
       stageId: stage.id,
+      subId: single?.id ?? null,
       kind: 'stage',
       code: `Đợt ${stage.number}`,
       content: (single ? (single.condition ?? stage.note) : stage.note) ?? '',
@@ -74,6 +76,7 @@ export function paymentTableRows(detail) {
       rows.push({
         id: sub.id,
         stageId: stage.id,
+        subId: sub.id,
         kind: 'sub',
         code: sub.code,
         content: sub.condition ?? '',

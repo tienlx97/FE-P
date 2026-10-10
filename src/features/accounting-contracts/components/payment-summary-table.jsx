@@ -3,7 +3,11 @@
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import {
+  pixel,
+  proportional,
+  useTableStickyColumns,
+} from '@astryxdesign/core/Table';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import * as stylex from '@stylexjs/stylex';
@@ -18,9 +22,12 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatVnd } from '../config/money.js';
 import { paymentTableRows } from '../config/payment-table.js';
+import { QuickEditValue } from './quick-edit-value.jsx';
 
 const styles = stylex.create({
   indent: { paddingInlineStart: 'var(--spacing-6)' },
+  // Keeps the ＋ slot on rows that have no ＋, so the ✎ / 🗑 buttons line up.
+  hidden: { visibility: 'hidden' },
 });
 
 /** @typedef {import('../config/payment-table.js').PaymentRow & Record<string, unknown>} PaymentRow */
@@ -79,11 +86,28 @@ const paymentColumns = (actions) => [
     header: 'Số tiền (VND)',
     width: pixel(170),
     align: 'end',
-    renderCell: (row) => (
-      <Text hasTabularNumbers weight={row.isParent ? 'bold' : undefined}>
-        {formatVnd(row.amount)}
-      </Text>
-    ),
+    renderCell: (row) => {
+      const sub = actions.findSub(row.stageId, row.subId);
+      // A summary row is the sum of its lần: nothing to type over.
+      if (!sub) {
+        return (
+          <Text hasTabularNumbers weight="bold">
+            {formatVnd(row.amount)}
+          </Text>
+        );
+      }
+      return (
+        <QuickEditValue
+          label={`Giá trị sau thuế lần ${sub.code}`}
+          value={sub.valueAfterTax}
+          computed={actions.autoAfterTax(sub)}
+          isTyped={sub.isValueAfterTaxManual}
+          text={formatVnd(sub.valueAfterTax)}
+          isBold={row.kind === 'stage'}
+          onSave={(typed) => actions.onSaveAfterTax(row.stageId, sub, typed)}
+        />
+      );
+    },
   },
   {
     key: 'date',
@@ -160,11 +184,22 @@ const paymentColumns = (actions) => [
           />
         </HStack>
       ) : (
-        <MetaRowActions
-          recordLabel={`lần ${row.code}`}
-          onEdit={() => actions.onEditSub(row.stageId, row.id)}
-          onDelete={() => actions.onDeleteSub(row.stageId, row.id)}
-        />
+        <HStack gap={1} vAlign="center" wrap="nowrap">
+          <Button
+            label="Chỗ trống"
+            aria-hidden
+            tabIndex={-1}
+            isIconOnly
+            variant="ghost"
+            icon={<Icon icon={Plus} size="sm" />}
+            xstyle={styles.hidden}
+          />
+          <MetaRowActions
+            recordLabel={`lần ${row.code}`}
+            onEdit={() => actions.onEditSub(row.stageId, row.id)}
+            onDelete={() => actions.onDeleteSub(row.stageId, row.id)}
+          />
+        </HStack>
       ),
   },
 ];
@@ -176,6 +211,9 @@ const paymentColumns = (actions) => [
  * @property {(stageId: string) => void} onDeleteStage
  * @property {(stageId: string, subId: string) => void} onEditSub
  * @property {(stageId: string, subId: string) => void} onDeleteSub
+ * @property {(stageId: string, subId: string | null) => import('../types/index.js').AccountingSubInstallment | null} findSub
+ * @property {(sub: import('../types/index.js').AccountingSubInstallment) => number | undefined} autoAfterTax What the value after tax would be if not typed.
+ * @property {(stageId: string, sub: import('../types/index.js').AccountingSubInstallment, typed: number | undefined) => Promise<{ success: boolean, message?: string }>} onSaveAfterTax
  */
 
 /**
@@ -185,6 +223,11 @@ const paymentColumns = (actions) => [
  * @param {{ detail: import('../types/index.js').AccountingContractDetail } & PaymentActions} props
  */
 export function PaymentSummaryTable({ detail, ...actions }) {
+  // "Đợt" and "Thao tác" stay pinned while the table scrolls sideways.
+  const sticky =
+    /** @type {import('@astryxdesign/core/Table').TablePlugin<PaymentRow>} */ (
+      useTableStickyColumns({ startKeys: ['code'], endKeys: ['actions'] })
+    );
   const { rows, totalAmount, totalPaid, stageCount } = paymentTableRows(detail);
   const remaining = totalAmount - totalPaid;
   return (
@@ -242,6 +285,7 @@ export function PaymentSummaryTable({ detail, ...actions }) {
     >
       <Table
         columns={paymentColumns(actions)}
+        plugins={{ stickyColumns: sticky }}
         data={/** @type {PaymentRow[]} */ (rows)}
         idKey="id"
         dividers="rows"
