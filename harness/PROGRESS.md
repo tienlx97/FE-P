@@ -1,5 +1,11 @@
 # Progress Log
 
+## 2026-10-10 — Quick-create customer in the Kế toán contract drawer, task 1.10 (`accounting-contracts`)
+
+- Per user ("Thêm nút thêm nhanh khách hàng trong Kế toán > Drawer Hợp đồng"). An IconButton "Thêm khách hàng" beside the Khách hàng selector opens Logistics' `QuickCreateCustomerDialog` (same directory, BE-P task 1.7); on create the accounting customers query is invalidated and the new id selected.
+- Features may not import each other: accounting-contracts exposes a render-function slot (`QuickCreateCustomerProvider` / `useQuickCreateCustomer`); `src/app/(protected)/accounting/layout.jsx` → `_components/accounting-quick-create-customer.jsx` plugs the Logistics drawer in. No slot → no button. A component value from context failed the React Compiler lint ("component is created during render"), hence a render function.
+- Not checked live: the Chrome extension again refused localhost pages ("browser-internal or unparseable URLs"). Gate passed: `harness/runs/20261010-093629-1945/`.
+
 ## 2026-10-10 — Kế toán access for "Kế toán HCM", task 1.9 (`accounting-contracts`)
 
 - Per user ("Ai có quyền truy cập ở phòng ban Kế toán HCM là truy cập được" → "Thêm phòng ban tên là 'Kế toán HCM'. Admin vẫn vào được"; Kế toán may view + add / edit / delete customers). BE-P task 1.8 maps only the "Kế toán HCM" department to `accounting:contracts:*` and opens the customer directory to either area's permission. Route / nav gating here was already permission-based (`accounting:contracts:view`), so no route change.

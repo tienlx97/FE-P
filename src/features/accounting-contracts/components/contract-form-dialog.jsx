@@ -2,15 +2,21 @@
 
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { Grid, GridSpan } from '@astryxdesign/core/Grid';
+import { HStack } from '@astryxdesign/core/HStack';
+import { Icon } from '@astryxdesign/core/Icon';
+import { IconButton } from '@astryxdesign/core/IconButton';
 import { Selector } from '@astryxdesign/core/Selector';
+import { StackItem } from '@astryxdesign/core/Stack';
 import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
+import { useQueryClient } from '@tanstack/react-query';
 import { FileText } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
+import { IconPlus } from '@/shared/components/icon/icon-plus.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
@@ -18,12 +24,17 @@ import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 import { checkContractCodes } from '../api/contracts.js';
 import { contractSchema } from '../config/contract-schema.js';
 import { formatVnd, valueAfterTax } from '../config/money.js';
-import { useCustomersQuery, useSourcesQuery } from '../hooks/use-catalogs.js';
+import {
+  CUSTOMERS_KEY,
+  useCustomersQuery,
+  useSourcesQuery,
+} from '../hooks/use-catalogs.js';
 import {
   useCompaniesQuery,
   useSaveContractMutation,
 } from '../hooks/use-contracts.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
+import { useQuickCreateCustomer } from './quick-create-customer-slot.jsx';
 
 /** @typedef {import('../types/index.js').AccountingContractFormValues} FormValues */
 /** @typedef {import('@astryxdesign/core/Calendar').ISODateString} ISODateString */
@@ -71,6 +82,9 @@ export function ContractFormDialog({
   const customersQuery = useCustomersQuery();
   const sourcesQuery = useSourcesQuery();
   const saveMutation = useSaveContractMutation();
+  const queryClient = useQueryClient();
+  const renderQuickCreateCustomer = useQuickCreateCustomer();
+  const [isQuickCreateOpen, setIsQuickCreateOpen] = useState(false);
 
   const companies = companiesQuery.data ?? [];
   const defaultCompanyId = companies.length === 1 ? companies[0].id : '';
@@ -214,19 +228,34 @@ export function ContractFormDialog({
         <MetaFormSection isBoxed index={2} title="Khách hàng & thanh toán">
           <Grid columns={10} gap={3}>
             <GridSpan columns={10}>
-              <Selector
-                label="Khách hàng"
-                placeholder="Chọn khách hàng"
-                value={values.customerId}
-                onChange={(value) => setField('customerId', value ?? '')}
-                options={customers.map((customer) => ({
-                  value: customer.id,
-                  label: customer.name,
-                }))}
-                isRequired
-                status={fieldStatuses.customerId}
-                statusVariant="tooltip"
-              />
+              <HStack gap={2} vAlign="end">
+                <StackItem size="fill">
+                  <Selector
+                    label="Khách hàng"
+                    placeholder="Chọn khách hàng"
+                    value={values.customerId}
+                    onChange={(value) => setField('customerId', value ?? '')}
+                    options={customers.map((customer) => ({
+                      value: customer.id,
+                      label: customer.name,
+                    }))}
+                    isRequired
+                    status={fieldStatuses.customerId}
+                    statusVariant="tooltip"
+                    width="100%"
+                  />
+                </StackItem>
+                {renderQuickCreateCustomer ? (
+                  <IconButton
+                    label="Thêm khách hàng"
+                    tooltip="Thêm khách hàng"
+                    icon={<Icon icon={IconPlus} size="sm" />}
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setIsQuickCreateOpen(true)}
+                  />
+                ) : null}
+              </HStack>
             </GridSpan>
             <GridSpan columns={7}>
               <Selector
@@ -292,6 +321,15 @@ export function ContractFormDialog({
             statusVariant="tooltip"
           />
         </MetaFormSection>
+        {renderQuickCreateCustomer?.({
+          isOpen: isQuickCreateOpen,
+          onOpenChange: setIsQuickCreateOpen,
+          onCreated: (customer) => {
+            // The directory is shared: refetch this feature's copy, then pick it.
+            queryClient.invalidateQueries({ queryKey: CUSTOMERS_KEY });
+            setField('customerId', customer.id);
+          },
+        })}
       </VStack>
     </FormDialog>
   );
