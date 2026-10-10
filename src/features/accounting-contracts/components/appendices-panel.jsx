@@ -115,6 +115,13 @@ export function AppendicesPanel({ detail, metrics, createKey }) {
       renderCell: (a) => signedValue(a, a.valueBeforeTax, 'normal'),
     },
     {
+      key: 'taxRatePercent',
+      header: 'Thuế',
+      width: pixel(80),
+      align: 'end',
+      renderCell: (a) => <Text hasTabularNumbers>{a.taxRatePercent}%</Text>,
+    },
+    {
       key: 'valueAfterTax',
       header: 'Giá trị sau thuế',
       width: pixel(160),

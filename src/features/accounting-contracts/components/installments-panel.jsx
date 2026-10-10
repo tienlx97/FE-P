@@ -24,6 +24,7 @@ import {
   installmentWorkbookFileName,
 } from '../config/installments-workbook.js';
 import { formatVnd } from '../config/money.js';
+import { isStagePaid } from '../config/payment-overview.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 import { InstallmentFormDialog } from './installment-form-dialog.jsx';
@@ -68,12 +69,30 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
       {
         key: 'code',
         header: 'Lần',
-        width: pixel(150),
+        width: pixel(90),
         renderCell: (sub) => <Text weight="bold">{sub.code}</Text>,
       },
       {
+        key: 'status',
+        header: 'Trạng thái',
+        width: pixel(150),
+        renderCell: (sub) => (
+          <MetaPill
+            label={sub.status === 'Paid' ? 'Đã thanh toán' : 'Kế hoạch'}
+            tone={sub.status === 'Paid' ? 'success' : 'muted'}
+          />
+        ),
+      },
+      {
+        key: 'paymentDate',
+        header: 'Ngày thanh toán',
+        width: pixel(150),
+        renderCell: (sub) =>
+          sub.paymentDate ? formatDisplayDate(sub.paymentDate) : '—',
+      },
+      {
         key: 'valueBeforeTax',
-        header: 'Trước thuế (VND)',
+        header: 'Trước thuế',
         width: pixel(160),
         align: 'end',
         renderCell: (sub) => (
@@ -91,7 +110,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
       },
       {
         key: 'valueAfterTax',
-        header: 'Sau thuế (VND)',
+        header: 'Sau thuế',
         width: pixel(160),
         align: 'end',
         renderCell: (sub) => (
@@ -102,8 +121,8 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
       },
       {
         key: 'actualPaidAmount',
-        header: 'Thực tế thanh toán (VND)',
-        width: pixel(190),
+        header: 'Thực tế thanh toán',
+        width: pixel(180),
         align: 'end',
         renderCell: (sub) => (
           <Text color={/** @type {any} */ ('meta-success')} hasTabularNumbers>
@@ -112,33 +131,15 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         ),
       },
       {
-        key: 'paymentDate',
-        header: 'Ngày thanh toán',
-        width: pixel(160),
-        renderCell: (sub) =>
-          sub.paymentDate ? formatDisplayDate(sub.paymentDate) : '—',
-      },
-      {
-        key: 'status',
-        header: 'Trạng thái',
-        width: pixel(170),
-        renderCell: (sub) => (
-          <MetaPill
-            label={sub.status === 'Paid' ? 'Đã thanh toán' : 'Kế hoạch'}
-            tone={sub.status === 'Paid' ? 'success' : 'muted'}
-          />
-        ),
-      },
-      {
         key: 'condition',
         header: 'Điều kiện',
-        width: proportional(1),
+        width: proportional(1, { minWidth: 260 }),
         renderCell: (sub) => sub.condition ?? '—',
       },
       {
         key: 'note',
         header: 'Ghi chú',
-        width: proportional(2),
+        width: proportional(1, { minWidth: 220 }),
         renderCell: (sub) => <Text color="secondary">{sub.note ?? '—'}</Text>,
       },
       {
@@ -229,11 +230,10 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
 
   /** @param {Installment} stage */
   function stageStatus(stage) {
-    const subs = stage.subInstallments;
-    if (subs.length > 0 && subs.every((sub) => sub.status === 'Paid')) {
+    if (isStagePaid(stage)) {
       return <MetaPill label="Đã thanh toán" tone="success" hasDot />;
     }
-    if (subs.some((sub) => sub.status === 'Paid')) {
+    if (stage.paidAmount > 0) {
       return <MetaPill label="Thanh toán một phần" tone="accent" hasDot />;
     }
     return <MetaPill label="Kế hoạch" tone="muted" hasDot />;
@@ -319,7 +319,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
                 </HStack>
                 <HStack gap={2} vAlign="center" wrap="nowrap">
                   <Text size="sm" weight="bold">
-                    ĐÃ THANH TOÁN:
+                    THỰC TẾ THANH TOÁN:
                   </Text>
                   <Text
                     color={/** @type {any} */ ('meta-success')}

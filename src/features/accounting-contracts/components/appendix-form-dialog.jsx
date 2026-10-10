@@ -9,7 +9,10 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Paperclip } from 'lucide-react';
 
-import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
+import {
+  MetaFormCard,
+  MetaFormSection,
+} from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
@@ -19,21 +22,24 @@ import {
   APPENDIX_TYPE_OPTIONS,
   appendixSchema,
 } from '../config/child-schemas.js';
-import { valueAfterTax } from '../config/money.js';
+import { formatVnd, valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
 
 /**
+ * A new appendix starts at the contract's tax rate; it can be changed.
  * @param {import('../types/index.js').AccountingAppendix | null} appendix
+ * @param {number} contractTaxRatePercent
  * @returns {import('../types/index.js').AccountingAppendixFormValues}
  */
-function valuesOf(appendix) {
+function valuesOf(appendix, contractTaxRatePercent) {
   return {
     type: appendix?.type ?? 'Increase',
     valueBeforeTax:
       appendix && appendix.type !== 'InfoChange'
         ? appendix.valueBeforeTax
         : undefined,
+    taxRatePercent: appendix?.taxRatePercent ?? contractTaxRatePercent,
     signedDate: appendix?.signedDate ?? '',
     buyerSigned: appendix?.buyerSigned ?? false,
     sellerSigned: appendix?.sellerSigned ?? false,
@@ -59,7 +65,7 @@ function AppendixFormSession({
 }) {
   const mutation = useContractChildMutation(contractId);
   const form = useZodForm({
-    initialValues: valuesOf(appendix),
+    initialValues: valuesOf(appendix, taxRatePercent),
     schema: appendixSchema,
     submit: (_parsed, values) =>
       mutation.mutateAsync({ kind: 'appendix', values, id: appendix?.id }),
@@ -68,10 +74,10 @@ function AppendixFormSession({
   const { values, setField, fieldStatuses } = form;
 
   const isInfoChange = values.type === 'InfoChange';
-  // Preview of the backend's value after tax (contract tax rate).
+  // Preview of the backend's value after tax (this appendix's tax rate).
   const afterTax = isInfoChange
     ? undefined
-    : valueAfterTax(values.valueBeforeTax, taxRatePercent);
+    : valueAfterTax(values.valueBeforeTax, values.taxRatePercent);
 
   return (
     <FormDialog
@@ -81,7 +87,7 @@ function AppendixFormSession({
       onOpenChange={onOpenChange}
       title={appendix ? 'Sửa phụ lục' : 'Thêm phụ lục'}
       submitLabel={appendix ? 'Lưu' : 'Thêm'}
-      width={640}
+      width={720}
       draft={{ values }}
       isSubmitting={form.isSubmitting}
       submitError={form.submitError}
@@ -94,7 +100,7 @@ function AppendixFormSession({
           title="Thông tin phụ lục"
           isTitleUppercase={false}
         >
-          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
+          <Grid columns={2} gap={4}>
             <Selector
               label="Loại phụ lục"
               value={values.type}
@@ -125,7 +131,7 @@ function AppendixFormSession({
               statusVariant="tooltip"
             />
           </Grid>
-          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
+          <Grid columns={2} gap={4}>
             <FormattedNumberTextInput
               label="Giá trị trước thuế"
               value={isInfoChange ? undefined : values.valueBeforeTax}
@@ -133,22 +139,36 @@ function AppendixFormSession({
               units="VND"
               isDisabled={isInfoChange}
               isRequired={!isInfoChange}
-              description={
-                isInfoChange
-                  ? 'Thay đổi thông tin không làm đổi giá trị hợp đồng'
-                  : undefined
-              }
               status={fieldStatuses.valueBeforeTax}
             />
             <FormattedNumberTextInput
-              label="Giá trị sau thuế"
-              value={afterTax}
-              onChange={() => {}}
-              units="VND"
-              isDisabled
-              description={`Tự tính theo thuế ${taxRatePercent}% của hợp đồng`}
+              label="Thuế"
+              value={values.taxRatePercent}
+              onChange={(value) => setField('taxRatePercent', value)}
+              units="%"
+              isDisabled={isInfoChange}
+              isRequired={!isInfoChange}
+              status={fieldStatuses.taxRatePercent}
             />
           </Grid>
+          <Text color="secondary" size="sm">
+            Thuế mặc định theo hợp đồng ({taxRatePercent}%).
+          </Text>
+          <MetaFormCard>
+            <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
+              <VStack gap={0}>
+                <Text weight="semibold">Giá trị sau thuế</Text>
+                <Text color="secondary" size="sm">
+                  {isInfoChange
+                    ? 'Thay đổi thông tin không làm đổi giá trị hợp đồng'
+                    : `Tự tính theo thuế ${values.taxRatePercent ?? 0}%`}
+                </Text>
+              </VStack>
+              <Text size="xl" weight="bold" color="accent" hasTabularNumbers>
+                {isInfoChange ? '—' : `${formatVnd(afterTax)} VND`}
+              </Text>
+            </HStack>
+          </MetaFormCard>
         </MetaFormSection>
         <MetaFormSection isBoxed title="Tình trạng ký" isTitleUppercase={false}>
           <Text size="sm" color="secondary">
@@ -174,6 +194,7 @@ function AppendixFormSession({
         >
           <TextArea
             label="Ghi chú"
+            rows={3}
             value={values.note}
             onChange={(value) => setField('note', value)}
             isOptional

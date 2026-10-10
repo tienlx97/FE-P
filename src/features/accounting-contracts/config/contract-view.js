@@ -50,12 +50,12 @@ export function contractMetrics(detail, icons) {
   const basePercent = percentOf(c.valueAfterTax, c.settlementValue);
   const invoicedPercent = percentOf(c.invoicedValue, c.settlementValue);
   const paidPercent = percentOf(c.paidValue, c.settlementValue);
-  const stageCount = detail.installments.length;
-  const paidCount = detail.installments.filter(
-    (stage) =>
-      stage.subInstallments.length > 0 &&
-      stage.subInstallments.every((sub) => sub.status === 'Paid'),
+  const paymentCount = detail.installments.flatMap(
+    (stage) => stage.subInstallments,
   ).length;
+  const paidPaymentCount = detail.installments
+    .flatMap((stage) => stage.subInstallments)
+    .filter((sub) => (sub.actualPaidAmount ?? 0) > 0).length;
 
   return {
     settlement: {
@@ -119,7 +119,7 @@ export function contractMetrics(detail, icons) {
     },
     paid: {
       id: 'paid',
-      label: 'ĐÃ THANH TOÁN',
+      label: 'THỰC TẾ THANH TOÁN',
       icon: icons.paid,
       iconTone: /** @type {const} */ ('success'),
       tone: /** @type {const} */ ('success'),
@@ -130,7 +130,7 @@ export function contractMetrics(detail, icons) {
         value: `${paidPercent}%`,
         tone: /** @type {const} */ ('success'),
       },
-      end: { hint: `(${paidCount}/${stageCount} đợt)` },
+      end: { hint: `(${paidPaymentCount}/${paymentCount} lần)` },
       segments: [
         { percent: paidPercent, tone: /** @type {const} */ ('success') },
       ],

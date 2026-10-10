@@ -49,7 +49,7 @@ const MONEY_COLUMNS = [
   { key: 'valueBeforeTax', label: 'Trước thuế' },
   { key: 'valueAfterTax', label: 'Sau thuế' },
   { key: 'settlementValue', label: 'Quyết toán' },
-  { key: 'paidValue', label: 'Đã thanh toán', tone: 'success' },
+  { key: 'paidValue', label: 'Thực tế thanh toán', tone: 'success' },
   { key: 'unpaidValue', label: 'Chưa thanh toán', tone: 'danger' },
   { key: 'invoicedValue', label: 'Đã xuất HĐ' },
   { key: 'remainingToInvoice', label: 'Còn phải xuất HĐ' },

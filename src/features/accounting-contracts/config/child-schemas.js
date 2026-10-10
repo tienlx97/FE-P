@@ -32,6 +32,10 @@ export const appendixSchema = z
       error: 'Vui lòng chọn loại phụ lục',
     }),
     valueBeforeTax: z.number().nonnegative().optional(),
+    taxRatePercent: z
+      .number({ error: 'Vui lòng nhập thuế' })
+      .min(0, 'Thuế từ 0 đến 100%')
+      .max(100, 'Thuế từ 0 đến 100%'),
     signedDate: z.string().min(1, 'Vui lòng chọn ngày ký'),
     buyerSigned: z.boolean(),
     sellerSigned: z.boolean(),

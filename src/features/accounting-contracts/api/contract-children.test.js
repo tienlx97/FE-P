@@ -12,6 +12,7 @@ test('an information-change appendix sends value before tax 0', () => {
     appendixBody({
       type: 'InfoChange',
       valueBeforeTax: 5,
+      taxRatePercent: 8,
       signedDate: '2026-02-01',
       buyerSigned: true,
       sellerSigned: true,

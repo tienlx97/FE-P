@@ -28,6 +28,7 @@ export function appendixBody(values) {
     type: values.type,
     valueBeforeTax:
       values.type === 'InfoChange' ? 0 : (values.valueBeforeTax ?? 0),
+    taxRatePercent: values.taxRatePercent ?? null,
     signedDate: values.signedDate,
     buyerSigned: values.buyerSigned,
     sellerSigned: values.sellerSigned,

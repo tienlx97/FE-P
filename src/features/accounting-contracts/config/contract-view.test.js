@@ -97,11 +97,11 @@ test('appendix totals split by direction; metrics show paid progress', () => {
     icons,
   );
   assert.equal(metrics.paid.start.value, '25%');
-  assert.equal(metrics.paid.end.hint, '(0/0 đợt)');
+  assert.equal(metrics.paid.end.hint, '(0/0 lần)');
   assert.equal(metrics.settlement.end.value, 'PL: +8');
 });
 
-test('paid KPI counts complete stages, not individual paid occurrences', () => {
+test('paid KPI counts payments with an actual paid amount', () => {
   const Icon = () => null;
   const icons = {
     settlement: Icon,
@@ -118,12 +118,22 @@ test('paid KPI counts complete stages, not individual paid occurrences', () => {
       appendices: [],
       invoices: [],
       installments: [
-        { subInstallments: [{ status: 'Paid' }, { status: 'Paid' }] },
-        { subInstallments: [{ status: 'Paid' }, { status: 'Planned' }] },
+        {
+          subInstallments: [
+            { status: 'Paid', actualPaidAmount: 5 },
+            { status: 'Paid', actualPaidAmount: 5 },
+          ],
+        },
+        {
+          subInstallments: [
+            { status: 'Paid', actualPaidAmount: 5 },
+            { status: 'Planned', actualPaidAmount: null },
+          ],
+        },
         { subInstallments: [] },
       ],
     }),
     icons,
   );
-  assert.equal(metrics.paid.end.hint, '(1/3 đợt)');
+  assert.equal(metrics.paid.end.hint, '(3/4 lần)');
 });

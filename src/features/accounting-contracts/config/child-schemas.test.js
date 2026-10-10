@@ -11,6 +11,7 @@ import {
 const appendix = {
   type: 'Increase',
   valueBeforeTax: 10,
+  taxRatePercent: 8,
   signedDate: '2026-02-01',
   buyerSigned: true,
   sellerSigned: false,
@@ -41,6 +42,10 @@ test('an appendix needs a value before tax unless it only changes information', 
       valueBeforeTax: undefined,
     }).success,
     true,
+  );
+  assert.equal(
+    appendixSchema.safeParse({ ...appendix, taxRatePercent: 101 }).success,
+    false,
   );
 });
 

@@ -63,7 +63,8 @@ export {};
  * @property {string} id
  * @property {AppendixType} type
  * @property {number} valueBeforeTax
- * @property {number} valueAfterTax At the contract's tax rate (backend-derived).
+ * @property {number} taxRatePercent Own rate; the contract's when none was given.
+ * @property {number} valueAfterTax At `taxRatePercent` (backend-derived).
  * @property {string} signedDate
  * @property {boolean} buyerSigned
  * @property {boolean} sellerSigned
@@ -136,6 +137,7 @@ export {};
  * @typedef {Object} AccountingAppendixFormValues
  * @property {AppendixType | ''} type
  * @property {number | undefined} valueBeforeTax
+ * @property {number | undefined} taxRatePercent
  * @property {string} signedDate
  * @property {boolean} buyerSigned
  * @property {boolean} sellerSigned

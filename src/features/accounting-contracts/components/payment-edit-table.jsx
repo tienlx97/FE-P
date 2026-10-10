@@ -4,7 +4,7 @@ import { Button } from '@astryxdesign/core/Button';
 import { Card } from '@astryxdesign/core/Card';
 import { DateInput } from '@astryxdesign/core/DateInput';
 import { Divider } from '@astryxdesign/core/Divider';
-import { Grid, GridSpan } from '@astryxdesign/core/Grid';
+import { Grid } from '@astryxdesign/core/Grid';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import { Selector } from '@astryxdesign/core/Selector';
@@ -52,8 +52,8 @@ function PaymentCard({
     contractValueBeforeTax,
   );
   return (
-    <Card padding={4}>
-      <VStack gap={4} hAlign="stretch">
+    <Card padding={5}>
+      <VStack gap={5} hAlign="stretch">
         <HStack hAlign="between" vAlign="center" gap={3}>
           <HStack vAlign="center" gap={3}>
             <Text weight="bold" color="accent" size="lg">
@@ -90,8 +90,11 @@ function PaymentCard({
           </HStack>
         </HStack>
         <Divider />
-        <Grid columns={10} gap={3}>
-          <GridSpan columns={2}>
+        <VStack gap={2} hAlign="stretch">
+          <Text color="secondary" size="sm" weight="semibold">
+            Giá trị
+          </Text>
+          <Grid columns={3} gap={4}>
             <Selector
               label="Hình thức"
               value={values.kind}
@@ -104,8 +107,6 @@ function PaymentCard({
                 )
               }
             />
-          </GridSpan>
-          <GridSpan columns={2}>
             <FormattedNumberTextInput
               label={isPercent ? 'Tỷ lệ' : 'Giá trị trước thuế'}
               isRequired
@@ -116,8 +117,6 @@ function PaymentCard({
               }
               status={status(isPercent ? 'percent' : 'valueBeforeTax')}
             />
-          </GridSpan>
-          <GridSpan columns={2}>
             <FormattedNumberTextInput
               label="Thuế"
               isRequired
@@ -126,8 +125,13 @@ function PaymentCard({
               onChange={(v) => onChange(index, 'taxRatePercent', v)}
               status={status('taxRatePercent')}
             />
-          </GridSpan>
-          <GridSpan columns={2}>
+          </Grid>
+        </VStack>
+        <VStack gap={2} hAlign="stretch">
+          <Text color="secondary" size="sm" weight="semibold">
+            Thanh toán
+          </Text>
+          <Grid columns={3} gap={4}>
             <Selector
               label="Trạng thái"
               value={values.status}
@@ -140,8 +144,6 @@ function PaymentCard({
                 )
               }
             />
-          </GridSpan>
-          <GridSpan columns={2}>
             <DateInput
               label="Ngày thanh toán"
               value={
@@ -153,8 +155,6 @@ function PaymentCard({
               onChange={(v) => onChange(index, 'paymentDate', v ?? '')}
               isOptional
             />
-          </GridSpan>
-          <GridSpan columns={4}>
             <FormattedNumberTextInput
               label="Giá trị thực tế thanh toán"
               value={values.actualPaidAmount}
@@ -162,32 +162,35 @@ function PaymentCard({
               onChange={(v) => onChange(index, 'actualPaidAmount', v)}
               status={status('actualPaidAmount')}
             />
-          </GridSpan>
-          <GridSpan columns={3}>
+          </Grid>
+        </VStack>
+        <VStack gap={2} hAlign="stretch">
+          <Text color="secondary" size="sm" weight="semibold">
+            Điều kiện và ghi chú
+          </Text>
+          <Grid columns={2} gap={4}>
             <TextArea
               label="Điều kiện thanh toán"
               placeholder="Điều kiện, hồ sơ cần hoàn tất…"
-              rows={2}
+              rows={3}
               value={values.condition}
               onChange={(v) => onChange(index, 'condition', v)}
               maxLength={1000}
               isOptional
               status={status('condition')}
             />
-          </GridSpan>
-          <GridSpan columns={3}>
             <TextArea
               label="Ghi chú"
               placeholder="Nhập ghi chú…"
-              rows={2}
+              rows={3}
               value={values.note}
               onChange={(v) => onChange(index, 'note', v)}
               maxLength={1000}
               isOptional
               status={status('note')}
             />
-          </GridSpan>
-        </Grid>
+          </Grid>
+        </VStack>
       </VStack>
     </Card>
   );

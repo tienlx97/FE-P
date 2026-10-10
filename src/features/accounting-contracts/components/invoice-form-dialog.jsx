@@ -96,7 +96,7 @@ function InvoiceFormSession({
       title={invoice ? 'Sửa hoá đơn' : 'Thêm hoá đơn'}
       subtitle={`Công trình ${projectCode}`}
       submitLabel={invoice ? 'Lưu thay đổi' : 'Lưu hoá đơn'}
-      width={640}
+      width={720}
       draft={{ values }}
       isSubmitting={form.isSubmitting}
       submitError={form.submitError}
@@ -109,7 +109,7 @@ function InvoiceFormSession({
           title="Thông tin hoá đơn"
           isTitleUppercase={false}
         >
-          <Grid columns={{ minWidth: 200, max: 2 }} gap={3}>
+          <Grid columns={2} gap={4}>
             <TextInput
               label="Số hoá đơn"
               value={values.invoiceNumber}
@@ -146,7 +146,7 @@ function InvoiceFormSession({
               </Text>
             </HStack>
           </MetaFormCard>
-          <Grid columns={{ minWidth: 160, max: 3 }} gap={3}>
+          <Grid columns={2} gap={4}>
             <FormattedNumberTextInput
               label="Giá trị trước thuế"
               value={values.valueBeforeTax}
@@ -161,17 +161,20 @@ function InvoiceFormSession({
               onChange={(value) => setField('taxRatePercent', value)}
               units="%"
               isRequired
-              description={`Mặc định theo hợp đồng (${contractTaxRatePercent}%)`}
               status={fieldStatuses.taxRatePercent}
             />
-            <FormattedNumberTextInput
-              label="Giá trị sau thuế"
-              value={afterTax}
-              onChange={() => {}}
-              units="VND"
-              isDisabled
-            />
           </Grid>
+          <Text color="secondary" size="sm">
+            Thuế mặc định theo hợp đồng ({contractTaxRatePercent}%).
+          </Text>
+          <MetaFormCard>
+            <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
+              <Text weight="semibold">Giá trị sau thuế</Text>
+              <Text size="xl" weight="bold" color="accent" hasTabularNumbers>
+                {formatVnd(afterTax)} VND
+              </Text>
+            </HStack>
+          </MetaFormCard>
         </MetaFormSection>
         <MetaFormSection
           isBoxed
@@ -180,6 +183,7 @@ function InvoiceFormSession({
         >
           <TextArea
             label="Ghi chú"
+            rows={3}
             value={values.note}
             onChange={(value) => setField('note', value)}
             isOptional

@@ -136,6 +136,16 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
     },
   ];
 
+  const invoiceTable = (
+    <Table
+      columns={columns}
+      data={detail.invoices}
+      idKey="id"
+      dividers="rows"
+      density="spacious"
+    />
+  );
+
   return (
     <VStack gap={5} hAlign="stretch">
       <MetaMetricsCard
@@ -181,22 +191,13 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
           </HStack>
         }
       >
-        <VStack
-          hAlign="stretch"
-          xstyle={
-            detail.invoices.length > PINNED_HEADER_MIN_ROWS
-              ? styles.bounded
-              : undefined
-          }
-        >
-          <Table
-            columns={columns}
-            data={detail.invoices}
-            idKey="id"
-            dividers="rows"
-            density="spacious"
-          />
-        </VStack>
+        {detail.invoices.length > PINNED_HEADER_MIN_ROWS ? (
+          <VStack hAlign="stretch" xstyle={styles.bounded}>
+            {invoiceTable}
+          </VStack>
+        ) : (
+          invoiceTable
+        )}
       </MetaTableCard>
 
       <InvoiceFormDialog

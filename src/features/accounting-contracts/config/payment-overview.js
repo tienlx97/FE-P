@@ -2,14 +2,20 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 
 import { formatVnd } from './money.js';
 
+/**
+ * A stage counts as paid once the actual amounts received cover its value.
+ * @param {import('../types/index.js').AccountingInstallment} stage
+ */
+export function isStagePaid(stage) {
+  return stage.subInstallments.length > 0 && stage.paidAmount >= stage.amount;
+}
+
 /** @param {import('../types/index.js').AccountingContractDetail} detail */
 export function paymentOverview(detail) {
   const stages = detail.installments
     .slice()
     .sort((a, b) => a.number - b.number);
-  const current = stages.find((stage) =>
-    stage.subInstallments.some((p) => p.status !== 'Paid'),
-  );
+  const current = stages.find((stage) => !isStagePaid(stage));
   const total = detail.contract.settlementValue;
   const paidPercent =
     total > 0
@@ -30,15 +36,13 @@ export function paymentOverview(detail) {
         .map((p) => p.paymentDate)
         .sort();
       const date = plannedDates[0];
-      const isPaid =
-        stage.subInstallments.length > 0 &&
-        stage.subInstallments.every((p) => p.status === 'Paid');
+      const isPaid = isStagePaid(stage);
       return {
         id: stage.id,
         label: `Đợt ${stage.number}`,
         amount: `${formatVnd(stage.amount)} VND`,
         dueDate: date ? formatDisplayDate(date) : undefined,
-        term: `${stage.subInstallments.length} lần · Đã thanh toán ${formatVnd(stage.paidAmount)} VND`,
+        term: `${stage.subInstallments.length} lần · Thực tế thanh toán ${formatVnd(stage.paidAmount)} VND`,
         status: /** @type {'paid' | 'active' | 'upcoming'} */ (
           isPaid ? 'paid' : stage === current ? 'active' : 'upcoming'
         ),

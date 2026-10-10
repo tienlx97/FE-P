@@ -103,7 +103,7 @@ export const CONTRACT_EXPORT_COLUMNS = [
   },
   {
     key: 'paidValue',
-    header: 'Đã thanh toán',
+    header: 'Thực tế thanh toán',
     group: 2,
     width: 20,
     kind: 'money',
@@ -280,7 +280,7 @@ export function buildContractsWorkbook(ExcelJS, input) {
   // Headline figures: four blocks reading the totals row below.
   const headline = [
     ['TỔNG QUYẾT TOÁN', 'settlementValue', COLORS.ink],
-    ['ĐÃ THANH TOÁN', 'paidValue', COLORS.success],
+    ['THỰC TẾ THANH TOÁN', 'paidValue', COLORS.success],
     ['CHƯA THANH TOÁN', 'unpaidValue', COLORS.danger],
     ['ĐÃ XUẤT HOÁ ĐƠN', 'invoicedValue', COLORS.accent],
   ];

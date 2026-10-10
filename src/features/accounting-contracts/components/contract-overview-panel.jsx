@@ -48,7 +48,7 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
         ]}
         paidPercent={payments.paidPercent}
         currentPercent={payments.currentPercent}
-        paidPercentLabel={`${Math.round(payments.paidPercent)}% đã thanh toán`}
+        paidPercentLabel={`${Math.round(payments.paidPercent)}% thực tế thanh toán`}
         paidAmountValue={`${formatVnd(c.paidValue)} VND`}
         totalAmountValue={`${formatVnd(c.settlementValue)} VND`}
         installments={payments.installments}
@@ -161,7 +161,7 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
                   '—'
                 )}
               </MetadataListItem>
-              <MetadataListItem label="Đã thanh toán">
+              <MetadataListItem label="Thực tế thanh toán">
                 <Text
                   color={/** @type {any} */ ('meta-success')}
                   weight="bold"
