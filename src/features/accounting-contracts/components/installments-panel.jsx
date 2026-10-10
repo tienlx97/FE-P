@@ -70,7 +70,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
 
   // The "Thao tác" column stays pinned to the right edge while the table scrolls.
   const stickyActions =
-    /** @type {import('@astryxdesign/core/Table').TablePlugin<Sub & Record<string, unknown>>} */ (
+    /** @type {import('@astryxdesign/core/Table').TablePlugin<Sub>} */ (
       useTableStickyColumns({ endKeys: ['actions'] })
     );
 
@@ -369,7 +369,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
           >
             <Table
               columns={paymentColumns(stage)}
-              plugins={[stickyActions]}
+              plugins={{ stickyColumns: stickyActions }}
               data={stage.subInstallments}
               idKey="id"
               dividers="rows"

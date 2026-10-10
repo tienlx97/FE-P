@@ -68,14 +68,19 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
   }
 
   // The totals row leads the table: count and sums of the invoices.
+  /** @type {Invoice} */
   const totalsRow = {
     id: TOTALS_ID,
     invoiceNumber: '',
+    issuedDate: '',
+    taxRatePercent: 0,
+    note: null,
     valueBeforeTax: detail.invoices.reduce(
       (sum, i) => sum + i.valueBeforeTax,
       0,
     ),
     valueAfterTax: detail.invoices.reduce((sum, i) => sum + i.valueAfterTax, 0),
+    isValueAfterTaxManual: false,
   };
   const rows = [totalsRow, ...detail.invoices];
   /** @param {Record<string, unknown>} row */
