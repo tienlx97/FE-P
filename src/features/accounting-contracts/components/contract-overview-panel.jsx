@@ -20,6 +20,7 @@ import { formatDisplayDate } from '@/shared/config/date-input-format.js';
 import { formatVnd } from '../config/money.js';
 import { paymentOverview } from '../config/payment-overview.js';
 import { useCustomersQuery } from '../hooks/use-catalogs.js';
+import { TypedMark } from './typed-mark.jsx';
 
 /**
  * Logistics overview summary and payment strip, adapted to accounting:
@@ -123,9 +124,11 @@ export function ContractOverviewPanel({ detail, metrics, onOpenTab }) {
                 {c.taxRatePercent}%
               </MetadataListItem>
               <MetadataListItem label="Sau thuế">
-                <Text weight="bold" hasTabularNumbers>
-                  {formatVnd(c.valueAfterTax)} VND
-                </Text>
+                <TypedMark isTyped={c.isValueAfterTaxManual} hAlign="start">
+                  <Text weight="bold" hasTabularNumbers>
+                    {formatVnd(c.valueAfterTax)} VND
+                  </Text>
+                </TypedMark>
               </MetadataListItem>
               <MetadataListItem label="Ghi chú">
                 {c.note ?? '—'}

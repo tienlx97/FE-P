@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-10 — Contract value after tax typeable, "sửa tay" marks, task 1.15 (`accounting-contracts`)
+
+- Per user ("chỉnh tiếp cho xong"), finishing 1.14's open items. Needs BE-P task 1.14 (contract `valueAfterTax` / `isValueAfterTaxManual`).
+- Contract drawer: "Giá trị hợp đồng (sau thuế)" is a `TypedValueInput` (computed placeholder, "Tự tính lại"); `contractBody` sends `valueAfterTax` (null = computed).
+- `TypedMark`: a pencil with "Đã sửa tay" tooltip before typed values — payments (before tax for percent, after tax), invoices and appendices (after tax), contract overview "Sau thuế".
+- Live on :3000: TEST-KT-04 typed 86,400,001 → settlement / chưa thanh toán 86,400,001, overview shows the mark; reset to 86,400,000. Payment 1.1 typed 86,400,001 → mark in the table; reset. Gate passed: `harness/runs/20261010-125059-1193/`.
+- `installments-panel.jsx` / `invoices-panel.jsx` also hold another session's uncommitted work; only this task's hunks were committed.
+
 ## 2026-10-10 — Typed (hand-rounded) values, task 1.14 (`accounting-contracts`)
 
 - Per user ("các giá trị sau khi tính toán có thể chỉnh sửa được. Ví dụ ... 123,456.78 ... 123,456 hoặc 123,457. Tương tự cho hoá đơn"). Needs BE-P task 1.13 (`valueAfterTax` / percent `valueBeforeTax` in requests, `is…Manual` flags).

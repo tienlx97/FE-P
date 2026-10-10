@@ -7,7 +7,6 @@ import { Icon } from '@astryxdesign/core/Icon';
 import { IconButton } from '@astryxdesign/core/IconButton';
 import { Selector } from '@astryxdesign/core/Selector';
 import { StackItem } from '@astryxdesign/core/Stack';
-import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { useQueryClient } from '@tanstack/react-query';
 import { FileText } from 'lucide-react';
@@ -23,7 +22,7 @@ import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { checkContractCodes } from '../api/contracts.js';
 import { contractSchema } from '../config/contract-schema.js';
-import { formatVnd, valueAfterTax } from '../config/money.js';
+import { valueAfterTax } from '../config/money.js';
 import {
   CUSTOMERS_KEY,
   useCustomersQuery,
@@ -35,6 +34,7 @@ import {
 } from '../hooks/use-contracts.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
 import { useQuickCreateCustomer } from './quick-create-customer-slot.jsx';
+import { TypedValueInput } from './typed-value-input.jsx';
 
 /** @typedef {import('../types/index.js').AccountingContractFormValues} FormValues */
 /** @typedef {import('@astryxdesign/core/Calendar').ISODateString} ISODateString */
@@ -55,6 +55,9 @@ function valuesOf(contract, defaultCompanyId) {
     customerId: contract?.customerId ?? '',
     valueBeforeTax: contract?.valueBeforeTax,
     taxRatePercent: contract?.taxRatePercent ?? 8,
+    valueAfterTax: contract?.isValueAfterTaxManual
+      ? contract.valueAfterTax
+      : undefined,
     paymentDueDate: contract?.paymentDueDate ?? '',
     note: contract?.note ?? '',
   };
@@ -305,10 +308,15 @@ export function ContractFormDialog({
               status={fieldStatuses.taxRatePercent}
             />
           </Grid>
-          <Text color="secondary">
-            Giá trị hợp đồng (sau thuế):{' '}
-            <Text weight="semibold">{formatVnd(afterTax)}</Text>
-          </Text>
+          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
+            <TypedValueInput
+              label="Giá trị hợp đồng (sau thuế)"
+              computed={afterTax}
+              typed={values.valueAfterTax}
+              onChange={(value) => setField('valueAfterTax', value)}
+              status={fieldStatuses.valueAfterTax}
+            />
+          </Grid>
         </MetaFormSection>
         <MetaFormSection isBoxed index={4} title="Ghi chú">
           <TextArea

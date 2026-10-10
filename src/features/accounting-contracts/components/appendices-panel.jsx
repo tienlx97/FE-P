@@ -24,6 +24,7 @@ import { formatVnd } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { AppendixFormDialog } from './appendix-form-dialog.jsx';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
+import { TypedMark } from './typed-mark.jsx';
 
 /** @typedef {import('../types/index.js').AccountingAppendix} Appendix */
 
@@ -126,7 +127,11 @@ export function AppendicesPanel({ detail, metrics, createKey }) {
       header: 'Giá trị sau thuế',
       width: pixel(160),
       align: 'end',
-      renderCell: (a) => signedValue(a, a.valueAfterTax, 'bold'),
+      renderCell: (a) => (
+        <TypedMark isTyped={a.isValueAfterTaxManual}>
+          {signedValue(a, a.valueAfterTax, 'bold')}
+        </TypedMark>
+      ),
     },
     {
       key: 'signedDate',

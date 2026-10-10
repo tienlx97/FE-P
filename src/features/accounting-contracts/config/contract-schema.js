@@ -28,6 +28,7 @@ export const contractSchema = z.object({
     .number({ error: 'Vui lòng nhập thuế' })
     .min(0, 'Từ 0 đến 100')
     .max(100, 'Từ 0 đến 100'),
+  valueAfterTax: z.number().nonnegative('Không được âm').optional(),
   paymentDueDate: z.string(),
   note: z.string().max(2000, 'Tối đa 2000 ký tự'),
 });

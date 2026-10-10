@@ -49,6 +49,7 @@ export function contractBody(values) {
     customerId: values.customerId,
     valueBeforeTax: values.valueBeforeTax,
     taxRatePercent: values.taxRatePercent,
+    valueAfterTax: values.valueAfterTax ?? null,
     paymentDueDate: values.paymentDueDate || null,
     note: blankToNull(values.note),
   };

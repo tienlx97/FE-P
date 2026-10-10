@@ -22,6 +22,7 @@ import { formatVnd } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 import { InvoiceFormDialog } from './invoice-form-dialog.jsx';
+import { TypedMark } from './typed-mark.jsx';
 
 /** @typedef {import('../types/index.js').AccountingInvoice} Invoice */
 
@@ -127,9 +128,11 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
       width: pixel(170),
       align: 'end',
       renderCell: (i) => (
-        <Text weight="bold" hasTabularNumbers>
-          {formatVnd(i.valueAfterTax)}
-        </Text>
+        <TypedMark isTyped={!isTotals(i) && i.isValueAfterTaxManual}>
+          <Text weight="bold" hasTabularNumbers>
+            {formatVnd(i.valueAfterTax)}
+          </Text>
+        </TypedMark>
       ),
     },
     {

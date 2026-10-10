@@ -33,6 +33,7 @@ import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 import { InstallmentFormDialog } from './installment-form-dialog.jsx';
 import { SubInstallmentFormDialog } from './sub-installment-form-dialog.jsx';
+import { TypedMark } from './typed-mark.jsx';
 
 /** @typedef {import('../types/index.js').AccountingInstallment} Installment */
 /** @typedef {import('../types/index.js').AccountingSubInstallment} Sub */
@@ -112,7 +113,11 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         width: pixel(160),
         align: 'end',
         renderCell: (sub) => (
-          <Text hasTabularNumbers>{formatVnd(sub.valueBeforeTax)}</Text>
+          <TypedMark
+            isTyped={sub.kind === 'Percent' && sub.isValueBeforeTaxManual}
+          >
+            <Text hasTabularNumbers>{formatVnd(sub.valueBeforeTax)}</Text>
+          </TypedMark>
         ),
       },
       {
@@ -130,9 +135,11 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         width: pixel(160),
         align: 'end',
         renderCell: (sub) => (
-          <Text weight="bold" hasTabularNumbers>
-            {formatVnd(sub.valueAfterTax)}
-          </Text>
+          <TypedMark isTyped={sub.isValueAfterTaxManual}>
+            <Text weight="bold" hasTabularNumbers>
+              {formatVnd(sub.valueAfterTax)}
+            </Text>
+          </TypedMark>
         ),
       },
       {

@@ -47,7 +47,8 @@ export {};
  * @property {string | null} customerName
  * @property {number} valueBeforeTax
  * @property {number} taxRatePercent
- * @property {number} valueAfterTax
+ * @property {number} valueAfterTax Computed, unless typed by the user.
+ * @property {boolean} isValueAfterTaxManual
  * @property {number} settlementValue
  * @property {number} invoicedValue
  * @property {number} remainingToInvoice
@@ -135,6 +136,7 @@ export {};
  * @property {string} customerId
  * @property {number | undefined} valueBeforeTax
  * @property {number | undefined} taxRatePercent
+ * @property {number | undefined} valueAfterTax Typed by the user, undefined = computed.
  * @property {string} paymentDueDate
  * @property {string} note
  */
