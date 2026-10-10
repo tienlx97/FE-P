@@ -143,10 +143,10 @@ export function buildInstallmentWorkbook(ExcelJS, input) {
   workbook.creator = 'KT-XNK';
   workbook.created = exportedAt;
   const sheet = workbook.addWorksheet('Đợt thanh toán', {
-    properties: {
-      defaultRowHeight: 20,
-      outlineProperties: { summaryBelow: false, summaryRight: true },
-    },
+    // No `outlineProperties` (summary row above the lần rows): with
+    // `fitToPage` ExcelJS writes <pageSetUpPr> before <outlinePr>, against
+    // the schema order, and Excel then reports the file as damaged.
+    properties: { defaultRowHeight: 20 },
     views: [{ state: 'frozen', ySplit: HEADER_ROW, showGridLines: false }],
     pageSetup: {
       paperSize: 9,

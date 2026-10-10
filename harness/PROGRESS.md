@@ -1,5 +1,14 @@
 # Progress Log
 
+## 2026-10-10 — "Đợt thanh toán" Excel opened as damaged (`accounting-contracts`)
+
+- Per user: Excel said "We found a problem with some content in 'Dot-thanh-toan-TEST-KT-02-2026-10-10.xlsx'" for the export from Kế toán > chi tiết hợp đồng > Đợt thanh toán.
+- Cause (bisected with Excel itself over COM, each part of sheet1.xml grafted onto a clean ExcelJS file): `<sheetPr><pageSetUpPr fitToPage="1"/><outlinePr …/></sheetPr>`. The schema order is tabColor, outlinePr, pageSetUpPr; ExcelJS writes pageSetUpPr first whenever `fitToPage` and `outlineProperties` are both set. Swapping the two, or dropping outlinePr, opens cleanly; nothing else in the file mattered.
+- Fix: no `outlineProperties` (fit-to-width printing kept; the lần rows stay grouped, Excel's +/- button sits below the group instead of above). Only this workbook combined the two (`fitToPage` alone is used by the other exports).
+- Regression test: `installments-workbook.test.js` unzips the written buffer and asserts the `<sheetPr>` children follow the schema order (fails with the old properties, passes now).
+- Verified in Excel (COM, read-only): the browser export of TEST-KT-02 opens — D14 1,210,000,000, F14 264,000,000, G14 946,000,000, D21 1,188,000,000; fit to 1 page wide; rows 18–19 grouped. Gate passed: `harness/runs/20261010-135408-954/`.
+- Harness gap: unit tests read workbooks back with ExcelJS, which accepts what Excel rejects; only the schema-order check above guards this case.
+
 ## 2026-10-10 — Click-to-edit in the drawers, task 1.17 (`accounting-contracts`)
 
 - Per user ("Áp dụng tương tự cách này trong drawer THÊM (hoá đơn, Đợt thanh toán, ...)"). The drawers' computed values now work like the tables: click the number (dashed underline; typed = accent + pencil), type, "Áp dụng" (Enter) / Hủy (Esc) / "Tự tính lại". In a drawer it only sets the form field; the drawer's own save sends it.

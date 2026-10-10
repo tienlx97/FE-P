@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
 import { test } from 'node:test';
 
 import ExcelJS from 'exceljs';
@@ -134,6 +135,19 @@ test('template content in the report style: value block, đợt and lần rows, 
   assert.deepEqual(sheet.getCell('A6').value, { formula: 'D15', result: 1180 });
   const buffer = await workbook.xlsx.writeBuffer();
   assert.ok(buffer.byteLength > 1000);
+
+  // Excel refuses a <sheetPr> whose children break the schema order
+  // (tabColor, outlinePr, pageSetUpPr) — ExcelJS writes pageSetUpPr first.
+  const JSZip = createRequire(import.meta.resolve('exceljs'))('jszip');
+  const zip = await JSZip.loadAsync(buffer);
+  const sheetXml = await zip.file('xl/worksheets/sheet1.xml').async('string');
+  const sheetPr = sheetXml.match(/<sheetPr>(.*?)<\/sheetPr>/)?.[1] ?? '';
+  const order = [...sheetPr.matchAll(/<(\w+)/g)].map((m) => m[1]);
+  const schema = ['tabColor', 'outlinePr', 'pageSetUpPr'];
+  assert.deepEqual(
+    order,
+    [...order].sort((a, b) => schema.indexOf(a) - schema.indexOf(b)),
+  );
 });
 
 test('file name carries the contract number and the day', () => {
