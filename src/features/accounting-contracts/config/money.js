@@ -27,19 +27,28 @@ export function valueAfterTax(valueBeforeTax, taxRatePercent) {
 }
 
 /**
- * Live preview of a sub-instalment's amount: % of the value after tax, or the entered amount.
+ * Live preview of a payment's values, as the backend computes them: before
+ * tax = % of the contract value before tax, or the entered amount; after tax
+ * = that at the payment's own rate.
  * @param {import('../types/index.js').PaymentKind} kind
  * @param {number | undefined} percent
- * @param {number | undefined} amount
- * @param {number} contractValueAfterTax
+ * @param {number | undefined} enteredValueBeforeTax
+ * @param {number | undefined} taxRatePercent
+ * @param {number} contractValueBeforeTax
  */
-export function subInstallmentAmount(
+export function subInstallmentValues(
   kind,
   percent,
-  amount,
-  contractValueAfterTax,
+  enteredValueBeforeTax,
+  taxRatePercent,
+  contractValueBeforeTax,
 ) {
-  if (kind === 'Percent')
-    return roundMoney((contractValueAfterTax * (percent ?? 0)) / 100);
-  return amount ?? 0;
+  const beforeTax =
+    kind === 'Percent'
+      ? roundMoney((contractValueBeforeTax * (percent ?? 0)) / 100)
+      : (enteredValueBeforeTax ?? 0);
+  return {
+    beforeTax,
+    afterTax: /** @type {number} */ (valueAfterTax(beforeTax, taxRatePercent)),
+  };
 }

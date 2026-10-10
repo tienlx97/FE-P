@@ -13,7 +13,8 @@ const sub = (over) => ({
   code: '1.1',
   kind: 'Percent',
   percent: 30,
-  amount: 300,
+  valueAfterTax: 300,
+  actualPaidAmount: 300,
   paymentDate: '2026-08-12',
   status: 'Paid',
   condition: 'Tạm ứng',
@@ -35,14 +36,26 @@ const installments = /** @type {any} */ ([
   {
     number: 2,
     note: null,
-    subInstallments: [sub({ code: '2.1', status: 'Planned', amount: 700 })],
+    subInstallments: [
+      sub({
+        code: '2.1',
+        status: 'Planned',
+        valueAfterTax: 700,
+        actualPaidAmount: null,
+      }),
+    ],
   },
   {
     number: 1,
     note: 'Tạm ứng',
     subInstallments: [
       sub({}),
-      sub({ code: '1.2', amount: 0, status: 'Planned' }),
+      sub({
+        code: '1.2',
+        valueAfterTax: 0,
+        actualPaidAmount: null,
+        status: 'Planned',
+      }),
     ],
   },
 ]);

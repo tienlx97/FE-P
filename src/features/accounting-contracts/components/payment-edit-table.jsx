@@ -20,16 +20,16 @@ import {
   PAYMENT_KIND_OPTIONS,
   PAYMENT_STATUS_OPTIONS,
 } from '../config/child-schemas.js';
-import { formatVnd, subInstallmentAmount } from '../config/money.js';
+import { formatVnd, subInstallmentValues } from '../config/money.js';
 
 /** @typedef {import('../types/index.js').AccountingSubInstallmentFormValues} Values */
 
 /**
- * One payment (lần thanh toán) as a card: the code and the computed amount on
- * top, then the editable fields — kind / value / status / date on one row,
- * condition and note below.
+ * One payment (lần thanh toán) as a card: the code and the computed values
+ * before / after tax on top, then the editable fields — kind / value / tax /
+ * status / date on one row, actual paid amount, condition and note below.
  * @param {{ row: { id: string, code: string, values: Values }, index: number,
- * valueAfterTax: number,
+ * contractValueBeforeTax: number,
  * onChange: <K extends keyof Values>(index: number, field: K, value: Values[K]) => void,
  * status: (field: string) => { type: 'error', message: string } | undefined,
  * onRemove?: (index: number) => void }} props
@@ -37,13 +37,20 @@ import { formatVnd, subInstallmentAmount } from '../config/money.js';
 function PaymentCard({
   row,
   index,
-  valueAfterTax,
+  contractValueBeforeTax,
   onChange,
   status,
   onRemove,
 }) {
   const { code, values } = row;
   const isPercent = values.kind === 'Percent';
+  const computed = subInstallmentValues(
+    values.kind,
+    values.percent,
+    values.valueBeforeTax,
+    values.taxRatePercent,
+    contractValueBeforeTax,
+  );
   return (
     <Card padding={4}>
       <VStack gap={4} hAlign="stretch">
@@ -59,17 +66,16 @@ function PaymentCard({
           <HStack vAlign="center" gap={3}>
             <VStack gap={0} hAlign="end">
               <Text color="secondary" size="sm">
-                Số tiền (VND)
+                Trước thuế (VND)
+              </Text>
+              <Text hasTabularNumbers>{formatVnd(computed.beforeTax)}</Text>
+            </VStack>
+            <VStack gap={0} hAlign="end">
+              <Text color="secondary" size="sm">
+                Sau thuế (VND)
               </Text>
               <Text weight="bold" size="lg" hasTabularNumbers>
-                {formatVnd(
-                  subInstallmentAmount(
-                    values.kind,
-                    values.percent,
-                    values.amount,
-                    valueAfterTax,
-                  ),
-                )}
+                {formatVnd(computed.afterTax)}
               </Text>
             </VStack>
             {onRemove ? (
@@ -85,7 +91,7 @@ function PaymentCard({
         </HStack>
         <Divider />
         <Grid columns={10} gap={3}>
-          <GridSpan columns={3}>
+          <GridSpan columns={2}>
             <Selector
               label="Hình thức"
               value={values.kind}
@@ -99,16 +105,26 @@ function PaymentCard({
               }
             />
           </GridSpan>
-          <GridSpan columns={3}>
+          <GridSpan columns={2}>
             <FormattedNumberTextInput
-              label={isPercent ? 'Tỷ lệ' : 'Giá trị'}
+              label={isPercent ? 'Tỷ lệ' : 'Giá trị trước thuế'}
               isRequired
-              value={isPercent ? values.percent : values.amount}
+              value={isPercent ? values.percent : values.valueBeforeTax}
               units={isPercent ? '%' : 'VND'}
               onChange={(v) =>
-                onChange(index, isPercent ? 'percent' : 'amount', v)
+                onChange(index, isPercent ? 'percent' : 'valueBeforeTax', v)
               }
-              status={status(isPercent ? 'percent' : 'amount')}
+              status={status(isPercent ? 'percent' : 'valueBeforeTax')}
+            />
+          </GridSpan>
+          <GridSpan columns={2}>
+            <FormattedNumberTextInput
+              label="Thuế"
+              isRequired
+              value={values.taxRatePercent}
+              units="%"
+              onChange={(v) => onChange(index, 'taxRatePercent', v)}
+              status={status('taxRatePercent')}
             />
           </GridSpan>
           <GridSpan columns={2}>
@@ -138,7 +154,16 @@ function PaymentCard({
               isOptional
             />
           </GridSpan>
-          <GridSpan columns={5}>
+          <GridSpan columns={4}>
+            <FormattedNumberTextInput
+              label="Giá trị thực tế thanh toán"
+              value={values.actualPaidAmount}
+              units="VND"
+              onChange={(v) => onChange(index, 'actualPaidAmount', v)}
+              status={status('actualPaidAmount')}
+            />
+          </GridSpan>
+          <GridSpan columns={3}>
             <TextArea
               label="Điều kiện thanh toán"
               placeholder="Điều kiện, hồ sơ cần hoàn tất…"
@@ -150,7 +175,7 @@ function PaymentCard({
               status={status('condition')}
             />
           </GridSpan>
-          <GridSpan columns={5}>
+          <GridSpan columns={3}>
             <TextArea
               label="Ghi chú"
               placeholder="Nhập ghi chú…"
@@ -171,14 +196,14 @@ function PaymentCard({
 /**
  * Editable list of payments, one card each (name kept from the table it
  * replaced).
- * @param {{ rows: { id: string, code: string, values: Values }[], valueAfterTax: number,
+ * @param {{ rows: { id: string, code: string, values: Values }[], contractValueBeforeTax: number,
  * onChange: <K extends keyof Values>(index: number, field: K, value: Values[K]) => void,
  * fieldStatuses: Record<string, { type: 'error', message: string } | undefined>,
  * onRemove?: (index: number) => void, statusPrefix?: string }} props
  */
 export function PaymentEditTable({
   rows,
-  valueAfterTax,
+  contractValueBeforeTax,
   onChange,
   fieldStatuses,
   onRemove,
@@ -194,7 +219,7 @@ export function PaymentEditTable({
           key={row.id}
           row={row}
           index={index}
-          valueAfterTax={valueAfterTax}
+          contractValueBeforeTax={contractValueBeforeTax}
           onChange={onChange}
           onRemove={rows.length > 1 ? onRemove : undefined}
           status={(field) =>

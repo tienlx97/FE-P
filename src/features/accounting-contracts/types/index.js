@@ -75,7 +75,9 @@ export {};
  * @property {string} id
  * @property {string} invoiceNumber
  * @property {string} issuedDate
- * @property {number} amount
+ * @property {number} valueBeforeTax
+ * @property {number} taxRatePercent The invoice's own rate (the contract's by default).
+ * @property {number} valueAfterTax
  * @property {string | null} note
  */
 
@@ -87,7 +89,10 @@ export {};
  * @property {string} code
  * @property {PaymentKind} kind
  * @property {number | null} percent
- * @property {number} amount
+ * @property {number} valueBeforeTax Percent: contract value before tax × percent; Quantity: entered.
+ * @property {number} taxRatePercent The payment's own rate (the contract's by default).
+ * @property {number} valueAfterTax
+ * @property {number | null} actualPaidAmount "Giá trị thực tế thanh toán"; the contract's paid value sums these.
  * @property {string | null} condition
  * @property {string | null} paymentDate
  * @property {PaymentStatus} status
@@ -99,8 +104,8 @@ export {};
  * @property {string} id
  * @property {number} number
  * @property {string | null} note
- * @property {number} amount
- * @property {number} paidAmount
+ * @property {number} amount Σ its payments' value after tax.
+ * @property {number} paidAmount Σ its payments' actual paid amount.
  * @property {AccountingSubInstallment[]} subInstallments
  */
 
@@ -141,7 +146,8 @@ export {};
  * @typedef {Object} AccountingInvoiceFormValues
  * @property {string} invoiceNumber
  * @property {string} issuedDate
- * @property {number | undefined} amount
+ * @property {number | undefined} valueBeforeTax
+ * @property {number | undefined} taxRatePercent
  * @property {string} note
  */
 
@@ -149,7 +155,9 @@ export {};
  * @typedef {Object} AccountingSubInstallmentFormValues
  * @property {PaymentKind} kind
  * @property {number | undefined} percent
- * @property {number | undefined} amount
+ * @property {number | undefined} valueBeforeTax Quantity only.
+ * @property {number | undefined} taxRatePercent
+ * @property {number | undefined} actualPaidAmount
  * @property {string} condition
  * @property {string} paymentDate
  * @property {PaymentStatus} status

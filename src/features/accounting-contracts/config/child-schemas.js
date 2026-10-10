@@ -54,18 +54,30 @@ export const invoiceSchema = z.object({
     .min(1, 'Vui lòng nhập số hoá đơn')
     .max(50, 'Tối đa 50 ký tự'),
   issuedDate: z.string().min(1, 'Vui lòng chọn ngày xuất'),
-  amount: z
-    .number({ error: 'Vui lòng nhập giá trị' })
+  valueBeforeTax: z
+    .number({ error: 'Vui lòng nhập giá trị trước thuế' })
     .positive('Giá trị phải lớn hơn 0'),
+  taxRatePercent: z
+    .number({ error: 'Vui lòng nhập thuế' })
+    .min(0, 'Thuế từ 0 đến 100%')
+    .max(100, 'Thuế từ 0 đến 100%'),
   note: z.string().max(1000, 'Tối đa 1000 ký tự'),
 });
 
-/** Percent needs 0 < % ≤ 100; Quantity needs an amount ≥ 0. */
+/** Percent needs 0 < % ≤ 100; Quantity needs a value before tax ≥ 0. */
 export const subInstallmentSchema = z
   .object({
     kind: z.enum(['Percent', 'Quantity']),
     percent: z.number().optional(),
-    amount: z.number().optional(),
+    valueBeforeTax: z.number().optional(),
+    taxRatePercent: z
+      .number({ error: 'Vui lòng nhập thuế' })
+      .min(0, 'Thuế từ 0 đến 100%')
+      .max(100, 'Thuế từ 0 đến 100%'),
+    actualPaidAmount: z
+      .number()
+      .nonnegative('Giá trị thực tế không được âm')
+      .optional(),
     condition: z.string().max(1000, 'Tối đa 1000 ký tự'),
     paymentDate: z.string(),
     status: z.enum(['Planned', 'Paid']),
@@ -84,11 +96,11 @@ export const subInstallmentSchema = z
     }
     if (
       values.kind === 'Quantity' &&
-      !(values.amount != null && values.amount >= 0)
+      !(values.valueBeforeTax != null && values.valueBeforeTax >= 0)
     ) {
       ctx.addIssue({
         code: 'custom',
-        path: ['amount'],
+        path: ['valueBeforeTax'],
         message: 'Vui lòng nhập giá trị thanh toán',
       });
     }

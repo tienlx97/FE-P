@@ -19,7 +19,9 @@ const appendix = {
 const sub = {
   kind: 'Percent',
   percent: 30,
-  amount: undefined,
+  valueBeforeTax: undefined,
+  taxRatePercent: 8,
+  actualPaidAmount: undefined,
   condition: '',
   paymentDate: '',
   status: 'Planned',
@@ -42,12 +44,13 @@ test('an appendix needs a value before tax unless it only changes information', 
   );
 });
 
-test('an invoice needs a number and a positive amount', () => {
+test('an invoice needs a number, a positive value before tax and a tax rate', () => {
   assert.equal(
     invoiceSchema.safeParse({
       invoiceNumber: '0001',
       issuedDate: '2026-03-01',
-      amount: 1,
+      valueBeforeTax: 1,
+      taxRatePercent: 8,
       note: '',
     }).success,
     true,
@@ -56,7 +59,8 @@ test('an invoice needs a number and a positive amount', () => {
     invoiceSchema.safeParse({
       invoiceNumber: ' ',
       issuedDate: '2026-03-01',
-      amount: 1,
+      valueBeforeTax: 1,
+      taxRatePercent: 8,
       note: '',
     }).success,
     false,
@@ -65,7 +69,8 @@ test('an invoice needs a number and a positive amount', () => {
     invoiceSchema.safeParse({
       invoiceNumber: '1',
       issuedDate: '2026-03-01',
-      amount: 0,
+      valueBeforeTax: 0,
+      taxRatePercent: 8,
       note: '',
     }).success,
     false,
@@ -75,6 +80,14 @@ test('an invoice needs a number and a positive amount', () => {
 test('a sub-instalment needs the value its kind uses', () => {
   assert.equal(subInstallmentSchema.safeParse(sub).success, true);
   assert.equal(
+    subInstallmentSchema.safeParse({ ...sub, taxRatePercent: 101 }).success,
+    false,
+  );
+  assert.equal(
+    subInstallmentSchema.safeParse({ ...sub, actualPaidAmount: -1 }).success,
+    false,
+  );
+  assert.equal(
     subInstallmentSchema.safeParse({ ...sub, percent: 150 }).success,
     false,
   );
@@ -83,8 +96,11 @@ test('a sub-instalment needs the value its kind uses', () => {
     false,
   );
   assert.equal(
-    subInstallmentSchema.safeParse({ ...sub, kind: 'Quantity', amount: 5 })
-      .success,
+    subInstallmentSchema.safeParse({
+      ...sub,
+      kind: 'Quantity',
+      valueBeforeTax: 5,
+    }).success,
     true,
   );
 });

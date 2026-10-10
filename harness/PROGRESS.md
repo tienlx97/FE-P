@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-10 — Invoice and payment tax, actual paid amount, task 1.12 (`accounting-contracts`)
+
+- Per user (invoice number typed by the user; invoice and payment: Giá trị trước thuế, Thuế defaulting to the contract's, Giá trị sau thuế; payment: Giá trị thực tế thanh toán). Needs BE-P task 1.11.
+- Invoice drawer: empty Số hoá đơn (the project-based suggestion and `config/invoice-number.js` removed), Giá trị trước thuế (defaults to what is left to invoice backed out of the contract rate), Thuế (contract rate, editable), disabled Giá trị sau thuế preview. Invoice table: Trước thuế / Thuế / Sau thuế.
+- Payment card: Hình thức, Tỷ lệ or Giá trị trước thuế, Thuế (contract rate by default), Trạng thái, Ngày; then Giá trị thực tế thanh toán, Điều kiện, Ghi chú; header shows before / after tax (`subInstallmentValues`). Payment table: Trước thuế / Thuế / Sau thuế / Thực tế thanh toán. Excel export: "Sau thuế (VND)" and "Thực tế thanh toán" columns (paid = actual).
+- Not checked live (Chrome extension still refuses localhost). Gate passed: `harness/runs/20261010-102339-1137/` (first run: `isOptional` is not a FormattedNumberTextInput prop).
+
 ## 2026-10-10 — Searchable customer selector; appendix before / after tax, task 1.11 (`accounting-contracts`)
 
 - Per user ("Selector khách hàng trong kế toán: thêm nút search"; "Phụ lục hợp đồng: Giá trị bao gồm 2 loại: Giá trị trước thuế, Giá trị sau thuế"). Contract drawer Khách hàng selector gets `hasSearch`.

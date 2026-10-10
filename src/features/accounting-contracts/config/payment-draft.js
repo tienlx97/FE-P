@@ -1,9 +1,14 @@
-/** @returns {import('../types/index.js').AccountingSubInstallmentFormValues} */
-export function emptySubInstallment() {
+/**
+ * @param {number} taxRatePercent The contract's rate — a payment's default.
+ * @returns {import('../types/index.js').AccountingSubInstallmentFormValues}
+ */
+export function emptySubInstallment(taxRatePercent) {
   return {
     kind: 'Percent',
     percent: undefined,
-    amount: undefined,
+    valueBeforeTax: undefined,
+    taxRatePercent,
+    actualPaidAmount: undefined,
     condition: '',
     paymentDate: '',
     status: 'Planned',
@@ -11,13 +16,16 @@ export function emptySubInstallment() {
   };
 }
 
-/** A new stage starts with exactly one full-value payment. */
-export function initialPaymentStage() {
+/**
+ * A new stage starts with exactly one full-value payment.
+ * @param {number} taxRatePercent The contract's rate.
+ */
+export function initialPaymentStage(taxRatePercent) {
   return {
     note: '',
     subInstallments: [
       /** @type {import('../types/index.js').AccountingSubInstallmentFormValues} */ ({
-        ...emptySubInstallment(),
+        ...emptySubInstallment(taxRatePercent),
         percent: 100,
       }),
     ],
@@ -30,7 +38,9 @@ export function paymentValues(sub) {
   return {
     kind: sub.kind,
     percent: sub.percent ?? undefined,
-    amount: sub.kind === 'Quantity' ? sub.amount : undefined,
+    valueBeforeTax: sub.kind === 'Quantity' ? sub.valueBeforeTax : undefined,
+    taxRatePercent: sub.taxRatePercent,
+    actualPaidAmount: sub.actualPaidAmount ?? undefined,
     condition: sub.condition ?? '',
     paymentDate: sub.paymentDate ?? '',
     status: sub.status,

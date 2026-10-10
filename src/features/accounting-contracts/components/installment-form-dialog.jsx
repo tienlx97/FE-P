@@ -13,7 +13,7 @@ import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
 
 import { installmentSchema } from '../config/child-schemas.js';
-import { formatVnd, subInstallmentAmount } from '../config/money.js';
+import { formatVnd, subInstallmentValues } from '../config/money.js';
 import {
   emptySubInstallment,
   initialPaymentStage,
@@ -25,14 +25,15 @@ import { PaymentEditTable } from './payment-edit-table.jsx';
 
 /** @typedef {import('../types/index.js').AccountingSubInstallmentFormValues} SubValues */
 /** @param {{ contractId: string, isOpen: boolean, onOpenChange: (open: boolean) => void,
- * installment: import('../types/index.js').AccountingInstallment | null, nextNumber: number, valueAfterTax: number }} props */
+ * installment: import('../types/index.js').AccountingInstallment | null, nextNumber: number,
+ * contract: import('../types/index.js').AccountingContractSummary }} props */
 function InstallmentFormSession({
   contractId,
   isOpen,
   onOpenChange,
   installment,
   nextNumber,
-  valueAfterTax,
+  contract,
 }) {
   const mutation = useContractChildMutation(contractId);
   const initial = installment
@@ -44,8 +45,10 @@ function InstallmentFormSession({
         })),
       }
     : {
-        ...initialPaymentStage(),
-        subInstallments: initialPaymentStage().subInstallments.map((sub) => ({
+        ...initialPaymentStage(contract.taxRatePercent),
+        subInstallments: initialPaymentStage(
+          contract.taxRatePercent,
+        ).subInstallments.map((sub) => ({
           ...sub,
           draftId: crypto.randomUUID(),
         })),
@@ -80,7 +83,13 @@ function InstallmentFormSession({
   const total = values.subInstallments.reduce(
     (sum, sub) =>
       sum +
-      subInstallmentAmount(sub.kind, sub.percent, sub.amount, valueAfterTax),
+      subInstallmentValues(
+        sub.kind,
+        sub.percent,
+        sub.valueBeforeTax,
+        sub.taxRatePercent,
+        contract.valueBeforeTax,
+      ).afterTax,
     0,
   );
   return (
@@ -124,15 +133,15 @@ function InstallmentFormSession({
                   Giá trị hợp đồng sau thuế
                 </Text>
                 <Text weight="semibold" hasTabularNumbers>
-                  {formatVnd(valueAfterTax)} VND
+                  {formatVnd(contract.valueAfterTax)} VND
                 </Text>
               </VStack>
             </HStack>
           </Card>
           <HStack hAlign="between" gap={3} wrap="wrap">
             <Text color="secondary" size="sm">
-              Mỗi lần thanh toán có tỷ lệ hoặc giá trị, trạng thái, ngày thanh
-              toán, điều kiện và ghi chú riêng.
+              Mỗi lần thanh toán có tỷ lệ hoặc giá trị trước thuế, thuế, giá trị
+              thực tế, trạng thái, ngày thanh toán, điều kiện và ghi chú riêng.
             </Text>
             {installment ? null : (
               <Button
@@ -142,7 +151,10 @@ function InstallmentFormSession({
                 onClick={() =>
                   setField('subInstallments', [
                     ...values.subInstallments,
-                    { ...emptySubInstallment(), draftId: crypto.randomUUID() },
+                    {
+                      ...emptySubInstallment(contract.taxRatePercent),
+                      draftId: crypto.randomUUID(),
+                    },
                   ])
                 }
               />
@@ -156,7 +168,7 @@ function InstallmentFormSession({
                 `${number}.${index + 1}`,
               values: sub,
             }))}
-            valueAfterTax={valueAfterTax}
+            contractValueBeforeTax={contract.valueBeforeTax}
             onChange={setSub}
             fieldStatuses={fieldStatuses}
             onRemove={

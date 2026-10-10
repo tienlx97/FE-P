@@ -18,25 +18,37 @@ import { TextInput } from '@/shared/components/text-input.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import { invoiceSchema } from '../config/child-schemas.js';
-import { nextInvoiceNumber } from '../config/invoice-number.js';
-import { formatVnd } from '../config/money.js';
+import { formatVnd, roundMoney, valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
 
 /**
+ * A new invoice starts with an empty number (the user types it), the
+ * contract's tax rate and what is left to invoice, backed out of that rate.
  * @param {import('../types/index.js').AccountingInvoice | null} invoice
- * @param {string} suggestedNumber
- * @param {number} remainingToInvoice
+ * @param {number} remainingToInvoice After tax.
+ * @param {number} contractTaxRatePercent
  * @returns {import('../types/index.js').AccountingInvoiceFormValues}
  */
-function valuesOf(invoice, suggestedNumber, remainingToInvoice) {
+function valuesOf(invoice, remainingToInvoice, contractTaxRatePercent) {
+  if (invoice) {
+    return {
+      invoiceNumber: invoice.invoiceNumber,
+      issuedDate: invoice.issuedDate,
+      valueBeforeTax: invoice.valueBeforeTax,
+      taxRatePercent: invoice.taxRatePercent,
+      note: invoice.note ?? '',
+    };
+  }
   return {
-    invoiceNumber: invoice?.invoiceNumber ?? suggestedNumber,
-    issuedDate: invoice?.issuedDate ?? '',
-    amount:
-      invoice?.amount ??
-      (remainingToInvoice > 0 ? remainingToInvoice : undefined),
-    note: invoice?.note ?? '',
+    invoiceNumber: '',
+    issuedDate: '',
+    valueBeforeTax:
+      remainingToInvoice > 0
+        ? roundMoney(remainingToInvoice / (1 + contractTaxRatePercent / 100))
+        : undefined,
+    taxRatePercent: contractTaxRatePercent,
+    note: '',
   };
 }
 
@@ -44,8 +56,8 @@ function valuesOf(invoice, suggestedNumber, remainingToInvoice) {
  * @param {{
  *   contractId: string,
  *   projectCode: string,
- *   invoices: import('../types/index.js').AccountingInvoice[],
  *   remainingToInvoice: number,
+ *   contractTaxRatePercent: number,
  *   isOpen: boolean,
  *   onOpenChange: (isOpen: boolean) => void,
  *   invoice: import('../types/index.js').AccountingInvoice | null,
@@ -54,22 +66,26 @@ function valuesOf(invoice, suggestedNumber, remainingToInvoice) {
 function InvoiceFormSession({
   contractId,
   projectCode,
-  invoices,
   remainingToInvoice,
+  contractTaxRatePercent,
   isOpen,
   onOpenChange,
   invoice,
 }) {
-  const suggestedNumber = nextInvoiceNumber(projectCode, invoices);
   const mutation = useContractChildMutation(contractId);
   const form = useZodForm({
-    initialValues: valuesOf(invoice, suggestedNumber, remainingToInvoice),
+    initialValues: valuesOf(
+      invoice,
+      remainingToInvoice,
+      contractTaxRatePercent,
+    ),
     schema: invoiceSchema,
     submit: (_parsed, values) =>
       mutation.mutateAsync({ kind: 'invoice', values, id: invoice?.id }),
     onSuccess: () => onOpenChange(false),
   });
   const { values, setField, fieldStatuses } = form;
+  const afterTax = valueAfterTax(values.valueBeforeTax, values.taxRatePercent);
 
   return (
     <FormDialog
@@ -116,10 +132,6 @@ function InvoiceFormSession({
               statusVariant="tooltip"
             />
           </Grid>
-          <Text size="sm" color="secondary">
-            Số hoá đơn theo mã công trình/HĐ-số thứ tự; có thể điều chỉnh trước
-            khi lưu.
-          </Text>
         </MetaFormSection>
         <MetaFormSection
           isBoxed
@@ -134,14 +146,32 @@ function InvoiceFormSession({
               </Text>
             </HStack>
           </MetaFormCard>
-          <FormattedNumberTextInput
-            label="Giá trị (đã gồm thuế)"
-            value={values.amount}
-            onChange={(value) => setField('amount', value)}
-            units="VND"
-            isRequired
-            status={fieldStatuses.amount}
-          />
+          <Grid columns={{ minWidth: 160, max: 3 }} gap={3}>
+            <FormattedNumberTextInput
+              label="Giá trị trước thuế"
+              value={values.valueBeforeTax}
+              onChange={(value) => setField('valueBeforeTax', value)}
+              units="VND"
+              isRequired
+              status={fieldStatuses.valueBeforeTax}
+            />
+            <FormattedNumberTextInput
+              label="Thuế"
+              value={values.taxRatePercent}
+              onChange={(value) => setField('taxRatePercent', value)}
+              units="%"
+              isRequired
+              description={`Mặc định theo hợp đồng (${contractTaxRatePercent}%)`}
+              status={fieldStatuses.taxRatePercent}
+            />
+            <FormattedNumberTextInput
+              label="Giá trị sau thuế"
+              value={afterTax}
+              onChange={() => {}}
+              units="VND"
+              isDisabled
+            />
+          </Grid>
         </MetaFormSection>
         <MetaFormSection
           isBoxed

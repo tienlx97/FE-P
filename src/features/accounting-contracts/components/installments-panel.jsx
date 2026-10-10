@@ -43,7 +43,6 @@ import { SubInstallmentFormDialog } from './sub-installment-form-dialog.jsx';
  */
 export function InstallmentsPanel({ detail, metrics, createKey }) {
   const contractId = detail.contract.id;
-  const valueAfterTax = detail.contract.valueAfterTax;
   const mutation = useContractChildMutation(contractId);
 
   const [installmentForm, setInstallmentForm] = useState(
@@ -73,12 +72,43 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         renderCell: (sub) => <Text weight="bold">{sub.code}</Text>,
       },
       {
-        key: 'amount',
-        header: 'Số tiền (VND)',
-        width: pixel(180),
+        key: 'valueBeforeTax',
+        header: 'Trước thuế (VND)',
+        width: pixel(160),
         align: 'end',
         renderCell: (sub) => (
-          <Text hasTabularNumbers>{formatVnd(sub.amount)}</Text>
+          <Text hasTabularNumbers>{formatVnd(sub.valueBeforeTax)}</Text>
+        ),
+      },
+      {
+        key: 'taxRatePercent',
+        header: 'Thuế',
+        width: pixel(80),
+        align: 'end',
+        renderCell: (sub) => (
+          <Text hasTabularNumbers>{sub.taxRatePercent}%</Text>
+        ),
+      },
+      {
+        key: 'valueAfterTax',
+        header: 'Sau thuế (VND)',
+        width: pixel(160),
+        align: 'end',
+        renderCell: (sub) => (
+          <Text weight="bold" hasTabularNumbers>
+            {formatVnd(sub.valueAfterTax)}
+          </Text>
+        ),
+      },
+      {
+        key: 'actualPaidAmount',
+        header: 'Thực tế thanh toán (VND)',
+        width: pixel(190),
+        align: 'end',
+        renderCell: (sub) => (
+          <Text color={/** @type {any} */ ('meta-success')} hasTabularNumbers>
+            {formatVnd(sub.actualPaidAmount)}
+          </Text>
         ),
       },
       {
@@ -335,7 +365,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         nextNumber={
           Math.max(0, ...detail.installments.map((stage) => stage.number)) + 1
         }
-        valueAfterTax={valueAfterTax}
+        contract={detail.contract}
       />
       <SubInstallmentFormDialog
         contractId={contractId}
@@ -345,7 +375,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         }
         installment={subForm.installment}
         sub={subForm.sub}
-        valueAfterTax={valueAfterTax}
+        contract={detail.contract}
       />
       <ConfirmDeleteDialog
         title={deleting?.title ?? null}

@@ -6,26 +6,18 @@ import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 
 import { subInstallmentSchema } from '../config/child-schemas.js';
-import { emptySubInstallment } from '../config/payment-draft.js';
+import { emptySubInstallment, paymentValues } from '../config/payment-draft.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
 import { PaymentEditTable } from './payment-edit-table.jsx';
 
 /**
  * @param {import('../types/index.js').AccountingSubInstallment | null} sub
+ * @param {number} contractTaxRatePercent A new payment's default rate.
  * @returns {import('../types/index.js').AccountingSubInstallmentFormValues}
  */
-function valuesOf(sub) {
-  if (!sub) return emptySubInstallment();
-  return {
-    kind: sub.kind,
-    percent: sub.percent ?? undefined,
-    amount: sub.kind === 'Quantity' ? sub.amount : undefined,
-    condition: sub.condition ?? '',
-    paymentDate: sub.paymentDate ?? '',
-    status: sub.status,
-    note: sub.note ?? '',
-  };
+function valuesOf(sub, contractTaxRatePercent) {
+  return sub ? paymentValues(sub) : emptySubInstallment(contractTaxRatePercent);
 }
 
 /**
@@ -36,7 +28,7 @@ function valuesOf(sub) {
  *   onOpenChange: (isOpen: boolean) => void,
  *   installment: import('../types/index.js').AccountingInstallment | null,
  *   sub: import('../types/index.js').AccountingSubInstallment | null,
- *   valueAfterTax: number,
+ *   contract: import('../types/index.js').AccountingContractSummary,
  * }} props
  */
 function SubInstallmentFormSession({
@@ -45,11 +37,11 @@ function SubInstallmentFormSession({
   onOpenChange,
   installment,
   sub,
-  valueAfterTax,
+  contract,
 }) {
   const mutation = useContractChildMutation(contractId);
   const form = useZodForm({
-    initialValues: valuesOf(sub),
+    initialValues: valuesOf(sub, contract.taxRatePercent),
     schema: subInstallmentSchema,
     submit: (_parsed, values) =>
       mutation.mutateAsync({
@@ -91,7 +83,7 @@ function SubInstallmentFormSession({
           onChange={(_index, field, value) => setField(field, value)}
           fieldStatuses={fieldStatuses}
           statusPrefix=""
-          valueAfterTax={valueAfterTax}
+          contractValueBeforeTax={contract.valueBeforeTax}
         />
       </MetaFormSection>
     </FormDialog>

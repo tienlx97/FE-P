@@ -29,8 +29,8 @@ const HEADER = [
   'Đợt / Lần',
   'Hình thức',
   'Tỷ lệ (%)',
-  'Số tiền (VND)',
-  'Đã thanh toán',
+  'Sau thuế (VND)',
+  'Thực tế thanh toán',
   'Chưa thanh toán',
   'Trạng thái',
   'Ngày thanh toán',
@@ -69,8 +69,9 @@ const toDate = (/** @type {string | null} */ iso) =>
 const displayDay = (date) =>
   `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
 
-/** @param {import('../types/index.js').AccountingSubInstallment} sub */
-const paidOf = (sub) => (sub.status === 'Paid' ? sub.amount : 0);
+/** What was actually received ("Giá trị thực tế thanh toán").
+ * @param {import('../types/index.js').AccountingSubInstallment} sub */
+const paidOf = (sub) => sub.actualPaidAmount ?? 0;
 
 /** @param {import('../types/index.js').AccountingInstallment} stage */
 function stageStatus(stage) {
@@ -246,7 +247,7 @@ export function buildInstallmentWorkbook(ExcelJS, input) {
       0,
     );
     const stageTotal = stage.subInstallments.reduce(
-      (s, sub) => s + sub.amount,
+      (s, sub) => s + sub.valueAfterTax,
       0,
     );
     band.getCell(1).value = `Đợt ${stage.number}`;
@@ -293,9 +294,9 @@ export function buildInstallmentWorkbook(ExcelJS, input) {
       row.getCell(2).value =
         sub.kind === 'Percent' ? 'Theo tỷ lệ' : 'Theo giá trị';
       row.getCell(3).value = sub.kind === 'Percent' ? sub.percent : null;
-      row.getCell(4).value = sub.amount;
+      row.getCell(4).value = sub.valueAfterTax;
       row.getCell(5).value = paidOf(sub);
-      row.getCell(6).value = sub.amount - paidOf(sub);
+      row.getCell(6).value = sub.valueAfterTax - paidOf(sub);
       row.getCell(7).value = isPaid ? 'Đã thanh toán' : 'Kế hoạch';
       row.getCell(8).value = toDate(sub.paymentDate);
       row.getCell(9).value = sub.condition;
@@ -332,7 +333,7 @@ export function buildInstallmentWorkbook(ExcelJS, input) {
   const grand = stages.reduce(
     (acc, stage) => {
       const amount = stage.subInstallments.reduce(
-        (s, sub) => s + sub.amount,
+        (s, sub) => s + sub.valueAfterTax,
         0,
       );
       const paid = stage.subInstallments.reduce((s, sub) => s + paidOf(sub), 0);

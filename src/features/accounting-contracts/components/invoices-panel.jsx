@@ -77,13 +77,29 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
       ),
     },
     {
-      key: 'amount',
-      header: 'Giá trị (VND)',
+      key: 'valueBeforeTax',
+      header: 'Trước thuế (VND)',
+      width: pixel(160),
+      align: 'end',
+      renderCell: (i) => (
+        <Text hasTabularNumbers>{formatVnd(i.valueBeforeTax)}</Text>
+      ),
+    },
+    {
+      key: 'taxRatePercent',
+      header: 'Thuế',
+      width: pixel(80),
+      align: 'end',
+      renderCell: (i) => <Text hasTabularNumbers>{i.taxRatePercent}%</Text>,
+    },
+    {
+      key: 'valueAfterTax',
+      header: 'Sau thuế (VND)',
       width: pixel(170),
       align: 'end',
       renderCell: (i) => (
         <Text weight="bold" hasTabularNumbers>
-          {formatVnd(i.amount)}
+          {formatVnd(i.valueAfterTax)}
         </Text>
       ),
     },
@@ -186,8 +202,8 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
       <InvoiceFormDialog
         contractId={contractId}
         projectCode={detail.contract.projectCode}
-        invoices={detail.invoices}
         remainingToInvoice={detail.contract.remainingToInvoice}
+        contractTaxRatePercent={detail.contract.taxRatePercent}
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
         invoice={editing}

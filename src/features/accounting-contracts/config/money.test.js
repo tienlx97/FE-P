@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import {
   formatVnd,
   roundMoney,
-  subInstallmentAmount,
+  subInstallmentValues,
   valueAfterTax,
 } from './money.js';
 
@@ -14,14 +14,14 @@ test('value after tax is value × (1 + tax %)', () => {
   assert.equal(valueAfterTax(undefined, 8), undefined);
 });
 
-test('sub-instalment amount follows its kind', () => {
-  assert.equal(
-    subInstallmentAmount('Percent', 30, 999, 108_000_000),
-    32_400_000,
-  );
-  assert.equal(
-    subInstallmentAmount('Quantity', 30, 5_000_000, 108_000_000),
-    5_000_000,
+test('sub-instalment values follow its kind and its own tax rate', () => {
+  assert.deepEqual(subInstallmentValues('Percent', 30, 999, 8, 100_000_000), {
+    beforeTax: 30_000_000,
+    afterTax: 32_400_000,
+  });
+  assert.deepEqual(
+    subInstallmentValues('Quantity', 30, 5_000_000, 10, 100_000_000),
+    { beforeTax: 5_000_000, afterTax: 5_500_000 },
   );
 });
 

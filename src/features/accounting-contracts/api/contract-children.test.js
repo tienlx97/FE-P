@@ -68,12 +68,16 @@ test('a sub-instalment sends only the value its kind uses', () => {
     status: /** @type {const} */ ('Paid'),
     note: '',
     percent: 30,
-    amount: 5,
+    valueBeforeTax: 5,
+    taxRatePercent: 8,
+    actualPaidAmount: undefined,
   };
   assert.deepEqual(subInstallmentBody({ ...values, kind: 'Percent' }), {
     kind: 'Percent',
     percent: 30,
-    amount: null,
+    valueBeforeTax: null,
+    taxRatePercent: 8,
+    actualPaidAmount: null,
     condition: null,
     paymentDate: null,
     status: 'Paid',

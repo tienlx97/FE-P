@@ -40,7 +40,8 @@ export function invoiceBody(values) {
   return {
     invoiceNumber: values.invoiceNumber.trim(),
     issuedDate: values.issuedDate,
-    amount: values.amount,
+    valueBeforeTax: values.valueBeforeTax,
+    taxRatePercent: values.taxRatePercent ?? null,
     note: blankToNull(values.note),
   };
 }
@@ -50,7 +51,9 @@ export function subInstallmentBody(values) {
   return {
     kind: values.kind,
     percent: values.kind === 'Percent' ? values.percent : null,
-    amount: values.kind === 'Quantity' ? values.amount : null,
+    valueBeforeTax: values.kind === 'Quantity' ? values.valueBeforeTax : null,
+    taxRatePercent: values.taxRatePercent ?? null,
+    actualPaidAmount: values.actualPaidAmount ?? null,
     condition: blankToNull(values.condition),
     paymentDate: values.paymentDate || null,
     status: values.status,
