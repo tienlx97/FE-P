@@ -22,7 +22,7 @@ import { invoiceFormValues } from '../config/edit-values.js';
 import { formatVnd, valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
-import { TypedValueInput } from './typed-value-input.jsx';
+import { ComputedValueCard } from './computed-value-card.jsx';
 
 /**
  * @param {{
@@ -135,23 +135,17 @@ function InvoiceFormSession({
           <Text color="secondary" size="sm">
             Thuế mặc định theo hợp đồng ({contractTaxRatePercent}%).
           </Text>
-          <Grid columns={2} gap={4}>
-            <TypedValueInput
-              label="Giá trị sau thuế"
-              computed={afterTax}
-              typed={values.valueAfterTax}
-              onChange={(value) => setField('valueAfterTax', value)}
-              status={fieldStatuses.valueAfterTax}
-            />
-          </Grid>
-          <MetaFormCard>
-            <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
-              <Text weight="semibold">Giá trị sau thuế</Text>
-              <Text size="xl" weight="bold" color="accent" hasTabularNumbers>
-                {formatVnd(values.valueAfterTax ?? afterTax)} VND
-              </Text>
-            </HStack>
-          </MetaFormCard>
+          <ComputedValueCard
+            label="Giá trị sau thuế"
+            computed={afterTax}
+            typed={values.valueAfterTax}
+            onChange={(value) => setField('valueAfterTax', value)}
+            hint={
+              afterTax === undefined
+                ? 'Nhập giá trị trước thuế để tính'
+                : `Tự tính theo thuế ${values.taxRatePercent ?? 0}%`
+            }
+          />
         </MetaFormSection>
         <MetaFormSection
           isBoxed

@@ -34,8 +34,8 @@ import {
   useSaveContractMutation,
 } from '../hooks/use-contracts.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
+import { ComputedValueCard } from './computed-value-card.jsx';
 import { useQuickCreateCustomer } from './quick-create-customer-slot.jsx';
-import { TypedValueInput } from './typed-value-input.jsx';
 
 /** @typedef {import('../types/index.js').AccountingContractFormValues} FormValues */
 /** @typedef {import('@astryxdesign/core/Calendar').ISODateString} ISODateString */
@@ -285,15 +285,17 @@ export function ContractFormDialog({
               status={fieldStatuses.taxRatePercent}
             />
           </Grid>
-          <Grid columns={{ minWidth: 220, max: 2 }} gap={3}>
-            <TypedValueInput
-              label="Giá trị hợp đồng (sau thuế)"
-              computed={afterTax}
-              typed={values.valueAfterTax}
-              onChange={(value) => setField('valueAfterTax', value)}
-              status={fieldStatuses.valueAfterTax}
-            />
-          </Grid>
+          <ComputedValueCard
+            label="Giá trị hợp đồng (sau thuế)"
+            computed={afterTax}
+            typed={values.valueAfterTax}
+            onChange={(value) => setField('valueAfterTax', value)}
+            hint={
+              afterTax === undefined
+                ? 'Nhập giá trị trước thuế để tính'
+                : `Tự tính theo thuế ${values.taxRatePercent ?? 0}%`
+            }
+          />
         </MetaFormSection>
         <MetaFormSection isBoxed index={4} title="Ghi chú">
           <TextArea

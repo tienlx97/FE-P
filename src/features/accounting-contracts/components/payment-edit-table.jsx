@@ -23,7 +23,7 @@ import {
   PERCENT_BASIS_OPTIONS,
 } from '../config/child-schemas.js';
 import { formatVnd, subInstallmentValues } from '../config/money.js';
-import { TypedValueInput } from './typed-value-input.jsx';
+import { QuickEditValue } from './quick-edit-value.jsx';
 
 /** @typedef {import('../types/index.js').AccountingSubInstallmentFormValues} Values */
 
@@ -61,15 +61,41 @@ function PaymentCard({ row, index, contract, onChange, status, onRemove }) {
               <Text color="secondary" size="sm">
                 Trước thuế (VND)
               </Text>
-              <Text hasTabularNumbers>{formatVnd(computed.beforeTax)}</Text>
+              {isPercent ? (
+                <QuickEditValue
+                  label={`Giá trị trước thuế lần ${code}`}
+                  value={computed.beforeTax}
+                  computed={computed.auto.beforeTax}
+                  isTyped={values.valueBeforeTax !== undefined}
+                  text={formatVnd(computed.beforeTax)}
+                  applyLabel="Áp dụng"
+                  onSave={async (typed) => {
+                    onChange(index, 'valueBeforeTax', typed);
+                    return { success: true };
+                  }}
+                />
+              ) : (
+                <Text hasTabularNumbers>{formatVnd(computed.beforeTax)}</Text>
+              )}
             </VStack>
             <VStack gap={0} hAlign="end">
               <Text color="secondary" size="sm">
                 Sau thuế (VND)
               </Text>
-              <Text weight="bold" size="lg" hasTabularNumbers>
-                {formatVnd(computed.afterTax)}
-              </Text>
+              <QuickEditValue
+                label={`Giá trị sau thuế lần ${code}`}
+                value={computed.afterTax}
+                computed={computed.auto.afterTax}
+                isTyped={values.valueAfterTax !== undefined}
+                text={formatVnd(computed.afterTax)}
+                applyLabel="Áp dụng"
+                isBold
+                isLarge
+                onSave={async (typed) => {
+                  onChange(index, 'valueAfterTax', typed);
+                  return { success: true };
+                }}
+              />
             </VStack>
             {onRemove ? (
               <Button
@@ -134,24 +160,6 @@ function PaymentCard({ row, index, contract, onChange, status, onRemove }) {
             />
           </Grid>
         </VStack>
-        <Grid columns={2} gap={4}>
-          {isPercent ? (
-            <TypedValueInput
-              label="Giá trị trước thuế"
-              computed={computed.auto.beforeTax}
-              typed={values.valueBeforeTax}
-              onChange={(v) => onChange(index, 'valueBeforeTax', v)}
-              status={status('valueBeforeTax')}
-            />
-          ) : null}
-          <TypedValueInput
-            label="Giá trị sau thuế"
-            computed={computed.auto.afterTax}
-            typed={values.valueAfterTax}
-            onChange={(v) => onChange(index, 'valueAfterTax', v)}
-            status={status('valueAfterTax')}
-          />
-        </Grid>
         <VStack gap={2} hAlign="stretch">
           <Text color="secondary" size="sm" weight="semibold">
             Thanh toán

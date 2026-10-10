@@ -51,8 +51,9 @@ const styles = stylex.create({
     color: 'var(--color-text-accent)',
   },
   bold: { fontWeight: 'var(--font-weight-bold)' },
+  large: { fontSize: 'var(--font-size-xl)' },
   tone: (/** @type {string} */ color) => ({ color }),
-  form: { margin: 0, minWidth: 'calc(var(--spacing-10) * 7)' },
+  form: { minWidth: 'calc(var(--spacing-10) * 7)' },
 });
 
 /**
@@ -62,7 +63,9 @@ const styles = stylex.create({
  * reference; "Lưu" stores the typed value (Enter), "Tự tính lại" goes back
  * to the computed one, Esc closes. Typing exactly the computed value also
  * means "computed". `text` is the shown value (e.g. "+10,800,000");
- * `toneColor` (a CSS colour) tints it while it is computed.
+ * `toneColor` (a CSS colour) tints it while it is computed. In a drawer
+ * `onSave` only sets the form field (`applyLabel` "Áp dụng"); with nothing
+ * to compute from yet (`isDisabled`) the value is plain text.
  * @param {{
  *   label: string,
  *   value: number,
@@ -72,6 +75,9 @@ const styles = stylex.create({
  *   text: string,
  *   isBold?: boolean,
  *   toneColor?: string,
+ *   isLarge?: boolean,
+ *   applyLabel?: string,
+ *   isDisabled?: boolean,
  * }} props
  */
 export function QuickEditValue({
@@ -83,6 +89,9 @@ export function QuickEditValue({
   text,
   isBold = false,
   toneColor,
+  isLarge = false,
+  applyLabel = 'Lưu',
+  isDisabled = false,
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [draft, setDraft] = useState(/** @type {number | undefined} */ (value));
@@ -108,12 +117,21 @@ export function QuickEditValue({
     else setError(result.message ?? 'Không thể lưu thay đổi');
   }
 
+  function apply() {
+    if (draft !== undefined && !isSaving)
+      save(typedOrComputed(draft, computed));
+  }
+
   const content = (
-    <form
+    // Not a <form>: the popover renders inside a drawer's form, and Enter
+    // there would submit the drawer. Enter is handled here instead.
+    <div
       {...stylex.props(styles.form)}
-      onSubmit={(event) => {
+      onKeyDown={(event) => {
+        if (event.key !== 'Enter') return;
         event.preventDefault();
-        if (draft !== undefined) save(typedOrComputed(draft, computed));
+        event.stopPropagation();
+        apply();
       }}
     >
       <VStack gap={2} hAlign="stretch">
@@ -152,16 +170,31 @@ export function QuickEditValue({
             onClick={() => setIsOpen(false)}
           />
           <Button
-            label={isSaving ? 'Đang lưu…' : 'Lưu'}
-            type="submit"
+            label={isSaving ? 'Đang lưu…' : applyLabel}
+            type="button"
+            onClick={apply}
             variant="primary"
             size="sm"
             isDisabled={isSaving || draft === undefined}
           />
         </HStack>
       </VStack>
-    </form>
+    </div>
   );
+
+  if (isDisabled) {
+    return (
+      <span
+        {...stylex.props(
+          toneColor ? styles.tone(toneColor) : null,
+          isBold && styles.bold,
+          isLarge && styles.large,
+        )}
+      >
+        {text}
+      </span>
+    );
+  }
 
   return (
     <Popover
@@ -189,6 +222,7 @@ export function QuickEditValue({
               isTyped ? styles.typed : styles.value,
               !isTyped && toneColor ? styles.tone(toneColor) : null,
               isBold && styles.bold,
+              isLarge && styles.large,
             )}
           >
             {text}

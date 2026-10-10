@@ -23,3 +23,4 @@
 - [x] 1.14 Typed values: payment value before tax (percent) / after tax, invoice and appendix value after tax can be typed over the computed one (placeholder shows it, "Tự tính lại" clears it) (BE-P task 1.13).
 - [x] 1.15 Contract value after tax typeable in the contract drawer; tables and overview mark typed values ("Đã sửa tay") (BE-P task 1.14).
 - [x] 1.16 Typed values are edited in place: click a value (dashed underline; typed ones accent + pencil) for a popover with the computed value, Lưu / Hủy / Tự tính lại; a new invoice starts with an empty value before tax.
+- [x] 1.17 Drawers (hoá đơn, đợt thanh toán, phụ lục, hợp đồng) edit computed values the same click-to-edit way ("Áp dụng" sets the form field); Enter in the editor never submits the drawer.

@@ -9,10 +9,7 @@ import { Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { Paperclip } from 'lucide-react';
 
-import {
-  MetaFormCard,
-  MetaFormSection,
-} from '@/shared/components/custom/meta/index.js';
+import { MetaFormSection } from '@/shared/components/custom/meta/index.js';
 import { FormDialog } from '@/shared/components/form-dialog.jsx';
 import { FormattedNumberTextInput } from '@/shared/components/formatted-number-text-input.jsx';
 import { TextArea } from '@/shared/components/text-area.jsx';
@@ -23,10 +20,10 @@ import {
   appendixSchema,
 } from '../config/child-schemas.js';
 import { appendixFormValues } from '../config/edit-values.js';
-import { formatVnd, valueAfterTax } from '../config/money.js';
+import { valueAfterTax } from '../config/money.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { useZodForm } from '../hooks/use-zod-form.js';
-import { TypedValueInput } from './typed-value-input.jsx';
+import { ComputedValueCard } from './computed-value-card.jsx';
 
 /**
  * @param {{
@@ -135,35 +132,19 @@ function AppendixFormSession({
           <Text color="secondary" size="sm">
             Thuế mặc định theo hợp đồng ({taxRatePercent}%).
           </Text>
-          <Grid columns={2} gap={4}>
-            <TypedValueInput
-              label="Giá trị sau thuế"
-              computed={afterTax}
-              typed={isInfoChange ? undefined : values.valueAfterTax}
-              onChange={(value) => setField('valueAfterTax', value)}
-              isDisabled={isInfoChange}
-              status={fieldStatuses.valueAfterTax}
-            />
-          </Grid>
-          <MetaFormCard>
-            <HStack hAlign="between" vAlign="center" gap={3} wrap="wrap">
-              <VStack gap={0}>
-                <Text weight="semibold">Giá trị sau thuế</Text>
-                <Text color="secondary" size="sm">
-                  {isInfoChange
-                    ? 'Thay đổi thông tin không làm đổi giá trị hợp đồng'
-                    : values.valueAfterTax !== undefined
-                      ? 'Đã sửa tay'
-                      : `Tự tính theo thuế ${values.taxRatePercent ?? 0}%`}
-                </Text>
-              </VStack>
-              <Text size="xl" weight="bold" color="accent" hasTabularNumbers>
-                {isInfoChange
-                  ? '—'
-                  : `${formatVnd(values.valueAfterTax ?? afterTax)} VND`}
-              </Text>
-            </HStack>
-          </MetaFormCard>
+          <ComputedValueCard
+            label="Giá trị sau thuế"
+            computed={afterTax}
+            typed={values.valueAfterTax}
+            onChange={(value) => setField('valueAfterTax', value)}
+            isDisabled={isInfoChange}
+            disabledHint="Thay đổi thông tin không làm đổi giá trị hợp đồng"
+            hint={
+              afterTax === undefined
+                ? 'Nhập giá trị trước thuế để tính'
+                : `Tự tính theo thuế ${values.taxRatePercent ?? 0}%`
+            }
+          />
         </MetaFormSection>
         <MetaFormSection isBoxed title="Tình trạng ký" isTitleUppercase={false}>
           <Text size="sm" color="secondary">

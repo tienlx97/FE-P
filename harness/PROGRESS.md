@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-10 — Click-to-edit in the drawers, task 1.17 (`accounting-contracts`)
+
+- Per user ("Áp dụng tương tự cách này trong drawer THÊM (hoá đơn, Đợt thanh toán, ...)"). The drawers' computed values now work like the tables: click the number (dashed underline; typed = accent + pencil), type, "Áp dụng" (Enter) / Hủy (Esc) / "Tự tính lại". In a drawer it only sets the form field; the drawer's own save sends it.
+- `ComputedValueCard` (invoice, appendix, contract drawers): "Giá trị sau thuế" card with the editable number and a hint (tự tính theo thuế n% — bấm vào số để sửa / Đã sửa tay · tự tính: … / "Nhập giá trị trước thuế để tính" while empty; Thay đổi thông tin: disabled). Payment card: the header's Trước thuế (percent) and Sau thuế are the click targets; the separate input row is gone. `TypedValueInput` deleted.
+- Fixed found live: the popover renders inside the drawer's `<form>`, so its own `<form>` was nested (React "form cannot be a descendant of form") and Enter reloaded the page through a native submit. The editor is no longer a form: Enter is handled on keydown with `preventDefault`, so neither form submits.
+- Live on :3000 (TEST-KT-02, nothing saved): Thêm đợt — Sau thuế 1,320,000,001 via Enter → drawer stays open ("Có thay đổi chưa lưu"), Σ đợt 1,320,000,001; Esc closes only the editor. Thêm hoá đơn — empty shows "—"; 114,311.83 → 125,743.01; typed 125,743 → "Đã sửa tay · tự tính: 125,743.01". Both drawers discarded. Gate passed: `harness/runs/20261010-134424-451/`.
+
 ## 2026-10-10 — Click-to-edit values, empty new invoice, task 1.16 (`accounting-contracts`)
 
 - Per user ("các giá trị có thể chỉnh sửa phải nổi bật, ví dụ như click vào thì edit được"; then "Bạn điều chỉnh sao cho tối ưu"; "Hoá đơn, Giá trị trước thuế ... không cần để giá trị mặc định").
