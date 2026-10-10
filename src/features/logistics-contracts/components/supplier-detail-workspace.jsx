@@ -144,7 +144,7 @@ function SupplierDetailBody({
   const [isDeleting, setIsDeleting] = useState(false);
   const deleteMutation = useDeleteSupplierMutation();
   const onBankAccountsChanged = useSupplierBankAccountsChanged(supplier.id);
-  const { groups, paymentTerms } = usePartyLookupsQuery('supplier');
+  const { groups } = usePartyLookupsQuery('supplier');
   const { shipmentCount, commissionCount } = useSupplierRelatedCounts(
     supplier.id,
   );
@@ -154,9 +154,6 @@ function SupplierDetailBody({
   const groupNames = (supplier.groupIds ?? [])
     .map((id) => groups.find((group) => group.id === id)?.name)
     .filter((name) => typeof name === 'string');
-  const paymentTermName = paymentTerms.find(
-    (term) => term.id === profile?.paymentTermId,
-  )?.name;
   const isOrganization = profile?.isOrganization ?? true;
 
   /** @type {Record<SupplierTab, number | undefined>} */
@@ -229,7 +226,6 @@ function SupplierDetailBody({
             <SupplierOverviewPanel
               supplier={supplier}
               groupNames={groupNames}
-              paymentTermName={paymentTermName}
               onViewBankAccounts={() => onActiveTabChange('banks')}
             />
           ) : null}

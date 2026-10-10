@@ -11,7 +11,6 @@ import {
   Clock,
   Landmark,
   MapPin,
-  ReceiptText,
   Wallet,
 } from 'lucide-react';
 
@@ -36,7 +35,6 @@ import { formatVndAmount } from '../config/currencies.js';
  *   nameLabel?: string,
  *   groupLabel?: string,
  *   groupNames: string[],
- *   paymentTermName?: string,
  *   onViewBankAccounts: () => void,
  * }} props
  */
@@ -45,16 +43,13 @@ export function SupplierOverviewPanel({
   nameLabel = 'Tên nhà cung cấp',
   groupLabel = 'Nhóm nhà cung cấp',
   groupNames,
-  paymentTermName,
   onViewBankAccounts,
 }) {
   const profile = supplier.profile;
   const isOrganization = profile?.isOrganization ?? true;
   const bankAccounts = supplier.bankAccounts ?? [];
   const hasCreditTerms = Boolean(
-    profile?.paymentTermId ||
-      profile?.dueDays != null ||
-      profile?.creditLimit != null,
+    profile?.dueDays != null || profile?.creditLimit != null,
   );
   const fullAddress = [
     supplier.address,
@@ -156,11 +151,6 @@ export function SupplierOverviewPanel({
           }
         >
           <Grid columns={{ minWidth: 220, max: 3 }} gap={3}>
-            <MetaShipmentField
-              label="Hình thức thanh toán"
-              icon={ReceiptText}
-              value={paymentTermName ?? ''}
-            />
             <MetaShipmentField
               label="Thời hạn công nợ"
               icon={Clock}

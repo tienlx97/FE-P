@@ -15,17 +15,9 @@ export function usePartyLookupsQuery(kind) {
     queryKey: ['logistics-contracts', groupRoute],
     queryFn: () => listPartyLookups(groupRoute, 'nhóm đối tác'),
   });
-  const paymentTerms = useQuery({
-    queryKey: ['logistics-contracts', 'payment-terms'],
-    queryFn: () => listPartyLookups('payment-terms', 'điều khoản thanh toán'),
-  });
   /** @type {import('../types/index.js').PartyLookup[]} */
   const groupItems = groups.data?.success ? groups.data.items : [];
-  /** @type {import('../types/index.js').PartyLookup[]} */
-  const paymentTermItems = paymentTerms.data?.success
-    ? paymentTerms.data.items
-    : [];
-  return { groups: groupItems, paymentTerms: paymentTermItems };
+  return { groups: groupItems };
 }
 
 /** @param {'customer' | 'supplier'} kind */

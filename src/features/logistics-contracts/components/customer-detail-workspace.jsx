@@ -158,16 +158,13 @@ function CustomerDetailBody({
   const [isDeleting, setIsDeleting] = useState(false);
   const deleteMutation = useDeleteCustomerMutation();
   const onBankAccountsChanged = useCustomerBankAccountsChanged(customer.id);
-  const { groups, paymentTerms } = usePartyLookupsQuery('customer');
+  const { groups } = usePartyLookupsQuery('customer');
   const contractsQuery = useCustomerContractsQuery(customer.id);
 
   const profile = customer.profile;
   const bankAccounts = customer.bankAccounts ?? [];
   const groupName = groups.find((group) => group.id === profile?.groupId)?.name;
   const groupNames = groupName ? [groupName] : [];
-  const paymentTermName = paymentTerms.find(
-    (term) => term.id === profile?.paymentTermId,
-  )?.name;
   const isOrganization = profile?.isOrganization ?? true;
   const contractCount = contractsQuery.data?.success
     ? contractsQuery.data.totalCount + (extraContracts?.count ?? 0)
@@ -243,7 +240,6 @@ function CustomerDetailBody({
               nameLabel="Tên khách hàng"
               groupLabel="Nhóm khách hàng"
               groupNames={groupNames}
-              paymentTermName={paymentTermName}
               onViewBankAccounts={() => onActiveTabChange('banks')}
             />
           ) : null}

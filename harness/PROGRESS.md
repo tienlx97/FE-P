@@ -1,5 +1,10 @@
 # Progress Log
 
+## 2026-10-10 — Party profile without paymentTermId / debtAccount
+
+- Per user ("bỏ và xóa" the fields no longer shown). Removed from `customerSchema`, party form values, the create / update payload (`api/suppliers.js`), typedefs, the overview card's "Hình thức thanh toán" line (card stays with Thời hạn công nợ / Hạn mức tối đa), and the payment-terms lookup fetch in `usePartyLookupsQuery` (customer + supplier detail pages no longer read terms). Contract payment terms (`describePaymentTerm`) are a different thing and untouched.
+- Needs BE-P `DropPartyPaymentTermAndDebtAccount`. Chrome :3000: customer detail renders, edit › save OK against the migrated dev DB. Gate passed: `harness/runs/20261010-080728-729294/`.
+
 ## 2026-10-10 — Party form: no payment term / debt account fields
 
 - Per user ("khách hàng (nhà cung cấp) không cần trường Tài khoản công nợ, Điều khoản thanh toán. Trong chi tiết khách hàng không cần ẩn card"). `PartyFormFields` (customer + supplier drawers) "Điều khoản thanh toán" section keeps only Số ngày được nợ / Số nợ tối đa. Saved values for the removed fields are left as they were (still sent from the loaded profile; new parties keep debtAccount 131 / 331). Detail overview card unchanged.

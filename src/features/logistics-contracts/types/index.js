@@ -157,10 +157,8 @@ export {};
  * @property {string | null} invoiceRecipientName
  * @property {string | null} invoiceRecipientEmails
  * @property {string | null} invoiceRecipientPhone
- * @property {string | null} paymentTermId
  * @property {number | null} dueDays
  * @property {number | null} creditLimit
- * @property {string | null} debtAccount
  * @property {string | null} country
  * @property {string | null} province
  * @property {string | null} district
@@ -538,10 +536,8 @@ export {};
  * @property {string} invoiceRecipientName
  * @property {string} invoiceRecipientEmails
  * @property {string} invoiceRecipientPhone
- * @property {string} paymentTermId
  * @property {number | undefined} dueDays
  * @property {number | undefined} creditLimit
- * @property {string} debtAccount
  * @property {string} country
  * @property {string} province
  * @property {string} district
