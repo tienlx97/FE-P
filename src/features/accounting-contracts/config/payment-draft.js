@@ -6,6 +6,7 @@ export function emptySubInstallment(taxRatePercent) {
   return {
     kind: 'Percent',
     percent: undefined,
+    percentBasis: 'BeforeTax',
     valueBeforeTax: undefined,
     taxRatePercent,
     actualPaidAmount: undefined,
@@ -38,6 +39,7 @@ export function paymentValues(sub) {
   return {
     kind: sub.kind,
     percent: sub.percent ?? undefined,
+    percentBasis: sub.percentBasis ?? 'BeforeTax',
     valueBeforeTax: sub.kind === 'Quantity' ? sub.valueBeforeTax : undefined,
     taxRatePercent: sub.taxRatePercent,
     actualPaidAmount: sub.actualPaidAmount ?? undefined,

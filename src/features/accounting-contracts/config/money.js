@@ -8,6 +8,15 @@ export function formatVnd(value) {
   return value == null ? '—' : VND.format(value);
 }
 
+/**
+ * "30% trước thuế" / "15% sau thuế"; "—" for a payment by amount.
+ * @param {Pick<import('../types/index.js').AccountingSubInstallment, 'kind' | 'percent' | 'percentBasis'>} sub
+ */
+export function percentLabel(sub) {
+  if (sub.kind !== 'Percent' || sub.percent == null) return '—';
+  return `${sub.percent}% ${sub.percentBasis === 'AfterTax' ? 'sau thuế' : 'trước thuế'}`;
+}
+
 /** @param {number} value Money columns are decimal(18,2), half away from zero. */
 export function roundMoney(value) {
   return (
@@ -27,26 +36,30 @@ export function valueAfterTax(valueBeforeTax, taxRatePercent) {
 }
 
 /**
- * Live preview of a payment's values, as the backend computes them: before
- * tax = % of the contract value before tax, or the entered amount; after tax
- * = that at the payment's own rate.
- * @param {import('../types/index.js').PaymentKind} kind
- * @param {number | undefined} percent
- * @param {number | undefined} enteredValueBeforeTax
- * @param {number | undefined} taxRatePercent
- * @param {number} contractValueBeforeTax
+ * Live preview of a payment's values, as the backend computes them. Percent
+ * of the value before tax: before = % × contract before tax, after = that at
+ * the payment's rate. Percent of the value after tax: after = % × contract
+ * after tax, before = that ÷ (1 + payment rate). Quantity: the entered amount
+ * at the payment's rate.
+ * @param {Pick<import('../types/index.js').AccountingSubInstallmentFormValues,
+ *   'kind' | 'percent' | 'percentBasis' | 'valueBeforeTax' | 'taxRatePercent'>} payment
+ * @param {{ valueBeforeTax: number, valueAfterTax: number }} contract
  */
-export function subInstallmentValues(
-  kind,
-  percent,
-  enteredValueBeforeTax,
-  taxRatePercent,
-  contractValueBeforeTax,
-) {
+export function subInstallmentValues(payment, contract) {
+  const { kind, percent, percentBasis, taxRatePercent } = payment;
+  if (kind === 'Percent' && percentBasis === 'AfterTax') {
+    const afterTax = roundMoney(
+      (contract.valueAfterTax * (percent ?? 0)) / 100,
+    );
+    return {
+      beforeTax: roundMoney((afterTax * 100) / (100 + (taxRatePercent ?? 0))),
+      afterTax,
+    };
+  }
   const beforeTax =
     kind === 'Percent'
-      ? roundMoney((contractValueBeforeTax * (percent ?? 0)) / 100)
-      : (enteredValueBeforeTax ?? 0);
+      ? roundMoney((contract.valueBeforeTax * (percent ?? 0)) / 100)
+      : (payment.valueBeforeTax ?? 0);
   return {
     beforeTax,
     afterTax: /** @type {number} */ (valueAfterTax(beforeTax, taxRatePercent)),

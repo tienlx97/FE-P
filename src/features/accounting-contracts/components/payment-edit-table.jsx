@@ -17,8 +17,10 @@ import { TextArea } from '@/shared/components/text-area.jsx';
 import { formatDateInputValue } from '@/shared/config/date-input-format.js';
 
 import {
+  labelOf,
   PAYMENT_KIND_OPTIONS,
   PAYMENT_STATUS_OPTIONS,
+  PERCENT_BASIS_OPTIONS,
 } from '../config/child-schemas.js';
 import { formatVnd, subInstallmentValues } from '../config/money.js';
 
@@ -26,31 +28,19 @@ import { formatVnd, subInstallmentValues } from '../config/money.js';
 
 /**
  * One payment (lần thanh toán) as a card: the code and the computed values
- * before / after tax on top, then the editable fields — kind / value / tax /
- * status / date on one row, actual paid amount, condition and note below.
+ * before / after tax on top, then the editable fields — kind / value / basis
+ * (percent only) / tax, then status / date / actual paid amount, condition
+ * and note below.
  * @param {{ row: { id: string, code: string, values: Values }, index: number,
- * contractValueBeforeTax: number,
+ * contract: { valueBeforeTax: number, valueAfterTax: number },
  * onChange: <K extends keyof Values>(index: number, field: K, value: Values[K]) => void,
  * status: (field: string) => { type: 'error', message: string } | undefined,
  * onRemove?: (index: number) => void }} props
  */
-function PaymentCard({
-  row,
-  index,
-  contractValueBeforeTax,
-  onChange,
-  status,
-  onRemove,
-}) {
+function PaymentCard({ row, index, contract, onChange, status, onRemove }) {
   const { code, values } = row;
   const isPercent = values.kind === 'Percent';
-  const computed = subInstallmentValues(
-    values.kind,
-    values.percent,
-    values.valueBeforeTax,
-    values.taxRatePercent,
-    contractValueBeforeTax,
-  );
+  const computed = subInstallmentValues(values, contract);
   return (
     <Card padding={5}>
       <VStack gap={5} hAlign="stretch">
@@ -60,7 +50,9 @@ function PaymentCard({
               Lần {code}
             </Text>
             <Text color="secondary" size="sm">
-              {isPercent ? 'Theo tỷ lệ' : 'Theo giá trị'}
+              {isPercent
+                ? `Theo tỷ lệ ${labelOf(PERCENT_BASIS_OPTIONS, values.percentBasis).toLowerCase()}`
+                : 'Theo giá trị'}
             </Text>
           </HStack>
           <HStack vAlign="center" gap={3}>
@@ -94,7 +86,7 @@ function PaymentCard({
           <Text color="secondary" size="sm" weight="semibold">
             Giá trị
           </Text>
-          <Grid columns={3} gap={4}>
+          <Grid columns={isPercent ? 4 : 3} gap={4}>
             <Selector
               label="Hình thức"
               value={values.kind}
@@ -117,6 +109,20 @@ function PaymentCard({
               }
               status={status(isPercent ? 'percent' : 'valueBeforeTax')}
             />
+            {isPercent ? (
+              <Selector
+                label="Tính trên"
+                value={values.percentBasis}
+                options={PERCENT_BASIS_OPTIONS}
+                onChange={(v) =>
+                  onChange(
+                    index,
+                    'percentBasis',
+                    /** @type {Values['percentBasis']} */ (v ?? 'BeforeTax'),
+                  )
+                }
+              />
+            ) : null}
             <FormattedNumberTextInput
               label="Thuế"
               isRequired
@@ -199,14 +205,15 @@ function PaymentCard({
 /**
  * Editable list of payments, one card each (name kept from the table it
  * replaced).
- * @param {{ rows: { id: string, code: string, values: Values }[], contractValueBeforeTax: number,
+ * @param {{ rows: { id: string, code: string, values: Values }[],
+ * contract: { valueBeforeTax: number, valueAfterTax: number },
  * onChange: <K extends keyof Values>(index: number, field: K, value: Values[K]) => void,
  * fieldStatuses: Record<string, { type: 'error', message: string } | undefined>,
  * onRemove?: (index: number) => void, statusPrefix?: string }} props
  */
 export function PaymentEditTable({
   rows,
-  contractValueBeforeTax,
+  contract,
   onChange,
   fieldStatuses,
   onRemove,
@@ -222,7 +229,7 @@ export function PaymentEditTable({
           key={row.id}
           row={row}
           index={index}
-          contractValueBeforeTax={contractValueBeforeTax}
+          contract={contract}
           onChange={onChange}
           onRemove={rows.length > 1 ? onRemove : undefined}
           status={(field) =>

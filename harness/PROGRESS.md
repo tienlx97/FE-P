@@ -1,5 +1,12 @@
 # Progress Log
 
+## 2026-10-10 — Percent payment basis, task 1.13 (`accounting-contracts`)
+
+- Per user ("Giá trị thanh toán theo 30% giá trị hợp đồng trước thuế. Hoặc ... 15% giá trị hợp đồng sau thuế"). Needs BE-P task 1.12 (`percentBasis`).
+- Payment card: "Tính trên" selector (Giá trị trước thuế / Giá trị sau thuế) beside Tỷ lệ, percent only; header reads "Theo tỷ lệ giá trị …". `subInstallmentValues(payment, contract)` previews like the backend: after tax basis anchors after = % × contract after tax, before = after ÷ (1 + payment rate). Payment table: "Tỷ lệ" column ("30% trước thuế" / "15% sau thuế" / "—", `percentLabel`).
+- Live on :3000 against the BE dev API: TEST-KT-02 2.2 set to 30 % sau thuế at 8 % → preview and saved row 366,666,666.67 / 396,000,000; reset to 10 % → 360,000,000 / 396,000,000; drawer reopens with "Giá trị sau thuế". Gate passed: `harness/runs/20261010-113924-938/`.
+- Committed alongside another session's uncommitted Excel-template work, which was left unstaged.
+
 ## 2026-10-10 — Invoice and payment tax, actual paid amount, task 1.12 (`accounting-contracts`)
 
 - Per user (invoice number typed by the user; invoice and payment: Giá trị trước thuế, Thuế defaulting to the contract's, Giá trị sau thuế; payment: Giá trị thực tế thanh toán). Needs BE-P task 1.11.

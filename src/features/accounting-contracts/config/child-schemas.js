@@ -12,6 +12,12 @@ export const PAYMENT_KIND_OPTIONS = [
   { value: 'Quantity', label: 'Theo số tiền' },
 ];
 
+/** Labels of BE-P `AccountingPercentBasis`. */
+export const PERCENT_BASIS_OPTIONS = [
+  { value: 'BeforeTax', label: 'Giá trị trước thuế' },
+  { value: 'AfterTax', label: 'Giá trị sau thuế' },
+];
+
 export const PAYMENT_STATUS_OPTIONS = [
   { value: 'Planned', label: 'Kế hoạch' },
   { value: 'Paid', label: 'Đã thanh toán' },
@@ -73,6 +79,7 @@ export const subInstallmentSchema = z
   .object({
     kind: z.enum(['Percent', 'Quantity']),
     percent: z.number().optional(),
+    percentBasis: z.enum(['BeforeTax', 'AfterTax']),
     valueBeforeTax: z.number().optional(),
     taxRatePercent: z
       .number({ error: 'Vui lòng nhập thuế' })

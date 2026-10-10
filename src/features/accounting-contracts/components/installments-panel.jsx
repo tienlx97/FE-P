@@ -27,7 +27,7 @@ import {
   buildInstallmentWorkbook,
   installmentWorkbookFileName,
 } from '../config/installments-workbook.js';
-import { formatVnd } from '../config/money.js';
+import { formatVnd, percentLabel } from '../config/money.js';
 import { isStagePaid } from '../config/payment-overview.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
@@ -99,6 +99,12 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
         width: pixel(150),
         renderCell: (sub) =>
           sub.paymentDate ? formatDisplayDate(sub.paymentDate) : '—',
+      },
+      {
+        key: 'percent',
+        header: 'Tỷ lệ',
+        width: pixel(170),
+        renderCell: (sub) => <Text>{percentLabel(sub)}</Text>,
       },
       {
         key: 'valueBeforeTax',

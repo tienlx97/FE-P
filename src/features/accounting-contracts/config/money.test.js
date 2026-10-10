@@ -3,6 +3,7 @@ import { test } from 'node:test';
 
 import {
   formatVnd,
+  percentLabel,
   roundMoney,
   subInstallmentValues,
   valueAfterTax,
@@ -14,14 +15,74 @@ test('value after tax is value × (1 + tax %)', () => {
   assert.equal(valueAfterTax(undefined, 8), undefined);
 });
 
+const contract = { valueBeforeTax: 100_000_000, valueAfterTax: 108_000_000 };
+/** @param {Partial<Parameters<typeof subInstallmentValues>[0]>} overrides */
+const payment = (overrides) => ({
+  kind: /** @type {const} */ ('Percent'),
+  percent: 30,
+  percentBasis: /** @type {const} */ ('BeforeTax'),
+  valueBeforeTax: 999,
+  taxRatePercent: 8,
+  ...overrides,
+});
+
 test('sub-instalment values follow its kind and its own tax rate', () => {
-  assert.deepEqual(subInstallmentValues('Percent', 30, 999, 8, 100_000_000), {
+  assert.deepEqual(subInstallmentValues(payment({}), contract), {
     beforeTax: 30_000_000,
     afterTax: 32_400_000,
   });
   assert.deepEqual(
-    subInstallmentValues('Quantity', 30, 5_000_000, 10, 100_000_000),
+    subInstallmentValues(
+      payment({
+        kind: 'Quantity',
+        valueBeforeTax: 5_000_000,
+        taxRatePercent: 10,
+      }),
+      contract,
+    ),
     { beforeTax: 5_000_000, afterTax: 5_500_000 },
+  );
+});
+
+test('a percent of the value after tax anchors the value after tax', () => {
+  assert.deepEqual(
+    subInstallmentValues(
+      payment({ percent: 15, percentBasis: 'AfterTax' }),
+      contract,
+    ),
+    { beforeTax: 15_000_000, afterTax: 16_200_000 },
+  );
+  assert.deepEqual(
+    subInstallmentValues(
+      payment({ percent: 15, percentBasis: 'AfterTax', taxRatePercent: 10 }),
+      contract,
+    ),
+    { beforeTax: 14_727_272.73, afterTax: 16_200_000 },
+  );
+  assert.deepEqual(
+    subInstallmentValues(
+      payment({ percent: 33.33, percentBasis: 'AfterTax' }),
+      {
+        valueBeforeTax: 1000,
+        valueAfterTax: 1080,
+      },
+    ),
+    { beforeTax: 333.3, afterTax: 359.96 },
+  );
+});
+
+test('percent label names the basis', () => {
+  assert.equal(
+    percentLabel({ kind: 'Percent', percent: 15, percentBasis: 'AfterTax' }),
+    '15% sau thuế',
+  );
+  assert.equal(
+    percentLabel({ kind: 'Percent', percent: 30, percentBasis: 'BeforeTax' }),
+    '30% trước thuế',
+  );
+  assert.equal(
+    percentLabel({ kind: 'Quantity', percent: null, percentBasis: null }),
+    '—',
   );
 });
 

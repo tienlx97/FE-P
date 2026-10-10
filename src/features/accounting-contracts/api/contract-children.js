@@ -52,6 +52,7 @@ export function subInstallmentBody(values) {
   return {
     kind: values.kind,
     percent: values.kind === 'Percent' ? values.percent : null,
+    percentBasis: values.kind === 'Percent' ? values.percentBasis : null,
     valueBeforeTax: values.kind === 'Quantity' ? values.valueBeforeTax : null,
     taxRatePercent: values.taxRatePercent ?? null,
     actualPaidAmount: values.actualPaidAmount ?? null,

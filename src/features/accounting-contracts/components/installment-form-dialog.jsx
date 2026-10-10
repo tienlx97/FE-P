@@ -81,15 +81,7 @@ function InstallmentFormSession({
   }
   const number = installment?.number ?? nextNumber;
   const total = values.subInstallments.reduce(
-    (sum, sub) =>
-      sum +
-      subInstallmentValues(
-        sub.kind,
-        sub.percent,
-        sub.valueBeforeTax,
-        sub.taxRatePercent,
-        contract.valueBeforeTax,
-      ).afterTax,
+    (sum, sub) => sum + subInstallmentValues(sub, contract).afterTax,
     0,
   );
   return (
@@ -168,7 +160,7 @@ function InstallmentFormSession({
                 `${number}.${index + 1}`,
               values: sub,
             }))}
-            contractValueBeforeTax={contract.valueBeforeTax}
+            contract={contract}
             onChange={setSub}
             fieldStatuses={fieldStatuses}
             onRemove={

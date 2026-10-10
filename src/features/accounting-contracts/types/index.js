@@ -29,6 +29,7 @@ export {};
 
 /** @typedef {'Increase' | 'Decrease' | 'InfoChange'} AppendixType */
 /** @typedef {'Percent' | 'Quantity'} PaymentKind */
+/** @typedef {'BeforeTax' | 'AfterTax'} PercentBasis Which contract value a percent payment is a share of. */
 /** @typedef {'Planned' | 'Paid'} PaymentStatus */
 
 /**
@@ -90,7 +91,8 @@ export {};
  * @property {string} code
  * @property {PaymentKind} kind
  * @property {number | null} percent
- * @property {number} valueBeforeTax Percent: contract value before tax × percent; Quantity: entered.
+ * @property {PercentBasis | null} percentBasis Percent only.
+ * @property {number} valueBeforeTax Percent BeforeTax: contract value before tax × percent; Percent AfterTax: value after tax ÷ (1 + rate); Quantity: entered.
  * @property {number} taxRatePercent The payment's own rate (the contract's by default).
  * @property {number} valueAfterTax
  * @property {number | null} actualPaidAmount "Giá trị thực tế thanh toán"; the contract's paid value sums these.
@@ -157,6 +159,7 @@ export {};
  * @typedef {Object} AccountingSubInstallmentFormValues
  * @property {PaymentKind} kind
  * @property {number | undefined} percent
+ * @property {PercentBasis} percentBasis Percent only.
  * @property {number | undefined} valueBeforeTax Quantity only.
  * @property {number | undefined} taxRatePercent
  * @property {number | undefined} actualPaidAmount

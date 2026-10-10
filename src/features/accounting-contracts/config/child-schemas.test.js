@@ -20,6 +20,7 @@ const appendix = {
 const sub = {
   kind: 'Percent',
   percent: 30,
+  percentBasis: /** @type {const} */ ('BeforeTax'),
   valueBeforeTax: undefined,
   taxRatePercent: 8,
   actualPaidAmount: undefined,
@@ -94,6 +95,15 @@ test('a sub-instalment needs the value its kind uses', () => {
   );
   assert.equal(
     subInstallmentSchema.safeParse({ ...sub, percent: 150 }).success,
+    false,
+  );
+  assert.equal(
+    subInstallmentSchema.safeParse({ ...sub, percentBasis: 'AfterTax' })
+      .success,
+    true,
+  );
+  assert.equal(
+    subInstallmentSchema.safeParse({ ...sub, percentBasis: 'Gross' }).success,
     false,
   );
   assert.equal(

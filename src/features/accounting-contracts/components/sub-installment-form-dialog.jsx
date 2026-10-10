@@ -83,7 +83,7 @@ function SubInstallmentFormSession({
           onChange={(_index, field, value) => setField(field, value)}
           fieldStatuses={fieldStatuses}
           statusPrefix=""
-          contractValueBeforeTax={contract.valueBeforeTax}
+          contract={contract}
         />
       </MetaFormSection>
     </FormDialog>

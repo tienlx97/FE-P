@@ -19,3 +19,4 @@
 - [x] 1.10 Contract drawer: "Thêm khách hàng" button beside Khách hàng opens the shared quick-create customer drawer (composed in `src/app/(protected)/accounting/layout.jsx`) and selects the new customer.
 - [x] 1.11 Contract drawer customer selector is searchable; appendix drawer takes Giá trị trước thuế and previews Giá trị sau thuế (contract tax rate), appendix table shows both (BE-P task 1.10).
 - [x] 1.12 Invoice number typed by the user; invoices and payments take value before tax and their own tax rate (contract's by default) with an after-tax preview; payments take the actual paid amount; tables and Excel export show them (BE-P task 1.11).
+- [x] 1.13 Percent payments choose "Tính trên" (giá trị trước thuế / sau thuế) with a matching preview; payment table shows the percent and its basis (BE-P task 1.12).
