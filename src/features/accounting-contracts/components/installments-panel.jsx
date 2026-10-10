@@ -4,6 +4,10 @@ import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
 import {
+  SegmentedControl,
+  SegmentedControlItem,
+} from '@astryxdesign/core/SegmentedControl';
+import {
   pixel,
   proportional,
   useTableStickyColumns,
@@ -37,6 +41,7 @@ import { isStagePaid } from '../config/payment-overview.js';
 import { useContractChildMutation } from '../hooks/use-contract-children.js';
 import { ConfirmDeleteDialog } from './confirm-delete-dialog.jsx';
 import { InstallmentFormDialog } from './installment-form-dialog.jsx';
+import { PaymentSummaryTable } from './payment-summary-table.jsx';
 import { QuickEditValue } from './quick-edit-value.jsx';
 import { SubInstallmentFormDialog } from './sub-installment-form-dialog.jsx';
 
@@ -236,6 +241,10 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
   }
 
   const [isExporting, setIsExporting] = useState(false);
+  // "Chi tiết": a card per đợt (editable); "Bảng tổng hợp": one table like the Excel export.
+  const [view, setView] = useState(
+    /** @type {'detail' | 'table'} */ ('detail'),
+  );
 
   /** ExcelJS is loaded on first use, like the list exports. */
   async function exportExcel() {
@@ -268,6 +277,8 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
   const stages = detail.installments
     .slice()
     .sort((a, b) => a.number - b.number);
+  /** @param {string} id */
+  const findStage = (id) => stages.find((stage) => stage.id === id) ?? null;
 
   const stageActions = (
     <HStack gap={2} vAlign="center" wrap="nowrap">
@@ -325,11 +336,66 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
               {stages.length} đợt · mỗi đợt có một hoặc nhiều lần thanh toán
             </Text>
           </VStack>
-          {stageActions}
+          <HStack gap={3} vAlign="center" wrap="wrap">
+            <SegmentedControl
+              label="Cách xem các đợt thanh toán"
+              value={view}
+              onChange={(value) =>
+                setView(/** @type {'detail' | 'table'} */ (value))
+              }
+            >
+              <SegmentedControlItem value="detail" label="Chi tiết" />
+              <SegmentedControlItem value="table" label="Bảng tổng hợp" />
+            </SegmentedControl>
+            {stageActions}
+          </HStack>
         </HStack>
       )}
 
-      {stages.map((stage) => {
+      {view === 'table' && stages.length > 0 ? (
+        <PaymentSummaryTable
+          detail={detail}
+          onAddSub={(stageId) =>
+            setSubForm({
+              isOpen: true,
+              installment: findStage(stageId),
+              sub: null,
+            })
+          }
+          onEditStage={(stageId) =>
+            setInstallmentForm({
+              isOpen: true,
+              installment: findStage(stageId),
+            })
+          }
+          onDeleteStage={(stageId) => {
+            const stage = findStage(stageId);
+            setDeleting({
+              title: `Xoá đợt ${stage?.number} và các lần thanh toán?`,
+              path: `installments/${stageId}`,
+            });
+          }}
+          onEditSub={(stageId, subId) => {
+            const stage = findStage(stageId);
+            setSubForm({
+              isOpen: true,
+              installment: stage,
+              sub: stage?.subInstallments.find((s) => s.id === subId) ?? null,
+            });
+          }}
+          onDeleteSub={(stageId, subId) => {
+            const code = findStage(stageId)?.subInstallments.find(
+              (s) => s.id === subId,
+            )?.code;
+            setDeleting({
+              title: `Xoá lần thanh toán ${code}?`,
+              path: `installments/${stageId}/sub-installments/${subId}`,
+            });
+          }}
+        />
+      ) : null}
+
+      {(view === 'detail' ? stages : []).map((stage) => {
         const unpaid = Math.max(0, stage.amount - stage.paidAmount);
         return (
           <MetaTableCard

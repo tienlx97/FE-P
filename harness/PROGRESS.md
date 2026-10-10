@@ -1,5 +1,13 @@
 # Progress Log
 
+## 2026-10-10 — "Bảng tổng hợp" view of the payments, task 1.18 (`accounting-contracts`)
+
+- Per user ("thêm tab xem đợt thanh toán / lần thanh toán kiểu table giống file Excel ... đơn giản, đẹp"; then "chỉ cần table các đợt thanh toán, không cần card Giá trị hợp đồng. Ngoài ra thêm các button sửa ... ở các row").
+- Đợt thanh toán tab: a "Chi tiết | Bảng tổng hợp" switch beside Xuất Excel / Thêm đợt. The table view is one card: Đợt · Nội dung · % · Số tiền · Ngày thanh toán · Thực tế đã thanh toán · Còn lại (running per đợt) · Ghi chú · Thao tác; a đợt with several lần is a bold summary row with its lần indented under it (a single-lần đợt is just that lần); totals (Số tiền / Thực tế / Còn lại) in the card footer. Value block of the Excel dropped as asked.
+- Row actions reuse the "Chi tiết" dialogs: đợt row ＋ thêm lần / ✎ sửa đợt / 🗑 xoá đợt; lần row ✎ sửa lần / 🗑 xoá lần (same delete confirmations).
+- `config/payment-table.js` (`paymentTableRows`, pure, tested on TEST-KT-02: còn lại 0 → 792,000,000 → 924,000,000, totals 1,188,000,000 / 264,000,000, `stageId` on every row) and `components/payment-summary-table.jsx`; the view choice is local state (per visit).
+- Live on :3000 (TEST-KT-02): table matches the Excel; ✎ on 2.2 opens "Sửa lần thanh toán 2.2"; 🗑 on Đợt 3 shows "Xoá đợt 3 và các lần thanh toán?" (cancelled, nothing deleted). Gate passed: `harness/runs/20261010-142444-1377/`.
+
 ## 2026-10-10 — "Đợt thanh toán" Excel opened as damaged (`accounting-contracts`)
 
 - Per user: Excel said "We found a problem with some content in 'Dot-thanh-toan-TEST-KT-02-2026-10-10.xlsx'" for the export from Kế toán > chi tiết hợp đồng > Đợt thanh toán.
