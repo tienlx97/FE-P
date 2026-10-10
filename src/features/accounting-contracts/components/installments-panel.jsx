@@ -3,7 +3,11 @@
 import { Button } from '@astryxdesign/core/Button';
 import { HStack } from '@astryxdesign/core/HStack';
 import { Icon } from '@astryxdesign/core/Icon';
-import { pixel, proportional } from '@astryxdesign/core/Table';
+import {
+  pixel,
+  proportional,
+  useTableStickyColumns,
+} from '@astryxdesign/core/Table';
 import { Heading, Text } from '@astryxdesign/core/Text';
 import { VStack } from '@astryxdesign/core/VStack';
 import { CirclePlus, FileSpreadsheet, ListChecks, Plus } from 'lucide-react';
@@ -62,6 +66,12 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
   const [deleting, setDeleting] = useState(
     /** @type {{ title: string, path: string } | null} */ (null),
   );
+
+  // The "Thao tác" column stays pinned to the right edge while the table scrolls.
+  const stickyActions =
+    /** @type {import('@astryxdesign/core/Table').TablePlugin<Sub & Record<string, unknown>>} */ (
+      useTableStickyColumns({ endKeys: ['actions'] })
+    );
 
   /** @param {Installment} stage @returns {import('@/shared/components/advance-table.jsx').AdvanceTableColumn<Sub>[]} */
   function paymentColumns(stage) {
@@ -346,6 +356,7 @@ export function InstallmentsPanel({ detail, metrics, createKey }) {
           >
             <Table
               columns={paymentColumns(stage)}
+              plugins={[stickyActions]}
               data={stage.subInstallments}
               idKey="id"
               dividers="rows"

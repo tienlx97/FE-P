@@ -25,6 +25,8 @@ import { InvoiceFormDialog } from './invoice-form-dialog.jsx';
 
 /** @typedef {import('../types/index.js').AccountingInvoice} Invoice */
 
+const TOTALS_ID = '__totals';
+
 /** More invoices than this scroll inside the card, header row pinned. */
 const PINNED_HEADER_MIN_ROWS = 8;
 
@@ -64,17 +66,41 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
     }
   }
 
+  // The totals row leads the table: count and sums of the invoices.
+  const totalsRow = {
+    id: TOTALS_ID,
+    invoiceNumber: '',
+    valueBeforeTax: detail.invoices.reduce(
+      (sum, i) => sum + i.valueBeforeTax,
+      0,
+    ),
+    valueAfterTax: detail.invoices.reduce((sum, i) => sum + i.valueAfterTax, 0),
+  };
+  const rows = [totalsRow, ...detail.invoices];
+  /** @param {Record<string, unknown>} row */
+  const isTotals = (row) => row.id === TOTALS_ID;
+
   /** @type {import('@astryxdesign/core/Table').TableColumn<Invoice & Record<string, unknown>>[]} */
   const columns = [
     {
       key: 'invoiceNumber',
       header: 'Số hoá đơn',
       width: pixel(220),
-      renderCell: (i) => (
-        <Text weight="bold" color="accent">
-          {i.invoiceNumber}
-        </Text>
-      ),
+      renderCell: (i) =>
+        isTotals(i) ? (
+          <HStack gap={2} vAlign="center" wrap="nowrap">
+            <Text size="lg" weight="bold" color="accent">
+              Σ
+            </Text>
+            <Text weight="bold" color="accent">
+              {detail.invoices.length} hoá đơn
+            </Text>
+          </HStack>
+        ) : (
+          <Text weight="bold" color="accent">
+            {i.invoiceNumber}
+          </Text>
+        ),
     },
     {
       key: 'valueBeforeTax',
@@ -82,7 +108,9 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
       width: pixel(160),
       align: 'end',
       renderCell: (i) => (
-        <Text hasTabularNumbers>{formatVnd(i.valueBeforeTax)}</Text>
+        <Text weight={isTotals(i) ? 'bold' : undefined} hasTabularNumbers>
+          {formatVnd(i.valueBeforeTax)}
+        </Text>
       ),
     },
     {
@@ -90,7 +118,8 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
       header: 'Thuế',
       width: pixel(80),
       align: 'end',
-      renderCell: (i) => <Text hasTabularNumbers>{i.taxRatePercent}%</Text>,
+      renderCell: (i) =>
+        isTotals(i) ? null : <Text hasTabularNumbers>{i.taxRatePercent}%</Text>,
     },
     {
       key: 'valueAfterTax',
@@ -107,39 +136,42 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
       key: 'issuedDate',
       header: 'Ngày xuất',
       width: pixel(140),
-      renderCell: (i) => (
-        <Text color="secondary" hasTabularNumbers>
-          {formatDisplayDate(i.issuedDate)}
-        </Text>
-      ),
+      renderCell: (i) =>
+        isTotals(i) ? null : (
+          <Text color="secondary" hasTabularNumbers>
+            {formatDisplayDate(i.issuedDate)}
+          </Text>
+        ),
     },
     {
       key: 'note',
       header: 'Ghi chú',
       width: proportional(2),
-      renderCell: (i) => <Text color="secondary">{i.note ?? '—'}</Text>,
+      renderCell: (i) =>
+        isTotals(i) ? null : <Text color="secondary">{i.note ?? '—'}</Text>,
     },
     {
       key: 'actions',
       header: 'Thao tác',
       width: pixel(110),
-      renderCell: (i) => (
-        <MetaRowActions
-          recordLabel={`hoá đơn ${i.invoiceNumber}`}
-          onEdit={() => {
-            setEditing(i);
-            setIsFormOpen(true);
-          }}
-          onDelete={() => setDeleting(i)}
-        />
-      ),
+      renderCell: (i) =>
+        isTotals(i) ? null : (
+          <MetaRowActions
+            recordLabel={`hoá đơn ${i.invoiceNumber}`}
+            onEdit={() => {
+              setEditing(i);
+              setIsFormOpen(true);
+            }}
+            onDelete={() => setDeleting(i)}
+          />
+        ),
     },
   ];
 
   const invoiceTable = (
     <Table
       columns={columns}
-      data={detail.invoices}
+      data={rows}
       idKey="id"
       dividers="rows"
       density="spacious"
@@ -175,21 +207,6 @@ export function InvoicesPanel({ detail, metrics, createKey }) {
         }
         isEmpty={detail.invoices.length === 0}
         emptyLabel="Chưa có hoá đơn"
-        footerStart={
-          <Text weight="medium" color="secondary">
-            Tổng số {detail.invoices.length} hoá đơn
-          </Text>
-        }
-        footerEnd={
-          <HStack gap={2} vAlign="center" wrap="nowrap">
-            <Text size="sm" weight="bold">
-              TỔNG ĐÃ XUẤT:
-            </Text>
-            <Text weight="bold" color="accent" hasTabularNumbers>
-              {formatVnd(detail.contract.invoicedValue)} VND
-            </Text>
-          </HStack>
-        }
       >
         {detail.invoices.length > PINNED_HEADER_MIN_ROWS ? (
           <VStack hAlign="stretch" xstyle={styles.bounded}>
